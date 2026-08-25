@@ -29,7 +29,7 @@ The colimit is
 $$
 \colim_\mathcal{I} M.
 $$
-See Section \ref{section-next}.
+See Sections \ref{section-next} and \ref{other-section-next}.
 
 \section{Next}
 \label{section-next}
@@ -72,11 +72,15 @@ See Section \ref{section-next}.
         self.assertEqual(units[2]["placeholders"]["MATH_0001"], "$$\n\\lim_\\mathcal{I} M.\n$$")
         self.assertEqual(units[4]["render"]["prefix"], "\\medskip\\noindent\n")
         self.assertEqual(
-            units[-1]["source_text"], "See Section <REF_0001>."
+            units[-1]["source_text"],
+            "See Sections <REF_0001> and <REF_0002>.",
         )
         self.assertEqual(
             units[-1]["placeholders"],
-            {"REF_0001": "\\ref{section-next}"},
+            {
+                "REF_0001": "\\ref{test-section-next}",
+                "REF_0002": "\\ref{other-section-next}",
+            },
         )
         self.assertEqual(units[-1]["render"]["suffix"], "\n\n")
         self.assertEqual(validate_units(units, SOURCE_COMMIT), [])

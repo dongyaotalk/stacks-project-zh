@@ -29,6 +29,22 @@ LOCKED_COMMANDS = {
     "ref": "REF",
     "url": "URL",
 }
+BOOK_LOCAL_LABEL_PREFIXES = (
+    "definition-",
+    "equation-",
+    "example-",
+    "exercise-",
+    "item-",
+    "lemma-",
+    "proposition-",
+    "remark-",
+    "remarks-",
+    "section-",
+    "situation-",
+    "subsection-",
+    "subsubsection-",
+    "theorem-",
+)
 STRUCTURAL_PREFIX_RE = re.compile(
     r"(?:(?:\\medskip|\\smallskip|\\bigskip)\s*)?(?:\\noindent)\s*"
 )
@@ -114,7 +130,9 @@ def extract_section_units(
         raise RecordError("Section extraction blocks TeX comments in the selected body")
 
     units: list[dict[str, Any]] = []
-    title_text, title_placeholders = _protect_natural_text(section_match.group("title"))
+    title_text, title_placeholders = _protect_natural_text(
+        section_match.group("title"), chapter
+    )
     units.append(
         _make_unit(
             unit_id=f"tag:{tag}:title",
@@ -135,7 +153,7 @@ def extract_section_units(
     for kind, value, prefix in _split_section_body(body):
         if kind == "paragraph":
             paragraph_count += 1
-            protected_text, placeholders = _protect_natural_text(value)
+            protected_text, placeholders = _protect_natural_text(value, chapter)
             units.append(
                 _make_unit(
                     unit_id=f"tag:{tag}:p{paragraph_count:03d}",
@@ -239,7 +257,9 @@ def _find_paragraph_end(body: str, start: int) -> tuple[int, int]:
     return len(body), len(body)
 
 
-def _protect_natural_text(text: str) -> tuple[str, dict[str, str]]:
+def _protect_natural_text(
+    text: str, chapter: str
+) -> tuple[str, dict[str, str]]:
     output: list[str] = []
     placeholders: dict[str, str] = {}
     counters: dict[str, int] = {}
@@ -272,6 +292,10 @@ def _protect_natural_text(text: str) -> tuple[str, dict[str, str]]:
                 raise RecordError(f"\\{command} requires one braced argument")
             argument_end = _find_balanced_brace(text, argument_start)
             value = text[position : argument_end + 1]
+            if command in {"eqref", "pageref", "ref"}:
+                argument = text[argument_start + 1 : argument_end]
+                if argument.startswith(BOOK_LOCAL_LABEL_PREFIXES):
+                    value = f"\\{command}{{{chapter}-{argument}}}"
             token = _add_placeholder(
                 placeholders, counters, placeholder_kind, value
             )

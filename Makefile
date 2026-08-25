@@ -29,6 +29,7 @@ OUTPUT_PDF := $(OUTPUT_DIR)/$(JOBNAME).pdf
 INDEX_STYLE := $(TEMPLATE_DIR)/styles/svind-zh.ist
 
 WORKFLOW_FILES := \
+	README.md \
 	WORKFLOW.md \
 	CONTRIBUTING.md \
 	GOVERNANCE.md \
@@ -77,6 +78,8 @@ WORKFLOW_FILES := \
 	.github/ISSUE_TEMPLATE/terminology.yml \
 	.github/ISSUE_TEMPLATE/review-request.yml \
 	.github/ISSUE_TEMPLATE/translation-problem.yml \
+	.github/ISSUE_TEMPLATE/codeowner-application.yml \
+	.github/ISSUE_TEMPLATE/unit-preparation.yml \
 	.github/workflows/ci.yml \
 	prompts/translator-v1.md \
 	prompts/translator-v2.md \

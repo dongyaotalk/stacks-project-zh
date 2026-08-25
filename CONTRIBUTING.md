@@ -4,6 +4,9 @@
 GitHub 协作时还应阅读 `docs/github-collaboration.md` 和
 `docs/task-allocation.md`；术语、许可证或 CI 修改分别阅读对应细则。
 
+README 的“人类贡献者指南”提供从 Fork、查找 Tag、认领喜欢的范围、生成候选、
+提交 PR 到申请 CODEOWNER 的完整操作路径。本文件只保留必须遵守的简明合同。
+
 ## 首次设置
 
 默认目录是：
@@ -39,10 +42,14 @@ GitHub 任务必须先在 Issue 中锁定英文 `source_commit`、chapter、Tag 
 `unit_id` 列表。不要用页码或源文件行号认领任务；一个 unit 或 batch 文件同一时间
 只能有一个写入 PR。
 
+如果喜欢的英文范围还没有出现在 `translation-data/units/`，先使用
+`.github/ISSUE_TEMPLATE/unit-preparation.yml` 请求结构化提取；不得直接翻译原始
+TeX 或手工发明 unit ID。
+
 ## 提交翻译
 
-翻译流水线尚未实现前，不接受把模型直接生成的整份 TeX 当作正式翻译数据。
-实现后，标准步骤是：
+无论翻译流水线状态如何，都不接受把模型直接生成的整份 TeX 当作正式翻译数据。
+当前仓库已支持结构化候选装配，标准步骤是：
 
 1. 从最新 `main` 建立 `translate/<chapter>/<tag>/<model>` 分支，并在 Issue 中声明 Harness、具体模型和 run ID；
 2. 验证 harvest 与 `upstream.lock`；
@@ -91,3 +98,11 @@ make template
 
 分支名、提交类型、必需 trailers、PR 粒度和合并规则见
 `docs/git-conventions.md`。本地 hook 只能提前发现问题，CI 和人工审查仍是最终门禁。
+
+## 申请 Maintainer 或 CODEOWNER
+
+任何人都可以贡献，不需要 CODEOWNER 身份。愿意长期维护明确路径时，使用
+`.github/ISSUE_TEMPLATE/codeowner-application.yml` 提交申请，提供责任路径、已合并
+贡献、审核能力、响应承诺和最小权限需求。获批后使用独立治理 PR 同步修改
+`MAINTAINERS.md`、`.github/CODEOWNERS` 和 GitHub 权限；CODEOWNERS 文件本身不授予
+平台权限，也不自动证明语言或数学审校资格。

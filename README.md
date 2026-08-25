@@ -1,11 +1,33 @@
 # Stacks Project 中文翻译
 
+[![CI](https://github.com/dongyaotalk/stacks-project-zh/actions/workflows/ci.yml/badge.svg)](https://github.com/dongyaotalk/stacks-project-zh/actions/workflows/ci.yml)
+
 这是 Stacks Project 的中文翻译协作仓库。项目维护可追踪、可审校、可随英文
 上游更新的结构化译文，并从这些数据生成 LaTeX 和 PDF 预览。
 
 当前仓库包含模型候选译文和翻译流水线数据，不等同于已经完成语言审校和数学
 审校的正式中文译本。正式发布只能从 `reviewed` 通道构建；模型输出、生成的
 TeX 和 PDF 都不是翻译事实来源。
+
+仓库地址：<https://github.com/dongyaotalk/stacks-project-zh>。任何人都可以通过
+Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或 CODEOWNER。
+
+## 我想做什么
+
+| 目标 | 从这里开始 | 是否需要写权限 |
+| --- | --- | --- |
+| 翻译自己喜欢的 Section/Tag | [查找并认领范围](#3-查找并认领自己喜欢的部分) | 否，Fork 后提 PR |
+| 用 Codex、Claude Code 或 API 模型翻译 | [生成结构化候选](#4-生成或改进翻译候选) | 否 |
+| 改进已有模型译文 | [同一 unit 生成新候选](#改进已有译文而不是覆盖历史) | 否 |
+| 人工审校中文或数学 | [参与审校](#6-人工审校术语和问题报告) | 否 |
+| 修复 Python、Schema、CI 或文档 | [贡献代码和工具](#5-贡献-python工具schema-ci或文档) | 否 |
+| 提议数学术语 | [提交术语 Issue](#6-人工审校术语和问题报告) | 否 |
+| 申请维护范围和 CODEOWNER | [申请流程](#11-申请成为-maintainer-或-codeowner) | 申请获批后授予 |
+| 让 AI 接手任务 | [AI 快速开始](#ai-快速开始可直接交给-agent-的任务说明) | 取决于操作者 |
+
+如果你只想报告错误，不需要配置本地环境：使用
+[Translation or source problem](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=translation-problem.yml)
+模板即可。
 
 ## 先读什么
 
@@ -84,15 +106,53 @@ Translation Memory。候选进入 `main` 只表示实验记录被保存，不等
 
 ## 人类贡献者指南
 
-### 1. 首次设置
+### 1. 选择一种贡献方式
+
+第一次参与不必先理解全部数据模型。先选择一种边界清楚的工作：
+
+| 类型 | 典型修改 | 推荐分支 | 最少检查 |
+| --- | --- | --- | --- |
+| 翻译候选 | `runs/` 和某一模型通道的 candidate JSONL | `translate/<chapter>/<tag>/<model>` | `make qa` |
+| 人工审校 | `review/language/`、`review/mathematics/` 和必要的 revision | `review/<chapter>/<tag>` | `make decision-check` |
+| 术语 | 术语 Issue；获批后独立修改 glossary | `term/<english-term>` | `make qa-all` |
+| Python/工具 | `stacks_zh/`、`scripts/`、`tests/` | `tool/<feature>` | `make tool-test` |
+| Schema/政策 | `schema/`、`config/`、规范文档和迁移 | `tool/<feature>` 或 `docs/<topic>` | `make qa-all` |
+| CI/构建 | `.github/workflows/`、`Makefile` | `build/<feature>` | 对应完整检查 |
+| 文档 | `README.md`、`docs/` | `docs/<topic>` | `make workflow-check` |
+
+翻译者、审校者、工具贡献者和 CODEOWNER 是不同角色。任何人都可以先贡献；
+CODEOWNER 是对某些路径承担长期审核责任的人，不是参与项目的前置资格。
+
+### 2. GitHub 账号、Fork 和首次设置
 
 需要 Git、Python 3.11 或更高版本，以及构建 PDF 时所需的 XeLaTeX、BibTeX 和
-makeindex。
+makeindex。只提交文档、Python 或结构化翻译数据时，可以先不安装 TeX。
+
+没有仓库写权限时，在 GitHub 点击 **Fork**，再克隆自己的 Fork。下面使用
+`canonical` 表示本项目的中文主仓库，避免把它与英文来源混淆：
+
+~~~bash
+git clone git@github.com:<your-account>/stacks-project-zh.git
+cd stacks-project-zh
+git remote add canonical https://github.com/dongyaotalk/stacks-project-zh.git
+git remote -v
+~~~
+
+有写权限的维护者可以直接克隆主仓库：
+
+~~~bash
+git clone git@github.com:dongyaotalk/stacks-project-zh.git
+cd stacks-project-zh
+~~~
 
 准备同级英文 harvest，并检出 `upstream.lock` 指定的 commit。然后：
 
 ~~~bash
-cd stacks-project-zh
+source_commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' upstream.lock)
+git clone https://github.com/stacks/stacks-project.git ../stacks-project
+git -C ../stacks-project fetch origin "$source_commit"
+git -C ../stacks-project checkout --detach "$source_commit"
+
 make repo-setup
 make workflow-check
 make harvest-check
@@ -109,7 +169,63 @@ make harvest-check HARVEST_DIR=/path/to/stacks-project
 或远程仓库。公开推送前请配置可接受的真实姓名和邮箱（或 GitHub noreply 邮箱），
 并检查历史中是否仍有本机临时身份。
 
-### 2. 认领一个明确范围
+每次开始新工作前同步主仓库。外部贡献者使用：
+
+~~~bash
+git fetch canonical
+git switch main
+git merge --ff-only canonical/main
+git push origin main
+~~~
+
+维护者把上面命令中的 `canonical` 换成 `origin`。英文 Stacks Project 只存在于
+相邻的 `../stacks-project` 工作树；不要把英文仓库作为中文仓库的可合并 remote。
+
+### 3. 查找并认领自己喜欢的部分
+
+#### 从 Stacks Tag 或英文内容开始
+
+最可靠的入口是 Stacks Project 永久 Tag。已知 Tag（例如 `001M`）时，先查询它
+对应的英文 label：
+
+~~~bash
+grep '^001M,' ../stacks-project/tags/tags
+~~~
+
+只知道英文标题或关键词时，先在只读英文 harvest 中搜索，再从相邻的 `\label{}`
+或 `tags/tags` 找永久 Tag。不要使用 PDF 页码或源文件行号作为任务坐标。
+
+接着检查中文仓库是否已经为这个 Tag 准备结构化 unit：
+
+~~~bash
+grep -l '"parent_tag": "001M"' translation-data/units/*.jsonl
+grep '"parent_tag": "001M"' translation-data/units/*.jsonl
+~~~
+
+也可以浏览 [`translation-data/units/`](translation-data/units/)；文件名去掉 `.jsonl`
+就是 `BATCH`，例如 `categories-001M.jsonl` 对应 `BATCH=categories-001M`。每行的
+`source_text` 是允许翻译的英文自然语言，`unit_id` 是稳定身份，`placeholders` 是
+必须原样保留的数学、引用或 LaTeX 结构。
+
+当前仓库只对已经出现在 `translation-data/units/` 的范围开放直接候选 PR。如果
+喜欢的章节尚未结构化，不要直接编辑英文 TeX 或手工创建不稳定 ID；请提交
+[Translation scope preparation](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=unit-preparation.yml)
+Issue，由维护者先安排提取、Tag 映射和 batch 边界。
+
+#### 避免与别人重复工作
+
+在认领前搜索
+[开放的翻译任务](https://github.com/dongyaotalk/stacks-project-zh/issues?q=is%3Aissue+is%3Aopen+label%3Atranslation)
+和开放 PR，确认没有人正在修改同一 unit 或 batch。然后使用
+[Translation task](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=translation-task.yml)
+模板创建 Issue：
+
+1. 从 `upstream.lock` 复制完整 40 位 `source_commit`；
+2. 填写 chapter、parent Tag、完整 `unit_id` 列表和准确 batch 文件；
+3. 写明操作者、Harness、具体模型、model record、run ID 和候选 lane；
+4. 在 Issue 中评论 `/claim` 或明确写出“由 `@账号` 认领”；
+5. 等维护者确认没有范围冲突后，从最新 `main` 建分支；
+6. 在 PR 合并、放弃或阻塞时更新 Issue 状态。
 
 翻译范围必须使用英文来源 commit、chapter、Section/父级 Tag 和稳定
 `unit_id` 指定，而不是使用 PDF 页码或当前源文件行号。例如：
@@ -130,6 +246,12 @@ units: tag:001M:title, tag:001M:statement, tag:001M:p001
 - 任务认领、审校和术语决定不能混在同一个 PR；
 - 发现范围重叠时，先在 Issue/PR 中协调，不要靠 Git 冲突决定所有权。
 
+创建分支并把 Issue 编号写进首次评论或 PR：
+
+~~~bash
+git switch -c translate/categories/001m/anthropic-opus-4-8
+~~~
+
 分支格式、大小写约定和提交 trailer 以
 [`docs/git-conventions.md`](docs/git-conventions.md) 为准。提交标题使用：
 
@@ -148,7 +270,7 @@ Translation-Run: <run-id>
 Prompt-Version: <version>
 ~~~
 
-### 3. 翻译和修改什么
+### 4. 生成或改进翻译候选
 
 正式翻译数据必须是结构化记录，而不是直接编辑整份英文 TeX。模型或译者只处理
 自然语言节点；公式、环境、标签、引用、引用键、URL、宏参数和占位符由程序保护。
@@ -163,28 +285,124 @@ Prompt-Version: <version>
 解释、假设、例子、结论或译者注；不得为了中文流畅而改变量词、否定、条件、方向
 或证明逻辑。
 
+#### 选择 Harness、模型和输出通道
+
+Harness 是运行工具，model 是实际生成文本的模型，两者不能混写：
+
+~~~text
+Codex + GPT-5.6-sol
+Claude Code + Opus 4.8
+custom-api + GLM-5.3
+~~~
+
+先运行 `make list-models`，并查看 [`config/models.yml`](config/models.yml) 与
+[`config/harnesses.yml`](config/harnesses.yml)。如果实际模型或 Harness 尚未登记，
+先提交一个独立配置/Schema PR；不要把一个新模型的输出放进旧模型目录，也不要
+只写 `codex` 来代替具体模型身份。
+
+#### 准备翻译器最小输出
+
+复制认领的完整 unit batch 到忽略目录 `tmp/`，不要修改 `translation-data/units/`
+中的英文事实。让人类或模型逐条生成 `tmp/<run-id>-drafts.jsonl`；每行只包含
+[`schema/translator-output.schema.json`](schema/translator-output.schema.json)
+允许的字段。例如：
+
+~~~json
+{"unit_id":"tag:001M:statement","translation":"……<MATH_0001>……","allowed_english":[],"term_occurrences":[{"source_term":"opposite category","target_term":"对偶范畴"}],"unknown_terms":[],"notes":[]}
+~~~
+
+草稿必须覆盖该 batch 的每一个 unit，不能缺行或多行。`translation` 中的
+`<MATH_0001>`、`<REF_0001>` 等占位符必须原样保留；具体 LaTeX 只存在于 unit 的
+`placeholders` 字段，不应让模型改写。
+
 模型候选通常通过以下流程生成或装配：
 
 ~~~bash
-python stacks_zh.py stamp-units --input <units.jsonl> --output <stamped.jsonl>
+batch=categories-001M
+lane=anthropic-opus-4.8
+run_id=run-20260825-categories-001m-opus48-01
+
+# 只有新提取的 unit 才需要 stamp-units；已跟踪 unit 不要重复改写。
 python stacks_zh.py assemble \
-  --units <units.jsonl> \
-  --drafts <translator-output.jsonl> \
-  --output <candidates.jsonl> \
+  --units "translation-data/units/${batch}.jsonl" \
+  --drafts "tmp/${run_id}-drafts.jsonl" \
+  --output "translation-data/candidates/${lane}/${batch}.jsonl" \
   --lock upstream.lock \
-  --model-id <concrete-model-id> \
-  --model-lane <lane> \
-  --harness-id <codex-or-claude-code-or-custom-api> \
-  --harness-version <version-or-unknown> \
-  --model-record-id <provider:model:record> \
-  --run-id <immutable-run-id> \
-  --model-identity-confidence <runtime-resolved|owner-confirmed|declared|unknown> \
-  --reasoning-effort <value> \
-  --prompt-version <version> \
-  --policy-revision <git-revision> \
-  --glossary-revision <git-revision> \
-  --created-at <RFC3339>
+  --model-id opus-4.8 \
+  --model-lane "$lane" \
+  --harness-id claude-code \
+  --harness-version '<actual-version-or-unknown>' \
+  --model-record-id anthropic:opus-4.8:declared \
+  --run-id "$run_id" \
+  --model-identity-confidence declared \
+  --reasoning-effort '<actual-value-or-not_exposed>' \
+  --prompt-version translator-v2 \
+  --policy-revision "git:$(git rev-parse HEAD)" \
+  --glossary-revision "git:$(git log -1 --format=%H -- config/glossary.yml)" \
+  --created-at '2026-08-25T16:00:00+08:00'
 ~~~
+
+`assemble` 会补充来源 hash、上下文、模型身份和确定性 QA 状态，但不会自动创建
+run manifest。根据 [`schema/run-manifest.schema.json`](schema/run-manifest.schema.json)
+创建 `translation-data/runs/<run-id>.json`，其中 `unit_ids` 和
+`inputs.context_hashes` 的顺序必须与候选记录一致。运行
+`make provenance-check` 会验证 manifest 与所有 candidate 的精确关联。
+
+run manifest 的最小形状如下；`model` 必须来自 `config/models.yml`，不能把
+Harness 名称当成模型：
+
+~~~json
+{
+  "schema_version": 1,
+  "run_id": "run-20260825-categories-001m-opus48-01",
+  "run_kind": "translation",
+  "task_id": "categories-001M",
+  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+  "unit_ids": ["tag:001M:statement", "tag:001M:p001"],
+  "harness": {
+    "id": "claude-code",
+    "version": "<actual-version-or-unknown>",
+    "adapter_version": "stacks-harness-v1"
+  },
+  "model": {
+    "record_id": "anthropic:opus-4.8:declared",
+    "provider": "Anthropic",
+    "requested_id": "opus-4.8",
+    "resolved_id": "opus-4.8",
+    "snapshot": null,
+    "identity_confidence": "declared"
+  },
+  "inputs": {
+    "prompt_version": "translator-v2",
+    "policy_revision": "git:<policy-commit>",
+    "glossary_revision": "git:<glossary-commit>",
+    "context_hashes": ["sha256:<64-hex-context-hash>"]
+  },
+  "created_at": "2026-08-25T16:00:00+08:00",
+  "replayable": false,
+  "status": "recorded"
+}
+~~~
+
+实际文件必须让 `context_hashes` 覆盖该 run 的全部候选记录；上面只是字段示例，
+不能原样提交 `<...>` 占位值。模型下架后保留旧 manifest，使用新的 `run_id`，不要
+重写历史身份。
+
+候选文件是一个 batch 的完整快照。如果目标 lane 已有同名文件，不要覆盖或混合
+两个 run；使用新 lane、先由维护者拆分 batch，或按
+[`docs/translation-replacement.md`](docs/translation-replacement.md) 设计新的
+append-only revision。
+
+#### 改进已有译文而不是覆盖历史
+
+任何人都可以用更好的模型或人工草稿改进既有 unit，但必须：
+
+1. 保持相同 `source_commit`、`unit_id` 和来源 hash；
+2. 创建新的 `run_id`、run manifest 和候选记录；
+3. 在 PR 中提供新旧中英 diff 和改进理由；
+4. 由维护者追加 selection，而不是删除旧候选；
+5. 正式采用时用新 revision 的 `supersedes_revision_id` 指向旧 revision；
+6. 重新完成受变化影响的语言和数学审校。
 
 `schema/translator-output.schema.json` 是翻译器的最小输出合同；
 `schema/unit.schema.json` 和 `schema/candidate.schema.json` 是装配后记录的合同。
@@ -192,7 +410,42 @@ python stacks_zh.py assemble \
 只保存候选，不等于正式采用；维护者选择和新模型替换分别记录在 `selections/` 和
 translation revision 中。
 
-### 4. 提交前检查
+### 5. 贡献 Python、工具、Schema、CI 或文档
+
+代码贡献从一个描述问题和验收标准的 Issue 开始。小型文档拼写修复可以直接 PR；
+改变数据格式、状态机、来源匹配、Tag 索引、翻译 QA 或渲染语义时，必须先讨论
+兼容性和既有 108 个 batch 的迁移方案。
+
+推荐步骤：
+
+~~~bash
+git switch -c tool/<short-feature>       # 文档用 docs/，CI 用 build/
+python3 -m unittest discover -s tests -p 'test_*.py'
+make tool-test
+make workflow-check
+make qa-all                              # 影响 Schema/QA/政策时必需
+git diff --check
+~~~
+
+代码 PR 必须包含：问题复现或设计理由、测试、兼容性说明、影响的数据和文档。不要
+在工具 PR 中顺便重写翻译；机械迁移脚本、迁移后的数据和语义变更应拆成可审查的
+提交。依赖目前以 Python 标准库为主；新增依赖必须说明许可证、锁定方式和 CI 影响。
+
+### 6. 人工审校、术语和问题报告
+
+- 使用 [Review request](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=review-request.yml)
+  认领语言或数学审校，记录真实人类身份、候选 hash、run 和结论；
+- 使用 [Terminology decision](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=terminology.yml)
+  提议译名、语境和备选方案；获批前保持 `proposed`；
+- 使用 [Translation or source problem](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=translation-problem.yml)
+  报告语义、数学、LaTeX、上游或工具问题；
+- 模型和自动化不能填写 `reviewer`、`Reviewed-By`，也不能把候选提升为人工审校状态。
+
+审校不是一句 “LGTM”。语言审校必须核对逐句对应、中文表达、术语和英文残留；
+数学审校必须核对对象、条件、量词、否定、方向、唯一性、引用命题和证明逻辑。
+记录格式见 [`schema/review.schema.json`](schema/review.schema.json)。
+
+### 7. 提交前检查
 
 翻译或文档修改至少运行：
 
@@ -236,7 +489,46 @@ make pdf MODEL=<model-lane>
 生成的 TeX、PDF、日志和缓存只用于检查，不要提交。正式发布 PDF 应作为 GitHub
 Release/CI artifact 发布，并附带 release manifest，而不是放进主分支。
 
-### 5. PR 和审校
+### 8. 提交、推送和 Pull Request
+
+先只暂存本任务文件并检查暂存区，不要直接 `git add -A`：
+
+~~~bash
+git status --short
+git add translation-data/runs/<run-id>.json \
+        translation-data/candidates/<lane>/<batch>.jsonl
+git diff --cached --check
+git diff --cached --stat
+git commit
+git push -u origin HEAD
+~~~
+
+`make repo-setup` 已配置 `.gitmessage` 和 `commit-msg` hook。翻译提交的正文必须保留
+以下 trailers；把示例值换成本任务的真实值：
+
+~~~text
+translate(categories-001m): add Opus 4.8 candidate
+
+Source-Commit: a04446e57ec1fbc252a871afcec7752fb2807b14
+Translation-Unit: tag:001M
+Translation-Model: opus-4.8
+Translation-Harness: claude-code
+Translation-Run: run-20260825-categories-001m-opus48-01
+Prompt-Version: translator-v2
+~~~
+
+推送后，在 GitHub 点击 **Compare & pull request**。外部贡献者选择：
+
+~~~text
+base repository: dongyaotalk/stacks-project-zh  base: main
+head repository: <your-account>/stacks-project-zh  compare: <your-branch>
+~~~
+
+PR 必须关联认领 Issue（例如 `Closes #123`）、完整填写模板并等待
+`policy-and-data`。CI 失败时在原分支继续提交；不要关闭 PR 后创建新 PR，也不要
+修改生成文件来掩盖失败。只有仓库管理员或具备相应路径审核职责的维护者决定合并。
+
+### 9. PR 和审校门禁
 
 PR 必须使用 [PR 模板](.github/pull_request_template.md)，说明：
 
@@ -260,6 +552,72 @@ PR 必须使用 [PR 模板](.github/pull_request_template.md)，说明：
 模型、自动 QA 和候选作者不能填写 `Reviewed-By`，也不能把状态提升为人工审校
 或 `PUBLISHED`。
 
+#### 候选 PR 合并后并不会自动成为正式译文
+
+合并 candidate PR 只保存一个可追溯的模型结果，流程仍是：
+
+~~~text
+candidate PR
+  → translation-data/selections/<selection>.json
+  → review/language/ 和/或 review/mathematics/
+  → translation-data/reviewed/<revision>.json
+  → decision-check
+  → 后续 Release
+~~~
+
+维护者可以接受、拒绝或要求重跑候选；选择记录必须指向精确的
+`unit_id + run_id + translation_hash`。语言、数学和术语决定分别记录，任何新模型
+替换都追加新 run/revision，并通过 `supersedes_revision_id` 关联旧版本。候选目录
+不会自动进入 Translation Memory，也不能因为 PR 已合并就填写 `PUBLISHED`。
+
+### 10. 合并后、冲突和放弃任务
+
+- PR 合并后，在任务 Issue 中记录合并 commit 和仍需的审校/术语工作；
+- 外部贡献者重新同步 `canonical/main`，不要继续复用已经合并的任务分支；
+- 同一 batch 出现并行 PR 时，后认领者暂停，由维护者决定拆分、排队或改用另一
+  model lane；不得用手工覆盖解决；
+- 暂时无法完成时把 Issue 标为 `blocked` 并保留证据；明确放弃时说明已完成内容，
+  由维护者移除 `claimed`，使别人可以从最新 `main` 重认领；
+- 上游来源变化后不要在旧任务上偷偷切换 commit，应由独立 `sync/*` PR 生成
+  `UPSTREAM_HISTORY.md` 和 `sync-reports/` 记录，再决定哪些 unit 重新翻译或审校。
+
+### 11. 申请成为 Maintainer 或 CODEOWNER
+
+#### 两者有什么区别
+
+- **Maintainer**：长期维护某类工作，可能拥有 GitHub `Write` 或 `Maintain` 权限；
+- **CODEOWNER**：为明确路径自动请求审核，并对这些文件承担持续响应责任；
+- CODEOWNER 不是荣誉头衔，也不会自动赋予语言或数学审校资格；
+- 写入 `.github/CODEOWNERS` 本身不会授予权限。GitHub 要求 CODEOWNER 对仓库具备
+  显式 `Write` 以上权限，因此权限和文件必须由仓库管理员一起配置。
+
+任何人都能贡献，无需先申请。准备承担长期责任后，使用
+[Maintainer / CODEOWNER application](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=codeowner-application.yml)
+提交申请。申请中必须写明：
+
+1. 希望负责的精确路径，例如 `stacks_zh/**`、`docs/**` 或某个 reviewed 范围；
+2. 申请 `Maintainer`、`CODEOWNER` 或两者，以及所需最小 GitHub 权限；
+3. 能证明能力的已合并 PR、审校或术语决定；
+4. 可持续响应时间、时区和暂时离开时的交接方式；
+5. 是否具有语言、数学、工具、术语或发布方面的审校能力；
+6. 对安全、来源锁、模型溯源、许可证和利益冲突规则的确认。
+
+评估标准包括贡献质量和可审计性、对工作流的理解、审核质量、持续性和最小权限
+原则，不以提交数量单独决定。维护者可以先授予较窄路径或试行期；申请人需完成
+一次真实 review 后再扩大范围。
+
+获批必须使用独立治理 PR，同时更新：
+
+- [`MAINTAINERS.md`](MAINTAINERS.md) 中的账号、角色、路径和生效日期；
+- [`.github/CODEOWNERS`](.github/CODEOWNERS) 的精确规则；
+- GitHub collaborator/team 权限和分支 ruleset（如需）；
+- 申请 Issue 中的决定、理由、试行期和复查日期。
+
+仓库管理员 `@dongyaotalk` 拥有 PR-only administrator bypass，可以独立合并自己
+创建的 PR；GitHub 不允许作者给自己的 PR留下普通 `Approved` review。管理员
+bypass 只解决平台权限，不替代翻译、数学、术语、许可证或发布审校记录。权限可因
+长期不活跃、安全风险、反复违反范围或主动退出而通过治理 PR 缩小/撤销。
+
 ## AI 和自动化代理指南
 
 README 不是 AI 的最高优先级规则。AI 开始任务时必须先读取：
@@ -271,6 +629,57 @@ README 不是 AI 的最高优先级规则。AI 开始任务时必须先读取：
 5. 对应 Schema 和提示词版本。
 
 如果这些文件互相矛盾，AI 必须停止并报告冲突，不能自行选择较宽松的解释。
+
+### AI 快速开始：可直接交给 Agent 的任务说明
+
+在人类已经创建并认领 Issue 后，可以把下面模板交给 Codex、Claude Code 或其他
+Agent。必须替换所有 `<...>`，并把写入范围限制为一个不重叠 batch：
+
+~~~text
+仓库：dongyaotalk/stacks-project-zh
+任务 Issue：#<number>
+目标：为 <chapter>/<parent-tag> 生成可验证的结构化翻译候选，不采用为正式译文。
+
+先完整读取：AGENTS.md、WORKFLOW.md、README.md、docs/task-allocation.md、
+docs/translation-rules.md、docs/model-provenance.md、prompts/translator-v2.md，
+以及 config/workflow.yml、config/macro-policy.yml、config/glossary.yml、
+config/harnesses.yml、config/models.yml 和相关 Schema。
+
+固定来源：<40-character source commit，必须等于 upstream.lock>
+只读 unit：translation-data/units/<batch>.jsonl
+unit_ids：<完整逐行列表>
+Harness/版本：<codex|claude-code|custom-api> / <真实版本或 unknown>
+模型：<provider> / <具体 model id> / <snapshot 或 null>
+model_record_id：<config/models.yml 中的精确记录>
+run_id：<新的不可变 ID>
+model_lane：<安全目录 slug>
+prompt：translator-v2
+
+只允许写入：
+- translation-data/runs/<run-id>.json
+- translation-data/candidates/<model-lane>/<batch>.jsonl
+- 必要且已声明的 tmp/ 草稿（不得提交）
+
+禁止修改：../stacks-project、upstream.lock、translation-data/units、
+translation-data/reviewed、translation-data/selections、review/、词表、公共政策、
+生成 TeX/PDF 和任务外文件。不得使用其他未审校候选作为 Translation Memory。
+
+逐条只翻译 source_text，原样保留占位符；不得添加原文没有的解释；每次数学术语
+都用 中文（English）；未知术语写 unknown_terms。先生成 translator-output JSONL，
+再用 stacks_zh.py assemble 装配，创建匹配的 run manifest。
+
+完成前运行：
+make workflow-check
+make harvest-check
+make tool-test
+make provenance-check
+make decision-check
+make qa BATCH=<batch> MODEL=<model-lane>
+git diff --check
+
+不要自行提升 LANGUAGE_REVIEWED、MATH_REVIEWED 或 PUBLISHED，不要合并 PR。
+结束时报告写入文件、unit_id、模型/Harness/run、检查结果、未知术语和 blocker。
+~~~
 
 ### AI 任务合同
 
@@ -374,27 +783,36 @@ UNTRANSLATED
 公开发布前还必须解决 `springer-template/svmono.cls` 以及相关字体、图片和 logo
 的再分发许可问题；详见 [`docs/release.md`](docs/release.md) 和本 README 的版权说明。
 
-## GitHub 初次发布建议
+## GitHub 仓库和权限（当前状态）
 
-若本地尚未配置 remote，准备公开协作时建议按以下顺序执行：
+主仓库是公开的 [dongyaotalk/stacks-project-zh](https://github.com/dongyaotalk/stacks-project-zh)，
+默认分支为 `main`。当前平台门禁是：
 
-1. 先确认许可证、第三方文件和提交作者身份；
-2. 建立 GitHub repository，默认先设为 private；
-3. 审核并启用基础 CI，核对 CODEOWNERS 并配置分支保护；
-4. 只推送规范整理后的 `main` 和必要的活动分支，不要盲目 `git push --all`；
-5. 在 GitHub 上用 Issue 认领 Tag/unit，再通过 PR 合并；
-6. CI 和人工审校门禁稳定后，再开放更多协作者。
+- 普通贡献者不能直接 push `main`，必须使用 Pull Request；
+- `policy-and-data` 必须通过，且禁止删除和非快进更新；
+- CODEOWNER 和维护者规则以 [`.github/CODEOWNERS`](.github/CODEOWNERS) 与
+  [`MAINTAINERS.md`](MAINTAINERS.md) 为准；
+- 仓库作者 `@dongyaotalk` 可在 PR 上使用管理员 bypass 独立合并自己的 PR，
+  但 GitHub 不会把作者自审显示为普通 `Approved`；
+- 管理员 bypass 不替代候选选择、语言审校、数学审校和发布记录。
 
-远程配置示例：
+外部贡献者使用 Fork 的 `origin` 和主仓库的 `canonical`：
 
 ~~~bash
-git remote add origin git@github.com:<owner>/<repository>.git
-git push -u origin main
-git push -u origin translate/<chapter>/<tag>/<lane>
+git remote add canonical https://github.com/dongyaotalk/stacks-project-zh.git
+git fetch canonical
+git push -u origin HEAD
 ~~~
 
-不要把英文仓库设置为中文仓库的 `origin`；英文仓库只能作为独立 harvest，并由
-`upstream.lock` 验证。
+维护者直接克隆主仓库时，`origin` 就是主仓库：
+
+~~~bash
+git remote add origin git@github.com:dongyaotalk/stacks-project-zh.git
+git push -u origin translate/<chapter>/<tag>/<model>
+~~~
+
+无论哪种方式，都不要把英文 `stacks-project` 设置为中文仓库的可合并 remote；
+英文仓库只能作为相邻 harvest，并由 `upstream.lock` 和 `make harvest-check` 验证。
 
 ## 版权和非官方声明
 

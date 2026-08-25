@@ -248,13 +248,59 @@ $\text{id} : \mathcal{I} \to \mathcal{I}$ is filtered.
             "{\\it directed}, or {\\it filtered} if the following conditions hold:",
         )
 
-    def test_blocks_definition_without_exactly_one_enumerate(self) -> None:
+    def test_extracts_simple_definition_without_adjacent_proof(self) -> None:
+        source = r"""
+\begin{definition}
+\label{definition-directed}
+Let $I$ be a preordered set. We say a system (resp.\ inverse system)
+$(M_i, f_{ii'})$ is a
+{\it directed system} if $I$ is a directed set
+(Definition \ref{definition-directed-set}).
+\end{definition}
+
+\begin{proof}
+This proof is not part of a definition scope.
+\end{proof}
+"""
+
+        units = extract_tag_units(
+            source, TAGS, SOURCE_COMMIT, "test", "IJKL"
+        )
+
+        self.assertEqual(
+            [unit["unit_id"] for unit in units], ["tag:IJKL:statement"]
+        )
+        self.assertEqual(units[0]["node_kind"], "definition")
+        self.assertEqual(
+            units[0]["source_text"],
+            "Let <MATH_0001> be a preordered set. We say a system "
+            "(resp.<TEXSPACE_0001>inverse system) "
+            "<MATH_0002> is a <TEXTITOPEN_0001>directed system"
+            "<TEXTITCLOSE_0001> if <MATH_0003> is a directed set "
+            "(Definition <REF_0001>).",
+        )
+        self.assertEqual(
+            units[0]["placeholders"]["REF_0001"],
+            "\\ref{test-definition-directed-set}",
+        )
+        self.assertEqual(units[0]["placeholders"]["TEXSPACE_0001"], "\\ ")
+        self.assertEqual(
+            units[0]["render"],
+            {
+                "prefix": "\\begin{definition}\n"
+                "\\label{test-definition-directed}\n",
+                "suffix": "\n\\end{definition}\n\n",
+            },
+        )
+        self.assertEqual(validate_units(units, SOURCE_COMMIT), [])
+
+    def test_blocks_malformed_definition_enumerate(self) -> None:
         source = r"""
 \begin{definition}
 \label{definition-directed}
 Text before.
-
-Text after.
+\begin{enumerate}
+\item Text.
 \end{definition}
 """
 

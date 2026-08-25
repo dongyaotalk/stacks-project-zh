@@ -135,6 +135,21 @@ def extract_tag_units(
         source_text, "definition", local_label, full_label
     )
     if definition_matches:
+        definition_body = definition_matches[0].group("body")
+        if (
+            "\\begin{enumerate}" not in definition_body
+            and "\\end{enumerate}" not in definition_body
+        ):
+            return _extract_tagged_statement_units(
+                source_text,
+                source_commit,
+                chapter,
+                tag,
+                full_label,
+                local_label,
+                "definition",
+                include_adjacent_proof=False,
+            )
         return _extract_enumerated_environment_units(
             source_text,
             source_commit,
@@ -169,9 +184,10 @@ def extract_tag_units(
             full_label,
             local_label,
             "lemma",
+            include_adjacent_proof=True,
         )
     raise RecordError(
-        f"Tag {tag} does not select a supported Section, enumerated definition, "
+        f"Tag {tag} does not select a supported Section, definition, "
         f"or lemma ({local_label!r})"
     )
 
@@ -425,6 +441,8 @@ def _extract_tagged_statement_units(
     full_label: str,
     local_label: str,
     environment: str,
+    *,
+    include_adjacent_proof: bool,
 ) -> list[dict[str, Any]]:
     matches = _labeled_environment_matches(
         source_text, environment, local_label, full_label
@@ -496,11 +514,12 @@ def _extract_tagged_statement_units(
         else:  # pragma: no cover - internal invariant
             raise AssertionError(kind)
     units[-1]["render"]["suffix"] = f"\n\\end{{{environment}}}\n\n"
-    units.extend(
-        _extract_adjacent_simple_proof_units(
-            source_text[match.end() :], source_commit, chapter, tag
+    if include_adjacent_proof:
+        units.extend(
+            _extract_adjacent_simple_proof_units(
+                source_text[match.end() :], source_commit, chapter, tag
+            )
         )
-    )
     return [stamp_unit_hashes(unit) for unit in units]
 
 
@@ -710,6 +729,14 @@ def _protect_natural_fragment(
             position = end + 1
             continue
         if character == "\\":
+            if text.startswith("\\ ", position):
+                output.append(
+                    _add_placeholder(
+                        placeholders, counters, "TEXSPACE", "\\ "
+                    )
+                )
+                position += 2
+                continue
             command_match = re.match(r"\\([A-Za-z@]+)", text[position:])
             if command_match is None:
                 raise RecordError(

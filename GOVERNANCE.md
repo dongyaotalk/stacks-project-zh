@@ -26,8 +26,13 @@
 `docs/review-and-qa.md`；术语见 `docs/terminology.md`；发布见
 `docs/release.md`。
 
-PR 作者不能伪造审校身份。维护者本人提交翻译时，仍须满足对应风险等级的审校
-要求。
+GitHub 不允许 PR 作者批准自己的 PR。当前仓库作者 `@dongyaotalk` 是仓库管理员，
+已配置为只能在 PR 上使用管理员 bypass：作者可以独立决定是否合并，不需要额外
+维护者；但不能直接向 `main` 推送。管理员 bypass 不等同于人工语言或数学审校，
+若发布门禁要求审校，仍须在 PR 或 `review/` 记录中明确决定、范围和理由。
+
+其他贡献者的 PR 仍按普通维护者审批和 CODEOWNER 规则处理。未来加入维护者团队
+后，可移除个人 bypass 并改由团队审核。
 
 ## 维护者变更
 

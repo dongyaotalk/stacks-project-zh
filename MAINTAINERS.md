@@ -9,6 +9,11 @@
 | --- | --- | --- | --- |
 | `@dongyaotalk` | OpenSSL | 仓库、工作流、翻译协调和发布维护 | 2026-08-25 |
 
+`@dongyaotalk` 同时是 GitHub 仓库管理员。GitHub 禁止 PR 作者批准自己的 PR，
+因此仓库已为该账号启用“仅 PR 管理员 bypass”：作者可以保留 PR 审计轨迹并独立
+合并，但不能绕过 PR 直接推送 `main`。bypass 只解决平台合并权限，不替代翻译、
+语言或数学审校记录。
+
 维护者变更必须通过独立治理 PR，并同步更新：
 
 - GitHub collaborator/team 权限；

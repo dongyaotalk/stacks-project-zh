@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
+from .extractor import extract_section
 from .records import RecordError
 from .provenance import ProvenanceError, validate_repository_provenance
 from .schema_validation import validate_repository_schemas
@@ -24,6 +25,16 @@ def build_parser() -> argparse.ArgumentParser:
     stamp = subparsers.add_parser("stamp-units", help="calculate unit source hashes")
     stamp.add_argument("--input", required=True, type=Path)
     stamp.add_argument("--output", required=True, type=Path)
+
+    extract = subparsers.add_parser(
+        "extract-section",
+        help="extract one unlabelled Section from the locked English harvest",
+    )
+    extract.add_argument("--harvest", required=True, type=Path)
+    extract.add_argument("--chapter", required=True)
+    extract.add_argument("--tag", required=True)
+    extract.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+    extract.add_argument("--output", required=True, type=Path)
 
     validate = subparsers.add_parser("validate", help="run deterministic candidate QA")
     validate.add_argument("--units", required=True, type=Path)
@@ -93,6 +104,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "stamp-units":
             count = stamp_units(args.input, args.output)
             print(f"Stamped {count} unit record(s): {args.output}")
+            return 0
+        if args.command == "extract-section":
+            count = extract_section(
+                args.harvest.resolve(),
+                args.chapter,
+                args.tag,
+                args.lock.resolve(),
+                args.output,
+            )
+            print(f"Extracted {count} unit record(s): {args.output}")
             return 0
         if args.command == "validate":
             count, errors = validate_batch(args.units, args.candidates, args.lock)

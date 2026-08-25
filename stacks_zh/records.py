@@ -157,6 +157,25 @@ def validate_records(
     return errors
 
 
+def validate_units(
+    units: list[dict[str, Any]], source_commit: str
+) -> list[str]:
+    errors: list[str] = []
+    unit_ids: set[str] = set()
+    for unit in units:
+        unit_id = unit.get("unit_id")
+        location = unit.get("_record_location", "unit")
+        if not isinstance(unit_id, str) or not unit_id:
+            errors.append(f"{location}: missing non-empty unit_id")
+            continue
+        if unit_id in unit_ids:
+            errors.append(f"{location}: duplicate unit_id {unit_id}")
+            continue
+        unit_ids.add(unit_id)
+        errors.extend(_validate_unit(unit, source_commit))
+    return errors
+
+
 def restore_placeholders(
     unit: dict[str, Any],
     translation: str,

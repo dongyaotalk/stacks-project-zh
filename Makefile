@@ -4,6 +4,8 @@ ENGINE ?= xelatex
 MODEL ?= template
 PYTHON ?= python3
 BATCH ?=
+CHAPTER ?=
+TAG ?=
 MODEL_DISPLAY_NAME ?= $(MODEL) 模型候选译文
 -include config/local.mk
 HARVEST_DIR ?= ../stacks-project
@@ -91,6 +93,7 @@ WORKFLOW_FILES := \
 	scripts/migrate_permanent_tags.py \
 	scripts/upstream_diff.py \
 	stacks_zh/decisions.py \
+	stacks_zh/extractor.py \
 	stacks_zh/provenance.py \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \
@@ -103,6 +106,7 @@ BASELINE_INDEX_MANIFEST := upstream-index/manifests/$(UPSTREAM_COMMIT).json
 
 UNIT_FILE := translation-data/units/$(BATCH).jsonl
 CANDIDATE_FILE := translation-data/candidates/$(MODEL)/$(BATCH).jsonl
+EXTRACT_OUTPUT ?= translation-data/units/$(CHAPTER)-$(TAG).jsonl
 MODEL_CANDIDATE_FILES = $(sort $(wildcard translation-data/candidates/$(MODEL)/*.jsonl))
 MODEL_BATCHES = $(notdir $(basename $(MODEL_CANDIDATE_FILES)))
 MODEL_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(MODEL_BATCHES)))
@@ -120,7 +124,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check tool-test schema-check provenance-check decision-check upstream-diff extract qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -177,6 +181,16 @@ upstream-diff:
 		$(if $(NEW_CHAPTERS),--new-chapters "$(NEW_CHAPTERS)",) \
 		$(if $(UNIT_ID_MAP),--unit-id-map "$(UNIT_ID_MAP)",) \
 		--output-json "$(OUTPUT_JSON)" --output-md "$(OUTPUT_MD)"
+
+extract: harvest-check
+	@test -n "$(CHAPTER)" || { printf 'CHAPTER is required\n' >&2; exit 1; }
+	@test -n "$(TAG)" || { printf 'TAG is required\n' >&2; exit 1; }
+	$(PYTHON) stacks_zh.py extract-section \
+		--harvest "$(HARVEST_DIR)" \
+		--chapter "$(CHAPTER)" \
+		--tag "$(TAG)" \
+		--lock "$(UPSTREAM_LOCK)" \
+		--output "$(EXTRACT_OUTPUT)"
 
 validate-batch:
 	@test -n "$(BATCH)" || { printf 'BATCH is required\n' >&2; exit 1; }
@@ -302,6 +316,7 @@ help:
 		'make provenance-check           Verify candidates and model runs' \
 		'make decision-check             Verify selections, reviews and revisions' \
 		'make upstream-diff OLD_UNITS=... NEW_UNITS=... NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...' \
+		'make extract CHAPTER=<chapter> TAG=<tag>     Extract one unlabelled Section batch' \
 		'make qa BATCH=<batch> MODEL=<model>       Validate one candidate batch' \
 		'make qa-all                     Validate every tracked candidate batch' \
 		'make render MODEL=<model>                 Render all batches in a model lane' \

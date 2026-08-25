@@ -160,6 +160,7 @@ make template
 make pdf MODEL=template
 make tool-test
 make schema-check
+make extract CHAPTER=<chapter> TAG=<tag>
 make qa BATCH=<batch> MODEL=<model>
 make qa-all
 make provenance-check
@@ -169,10 +170,14 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
   OUTPUT_JSON=<path> OUTPUT_MD=<path>
 ```
 
+当前 `make extract` 只处理正文中没有嵌套 `\label` 的完整 Section：它依据锁定的
+`tags/tags` 生成稳定 Tag unit，保护行内/展示数学和锁定引用命令，并在遇到嵌套
+标签、未知文本命令、环境或 TeX 注释时失败。带定义、引理、列表、表格或其他嵌套
+结构的 Section 仍须等待解析器扩展和对应测试，不得退回手工创建 unit。
+
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 
 ```bash
-make extract CHAPTER=<chapter>
 make queue SECTION=<tag>
 make translate BATCH=<batch> MODEL=<model>
 make critic BATCH=<batch> MODEL=<model>

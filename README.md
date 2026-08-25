@@ -305,6 +305,21 @@ custom-api + GLM-5.3
 先提交一个独立配置/Schema PR；不要把一个新模型的输出放进旧模型目录，也不要
 只写 `codex` 来代替具体模型身份。
 
+#### 提取已批准的 Section unit
+
+已批准的范围准备任务如果是正文中没有嵌套 `\label` 的完整 Section，维护者可以从
+锁定 harvest 生成稳定 unit：
+
+~~~bash
+make extract CHAPTER=categories TAG=002U
+~~~
+
+命令默认写入 `translation-data/units/categories-002U.jsonl`，会验证 harvest 的
+remote、完整 commit、commit 日期和工作树，并依据 `tags/tags` 验证永久 Tag。当前
+提取器只支持 Section 标题、普通段落、行内/展示数学和锁定引用命令；遇到嵌套标签、
+未知文本命令、环境或 TeX 注释会直接失败。此时必须扩展解析器与测试，不能手工创建
+unit ID。已有 unit 不得覆盖；需要重提取时按上游同步或显式迁移流程处理。
+
 #### 准备翻译器最小输出
 
 复制认领的完整 unit batch 到忽略目录 `tmp/`，不要修改 `translation-data/units/`

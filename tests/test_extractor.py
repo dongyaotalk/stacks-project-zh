@@ -11,6 +11,7 @@ TAGS = (
     "ABCD,test-section-limit-sets\n"
     "EFGH,test-section-next\n"
     "IJKL,test-definition-directed\n"
+    "MNOP,test-lemma-directed-commutes\n"
 )
 
 
@@ -232,6 +233,80 @@ Text after.
 
         with self.assertRaisesRegex(RecordError, "nested label"):
             extract_tag_units(source, TAGS, SOURCE_COMMIT, "test", "IJKL")
+
+
+class TaggedStatementExtractorTests(unittest.TestCase):
+    def test_extracts_lemma_displays_trailing_text_and_adjacent_proof(self) -> None:
+        source = r"""
+\begin{lemma}
+\label{lemma-directed-commutes}
+Let $\mathcal{I}$ and $\mathcal{J}$ be index categories.
+In this case
+$$
+\colim_i \lim_j M_{i,j} = \lim_j \colim_i M_{i,j}.
+$$
+In particular, filtered colimits commute with finite products.
+\end{lemma}
+
+\begin{proof}
+Omitted. See Lemma \ref{lemma-other}.
+\end{proof}
+"""
+
+        units = extract_tag_units(
+            source, TAGS, SOURCE_COMMIT, "test", "MNOP"
+        )
+
+        self.assertEqual(
+            [unit["unit_id"] for unit in units],
+            [
+                "tag:MNOP:statement",
+                "tag:MNOP:display001",
+                "tag:MNOP:p001",
+                "tag:MNOP:proof-p001",
+            ],
+        )
+        self.assertEqual(
+            units[0]["render"],
+            {
+                "prefix": "\\begin{lemma}\n"
+                "\\label{test-lemma-directed-commutes}\n",
+                "suffix": "\n",
+            },
+        )
+        self.assertEqual(units[1]["source_text"], "<MATH_0001>")
+        self.assertEqual(
+            units[2]["render"]["suffix"], "\n\\end{lemma}\n\n"
+        )
+        self.assertEqual(
+            units[3]["source_text"], "Omitted. See Lemma <REF_0001>."
+        )
+        self.assertEqual(
+            units[3]["placeholders"],
+            {"REF_0001": "\\ref{test-lemma-other}"},
+        )
+        self.assertEqual(
+            units[3]["render"],
+            {
+                "prefix": "\\begin{proof}\n",
+                "suffix": "\n\\end{proof}\n\n",
+            },
+        )
+        self.assertEqual(validate_units(units, SOURCE_COMMIT), [])
+
+    def test_blocks_nested_environment_in_simple_lemma(self) -> None:
+        source = r"""
+\begin{lemma}
+\label{lemma-directed-commutes}
+Text before.
+\begin{enumerate}
+\item Nested text.
+\end{enumerate}
+\end{lemma}
+"""
+
+        with self.assertRaisesRegex(RecordError, r"unknown.*\\begin"):
+            extract_tag_units(source, TAGS, SOURCE_COMMIT, "test", "MNOP")
 
 
 if __name__ == "__main__":

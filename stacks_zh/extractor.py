@@ -131,13 +131,34 @@ def extract_tag_units(
         return extract_section_units(
             source_text, tags_text, source_commit, chapter, tag
         )
-    return _extract_enumerated_definition_units(
-        source_text,
-        source_commit,
-        chapter,
-        tag,
-        full_label,
-        local_label,
+    definition_matches = _labeled_environment_matches(
+        source_text, "definition", local_label, full_label
+    )
+    if definition_matches:
+        return _extract_enumerated_definition_units(
+            source_text,
+            source_commit,
+            chapter,
+            tag,
+            full_label,
+            local_label,
+        )
+    lemma_matches = _labeled_environment_matches(
+        source_text, "lemma", local_label, full_label
+    )
+    if lemma_matches:
+        return _extract_tagged_statement_units(
+            source_text,
+            source_commit,
+            chapter,
+            tag,
+            full_label,
+            local_label,
+            "lemma",
+        )
+    raise RecordError(
+        f"Tag {tag} does not select a supported Section, enumerated definition, "
+        f"or lemma ({local_label!r})"
     )
 
 
@@ -250,16 +271,13 @@ def _extract_enumerated_definition_units(
     full_label: str,
     local_label: str,
 ) -> list[dict[str, Any]]:
-    definition_re = re.compile(
-        r"(?ms)^\\begin\{definition\}[ \t]*\n"
-        r"\\label\{" + re.escape(local_label) + r"\}[ \t]*\n"
-        r"(?P<body>.*?)^\\end\{definition\}[ \t]*(?:\n|$)"
+    matches = _labeled_environment_matches(
+        source_text, "definition", local_label, full_label
     )
-    matches = list(definition_re.finditer(source_text))
     if len(matches) != 1:
         raise RecordError(
-            f"Tag {tag} is neither a supported Section nor exactly one "
-            f"enumerated definition ({local_label!r}); found {len(matches)}"
+            f"expected exactly one enumerated definition for Tag {tag} "
+            f"({local_label!r}); found {len(matches)}"
         )
     body = matches[0].group("body")
     if re.search(r"\\label\{", body):
@@ -349,6 +367,180 @@ def _extract_enumerated_definition_units(
         )
     )
     return [stamp_unit_hashes(unit) for unit in units]
+
+
+def _extract_tagged_statement_units(
+    source_text: str,
+    source_commit: str,
+    chapter: str,
+    tag: str,
+    full_label: str,
+    local_label: str,
+    environment: str,
+) -> list[dict[str, Any]]:
+    matches = _labeled_environment_matches(
+        source_text, environment, local_label, full_label
+    )
+    if len(matches) != 1:
+        raise RecordError(
+            f"expected exactly one {environment} for Tag {tag} "
+            f"({local_label!r}); found {len(matches)}"
+        )
+    match = matches[0]
+    body = match.group("body")
+    _validate_simple_environment_body(body, environment)
+    blocks = _split_section_body(body)
+    if not blocks or blocks[0][0] != "paragraph":
+        raise RecordError(f"tagged {environment} requires leading natural-language text")
+
+    units: list[dict[str, Any]] = []
+    paragraph_count = 0
+    display_count = 0
+    for block_index, (kind, value, structural_prefix) in enumerate(blocks):
+        if kind == "paragraph":
+            protected, placeholders = _protect_natural_text(value, chapter)
+            if block_index == 0:
+                if structural_prefix:
+                    raise RecordError(
+                        f"tagged {environment} leading text cannot have a structural prefix"
+                    )
+                unit_id = f"tag:{tag}:statement"
+                node_kind = environment
+                prefix = (
+                    f"\\begin{{{environment}}}\n"
+                    f"\\label{{{full_label}}}\n"
+                )
+            else:
+                paragraph_count += 1
+                unit_id = f"tag:{tag}:p{paragraph_count:03d}"
+                node_kind = "paragraph"
+                prefix = structural_prefix
+            units.append(
+                _make_unit(
+                    unit_id=unit_id,
+                    parent_tag=tag,
+                    chapter=chapter,
+                    node_kind=node_kind,
+                    risk_level="R3",
+                    source_commit=source_commit,
+                    source_text=protected,
+                    placeholders=placeholders,
+                    prefix=prefix,
+                    suffix="\n",
+                )
+            )
+        elif kind == "display":
+            display_count += 1
+            units.append(
+                _make_unit(
+                    unit_id=f"tag:{tag}:display{display_count:03d}",
+                    parent_tag=tag,
+                    chapter=chapter,
+                    node_kind="display_math",
+                    risk_level="R3",
+                    source_commit=source_commit,
+                    source_text="<MATH_0001>",
+                    placeholders={"MATH_0001": value},
+                    prefix=structural_prefix,
+                    suffix="\n",
+                )
+            )
+        else:  # pragma: no cover - internal invariant
+            raise AssertionError(kind)
+    units[-1]["render"]["suffix"] = f"\n\\end{{{environment}}}\n\n"
+    units.extend(
+        _extract_adjacent_simple_proof_units(
+            source_text[match.end() :], source_commit, chapter, tag
+        )
+    )
+    return [stamp_unit_hashes(unit) for unit in units]
+
+
+def _extract_adjacent_simple_proof_units(
+    tail: str,
+    source_commit: str,
+    chapter: str,
+    tag: str,
+) -> list[dict[str, Any]]:
+    proof_re = re.compile(
+        r"(?ms)\A[ \t\n]*\\begin\{proof\}[ \t]*\n"
+        r"(?P<body>.*?)^\\end\{proof\}[ \t]*(?:\n|$)"
+    )
+    match = proof_re.match(tail)
+    if match is None:
+        return []
+    body = match.group("body")
+    _validate_simple_environment_body(body, "proof")
+    blocks = _split_section_body(body)
+    if not blocks or blocks[0][0] != "paragraph":
+        raise RecordError("adjacent proof requires leading natural-language text")
+
+    units: list[dict[str, Any]] = []
+    paragraph_count = 0
+    display_count = 0
+    for block_index, (kind, value, structural_prefix) in enumerate(blocks):
+        if kind == "paragraph":
+            paragraph_count += 1
+            protected, placeholders = _protect_natural_text(value, chapter)
+            units.append(
+                _make_unit(
+                    unit_id=f"tag:{tag}:proof-p{paragraph_count:03d}",
+                    parent_tag=tag,
+                    chapter=chapter,
+                    node_kind="proof" if block_index == 0 else "proof_paragraph",
+                    risk_level="R3",
+                    source_commit=source_commit,
+                    source_text=protected,
+                    placeholders=placeholders,
+                    prefix=("\\begin{proof}\n" if block_index == 0 else "")
+                    + structural_prefix,
+                    suffix="\n",
+                )
+            )
+        elif kind == "display":
+            display_count += 1
+            units.append(
+                _make_unit(
+                    unit_id=f"tag:{tag}:proof-display{display_count:03d}",
+                    parent_tag=tag,
+                    chapter=chapter,
+                    node_kind="display_math",
+                    risk_level="R3",
+                    source_commit=source_commit,
+                    source_text="<MATH_0001>",
+                    placeholders={"MATH_0001": value},
+                    prefix=structural_prefix,
+                    suffix="\n",
+                )
+            )
+        else:  # pragma: no cover - internal invariant
+            raise AssertionError(kind)
+    units[-1]["render"]["suffix"] = "\n\\end{proof}\n\n"
+    return units
+
+
+def _validate_simple_environment_body(body: str, environment: str) -> None:
+    if re.search(r"\\label\{", body):
+        raise RecordError(f"{environment} contains a nested label")
+    if _contains_unescaped_comment(body):
+        raise RecordError(f"{environment} extraction blocks TeX comments")
+
+
+def _labeled_environment_matches(
+    source_text: str,
+    environment: str,
+    local_label: str,
+    full_label: str,
+) -> list[re.Match[str]]:
+    labels = "|".join(
+        re.escape(label) for label in dict.fromkeys((local_label, full_label))
+    )
+    pattern = re.compile(
+        rf"(?ms)^\\begin\{{{re.escape(environment)}\}}[ \t]*\n"
+        rf"\\label\{{(?:{labels})\}}[ \t]*\n"
+        rf"(?P<body>.*?)^\\end\{{{re.escape(environment)}\}}[ \t]*(?:\n|$)"
+    )
+    return list(pattern.finditer(source_text))
 
 
 def _split_section_body(body: str) -> list[tuple[str, str, str]]:

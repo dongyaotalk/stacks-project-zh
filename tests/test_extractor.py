@@ -12,6 +12,7 @@ TAGS = (
     "EFGH,test-section-next\n"
     "IJKL,test-definition-directed\n"
     "MNOP,test-lemma-directed-commutes\n"
+    "QRST,test-lemma-split-into-directed\n"
 )
 
 
@@ -299,14 +300,65 @@ Omitted. See Lemma \ref{lemma-other}.
 \begin{lemma}
 \label{lemma-directed-commutes}
 Text before.
-\begin{enumerate}
+\begin{itemize}
 \item Nested text.
-\end{enumerate}
+\end{itemize}
 \end{lemma}
 """
 
         with self.assertRaisesRegex(RecordError, r"unknown.*\\begin"):
             extract_tag_units(source, TAGS, SOURCE_COMMIT, "test", "MNOP")
+
+    def test_extracts_enumerated_lemma_and_adjacent_proof(self) -> None:
+        source = r"""
+\begin{lemma}
+\label{lemma-split-into-directed}
+Let $\mathcal{I}$ be an index category. Assume
+\begin{enumerate}
+\item for every pair of morphisms $a, b$ there is an object $z$, and
+\item for every pair of morphisms $c, d$ there is a morphism $e$.
+\end{enumerate}
+Then $\mathcal{I}$ is a union of filtered index categories.
+\end{lemma}
+
+\begin{proof}
+If $\mathcal{I}$ is empty, the result is clear.
+\end{proof}
+"""
+
+        units = extract_tag_units(
+            source, TAGS, SOURCE_COMMIT, "test", "QRST"
+        )
+
+        self.assertEqual(
+            [unit["unit_id"] for unit in units],
+            [
+                "tag:QRST:statement",
+                "tag:QRST:item001",
+                "tag:QRST:item002",
+                "tag:QRST:p001",
+                "tag:QRST:proof-p001",
+            ],
+        )
+        self.assertEqual(units[0]["node_kind"], "lemma")
+        self.assertEqual(
+            units[0]["render"]["prefix"],
+            "\\begin{lemma}\n\\label{test-lemma-split-into-directed}\n",
+        )
+        self.assertEqual(
+            units[2]["render"]["suffix"], "\n\\end{enumerate}\n"
+        )
+        self.assertEqual(
+            units[3]["render"]["suffix"], "\n\\end{lemma}\n\n"
+        )
+        self.assertEqual(
+            units[4]["render"],
+            {
+                "prefix": "\\begin{proof}\n",
+                "suffix": "\n\\end{proof}\n\n",
+            },
+        )
+        self.assertEqual(validate_units(units, SOURCE_COMMIT), [])
 
 
 if __name__ == "__main__":

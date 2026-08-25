@@ -135,18 +135,32 @@ def extract_tag_units(
         source_text, "definition", local_label, full_label
     )
     if definition_matches:
-        return _extract_enumerated_definition_units(
+        return _extract_enumerated_environment_units(
             source_text,
             source_commit,
             chapter,
             tag,
             full_label,
             local_label,
+            "definition",
+            include_adjacent_proof=False,
         )
     lemma_matches = _labeled_environment_matches(
         source_text, "lemma", local_label, full_label
     )
     if lemma_matches:
+        lemma_body = lemma_matches[0].group("body")
+        if "\\begin{enumerate}" in lemma_body or "\\end{enumerate}" in lemma_body:
+            return _extract_enumerated_environment_units(
+                source_text,
+                source_commit,
+                chapter,
+                tag,
+                full_label,
+                local_label,
+                "lemma",
+                include_adjacent_proof=True,
+            )
         return _extract_tagged_statement_units(
             source_text,
             source_commit,
@@ -263,56 +277,57 @@ def extract_section_units(
     return [stamp_unit_hashes(unit) for unit in units]
 
 
-def _extract_enumerated_definition_units(
+def _extract_enumerated_environment_units(
     source_text: str,
     source_commit: str,
     chapter: str,
     tag: str,
     full_label: str,
     local_label: str,
+    environment: str,
+    *,
+    include_adjacent_proof: bool,
 ) -> list[dict[str, Any]]:
     matches = _labeled_environment_matches(
-        source_text, "definition", local_label, full_label
+        source_text, environment, local_label, full_label
     )
     if len(matches) != 1:
         raise RecordError(
-            f"expected exactly one enumerated definition for Tag {tag} "
+            f"expected exactly one enumerated {environment} for Tag {tag} "
             f"({local_label!r}); found {len(matches)}"
         )
-    body = matches[0].group("body")
-    if re.search(r"\\label\{", body):
-        raise RecordError("enumerated definition contains a nested label")
-    if _contains_unescaped_comment(body):
-        raise RecordError("definition extraction blocks TeX comments")
+    match = matches[0]
+    body = match.group("body")
+    _validate_simple_environment_body(body, environment)
     if body.count("\\begin{enumerate}") != 1 or body.count("\\end{enumerate}") != 1:
         raise RecordError(
-            "tagged definition extraction currently requires exactly one enumerate"
+            f"tagged {environment} extraction currently requires exactly one enumerate"
         )
     before, remainder = body.split("\\begin{enumerate}", 1)
     item_text, after = remainder.split("\\end{enumerate}", 1)
     before_blocks = _split_section_body(before)
     after_blocks = _split_section_body(after)
     if len(before_blocks) != 1 or before_blocks[0][0] != "paragraph":
-        raise RecordError("enumerated definition requires one leading text node")
+        raise RecordError(f"enumerated {environment} requires one leading text node")
     if len(after_blocks) != 1 or after_blocks[0][0] != "paragraph":
-        raise RecordError("enumerated definition requires one trailing text node")
+        raise RecordError(f"enumerated {environment} requires one trailing text node")
 
     units: list[dict[str, Any]] = []
     leading_text, leading_prefix = before_blocks[0][1], before_blocks[0][2]
     if leading_prefix:
-        raise RecordError("definition leading text cannot have a structural prefix")
+        raise RecordError(f"{environment} leading text cannot have a structural prefix")
     protected, placeholders = _protect_natural_text(leading_text, chapter)
     units.append(
         _make_unit(
             unit_id=f"tag:{tag}:statement",
             parent_tag=tag,
             chapter=chapter,
-            node_kind="definition",
+            node_kind=environment,
             risk_level="R3",
             source_commit=source_commit,
             source_text=protected,
             placeholders=placeholders,
-            prefix=f"\\begin{{definition}}\n\\label{{{full_label}}}\n",
+            prefix=f"\\begin{{{environment}}}\n\\label{{{full_label}}}\n",
             suffix="\n\\begin{enumerate}\n",
         )
     )
@@ -350,7 +365,7 @@ def _extract_enumerated_definition_units(
 
     trailing_text, trailing_prefix = after_blocks[0][1], after_blocks[0][2]
     if trailing_prefix:
-        raise RecordError("definition trailing text cannot have a structural prefix")
+        raise RecordError(f"{environment} trailing text cannot have a structural prefix")
     protected, placeholders = _protect_natural_text(trailing_text, chapter)
     units.append(
         _make_unit(
@@ -363,9 +378,15 @@ def _extract_enumerated_definition_units(
             source_text=protected,
             placeholders=placeholders,
             prefix="",
-            suffix="\n\\end{definition}\n\n",
+            suffix=f"\n\\end{{{environment}}}\n\n",
         )
     )
+    if include_adjacent_proof:
+        units.extend(
+            _extract_adjacent_simple_proof_units(
+                source_text[match.end() :], source_commit, chapter, tag
+            )
+        )
     return [stamp_unit_hashes(unit) for unit in units]
 
 

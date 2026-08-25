@@ -317,10 +317,11 @@ make extract CHAPTER=categories TAG=002U
 命令默认写入 `translation-data/units/categories-002U.jsonl`，会验证 harvest 的
 remote、完整 commit、commit 日期和工作树，并依据 `tags/tags` 验证永久 Tag。当前
 提取器支持三种窄范围结构：Section 标题及第一处带标签子结构之前的无标签导言；由普通
-段落和展示数学组成，或带一个 `enumerate` 且枚举前后各一段自然语言的单个
-definition；以及同样由普通段落和展示数学组成，或带一个 `enumerate` 且枚举前后各一段
-自然语言，并可带相邻简单 proof 的单个 lemma。它保护行内/展示数学、锁定引用命令、
-TeX 控制空格和旧式 `{\it ...}` 外壳；遇到范围外的
+段落和展示数学组成，或带一个 `enumerate` 的单个 definition；以及同样由普通段落和
+展示数学组成，或带一个 `enumerate`，并可带相邻简单 proof 的单个 lemma。枚举前须有
+一段自然语言，枚举项可包含普通段落和展示数学，枚举后至多有一段自然语言。它保护
+行内/展示数学、锁定引用命令、TeX 控制空格、可翻译脚注外壳以及旧式 `{\it ...}`、
+`{\em ...}` 外壳；遇到范围外的
 嵌套标签、未知文本命令、环境或 TeX 注释会直接失败。此时必须扩展解析器与测试，
 不能手工创建 unit ID。已有 unit 不得覆盖；需要重提取时按上游同步或显式迁移流程
 处理。

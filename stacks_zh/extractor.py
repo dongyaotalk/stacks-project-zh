@@ -48,6 +48,11 @@ BOOK_LOCAL_LABEL_PREFIXES = (
 STRUCTURAL_PREFIX_RE = re.compile(
     r"(?:(?:\\medskip|\\smallskip|\\bigskip)\s*)?(?:\\noindent)\s*"
 )
+TRANSLATABLE_WRAPPERS = (
+    ("{\\it ", "TEXTITOPEN", "TEXTITCLOSE"),
+    ("{\\em ", "EMOPEN", "EMCLOSE"),
+    ("\\footnote{", "FOOTNOTEOPEN", "FOOTNOTECLOSE"),
+)
 
 
 def extract_section(
@@ -352,8 +357,12 @@ def _extract_enumerated_environment_units(
     after_blocks = _split_section_body(after)
     if len(before_blocks) != 1 or before_blocks[0][0] != "paragraph":
         raise RecordError(f"enumerated {environment} requires one leading text node")
-    if len(after_blocks) != 1 or after_blocks[0][0] != "paragraph":
-        raise RecordError(f"enumerated {environment} requires one trailing text node")
+    if len(after_blocks) > 1 or (
+        after_blocks and after_blocks[0][0] != "paragraph"
+    ):
+        raise RecordError(
+            f"enumerated {environment} permits at most one trailing text node"
+        )
 
     units: list[dict[str, Any]] = []
     leading_text, leading_prefix = before_blocks[0][1], before_blocks[0][2]
@@ -389,41 +398,36 @@ def _extract_enumerated_environment_units(
         raw_item = item_text[item_match.end() : item_end].strip()
         if not raw_item:
             raise RecordError(f"enumerate item {index} is empty")
-        protected, placeholders = _protect_natural_text(raw_item, chapter)
-        suffix = "\n\\end{enumerate}\n" if index == len(item_matches) else "\n"
+        units.extend(
+            _extract_enumerated_item_units(
+                raw_item, source_commit, chapter, tag, index
+            )
+        )
+    units[-1]["render"]["suffix"] += "\\end{enumerate}\n"
+
+    if after_blocks:
+        trailing_text, trailing_prefix = after_blocks[0][1], after_blocks[0][2]
+        if trailing_prefix:
+            raise RecordError(
+                f"{environment} trailing text cannot have a structural prefix"
+            )
+        protected, placeholders = _protect_natural_text(trailing_text, chapter)
         units.append(
             _make_unit(
-                unit_id=f"tag:{tag}:item{index:03d}",
+                unit_id=f"tag:{tag}:p001",
                 parent_tag=tag,
                 chapter=chapter,
-                node_kind="list_item",
+                node_kind="paragraph",
                 risk_level="R3",
                 source_commit=source_commit,
                 source_text=protected,
                 placeholders=placeholders,
-                prefix="\\item ",
-                suffix=suffix,
+                prefix="",
+                suffix=f"\n\\end{{{environment}}}\n\n",
             )
         )
-
-    trailing_text, trailing_prefix = after_blocks[0][1], after_blocks[0][2]
-    if trailing_prefix:
-        raise RecordError(f"{environment} trailing text cannot have a structural prefix")
-    protected, placeholders = _protect_natural_text(trailing_text, chapter)
-    units.append(
-        _make_unit(
-            unit_id=f"tag:{tag}:p001",
-            parent_tag=tag,
-            chapter=chapter,
-            node_kind="paragraph",
-            risk_level="R3",
-            source_commit=source_commit,
-            source_text=protected,
-            placeholders=placeholders,
-            prefix="",
-            suffix=f"\n\\end{{{environment}}}\n\n",
-        )
-    )
+    else:
+        units[-1]["render"]["suffix"] += f"\\end{{{environment}}}\n\n"
     if include_adjacent_proof:
         units.extend(
             _extract_adjacent_simple_proof_units(
@@ -431,6 +435,73 @@ def _extract_enumerated_environment_units(
             )
         )
     return [stamp_unit_hashes(unit) for unit in units]
+
+
+def _extract_enumerated_item_units(
+    raw_item: str,
+    source_commit: str,
+    chapter: str,
+    tag: str,
+    item_index: int,
+) -> list[dict[str, Any]]:
+    blocks = _split_section_body(raw_item)
+    if not blocks or blocks[0][0] != "paragraph":
+        raise RecordError(f"enumerate item {item_index} requires leading text")
+
+    units: list[dict[str, Any]] = []
+    paragraph_count = 0
+    display_count = 0
+    item_id = f"item{item_index:03d}"
+    for block_index, (kind, value, structural_prefix) in enumerate(blocks):
+        if kind == "paragraph":
+            protected, placeholders = _protect_natural_text(value, chapter)
+            if block_index == 0:
+                if structural_prefix:
+                    raise RecordError(
+                        f"enumerate item {item_index} leading text cannot have "
+                        "a structural prefix"
+                    )
+                unit_id = f"tag:{tag}:{item_id}"
+                node_kind = "list_item"
+                prefix = "\\item "
+            else:
+                paragraph_count += 1
+                unit_id = f"tag:{tag}:{item_id}-p{paragraph_count:03d}"
+                node_kind = "list_item_paragraph"
+                prefix = structural_prefix
+            units.append(
+                _make_unit(
+                    unit_id=unit_id,
+                    parent_tag=tag,
+                    chapter=chapter,
+                    node_kind=node_kind,
+                    risk_level="R3",
+                    source_commit=source_commit,
+                    source_text=protected,
+                    placeholders=placeholders,
+                    prefix=prefix,
+                    suffix="\n",
+                )
+            )
+        elif kind == "display":
+            display_count += 1
+            units.append(
+                _make_unit(
+                    unit_id=f"tag:{tag}:{item_id}-display{display_count:03d}",
+                    parent_tag=tag,
+                    chapter=chapter,
+                    node_kind="display_math",
+                    risk_level="R3",
+                    source_commit=source_commit,
+                    source_text="<MATH_0001>",
+                    placeholders={"MATH_0001": value},
+                    prefix=structural_prefix,
+                    suffix="\n",
+                )
+            )
+        else:  # pragma: no cover - internal invariant
+            raise AssertionError(kind)
+    return units
 
 
 def _extract_tagged_statement_units(
@@ -699,22 +770,34 @@ def _protect_natural_fragment(
     while position < len(text):
         if text.startswith("$$", position):
             raise RecordError("display math must be a separate extraction node")
-        if text.startswith("{\\it ", position):
-            group_end = _find_balanced_brace(text, position)
+        wrapper = next(
+            (
+                (prefix, open_kind, close_kind)
+                for prefix, open_kind, close_kind in TRANSLATABLE_WRAPPERS
+                if text.startswith(prefix, position)
+            ),
+            None,
+        )
+        if wrapper is not None:
+            prefix, open_kind, close_kind = wrapper
+            group_start = (
+                position if prefix.startswith("{") else position + len(prefix) - 1
+            )
+            group_end = _find_balanced_brace(text, group_start)
             output.append(
                 _add_placeholder(
-                    placeholders, counters, "TEXTITOPEN", "{\\it "
+                    placeholders, counters, open_kind, prefix
                 )
             )
             _protect_natural_fragment(
-                text[position + len("{\\it ") : group_end],
+                text[position + len(prefix) : group_end],
                 chapter,
                 output,
                 placeholders,
                 counters,
             )
             output.append(
-                _add_placeholder(placeholders, counters, "TEXTITCLOSE", "}")
+                _add_placeholder(placeholders, counters, close_kind, "}")
             )
             position = group_end + 1
             continue

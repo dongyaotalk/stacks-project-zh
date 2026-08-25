@@ -382,6 +382,70 @@ Omitted. See Lemma \ref{lemma-other}.
         )
         self.assertEqual(validate_units(units, SOURCE_COMMIT), [])
 
+    def test_extracts_enumerated_item_displays_and_translatable_wrappers(self) -> None:
+        source = r"""
+\begin{lemma}
+\label{lemma-split-into-directed}
+Let $I$ be a directed set with the following properties:
+\begin{enumerate}
+\item The transformation is
+$$
+\theta : A \longrightarrow B.
+$$
+It is an isomorphism.
+\item The dual statement also holds.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Construct $I_0$\footnote{In fact, it is partially ordered.} and call a
+category {\em finitely generated} when appropriate. Then
+$$
+x = y.
+$$
+This concludes the proof.
+\end{proof}
+"""
+
+        units = extract_tag_units(
+            source, TAGS, SOURCE_COMMIT, "test", "QRST"
+        )
+
+        self.assertEqual(
+            [unit["unit_id"] for unit in units],
+            [
+                "tag:QRST:statement",
+                "tag:QRST:item001",
+                "tag:QRST:item001-display001",
+                "tag:QRST:item001-p001",
+                "tag:QRST:item002",
+                "tag:QRST:proof-p001",
+                "tag:QRST:proof-display001",
+                "tag:QRST:proof-p002",
+            ],
+        )
+        self.assertEqual(units[1]["render"]["prefix"], "\\item ")
+        self.assertEqual(units[2]["source_text"], "<MATH_0001>")
+        self.assertEqual(
+            units[4]["render"]["suffix"],
+            "\n\\end{enumerate}\n\\end{lemma}\n\n",
+        )
+        self.assertEqual(
+            units[5]["source_text"],
+            "Construct <MATH_0001><FOOTNOTEOPEN_0001>In fact, it is "
+            "partially ordered.<FOOTNOTECLOSE_0001> and call a category "
+            "<EMOPEN_0001>finitely generated<EMCLOSE_0001> when "
+            "appropriate. Then",
+        )
+        self.assertEqual(
+            units[5]["placeholders"]["FOOTNOTEOPEN_0001"], "\\footnote{"
+        )
+        self.assertEqual(units[5]["placeholders"]["EMOPEN_0001"], "{\\em ")
+        self.assertEqual(
+            units[-1]["render"]["suffix"], "\n\\end{proof}\n\n"
+        )
+        self.assertEqual(validate_units(units, SOURCE_COMMIT), [])
+
     def test_blocks_nested_environment_in_simple_lemma(self) -> None:
         source = r"""
 \begin{lemma}

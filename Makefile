@@ -70,6 +70,7 @@ WORKFLOW_FILES := \
 	schema/selection.schema.json \
 	schema/translation-revision.schema.json \
 	schema/upstream-sync-report.schema.json \
+	schema/upstream-index-manifest.schema.json \
 	schema/translator-output.schema.json \
 	.github/pull_request_template.md \
 	.github/CODEOWNERS \
@@ -81,6 +82,7 @@ WORKFLOW_FILES := \
 	.github/ISSUE_TEMPLATE/codeowner-application.yml \
 	.github/ISSUE_TEMPLATE/unit-preparation.yml \
 	.github/workflows/ci.yml \
+	prompts/README.md \
 	prompts/translator-v1.md \
 	prompts/translator-v2.md \
 	migration/model-identity-map.json \
@@ -89,6 +91,11 @@ WORKFLOW_FILES := \
 	scripts/migrate_permanent_tags.py \
 	scripts/upstream_diff.py \
 	stacks_zh/decisions.py \
+	stacks_zh/provenance.py \
+	stacks_zh/records.py \
+	stacks_zh/schema_validation.py \
+	stacks_zh/upstream.py \
+	stacks_zh/workflow.py \
 	upstream-index/README.md
 
 BASELINE_REPORT := sync-reports/baseline-a04446e5.json
@@ -113,7 +120,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check tool-test provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -148,6 +155,12 @@ provenance-check:
 decision-check:
 	$(PYTHON) stacks_zh.py decision-check --root .
 
+schema-check:
+	$(PYTHON) stacks_zh.py schema-check --root .
+
+upstream-index-check:
+	$(PYTHON) stacks_zh.py upstream-index-check --root . --harvest "$(HARVEST_DIR)"
+
 upstream-diff:
 	@test -n "$(OLD_UNITS)" || { printf 'OLD_UNITS is required\n' >&2; exit 1; }
 	@test -n "$(NEW_UNITS)" || { printf 'NEW_UNITS is required\n' >&2; exit 1; }
@@ -171,13 +184,13 @@ validate-batch:
 	@test -f "$(UNIT_FILE)" || { printf 'Missing unit file: %s\n' "$(UNIT_FILE)" >&2; exit 1; }
 	@test -f "$(CANDIDATE_FILE)" || { printf 'Missing candidate file: %s\n' "$(CANDIDATE_FILE)" >&2; exit 1; }
 
-qa: validate-model validate-batch workflow-check harvest-check provenance-check decision-check
+qa: validate-model validate-batch workflow-check harvest-check upstream-index-check schema-check provenance-check decision-check
 	$(PYTHON) stacks_zh.py validate \
 		--units "$(UNIT_FILE)" \
 		--candidates "$(CANDIDATE_FILE)" \
 		--lock "$(UPSTREAM_LOCK)"
 
-qa-all: workflow-check harvest-check provenance-check decision-check
+qa-all: workflow-check harvest-check upstream-index-check schema-check provenance-check decision-check
 	@set -eu; count=0; \
 		for candidate in translation-data/candidates/*/*.jsonl; do \
 			model=$$(basename "$$(dirname "$$candidate")"); \
@@ -283,7 +296,9 @@ help:
 		'make repo-setup                  Configure repository-local Git rules' \
 		'make workflow-check              Verify required workflow policy files' \
 		'make harvest-check              Verify harvest remote, revision, and cleanliness' \
+		'make upstream-index-check       Verify locked Tag/chapter index and sync history' \
 		'make tool-test                  Run candidate pipeline tests' \
+		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \
 		'make decision-check             Verify selections, reviews and revisions' \
 		'make upstream-diff OLD_UNITS=... NEW_UNITS=... NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...' \
@@ -292,7 +307,7 @@ help:
 		'make render MODEL=<model>                 Render all batches in a model lane' \
 		'make template                   Build the template smoke test' \
 		'make pdf MODEL=<model>          Build springer-template/translations/<model>' \
-		'make list-models                List available translation models' \
+		'make list-models                List configured translation model lanes' \
 		'make clean MODEL=<model>        Remove one model build directory' \
 		'make distclean                  Remove all generated files' \
 		'' \

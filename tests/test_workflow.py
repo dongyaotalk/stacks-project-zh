@@ -520,6 +520,30 @@ class AssemblyTests(unittest.TestCase):
             self.assertEqual(candidate["qa_status"], "PASS")
             self.assertEqual(candidate["term_status"], "DECISION_REQUIRED")
 
+    def test_assemble_rejects_legacy_prompt_for_new_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            units = root / "units.jsonl"
+            drafts = root / "drafts.jsonl"
+            write_jsonl(units, [{"unit_id": "unused"}])
+            write_jsonl(drafts, [{"unit_id": "unused"}])
+            with self.assertRaisesRegex(RecordError, "requires translator-v2"):
+                assemble_candidates(
+                    units,
+                    drafts,
+                    root / "candidates.jsonl",
+                    lock,
+                    "test/model",
+                    "test",
+                    "not_exposed",
+                    "translator-v1",
+                    "git:policy",
+                    "git:glossary",
+                    "2026-08-25T00:00:00+08:00",
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

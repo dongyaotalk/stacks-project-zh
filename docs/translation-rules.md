@@ -116,10 +116,15 @@
 - `unit_id`；
 - 与输入段对应的中文文本；
 - 原样占位符；
+- `term_occurrences`：按译文中每个 `中文（English）` 术语的文本顺序逐项记录，重复
+  出现也必须重复记录；
 - `unknown_terms`；
 - 可选、简短、非正文的 `notes`。
 
 禁止输出完整 TeX 文档、Markdown 解释、思维过程、质量自评或自行修改的术语表。
+所有新候选必须使用 `prompts/README.md` 标记的当前生产版本；当前为
+`translator-v2`。`translator-v1` 仅供历史复现和测试兼容，`assemble` 会拒绝用它
+创建新候选。
 
 ## 9. 未翻译内容
 

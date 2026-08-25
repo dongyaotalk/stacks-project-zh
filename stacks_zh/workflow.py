@@ -14,6 +14,7 @@ from .records import (
     validate_records,
     write_jsonl,
 )
+from .schema_validation import validate_named_schema
 
 
 SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -22,6 +23,7 @@ LABEL_RE = re.compile(r"\\label\{([^{}]+)\}")
 REF_VALUE_RE = re.compile(r"^\\ref\{([^{}]+)\}$")
 TAG_RE = re.compile(r"^[0-9A-Z]+$")
 TAG_LABEL_RE = re.compile(r"^[A-Za-z0-9._:+-]+$")
+CURRENT_TRANSLATOR_PROMPT = "translator-v2"
 
 
 def stamp_units(input_path: Path, output_path: Path) -> int:
@@ -59,6 +61,11 @@ def assemble_candidates(
 ) -> int:
     if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
         raise RecordError(f"invalid model lane {model_lane!r}")
+    if prompt_version != CURRENT_TRANSLATOR_PROMPT:
+        raise RecordError(
+            f"new candidate assembly requires {CURRENT_TRANSLATOR_PROMPT}; "
+            f"{prompt_version!r} is not a current production prompt"
+        )
     source_commit = load_upstream_commit(lock_path)
     model_record_id = model_record_id or f"legacy:{model_id}:unknown"
     run_id = run_id or f"run-{model_lane}-{source_commit[:12]}"
@@ -72,6 +79,14 @@ def assemble_candidates(
             raise RecordError(f"{location}: draft requires a non-empty unit_id")
         if unit_id in draft_by_id:
             raise RecordError(f"{location}: duplicate draft unit_id {unit_id}")
+        schema_value = {
+            key: value for key, value in draft.items() if not key.startswith("_")
+        }
+        schema_errors = validate_named_schema(
+            schema_value, "translator-output.schema.json", str(location)
+        )
+        if schema_errors:
+            raise RecordError("translator output schema failed:\n" + "\n".join(schema_errors))
         draft_by_id[unit_id] = draft
     unit_ids = [unit["unit_id"] for unit in units]
     if set(draft_by_id) != set(unit_ids):

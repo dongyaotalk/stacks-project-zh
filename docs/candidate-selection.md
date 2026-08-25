@@ -18,7 +18,8 @@
 - 具体 provider/model ID；
 - model record 和 run ID；
 - prompt、policy、glossary 和 context hash；
-- 结构、术语、critic 和构建结果。
+- 结构、术语和构建结果，以及人工提供的 critic 状态。当前仓库尚未实现 critic
+  记录 Schema 和自动提升命令，不得把 `TERM_OK` 候选描述成已通过 `CRITIC_OK`。
 
 候选可以被维护者：
 
@@ -33,6 +34,7 @@
 
 ```json
 {
+  "schema_version": 1,
   "selection_id": "selection-001M-statement-003",
   "unit_id": "tag:001M:statement",
   "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",

@@ -18,4 +18,7 @@
 - `ci.md`：GitHub Actions、来源 checkout 和自动门禁合同；
 - `release.md`：正式发布门禁、版本和许可证。
 
+Prompt 版本见 [`../prompts/README.md`](../prompts/README.md)；新任务必须使用
+`translator-v2`，`translator-v1` 仅保留用于历史复现和测试兼容。
+
 修改任一规范时必须检查其他文档、`AGENTS.md` 和 `config/` 是否需要同步更新。

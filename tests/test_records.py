@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from stacks_zh.records import sha256_value, stamp_unit_hashes, validate_records
+from stacks_zh.schema_validation import validate_named_schema
 
 
 SOURCE_COMMIT = "a" * 40
@@ -55,6 +56,39 @@ def make_candidate(unit: dict[str, object]) -> dict[str, object]:
 
 
 class RecordValidationTests(unittest.TestCase):
+    def test_candidate_schema_rejects_unknown_fields(self) -> None:
+        unit = make_unit()
+        candidate = make_candidate(unit)
+        candidate.update(
+            {
+                "schema_version": 2,
+                "harness_id": "test",
+                "harness_version": "test",
+                "model_record_id": "provider:model:declared",
+                "model_snapshot": None,
+                "model_identity_confidence": "declared",
+                "run_id": "run-test",
+                "translation_hash": sha256_value(candidate["translation"]),
+                "unexpected": True,
+            }
+        )
+        errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+        self.assertTrue(any("unexpected property 'unexpected'" in error for error in errors))
+
+    def test_translator_output_schema_rejects_missing_term_occurrences(self) -> None:
+        errors = validate_named_schema(
+            {
+                "unit_id": "tag:TEST:p001",
+                "translation": "测试。",
+                "allowed_english": [],
+                "unknown_terms": [],
+                "notes": [],
+            },
+            "translator-output.schema.json",
+            "draft",
+        )
+        self.assertTrue(any("missing required property 'term_occurrences'" in error for error in errors))
+
     def test_valid_candidate_passes(self) -> None:
         unit = make_unit()
         self.assertEqual(validate_records([unit], [make_candidate(unit)], SOURCE_COMMIT), [])
@@ -163,6 +197,13 @@ class RecordValidationTests(unittest.TestCase):
         candidate["stage"] = "LANGUAGE_REVIEWED"
         errors = validate_records([unit], [candidate], SOURCE_COMMIT)
         self.assertTrue(any("cannot claim stage" in error for error in errors))
+
+    def test_candidate_cannot_claim_unimplemented_critic_gate(self) -> None:
+        unit = make_unit()
+        candidate = make_candidate(unit)
+        candidate["stage"] = "CRITIC_OK"
+        errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+        self.assertTrue(any("CRITIC_OK is unavailable" in error for error in errors))
 
 
 if __name__ == "__main__":

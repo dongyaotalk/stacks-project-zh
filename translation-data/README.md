@@ -1,8 +1,8 @@
 # Translation data
 
-本目录将保存结构化翻译事实，而不是生成后的 TeX。
+本目录保存结构化翻译事实，而不是生成后的 TeX。
 
-计划布局：
+当前布局：
 
 ```text
 translation-data/

@@ -61,7 +61,7 @@
 
 ## Source and generated files
 
-- `translation-data/` is the future structured translation source of truth.
+- `translation-data/` is the current structured translation source of truth.
 - `springer-template/translations/template/` is the tracked smoke-test manuscript.
 - Other directories under `springer-template/translations/` are generated model
   previews and must not become the translation database.
@@ -81,6 +81,8 @@
 ## Required validation
 
 - Run `make workflow-check` and `make harvest-check` for all workflow work.
+- Run `make upstream-index-check` after changing the source lock, index, or sync history.
+- Run `make schema-check` after changing structured data or any JSON Schema.
 - Run `make qa-all` after changing shared Schema, QA, workflow, or policy that
   can affect existing candidate records.
 - Run `git diff --check` before committing.

@@ -7,6 +7,8 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from .schema_validation import validate_named_schema
+
 
 HASH_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 PLACEHOLDER_NAME_RE = re.compile(r"^[A-Z][A-Z0-9]*_[0-9]{4}$")
@@ -178,6 +180,8 @@ def placeholder_names(text: str) -> list[str]:
 def _validate_unit(unit: dict[str, Any], source_commit: str) -> list[str]:
     errors: list[str] = []
     location = unit.get("_record_location", "unit")
+    schema_value = {key: value for key, value in unit.items() if not key.startswith("_")}
+    errors.extend(validate_named_schema(schema_value, "unit.schema.json", str(location)))
     required_strings = (
         "unit_id",
         "parent_tag",
@@ -270,6 +274,12 @@ def _validate_candidate(
     if schema_version not in {1, 2}:
         errors.append(f"{location}: schema_version must be 1 or 2")
     if schema_version == 2:
+        schema_value = {
+            key: value for key, value in candidate.items() if not key.startswith("_")
+        }
+        errors.extend(
+            validate_named_schema(schema_value, "candidate.schema.json", str(location))
+        )
         provenance_strings = (
             "harness_id",
             "harness_version",
@@ -396,6 +406,10 @@ def _validate_candidate(
     stage = candidate.get("stage")
     if stage not in STAGES:
         errors.append(f"{location}: invalid stage {stage!r}")
+    elif stage == "CRITIC_OK":
+        errors.append(
+            f"{location}: CRITIC_OK is unavailable until critic records and validation are implemented"
+        )
     elif STAGES.index(stage) > MODEL_MAX_STAGE:
         errors.append(f"{location}: model candidate cannot claim stage {stage}")
     if candidate.get("source_status") != "CURRENT":

@@ -35,7 +35,7 @@
 | `UNTRANSLATED → AI_DRAFT` | 翻译器 |
 | `AI_DRAFT → STRUCTURE_OK` | 确定性结构检查 |
 | `STRUCTURE_OK → TERM_OK` | 术语检查；没有待决术语 |
-| `TERM_OK → CRITIC_OK` | 批评门禁；无 blocker/critical |
+| `TERM_OK → CRITIC_OK` | 规划中的批评门禁；当前无 Schema/命令，不得执行该提升 |
 | `CRITIC_OK → LANGUAGE_REVIEWED` | 人工语言审校者 |
 | `LANGUAGE_REVIEWED → MATH_REVIEWED` | 人工数学审校者 |
 | 审校完成 → `PUBLISHED` | 发布门禁 |
@@ -77,6 +77,10 @@
 
 批评者逐条输出问题，字段包括 `unit_id`、严重性、类别、英文位置、中文位置、
 理由和最小修订建议。不得只给分数，也不得重写整个单元。
+
+本节当前是尚待实现的记录合同：仓库还没有 critic JSON Schema、`review/issues/`
+事实目录或 `make critic` 命令，因此现有候选最高仅到 `TERM_OK`。在这些接口和测试
+落地前，PR 可附人工 critic 摘要，但不能据此修改候选为 `CRITIC_OK`。
 
 严重性：
 
@@ -140,7 +144,7 @@
 - Section/Tag 和单元列表；
 - 模型与提示词版本；
 - 双语逐单元 diff；
-- 结构、术语、批评和构建摘要；
+- 结构、术语和构建摘要，以及人工提供的批评状态；
 - 新术语或待决问题；
 - 语言/数学审校状态；
 - 对应 PDF 预览位置或 CI 产物。

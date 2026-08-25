@@ -155,9 +155,11 @@ UNTRANSLATED
 make repo-setup
 make workflow-check
 make harvest-check
+make upstream-index-check
 make template
 make pdf MODEL=template
 make tool-test
+make schema-check
 make qa BATCH=<batch> MODEL=<model>
 make qa-all
 make provenance-check

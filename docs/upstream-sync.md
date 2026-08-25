@@ -132,3 +132,8 @@ report.new_commit == 同步后 upstream.lock.commit
 
 CI 必须检查 lock、新索引 manifest、机器报告和 `UPSTREAM_HISTORY.md` 相互一致。
 存在 unresolved mapping 或 `qa_result: FAIL` 时不得合并。
+
+上述合同由 `make upstream-index-check` 执行：它按
+`schema/upstream-index-manifest.schema.json` 验证锁定 commit 的 manifest，并将
+repository/commit/date、`tags/tags` hash、`chapters.tex` hash、永久 Tag 数量、同步
+报告和人类历史链接交叉核对。

@@ -1,7 +1,9 @@
 # CI 门禁合同
 
-本文定义 GitHub Actions 应实现的确定性检查。它描述的是门禁合同；在 workflow 文件
-实际提交和 GitHub 分支保护启用前，不能声称 CI 已经生效。
+本文定义 GitHub Actions 的确定性检查和门禁合同。当前仓库的
+`.github/workflows/ci.yml` 已启用，并在 PR 和 `main` push 上运行；远程 `main` 规则集
+要求 `policy-and-data` 成功后才能合并。本文中的“应”表示需要保持的仓库合同，而不是
+尚未实现的计划。
 
 ## 1. 必须检查的内容
 
@@ -11,8 +13,11 @@
 make workflow-check
 make tool-test
 make harvest-check
+make upstream-index-check
+make schema-check
 make provenance-check
 make decision-check
+make qa-all
 git diff --check
 ~~~
 
@@ -20,14 +25,16 @@ git diff --check
 NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...` 生成并审查 old/new 报告；报告出现
 未解决映射时不得更新 `upstream.lock`。
 
-翻译数据 PR 还必须对变更涉及的每个 batch 执行：
+贡献者在提交翻译数据 PR 前还应对目标 batch 执行：
 
 ~~~bash
 make qa BATCH=<batch> MODEL=<model-lane>
 ~~~
 
-修改模板、样式、Makefile 或渲染逻辑时，还必须执行目标模板或 PDF 构建。构建失败
-不能通过编辑生成的 TeX 绕过。
+当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
+changed path。修改模板、样式、Makefile 或渲染逻辑时，贡献者还必须在本地执行目标
+模板或 PDF 构建；当前 `policy-and-data` job 不安装 TeX，也不会自动完成该构建。构建
+失败不能通过编辑生成的 TeX 绕过。
 
 ## 2. 来源 checkout
 
@@ -44,7 +51,7 @@ CI 不应把英文仓库作为中文仓库的 Git remote，也不应把英文源
 
 ## 3. PR 范围和覆盖率
 
-CI 应根据 PR diff 和候选记录检查：
+完整的 PR 范围合同要求核对：
 
 - 声明的 `Translation-Unit` 与实际 unit 一致；
 - candidate 和 unit 文件成对存在；
@@ -56,8 +63,14 @@ CI 应根据 PR diff 和候选记录检查：
 - 没有修改 build、output、生成模型 TeX 或本地路径；
 - 翻译 PR 没有夹带 glossary、upstream lock 或 reviewed 汇总变更。
 
-只运行一个手工指定的 `make qa` 不足以覆盖多文件 PR；CI 需要遍历所有受影响
-batch。合并到 `main` 后还应运行全量数据检查。
+当前自动化已经检查所有已跟踪候选的 Schema 相关字段、来源、run 溯源、
+selection/review/revision 链、候选覆盖率、占位符、英文残留、术语和状态。它通过
+`make qa-all` 全量遍历候选，而不是根据 diff 只遍历受影响 batch。
+
+当前自动化尚未解析 Issue/PR 声明，也没有 changed-path/task-scope 机器人，因此
+“声明的 Translation-Unit 与实际变更一致”“翻译 PR 没有夹带其他类别修改”等
+diff 级范围仍由维护者人工核对。只运行一个手工指定的 `make qa` 不足以覆盖多文件
+PR；合并到 `main` 后的 workflow 仍会重新运行全量检查。
 
 ## 4. Artifact 和权限
 
@@ -79,15 +92,18 @@ permissions:
 
 ## 5. 分支保护
 
-GitHub 仓库配置完成后，`main` 至少需要：
+当前远程 `main-protection` 规则集实际配置为：
 
-- required status checks；
-- 禁止直接 push；
-- 至少一名维护者批准；
-- R1 以上翻译的语言审校；
-- R3 和指定 R2 的数学审校；
-- 禁止 force-push；
-- 已发布 tag 不可移动。
+- 所有普通变更通过 Pull Request；
+- 至少一项批准和 CODEOWNER 审核，并解决 review threads；
+- strict required status check `policy-and-data`；
+- 禁止删除 `main` 和非快进更新；
+- `@dongyaotalk` 仅可在 PR 上使用管理员 bypass，不能绕过 PR 直接 push。
+
+R1 以上语言审校、R3 和指定 R2 数学审校由结构化审校记录和
+`make decision-check` 负责；已发布 tag 不可移动是仓库治理政策。它们不是 GitHub
+ruleset 中独立的 reviewer/status/tag 规则，不能把平台设置描述成已经自动完成这些
+语义判断。
 
 CODEOWNERS 必须与 `MAINTAINERS.md` 一致。CODEOWNERS 审批不能替代语言或数学
 审校；对应 reviewer 仍须按风险等级留下结构化记录。
@@ -97,13 +113,21 @@ CODEOWNERS 必须与 `MAINTAINERS.md` 一致。CODEOWNERS 审批不能替代语�
 - 来源 checkout 失败：阻断，不降级到其他 commit；
 - Schema、结构或占位符失败：拒绝候选；
 - 待决术语：保持 `DECISION_REQUIRED`；
-- critic 出现 blocker/critical：不能提升阶段；
+- critic 出现 blocker/critical：不能提升阶段；当前自动 critic 门禁尚未实现，
+  `CRITIC_OK` 不得由贡献者手工宣称；
 - TeX 失败：区分数据、渲染器、模板和环境责任；
 - 许可证不确定：阻断公开 Release，但不应由自动检查猜测授权。
 
 ## 7. 当前状态
 
-本地 `make workflow-check`、`make tool-test`、`make harvest-check`、单批次
-`make provenance-check`、单批次 `make qa` 和全量 `make qa-all` 已可执行。仓库包含基础 GitHub Actions workflow，
-但只有推送到配置好的 GitHub 仓库后才会实际运行。changed-path 范围机器人、
-CODEOWNERS 已登记当前维护者；分支保护仍需在远程仓库创建并推送后配置。
+本地 `make workflow-check`、`make tool-test`、`make harvest-check`、
+`make upstream-index-check`、`make schema-check`、`make provenance-check`、
+`make decision-check` 和全量
+`make qa-all` 已可执行，且同一组
+检查由 GitHub Actions 的 `policy-and-data` job 运行。CI 当前对全部已跟踪候选 batch
+执行 QA（目前为 108 个 batch），不是按 PR changed-path 做增量筛选。
+
+当前没有自动的 changed-path/task-scope 机器人；PR 模板中的范围声明仍须由贡献者填写，
+并由维护者和 CI 的数据检查核对。R1/R2/R3 所需的语言、数学和术语审校仍通过人工
+审校记录及 `make decision-check` 作为数据门禁，不是 GitHub 自动替代的批准。管理员
+的 PR-only bypass 只解决平台合并权限，不替代这些审校记录或许可证、发布门禁。

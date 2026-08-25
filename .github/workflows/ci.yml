@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy-and-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out Chinese repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+
+      - name: Check out locked English harvest
+        shell: bash
+        run: |
+          set -euo pipefail
+          repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' upstream.lock)
+          commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' upstream.lock)
+          test -n "$repository"
+          test -n "$commit"
+          mkdir ../stacks-project
+          git -C ../stacks-project init
+          git -C ../stacks-project remote add origin "$repository"
+          git -C ../stacks-project fetch --depth 1 origin "$commit"
+          git -C ../stacks-project checkout --detach FETCH_HEAD
+
+      - name: Validate workflow and tools
+        run: |
+          make workflow-check
+          make tool-test
+          make harvest-check
+          make provenance-check
+          make decision-check
+          make qa-all
+          git diff --check

@@ -1,0 +1,93 @@
+# 参与 Stacks Project 中文翻译
+
+提交任何修改前，请先阅读 `WORKFLOW.md` 和与本次工作对应的 `docs/` 细则。使用
+GitHub 协作时还应阅读 `docs/github-collaboration.md` 和
+`docs/task-allocation.md`；术语、许可证或 CI 修改分别阅读对应细则。
+
+## 首次设置
+
+默认目录是：
+
+```text
+stacks/
+├── stacks-project/
+└── stacks-project-zh/
+```
+
+进入中文仓库后执行：
+
+```bash
+make repo-setup
+make workflow-check
+make harvest-check
+make template
+```
+
+`repo-setup` 只设置本仓库的提交模板、hooks 路径和文件模式策略，不设置姓名、
+邮箱或远程仓库。
+
+## 选择工作类型
+
+- 翻译候选：一个 Harness、一个具体模型、一个 Section、一个不重叠批次；
+- 人工审校：只修改指定单元的审校结果和必要的最小译文修订；
+- 术语决策：使用独立 `term/*` 分支和 PR；
+- 上游同步：使用独立 `sync/*` 分支，禁止夹带普通翻译；
+- 工具或模板：不得顺便改变 reviewed 译文；
+- 规范修改：必须说明迁移影响和需要重新检查的既有数据。
+
+GitHub 任务必须先在 Issue 中锁定英文 `source_commit`、chapter、Tag 和完整
+`unit_id` 列表。不要用页码或源文件行号认领任务；一个 unit 或 batch 文件同一时间
+只能有一个写入 PR。
+
+## 提交翻译
+
+翻译流水线尚未实现前，不接受把模型直接生成的整份 TeX 当作正式翻译数据。
+实现后，标准步骤是：
+
+1. 从最新 `main` 建立 `translate/<chapter>/<tag>/<model>` 分支，并在 Issue 中声明 Harness、具体模型和 run ID；
+2. 验证 harvest 与 `upstream.lock`；
+3. 生成冻结的输入包；
+4. 只写入指定 Harness、模型、run 和单元的候选数据；
+5. 运行结构、术语和语义检查；
+6. 生成双语 diff 与 QA 摘要；
+7. 按 `.gitmessage` 写原子提交；
+8. 使用 PR 模板提交，不自行提升人工审校状态。
+
+## 提交术语
+
+术语 PR 必须提供英文词形、建议中文、定义或语境、出现位置、备选方案和理由。
+术语获批前状态保持 `proposed`，不得自动批量修改现有译文。术语批准与译文应用
+应使用两个独立提交或 PR。
+
+无论词条状态如何，正文中每一次数学术语出现都必须采用 `中文（English）`
+形式；批准词条只决定中文译法，不取消保留英文的要求。
+
+## 提交审校
+
+审校者不得只给出“看起来正确”。必须记录审校层级、审校人、时间、来源 commit、
+问题分类和结论。数学审校者需要核对量词、否定、方向、条件、对象以及引用陈述。
+
+## 提交前检查
+
+所有修改至少执行：
+
+```bash
+make workflow-check
+make harvest-check
+make tool-test
+git diff --check
+```
+
+修改 LaTeX 模板、样式、Makefile 或生成逻辑时还必须执行：
+
+```bash
+make template
+```
+
+不要提交 `build/`、`output/`、`.harvest/`、`source-ir/`、生成的模型 TeX、PDF
+或 SQLite 缓存。正式 PDF 作为 Release 产物发布。
+
+## Git 要求
+
+分支名、提交类型、必需 trailers、PR 粒度和合并规则见
+`docs/git-conventions.md`。本地 hook 只能提前发现问题，CI 和人工审查仍是最终门禁。

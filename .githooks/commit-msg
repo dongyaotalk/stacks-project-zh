@@ -1,0 +1,60 @@
+#!/bin/sh
+
+set -eu
+
+message_file=$1
+subject=$(sed -n '1p' "$message_file")
+
+case "$subject" in
+	Merge\ *|Revert\ *|fixup!\ *|squash!\ *)
+		exit 0
+		;;
+esac
+
+if ! printf '%s\n' "$subject" | grep -Eq '^(translate|review|term|sync|tool|template|docs|test|build|chore)(\([a-z0-9][a-z0-9._/-]*\))?: .+'; then
+	printf '%s\n' \
+		'Invalid commit subject.' \
+		'Expected: <type>(<scope>): <summary>' \
+		'Types: translate, review, term, sync, tool, template, docs, test, build, chore' >&2
+	exit 1
+fi
+
+if test "${#subject}" -gt 100; then
+	printf 'Commit subject is longer than 100 characters.\n' >&2
+	exit 1
+fi
+
+commit_type=$(printf '%s\n' "$subject" | sed 's/[(:].*//')
+
+require_trailer() {
+	trailer=$1
+	if ! grep -Eq "^${trailer}: .+" "$message_file"; then
+		printf 'Missing required trailer: %s\n' "$trailer" >&2
+		exit 1
+	fi
+}
+
+case "$commit_type" in
+	translate)
+		require_trailer Source-Commit
+		require_trailer Translation-Unit
+		require_trailer Translation-Model
+		require_trailer Translation-Harness
+		require_trailer Translation-Run
+		require_trailer Prompt-Version
+		;;
+	review)
+		require_trailer Source-Commit
+		require_trailer Translation-Unit
+		require_trailer Reviewed-By
+		require_trailer Review-Level
+		;;
+	term)
+		require_trailer Term
+		require_trailer Decision
+		;;
+	sync)
+		require_trailer Old-Source-Commit
+		require_trailer New-Source-Commit
+		;;
+esac

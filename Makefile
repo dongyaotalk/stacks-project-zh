@@ -238,7 +238,7 @@ workflow-check:
 		fi; \
 		test -s "$(BASELINE_REPORT)" || { printf 'Missing baseline sync report: %s\n' "$(BASELINE_REPORT)" >&2; exit 1; }; \
 		test -s "$(BASELINE_INDEX_MANIFEST)" || { printf 'Missing upstream index manifest: %s\n' "$(BASELINE_INDEX_MANIFEST)" >&2; exit 1; }; \
-		rg -q '"commit": "$(UPSTREAM_COMMIT)"' "$(BASELINE_INDEX_MANIFEST)" || { printf 'Upstream index manifest does not match upstream.lock\n' >&2; exit 1; }; \
+		grep -Fq '"commit": "$(UPSTREAM_COMMIT)"' "$(BASELINE_INDEX_MANIFEST)" || { printf 'Upstream index manifest does not match upstream.lock\n' >&2; exit 1; }; \
 		printf 'Workflow policy: OK (%s required files)\n' "$(words $(WORKFLOW_FILES))"
 
 harvest-check:

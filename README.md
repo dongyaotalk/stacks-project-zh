@@ -316,7 +316,7 @@ make extract CHAPTER=categories TAG=002U
 
 命令默认写入 `translation-data/units/categories-002U.jsonl`，会验证 harvest 的
 remote、完整 commit、commit 日期和工作树，并依据 `tags/tags` 验证永久 Tag。当前
-提取器支持三种窄范围结构：没有嵌套 `\label` 的完整 Section；带一个
+提取器支持三种窄范围结构：Section 标题及第一处带标签子结构之前的无标签导言；带一个
 `enumerate`、枚举前后各一段自然语言的单个 definition；以及由普通段落和展示数学
 组成，或带一个 `enumerate` 且枚举前后各一段自然语言，并可带相邻简单 proof 的单个
 lemma。它保护行内/展示数学、锁定引用命令和旧式 `{\it ...}` 外壳；遇到范围外的

@@ -95,7 +95,41 @@ See Sections \ref{section-next} and \ref{other-section-next}.
             "Let $M : \\mathcal{I} \\to \\textit{Sets}$ be a diagram. The limit is",
         )
 
-    def test_blocks_nested_labels_until_nested_units_are_supported(self) -> None:
+    def test_extracts_prologue_before_nested_labeled_environment(self) -> None:
+        source = r"""
+\section{Limits and colimits in sets}
+\label{section-limit-sets}
+Introductory text.
+
+\begin{lemma}
+\label{lemma-nested}
+Nested statement.
+\end{lemma}
+"""
+
+        units = extract_section_units(
+            source, TAGS, SOURCE_COMMIT, "test", "ABCD"
+        )
+
+        self.assertEqual(
+            [unit["unit_id"] for unit in units],
+            ["tag:ABCD:title", "tag:ABCD:p001"],
+        )
+        self.assertEqual(units[1]["source_text"], "Introductory text.")
+        self.assertEqual(units[1]["render"]["suffix"], "\n\n")
+
+    def test_blocks_nested_label_outside_child_environment(self) -> None:
+        source = r"""
+\section{Limits and colimits in sets}
+\label{section-limit-sets}
+Introductory text.
+\label{lemma-nested}
+"""
+
+        with self.assertRaisesRegex(RecordError, "outside an identifiable"):
+            extract_section_units(source, TAGS, SOURCE_COMMIT, "test", "ABCD")
+
+    def test_title_only_prologue_keeps_section_label_rendering(self) -> None:
         source = r"""
 \section{Limits and colimits in sets}
 \label{section-limit-sets}
@@ -105,8 +139,15 @@ Nested statement.
 \end{lemma}
 """
 
-        with self.assertRaisesRegex(RecordError, "nested labels: lemma-nested"):
-            extract_section_units(source, TAGS, SOURCE_COMMIT, "test", "ABCD")
+        units = extract_section_units(
+            source, TAGS, SOURCE_COMMIT, "test", "ABCD"
+        )
+
+        self.assertEqual([unit["unit_id"] for unit in units], ["tag:ABCD:title"])
+        self.assertEqual(
+            units[0]["render"]["suffix"],
+            "}\n\\label{test-section-limit-sets}\n\n",
+        )
 
     def test_blocks_unknown_text_commands(self) -> None:
         source = r"""

@@ -205,11 +205,11 @@ def extract_section_units(
         else len(source_text)
     )
     body = source_text[section_match.end() : body_end]
-    nested_labels = re.findall(r"\\label\{([^{}]+)\}", body)
-    if nested_labels:
-        raise RecordError(
-            "Section extraction currently requires an unlabelled body; nested labels: "
-            + ", ".join(nested_labels)
+    nested_label_matches = list(re.finditer(r"(?m)^\\label\{([^{}]+)\}[ \t]*$", body))
+    truncated_for_nested_scope = bool(nested_label_matches)
+    if nested_label_matches:
+        body = _section_prologue_before_nested_scope(
+            body, nested_label_matches[0], tag
         )
     if _contains_unescaped_comment(body):
         raise RecordError("Section extraction blocks TeX comments in the selected body")
@@ -271,10 +271,37 @@ def extract_section_units(
             )
         else:  # pragma: no cover - internal invariant
             raise AssertionError(kind)
-    if len(units) == 1:
+    if len(units) == 1 and not truncated_for_nested_scope:
         raise RecordError(f"Section Tag {tag} has no extractable body")
-    units[-1]["render"]["suffix"] = "\n\n"
+    if len(units) > 1:
+        units[-1]["render"]["suffix"] = "\n\n"
     return [stamp_unit_hashes(unit) for unit in units]
+
+
+def _section_prologue_before_nested_scope(
+    body: str,
+    label_match: re.Match[str],
+    tag: str,
+) -> str:
+    environment_starts = list(
+        re.finditer(
+            r"(?m)^\\begin\{[A-Za-z*]+\}(?:\[[^\n]*\])?[ \t]*\n",
+            body[: label_match.start()],
+        )
+    )
+    if not environment_starts:
+        raise RecordError(
+            f"Section Tag {tag} has nested label {label_match.group(1)!r} "
+            "outside an identifiable child environment"
+        )
+    environment_start = environment_starts[-1]
+    between = body[environment_start.end() : label_match.start()]
+    if between.strip():
+        raise RecordError(
+            f"Section Tag {tag} has unsupported content before nested label "
+            f"{label_match.group(1)!r}"
+        )
+    return body[: environment_start.start()]
 
 
 def _extract_enumerated_environment_units(

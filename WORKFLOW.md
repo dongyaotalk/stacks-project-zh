@@ -170,7 +170,8 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
   OUTPUT_JSON=<path> OUTPUT_MD=<path>
 ```
 
-当前 `make extract` 处理三种窄范围结构：正文中没有嵌套 `\label` 的完整 Section；
+当前 `make extract` 处理三种窄范围结构：Section 标题及第一处带标签子结构之前的
+无标签导言；
 带一个 `enumerate`、枚举前后各一段自然语言的单个 definition；以及由普通段落和
 展示数学组成，或带一个 `enumerate` 且枚举前后各一段自然语言，并可带相邻简单
 proof 的单个 lemma。它依据锁定的 `tags/tags` 生成稳定 Tag unit，保护行内/展示数学、

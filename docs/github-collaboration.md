@@ -8,8 +8,7 @@
 中文仓库与英文 `stacks-project` 保持独立历史。中文仓库只配置自己的 `origin`；
 英文仓库作为独立 harvest，由 `upstream.lock` 锁定和 `make harvest-check` 验证。
 
-在许可证、第三方文件和初始分支整理完成前，建议 GitHub 仓库保持 private。首次
-公开协作前必须确认：
+当前仓库已经公开协作。任何新增镜像仓库或迁移都必须在开放协作前确认：
 
 - `upstream.lock` 指向可访问的官方英文仓库；
 - `springer-template` 内的模板、字体和图片具有明确的再分发方案；
@@ -74,20 +73,31 @@ PDF 页码、源文件行号或“这一节后半部分”等不稳定描述。�
 PR 模板是人工声明，CI 仍必须根据变更文件、候选 run manifest 和记录内容检查范围，
 不能只相信勾选框。候选合并到 `main` 只保存候选；维护者选择和正式采用另有记录。
 
-## 5. `main` 保护建议
+## 5. 当前 `main` 保护
 
-GitHub 仓库建立后，维护者应配置：
+当前 GitHub 规则集已经配置：
 
 - 禁止直接向 `main` push；
-- 必须通过 `workflow-check`、工具测试和受影响批次 QA；
-- 翻译 PR 必须有语言审校；
-- R3 或配置指定的 R2 内容必须有数学审校；
-- 术语、`upstream.lock`、Schema 和发布文件需要维护者批准；
-- 禁止 force-push 和删除已发布 tag；
-- 合并前清理调试提交和无关变更。
+- PR 必须通过 `policy-and-data`，其中包括 workflow、工具、harvest、溯源、决策
+  和全部候选 batch QA；
+- 禁止删除和非快进更新；
+- 需要 CODEOWNER 审核的普通 PR 使用 `.github/CODEOWNERS`；
+- 仓库作者 `@dongyaotalk` 具有 PR-only administrator bypass，可以独立合并自己
+  的 PR，但 GitHub 不会把作者自审显示为普通 `Approved`；
+- bypass 不替代语言、数学、术语、许可证和发布记录，具体门禁仍由本仓库数据模型
+  和审校文档决定。
 
 CODEOWNERS 必须与 `MAINTAINERS.md` 中的真实 GitHub 账号一致。维护者变更时通过
 独立治理 PR 同步修改，不能用本机 Git 身份、模型名称或虚假账号代替。
+
+申请 CODEOWNER 使用 `.github/ISSUE_TEMPLATE/codeowner-application.yml`。申请应
+指定最窄责任路径、最小权限、已合并贡献、审核能力和响应承诺。获批必须同时配置
+GitHub `Write` 或更高权限，否则 CODEOWNERS 无法作为有效的 required reviewer。
+CODEOWNER 只拥有所列路径的审核责任，不自动获得语言、数学或发布审校资格。
+
+当前仓库管理员 `@dongyaotalk` 具有 PR-only administrator bypass：可以在保留 PR
+记录的情况下独立合并，不依赖他人批准，但不能直接 push `main`。管理员 bypass
+不替代翻译、数学、术语、许可证或发布所要求的事实记录。
 
 ## 6. CI 和权限
 

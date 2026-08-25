@@ -170,10 +170,12 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
   OUTPUT_JSON=<path> OUTPUT_MD=<path>
 ```
 
-当前 `make extract` 只处理正文中没有嵌套 `\label` 的完整 Section：它依据锁定的
-`tags/tags` 生成稳定 Tag unit，保护行内/展示数学和锁定引用命令，并在遇到嵌套
-标签、未知文本命令、环境或 TeX 注释时失败。带定义、引理、列表、表格或其他嵌套
-结构的 Section 仍须等待解析器扩展和对应测试，不得退回手工创建 unit。
+当前 `make extract` 处理两种窄范围结构：正文中没有嵌套 `\label` 的完整 Section；
+以及带一个 `enumerate`、枚举前后各一段自然语言的单个 definition。它依据锁定的
+`tags/tags` 生成稳定 Tag unit，保护行内/展示数学、锁定引用命令和旧式
+`{\it ...}` 外壳，并在遇到范围外的嵌套标签、未知文本命令、环境或 TeX 注释时
+失败。其他定义、引理、列表、表格或嵌套结构仍须等待解析器扩展和对应测试，不得
+退回手工创建 unit。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 

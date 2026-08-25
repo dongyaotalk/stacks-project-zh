@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import unittest
 
-from stacks_zh.extractor import extract_section_units
+from stacks_zh.extractor import extract_section_units, extract_tag_units
 from stacks_zh.records import RecordError, restore_placeholders, validate_units
 
 
 SOURCE_COMMIT = "b" * 40
-TAGS = "ABCD,test-section-limit-sets\nEFGH,test-section-next\n"
+TAGS = (
+    "ABCD,test-section-limit-sets\n"
+    "EFGH,test-section-next\n"
+    "IJKL,test-definition-directed\n"
+)
 
 
 class SectionExtractorTests(unittest.TestCase):
@@ -133,6 +137,101 @@ Text. % source comment
                 "test",
                 "ABCD",
             )
+
+
+class TaggedDefinitionExtractorTests(unittest.TestCase):
+    def test_extracts_enumerated_definition_and_text_declarations(self) -> None:
+        source = r"""
+\begin{definition}
+\label{definition-directed}
+We say that a diagram $M : \mathcal{I} \to \mathcal{C}$ is {\it directed},
+or {\it filtered} if the following conditions hold:
+\begin{enumerate}
+\item the category $\mathcal{I}$ has at least one object,
+\item for every pair of objects $x, y$ there exists an object $z$, and
+\item for every pair of morphisms $a, b : x \to y$ there exists
+$c : y \to z$ such that $M(c \circ a) = M(c \circ b)$.
+\end{enumerate}
+We say that $\mathcal{I}$ is {\it directed} if
+$\text{id} : \mathcal{I} \to \mathcal{I}$ is filtered.
+\end{definition}
+"""
+
+        units = extract_tag_units(
+            source, TAGS, SOURCE_COMMIT, "test", "IJKL"
+        )
+
+        self.assertEqual(
+            [unit["unit_id"] for unit in units],
+            [
+                "tag:IJKL:statement",
+                "tag:IJKL:item001",
+                "tag:IJKL:item002",
+                "tag:IJKL:item003",
+                "tag:IJKL:p001",
+            ],
+        )
+        self.assertEqual(
+            units[0]["source_text"],
+            "We say that a diagram <MATH_0001> is "
+            "<TEXTITOPEN_0001>directed<TEXTITCLOSE_0001>, or "
+            "<TEXTITOPEN_0002>filtered<TEXTITCLOSE_0002> if the following "
+            "conditions hold:",
+        )
+        self.assertEqual(
+            units[0]["placeholders"],
+            {
+                "MATH_0001": "$M : \\mathcal{I} \\to \\mathcal{C}$",
+                "TEXTITOPEN_0001": "{\\it ",
+                "TEXTITCLOSE_0001": "}",
+                "TEXTITOPEN_0002": "{\\it ",
+                "TEXTITCLOSE_0002": "}",
+            },
+        )
+        self.assertEqual(
+            units[0]["render"],
+            {
+                "prefix": "\\begin{definition}\n"
+                "\\label{test-definition-directed}\n",
+                "suffix": "\n\\begin{enumerate}\n",
+            },
+        )
+        self.assertEqual(units[3]["render"]["suffix"], "\n\\end{enumerate}\n")
+        self.assertEqual(units[4]["render"]["suffix"], "\n\\end{definition}\n\n")
+        self.assertEqual(validate_units(units, SOURCE_COMMIT), [])
+        self.assertEqual(
+            restore_placeholders(units[0], units[0]["source_text"]),
+            "We say that a diagram $M : \\mathcal{I} \\to \\mathcal{C}$ is "
+            "{\\it directed}, or {\\it filtered} if the following conditions hold:",
+        )
+
+    def test_blocks_definition_without_exactly_one_enumerate(self) -> None:
+        source = r"""
+\begin{definition}
+\label{definition-directed}
+Text before.
+
+Text after.
+\end{definition}
+"""
+
+        with self.assertRaisesRegex(RecordError, "exactly one enumerate"):
+            extract_tag_units(source, TAGS, SOURCE_COMMIT, "test", "IJKL")
+
+    def test_blocks_nested_labels(self) -> None:
+        source = r"""
+\begin{definition}
+\label{definition-directed}
+Text before.
+\begin{enumerate}
+\item Text. \label{item-nested}
+\end{enumerate}
+Text after.
+\end{definition}
+"""
+
+        with self.assertRaisesRegex(RecordError, "nested label"):
+            extract_tag_units(source, TAGS, SOURCE_COMMIT, "test", "IJKL")
 
 
 if __name__ == "__main__":

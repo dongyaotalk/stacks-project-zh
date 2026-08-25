@@ -83,6 +83,64 @@ def extract_section(
     return len(units)
 
 
+def extract_tag(
+    harvest_dir: Path,
+    chapter: str,
+    tag: str,
+    lock_path: Path,
+    output_path: Path,
+) -> int:
+    """Extract one supported permanent-Tag scope from the locked harvest."""
+    if not SAFE_NAME_RE.fullmatch(chapter) or ".." in chapter:
+        raise RecordError(f"invalid chapter name {chapter!r}")
+    if not TAG_RE.fullmatch(tag):
+        raise RecordError(f"invalid permanent Tag {tag!r}")
+    if output_path.exists():
+        raise RecordError(f"refusing to overwrite existing unit batch {output_path}")
+
+    _validate_locked_harvest(harvest_dir, lock_path)
+    source_path = harvest_dir / f"{chapter}.tex"
+    tags_path = harvest_dir / "tags" / "tags"
+    try:
+        source_text = source_path.read_text(encoding="utf-8")
+        tags_text = tags_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise RecordError(f"cannot read locked extraction input: {exc}") from exc
+
+    source_commit = load_upstream_commit(lock_path)
+    units = extract_tag_units(source_text, tags_text, source_commit, chapter, tag)
+    errors = validate_units(units, source_commit)
+    if errors:
+        raise RecordError("extracted unit validation failed:\n" + "\n".join(errors))
+    write_jsonl(output_path, units)
+    return len(units)
+
+
+def extract_tag_units(
+    source_text: str,
+    tags_text: str,
+    source_commit: str,
+    chapter: str,
+    tag: str,
+) -> list[dict[str, Any]]:
+    """Dispatch a permanent Tag to one of the explicitly supported extractors."""
+    full_label = _full_label_for_tag(tags_text, chapter, tag)
+    local_label = full_label.removeprefix(f"{chapter}-")
+    section_labels = {match.group("label") for match in SECTION_RE.finditer(source_text)}
+    if local_label in section_labels or full_label in section_labels:
+        return extract_section_units(
+            source_text, tags_text, source_commit, chapter, tag
+        )
+    return _extract_enumerated_definition_units(
+        source_text,
+        source_commit,
+        chapter,
+        tag,
+        full_label,
+        local_label,
+    )
+
+
 def extract_section_units(
     source_text: str,
     tags_text: str,
@@ -91,16 +149,8 @@ def extract_section_units(
     tag: str,
 ) -> list[dict[str, Any]]:
     """Return stamped units for a deliberately narrow, policy-safe Section scope."""
-    tag_to_label = _load_tag_map(tags_text)
-    full_label = tag_to_label.get(tag)
-    if full_label is None:
-        raise RecordError(f"permanent Tag {tag!r} is absent from tags/tags")
-    chapter_prefix = f"{chapter}-"
-    if not full_label.startswith(chapter_prefix):
-        raise RecordError(
-            f"permanent Tag {tag} maps to {full_label!r}, not chapter {chapter!r}"
-        )
-    local_label = full_label.removeprefix(chapter_prefix)
+    full_label = _full_label_for_tag(tags_text, chapter, tag)
+    local_label = full_label.removeprefix(f"{chapter}-")
 
     sections = list(SECTION_RE.finditer(source_text))
     matching = [
@@ -192,6 +242,115 @@ def extract_section_units(
     return [stamp_unit_hashes(unit) for unit in units]
 
 
+def _extract_enumerated_definition_units(
+    source_text: str,
+    source_commit: str,
+    chapter: str,
+    tag: str,
+    full_label: str,
+    local_label: str,
+) -> list[dict[str, Any]]:
+    definition_re = re.compile(
+        r"(?ms)^\\begin\{definition\}[ \t]*\n"
+        r"\\label\{" + re.escape(local_label) + r"\}[ \t]*\n"
+        r"(?P<body>.*?)^\\end\{definition\}[ \t]*(?:\n|$)"
+    )
+    matches = list(definition_re.finditer(source_text))
+    if len(matches) != 1:
+        raise RecordError(
+            f"Tag {tag} is neither a supported Section nor exactly one "
+            f"enumerated definition ({local_label!r}); found {len(matches)}"
+        )
+    body = matches[0].group("body")
+    if re.search(r"\\label\{", body):
+        raise RecordError("enumerated definition contains a nested label")
+    if _contains_unescaped_comment(body):
+        raise RecordError("definition extraction blocks TeX comments")
+    if body.count("\\begin{enumerate}") != 1 or body.count("\\end{enumerate}") != 1:
+        raise RecordError(
+            "tagged definition extraction currently requires exactly one enumerate"
+        )
+    before, remainder = body.split("\\begin{enumerate}", 1)
+    item_text, after = remainder.split("\\end{enumerate}", 1)
+    before_blocks = _split_section_body(before)
+    after_blocks = _split_section_body(after)
+    if len(before_blocks) != 1 or before_blocks[0][0] != "paragraph":
+        raise RecordError("enumerated definition requires one leading text node")
+    if len(after_blocks) != 1 or after_blocks[0][0] != "paragraph":
+        raise RecordError("enumerated definition requires one trailing text node")
+
+    units: list[dict[str, Any]] = []
+    leading_text, leading_prefix = before_blocks[0][1], before_blocks[0][2]
+    if leading_prefix:
+        raise RecordError("definition leading text cannot have a structural prefix")
+    protected, placeholders = _protect_natural_text(leading_text, chapter)
+    units.append(
+        _make_unit(
+            unit_id=f"tag:{tag}:statement",
+            parent_tag=tag,
+            chapter=chapter,
+            node_kind="definition",
+            risk_level="R3",
+            source_commit=source_commit,
+            source_text=protected,
+            placeholders=placeholders,
+            prefix=f"\\begin{{definition}}\n\\label{{{full_label}}}\n",
+            suffix="\n\\begin{enumerate}\n",
+        )
+    )
+
+    item_matches = list(re.finditer(r"(?m)^\\item[ \t]+", item_text))
+    if not item_matches:
+        raise RecordError("enumerate has no list items")
+    if item_text[: item_matches[0].start()].strip():
+        raise RecordError("enumerate contains text before its first list item")
+    for index, item_match in enumerate(item_matches, start=1):
+        item_end = (
+            item_matches[index].start()
+            if index < len(item_matches)
+            else len(item_text)
+        )
+        raw_item = item_text[item_match.end() : item_end].strip()
+        if not raw_item:
+            raise RecordError(f"enumerate item {index} is empty")
+        protected, placeholders = _protect_natural_text(raw_item, chapter)
+        suffix = "\n\\end{enumerate}\n" if index == len(item_matches) else "\n"
+        units.append(
+            _make_unit(
+                unit_id=f"tag:{tag}:item{index:03d}",
+                parent_tag=tag,
+                chapter=chapter,
+                node_kind="list_item",
+                risk_level="R3",
+                source_commit=source_commit,
+                source_text=protected,
+                placeholders=placeholders,
+                prefix="\\item ",
+                suffix=suffix,
+            )
+        )
+
+    trailing_text, trailing_prefix = after_blocks[0][1], after_blocks[0][2]
+    if trailing_prefix:
+        raise RecordError("definition trailing text cannot have a structural prefix")
+    protected, placeholders = _protect_natural_text(trailing_text, chapter)
+    units.append(
+        _make_unit(
+            unit_id=f"tag:{tag}:p001",
+            parent_tag=tag,
+            chapter=chapter,
+            node_kind="paragraph",
+            risk_level="R3",
+            source_commit=source_commit,
+            source_text=protected,
+            placeholders=placeholders,
+            prefix="",
+            suffix="\n\\end{definition}\n\n",
+        )
+    )
+    return [stamp_unit_hashes(unit) for unit in units]
+
+
 def _split_section_body(body: str) -> list[tuple[str, str, str]]:
     blocks: list[tuple[str, str, str]] = []
     position = 0
@@ -263,10 +422,43 @@ def _protect_natural_text(
     output: list[str] = []
     placeholders: dict[str, str] = {}
     counters: dict[str, int] = {}
+    _protect_natural_fragment(text, chapter, output, placeholders, counters)
+    normalized = " ".join("".join(output).split())
+    if not normalized:
+        raise RecordError("natural-language node became empty after protection")
+    return normalized, placeholders
+
+
+def _protect_natural_fragment(
+    text: str,
+    chapter: str,
+    output: list[str],
+    placeholders: dict[str, str],
+    counters: dict[str, int],
+) -> None:
     position = 0
     while position < len(text):
         if text.startswith("$$", position):
             raise RecordError("display math must be a separate extraction node")
+        if text.startswith("{\\it ", position):
+            group_end = _find_balanced_brace(text, position)
+            output.append(
+                _add_placeholder(
+                    placeholders, counters, "TEXTITOPEN", "{\\it "
+                )
+            )
+            _protect_natural_fragment(
+                text[position + len("{\\it ") : group_end],
+                chapter,
+                output,
+                placeholders,
+                counters,
+            )
+            output.append(
+                _add_placeholder(placeholders, counters, "TEXTITCLOSE", "}")
+            )
+            position = group_end + 1
+            continue
         character = text[position]
         if character == "$":
             end = _find_unescaped(text, "$", position + 1)
@@ -308,11 +500,6 @@ def _protect_natural_text(
             raise RecordError("TeX comments are unsupported in natural-language nodes")
         output.append(character)
         position += 1
-
-    normalized = " ".join("".join(output).split())
-    if not normalized:
-        raise RecordError("natural-language node became empty after protection")
-    return normalized, placeholders
 
 
 def _add_placeholder(
@@ -380,6 +567,19 @@ def _load_tag_map(tags_text: str) -> dict[str, str]:
     if not tag_to_label:
         raise RecordError("tags/tags has no permanent Tag mappings")
     return tag_to_label
+
+
+def _full_label_for_tag(tags_text: str, chapter: str, tag: str) -> str:
+    tag_to_label = _load_tag_map(tags_text)
+    full_label = tag_to_label.get(tag)
+    if full_label is None:
+        raise RecordError(f"permanent Tag {tag!r} is absent from tags/tags")
+    chapter_prefix = f"{chapter}-"
+    if not full_label.startswith(chapter_prefix):
+        raise RecordError(
+            f"permanent Tag {tag} maps to {full_label!r}, not chapter {chapter!r}"
+        )
+    return full_label
 
 
 def _contains_unescaped_comment(text: str) -> bool:

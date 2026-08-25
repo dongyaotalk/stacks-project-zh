@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
-from .extractor import extract_section
+from .extractor import extract_section, extract_tag
 from .records import RecordError
 from .provenance import ProvenanceError, validate_repository_provenance
 from .schema_validation import validate_repository_schemas
@@ -35,6 +35,16 @@ def build_parser() -> argparse.ArgumentParser:
     extract.add_argument("--tag", required=True)
     extract.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
     extract.add_argument("--output", required=True, type=Path)
+
+    extract_any = subparsers.add_parser(
+        "extract-tag",
+        help="extract one supported permanent-Tag scope from the locked English harvest",
+    )
+    extract_any.add_argument("--harvest", required=True, type=Path)
+    extract_any.add_argument("--chapter", required=True)
+    extract_any.add_argument("--tag", required=True)
+    extract_any.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+    extract_any.add_argument("--output", required=True, type=Path)
 
     validate = subparsers.add_parser("validate", help="run deterministic candidate QA")
     validate.add_argument("--units", required=True, type=Path)
@@ -107,6 +117,16 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "extract-section":
             count = extract_section(
+                args.harvest.resolve(),
+                args.chapter,
+                args.tag,
+                args.lock.resolve(),
+                args.output,
+            )
+            print(f"Extracted {count} unit record(s): {args.output}")
+            return 0
+        if args.command == "extract-tag":
+            count = extract_tag(
                 args.harvest.resolve(),
                 args.chapter,
                 args.tag,

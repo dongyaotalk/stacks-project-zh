@@ -185,7 +185,7 @@ upstream-diff:
 extract: harvest-check
 	@test -n "$(CHAPTER)" || { printf 'CHAPTER is required\n' >&2; exit 1; }
 	@test -n "$(TAG)" || { printf 'TAG is required\n' >&2; exit 1; }
-	$(PYTHON) stacks_zh.py extract-section \
+	$(PYTHON) stacks_zh.py extract-tag \
 		--harvest "$(HARVEST_DIR)" \
 		--chapter "$(CHAPTER)" \
 		--tag "$(TAG)" \

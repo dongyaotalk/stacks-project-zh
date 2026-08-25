@@ -1,5 +1,14 @@
 # Translator prompt v1
 
+> **Legacy prompt — do not use for new translation runs.**
+>
+> `translator-v2` is the current production prompt and is required by all
+> configured model-candidate lanes. This file is retained only so historical
+> candidates
+> and test fixtures can be reproduced. It predates the mandatory bilingual
+> mathematical-term and `term_occurrences` contract; it must not be used to
+> create new candidates for `main`.
+
 ## Role
 
 Translate only the supplied natural-language unit from the locked Stacks Project

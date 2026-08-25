@@ -16,8 +16,7 @@
 - `main` 是可审查的协作基线；
 - CI、分支保护和审校责任已经配置。
 
-不要把 `git push --all` 当作首次发布策略。先推送整理后的 `main`，再按 Issue 和
-PR 需要推送活动分支。
+不要使用 `git push --all`；只按 Issue 和 PR 需要推送当前活动分支。
 
 ## 2. 角色
 
@@ -70,8 +69,10 @@ PDF 页码、源文件行号或“这一节后半部分”等不稳定描述。�
 审校 PR 只做审校发现所需的最小修订；术语 PR 与译文应用 PR 分离；上游同步 PR
 只处理一个旧 commit 到新 commit 的范围。
 
-PR 模板是人工声明，CI 仍必须根据变更文件、候选 run manifest 和记录内容检查范围，
-不能只相信勾选框。候选合并到 `main` 只保存候选；维护者选择和正式采用另有记录。
+PR 模板是人工声明，维护者应根据变更文件、候选 run manifest 和记录内容检查范围，
+不能只相信勾选框。当前 workflow 没有自动的 changed-path/task-scope 机器人；其余结构、
+来源、溯源和候选 QA 由 `policy-and-data` 检查。候选合并到 `main` 只保存候选；维护者
+选择和正式采用另有记录。
 
 ## 5. 当前 `main` 保护
 
@@ -111,8 +112,9 @@ permissions:
 模型调用、API key、发布令牌不能写入仓库、PR、候选 JSONL 或日志。CI 不应执行
 英文 TeX、注释、文献或链接中的指令；它们只是输入数据。
 
-CI 的正式合同见 `docs/ci.md`。仓库已经包含基础 workflow 文件，但在 GitHub 仓库
-创建、推送并成功运行前，不能把本地检查描述为 GitHub 已启用的门禁。
+CI 的正式合同见 `docs/ci.md`。当前仓库的 `.github/workflows/ci.yml` 已启用，
+`policy-and-data` 会在 PR 和 `main` push 上运行，并由远程 `main` 规则集作为必需状态
+检查。R1/R2/R3 的人工审校记录仍须按数据模型提交；GitHub 状态检查不会替代它们。
 
 ## 7. 冲突、放弃和重认领
 
@@ -132,9 +134,9 @@ Release 必须包含 manifest、PDF hash、中文仓库 commit、英文来源 co
 词表、模板和渲染器版本。发布问题通过 revert 或新修订 Release 处理，不重写已发布
 历史。
 
-## 9. 首次配置检查
+## 9. 新克隆或新 Fork 的配置检查
 
-首次连接 GitHub 前只做本地只读检查：
+新克隆、Fork 或更换凭据后先做本地只读检查：
 
 ~~~bash
 git remote -v
@@ -144,5 +146,5 @@ git config user.email
 git status --short
 ~~~
 
-确认仓库 URL 后才添加 `origin`。添加 remote 和 push 属于明确的 Git 操作；文档、
-许可证和 CI 准备工作不需要提前 push。
+确认仓库 URL 后再添加或修改 `origin`。添加 remote 和 push 属于明确的 Git 操作；
+不要因为主仓库已公开，就覆盖贡献者已有的 Fork remote。

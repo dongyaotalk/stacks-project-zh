@@ -23,6 +23,8 @@ stacks/
 make repo-setup
 make workflow-check
 make harvest-check
+make upstream-index-check
+make schema-check
 make template
 ```
 
@@ -81,7 +83,9 @@ TeX 或手工发明 unit ID。
 ```bash
 make workflow-check
 make harvest-check
+make upstream-index-check
 make tool-test
+make schema-check
 git diff --check
 ```
 

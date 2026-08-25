@@ -8,7 +8,9 @@ from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
 from .records import RecordError
 from .provenance import ProvenanceError, validate_repository_provenance
+from .schema_validation import validate_repository_schemas
 from .tool_version import VERSION
+from .upstream import validate_upstream_index
 from .workflow import assemble_candidates, render_batch, stamp_units, validate_batch
 
 
@@ -72,6 +74,15 @@ def build_parser() -> argparse.ArgumentParser:
         "decision-check", help="verify selections, human reviews and formal revisions"
     )
     decisions.add_argument("--root", type=Path, default=Path("."))
+    schemas = subparsers.add_parser(
+        "schema-check", help="validate every structured record against its JSON Schema"
+    )
+    schemas.add_argument("--root", type=Path, default=Path("."))
+    upstream_index = subparsers.add_parser(
+        "upstream-index-check", help="verify the locked Tag/chapter index and sync history"
+    )
+    upstream_index.add_argument("--root", type=Path, default=Path("."))
+    upstream_index.add_argument("--harvest", required=True, type=Path)
     return parser
 
 
@@ -144,7 +155,23 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             print("Selection and revision linkage: PASS")
             return 0
-    except (RecordError, ProvenanceError) as exc:
+        if args.command == "schema-check":
+            errors = validate_repository_schemas(args.root.resolve())
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            print("Repository JSON Schema: PASS")
+            return 0
+        if args.command == "upstream-index-check":
+            errors = validate_upstream_index(args.root.resolve(), args.harvest.resolve())
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            print("Upstream index and history: PASS")
+            return 0
+    except (RecordError, ProvenanceError, OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
     parser.error("unknown command")

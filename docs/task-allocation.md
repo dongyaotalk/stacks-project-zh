@@ -130,8 +130,9 @@ Prompt-Version: <declared version>
 - 是否修改了生成目录或不允许的共享文件；
 - 是否把一个模型候选提升成了人工审校状态。
 
-当前本地 `make qa` 验证单个 batch；GitHub CI 应对 PR 变更涉及的所有 batch 执行
-相同检查。
+当前本地 `make qa` 验证单个 batch；GitHub 的 `policy-and-data` job 对仓库内全部已跟踪
+候选 batch 执行 `make qa-all`。PR 的 changed-path/task-scope 与 Issue 声明目前仍由维护者
+人工核对，不能把 PR 模板勾选框当作自动门禁。
 
 ## 7. 任务记录最小模板
 

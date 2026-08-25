@@ -48,12 +48,15 @@
 
 - [ ] `make workflow-check`
 - [ ] `make harvest-check`
+- [ ] `make upstream-index-check`
 - [ ] `make tool-test`
+- [ ] `make schema-check`
+- [ ] `make provenance-check`（模型候选/run 变更必需）
+- [ ] `make decision-check`（selection/review/revision 变更必需）
 - [ ] `git diff --check`
-- [ ] 数据 Schema 检查（如适用）
 - [ ] 结构检查（如适用）
 - [ ] 术语检查（如适用）
-- [ ] 独立 critic（如适用）
+- [ ] 已说明独立 critic 状态（当前无自动 critic 命令）
 - [ ] `make template` 或目标 PDF 构建（模板/渲染修改必需）
 - [ ] 已检查未定义引用、重复标签、目录、链接、字体和索引
 

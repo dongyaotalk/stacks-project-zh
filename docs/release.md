@@ -39,7 +39,9 @@ zh-2026.09.r1-stacks-a04446e
 
 正式发布前必须确认：
 
-- `make workflow-check` 和 `make harvest-check` 通过；
+- `make workflow-check`、`make harvest-check`、`make upstream-index-check`、
+  `make schema-check`、`make provenance-check`、`make decision-check` 和全量
+  `make qa-all` 通过；
 - 所有包含单元 `source_status=CURRENT`；
 - R1 以上单元完成语言审校；
 - R3 及指定 R2 单元完成数学审校；

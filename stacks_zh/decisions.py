@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .records import sha256_value
+from .schema_validation import validate_named_schema
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -75,6 +76,9 @@ def validate_repository_decisions(root: Path) -> list[str]:
         except ValueError as exc:
             errors.append(str(exc))
             continue
+        errors.extend(
+            validate_named_schema(selection, "selection.schema.json", str(path))
+        )
         selection_id = selection.get("selection_id")
         if not isinstance(selection_id, str) or not selection_id:
             errors.append(f"{path}: selection_id is required")
@@ -110,6 +114,7 @@ def validate_repository_decisions(root: Path) -> list[str]:
             except ValueError as exc:
                 errors.append(str(exc))
                 continue
+            errors.extend(validate_named_schema(review, "review.schema.json", str(path)))
             review_id = review.get("review_id")
             if not isinstance(review_id, str) or not review_id:
                 errors.append(f"{path}: review_id is required")
@@ -139,6 +144,11 @@ def validate_repository_decisions(root: Path) -> list[str]:
         except ValueError as exc:
             errors.append(str(exc))
             continue
+        errors.extend(
+            validate_named_schema(
+                revision, "translation-revision.schema.json", str(path)
+            )
+        )
         revision_id = revision.get("revision_id")
         if not isinstance(revision_id, str) or not revision_id:
             errors.append(f"{path}: revision_id is required")
@@ -249,10 +259,25 @@ def validate_repository_decisions(root: Path) -> list[str]:
             if review.get("resulting_translation_hash") != revision.get("translation_hash"):
                 errors.append(f"{path}: {review_path} does not approve this revision hash")
         risk = revision.get("risk_level")
-        if risk in {"R1", "R2", "R3"} and "language" not in review_types:
-            errors.append(f"{path}: {risk} requires an approved language review")
-        if risk == "R3" and "mathematics" not in review_types:
-            errors.append(f"{path}: R3 requires an approved mathematics review")
+        required_reviews = set()
+        if selection_entry and isinstance(selection_entry[1].get("review_required"), list):
+            required_reviews.update(selection_entry[1]["review_required"])
+        if risk in {"R1", "R2", "R3"}:
+            required_reviews.add("language")
+        if risk == "R3":
+            required_reviews.add("mathematics")
+        for review_type in sorted(required_reviews - review_types):
+            errors.append(f"{path}: selection/risk requires approved {review_type} review")
+        stage = revision.get("stage")
+        if "mathematics" in required_reviews and stage == "LANGUAGE_REVIEWED":
+            errors.append(f"{path}: stage does not reflect required mathematics review")
+        if stage == "MATH_REVIEWED" and "mathematics" not in review_types:
+            errors.append(f"{path}: MATH_REVIEWED requires an approved mathematics review")
+        publication_status = revision.get("publication_status")
+        if publication_status == "RELEASED" and stage != "PUBLISHED":
+            errors.append(f"{path}: RELEASED requires stage PUBLISHED")
+        if stage == "PUBLISHED" and publication_status != "RELEASED":
+            errors.append(f"{path}: PUBLISHED requires publication_status RELEASED")
         supersedes = revision.get("supersedes_revision_id")
         if supersedes is not None:
             previous = revisions.get(str(supersedes))

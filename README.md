@@ -47,6 +47,7 @@ Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或
 | [`docs/ci.md`](docs/ci.md) | GitHub Actions 和自动门禁合同 |
 | [`docs/upstream-sync.md`](docs/upstream-sync.md) | 英文上游更新和 stale 译文处理 |
 | [`docs/model-provenance.md`](docs/model-provenance.md) | Harness、具体模型、运行和模型下架处理 |
+| [`prompts/README.md`](prompts/README.md) | Translator Prompt 版本和历史兼容规则 |
 | [`docs/candidate-selection.md`](docs/candidate-selection.md) | 候选保存、维护者选择和正式采用 |
 | [`docs/translation-replacement.md`](docs/translation-replacement.md) | 新模型替换旧译文和 revision 关系 |
 | [`docs/release.md`](docs/release.md) | PDF、Release、许可证和可复现发布 |
@@ -90,10 +91,12 @@ translation-data/
 └── retired/                     # 上游删除后的历史记录
 
 review/
-├── issues/                      # 自动问题和独立 critic 记录
 ├── language/                    # 人工语言审校记录
 └── mathematics/                 # 人工数学审校记录
 ~~~
+
+`review/issues/` 是独立 critic 记录的规划接口，当前目录、Schema 和 `make critic`
+命令尚未实现；critic 结果暂由 PR 人工说明，不能声称已有自动 critic 门禁。
 
 `translation-data/` 是翻译事实来源。`springer-template/translations/<model>/`、
 `build/`、`output/`、`.harvest/`、`source-ir/`、SQLite 索引和报告均为
@@ -156,7 +159,9 @@ git -C ../stacks-project checkout --detach "$source_commit"
 make repo-setup
 make workflow-check
 make harvest-check
+make upstream-index-check
 make tool-test
+make schema-check
 ~~~
 
 默认英文路径是 `../stacks-project`，也可以显式指定：
@@ -405,10 +410,15 @@ append-only revision。
 6. 重新完成受变化影响的语言和数学审校。
 
 `schema/translator-output.schema.json` 是翻译器的最小输出合同；
-`schema/unit.schema.json` 和 `schema/candidate.schema.json` 是装配后记录的合同。
+`schema/unit.schema.json`（v1）和 `schema/candidate.schema.json`（v2）是装配后记录的合同。
 `schema/run-manifest.schema.json` 是每次模型运行的不可变来源合同。候选进入 `main`
 只保存候选，不等于正式采用；维护者选择和新模型替换分别记录在 `selections/` 和
 translation revision 中。
+
+这些 JSON Schema 不是只供阅读的示例：`assemble`、`make schema-check`、
+`make qa-all`、`make provenance-check` 和 `make decision-check` 会执行对应机器合同。新候选装配只
+接受当前 `translator-v2`；`translator-v1` 只用于历史候选复现和兼容测试，详见
+[`prompts/README.md`](prompts/README.md)。
 
 ### 5. 贡献 Python、工具、Schema、CI 或文档
 
@@ -423,6 +433,7 @@ git switch -c tool/<short-feature>       # 文档用 docs/，CI 用 build/
 python3 -m unittest discover -s tests -p 'test_*.py'
 make tool-test
 make workflow-check
+make schema-check
 make qa-all                              # 影响 Schema/QA/政策时必需
 git diff --check
 ~~~
@@ -452,7 +463,9 @@ git diff --check
 ~~~bash
 make workflow-check
 make harvest-check
+make upstream-index-check
 make tool-test
+make schema-check
 make decision-check
 git diff --check
 ~~~
@@ -536,7 +549,7 @@ PR 必须使用 [PR 模板](.github/pull_request_template.md)，说明：
 - Chapter / Section / Tag 和 unit 列表；
 - 模型、提示词和词表版本；
 - 双语 diff；
-- 结构、术语、critic 和构建结果；
+- 结构、术语、构建结果，以及人工提供的 critic 状态（当前没有自动 critic 命令）；
 - 未决术语和 blocker/critical/major 问题；
 - 语言审校和数学审校结论。
 
@@ -671,7 +684,9 @@ translation-data/reviewed、translation-data/selections、review/、词表、公
 完成前运行：
 make workflow-check
 make harvest-check
+make upstream-index-check
 make tool-test
+make schema-check
 make provenance-check
 make decision-check
 make qa BATCH=<batch> MODEL=<model-lane>
@@ -721,7 +736,9 @@ AI 不得同时承担译者和独立 critic 的同一上下文，不得让两个
 - 不修改 `reviewed/`、词表、`upstream.lock`、公共 manifest 或生成目录，除非任务
   合同明确授权。
 
-模型候选最多只能进入 `CRITIC_OK` 阶段。模型不能声明
+当前 `assemble` 只会自动提升到 `STRUCTURE_OK` 或 `TERM_OK`；仓库尚未实现可把记录
+提升到 `CRITIC_OK` 的 critic Schema/命令。即使未来实现，模型候选最多也只能进入
+`CRITIC_OK` 阶段。模型不能声明
 `LANGUAGE_REVIEWED`、`MATH_REVIEWED` 或 `PUBLISHED`，也不能伪造人工审校者。
 
 ### AI 完成前验证
@@ -731,6 +748,8 @@ AI 必须根据任务范围运行相应检查：
 ~~~bash
 make workflow-check
 make harvest-check
+make upstream-index-check
+make schema-check
 make qa BATCH=<batch> MODEL=<model-lane>
 git diff --check
 ~~~

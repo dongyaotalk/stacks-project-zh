@@ -22,10 +22,12 @@ translation-data/
 └── retired/                     # 上游删除后的历史记录
 
 review/
-├── issues/                      # 自动和模型批评问题
 ├── language/                    # 人工语言审校记录
 └── mathematics/                 # 人工数学审校记录
 ```
+
+`review/issues/` 是自动/模型 critic 记录的规划接口；当前尚无对应 Schema、目录和
+命令，不能把它当作已经实现的数据事实。
 
 `source-ir/` 是按 `upstream.lock` 和解析器版本可重建的缓存，不提交 Git。权威
 Translation Memory 由 `translation-data/reviewed/` 生成，SQLite 只作为查询索引。
@@ -108,6 +110,9 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
 
 每个模型输出独立记录，不覆盖其他模型：
 
+下面是包含关键字段的缩略示例；`...` 只是哈希等长值的文档占位符，实际文件必须
+完整符合 `schema/candidate.schema.json`，不能直接把本例当作可提交 JSON。
+
 ```json
 {
   "schema_version": 2,
@@ -125,6 +130,7 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
   "reasoning_effort": "configured-value",
   "prompt_version": "translator-v2",
   "glossary_revision": "git:<commit>",
+  "context": {"prompt_version": "translator-v2"},
   "context_hash": "sha256:...",
   "translation": "...",
   "term_occurrences": [
@@ -133,6 +139,10 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
   "unknown_terms": [],
   "notes": [],
   "stage": "AI_DRAFT",
+  "source_status": "CURRENT",
+  "qa_status": "NOT_RUN",
+  "term_status": "CLEAR",
+  "publication_status": "CANDIDATE",
   "translation_hash": "sha256:...",
   "created_at": "RFC3339 timestamp"
 }
@@ -182,7 +192,8 @@ issues_closed
 resulting_translation_hash
 ```
 
-`review_type` 只能是配置允许的类型，例如 `language`、`mathematics`、`term`。
+`review_type` 只能是 Schema 允许的类型：`language` 或 `mathematics`。术语决定不使用
+review schema，而是通过术语 Issue/PR、`config/glossary.yml` 和独立的术语提交记录。
 审校记录引用候选 hash，防止候选改变后旧批准仍被错误沿用。
 
 正式 revision 不是只保存一个 hash 的目录索引，而是包含被采用的 `translation` 和
@@ -203,10 +214,15 @@ revision 进入正式数据。
 所有结构化记录必须带 `schema_version`。不兼容修改必须提供迁移程序、迁移测试和
 受影响文件清单；不得通过一次大规模格式化提交掩盖含义变化。
 
-版本 1 的机器可读合同位于 `schema/unit.schema.json`、
-`schema/candidate.schema.json` 和 `schema/review.schema.json`；翻译器自身的
+`schema/unit.schema.json` 和 `schema/review.schema.json` 当前是版本 1；
+`schema/candidate.schema.json` 当前合同是版本 2。运行时验证器仍保留 candidate
+版本 1 的兼容分支，仅用于历史 fixture 和迁移检查；新候选必须使用版本 2。翻译器自身的
 最小输出合同位于
 `schema/translator-output.schema.json`。`python stacks_zh.py stamp-units` 只负责
 计算确定性来源 hash；`python stacks_zh.py assemble` 将最小模型输出与来源、上下文、
 模型和状态事实装配成候选记录。`make qa BATCH=<batch> MODEL=<model>` 还会检查来源
 锁、覆盖率、占位符顺序、状态授权、上下文 hash、英文残留说明和待决术语门禁。
+`make schema-check` 对仓库内全部 unit、candidate、run、selection、review、revision 和
+sync report 执行机器合同；`make provenance-check` 和 `make decision-check` 再检查
+跨文件引用链。Schema 中的必填字段、类型、枚举、格式和 `additionalProperties`
+均是可执行约束。

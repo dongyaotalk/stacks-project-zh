@@ -4,14 +4,16 @@
 和 `run_id`；
 候选内容改变后，旧审校不得继续生效。
 
-计划布局：
+当前布局：
 
 ```text
 review/
-├── issues/
 ├── language/
 └── mathematics/
 ```
+
+`review/issues/` 是 critic 问题记录的预留目录，当前尚未实现对应 Schema 和命令，
+因此不能声称 critic 自动门禁已经落地。
 
 维护者对候选的接受、拒绝或要求修改不写入审校记录，而写入
 `translation-data/selections/`；正式采用和替换关系写入 translation revision。

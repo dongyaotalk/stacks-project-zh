@@ -62,10 +62,11 @@ reviewed 数据、`upstream.lock` 或生成模板。
 ```text
 目标：生成 sets/0008 的 model-x 候选译文并通过候选级 QA。
 范围：任务清单中的 unit_id；不得扩大到相邻 Section。
-允许写入：translation-data/candidates/model-x/sets.jsonl、review/issues/model-x/。
+允许写入：translation-data/candidates/model-x/sets.jsonl；critic 结果在 PR 中报告。
 只读：../stacks-project、upstream.lock、source-ir、config、已发布 TM。
 禁止：修改英文 harvest、词表、reviewed 数据、人工审校字段和生成 TeX。
-完成：Schema、结构、术语和 critic 检查完成，报告全部可追溯。
+完成：Schema、结构和术语检查完成；附人工 critic 状态。当前 critic Schema 和命令
+尚未实现，不得自行把候选提升为 CRITIC_OK。
 ```
 
 ## 4. 输入包冻结

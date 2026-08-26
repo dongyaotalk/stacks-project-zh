@@ -386,6 +386,17 @@ class RenderTests(unittest.TestCase):
                 "\\item \\hyperref[pending-section-phantom]{Pending {Nested}}\n",
                 encoding="utf-8",
             )
+            title_map = root / "chapter-titles.json"
+            title_map.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "titles": {"translated": "已翻译", "pending": "待填章节"},
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
 
             output = root / "rendered"
             render_batch(
@@ -396,6 +407,7 @@ class RenderTests(unittest.TestCase):
                 "test",
                 "测试候选",
                 manifest,
+                chapter_title_path=title_map,
             )
 
             contents = (output / "contents.tex").read_text(encoding="utf-8")
@@ -403,9 +415,10 @@ class RenderTests(unittest.TestCase):
                 contents.index("chapters/translated"), contents.index("chapters/pending")
             )
             pending = (output / "chapters" / "pending.tex").read_text(encoding="utf-8")
-            self.assertIn("\\chapter{Pending {Nested}（待译）}", pending)
+            self.assertIn("\\chapter{待填章节（Pending {Nested}）}", pending)
             self.assertIn("\\label{pending-section-phantom}", pending)
-            self.assertIn("正文待翻译", pending)
+            self.assertNotIn("待译", pending)
+            self.assertNotIn("正文", pending)
 
     def test_render_orders_same_chapter_batches_by_harvest_labels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

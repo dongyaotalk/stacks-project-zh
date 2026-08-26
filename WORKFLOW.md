@@ -174,8 +174,9 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
 `make init-chapters` 为锁定上游的全部章节生成 Section 级任务骨架，
 `make chapter-template-check` 验证骨架未过期。骨架只提供稳定坐标、建议 batch 和
 准备状态；它不代替下列尚未实现的完整章节提取接口。`make render MODEL=<model>`
-会同时为没有候选译文的章节生成可编译占位骨架，使预览 PDF 保留上游的完整章节顺序
-和章节标签；这些生成文件不是译文编辑入口。
+会同时为没有候选译文的章节生成使用 `config/chapter-titles.json` 中双语标题的空白、
+可编译骨架，使预览 PDF 保留上游的完整章节顺序和章节标签；骨架不显示“待译”正文，
+这些生成文件也不是译文编辑入口。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 

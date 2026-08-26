@@ -80,6 +80,7 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--model-lane", required=True)
     render.add_argument("--display-name", required=True)
     render.add_argument("--chapter-manifest", type=Path)
+    render.add_argument("--chapter-title-map", type=Path)
     render.add_argument("--chapter-source-dir", type=Path)
     render.add_argument("--tags-file", type=Path)
     render.add_argument("--output-dir", type=Path)
@@ -180,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.chapter_manifest,
                 args.tags_file,
                 args.chapter_source_dir,
+                args.chapter_title_map,
             )
             print(f"Rendered {len(written)} file(s): {output_dir}")
             return 0

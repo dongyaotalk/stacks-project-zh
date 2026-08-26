@@ -55,7 +55,8 @@ def _command_arguments(text: str, pattern: re.Pattern[str]) -> Iterator[tuple[st
         yield _braced_argument(text, opening_brace)
 
 
-def _manifest_chapters(chapters_text: str) -> list[tuple[str, str]]:
+def manifest_chapters(chapters_text: str) -> list[tuple[str, str]]:
+    """Return canonical chapter slugs and LaTeX-safe display titles."""
     chapters: list[tuple[str, str]] = []
     seen: set[str] = set()
     for line in chapters_text.splitlines():
@@ -204,7 +205,7 @@ def build_chapter_templates(
         tags_text = tags_path.read_text(encoding="utf-8")
     except OSError as exc:
         raise RecordError(f"cannot read locked chapter-template input: {exc}") from exc
-    chapters = _manifest_chapters(chapters_text)
+    chapters = manifest_chapters(chapters_text)
     tags = _tag_by_label(tags_text)
     existing = _existing_unit_files(root, units_dir)
 

@@ -12,3 +12,7 @@
 这些 JSON 不是译文容器，不要手工编辑。使用 `make init-chapters` 从锁定 harvest 和
 现有 unit 重新生成，使用 `make chapter-template-check` 验证它们没有过期。译文仍写入
 `translation-data/candidates/<model-lane>/`，并遵守 `docs/task-allocation.md`。
+
+模型预览渲染会读取同一份上游章节清单：已有候选的章节渲染候选内容，其余章节生成
+带永久章节标签的“正文待翻译”LaTeX 骨架。因此完整 PDF 可展示全部章节，但生成目录
+`springer-template/translations/<model-lane>/` 仍是可覆盖的预览产物，不应直接填入译文。

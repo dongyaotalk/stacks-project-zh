@@ -14,6 +14,7 @@
 
 ```text
 translation-data/
+├── chapter-templates/           # 全章节 Section 任务骨架，不保存译文
 ├── units/                       # 稳定单元索引，不复制整份 TeX
 ├── runs/<run-id>.json           # Harness、具体模型和冻结输入的 manifest
 ├── candidates/<model-lane>/     # 各模型候选 JSONL
@@ -31,6 +32,11 @@ review/
 
 `source-ir/` 是按 `upstream.lock` 和解析器版本可重建的缓存，不提交 Git。权威
 Translation Memory 由 `translation-data/reviewed/` 生成，SQLite 只作为查询索引。
+
+`chapter-templates/` 是从锁定 `chapters.tex`、章源文件、`tags/tags` 和现有 unit
+确定性生成的协作索引。每章一个文件，每个 Section 记录永久 Tag、建议 batch/unit
+路径及 `READY`、`UNPREPARED` 或 `BLOCKED_NO_TAG` 状态。它既不包含译文，也不把
+尚未提取的范围伪装成可翻译 unit；更新后必须通过 `make chapter-template-check`。
 
 ## 2. 稳定翻译单元
 

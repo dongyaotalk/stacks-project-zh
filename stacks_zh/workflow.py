@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from typing import Iterable
 
+from .chapter_templates import manifest_chapters
 from .records import (
     RecordError,
     load_jsonl,
@@ -18,7 +19,6 @@ from .schema_validation import validate_named_schema
 
 
 SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
-CHAPTER_LINK_RE = re.compile(r"\\hyperref\[([A-Za-z0-9._-]+)-section-phantom\]")
 LABEL_RE = re.compile(r"\\label\{([^{}]+)\}")
 REF_VALUE_RE = re.compile(r"^\\ref\{([^{}]+)\}$")
 TAG_RE = re.compile(r"^[0-9A-Z]+$")
@@ -272,16 +272,15 @@ def render_batch(
         render = unit["render"]
         chapter_chunks[chapter].append(render["prefix"] + translated + render["suffix"])
 
+    chapter_titles: dict[str, str] = {}
     if chapter_manifest_path is not None:
         try:
             manifest_text = chapter_manifest_path.read_text(encoding="utf-8")
         except OSError as exc:
             raise RecordError(f"cannot read chapter manifest {chapter_manifest_path}: {exc}") from exc
-        canonical_order = CHAPTER_LINK_RE.findall(manifest_text)
-        if not canonical_order:
-            raise RecordError(f"{chapter_manifest_path}: no canonical chapter links found")
-        if len(canonical_order) != len(set(canonical_order)):
-            raise RecordError(f"{chapter_manifest_path}: duplicate canonical chapter names")
+        canonical_chapters = manifest_chapters(manifest_text)
+        canonical_order = [chapter for chapter, _ in canonical_chapters]
+        chapter_titles = dict(canonical_chapters)
         order_index = {chapter: index for index, chapter in enumerate(canonical_order)}
         unknown_chapters = sorted(set(chapter_order) - set(order_index))
         if unknown_chapters:
@@ -289,7 +288,7 @@ def render_batch(
                 f"{chapter_manifest_path}: rendered chapters absent from manifest: "
                 + ", ".join(unknown_chapters)
             )
-        chapter_order.sort(key=order_index.__getitem__)
+        chapter_order = canonical_order
 
     output_dir.mkdir(parents=True, exist_ok=True)
     chapters_dir = output_dir / "chapters"
@@ -297,7 +296,13 @@ def render_batch(
     written: list[Path] = []
     for chapter in chapter_order:
         chapter_path = chapters_dir / f"{chapter}.tex"
-        chapter_path.write_text("".join(chapter_chunks[chapter]), encoding="utf-8")
+        chunks = chapter_chunks.get(chapter)
+        chapter_text = (
+            "".join(chunks)
+            if chunks
+            else _pending_chapter_template(chapter, chapter_titles[chapter])
+        )
+        chapter_path.write_text(chapter_text, encoding="utf-8")
         written.append(chapter_path)
 
     metadata = output_dir / "metadata.tex"
@@ -323,6 +328,17 @@ def render_batch(
     )
     written.append(contents)
     return written
+
+
+def _pending_chapter_template(chapter: str, source_title: str) -> str:
+    return (
+        "% Generated untranslated chapter scaffold; do not edit this preview file.\n"
+        f"\\chapter{{{source_title}（待译）}}\n"
+        "\\phantomsection\n"
+        f"\\label{{{chapter}-section-phantom}}\n\n"
+        "\\noindent\n"
+        "\\emph{本章翻译模板已初始化，正文待翻译。}\n\n"
+    )
 
 
 def _load_tags(path: Path) -> dict[str, str]:

@@ -328,6 +328,85 @@ class RenderTests(unittest.TestCase):
                 "后一章。\n",
             )
 
+    def test_render_initializes_untranslated_manifest_chapters(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            unit = stamp_unit_hashes(
+                {
+                    "schema_version": 1,
+                    "unit_id": "tag:TEST:title",
+                    "parent_tag": "TEST",
+                    "chapter": "translated",
+                    "node_kind": "chapter_title",
+                    "risk_level": "R1",
+                    "source_commit": SOURCE_COMMIT,
+                    "source_text": "Translated",
+                    "source_status": "CURRENT",
+                    "placeholders": {},
+                    "render": {
+                        "prefix": "\\chapter{",
+                        "suffix": "}\n\\phantomsection\n\\label{translated-section-phantom}\n",
+                    },
+                }
+            )
+            context = {"instructions": "translator-v1", "unit_ids": [unit["unit_id"]]}
+            candidate = {
+                "schema_version": 1,
+                "unit_id": unit["unit_id"],
+                "source_commit": SOURCE_COMMIT,
+                "source_text_hash": unit["source_text_hash"],
+                "model_id": "test/model",
+                "model_lane": "test",
+                "reasoning_effort": "not_exposed",
+                "prompt_version": "translator-v1",
+                "glossary_revision": "git:test",
+                "context": context,
+                "context_hash": sha256_value(context),
+                "translation": "已翻译",
+                "allowed_english": [],
+                "term_occurrences": [],
+                "unknown_terms": [],
+                "notes": [],
+                "stage": "TERM_OK",
+                "source_status": "CURRENT",
+                "qa_status": "PASS",
+                "term_status": "CLEAR",
+                "publication_status": "CANDIDATE",
+                "created_at": "2026-08-25T00:00:00+08:00",
+            }
+            units_path = root / "units.jsonl"
+            candidates_path = root / "candidates.jsonl"
+            write_jsonl(units_path, [unit])
+            write_jsonl(candidates_path, [candidate])
+            manifest = root / "chapters.tex"
+            manifest.write_text(
+                "\\item \\hyperref[translated-section-phantom]{Translated}\n"
+                "\\item \\hyperref[pending-section-phantom]{Pending {Nested}}\n",
+                encoding="utf-8",
+            )
+
+            output = root / "rendered"
+            render_batch(
+                units_path,
+                candidates_path,
+                lock,
+                output,
+                "test",
+                "测试候选",
+                manifest,
+            )
+
+            contents = (output / "contents.tex").read_text(encoding="utf-8")
+            self.assertLess(
+                contents.index("chapters/translated"), contents.index("chapters/pending")
+            )
+            pending = (output / "chapters" / "pending.tex").read_text(encoding="utf-8")
+            self.assertIn("\\chapter{Pending {Nested}（待译）}", pending)
+            self.assertIn("\\label{pending-section-phantom}", pending)
+            self.assertIn("正文待翻译", pending)
+
     def test_render_orders_same_chapter_batches_by_harvest_labels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

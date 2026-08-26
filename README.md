@@ -220,9 +220,10 @@ JSON 模板。它按上游顺序列出每个 Section 的永久 Tag、建议 batc
 章节，并用 `make chapter-template-check` 防止模板与锁定来源脱节。
 
 运行 `make render MODEL=<model>` 时，渲染器会按同一份上游章节清单生成全部章节：
-已有候选译文的章节写入当前内容，尚无候选的章节写入带稳定章节标签和“正文待翻译”
-提示的可编译骨架。因此成书 PDF 会显示完整章节目录；生成的预览 TeX 仍不可手工编辑，
-贡献内容应写入结构化 unit/candidate 文件。
+已有候选译文的章节写入当前内容，尚无候选的章节使用
+[`config/chapter-titles.json`](config/chapter-titles.json) 中的中英双语标题写入空白、
+可编译且带稳定章节标签的骨架，不额外显示“待译”提示。因此成书 PDF 会显示完整章节
+目录；生成的预览 TeX 仍不可手工编辑，贡献内容应写入结构化 unit/candidate 文件。
 
 当前仓库只对已经出现在 `translation-data/units/` 的范围开放直接候选 PR。如果
 喜欢的章节尚未结构化，不要直接编辑英文 TeX 或手工创建不稳定 ID；请提交

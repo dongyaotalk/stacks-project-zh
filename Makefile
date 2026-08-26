@@ -9,6 +9,7 @@ MODEL_DISPLAY_NAME ?= $(MODEL) 模型候选译文
 HARVEST_DIR ?= ../stacks-project
 CHAPTER_MANIFEST ?= $(HARVEST_DIR)/chapters.tex
 CHAPTER_SOURCE_DIR ?= $(HARVEST_DIR)
+CHAPTER_TITLE_MAP ?= config/chapter-titles.json
 TAGS_FILE ?= $(HARVEST_DIR)/tags/tags
 UPSTREAM_LOCK ?= upstream.lock
 BUILD_ROOT ?= build
@@ -61,6 +62,7 @@ WORKFLOW_FILES := \
 	config/workflow.yml \
 	config/harnesses.yml \
 	config/macro-policy.yml \
+	config/chapter-titles.json \
 	config/glossary.yml \
 	config/models.yml \
 	config/style-guide.md \
@@ -230,6 +232,7 @@ render: validate-model validate-render workflow-check harvest-check
 		--model-lane "$(MODEL)" \
 		--display-name "$(MODEL_DISPLAY_NAME)" \
 		--chapter-manifest "$(CHAPTER_MANIFEST)" \
+		--chapter-title-map "$(CHAPTER_TITLE_MAP)" \
 		--chapter-source-dir "$(CHAPTER_SOURCE_DIR)" \
 		--tags-file "$(TAGS_FILE)" \
 		--output-dir "$(MODEL_DIR)"

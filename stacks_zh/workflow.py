@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Iterable
@@ -189,6 +190,7 @@ def render_batch(
     chapter_manifest_path: Path | None = None,
     tags_path: Path | None = None,
     chapter_source_dir: Path | None = None,
+    chapter_title_path: Path | None = None,
 ) -> list[Path]:
     if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
         raise RecordError(f"invalid model lane {model_lane!r}")
@@ -272,7 +274,7 @@ def render_batch(
         render = unit["render"]
         chapter_chunks[chapter].append(render["prefix"] + translated + render["suffix"])
 
-    chapter_titles: dict[str, str] = {}
+    chapter_titles: dict[str, tuple[str, str]] = {}
     if chapter_manifest_path is not None:
         try:
             manifest_text = chapter_manifest_path.read_text(encoding="utf-8")
@@ -280,7 +282,16 @@ def render_batch(
             raise RecordError(f"cannot read chapter manifest {chapter_manifest_path}: {exc}") from exc
         canonical_chapters = manifest_chapters(manifest_text)
         canonical_order = [chapter for chapter, _ in canonical_chapters]
-        chapter_titles = dict(canonical_chapters)
+        source_titles = dict(canonical_chapters)
+        translated_titles = (
+            _load_chapter_title_translations(chapter_title_path, canonical_order)
+            if chapter_title_path is not None
+            else source_titles
+        )
+        chapter_titles = {
+            chapter: (translated_titles[chapter], source_titles[chapter])
+            for chapter in canonical_order
+        }
         order_index = {chapter: index for index, chapter in enumerate(canonical_order)}
         unknown_chapters = sorted(set(chapter_order) - set(order_index))
         if unknown_chapters:
@@ -300,7 +311,7 @@ def render_batch(
         chapter_text = (
             "".join(chunks)
             if chunks
-            else _pending_chapter_template(chapter, chapter_titles[chapter])
+            else _empty_chapter_template(chapter, *chapter_titles[chapter])
         )
         chapter_path.write_text(chapter_text, encoding="utf-8")
         written.append(chapter_path)
@@ -330,14 +341,44 @@ def render_batch(
     return written
 
 
-def _pending_chapter_template(chapter: str, source_title: str) -> str:
+def _load_chapter_title_translations(path: Path, chapters: list[str]) -> dict[str, str]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise RecordError(f"cannot read chapter title map {path}: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise RecordError(f"{path}: invalid chapter title JSON: {exc.msg}") from exc
+    if not isinstance(value, dict) or value.get("schema_version") != 1:
+        raise RecordError(f"{path}: chapter title map requires schema_version 1")
+    titles = value.get("titles")
+    if not isinstance(titles, dict):
+        raise RecordError(f"{path}: chapter title map requires a titles object")
+    expected = set(chapters)
+    actual = set(titles)
+    if actual != expected:
+        missing = sorted(expected - actual)
+        extra = sorted(actual - expected)
+        details = []
+        if missing:
+            details.append("missing: " + ", ".join(missing))
+        if extra:
+            details.append("extra: " + ", ".join(extra))
+        raise RecordError(f"{path}: chapter title coverage mismatch ({'; '.join(details)})")
+    for chapter, title in titles.items():
+        if not isinstance(title, str) or not title.strip():
+            raise RecordError(f"{path}: chapter {chapter!r} requires a non-empty title")
+    return titles
+
+
+def _empty_chapter_template(chapter: str, target_title: str, source_title: str) -> str:
+    display_title = (
+        source_title if target_title == source_title else f"{target_title}（{source_title}）"
+    )
     return (
-        "% Generated untranslated chapter scaffold; do not edit this preview file.\n"
-        f"\\chapter{{{source_title}（待译）}}\n"
+        "% Generated empty chapter scaffold; do not edit this preview file.\n"
+        f"\\chapter{{{display_title}}}\n"
         "\\phantomsection\n"
         f"\\label{{{chapter}-section-phantom}}\n\n"
-        "\\noindent\n"
-        "\\emph{本章翻译模板已初始化，正文待翻译。}\n\n"
     )
 
 

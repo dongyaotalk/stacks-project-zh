@@ -156,6 +156,8 @@ make repo-setup
 make workflow-check
 make harvest-check
 make upstream-index-check
+make init-chapters
+make chapter-template-check
 make template
 make pdf MODEL=template
 make tool-test
@@ -168,6 +170,10 @@ make render MODEL=<model>
 make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
   OUTPUT_JSON=<path> OUTPUT_MD=<path>
 ```
+
+`make init-chapters` 为锁定上游的全部章节生成 Section 级任务骨架，
+`make chapter-template-check` 验证骨架未过期。骨架只提供稳定坐标、建议 batch 和
+准备状态；它不代替下列尚未实现的完整章节提取接口。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 

@@ -212,6 +212,13 @@ grep '"parent_tag": "001M"' translation-data/units/*.jsonl
 `source_text` 是允许翻译的英文自然语言，`unit_id` 是稳定身份，`placeholders` 是
 必须原样保留的数学、引用或 LaTeX 结构。
 
+若想从后面的任意章节开始，先打开
+[`translation-data/chapter-templates/`](translation-data/chapter-templates/) 中对应章的
+JSON 模板。它按上游顺序列出每个 Section 的永久 Tag、建议 batch/unit 路径和准备
+状态；`READY` 可直接按已有 `unit_files` 认领，`UNPREPARED` 先提交 scope preparation，
+`BLOCKED_NO_TAG` 则先解决稳定坐标。维护者使用 `make init-chapters` 初始化或刷新全部
+章节，并用 `make chapter-template-check` 防止模板与锁定来源脱节。
+
 当前仓库只对已经出现在 `translation-data/units/` 的范围开放直接候选 PR。如果
 喜欢的章节尚未结构化，不要直接编辑英文 TeX 或手工创建不稳定 ID；请提交
 [Translation scope preparation](https://github.com/dongyaotalk/stacks-project-zh/issues/new?template=unit-preparation.yml)

@@ -39,6 +39,21 @@ model_lane: openai-gpt-5.6-sol
 `unit_id` 优先使用 `tag:<TAG>:<sub-id>`。没有永久 Tag 的单元仍必须使用已保存的
 合成 ID；不能因为上游移动或换页重新编号。
 
+### 1.1 从任意章节开始
+
+`translation-data/chapter-templates/<chapter>.json` 预先初始化锁定上游的全部章节，
+并按原书顺序列出 Section 标题、永久 Tag、建议 batch 和 unit 路径。贡献者可以先在
+目标章节模板中选择一个 Section：
+
+- `READY`：使用 `unit_files` 中的现有稳定单元创建翻译任务；
+- `UNPREPARED`：坐标和建议文件已冻结，但必须先完成独立的 scope preparation；
+- `BLOCKED_NO_TAG`：不得手工发明 ID，应先解决永久 Tag 或合成 ID 映射；
+- 章节为 `SOURCE_UNAVAILABLE`：该项由上游生成或不提供独立章源文件，不能直接认领。
+
+模板是任务骨架，不是译文容器。候选内容仍只写入对应模型 lane 的 candidate JSONL，
+正式译文仍只来自 reviewed revision。运行 `make init-chapters` 更新全部模板，运行
+`make chapter-template-check` 检查它们是否与锁定来源和现有 unit 一致。
+
 ## 2. 允许和禁止的范围
 
 允许的任务范围：

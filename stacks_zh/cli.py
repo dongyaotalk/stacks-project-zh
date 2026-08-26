@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .chapter_templates import initialize_chapter_templates
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
 from .records import RecordError
@@ -24,6 +25,23 @@ def build_parser() -> argparse.ArgumentParser:
     stamp = subparsers.add_parser("stamp-units", help="calculate unit source hashes")
     stamp.add_argument("--input", required=True, type=Path)
     stamp.add_argument("--output", required=True, type=Path)
+
+    init_chapters = subparsers.add_parser(
+        "init-chapters",
+        help="initialize deterministic task scaffolds for every locked chapter",
+    )
+    init_chapters.add_argument("--root", type=Path, default=Path("."))
+    init_chapters.add_argument("--harvest", required=True, type=Path)
+    init_chapters.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+    init_chapters.add_argument(
+        "--units-dir", type=Path, default=Path("translation-data/units")
+    )
+    init_chapters.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("translation-data/chapter-templates"),
+    )
+    init_chapters.add_argument("--check", action="store_true")
 
     validate = subparsers.add_parser("validate", help="run deterministic candidate QA")
     validate.add_argument("--units", required=True, type=Path)
@@ -93,6 +111,32 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "stamp-units":
             count = stamp_units(args.input, args.output)
             print(f"Stamped {count} unit record(s): {args.output}")
+            return 0
+        if args.command == "init-chapters":
+            root = args.root.resolve()
+            lock_path = args.lock if args.lock.is_absolute() else root / args.lock
+            units_dir = (
+                args.units_dir if args.units_dir.is_absolute() else root / args.units_dir
+            )
+            output_dir = (
+                args.output_dir
+                if args.output_dir.is_absolute()
+                else root / args.output_dir
+            )
+            count, errors = initialize_chapter_templates(
+                root,
+                args.harvest.resolve(),
+                lock_path,
+                units_dir,
+                output_dir,
+                check=args.check,
+            )
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            action = "Checked" if args.check else "Initialized"
+            print(f"{action} {count} chapter template(s): {output_dir}")
             return 0
         if args.command == "validate":
             count, errors = validate_batch(args.units, args.candidates, args.lock)

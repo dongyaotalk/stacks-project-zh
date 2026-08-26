@@ -13,6 +13,7 @@ TAGS_FILE ?= $(HARVEST_DIR)/tags/tags
 UPSTREAM_LOCK ?= upstream.lock
 BUILD_ROOT ?= build
 OUTPUT_DIR ?= output/pdf
+CHAPTER_TEMPLATE_DIR ?= translation-data/chapter-templates
 
 UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
@@ -64,6 +65,7 @@ WORKFLOW_FILES := \
 	config/models.yml \
 	config/style-guide.md \
 	schema/unit.schema.json \
+	schema/chapter-template.schema.json \
 	schema/candidate.schema.json \
 	schema/review.schema.json \
 	schema/run-manifest.schema.json \
@@ -91,12 +93,14 @@ WORKFLOW_FILES := \
 	scripts/migrate_permanent_tags.py \
 	scripts/upstream_diff.py \
 	stacks_zh/decisions.py \
+	stacks_zh/chapter_templates.py \
 	stacks_zh/provenance.py \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \
 	stacks_zh/upstream.py \
 	stacks_zh/workflow.py \
-	upstream-index/README.md
+	upstream-index/README.md \
+	translation-data/chapter-templates/README.md
 
 BASELINE_REPORT := sync-reports/baseline-a04446e5.json
 BASELINE_INDEX_MANIFEST := upstream-index/manifests/$(UPSTREAM_COMMIT).json
@@ -120,7 +124,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -161,6 +165,16 @@ schema-check:
 upstream-index-check:
 	$(PYTHON) stacks_zh.py upstream-index-check --root . --harvest "$(HARVEST_DIR)"
 
+init-chapters: harvest-check upstream-index-check
+	$(PYTHON) stacks_zh.py init-chapters --root . --harvest "$(HARVEST_DIR)" \
+		--lock "$(UPSTREAM_LOCK)" --units-dir translation-data/units \
+		--output-dir "$(CHAPTER_TEMPLATE_DIR)"
+
+chapter-template-check: harvest-check upstream-index-check
+	$(PYTHON) stacks_zh.py init-chapters --root . --harvest "$(HARVEST_DIR)" \
+		--lock "$(UPSTREAM_LOCK)" --units-dir translation-data/units \
+		--output-dir "$(CHAPTER_TEMPLATE_DIR)" --check
+
 upstream-diff:
 	@test -n "$(OLD_UNITS)" || { printf 'OLD_UNITS is required\n' >&2; exit 1; }
 	@test -n "$(NEW_UNITS)" || { printf 'NEW_UNITS is required\n' >&2; exit 1; }
@@ -184,13 +198,13 @@ validate-batch:
 	@test -f "$(UNIT_FILE)" || { printf 'Missing unit file: %s\n' "$(UNIT_FILE)" >&2; exit 1; }
 	@test -f "$(CANDIDATE_FILE)" || { printf 'Missing candidate file: %s\n' "$(CANDIDATE_FILE)" >&2; exit 1; }
 
-qa: validate-model validate-batch workflow-check harvest-check upstream-index-check schema-check provenance-check decision-check
+qa: validate-model validate-batch workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
 	$(PYTHON) stacks_zh.py validate \
 		--units "$(UNIT_FILE)" \
 		--candidates "$(CANDIDATE_FILE)" \
 		--lock "$(UPSTREAM_LOCK)"
 
-qa-all: workflow-check harvest-check upstream-index-check schema-check provenance-check decision-check
+qa-all: workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
 	@set -eu; count=0; \
 		for candidate in translation-data/candidates/*/*.jsonl; do \
 			model=$$(basename "$$(dirname "$$candidate")"); \

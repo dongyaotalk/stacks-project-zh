@@ -9,6 +9,27 @@
 审校的正式中文译本。正式发布只能从 `reviewed` 通道构建；模型输出、生成的
 TeX 和 PDF 都不是翻译事实来源。
 
+## 当前进度（数据快照）
+
+截至 2026-08-28、英文来源 commit `a04446e57ec1fbc252a871afcec7752fb2807b14`：
+
+| 指标 | 数量 | 说明 |
+| --- | ---: | --- |
+| 已准备稳定翻译单元 | 670 | `translation-data/units/` 中的结构化单元 |
+| 已生成模型候选记录 | 670 | 全部为 `publication_status=CANDIDATE` |
+| `AI_DRAFT` 持久记录 | 0 | `assemble` 在确定性 QA 后会自动推进到下一阶段 |
+| `STRUCTURE_OK` | 573 | 结构检查通过，仍有待决术语 |
+| `TERM_OK` | 97 | 结构和术语检查通过 |
+| `CRITIC_OK` | 0 | 当前独立 critic 的 Schema/命令尚未实现 |
+| `LANGUAGE_REVIEWED` | 0 | 尚无人工语言审校记录 |
+| `MATH_REVIEWED` | 0 | 尚无人工数学审校记录 |
+| `PUBLISHED` | 0 | `translation-data/reviewed/` 仍为空 |
+| 当前可发布单元 | **0** | 候选记录不等于正式采用或发布 |
+
+这些数字来自已跟踪的 `units/`、模型 `candidates/` 和 `reviewed/` 数据；新增候选
+或审校记录后应同步更新本快照。按照项目规则，在完成要求的人工语言/数学审校、
+选择决定、许可证核查和发布门禁前，不得把任何模型候选称为正式译文或发布版本。
+
 仓库地址：<https://github.com/dongyaotalk/stacks-project-zh>。任何人都可以通过
 Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或 CODEOWNER。
 
@@ -864,8 +885,8 @@ git push -u origin translate/<chapter>/<tag>/<model>
 本项目独立编写的软件工具采用更宽松的 MIT License，完整文本见
 `LICENSES/MIT.txt`。
 
-项目新增翻译与文档版权归 OpenSSL 和贡献者所有；原始 Stacks Project 内容继续
-保留其作者、版权和 GFDL 声明。
+项目新增翻译与文档的版权归相应作者和贡献者所有，不统一归属于仓库维护者或某个
+组织；原始 Stacks Project 内容继续保留其作者、版权和 GFDL 声明。
 
 第三方文件不因上述许可证而被重新许可。`THIRD_PARTY_NOTICES.md` 目前仍有待核实
 项目；在相关 blocker 关闭前，请不要把仓库或其 PDF 当作已经完成授权核查的正式

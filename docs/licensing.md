@@ -22,7 +22,7 @@ Stacks Project 英文内容依照 GNU Free Documentation License 1.2 或更高�
 项目新增翻译与文档声明：
 
 ```text
-Copyright (c) 2026 OpenSSL and contributors.
+Copyright (c) 2026 the respective contributors to stacks-project-zh.
 Permission is granted to copy, distribute and/or modify this document under
 the terms of the GNU Free Documentation License, Version 1.2 or any later
 version published by the Free Software Foundation; with no Invariant
@@ -39,6 +39,10 @@ License；MIT 全文位于 `LICENSES/MIT.txt`。当前范围包括：
 
 文件同时包含第三方或 GFDL 衍生内容时，以对应第三方许可或 GFDL 为准；MIT 不会
 覆盖或重新许可这些内容。
+
+“OpenSSL”是当前仓库维护者的公开身份，不是所有新增翻译或文档的统一版权人。
+除非某个文件另有明确的版权声明，新增内容的版权应归实际创作者及其他依法享有
+权利的贡献者；提交者、维护者和审校者的项目角色不改变版权归属。
 
 ## 2. 当前需要核实的文件
 

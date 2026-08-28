@@ -9,29 +9,38 @@
 审校的正式中文译本。正式发布只能从 `reviewed` 通道构建；模型输出、生成的
 TeX 和 PDF 都不是翻译事实来源。
 
-## 当前进度（数据快照）
+## 全书翻译进度
 
-截至 2026-08-28、英文来源 commit `a04446e57ec1fbc252a871afcec7752fb2807b14`：
+<!-- translation-progress:start -->
+英文来源 commit：`a04446e57ec1fbc252a871afcec7752fb2807b14`。
 
-| 指标 | 数量 | 说明 |
-| --- | ---: | --- |
-| 已准备稳定翻译单元 | 691 | `translation-data/units/` 中的结构化单元 |
-| 已生成模型候选记录 | 691 | 全部为 `publication_status=CANDIDATE` |
-| `AI_DRAFT` 持久记录 | 0 | `assemble` 在确定性 QA 后会自动推进到下一阶段 |
-| `STRUCTURE_OK` | 593 | 结构检查通过，仍有待决术语 |
-| `TERM_OK` | 98 | 结构和术语检查通过 |
-| `CRITIC_OK` | 0 | 当前独立 critic 的 Schema/命令尚未实现 |
-| `LANGUAGE_REVIEWED` | 0 | 尚无人工语言审校记录 |
-| `MATH_REVIEWED` | 0 | 尚无人工数学审校记录 |
-| `PUBLISHED` | 0 | `translation-data/reviewed/` 仍为空 |
-| 当前可发布单元 | **0** | 候选记录不等于正式采用或发布 |
+全书进度以锁定英文源中归属于各章的永久 Tag 为固定分母。模型候选、人工审校和
+正式发布分别计数；候选合并不等于译文完成或发布。
 
-这些数字来自已跟踪的 `units/`、模型 `candidates/` 和 `reviewed/` 数据；新增候选
-或审校记录后应同步更新本快照。按照项目规则，在完成要求的人工语言/数学审校、
-选择决定、许可证核查和发布门禁前，不得把任何模型候选称为正式译文或发布版本。
-详细的统计口径、去重规则、更新时机和状态措辞约束见
-[`docs/progress.md`](docs/progress.md)。快照只反映已合并到 `main` 的当前数据，不
-包含工作分支、开放 PR 或临时草稿。
+| 指标 | 进度 |
+| --- | ---: |
+| 模型候选译文覆盖 | 155 / 21,437（0.7%） |
+| 人工审校译文覆盖 | 0 / 21,437（0.0%） |
+| 正式发布译文覆盖 | 0 / 21,437（0.0%） |
+| 已有模型候选的章 | 6 / 116 |
+| 候选覆盖全部 Tag 的章 | 2 / 116 |
+| 人工审校覆盖全部 Tag 的章 | 0 / 116 |
+
+当前已有准备数据或候选译文的章节：
+
+| 章 | 标题 | 模型候选 Tag | 人工审校 Tag | 状态 |
+| ---: | --- | ---: | ---: | --- |
+| 1 | 引言（`introduction`） | 3 / 3（100.0%） | 0 / 3（0.0%） | 候选齐备，待审校 |
+| 2 | 约定（`conventions`） | 6 / 6（100.0%） | 0 / 6（0.0%） | 候选齐备，待审校 |
+| 3 | 集合论（`sets`） | 34 / 39（87.2%） | 0 / 39（0.0%） | 候选进行中 |
+| 4 | 范畴（`categories`） | 84 / 317（26.5%） | 0 / 317（0.0%） | 候选进行中 |
+| 112 | 文献指南（`guide`） | 13 / 22（59.1%） | 0 / 22（0.0%） | 候选进行中 |
+| 113 | 期望事项（`desirables`） | 15 / 21（71.4%） | 0 / 21（0.0%） | 候选进行中 |
+
+[查看全部 117 章逐章进度](docs/translation-progress.md)。其中第 117 章为自动生成
+索引，没有可统计正文 Tag；统计还排除了不属于任何章的书籍分部导航 Tag。详细
+口径及更新约束见 [进度快照规范](docs/progress.md)。
+<!-- translation-progress:end -->
 
 仓库地址：<https://github.com/dongyaotalk/stacks-project-zh>。任何人都可以通过
 Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或 CODEOWNER。
@@ -71,6 +80,8 @@ Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或
 | [`docs/ci.md`](docs/ci.md) | GitHub Actions 和自动门禁合同 |
 | [`docs/upstream-sync.md`](docs/upstream-sync.md) | 英文上游更新和 stale 译文处理 |
 | [`docs/model-provenance.md`](docs/model-provenance.md) | Harness、具体模型、运行和模型下架处理 |
+| [`docs/progress.md`](docs/progress.md) | 全书/逐章进度的统计口径和强制更新规则 |
+| [`docs/translation-progress.md`](docs/translation-progress.md) | 由结构化数据生成的 117 章翻译进度 |
 | [`prompts/README.md`](prompts/README.md) | Translator Prompt 版本和历史兼容规则 |
 | [`docs/candidate-selection.md`](docs/candidate-selection.md) | 候选保存、维护者选择和正式采用 |
 | [`docs/translation-replacement.md`](docs/translation-replacement.md) | 新模型替换旧译文和 revision 关系 |

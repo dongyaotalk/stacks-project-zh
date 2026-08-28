@@ -7,6 +7,7 @@ from pathlib import Path
 from .chapter_templates import initialize_chapter_templates
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
+from .progress import update_progress_report
 from .records import RecordError
 from .provenance import ProvenanceError, validate_repository_provenance
 from .schema_validation import validate_repository_schemas
@@ -102,6 +103,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     upstream_index.add_argument("--root", type=Path, default=Path("."))
     upstream_index.add_argument("--harvest", required=True, type=Path)
+
+    progress = subparsers.add_parser(
+        "progress", help="generate or check the README and per-chapter progress report"
+    )
+    progress.add_argument("--root", type=Path, default=Path("."))
+    progress.add_argument("--tags", required=True, type=Path)
+    progress.add_argument("--readme", type=Path, default=Path("README.md"))
+    progress.add_argument(
+        "--output", type=Path, default=Path("docs/translation-progress.md")
+    )
+    progress.add_argument("--check", action="store_true")
     return parser
 
 
@@ -216,6 +228,25 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"ERROR: {error}", file=sys.stderr)
                 return 1
             print("Upstream index and history: PASS")
+            return 0
+        if args.command == "progress":
+            root = args.root.resolve()
+            tags_path = args.tags if args.tags.is_absolute() else root / args.tags
+            readme_path = args.readme if args.readme.is_absolute() else root / args.readme
+            output_path = args.output if args.output.is_absolute() else root / args.output
+            count, errors = update_progress_report(
+                root,
+                tags_path,
+                readme_path,
+                output_path,
+                check=args.check,
+            )
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            action = "Checked" if args.check else "Updated"
+            print(f"{action} translation progress for {count} chapter(s)")
             return 0
     except (RecordError, ProvenanceError, OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

@@ -127,6 +127,12 @@ trailers 记录可审计事实，不得伪造审校人或用模型名称填写 `
 机械迁移应与语义修改分开提交。提交前运行 `git diff --check` 并检查暂存区，而
 不是直接执行 `git add -A` 后盲目提交。
 
+创建任何 Git 提交或 Pull Request 前必须完成适用的本地 LaTeX 编译并确认命令以零
+状态退出。翻译候选执行 `make render MODEL=<model-lane>` 和
+`make pdf MODEL=<model-lane>`；其他修改至少执行 `make template`。缺少 TeX 工具链
+或出现编译错误时不得提交、推送或创建 PR。生成的 TeX、PDF 和日志仅用于检查，
+不得纳入提交。
+
 ## 7. PR 类型和粒度
 
 ### 翻译 PR

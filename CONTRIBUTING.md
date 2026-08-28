@@ -59,8 +59,10 @@ TeX 或手工发明 unit ID。
 4. 只写入指定 Harness、模型、run 和单元的候选数据；
 5. 运行结构、术语和语义检查；
 6. 生成双语 diff 与 QA 摘要；
-7. 按 `.gitmessage` 写原子提交；
-8. 使用 PR 模板提交，不自行提升人工审校状态。
+7. 执行 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`，确认本次
+   候选所在模型通道的 LaTeX 编译无错误；
+8. 按 `.gitmessage` 写原子提交；
+9. 使用 PR 模板提交，不自行提升人工审校状态。
 
 ## 提交术语
 
@@ -89,11 +91,21 @@ make schema-check
 git diff --check
 ```
 
-修改 LaTeX 模板、样式、Makefile 或生成逻辑时还必须执行：
+在创建 Git 提交或 PR 前必须完成一次适用的本地 LaTeX 编译。翻译候选必须执行：
+
+```bash
+make render MODEL=<model-lane>
+make pdf MODEL=<model-lane>
+```
+
+其他修改至少执行：
 
 ```bash
 make template
 ```
+
+上述命令必须以零状态退出。缺少 XeLaTeX、BibTeX 或 makeindex，或者出现编译错误时，
+不得提交、推送或创建 PR。不得编辑生成文件来掩盖失败。
 
 不要提交 `build/`、`output/`、`.harvest/`、`source-ir/`、生成的模型 TeX、PDF
 或 SQLite 缓存。正式 PDF 作为 Release 产物发布。

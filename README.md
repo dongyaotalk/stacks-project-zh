@@ -152,8 +152,9 @@ CODEOWNER 是对某些路径承担长期审核责任的人，不是参与项目�
 
 ### 2. GitHub 账号、Fork 和首次设置
 
-需要 Git、Python 3.11 或更高版本，以及构建 PDF 时所需的 XeLaTeX、BibTeX 和
-makeindex。只提交文档、Python 或结构化翻译数据时，可以先不安装 TeX。
+需要 Git、Python 3.11 或更高版本，以及 XeLaTeX、BibTeX 和 makeindex。所有提交和
+PR 都有本地 LaTeX 编译门禁，因此即使只修改文档、Python 或结构化翻译数据，也不能
+省略 TeX 工具链。
 
 没有仓库写权限时，在 GitHub 点击 **Fork**，再克隆自己的 Fork。下面使用
 `canonical` 表示本项目的中文主仓库，避免把它与英文来源混淆：
@@ -511,7 +512,11 @@ git diff --check
 
 ~~~bash
 make qa BATCH=<batch> MODEL=<model-lane>
+make render MODEL=<model-lane>
+make pdf MODEL=<model-lane>
 ~~~
+
+后两条命令必须在 Git 提交前成功，以确认本次候选所在模型通道可以完整编译。
 
 修改共享 Schema、QA、工作流或政策时还要验证全部已跟踪候选：
 
@@ -523,18 +528,15 @@ make qa-all
 `make upstream-diff` 生成 JSON/Markdown 报告；报告中的受影响单元、失效状态和未解决
 映射必须在同步 PR 中逐项处理。
 
-模板、渲染器或样式变化还需要：
+其他修改在 Git 提交前至少还要运行：
 
 ~~~bash
 make template
 ~~~
 
-需要预览某个模型通道时：
-
-~~~bash
-make render MODEL=<model-lane>
-make pdf MODEL=<model-lane>
-~~~
+适用的 LaTeX 命令必须以零状态退出；缺少工具链或出现编译错误时不得提交、推送或
+创建 PR。不得编辑生成的 TeX、PDF 或日志来绕过失败。管理员 PR-only bypass 也不
+豁免此门禁。
 
 生成的 TeX、PDF、日志和缓存只用于检查，不要提交。正式发布 PDF 应作为 GitHub
 Release/CI artifact 发布，并附带 release manifest，而不是放进主分支。

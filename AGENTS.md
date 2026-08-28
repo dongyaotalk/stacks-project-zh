@@ -86,7 +86,10 @@
 - Run `make qa-all` after changing shared Schema, QA, workflow, or policy that
   can affect existing candidate records.
 - Run `git diff --check` before committing.
-- Run `make template` after changing the Springer template, styles, Makefile, or
-  rendering behavior.
+- Before any Git commit or PR, complete an applicable local LaTeX build with no
+  errors. For translation candidates, run `make render MODEL=<model-lane>` and
+  `make pdf MODEL=<model-lane>`; for other changes, run at least `make template`.
+  A missing TeX toolchain or failed build blocks committing, pushing, and opening
+  a PR.
 - A source revision mismatch, protected-node change, unresolved critical issue, or
   missing required human review is an error; never silently continue.

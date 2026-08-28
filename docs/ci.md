@@ -29,12 +29,16 @@ NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...` 生成并审查 old/new 报告；�
 
 ~~~bash
 make qa BATCH=<batch> MODEL=<model-lane>
+make render MODEL=<model-lane>
+make pdf MODEL=<model-lane>
 ~~~
 
 当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
-changed path。修改模板、样式、Makefile 或渲染逻辑时，贡献者还必须在本地执行目标
-模板或 PDF 构建；当前 `policy-and-data` job 不安装 TeX，也不会自动完成该构建。构建
-失败不能通过编辑生成的 TeX 绕过。
+changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用的本地 LaTeX 编译：
+翻译候选编译对应模型通道，其他修改至少执行 `make template`。当前
+`policy-and-data` job 不安装 TeX，也不会自动完成该构建，因此 PR 清单中的本地编译
+结果是必需声明，不是 CI 已代为执行的项目。缺少工具链或构建失败时不得提交、推送
+或创建 PR，也不能通过编辑生成的 TeX 绕过。管理员 PR-only bypass 不豁免此门禁。
 
 ## 2. 来源 checkout
 

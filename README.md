@@ -15,10 +15,10 @@ TeX 和 PDF 都不是翻译事实来源。
 
 | 指标 | 数量 | 说明 |
 | --- | ---: | --- |
-| 已准备稳定翻译单元 | 687 | `translation-data/units/` 中的结构化单元 |
-| 已生成模型候选记录 | 687 | 全部为 `publication_status=CANDIDATE` |
+| 已准备稳定翻译单元 | 691 | `translation-data/units/` 中的结构化单元 |
+| 已生成模型候选记录 | 691 | 全部为 `publication_status=CANDIDATE` |
 | `AI_DRAFT` 持久记录 | 0 | `assemble` 在确定性 QA 后会自动推进到下一阶段 |
-| `STRUCTURE_OK` | 589 | 结构检查通过，仍有待决术语 |
+| `STRUCTURE_OK` | 593 | 结构检查通过，仍有待决术语 |
 | `TERM_OK` | 98 | 结构和术语检查通过 |
 | `CRITIC_OK` | 0 | 当前独立 critic 的 Schema/命令尚未实现 |
 | `LANGUAGE_REVIEWED` | 0 | 尚无人工语言审校记录 |

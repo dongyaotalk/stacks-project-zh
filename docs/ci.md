@@ -59,6 +59,8 @@ CI 不应把英文仓库作为中文仓库的 Git remote，也不应把英文源
 
 - 声明的 `Translation-Unit` 与实际 unit 一致；
 - candidate 和 unit 文件成对存在；
+- 修改进度报告、生成器或统计规范的 PR 中，README 与逐章进度报告必须和当前
+  unit/candidate/reviewed/永久 Tag 数据一致；
 - unit_id 在任务范围内且不重复；
 - source commit 和 hash 与 `upstream.lock` 一致；
 - Harness、具体模型、model record、run ID 与不可变 run manifest 一致；

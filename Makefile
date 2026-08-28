@@ -56,6 +56,7 @@ WORKFLOW_FILES := \
 	docs/ci.md \
 	docs/model-provenance.md \
 	docs/progress.md \
+	docs/translation-progress.md \
 	docs/candidate-selection.md \
 	docs/translation-replacement.md \
 	review/language/README.md \
@@ -98,6 +99,7 @@ WORKFLOW_FILES := \
 	stacks_zh/decisions.py \
 	stacks_zh/chapter_templates.py \
 	stacks_zh/provenance.py \
+	stacks_zh/progress.py \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \
 	stacks_zh/upstream.py \
@@ -127,7 +129,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -177,6 +179,12 @@ chapter-template-check: harvest-check upstream-index-check
 	$(PYTHON) stacks_zh.py init-chapters --root . --harvest "$(HARVEST_DIR)" \
 		--lock "$(UPSTREAM_LOCK)" --units-dir translation-data/units \
 		--output-dir "$(CHAPTER_TEMPLATE_DIR)" --check
+
+progress:
+	$(PYTHON) stacks_zh.py progress --root . --tags "$(TAGS_FILE)"
+
+progress-check:
+	$(PYTHON) stacks_zh.py progress --root . --tags "$(TAGS_FILE)" --check
 
 upstream-diff:
 	@test -n "$(OLD_UNITS)" || { printf 'OLD_UNITS is required\n' >&2; exit 1; }
@@ -315,6 +323,8 @@ help:
 		'make workflow-check              Verify required workflow policy files' \
 		'make harvest-check              Verify harvest remote, revision, and cleanliness' \
 		'make upstream-index-check       Verify locked Tag/chapter index and sync history' \
+		'make progress                   Refresh README and per-chapter translation progress' \
+		'make progress-check             Verify committed translation progress is current' \
 		'make tool-test                  Run candidate pipeline tests' \
 		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \

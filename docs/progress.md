@@ -1,63 +1,79 @@
-# 翻译进度快照规范
+# 翻译进度报告规范
 
-README 的“当前进度（数据快照）”只用于展示已经合并到中文仓库 `main` 的可追溯状态。
-它不是翻译数据的第二个来源，也不能用来替代候选、审校、选择或发布记录。
+README 的“全书翻译进度”和 `docs/translation-progress.md` 用于回答两个问题：整本书
+已经翻译到什么程度，以及每一章是未开始、进行中还是已有完整候选。报告只展示已经
+合并到中文仓库 `main` 的可追溯状态，不是翻译数据的第二个来源。
 
-## 统计范围
+## 固定分母
 
-- 快照只统计当前 `main` 的已提交文件，不统计工作分支、开放 PR、未提交改动、
-  `tmp/` 草稿、生成的 TeX/PDF 或本地缓存。
-- 快照必须注明统计日期和 `upstream.lock` 中的完整英文 `source_commit`。来源提交
-  变化后，旧快照不得继续沿用。
-- 只有 `source_commit` 与 `upstream.lock` 一致且 `source_status=CURRENT` 的记录才可
-  计入；过期或被撤回的记录不计入当前进度。
+- 全书和逐章百分比以锁定英文 harvest 的 `tags/tags` 中永久 Tag 为分母。Tag 按完整
+  label 的章名前缀归入 `translation-data/chapter-templates/` 中的 117 章。
+- `book-part-*` 只用于书籍分部导航，不属于任何章，不进入分母。
+- 自动生成索引章没有独立可翻译正文 Tag，逐章表显示为“不适用”。
+- Tag 百分比不按页数、字数、公式数量或数学难度加权，因此是稳定、可复核的覆盖指标，
+  不是阅读工作量估算。
+- 已准备 unit 数不能作为全书分母。只用“候选 unit / 已准备 unit”会隐藏尚未提取的
+  大部分英文内容，禁止把这种比例称为全书完成率。
 
-## 计数口径
+## 覆盖定义
 
-- **已准备稳定翻译单元**：统计 `translation-data/units/*.jsonl` 中唯一的
-  `unit_id`。每个 unit 只能计一次。
-- **已生成模型候选记录**：统计有完整当前候选记录、可由有效 run manifest 追溯、且
-  覆盖该 unit 的唯一 `unit_id`。同一 unit 在多个模型通道中出现时仍只计一次，不得
-  将模型数量当作 unit 数量。
-- **阶段数量**：对每个有当前候选的 unit，只按其最高合法阶段计数；
-  `AI_DRAFT`、`STRUCTURE_OK`、`TERM_OK`、`CRITIC_OK`、`LANGUAGE_REVIEWED`、
-  `MATH_REVIEWED` 和 `PUBLISHED` 这些数字必须互斥，不能把同一个 unit 在多个阶段
-  重复相加。临时草稿不等于持久化的 `AI_DRAFT`。
-- **`AI_DRAFT`**：只有记录文件中的 `stage=AI_DRAFT` 才能计入。通过确定性 QA 后已
-  自动推进到更高阶段的记录不得再计入 `AI_DRAFT`。
-- **`LANGUAGE_REVIEWED` 与 `MATH_REVIEWED`**：只有存在符合 Schema 的人工审校记录、
-  选择记录和相应 hash 关联时才能计入；模型字段、PR 合并或评论文字不能代替审校
-  记录。
-- **`PUBLISHED`**：只有 `translation-data/reviewed/` 中通过全部阶段门禁、选择决定和
-  发布检查的 unit 才能计入。模型候选永远不能计入 `PUBLISHED`。
-- **当前可发布单元**：只能统计同时满足 `PUBLISHED`、来源仍为 `CURRENT`、引用和
-  许可证/第三方资源门禁均已通过的 unit。任一适用的发布 blocker 未解决时，相关
-  unit 不得计入。
+- **已准备 Tag**：该 Tag 至少有一个与 `upstream.lock` 一致且
+  `source_status=CURRENT` 的稳定 unit。
+- **模型候选 Tag**：该 Tag 已准备的每一个当前 unit 都有至少一个与锁定来源一致的
+  当前模型 candidate。多个模型覆盖同一 unit 或 Tag 时只计一次。
+- **人工审校 Tag**：该 Tag 已准备的每一个当前 unit 都有 `status=current` 的正式
+  translation revision。PR 合并、模型字段和评论文字不能代替人工审校记录。
+- **正式发布 Tag**：该 Tag 的每一个当前 unit 都有 `stage=PUBLISHED` 且
+  `publication_status=RELEASED` 的 current revision。
+- unit 准备必须覆盖其认领 Tag 的完整翻译范围。若发现 unit 提取不完整，应修复范围
+  数据，不能靠修改进度算法把不完整范围标记为已覆盖。
 
-阶段数量应能由仓库中的结构化记录复核。不能用“已翻译段落数”“完成百分比”、
-PR 数量或主观估计替代上述口径。
+逐章状态按以下优先级确定：
 
-## 更新时机和内容
+1. 没有可翻译正文 Tag：`不适用`；
+2. 全部 Tag 已正式发布：`已发布`；
+3. 全部 Tag 已有人工审校 revision：`人工审校齐备`；
+4. 全部 Tag 已有模型候选：`候选齐备，待审校`；
+5. 部分 Tag 已有候选：`候选进行中`，已有审校时为`翻译与审校进行中`；
+6. 只有准备数据：`已准备，未翻译`；
+7. 没有准备数据或候选：`未开始`。
 
-发生下列任一变化后，必须在变化合并到 `main` 后刷新 README 快照：新增或删除 unit、
-新增或撤回 candidate/run、产生或变更 reviewed/selection/review 记录，或改变影响
-发布门禁的政策与许可证状态。
+“候选齐备”不等于译文完成、人工审校完成或可以发布。README 和 PR 描述必须持续
+区分模型候选、人工审校和正式发布。
 
-每次刷新至少要核对：
+## 确定性生成
 
-1. 统计日期和完整英文 `source_commit`；
-2. units、当前候选、各阶段、reviewed 和可发布数量；
-3. README 表格中的说明是否仍准确，尤其是候选不能称为正式译文或发布版本；
-4. `git diff --check`、相关 Schema/QA 检查和 `git status` 是否显示统计确实来自当前
-   `main` 数据。
+进度不是手工维护的数字。统一运行：
 
-翻译 PR 可以附带进度刷新，也可以在合并后紧接着使用独立的 `docs(progress): ...`
-提交刷新；但在下一批翻译开始前，README 不得继续显示已经过时的数字。若工作分支
-尚未合并，不能提前把该分支的 unit 或 candidate 写入主分支快照。
+```bash
+make progress
+```
 
-## 状态措辞
+该命令读取：
 
-README 和 PR 描述必须区分“已准备”“已生成候选”“已通过结构/术语检查”“已人工审校”
-和“已发布”。除非结构化记录和发布门禁共同证明，否则不得使用“正式译文”“可发布”
-或“已完成发布”等表述。管理员 bypass 只解决 GitHub 合并权限，不改变任何统计或
-发布状态。
+- `upstream.lock` 和锁定 harvest 的 `tags/tags`；
+- `translation-data/chapter-templates/` 和 `config/chapter-titles.json`；
+- `translation-data/units/`、`translation-data/candidates/`；
+- `translation-data/reviewed/` 中的 current revision。
+
+命令只更新 README 标记区间和 `docs/translation-progress.md`。逐章表属于生成内容，
+不得手工修改。下列命令验证提交中的报告与结构化数据完全一致：
+
+```bash
+make progress-check
+```
+
+进度报告、生成器或本规范发生变化的 PR，CI 必须运行 `make progress-check`。新增、
+删除或更改 current unit、candidate、reviewed revision、章节模板、来源 lock 或 Tag
+索引合并到 `main` 后，必须用独立进度 PR 先运行 `make progress`，再执行
+`make progress-check`。报告只能包含已经进入 `main` 的数据；开放 PR、其他工作分支、
+`tmp/` 草稿、生成 TeX/PDF 和本地缓存一律不计入。
+
+## 提交边界
+
+翻译候选 PR 不直接手改进度表。候选合并到 `main` 后，应在下一批翻译开始前运行
+`make progress`，并用独立 `docs(progress): ...` PR 提交生成结果。若同一 PR 修改进度
+生成器、统计口径或工作流政策，则按工具/政策变更运行全量 QA，并在 Git 提交前通过
+适用的本地 LaTeX 编译门禁。
+
+管理员 bypass 只解决 GitHub 合并权限，不改变进度、审校或发布状态。

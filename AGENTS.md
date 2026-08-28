@@ -85,6 +85,9 @@
 - Run `make schema-check` after changing structured data or any JSON Schema.
 - Run `make qa-all` after changing shared Schema, QA, workflow, or policy that
   can affect existing candidate records.
+- After current unit, candidate, reviewed, chapter, or source-Tag data merges to
+  `main`, open a separate progress update before the next translation batch.
+  Run `make progress`, then require `make progress-check` before committing it.
 - Run `git diff --check` before committing.
 - Before any Git commit or PR, complete an applicable local LaTeX build with no
   errors. For translation candidates, run `make render MODEL=<model-lane>` and

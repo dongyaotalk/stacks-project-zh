@@ -12,6 +12,17 @@ from .records import RecordError, load_upstream_commit
 README_START = "<!-- translation-progress:start -->"
 README_END = "<!-- translation-progress:end -->"
 
+CHAPTER_STATUS_ORDER = (
+    "未开始",
+    "翻译中",
+    "候选译文完成，待审校",
+    "人工审校中",
+    "人工审校完成，待发布",
+    "发布中",
+    "已发布",
+    "不适用",
+)
+
 
 @dataclass(frozen=True)
 class ChapterProgress:
@@ -31,14 +42,16 @@ class ChapterProgress:
             return "不适用"
         if self.published_tags == self.total_tags:
             return "已发布"
+        if self.published_tags:
+            return "发布中"
         if self.reviewed_tags == self.total_tags:
-            return "人工审校齐备"
+            return "人工审校完成，待发布"
+        if self.reviewed_tags:
+            return "人工审校中"
         if self.candidate_tags == self.total_tags:
-            return "候选齐备，待审校"
+            return "候选译文完成，待审校"
         if self.candidate_tags:
-            return "翻译与审校进行中" if self.reviewed_tags else "候选进行中"
-        if self.prepared_tags:
-            return "已准备，未翻译"
+            return "翻译中"
         return "未开始"
 
 
@@ -277,63 +290,89 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
     )
 
 
-def _coverage(count: int, total: int) -> str:
+def _scope_coverage(count: int, total: int) -> str:
     if total == 0:
         return "—"
-    return f"{count:,} / {total:,}（{count / total * 100:.1f}%）"
+    return f"{count:,} / {total:,}"
+
+
+def _chapter_ranges(chapters: Iterable[ChapterProgress]) -> str:
+    ordinals = sorted(chapter.ordinal for chapter in chapters)
+    if not ordinals:
+        return "—"
+    ranges: list[str] = []
+    start = previous = ordinals[0]
+    for ordinal in ordinals[1:]:
+        if ordinal == previous + 1:
+            previous = ordinal
+            continue
+        ranges.append(str(start) if start == previous else f"{start}-{previous}")
+        start = previous = ordinal
+    ranges.append(str(start) if start == previous else f"{start}-{previous}")
+    return f"第 {'、'.join(ranges)} 章"
+
+
+def _status_table(chapters: Iterable[ChapterProgress]) -> list[str]:
+    chapter_list = tuple(chapters)
+    lines = [
+        "| 当前阶段 | 章数 | 章节 |",
+        "| --- | ---: | --- |",
+    ]
+    for status in CHAPTER_STATUS_ORDER:
+        matching = tuple(chapter for chapter in chapter_list if chapter.status == status)
+        lines.append(f"| {status} | {len(matching)} | {_chapter_ranges(matching)} |")
+    return lines
 
 
 def _chapter_table(chapters: Iterable[ChapterProgress]) -> list[str]:
     lines = [
-        "| 章 | 标题 | 模型候选 Tag | 人工审校 Tag | 状态 |",
-        "| ---: | --- | ---: | ---: | --- |",
+        "| 章 | 标题 | 当前阶段 | 候选译文范围 | 人工审校范围 |",
+        "| ---: | --- | --- | ---: | ---: |",
     ]
     for chapter in chapters:
         title = chapter.title.replace("|", "\\|")
         lines.append(
-            f"| {chapter.ordinal} | {title}（`{chapter.slug}`） | "
-            f"{_coverage(chapter.candidate_tags, chapter.total_tags)} | "
-            f"{_coverage(chapter.reviewed_tags, chapter.total_tags)} | {chapter.status} |"
+            f"| {chapter.ordinal} | {title}（`{chapter.slug}`） | {chapter.status} | "
+            f"{_scope_coverage(chapter.candidate_tags, chapter.total_tags)} | "
+            f"{_scope_coverage(chapter.reviewed_tags, chapter.total_tags)} |"
         )
     return lines
 
 
 def render_readme_progress(snapshot: ProgressSnapshot) -> str:
     content_chapters = snapshot.content_chapters
+    non_content_chapters = tuple(
+        chapter for chapter in snapshot.chapters if not chapter.total_tags
+    )
     active = tuple(
         chapter
         for chapter in content_chapters
-        if chapter.candidate_tags or chapter.prepared_tags
+        if chapter.candidate_tags or chapter.reviewed_tags or chapter.published_tags
     )
     started = sum(chapter.candidate_tags > 0 for chapter in content_chapters)
     candidate_complete = sum(
         chapter.candidate_tags == chapter.total_tags for chapter in content_chapters
     )
-    reviewed_complete = sum(
-        chapter.reviewed_tags == chapter.total_tags for chapter in content_chapters
-    )
+    not_started = sum(chapter.status == "未开始" for chapter in content_chapters)
     lines = [
         f"英文来源 commit：`{snapshot.source_commit}`。",
         "",
-        "全书进度以锁定英文源中归属于各章的永久 Tag 为固定分母。模型候选、人工审校和",
-        "正式发布分别计数；候选合并不等于译文完成或发布。",
+        f"全书共 {len(snapshot.chapters)} 章，其中 {len(content_chapters)} 章有可翻译正文，",
+        f"{_chapter_ranges(non_content_chapters)}为自动生成索引。目前 "
+        f"{started} 章已有候选译文：{candidate_complete} 章候选译文覆盖全章，"
+        f"{started - candidate_complete} 章仍在推进；{not_started} 章尚未开始。",
         "",
-        "| 指标 | 进度 |",
-        "| --- | ---: |",
-        f"| 模型候选译文覆盖 | {_coverage(snapshot.candidate_tags, snapshot.total_tags)} |",
-        f"| 人工审校译文覆盖 | {_coverage(snapshot.reviewed_tags, snapshot.total_tags)} |",
-        f"| 正式发布译文覆盖 | {_coverage(snapshot.published_tags, snapshot.total_tags)} |",
-        f"| 已有模型候选的章 | {started} / {len(content_chapters)} |",
-        f"| 候选覆盖全部 Tag 的章 | {candidate_complete} / {len(content_chapters)} |",
-        f"| 人工审校覆盖全部 Tag 的章 | {reviewed_complete} / {len(content_chapters)} |",
+        "章节只归入一个当前阶段；模型候选、人工审校和正式发布严格分开：",
         "",
-        "当前已有准备数据或候选译文的章节：",
+        *_status_table(snapshot.chapters),
+        "",
+        "当前已有译文的章节：",
         "",
         *_chapter_table(active),
         "",
-        "[查看全部 117 章逐章进度](docs/translation-progress.md)。其中第 117 章为自动生成",
-        "索引，没有可统计正文 Tag；统计还排除了不属于任何章的书籍分部导航 Tag。详细",
-        "口径及更新约束见 [进度快照规范](docs/progress.md)。",
+        "[查看全部 117 章的逐章清单](docs/translation-progress.md)，可直接确认每章是已完成",
+        "候选译文、正在翻译、进入人工审校，还是尚未开始。详细口径及更新约束见",
+        "[进度快照规范](docs/progress.md)。",
     ]
     return "\n".join(lines) + "\n"
 
@@ -346,21 +385,26 @@ def render_chapter_report(snapshot: ProgressSnapshot) -> str:
         "",
         f"英文来源 commit：`{snapshot.source_commit}`。",
         "",
-        "“模型候选 Tag”表示该永久 Tag 已准备的全部当前 unit 均有至少一个可追溯模型",
-        "候选；“人工审校 Tag”只统计已有 current translation revision 的 Tag。两者都不",
-        "等于正式发布。百分比按 Tag 数量计算，不按页数、字数或数学难度加权。",
+        f"全书共 {len(snapshot.chapters)} 章，其中 {len(snapshot.content_chapters)} 章有可翻译正文。",
+        "下表先按章节给出整本书状态，再逐章列出翻译进度；单纯准备 unit 不算已经",
+        "开始翻译。模型候选、人工审校和正式发布是三个不同阶段。",
         "",
-        "## 逐章状态",
+        "## 整本书状态",
+        "",
+        *_status_table(snapshot.chapters),
+        "",
+        "## 每章进度",
         "",
         *_chapter_table(snapshot.chapters),
         "",
         "## 统计说明",
         "",
-        f"- 分母为 {snapshot.total_tags:,} 个章节永久 Tag；另有 "
-        f"{snapshot.ignored_navigation_tags} 个 `book-part-*` 导航 Tag 不属于任何章，未计入。",
-        f"- 当前共有 {snapshot.current_units:,} 个稳定 unit，其中 "
-        f"{snapshot.candidate_units:,} 个已有当前模型候选；unit 数只用于核对 Tag 覆盖，"
-        "不是全书完成率分母。",
+        "- “候选译文范围”和“人工审校范围”的 `x / y` 以本章永久 Tag 为结构范围；它只",
+        "  用来说明本章覆盖到哪里，不代表页数、字数或工作量百分比。",
+        f"- 锁定英文源共有 {snapshot.total_tags:,} 个章节永久 Tag；另有 "
+        f"{snapshot.ignored_navigation_tags} 个 `book-part-*` 导航 Tag 不属于任何章。",
+        "- 全书概览按章节阶段统计，不把不同章节的 Tag 累加成一个看似精确的全书完成率。",
+        "- 已准备 unit 数和候选 unit 数不作为公开翻译进度；准备数据本身不等于已有译文。",
         "- 第 117 章是自动生成索引，没有独立可翻译正文，因此显示为“不适用”。",
         "- 生成算法、状态定义和更新门禁见 [翻译进度快照规范](progress.md)。",
         "",

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from stacks_zh.progress import update_progress_report
+from stacks_zh.progress import ChapterProgress, update_progress_report
 
 
 SOURCE_COMMIT = "a" * 40
@@ -24,6 +24,36 @@ def write_jsonl(path: Path, values: list[dict[str, object]]) -> None:
 
 
 class ProgressReportTests(unittest.TestCase):
+    def test_chapter_status_uses_translation_stage_not_preparation(self) -> None:
+        def chapter(
+            *, candidate: int = 0, reviewed: int = 0, published: int = 0
+        ) -> ChapterProgress:
+            return ChapterProgress(
+                ordinal=1,
+                slug="alpha",
+                title="甲",
+                source_state="CURRENT",
+                total_tags=2,
+                prepared_tags=2,
+                candidate_tags=candidate,
+                reviewed_tags=reviewed,
+                published_tags=published,
+            )
+
+        self.assertEqual(chapter().status, "未开始")
+        self.assertEqual(chapter(candidate=1).status, "翻译中")
+        self.assertEqual(chapter(candidate=2).status, "候选译文完成，待审校")
+        self.assertEqual(chapter(candidate=2, reviewed=1).status, "人工审校中")
+        self.assertEqual(
+            chapter(candidate=2, reviewed=2).status, "人工审校完成，待发布"
+        )
+        self.assertEqual(
+            chapter(candidate=2, reviewed=2, published=1).status, "发布中"
+        )
+        self.assertEqual(
+            chapter(candidate=2, reviewed=2, published=2).status, "已发布"
+        )
+
     def test_generates_and_checks_tag_based_chapter_progress(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -123,12 +153,18 @@ class ProgressReportTests(unittest.TestCase):
             self.assertEqual(count, 2)
             self.assertEqual(errors, [])
             readme_text = readme.read_text(encoding="utf-8")
-            self.assertIn("模型候选译文覆盖 | 1 / 3（33.3%）", readme_text)
-            self.assertIn("人工审校译文覆盖 | 1 / 3（33.3%）", readme_text)
-            self.assertIn("| 1 | 甲（`alpha`） | 1 / 2（50.0%）", readme_text)
+            self.assertIn("1 章已有候选译文", readme_text)
+            self.assertIn("| 人工审校中 | 1 | 第 1 章 |", readme_text)
+            self.assertIn("| 未开始 | 1 | 第 2 章 |", readme_text)
+            self.assertIn(
+                "| 1 | 甲（`alpha`） | 人工审校中 | 1 / 2 | 1 / 2 |",
+                readme_text,
+            )
             self.assertNotIn("`beta`", readme_text)
             report_text = report.read_text(encoding="utf-8")
-            self.assertIn("| 2 | 乙（`beta`） | 0 / 1（0.0%）", report_text)
+            self.assertIn(
+                "| 2 | 乙（`beta`） | 未开始 | 0 / 1 | 0 / 1 |", report_text
+            )
             self.assertIn("另有 1 个 `book-part-*` 导航 Tag", report_text)
 
             checked_count, check_errors = update_progress_report(

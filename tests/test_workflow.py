@@ -17,10 +17,30 @@ SOURCE_COMMIT = "b" * 40
 
 
 class RenderTests(unittest.TestCase):
+    def test_title_local_label_resolves_to_chapter_prefixed_permanent_tag(self) -> None:
+        unit = {
+            "unit_id": "tag:02BL:title",
+            "parent_tag": "02BL",
+            "chapter": "desirables",
+            "node_kind": "section_title",
+            "placeholders": {},
+            "render": {
+                "prefix": "\\section{",
+                "suffix": "}\\label{section-examples-stacks}",
+            },
+        }
+
+        _validate_title_permanent_tags(
+            [unit],
+            {"desirables-section-examples-stacks": "02BL"},
+            Path("tags/tags"),
+        )
+
     def test_title_parent_tag_must_match_rendered_label(self) -> None:
         unit = {
             "unit_id": "tag:0007:title",
             "parent_tag": "0007",
+            "chapter": "conventions",
             "node_kind": "section_title",
             "placeholders": {},
             "render": {

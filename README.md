@@ -29,6 +29,9 @@ TeX 和 PDF 都不是翻译事实来源。
 这些数字来自已跟踪的 `units/`、模型 `candidates/` 和 `reviewed/` 数据；新增候选
 或审校记录后应同步更新本快照。按照项目规则，在完成要求的人工语言/数学审校、
 选择决定、许可证核查和发布门禁前，不得把任何模型候选称为正式译文或发布版本。
+详细的统计口径、去重规则、更新时机和状态措辞约束见
+[`docs/progress.md`](docs/progress.md)。快照只反映已合并到 `main` 的当前数据，不
+包含工作分支、开放 PR 或临时草稿。
 
 仓库地址：<https://github.com/dongyaotalk/stacks-project-zh>。任何人都可以通过
 Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或 CODEOWNER。

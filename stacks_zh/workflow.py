@@ -258,12 +258,13 @@ def render_batch(
                 continue
             if tags_path is None:
                 continue
-            tag = tags_by_label.get(label)
-            if tag is None:
+            resolved = _permanent_tag_for_label(label, chapter, tags_by_label)
+            if resolved is None:
                 raise RecordError(
                     f"{unit['unit_id']}: unresolved reference {label!r} has no permanent "
                     f"Tag in {tags_path}"
                 )
+            _, tag = resolved
             placeholder_overrides[name] = (
                 f"\\href{{https://stacks.math.columbia.edu/tag/{tag}}}"
                 f"{{Tag {tag}（待译）}}"
@@ -411,6 +412,21 @@ def _load_tags(path: Path) -> dict[str, str]:
     return tags_by_label
 
 
+def _permanent_tag_for_label(
+    label: str,
+    chapter: str,
+    tags_by_label: dict[str, str],
+) -> tuple[str, str] | None:
+    tag = tags_by_label.get(label)
+    if tag is not None:
+        return label, tag
+    full_label = f"{chapter}-{label}"
+    tag = tags_by_label.get(full_label)
+    if tag is not None:
+        return full_label, tag
+    return None
+
+
 def _validate_title_permanent_tags(
     units: list[dict[str, object]],
     tags_by_label: dict[str, str],
@@ -438,15 +454,18 @@ def _validate_title_permanent_tags(
                 f"{unit['unit_id']}: title unit has no rendered label to verify "
                 f"against {tags_path}"
             )
+        chapter = unit["chapter"]
+        assert isinstance(chapter, str)
         mapped_tags: dict[str, str] = {}
         for label in labels:
-            tag = tags_by_label.get(label)
-            if tag is None:
+            resolved = _permanent_tag_for_label(label, chapter, tags_by_label)
+            if resolved is None:
                 raise RecordError(
                     f"{unit['unit_id']}: rendered title label {label!r} has no "
                     f"permanent Tag in {tags_path}"
                 )
-            mapped_tags[label] = tag
+            full_label, tag = resolved
+            mapped_tags[full_label] = tag
         parent_tag = unit["parent_tag"]
         if parent_tag not in mapped_tags.values():
             mappings = ", ".join(

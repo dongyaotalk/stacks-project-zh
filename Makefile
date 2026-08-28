@@ -55,6 +55,7 @@ WORKFLOW_FILES := \
 	docs/licensing.md \
 	docs/ci.md \
 	docs/model-provenance.md \
+	docs/progress.md \
 	docs/candidate-selection.md \
 	docs/translation-replacement.md \
 	review/language/README.md \

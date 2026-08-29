@@ -1,9 +1,10 @@
 # CI 门禁合同
 
 本文定义 GitHub Actions 的确定性检查和门禁合同。当前仓库的
-`.github/workflows/ci.yml` 已启用，并在 PR 和 `main` push 上运行；远程 `main` 规则集
-要求 `policy-and-data` 成功后才能合并。本文中的“应”表示需要保持的仓库合同，而不是
-尚未实现的计划。
+`.github/workflows/ci.yml` 和 `.github/workflows/pr-contract.yml` 已启用。前者在 PR
+和 `main` push 上验证仓库数据，后者通过 `pull_request_target` 从默认分支运行可信
+校验器。远程 `main` 规则集要求 `policy-and-data` 和 `pr-contract` 成功后才能合并。
+本文中的“应”表示需要保持的仓库合同，而不是尚未实现的计划。
 
 ## 1. 必须检查的内容
 
@@ -55,6 +56,19 @@ CI 不应把英文仓库作为中文仓库的 Git remote，也不应把英文源
 
 ## 3. PR 范围和覆盖率
 
+每个 PR 必须由 `pr-contract` 验证：
+
+- 恰好用 `Closes`、`Fixes` 或 `Resolves` 关联一个本仓库 Issue；
+- Issue 早于 PR 创建，处于 `OPEN`，并带有 `claimed` 标签；
+- Issue 的 `task_id` 出现在 PR 正文中；
+- Issue 的 owner 是 PR 作者，branch 与 PR head 完全一致；
+- 所有 changed paths 均在 Issue 的 `allowed_write_files` 中；
+- 翻译结构化数据中的实际 `unit_id`、`source_commit`、chapter 和 parent Tag 均在
+  Issue 的任务坐标内。
+
+`pr-contract` 只检出默认分支，不检出或执行 PR head 中的代码；PR 中对校验器的修改
+必须先合并，后续 PR 才会使用。它只有 contents、Issues 和 Pull Requests 的只读权限。
+
 完整的 PR 范围合同要求核对：
 
 - 声明的 `Translation-Unit` 与实际 unit 一致；
@@ -73,10 +87,10 @@ CI 不应把英文仓库作为中文仓库的 Git remote，也不应把英文源
 selection/review/revision 链、候选覆盖率、占位符、英文残留、术语和状态。它通过
 `make qa-all` 全量遍历候选，而不是根据 diff 只遍历受影响 batch。
 
-当前自动化尚未解析 Issue/PR 声明，也没有 changed-path/task-scope 机器人，因此
-“声明的 Translation-Unit 与实际变更一致”“翻译 PR 没有夹带其他类别修改”等
-diff 级范围仍由维护者人工核对。只运行一个手工指定的 `make qa` 不足以覆盖多文件
-PR；合并到 `main` 后的 workflow 仍会重新运行全量检查。
+自动化已经阻断缺少 Issue、Issue/branch/path 不匹配和结构化 unit 超范围。语义边界
+是否合理、自然语言说明是否准确，以及非结构化文件的内容是否属于任务范围，仍由
+维护者人工核对。只运行一个手工指定的 `make qa` 不足以覆盖多文件 PR；合并到
+`main` 后的 workflow 仍会重新运行全量检查。
 
 ## 4. Artifact 和权限
 
@@ -88,6 +102,8 @@ Actions 默认使用最小权限：
 ~~~yaml
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 ~~~
 
 第三方 Actions 必须固定到完整 commit SHA，并在行尾注释对应主版本；不能只使用
@@ -102,7 +118,7 @@ permissions:
 
 - 所有普通变更通过 Pull Request；
 - 至少一项批准和 CODEOWNER 审核，并解决 review threads；
-- strict required status check `policy-and-data`；
+- strict required status checks `policy-and-data` 和 `pr-contract`；
 - 禁止删除 `main` 和非快进更新；
 - `@dongyaotalk` 仅可在 PR 上使用管理员 bypass，不能绕过 PR 直接 push。
 
@@ -133,7 +149,7 @@ CODEOWNERS 必须与 `MAINTAINERS.md` 一致。CODEOWNERS 审批不能替代语�
 检查由 GitHub Actions 的 `policy-and-data` job 运行。CI 当前对全部已跟踪候选 batch
 执行 QA（目前为 108 个 batch），不是按 PR changed-path 做增量筛选。
 
-当前没有自动的 changed-path/task-scope 机器人；PR 模板中的范围声明仍须由贡献者填写，
-并由维护者和 CI 的数据检查核对。R1/R2/R3 所需的语言、数学和术语审校仍通过人工
+`pr-contract` 已自动验证 Issue 生命周期、branch、changed paths 和结构化 unit 范围；
+PR 模板中的语义范围声明仍须由贡献者填写并由维护者核对。R1/R2/R3 所需的语言、数学和术语审校仍通过人工
 审校记录及 `make decision-check` 作为数据门禁，不是 GitHub 自动替代的批准。管理员
 的 PR-only bypass 只解决平台合并权限，不替代这些审校记录或许可证、发布门禁。

@@ -86,8 +86,10 @@ WORKFLOW_FILES := \
 	.github/ISSUE_TEMPLATE/review-request.yml \
 	.github/ISSUE_TEMPLATE/translation-problem.yml \
 	.github/ISSUE_TEMPLATE/codeowner-application.yml \
+	.github/ISSUE_TEMPLATE/work-item.yml \
 	.github/ISSUE_TEMPLATE/unit-preparation.yml \
 	.github/workflows/ci.yml \
+	.github/workflows/pr-contract.yml \
 	prompts/README.md \
 	prompts/translator-v1.md \
 	prompts/translator-v2.md \
@@ -95,10 +97,12 @@ WORKFLOW_FILES := \
 	migration/unit-id-map.json \
 	scripts/migrate_model_identity.py \
 	scripts/migrate_permanent_tags.py \
+	scripts/check_pr_contract.py \
 	scripts/upstream_diff.py \
 	stacks_zh/decisions.py \
 	stacks_zh/chapter_templates.py \
 	stacks_zh/provenance.py \
+	stacks_zh/pr_contract.py \
 	stacks_zh/progress.py \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \

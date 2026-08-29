@@ -111,6 +111,11 @@ AVAILABLE ← ABANDONED
 任务被阻塞时保留 `BLOCKED`，不要把未完成单元伪装成 `MERGED`。放弃任务时说明
 原因和已有输出，其他人从最新 `main` 重新认领。
 
+这里的“引用”必须使用 `Closes #<issue>`、`Fixes #<issue>` 或
+`Resolves #<issue>` 形成 GitHub 原生 closing relation。Issue 必须早于 PR 创建、处于
+`OPEN`、带有 `claimed` 标签，并包含与 PR 一致的 owner、branch 和
+`allowed_write_files`。不得先开 PR 再补 Issue，也不得只在正文中提到一个编号。
+
 ## 5. 分支命名和大小写
 
 分支格式见 `docs/git-conventions.md`。Tag 本身可以含大写字母，但分支 slug 建议
@@ -146,8 +151,9 @@ Prompt-Version: <declared version>
 - 是否把一个模型候选提升成了人工审校状态。
 
 当前本地 `make qa` 验证单个 batch；GitHub 的 `policy-and-data` job 对仓库内全部已跟踪
-候选 batch 执行 `make qa-all`。PR 的 changed-path/task-scope 与 Issue 声明目前仍由维护者
-人工核对，不能把 PR 模板勾选框当作自动门禁。
+候选 batch 执行 `make qa-all`。独立的 `pr-contract` job 验证 Issue 生命周期、branch、
+changed paths 和结构化 unit 是否落在任务坐标内；语义范围和非结构化内容仍由维护者
+人工核对，不能把 PR 模板勾选框当作完整审查。
 
 ## 7. 任务记录最小模板
 

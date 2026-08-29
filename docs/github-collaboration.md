@@ -44,6 +44,10 @@
 - 负责人和预期审校角色；
 - 当前状态和阻塞项。
 
+任何会产生 PR 的 Issue 还必须明确 `owner`、精确 branch 和
+`allowed_write_files`。打开 PR 前添加 `claimed` 标签；PR 只能用 closing keyword
+关联这一个 Issue，且 Issue 必须早于 PR 创建。先开 PR、后补 Issue 不被接受。
+
 推荐标签：
 
 ~~~text
@@ -69,9 +73,10 @@ PDF 页码、源文件行号或“这一节后半部分”等不稳定描述。�
 审校 PR 只做审校发现所需的最小修订；术语 PR 与译文应用 PR 分离；上游同步 PR
 只处理一个旧 commit 到新 commit 的范围。
 
-PR 模板是人工声明，维护者应根据变更文件、候选 run manifest 和记录内容检查范围，
-不能只相信勾选框。当前 workflow 没有自动的 changed-path/task-scope 机器人；其余结构、
-来源、溯源和候选 QA 由 `policy-and-data` 检查。候选合并到 `main` 只保存候选；维护者
+PR 模板仍是贡献者的人工声明，但 `pr-contract` 会从 GitHub 原生 closing Issue 关系
+验证 Issue 创建时间、状态、标签、owner、branch、changed paths 和结构化 unit 范围；
+不能用正文中随意出现的 Issue 编号冒充关联。其余结构、来源、溯源和候选 QA 由
+`policy-and-data` 检查。候选合并到 `main` 只保存候选；维护者
 选择和正式采用另有记录。
 
 ## 5. 当前 `main` 保护
@@ -79,8 +84,8 @@ PR 模板是人工声明，维护者应根据变更文件、候选 run manifest 
 当前 GitHub 规则集已经配置：
 
 - 禁止直接向 `main` push；
-- PR 必须通过 `policy-and-data`，其中包括 workflow、工具、harvest、溯源、决策
-  和全部候选 batch QA；
+- PR 必须通过 `pr-contract` 和 `policy-and-data`；前者检查 Issue→PR 合同，后者包括
+  workflow、工具、harvest、溯源、决策和全部候选 batch QA；
 - 禁止删除和非快进更新；
 - 需要 CODEOWNER 审核的普通 PR 使用 `.github/CODEOWNERS`；
 - 仓库作者 `@dongyaotalk` 具有 PR-only administrator bypass，可以独立合并自己

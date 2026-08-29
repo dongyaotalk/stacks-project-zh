@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +24,79 @@ CHAPTER_STATUS_ORDER = (
     "不适用",
 )
 
+LABEL_RE = re.compile(r"\\label\{(?P<label>[^{}\r\n]+)\}")
+TAG_UNIT_RE = re.compile(r"^tag:(?P<tag>[0-9A-Z]+):")
+LABEL_UNIT_RE = re.compile(r"^label:(?P<label>.+):[^:]+$")
+
+
+@dataclass(frozen=True)
+class SectionProgress:
+    ordinal: int
+    source_title: str
+    parent_tag: str
+    required_tags: int
+    prepared_tags: int
+    total_units: int
+    candidate_units: int
+    reviewed_units: int
+    published_units: int
+
+    @property
+    def candidate_started(self) -> bool:
+        return self.candidate_units > 0
+
+    @property
+    def candidate_complete(self) -> bool:
+        return (
+            self.total_units > 0
+            and self.prepared_tags == self.required_tags
+            and self.candidate_units == self.total_units
+        )
+
+    @property
+    def reviewed_started(self) -> bool:
+        return self.reviewed_units > 0
+
+    @property
+    def reviewed_complete(self) -> bool:
+        return (
+            self.total_units > 0
+            and self.prepared_tags == self.required_tags
+            and self.reviewed_units == self.total_units
+        )
+
+    @property
+    def published_started(self) -> bool:
+        return self.published_units > 0
+
+    @property
+    def published_complete(self) -> bool:
+        return (
+            self.total_units > 0
+            and self.prepared_tags == self.required_tags
+            and self.published_units == self.total_units
+        )
+
+    @staticmethod
+    def _stage(started: bool, complete: bool) -> str:
+        if complete:
+            return "完成"
+        if started:
+            return "进行中"
+        return "未开始"
+
+    @property
+    def candidate_stage(self) -> str:
+        return self._stage(self.candidate_started, self.candidate_complete)
+
+    @property
+    def reviewed_stage(self) -> str:
+        return self._stage(self.reviewed_started, self.reviewed_complete)
+
+    @property
+    def published_stage(self) -> str:
+        return self._stage(self.published_started, self.published_complete)
+
 
 @dataclass(frozen=True)
 class ChapterProgress:
@@ -30,27 +104,62 @@ class ChapterProgress:
     slug: str
     title: str
     source_state: str
-    total_tags: int
-    prepared_tags: int
-    candidate_tags: int
-    reviewed_tags: int
-    published_tags: int
+    sections: tuple[SectionProgress, ...]
+
+    @property
+    def total_sections(self) -> int:
+        return len(self.sections)
+
+    @property
+    def candidate_complete_sections(self) -> int:
+        return sum(section.candidate_complete for section in self.sections)
+
+    @property
+    def candidate_started_sections(self) -> int:
+        return sum(section.candidate_started for section in self.sections)
+
+    @property
+    def candidate_active_sections(self) -> int:
+        return sum(
+            section.candidate_started and not section.candidate_complete
+            for section in self.sections
+        )
+
+    @property
+    def candidate_unstarted_sections(self) -> int:
+        return sum(not section.candidate_started for section in self.sections)
+
+    @property
+    def reviewed_complete_sections(self) -> int:
+        return sum(section.reviewed_complete for section in self.sections)
+
+    @property
+    def reviewed_started_sections(self) -> int:
+        return sum(section.reviewed_started for section in self.sections)
+
+    @property
+    def published_complete_sections(self) -> int:
+        return sum(section.published_complete for section in self.sections)
+
+    @property
+    def published_started_sections(self) -> int:
+        return sum(section.published_started for section in self.sections)
 
     @property
     def status(self) -> str:
-        if self.total_tags == 0:
+        if not self.sections:
             return "不适用"
-        if self.published_tags == self.total_tags:
+        if self.published_complete_sections == self.total_sections:
             return "已发布"
-        if self.published_tags:
+        if self.published_started_sections:
             return "发布中"
-        if self.reviewed_tags == self.total_tags:
+        if self.reviewed_complete_sections == self.total_sections:
             return "人工审校完成，待发布"
-        if self.reviewed_tags:
+        if self.reviewed_started_sections:
             return "人工审校中"
-        if self.candidate_tags == self.total_tags:
+        if self.candidate_complete_sections == self.total_sections:
             return "候选译文完成，待审校"
-        if self.candidate_tags:
+        if self.candidate_started_sections:
             return "翻译中"
         return "未开始"
 
@@ -59,33 +168,29 @@ class ChapterProgress:
 class ProgressSnapshot:
     source_commit: str
     chapters: tuple[ChapterProgress, ...]
-    ignored_navigation_tags: int
     current_units: int
     candidate_units: int
 
     @property
     def content_chapters(self) -> tuple[ChapterProgress, ...]:
-        return tuple(chapter for chapter in self.chapters if chapter.total_tags)
+        return tuple(chapter for chapter in self.chapters if chapter.total_sections)
 
     @property
-    def total_tags(self) -> int:
-        return sum(chapter.total_tags for chapter in self.chapters)
+    def sections(self) -> tuple[SectionProgress, ...]:
+        return tuple(section for chapter in self.chapters for section in chapter.sections)
 
-    @property
-    def prepared_tags(self) -> int:
-        return sum(chapter.prepared_tags for chapter in self.chapters)
 
-    @property
-    def candidate_tags(self) -> int:
-        return sum(chapter.candidate_tags for chapter in self.chapters)
+@dataclass(frozen=True)
+class _TagIndex:
+    chapter_by_tag: dict[str, str]
+    label_by_tag: dict[str, str]
+    tag_by_label: dict[str, str]
 
-    @property
-    def reviewed_tags(self) -> int:
-        return sum(chapter.reviewed_tags for chapter in self.chapters)
 
-    @property
-    def published_tags(self) -> int:
-        return sum(chapter.published_tags for chapter in self.chapters)
+@dataclass(frozen=True)
+class _ChapterSource:
+    sections: tuple[tuple[int, str, str, frozenset[str]], ...]
+    section_by_tag: dict[str, int]
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -149,17 +254,15 @@ def _load_titles(root: Path) -> dict[str, str]:
     return value
 
 
-def _load_chapter_tags(
-    tags_path: Path, chapter_slugs: set[str]
-) -> tuple[dict[str, set[str]], dict[str, str], int]:
+def _load_tag_index(tags_path: Path, chapter_slugs: set[str]) -> _TagIndex:
     try:
         lines = tags_path.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
         raise RecordError(f"cannot read permanent Tag map {tags_path}: {exc}") from exc
     sorted_slugs = sorted(chapter_slugs, key=len, reverse=True)
-    by_chapter: dict[str, set[str]] = defaultdict(set)
     chapter_by_tag: dict[str, str] = {}
-    ignored_navigation_tags = 0
+    label_by_tag: dict[str, str] = {}
+    tag_by_label: dict[str, str] = {}
     for line_number, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -167,23 +270,131 @@ def _load_chapter_tags(
         if "," not in line:
             raise RecordError(f"{tags_path}:{line_number}: expected TAG,label")
         tag, label = line.split(",", 1)
-        if tag in chapter_by_tag:
-            raise RecordError(f"{tags_path}:{line_number}: duplicate permanent Tag {tag}")
+        if tag in chapter_by_tag or label in tag_by_label:
+            raise RecordError(f"{tags_path}:{line_number}: duplicate permanent Tag or label")
         chapter = next(
             (slug for slug in sorted_slugs if label.startswith(f"{slug}-")), None
         )
         if chapter is None:
             if label.startswith("book-part-"):
-                ignored_navigation_tags += 1
                 continue
             raise RecordError(
                 f"{tags_path}:{line_number}: Tag {tag} is not assigned to a chapter"
             )
-        by_chapter[chapter].add(tag)
         chapter_by_tag[tag] = chapter
+        label_by_tag[tag] = label
+        tag_by_label[label] = tag
     if not chapter_by_tag:
         raise RecordError(f"{tags_path}: no chapter permanent Tags")
-    return by_chapter, chapter_by_tag, ignored_navigation_tags
+    return _TagIndex(chapter_by_tag, label_by_tag, tag_by_label)
+
+
+def _full_label(chapter: str, label: str) -> str:
+    return label if label.startswith(f"{chapter}-") else f"{chapter}-{label}"
+
+
+def _requires_translation(chapter: str, full_label: str) -> bool:
+    local_label = full_label.removeprefix(f"{chapter}-")
+    return not local_label.startswith("equation-")
+
+
+def _chapter_source(
+    harvest_root: Path,
+    template: dict[str, Any],
+    tag_index: _TagIndex,
+) -> _ChapterSource:
+    chapter = str(template["chapter"])
+    raw_sections = template.get("sections")
+    if not isinstance(raw_sections, list):
+        raise RecordError(f"chapter template {chapter!r}: sections must be an array")
+    if not raw_sections:
+        return _ChapterSource((), {})
+    source_file = template.get("source_file")
+    if not isinstance(source_file, str) or not source_file:
+        raise RecordError(f"chapter template {chapter!r}: source_file is required")
+    source_path = harvest_root / source_file
+    try:
+        source_text = source_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise RecordError(f"cannot read locked chapter source {source_path}: {exc}") from exc
+
+    label_positions: dict[str, int] = {}
+    for match in LABEL_RE.finditer(source_text):
+        full_label = _full_label(chapter, match.group("label"))
+        tag = tag_index.tag_by_label.get(full_label)
+        if tag is None or tag_index.chapter_by_tag.get(tag) != chapter:
+            continue
+        if tag in label_positions:
+            raise RecordError(f"{source_path}: duplicate current label {full_label}")
+        label_positions[tag] = match.start()
+
+    section_starts: list[tuple[int, int, str, str]] = []
+    for expected_ordinal, raw_section in enumerate(raw_sections, start=1):
+        if not isinstance(raw_section, dict):
+            raise RecordError(f"chapter template {chapter!r}: invalid Section record")
+        ordinal = raw_section.get("ordinal")
+        source_title = raw_section.get("source_title")
+        parent_tag = raw_section.get("parent_tag")
+        source_label = raw_section.get("source_label")
+        if (
+            ordinal != expected_ordinal
+            or not isinstance(source_title, str)
+            or not source_title
+            or not isinstance(source_label, str)
+        ):
+            raise RecordError(f"chapter template {chapter!r}: invalid Section identity")
+        position = label_positions.get(parent_tag) if isinstance(parent_tag, str) else None
+        if position is None:
+            local_label = source_label.removeprefix(f"{chapter}-")
+            label_match = re.search(
+                rf"\\label\{{(?:{re.escape(local_label)}|{re.escape(source_label)})\}}",
+                source_text,
+            )
+            position = label_match.start() if label_match is not None else None
+        if position is None:
+            raise RecordError(
+                f"{source_path}: Section {ordinal} label {source_label} is missing"
+            )
+        section_starts.append((position, ordinal, source_title, parent_tag or "待补 Tag"))
+    if section_starts != sorted(section_starts):
+        raise RecordError(f"{source_path}: Section order does not match chapter template")
+
+    ordered_tags = sorted((position, tag) for tag, position in label_positions.items())
+    sections: list[tuple[int, str, str, frozenset[str]]] = []
+    section_by_tag: dict[str, int] = {}
+    for index, (start, ordinal, source_title, parent_tag) in enumerate(section_starts):
+        scope_start = 0 if index == 0 else start
+        end = section_starts[index + 1][0] if index + 1 < len(section_starts) else len(source_text)
+        section_tags = {
+            tag for position, tag in ordered_tags if scope_start <= position < end
+        }
+        required_tags = {
+            tag
+            for tag in section_tags
+            if _requires_translation(chapter, tag_index.label_by_tag[tag])
+        }
+        if parent_tag == "待补 Tag":
+            required_tags.add(f"missing-section-tag:{chapter}:{ordinal}")
+        if parent_tag != "待补 Tag" and parent_tag not in required_tags:
+            raise RecordError(
+                f"{source_path}: Section {ordinal} does not define a translatable scope"
+            )
+        for tag in section_tags:
+            section_by_tag[tag] = ordinal
+        sections.append((ordinal, source_title, parent_tag, frozenset(required_tags)))
+    return _ChapterSource(tuple(sections), section_by_tag)
+
+
+def _unit_identity_tag(unit_id: str, parent_tag: str, tag_index: _TagIndex) -> str:
+    tag_match = TAG_UNIT_RE.match(unit_id)
+    if tag_match is not None and tag_match.group("tag") in tag_index.chapter_by_tag:
+        return tag_match.group("tag")
+    label_match = LABEL_UNIT_RE.match(unit_id)
+    if label_match is not None:
+        tag = tag_index.tag_by_label.get(label_match.group("label"))
+        if tag is not None:
+            return tag
+    return parent_tag
 
 
 def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
@@ -194,12 +405,16 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
     missing_titles = sorted(chapter_slugs - titles.keys())
     if missing_titles:
         raise RecordError(f"chapter title map is missing: {', '.join(missing_titles)}")
-    tags_by_chapter, chapter_by_tag, ignored_tags = _load_chapter_tags(
-        tags_path, chapter_slugs
-    )
+    tag_index = _load_tag_index(tags_path, chapter_slugs)
+    harvest_root = tags_path.parent.parent
+    chapter_sources = {
+        str(template["chapter"]): _chapter_source(harvest_root, template, tag_index)
+        for template in templates
+    }
 
-    units_by_tag: dict[str, set[str]] = defaultdict(set)
-    unit_by_id: dict[str, tuple[str, str]] = {}
+    unit_by_id: dict[str, tuple[str, int | None, str]] = {}
+    units_by_section: dict[tuple[str, int], set[str]] = defaultdict(set)
+    prepared_tags_by_section: dict[tuple[str, int], set[str]] = defaultdict(set)
     for path, line_number, unit in _read_jsonl(
         (root / "translation-data/units").glob("*.jsonl")
     ):
@@ -212,15 +427,26 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
             raise RecordError(f"{path}:{line_number}: unit identity fields are required")
         if unit_id in unit_by_id:
             raise RecordError(f"{path}:{line_number}: duplicate current unit_id {unit_id}")
-        mapped_chapter = chapter_by_tag.get(parent_tag)
+        mapped_chapter = tag_index.chapter_by_tag.get(parent_tag)
         if mapped_chapter is None:
             raise RecordError(f"{path}:{line_number}: unknown parent_tag {parent_tag}")
         if chapter != mapped_chapter:
             raise RecordError(
                 f"{path}:{line_number}: chapter {chapter!r} does not match Tag {parent_tag}"
             )
-        unit_by_id[unit_id] = (parent_tag, chapter)
-        units_by_tag[parent_tag].add(unit_id)
+        identity_tag = _unit_identity_tag(unit_id, parent_tag, tag_index)
+        if tag_index.chapter_by_tag.get(identity_tag) != chapter:
+            raise RecordError(
+                f"{path}:{line_number}: unit identity Tag does not match chapter {chapter!r}"
+            )
+        section_ordinal = chapter_sources[chapter].section_by_tag.get(identity_tag)
+        if section_ordinal is None:
+            section_ordinal = chapter_sources[chapter].section_by_tag.get(parent_tag)
+        unit_by_id[unit_id] = (chapter, section_ordinal, identity_tag)
+        if section_ordinal is not None:
+            key = (chapter, section_ordinal)
+            units_by_section[key].add(unit_id)
+            prepared_tags_by_section[key].add(identity_tag)
 
     candidate_units: set[str] = set()
     for path, line_number, candidate in _read_jsonl(
@@ -256,44 +482,42 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
         ):
             published_units.add(unit_id)
 
-    prepared_tags = set(units_by_tag)
-    candidate_tags = {
-        tag for tag, unit_ids in units_by_tag.items() if unit_ids <= candidate_units
-    }
-    reviewed_tags = {
-        tag for tag, unit_ids in units_by_tag.items() if unit_ids <= reviewed_units
-    }
-    published_tags = {
-        tag for tag, unit_ids in units_by_tag.items() if unit_ids <= published_units
-    }
-
-    chapters = tuple(
-        ChapterProgress(
-            ordinal=int(template["chapter_ordinal"]),
-            slug=str(template["chapter"]),
-            title=titles[str(template["chapter"])],
-            source_state=str(template.get("source_state", "")),
-            total_tags=len(tags_by_chapter[str(template["chapter"])]),
-            prepared_tags=len(tags_by_chapter[str(template["chapter"])] & prepared_tags),
-            candidate_tags=len(tags_by_chapter[str(template["chapter"])] & candidate_tags),
-            reviewed_tags=len(tags_by_chapter[str(template["chapter"])] & reviewed_tags),
-            published_tags=len(tags_by_chapter[str(template["chapter"])] & published_tags),
+    chapters: list[ChapterProgress] = []
+    for template in templates:
+        chapter = str(template["chapter"])
+        sections: list[SectionProgress] = []
+        for ordinal, source_title, parent_tag, required_tags in chapter_sources[chapter].sections:
+            key = (chapter, ordinal)
+            unit_ids = units_by_section[key]
+            prepared_tags = prepared_tags_by_section[key] & required_tags
+            sections.append(
+                SectionProgress(
+                    ordinal=ordinal,
+                    source_title=source_title,
+                    parent_tag=parent_tag,
+                    required_tags=len(required_tags),
+                    prepared_tags=len(prepared_tags),
+                    total_units=len(unit_ids),
+                    candidate_units=len(unit_ids & candidate_units),
+                    reviewed_units=len(unit_ids & reviewed_units),
+                    published_units=len(unit_ids & published_units),
+                )
+            )
+        chapters.append(
+            ChapterProgress(
+                ordinal=int(template["chapter_ordinal"]),
+                slug=chapter,
+                title=titles[chapter],
+                source_state=str(template.get("source_state", "")),
+                sections=tuple(sections),
+            )
         )
-        for template in templates
-    )
     return ProgressSnapshot(
         source_commit=source_commit,
-        chapters=chapters,
-        ignored_navigation_tags=ignored_tags,
+        chapters=tuple(chapters),
         current_units=len(unit_by_id),
         candidate_units=len(candidate_units),
     )
-
-
-def _scope_coverage(count: int, total: int) -> str:
-    if total == 0:
-        return "—"
-    return f"{count:,} / {total:,}"
 
 
 def _chapter_ranges(chapters: Iterable[ChapterProgress]) -> str:
@@ -324,55 +548,122 @@ def _status_table(chapters: Iterable[ChapterProgress]) -> list[str]:
     return lines
 
 
+def _pipeline_table(sections: Iterable[SectionProgress]) -> list[str]:
+    section_list = tuple(sections)
+
+    def counts(stage: str) -> tuple[int, int, int]:
+        started = sum(getattr(section, f"{stage}_started") for section in section_list)
+        complete = sum(getattr(section, f"{stage}_complete") for section in section_list)
+        return complete, started - complete, len(section_list) - started
+
+    candidate = counts("candidate")
+    reviewed = counts("reviewed")
+    published = counts("published")
+    total = len(section_list)
+
+    def coverage(complete: int) -> str:
+        percentage = 100 * complete / total if total else 0
+        return f"{complete:,} / {total:,}（{percentage:.1f}%）"
+
+    return [
+        "| 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |",
+        "| --- | ---: | ---: | ---: |",
+        f"| 模型候选译文 | {coverage(candidate[0])} | {candidate[1]:,} | {candidate[2]:,} |",
+        f"| 人工审校 | {coverage(reviewed[0])} | {reviewed[1]:,} | {reviewed[2]:,} |",
+        f"| 正式发布 | {coverage(published[0])} | {published[1]:,} | {published[2]:,} |",
+    ]
+
+
 def _chapter_table(chapters: Iterable[ChapterProgress]) -> list[str]:
     lines = [
-        "| 章 | 标题 | 当前阶段 | 候选译文范围 | 人工审校范围 |",
-        "| ---: | --- | --- | ---: | ---: |",
+        "| 章 | 标题 | 当前阶段 | 候选完成 / 总数 | 翻译中 | 未开始 | 审校完成 | 已发布 |",
+        "| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for chapter in chapters:
         title = chapter.title.replace("|", "\\|")
+        if chapter.total_sections:
+            percentage = 100 * chapter.candidate_complete_sections / chapter.total_sections
+            values = (
+                f"{chapter.candidate_complete_sections} / {chapter.total_sections}（{percentage:.1f}%）",
+                str(chapter.candidate_active_sections),
+                str(chapter.candidate_unstarted_sections),
+                str(chapter.reviewed_complete_sections),
+                str(chapter.published_complete_sections),
+            )
+        else:
+            values = ("—",) * 5
         lines.append(
             f"| {chapter.ordinal} | {title}（`{chapter.slug}`） | {chapter.status} | "
-            f"{_scope_coverage(chapter.candidate_tags, chapter.total_tags)} | "
-            f"{_scope_coverage(chapter.reviewed_tags, chapter.total_tags)} |"
+            f"{values[0]} | {values[1]} | {values[2]} | {values[3]} | {values[4]} |"
         )
+    return lines
+
+
+def _section_detail(chapters: Iterable[ChapterProgress]) -> list[str]:
+    lines: list[str] = []
+    for chapter in chapters:
+        if not chapter.candidate_started_sections:
+            continue
+        lines.extend(
+            [
+                f"### 第 {chapter.ordinal} 章 {chapter.title}（`{chapter.slug}`）",
+                "",
+                f"共 {chapter.total_sections} 个 Section：候选完成 "
+                f"{chapter.candidate_complete_sections}，翻译中 "
+                f"{chapter.candidate_active_sections}，未开始 "
+                f"{chapter.candidate_unstarted_sections}。",
+                "",
+                "| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |",
+                "| ---: | --- | --- | --- | --- | --- |",
+            ]
+        )
+        for section in chapter.sections:
+            source_title = section.source_title.replace("|", "\\|")
+            lines.append(
+                f"| {section.ordinal} | `{section.parent_tag}` | {source_title} | "
+                f"{section.candidate_stage} | {section.reviewed_stage} | "
+                f"{section.published_stage} |"
+            )
+        lines.append("")
     return lines
 
 
 def render_readme_progress(snapshot: ProgressSnapshot) -> str:
     content_chapters = snapshot.content_chapters
     non_content_chapters = tuple(
-        chapter for chapter in snapshot.chapters if not chapter.total_tags
+        chapter for chapter in snapshot.chapters if not chapter.total_sections
     )
     active = tuple(
-        chapter
-        for chapter in content_chapters
-        if chapter.candidate_tags or chapter.reviewed_tags or chapter.published_tags
+        chapter for chapter in content_chapters if chapter.candidate_started_sections
     )
-    started = sum(chapter.candidate_tags > 0 for chapter in content_chapters)
-    candidate_complete = sum(
-        chapter.candidate_tags == chapter.total_tags for chapter in content_chapters
-    )
-    not_started = sum(chapter.status == "未开始" for chapter in content_chapters)
+    sections = snapshot.sections
+    candidate_complete = sum(section.candidate_complete for section in sections)
+    candidate_started = sum(section.candidate_started for section in sections)
     lines = [
         f"英文来源 commit：`{snapshot.source_commit}`。",
         "",
-        f"全书共 {len(snapshot.chapters)} 章，其中 {len(content_chapters)} 章有可翻译正文，",
-        f"{_chapter_ranges(non_content_chapters)}为自动生成索引。目前 "
-        f"{started} 章已有候选译文：{candidate_complete} 章候选译文覆盖全章，"
-        f"{started - candidate_complete} 章仍在推进；{not_started} 章尚未开始。",
+        f"全书共 {len(snapshot.chapters)} 章，其中 {len(content_chapters)} 章、"
+        f"{len(sections):,} 个 Section 有可翻译正文；",
+        f"{_chapter_ranges(non_content_chapters)}为自动生成索引。当前有 "
+        f"{candidate_complete:,} 个 Section 候选译文完成，"
+        f"{candidate_started - candidate_complete:,} 个正在翻译，"
+        f"{len(sections) - candidate_started:,} 个尚未开始。",
         "",
         "章节只归入一个当前阶段；模型候选、人工审校和正式发布严格分开：",
         "",
         *_status_table(snapshot.chapters),
         "",
-        "当前已有译文的章节：",
+        "按全书 Section 汇总：",
+        "",
+        *_pipeline_table(sections),
+        "",
+        "当前已开始翻译的章节（各数字均为 Section 数）：",
         "",
         *_chapter_table(active),
         "",
-        "[查看全部 117 章的逐章清单](docs/translation-progress.md)，可直接确认每章是已完成",
-        "候选译文、正在翻译、进入人工审校，还是尚未开始。详细口径及更新约束见",
-        "[进度快照规范](docs/progress.md)。",
+        f"[查看全部 {len(snapshot.chapters)} 章及已开始章节的逐节明细]"
+        "(docs/translation-progress.md)。详细统计口径和强制更新约束见",
+        "[进度报告规范](docs/progress.md)。",
     ]
     return "\n".join(lines) + "\n"
 
@@ -385,28 +676,41 @@ def render_chapter_report(snapshot: ProgressSnapshot) -> str:
         "",
         f"英文来源 commit：`{snapshot.source_commit}`。",
         "",
-        f"全书共 {len(snapshot.chapters)} 章，其中 {len(snapshot.content_chapters)} 章有可翻译正文。",
-        "下表先按章节给出整本书状态，再逐章列出翻译进度；单纯准备 unit 不算已经",
-        "开始翻译。模型候选、人工审校和正式发布是三个不同阶段。",
+        f"全书共 {len(snapshot.chapters)} 章、{len(snapshot.sections):,} 个可翻译 Section。",
+        "本页先列整本书和每章状态，再列所有已开始章节的逐节状态。没有出现在逐节",
+        "明细中的正文章，其全部 Section 均为“未开始”。模型候选、人工审校和正式发布",
+        "是三个不同阶段。",
         "",
         "## 整本书状态",
         "",
         *_status_table(snapshot.chapters),
         "",
+        "## 全书 Section 状态",
+        "",
+        *_pipeline_table(snapshot.sections),
+        "",
         "## 每章进度",
+        "",
+        "下表中的五个数字均为本章 Section 数，不是永久 Tag、unit、页数或字数。",
         "",
         *_chapter_table(snapshot.chapters),
         "",
+        "## 已开始章节的逐节明细",
+        "",
+        *_section_detail(snapshot.chapters),
         "## 统计说明",
         "",
-        "- “候选译文范围”和“人工审校范围”的 `x / y` 以本章永久 Tag 为结构范围；它只",
-        "  用来说明本章覆盖到哪里，不代表页数、字数或工作量百分比。",
-        f"- 锁定英文源共有 {snapshot.total_tags:,} 个章节永久 Tag；另有 "
-        f"{snapshot.ignored_navigation_tags} 个 `book-part-*` 导航 Tag 不属于任何章。",
-        "- 全书概览按章节阶段统计，不把不同章节的 Tag 累加成一个看似精确的全书完成率。",
-        "- 已准备 unit 数和候选 unit 数不作为公开翻译进度；准备数据本身不等于已有译文。",
-        "- 第 117 章是自动生成索引，没有独立可翻译正文，因此显示为“不适用”。",
-        "- 生成算法、状态定义和更新门禁见 [翻译进度快照规范](progress.md)。",
+        "- Section 来自锁定英文源的 `\\section{}` 目录结构，是全书和逐章统一使用的",
+        "  固定公开分母；不同 Section 长度不同，因此这里不声称是工作量百分比。",
+        "- “候选完成”要求该 Section 内所有需要翻译的永久 Tag 范围都已有 current unit，",
+        "  且每个 current unit 都有候选。只有部分候选时显示“翻译中”。纯公式的",
+        "  `equation-*` Tag 没有自然语言，不作为翻译范围。",
+        "- unit 和永久 Tag 只用于内部完整性校验，不再作为公开进度数字；准备 unit 本身",
+        "  不会把 Section 标记为已经开始翻译。",
+        "- “候选译文完成”不等于人工审校完成，更不等于可以发布。人工审校和发布只由",
+        "  current reviewed revision 的状态决定。",
+        "- 第 117 章是自动生成索引，没有独立可翻译 Section，因此显示为“不适用”。",
+        "- 生成算法、状态定义和更新门禁见 [翻译进度报告规范](progress.md)。",
         "",
     ]
     return "\n".join(lines)

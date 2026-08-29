@@ -482,8 +482,9 @@ translation revision 中。
 
 ### 5. 贡献 Python、工具、Schema、CI 或文档
 
-代码贡献从一个描述问题和验收标准的 Issue 开始。小型文档拼写修复可以直接 PR；
-改变数据格式、状态机、来源匹配、Tag 索引、翻译 QA 或渲染语义时，必须先讨论
+代码贡献从一个描述问题和验收标准的 Issue 开始；小型文档拼写修复也不例外，避免
+再次出现无法追溯任务范围的直接 PR。改变数据格式、状态机、来源匹配、Tag 索引、
+翻译 QA 或渲染语义时，必须先讨论
 兼容性和既有 108 个 batch 的迁移方案。
 
 推荐步骤：
@@ -598,8 +599,11 @@ base repository: dongyaotalk/stacks-project-zh  base: main
 head repository: <your-account>/stacks-project-zh  compare: <your-branch>
 ~~~
 
-PR 必须关联认领 Issue（例如 `Closes #123`）、完整填写模板并等待
-`policy-and-data`。CI 失败时在原分支继续提交；不要关闭 PR 后创建新 PR，也不要
+PR 必须使用 closing keyword 关联一个早于 PR 创建的认领 Issue（例如
+`Closes #123`），并在正文写出同一个 `task_id`。Issue 必须处于 `OPEN`、带有
+`claimed` 标签，且其中的 owner、branch、`allowed_write_files` 和 unit 范围与实际
+PR 一致。完整填写模板并等待 `pr-contract` 和 `policy-and-data`；前者从默认分支
+运行可信校验器，不能由 PR 自己修改后绕过。CI 失败时在原分支继续提交；不要关闭 PR 后创建新 PR，也不要
 修改生成文件来掩盖失败。只有仓库管理员或具备相应路径审核职责的维护者决定合并。
 
 ### 9. PR 和审校门禁

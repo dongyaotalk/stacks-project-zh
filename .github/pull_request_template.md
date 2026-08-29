@@ -12,7 +12,7 @@
 
 ## 范围和来源
 
-- 关联 Issue / task ID：
+- 关闭并关联的任务 Issue / task ID：`Closes #<issue>` / `<task_id>`
 - 英文完整 commit：
 - Chapter / Section / Tag：
 - Translation unit：
@@ -35,6 +35,8 @@
 - [ ] 没有修改英文 harvest
 - [ ] `upstream.lock` 与任务来源一致
 - [ ] 所有 unit 和文件都在 Issue/任务声明范围内
+- [ ] Issue 早于 PR 创建，状态为 `OPEN` 且带有 `claimed` 标签
+- [ ] Issue 中的 owner、branch、`allowed_write_files` 与本 PR 一致
 - [ ] 本 PR 是对应 unit/batch 的唯一写入者
 - [ ] 公式、环境、标签、引用和引用键保持不变
 - [ ] 占位符数量、类型和顺序一致
@@ -81,6 +83,7 @@
 ## Git
 
 - [ ] 分支名符合 `docs/git-conventions.md`
+- [ ] `pr-contract` 已验证 closing Issue 和 changed-path/unit scope
 - [ ] 提交原子且标题符合约定
 - [ ] 必需 trailers 完整
 - [ ] 未提交生成文件、凭据、本地路径或无关修改

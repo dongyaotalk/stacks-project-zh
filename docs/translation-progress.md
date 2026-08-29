@@ -13,8 +13,8 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 109 | 第 5-111、115-116 章 |
-| 翻译中 | 1 | 第 4 章 |
+| 未开始 | 108 | 第 5-111、116 章 |
+| 翻译中 | 2 | 第 4、115 章 |
 | 候选译文完成，待审校 | 6 | 第 1-3、112-114 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 54 / 3,299（1.6%） | 13 | 3,232 |
+| 模型候选译文 | 54 / 3,299（1.6%） | 14 | 3,231 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -150,7 +150,7 @@
 | 112 | 文献指南（`guide`） | 候选译文完成，待审校 | 7 / 7（100.0%） | 0 | 0 | 0 | 0 |
 | 113 | 期望事项（`desirables`） | 候选译文完成，待审校 | 20 / 20（100.0%） | 0 | 0 | 0 | 0 |
 | 114 | 编码风格（`coding`） | 候选译文完成，待审校 | 1 / 1（100.0%） | 0 | 0 | 0 | 0 |
-| 115 | 已废弃内容（`obsolete`） | 未开始 | 0 / 26（0.0%） | 0 | 26 | 0 | 0 |
+| 115 | 已废弃内容（`obsolete`） | 翻译中 | 0 / 26（0.0%） | 1 | 25 | 0 | 0 |
 | 116 | GNU 自由文档许可证（`fdl`） | 未开始 | 0 / 11（0.0%） | 0 | 11 | 0 | 0 |
 | 117 | 自动生成索引（`index`） | 不适用 | — | — | — | — | — |
 
@@ -295,6 +295,39 @@
 | Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | `02BZ` | List of style comments | 完成 | 未开始 | 未开始 |
+
+### 第 115 章 已废弃内容（`obsolete`）
+
+共 26 个 Section：候选完成 0，翻译中 1，未开始 25。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `073U` | Introduction | 进行中 | 未开始 | 未开始 |
+| 2 | `0G5K` | Preliminaries | 未开始 | 未开始 | 未开始 |
+| 3 | `0BFJ` | Homological algebra | 未开始 | 未开始 | 未开始 |
+| 4 | `088X` | Obsolete algebra lemmas | 未开始 | 未开始 | 未开始 |
+| 5 | `073V` | Lemmas related to ZMT | 未开始 | 未开始 | 未开始 |
+| 6 | `07GD` | Formally smooth ring maps | 未开始 | 未开始 | 未开始 |
+| 7 | `0EGM` | Sites and sheaves | 未开始 | 未开始 | 未开始 |
+| 8 | `0BM0` | Cohomology | 未开始 | 未开始 | 未开始 |
+| 9 | `0FU5` | Differential graded algebra | 未开始 | 未开始 | 未开始 |
+| 10 | `08Q0` | Simplicial methods | 未开始 | 未开始 | 未开始 |
+| 11 | `07VA` | Results on schemes | 未开始 | 未开始 | 未开始 |
+| 12 | `0GXZ` | Derived categories of varieties | 未开始 | 未开始 | 未开始 |
+| 13 | `0FYI` | Representability in the regular proper case | 未开始 | 未开始 | 未开始 |
+| 14 | `08J4` | Functor of quotients | 未开始 | 未开始 | 未开始 |
+| 15 | `0ARG` | Spaces and fpqc coverings | 未开始 | 未开始 | 未开始 |
+| 16 | `07T6` | Very reasonable algebraic spaces | 未开始 | 未开始 | 未开始 |
+| 17 | `0D45` | Obsolete lemmas on algebraic spaces | 未开始 | 未开始 | 未开始 |
+| 18 | `0G2T` | Obsolete lemmas on algebraic stacks | 未开始 | 未开始 | 未开始 |
+| 19 | `08T5` | Variants of cotangent complexes for schemes | 未开始 | 未开始 | 未开始 |
+| 20 | `08VZ` | Deformations and obstructions of flat modules | 未开始 | 未开始 | 未开始 |
+| 21 | `0CXY` | The stack of coherent sheaves in the non-flat case | 未开始 | 未开始 | 未开始 |
+| 22 | `0AS3` | Modifications | 未开始 | 未开始 | 未开始 |
+| 23 | `0AYK` | Intersection theory | 未开始 | 未开始 | 未开始 |
+| 24 | `0AYE` | Commutativity of intersecting divisors | 未开始 | 未开始 | 未开始 |
+| 25 | `0C6D` | Dualizing modules on regular proper models | 未开始 | 未开始 | 未开始 |
+| 26 | `09AQ` | Duplicate and split out references | 未开始 | 未开始 | 未开始 |
 
 ## 统计说明
 

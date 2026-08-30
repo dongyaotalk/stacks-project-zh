@@ -55,6 +55,32 @@ TeX 和 PDF 都不是翻译事实来源。
 [进度报告规范](docs/progress.md)。
 <!-- translation-progress:end -->
 
+## 推荐翻译顺序
+
+<!-- translation-plan:start -->
+优先级方法：`reader-value-v1`。用户显式指定的 Chapter/Tag 始终高于
+项目默认优先级；未指定时才按 P0 → P4、wave、章内 Section 顺序选择。
+
+| 优先级 | 章 | 当前范围 | 准备状态 | 下一动作 |
+| --- | --- | --- | --- | --- |
+| P0 | 第 105 章 代数栈导论（`stacks-introduction`） | Section 1 / `072I` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 1 章 引言（`introduction`） | Section 1 / `0001` | `READY` | `REVIEW` |
+| P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 26 章 概形（`schemes`） | Section 1 / `01H9` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 28 章 概形的性质（`properties`） | Section 1 / `01OI` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 29 章 概形的态射（`morphisms`） | Section 1 / `01QM` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 34 章 概形上的拓扑（`topologies`） | Section 1 / `020L` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 35 章 下降（`descent`） | Section 1 / `0239` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 41 章 概形的平展态射（`etale`） | Section 1 / `024K` | `UNPREPARED` | `PREPARE_SCOPE` |
+
+运行 `make next-task` 获取当前自动任务；也可用
+`make next-task CHAPTER=105` 或 `make next-task CHAPTER=105 TAG=072I`
+锁定本次范围。完整政策和 117 章队列见
+[翻译优先级](docs/translation-priority.md)与
+[当前翻译计划](docs/translation-plan.md)。
+<!-- translation-plan:end -->
+
 仓库地址：<https://github.com/dongyaotalk/stacks-project-zh>。任何人都可以通过
 Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或 CODEOWNER。
 
@@ -95,6 +121,8 @@ Issue 和 Pull Request 参与；提交候选翻译不要求先成为维护者或
 | [`docs/model-provenance.md`](docs/model-provenance.md) | Harness、具体模型、运行和模型下架处理 |
 | [`docs/progress.md`](docs/progress.md) | 全书/逐章进度的统计口径和强制更新规则 |
 | [`docs/translation-progress.md`](docs/translation-progress.md) | 由结构化数据生成的 117 章翻译进度 |
+| [`docs/translation-priority.md`](docs/translation-priority.md) | P0–P4 政策、显式范围覆盖和任务选择规则 |
+| [`docs/translation-plan.md`](docs/translation-plan.md) | 由优先级和当前状态生成的 117 章行动队列 |
 | [`prompts/README.md`](prompts/README.md) | Translator Prompt 版本和历史兼容规则 |
 | [`docs/candidate-selection.md`](docs/candidate-selection.md) | 候选保存、维护者选择和正式采用 |
 | [`docs/translation-replacement.md`](docs/translation-replacement.md) | 新模型替换旧译文和 revision 关系 |
@@ -261,7 +289,11 @@ grep '"parent_tag": "001M"' translation-data/units/*.jsonl
 `source_text` 是允许翻译的英文自然语言，`unit_id` 是稳定身份，`placeholders` 是
 必须原样保留的数学、引用或 LaTeX 结构。
 
-若想从后面的任意章节开始，先打开
+若不确定从哪里开始，运行 `make next-task`；系统会按项目优先级和当前状态返回下一项
+具体动作。用户指定的范围具有最高优先级，例如 `make next-task CHAPTER=105`，或进一步
+指定 `make next-task CHAPTER=105 TAG=072I`。显式范围已经完成时不会自动切换到别章。
+
+若想从后面的任意章节开始，也可以直接打开
 [`translation-data/chapter-templates/`](translation-data/chapter-templates/) 中对应章的
 JSON 模板。它按上游顺序列出每个 Section 的永久 Tag、建议 batch/unit 路径和准备
 状态；`READY` 可直接按已有 `unit_files` 认领，`UNPREPARED` 先提交 scope preparation，

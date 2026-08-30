@@ -77,6 +77,8 @@ CI 不应把英文仓库作为中文仓库的 Git remote，也不应把英文源
 - candidate 和 unit 文件成对存在；
 - 修改进度报告、生成器或统计规范的 PR 中，README 与逐章进度报告必须和当前
   unit/candidate/reviewed/永久 Tag 数据一致；
+- 优先级配置、计划生成器、README 推荐队列和 `docs/translation-plan.md` 必须通过
+  `make plan-check` 保持一致；
 - unit_id 在任务范围内且不重复；
 - source commit 和 hash 与 `upstream.lock` 一致；
 - Harness、具体模型、model record、run ID 与不可变 run manifest 一致；
@@ -150,6 +152,10 @@ CODEOWNERS 必须与 `MAINTAINERS.md` 一致。CODEOWNERS 审批不能替代语�
 `make qa-all` 已可执行，且同一组
 检查由 GitHub Actions 的 `policy-and-data` job 运行。CI 当前对全部已跟踪候选 batch
 执行 QA（目前为 108 个 batch），不是按 PR changed-path 做增量筛选。
+
+优先级配置、计划生成器、计划文档、README 推荐区间或相关测试发生变化时，CI 另外
+执行 `make plan-check`。current unit、candidate 或 reviewed 数据合并后，计划像进度
+报告一样由独立更新任务运行 `make plan`，避免普通翻译 PR 夹带生成文档。
 
 `pr-contract` 已自动验证 Issue 生命周期、branch、changed paths 和结构化 unit 范围；
 PR 模板中的语义范围声明仍须由贡献者填写并由维护者核对。R1/R2/R3 所需的语言、数学和术语审校仍通过人工

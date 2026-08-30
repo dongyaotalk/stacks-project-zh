@@ -103,9 +103,11 @@ HARNESS_ID=<harness-id>`，并让 `assemble` 默认的 `--harness-version auto` 
 
 任何修改在创建 Git 提交或 Pull Request 前都必须完成一次适用的本地 LaTeX 编译，
 且命令必须以零状态退出。翻译候选必须先执行 `make render MODEL=<model-lane>`，再执行
-`make pdf MODEL=<model-lane>`，以编译包含本次候选的模型通道；其他修改至少执行
-`make template`。缺少 TeX 工具链或出现编译错误时不得提交、推送或创建 PR，也不得
-通过修改生成的 TeX、PDF 或日志绕过失败。生成产物仍不得提交。
+`make pdf MODEL=<model-lane>`，以编译包含本次候选的模型通道；其他文档、进度、政策和
+工具修改也对当前候选通道执行这两条命令（默认 `MODEL=openai-gpt-5.6-sol`）。只有
+模板、样式、Makefile 或渲染路径发生变化时才追加 `make template`。裸 `make pdf` 不再
+有隐式 `template` 默认值，必须显式指定 `MODEL`。缺少 TeX 工具链或出现编译错误时不得
+提交、推送或创建 PR，也不得通过修改生成的 TeX、PDF 或日志绕过失败。生成产物仍不得提交。
 
 ## 5. 状态模型
 

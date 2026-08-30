@@ -129,9 +129,11 @@ trailers 记录可审计事实，不得伪造审校人或用模型名称填写 `
 
 创建任何 Git 提交或 Pull Request 前必须完成适用的本地 LaTeX 编译并确认命令以零
 状态退出。翻译候选执行 `make render MODEL=<model-lane>` 和
-`make pdf MODEL=<model-lane>`；其他修改至少执行 `make template`。缺少 TeX 工具链
-或出现编译错误时不得提交、推送或创建 PR。生成的 TeX、PDF 和日志仅用于检查，
-不得纳入提交。
+`make pdf MODEL=<model-lane>`；其他文档、进度、政策和工具修改也针对当前候选通道
+执行这两条命令（默认 `openai-gpt-5.6-sol`）。只有模板、样式、Makefile 或渲染路径
+发生变化时才另外执行 `make template`。裸 `make pdf` 必须显式指定 `MODEL`。缺少
+TeX 工具链或出现编译错误时不得提交、推送或创建 PR。生成的 TeX、PDF 和日志仅用于
+检查，不得纳入提交。
 
 ## 7. PR 类型和粒度
 

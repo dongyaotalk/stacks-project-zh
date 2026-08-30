@@ -17,6 +17,7 @@ OUTPUT_DIR ?= output/pdf
 CHAPTER_TEMPLATE_DIR ?= translation-data/chapter-templates
 HARNESS_ID ?= codex
 HARNESS_CONFIG ?= config/harnesses.yml
+PRIORITY_CONFIG ?= config/translation-priorities.json
 
 UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
@@ -33,6 +34,7 @@ OUTPUT_PDF := $(OUTPUT_DIR)/$(JOBNAME).pdf
 INDEX_STYLE := $(TEMPLATE_DIR)/styles/svind-zh.ist
 
 WORKFLOW_FILES := \
+	AGENTS.md \
 	README.md \
 	WORKFLOW.md \
 	CONTRIBUTING.md \
@@ -59,6 +61,8 @@ WORKFLOW_FILES := \
 	docs/model-provenance.md \
 	docs/progress.md \
 	docs/translation-progress.md \
+	docs/translation-priority.md \
+	docs/translation-plan.md \
 	docs/candidate-selection.md \
 	docs/translation-replacement.md \
 	review/language/README.md \
@@ -67,11 +71,13 @@ WORKFLOW_FILES := \
 	config/harnesses.yml \
 	config/macro-policy.yml \
 	config/chapter-titles.json \
+	config/translation-priorities.json \
 	config/glossary.yml \
 	config/models.yml \
 	config/style-guide.md \
 	schema/unit.schema.json \
 	schema/chapter-template.schema.json \
+	schema/translation-priorities.schema.json \
 	schema/candidate.schema.json \
 	schema/review.schema.json \
 	schema/run-manifest.schema.json \
@@ -107,10 +113,12 @@ WORKFLOW_FILES := \
 	stacks_zh/provenance.py \
 	stacks_zh/pr_contract.py \
 	stacks_zh/progress.py \
+	stacks_zh/planning.py \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \
 	stacks_zh/upstream.py \
 	stacks_zh/workflow.py \
+	tests/test_planning.py \
 	upstream-index/README.md \
 	translation-data/chapter-templates/README.md
 
@@ -122,6 +130,7 @@ CANDIDATE_FILE := translation-data/candidates/$(MODEL)/$(BATCH).jsonl
 MODEL_CANDIDATE_FILES = $(sort $(wildcard translation-data/candidates/$(MODEL)/*.jsonl))
 MODEL_BATCHES = $(notdir $(basename $(MODEL_CANDIDATE_FILES)))
 MODEL_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(MODEL_BATCHES)))
+NEXT_TASK_ARGS = $(if $(strip $(CHAPTER)),--chapter "$(CHAPTER)",) $(if $(strip $(TAG)),--tag "$(TAG)",) $(if $(filter 1 true yes,$(FALLBACK)),--fallback,) $(if $(filter 1 true yes,$(JSON)),--json,)
 
 SOURCE_REVISION ?= $(shell printf '%s' '$(UPSTREAM_COMMIT)' | cut -c1-12)
 SOURCE_DATE ?= $(UPSTREAM_COMMIT_DATE)
@@ -136,7 +145,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -192,6 +201,15 @@ progress:
 
 progress-check:
 	$(PYTHON) stacks_zh.py progress --root . --tags "$(TAGS_FILE)" --check
+
+plan:
+	$(PYTHON) stacks_zh.py plan --root . --priorities "$(PRIORITY_CONFIG)"
+
+plan-check:
+	$(PYTHON) stacks_zh.py plan --root . --priorities "$(PRIORITY_CONFIG)" --check
+
+next-task:
+	$(PYTHON) stacks_zh.py next-task --root . --priorities "$(PRIORITY_CONFIG)" $(NEXT_TASK_ARGS)
 
 harness-version:
 	@test -n "$(strip $(HARNESS_ID))" || { printf 'HARNESS_ID is required\n' >&2; exit 1; }
@@ -339,6 +357,9 @@ help:
 		'make upstream-index-check       Verify locked Tag/chapter index and sync history' \
 		'make progress                   Refresh README and per-chapter translation progress' \
 		'make progress-check             Verify committed translation progress is current' \
+		'make plan                       Refresh README and the priority-aware translation plan' \
+		'make plan-check                 Verify the committed translation plan is current' \
+		'make next-task [CHAPTER=115] [TAG=0BM0] [JSON=1]  Select the next workflow action' \
 		'make tool-test                  Run candidate pipeline tests' \
 		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \

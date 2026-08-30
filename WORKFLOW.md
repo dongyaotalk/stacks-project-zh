@@ -19,9 +19,10 @@
 2. `config/workflow.yml`：状态、风险等级和硬性流程配置；
 3. `config/macro-policy.yml`：LaTeX 节点处理策略；
 4. `config/glossary.yml`：已批准和待决术语；
-5. 本文件及 `docs/`：完整的人类可读规范；
-6. `AGENTS.md`：Codex 和其他自动化代理的执行边界；
-7. `README.md`：项目介绍，不覆盖上述规范。
+5. `config/translation-priorities.json`：全书长期默认翻译顺序；
+6. 本文件及 `docs/`：完整的人类可读规范；
+7. `AGENTS.md`：Codex 和其他自动化代理的执行边界；
+8. `README.md`：项目介绍，不覆盖上述规范。
 
 模型身份还必须遵守 `config/harnesses.yml`、`config/models.yml` 和
 `docs/model-provenance.md`。Harness 是执行工具，模型是文本生成者，二者不得混用。
@@ -171,6 +172,10 @@ make harvest-check
 make upstream-index-check
 make init-chapters
 make chapter-template-check
+make plan
+make plan-check
+make next-task
+make next-task CHAPTER=115 TAG=0BM0
 make template
 make pdf MODEL=template
 make tool-test
@@ -190,6 +195,11 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
 会同时为没有候选译文的章节生成使用 `config/chapter-titles.json` 中双语标题的空白、
 可编译骨架，使预览 PDF 保留上游的完整章节顺序和章节标签；骨架不显示“待译”正文，
 这些生成文件也不是译文编辑入口。
+
+`make next-task` 是调度接口，不修改任何译文事实。显式的 `CHAPTER`/`TAG` 是本次运行的
+范围约束，优先于 `config/translation-priorities.json` 中的长期默认政策；没有显式范围
+时才按 P0–P4、wave 和 Section 顺序自动选择。`make plan` 确定性生成全书当前行动
+队列。详见 `docs/translation-priority.md`。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 
@@ -212,6 +222,7 @@ make upstream-status
 - `docs/codex-workflow.md`：Codex 任务拆分、输入输出和并发规则；
 - `docs/github-collaboration.md`：GitHub Issue、PR、角色和分支保护；
 - `docs/task-allocation.md`：任务坐标、认领生命周期和写入所有权；
+- `docs/translation-priority.md`：P0–P4 翻译政策和下一任务调度；
 - `docs/terminology.md`：术语决策和 AI 限制；
 - `docs/licensing.md`：公开仓库和 Release 的许可证检查；
 - `docs/ci.md`：GitHub Actions 的可执行门禁合同；

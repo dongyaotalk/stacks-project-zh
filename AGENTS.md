@@ -4,11 +4,11 @@
 
 - Read `WORKFLOW.md` before translation, review, synchronization, or release work.
 - Read the matching file under `docs/` before changing that part of the workflow.
-- Read `docs/task-allocation.md` for translation scope and
+- Read `docs/task-allocation.md` and `docs/translation-priority.md` for translation scope and
   `docs/github-collaboration.md` for GitHub work.
 - Treat `config/workflow.yml`, `config/macro-policy.yml`, and
-  `config/glossary.yml`, `config/harnesses.yml`, and `config/models.yml` as
-  enforceable policy, not optional examples.
+  `config/glossary.yml`, `config/harnesses.yml`, `config/models.yml`, and
+  `config/translation-priorities.json` as enforceable policy, not optional examples.
 - If policy files disagree, stop and propose a dedicated policy fix. Do not choose
   a convenient interpretation inside an ordinary translation task.
 

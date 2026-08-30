@@ -76,6 +76,7 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/candidates/*/*.jsonl", "candidate.schema.json"),
     )
     json_families = (
+        ("config/translation-priorities.json", "translation-priorities.schema.json"),
         ("translation-data/chapter-templates/*.json", "chapter-template.schema.json"),
         ("translation-data/runs/*.json", "run-manifest.schema.json"),
         ("translation-data/selections/*.json", "selection.schema.json"),

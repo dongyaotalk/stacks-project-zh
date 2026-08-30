@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 71 / 3,299（2.2%） | 14 | 3,214 |
+| 模型候选译文 | 72 / 3,299（2.2%） | 14 | 3,213 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -150,7 +150,7 @@
 | 112 | 文献指南（`guide`） | 候选译文完成，待审校 | 7 / 7（100.0%） | 0 | 0 | 0 | 0 |
 | 113 | 期望事项（`desirables`） | 候选译文完成，待审校 | 20 / 20（100.0%） | 0 | 0 | 0 | 0 |
 | 114 | 编码风格（`coding`） | 候选译文完成，待审校 | 1 / 1（100.0%） | 0 | 0 | 0 | 0 |
-| 115 | 已废弃内容（`obsolete`） | 翻译中 | 16 / 26（61.5%） | 0 | 10 | 0 | 0 |
+| 115 | 已废弃内容（`obsolete`） | 翻译中 | 17 / 26（65.4%） | 0 | 9 | 0 | 0 |
 | 116 | GNU 自由文档许可证（`fdl`） | 翻译中 | 1 / 11（9.1%） | 1 | 9 | 0 | 0 |
 | 117 | 自动生成索引（`index`） | 不适用 | — | — | — | — | — |
 
@@ -298,7 +298,7 @@
 
 ### 第 115 章 已废弃内容（`obsolete`）
 
-共 26 个 Section：候选完成 16，翻译中 0，未开始 10。
+共 26 个 Section：候选完成 17，翻译中 0，未开始 9。
 
 | Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
 | ---: | --- | --- | --- | --- | --- |
@@ -318,7 +318,7 @@
 | 14 | `08J4` | Functor of quotients | 完成 | 未开始 | 未开始 |
 | 15 | `0ARG` | Spaces and fpqc coverings | 完成 | 未开始 | 未开始 |
 | 16 | `07T6` | Very reasonable algebraic spaces | 完成 | 未开始 | 未开始 |
-| 17 | `0D45` | Obsolete lemmas on algebraic spaces | 未开始 | 未开始 | 未开始 |
+| 17 | `0D45` | Obsolete lemmas on algebraic spaces | 完成 | 未开始 | 未开始 |
 | 18 | `0G2T` | Obsolete lemmas on algebraic stacks | 未开始 | 未开始 | 未开始 |
 | 19 | `08T5` | Variants of cotangent complexes for schemes | 未开始 | 未开始 | 未开始 |
 | 20 | `08VZ` | Deformations and obstructions of flat modules | 未开始 | 未开始 | 未开始 |

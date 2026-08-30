@@ -52,6 +52,9 @@
 - Translator and critic must use independent contexts.
 - Never infer a model from a Harness name. `codex` and `claude-code` identify tools,
   not model versions; every model candidate must point to an immutable run manifest.
+- Resolve the Harness version at run time with `make harness-check HARNESS_ID=<harness-id>`;
+  never copy a prior version or write `unknown` for a new run. `assemble` defaults to
+  `--harness-version auto` and fails if resolution fails.
 - Do not modify `upstream.lock`, the glossary, reviewed data, or shared manifests
   unless the task explicitly names that resource.
 - Protect unrelated user changes in a dirty worktree.
@@ -89,6 +92,8 @@
   `main`, open a separate progress update before the next translation batch.
   Run `make progress`, then require `make progress-check` before committing it.
 - Run `git diff --check` before committing.
+- Run `make harness-check HARNESS_ID=<harness-id>` before creating any new run;
+  the command must resolve a concrete version at run time.
 - Before any Git commit or PR, complete an applicable local LaTeX build with no
   errors. For translation candidates, run `make render MODEL=<model-lane>` and
   `make pdf MODEL=<model-lane>`; for other changes, run at least `make template`.

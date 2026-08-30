@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import shlex
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -628,6 +630,15 @@ class AssemblyTests(unittest.TestCase):
             units_path = root / "units.jsonl"
             drafts_path = root / "drafts.jsonl"
             output_path = root / "candidates.jsonl"
+            harness_config = root / "harnesses.yml"
+            harness_config.write_text(
+                "schema: 1\n\nharnesses:\n"
+                "  codex:\n"
+                "    version_command: "
+                + shlex.join([sys.executable, "-c", "print('codex-cli 7.8.9')"])
+                + "\n",
+                encoding="utf-8",
+            )
             write_jsonl(units_path, [unit])
             write_jsonl(drafts_path, [draft])
 
@@ -643,6 +654,13 @@ class AssemblyTests(unittest.TestCase):
                 "git:policy",
                 "git:glossary",
                 "2026-08-25T00:00:00+08:00",
+                harness_id="codex",
+                harness_version="auto",
+                harness_config_path=harness_config,
+            )
+            self.assertEqual(
+                json.loads(output_path.read_text(encoding="utf-8"))["harness_version"],
+                "7.8.9",
             )
 
             candidate = json.loads(output_path.read_text(encoding="utf-8"))

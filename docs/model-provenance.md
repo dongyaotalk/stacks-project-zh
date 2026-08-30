@@ -29,8 +29,15 @@ manifest 必须同时写明 Harness 和具体模型。
 - `claude-code`
 - `custom-api`
 
-Harness 记录 `id`、版本和项目适配器版本。工具版本不可得时写 `unknown`，不得
-猜测。
+Harness 记录 `id`、版本和项目适配器版本。新运行不得手工复制版本，也不得写
+`unknown`：使用 `--harness-version auto`（默认）或 `make harness-check
+HARNESS_ID=<harness-id>`，由 `config/harnesses.yml` 中登记的命令在运行时执行并
+解析版本。命令失败、输出为空或无法解析时，运行必须失败。`unknown` 只保留给
+不可回写的历史 manifest。
+
+当前桌面 Codex 会优先使用客户端导出的 `CODEX_MCP_NODE_PATH` 推导嵌入式
+`codex` 可执行文件；没有该环境信息时才回退到注册的 `codex --version`。因此
+客户端升级后，新运行会自动记录升级后的 Harness 版本。
 
 ### Model
 

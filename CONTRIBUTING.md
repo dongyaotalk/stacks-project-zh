@@ -26,6 +26,7 @@ make harvest-check
 make upstream-index-check
 make schema-check
 make template
+make harness-check HARNESS_ID=codex
 ```
 
 `repo-setup` 只设置本仓库的提交模板、hooks 路径和文件模式策略，不设置姓名、
@@ -53,7 +54,7 @@ TeX 或手工发明 unit ID。
 无论翻译流水线状态如何，都不接受把模型直接生成的整份 TeX 当作正式翻译数据。
 当前仓库已支持结构化候选装配，标准步骤是：
 
-1. 从最新 `main` 建立 `translate/<chapter>/<tag>/<model>` 分支，并在 Issue 中声明 Harness、具体模型和 run ID；
+1. 从最新 `main` 建立 `translate/<chapter>/<tag>/<model>` 分支，并在 Issue 中声明 Harness、具体模型和 run ID；Harness 版本必须由 `make harness-check HARNESS_ID=<harness-id>` 动态获取；
 2. 验证 harvest 与 `upstream.lock`；
 3. 生成冻结的输入包；
 4. 只写入指定 Harness、模型、run 和单元的候选数据；

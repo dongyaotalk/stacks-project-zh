@@ -15,6 +15,8 @@ UPSTREAM_LOCK ?= upstream.lock
 BUILD_ROOT ?= build
 OUTPUT_DIR ?= output/pdf
 CHAPTER_TEMPLATE_DIR ?= translation-data/chapter-templates
+HARNESS_ID ?= codex
+HARNESS_CONFIG ?= config/harnesses.yml
 
 UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
@@ -100,6 +102,7 @@ WORKFLOW_FILES := \
 	scripts/check_pr_contract.py \
 	scripts/upstream_diff.py \
 	stacks_zh/decisions.py \
+	stacks_zh/harness.py \
 	stacks_zh/chapter_templates.py \
 	stacks_zh/provenance.py \
 	stacks_zh/pr_contract.py \
@@ -133,7 +136,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check tool-test schema-check provenance-check decision-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -189,6 +192,12 @@ progress:
 
 progress-check:
 	$(PYTHON) stacks_zh.py progress --root . --tags "$(TAGS_FILE)" --check
+
+harness-version:
+	@test -n "$(strip $(HARNESS_ID))" || { printf 'HARNESS_ID is required\n' >&2; exit 1; }
+	$(PYTHON) stacks_zh.py harness-version --harness-id "$(HARNESS_ID)" --config "$(HARNESS_CONFIG)"
+
+harness-check: harness-version
 
 upstream-diff:
 	@test -n "$(OLD_UNITS)" || { printf 'OLD_UNITS is required\n' >&2; exit 1; }
@@ -333,6 +342,7 @@ help:
 		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \
 		'make decision-check             Verify selections, reviews and revisions' \
+		'make harness-check HARNESS_ID=codex  Resolve the current Harness version' \
 		'make upstream-diff OLD_UNITS=... NEW_UNITS=... NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...' \
 		'make qa BATCH=<batch> MODEL=<model>       Validate one candidate batch' \
 		'make qa-all                     Validate every tracked candidate batch' \

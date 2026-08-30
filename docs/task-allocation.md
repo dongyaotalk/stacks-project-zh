@@ -29,7 +29,8 @@ model_lane: openai-gpt-5.6-sol
 - `chapter`：上游 chapter 文件名；
 - `parent_tag`：Section 或父级永久 Tag；
 - `unit_ids`：实际允许修改的稳定单元；
-- `harness_id`：执行任务的工具，例如 `codex` 或 `claude-code`；
+- `harness_id`：执行任务的工具，例如 `codex` 或 `claude-code`；版本必须由
+  `config/harnesses.yml` 的注册命令在本次运行时动态解析；
 - `model_id`：实际生成候选的具体模型；
 - `model_record_id`：模型注册表中的身份记录；
 - `run_id`：一次冻结输入运行的不可变清单；

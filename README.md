@@ -367,6 +367,13 @@ custom-api + GLM-5.3
 先提交一个独立配置/Schema PR；不要把一个新模型的输出放进旧模型目录，也不要
 只写 `codex` 来代替具体模型身份。
 
+每次运行都必须动态获取 Harness 版本，不能从旧 run 或对话中复制。先执行
+`make harness-check HARNESS_ID=<harness-id>` 验证当前可执行文件；`assemble` 的
+`--harness-version` 默认值为 `auto`，会在装配时再次执行同一注册命令。命令失败、
+无法解析或返回 `unknown` 时必须停止。桌面 Codex 会优先使用客户端导出的
+`CODEX_MCP_NODE_PATH` 找到嵌入式 Harness；旧 manifest 的 `unknown` 只作为不可变
+历史保留。
+
 #### 准备翻译器最小输出
 
 复制认领的完整 unit batch 到忽略目录 `tmp/`，不要修改 `translation-data/units/`
@@ -398,7 +405,8 @@ python stacks_zh.py assemble \
   --model-id opus-4.8 \
   --model-lane "$lane" \
   --harness-id claude-code \
-  --harness-version '<actual-version-or-unknown>' \
+  --harness-version auto \
+  --harness-config config/harnesses.yml \
   --model-record-id anthropic:opus-4.8:declared \
   --run-id "$run_id" \
   --model-identity-confidence declared \
@@ -428,7 +436,7 @@ Harness 名称当成模型：
   "unit_ids": ["tag:001M:statement", "tag:001M:p001"],
   "harness": {
     "id": "claude-code",
-    "version": "<actual-version-or-unknown>",
+    "version": "<observed-by-harness-version>",
     "adapter_version": "stacks-harness-v1"
   },
   "model": {
@@ -728,7 +736,7 @@ config/harnesses.yml、config/models.yml 和相关 Schema。
 固定来源：<40-character source commit，必须等于 upstream.lock>
 只读 unit：translation-data/units/<batch>.jsonl
 unit_ids：<完整逐行列表>
-Harness/版本：<codex|claude-code|custom-api> / <真实版本或 unknown>
+Harness/版本：<codex|claude-code|custom-api> / <make harness-check 的实际输出>
 模型：<provider> / <具体 model id> / <snapshot 或 null>
 model_record_id：<config/models.yml 中的精确记录>
 run_id：<新的不可变 ID>

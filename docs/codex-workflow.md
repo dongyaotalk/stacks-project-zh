@@ -79,12 +79,15 @@ reviewed 数据、`upstream.lock` 或生成模板。
 - 风格规范 commit；
 - 词表 revision；
 - 上下文包 hash；
-- Harness 及版本；
+- Harness 及其运行时动态解析的版本（`--harness-version auto`）；
 - 具体 provider/model ID、model record 和模型 snapshot（如有）；
 - 不可变 run ID；
 - 模型标识和推理配置。
 
-任一输入变化都必须创建新运行记录，不能覆盖旧候选。
+任一输入变化都必须创建新运行记录，不能覆盖旧候选。每次新运行都重新执行
+Harness 版本命令；不能沿用上一运行的版本，也不能把 `unknown` 当作新运行的值。
+开始新运行前先执行 `make harness-check HARNESS_ID=<harness-id>`，确认当前命令能够
+返回具体版本；这一步不能由 Issue 中的手工文字替代。
 
 ## 5. 并行和写入所有权
 

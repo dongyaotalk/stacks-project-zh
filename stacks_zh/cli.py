@@ -7,6 +7,7 @@ from pathlib import Path
 from .chapter_templates import initialize_chapter_templates
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
+from .harness import resolve_harness
 from .progress import update_progress_report
 from .records import RecordError
 from .provenance import ProvenanceError, validate_repository_provenance
@@ -64,7 +65,15 @@ def build_parser() -> argparse.ArgumentParser:
     assemble.add_argument("--glossary-revision", required=True)
     assemble.add_argument("--created-at", required=True)
     assemble.add_argument("--harness-id", required=True)
-    assemble.add_argument("--harness-version", required=True)
+    assemble.add_argument(
+        "--harness-version",
+        default="auto",
+        choices=["auto"],
+        help="observed version, or auto to execute the registered command (default)",
+    )
+    assemble.add_argument(
+        "--harness-config", type=Path, default=Path("config/harnesses.yml")
+    )
     assemble.add_argument("--model-record-id", required=True)
     assemble.add_argument("--run-id", required=True)
     assemble.add_argument("--model-snapshot")
@@ -114,6 +123,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--output", type=Path, default=Path("docs/translation-progress.md")
     )
     progress.add_argument("--check", action="store_true")
+
+    harness_version = subparsers.add_parser(
+        "harness-version", help="resolve a Harness version from its configured executable"
+    )
+    harness_version.add_argument("--harness-id", required=True)
+    harness_version.add_argument(
+        "--config", type=Path, default=Path("config/harnesses.yml")
+    )
+
     return parser
 
 
@@ -160,6 +178,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Candidate QA: PASS ({count} unit(s))")
             return 0
         if args.command == "assemble":
+            harness_config = (
+                args.harness_config
+                if args.harness_config.is_absolute()
+                else Path.cwd() / args.harness_config
+            )
             count = assemble_candidates(
                 args.units,
                 args.drafts,
@@ -178,8 +201,15 @@ def main(argv: list[str] | None = None) -> int:
                 args.run_id,
                 args.model_snapshot,
                 args.model_identity_confidence,
+                harness_config_path=harness_config,
             )
             print(f"Assembled {count} candidate record(s): {args.output}")
+            return 0
+        if args.command == "harness-version":
+            config_path = args.config if args.config.is_absolute() else Path.cwd() / args.config
+            resolution = resolve_harness(args.harness_id, config_path)
+            print(f"{resolution.harness_id}: {resolution.version}")
+            print(f"command: {' '.join(resolution.command)}")
             return 0
         if args.command == "render":
             output_dir = args.output_dir or DEFAULT_RENDER_ROOT / args.model_lane

@@ -126,7 +126,7 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
   "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
   "source_text_hash": "sha256:...",
   "harness_id": "codex",
-  "harness_version": "unknown",
+  "harness_version": "<observed-at-run-time>",
   "model_id": "gpt-5.6-sol",
   "model_lane": "openai-gpt-5.6-sol",
   "model_record_id": "openai:gpt-5.6-sol:owner-confirmed",
@@ -154,7 +154,9 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
 }
 ```
 
-必须记录 Harness、实际模型、模型记录和不可变 `run_id`。如果供应商没有暴露模型
+必须记录 Harness、实际模型、模型记录和不可变 `run_id`。新候选装配默认动态执行
+`config/harnesses.yml` 中的 Harness 版本命令（等价于 `--harness-version auto`）；
+如果命令失败或无法解析版本，装配必须失败。如果供应商没有暴露模型
 快照，`model_snapshot` 写 `null`，并明确可重放性；不能只写 `codex`、`claude-code`
 或营销名称。不同模型使用相同输入时，`context_hash` 和 `prompt_version` 必须一致。
 

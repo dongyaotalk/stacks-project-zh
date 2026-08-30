@@ -20,6 +20,7 @@
 - 允许写入文件：
 - 模型/通道（如适用）：
 - Harness / 版本（如适用）：
+- [ ] 新运行的 Harness 版本已通过 `make harness-check HARNESS_ID=<harness-id>` 动态获取（历史 manifest 不回写）
 - 具体 provider/model ID（如适用）：
 - Model record / snapshot（如适用）：
 - Translation run ID（如适用）：

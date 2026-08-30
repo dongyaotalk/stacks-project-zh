@@ -80,6 +80,11 @@
 提示词、词表和上下文。候选合并到 `main` 只表示保存这次运行，不表示正式采用。
 维护者选择、人工审校和正式 revision 必须分别记录。
 
+新运行的 Harness 版本不得手工填写或沿用旧值。使用 `make harness-check
+HARNESS_ID=<harness-id>`，并让 `assemble` 默认的 `--harness-version auto` 在装配时
+再次执行 `config/harnesses.yml` 中登记的版本命令；执行失败或结果为 `unknown` 时
+不得生成候选。历史 manifest 不回写。
+
 ### 4.5 自动检查
 
 结构检查属于硬门禁。任一受保护节点缺失、增加、重排或改变时，候选译文直接

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from .chapter_templates import manifest_chapters
+from .harness import resolve_harness_version
 from .records import (
     RecordError,
     load_jsonl,
@@ -55,11 +56,12 @@ def assemble_candidates(
     glossary_revision: str,
     created_at: str,
     harness_id: str = "unknown",
-    harness_version: str = "unknown",
+    harness_version: str = "auto",
     model_record_id: str | None = None,
     run_id: str | None = None,
     model_snapshot: str | None = None,
     model_identity_confidence: str = "unknown",
+    harness_config_path: Path | None = None,
 ) -> int:
     if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
         raise RecordError(f"invalid model lane {model_lane!r}")
@@ -68,6 +70,18 @@ def assemble_candidates(
             f"new candidate assembly requires {CURRENT_TRANSLATOR_PROMPT}; "
             f"{prompt_version!r} is not a current production prompt"
         )
+    if not harness_id or harness_id == "unknown":
+        raise RecordError("new candidate assembly requires a registered harness_id")
+    if harness_version != "auto":
+        raise RecordError(
+            "new candidate assembly resolves harness_version dynamically; "
+            "use --harness-version auto"
+        )
+    config_path = harness_config_path or Path("config/harnesses.yml")
+    try:
+        harness_version = resolve_harness_version(harness_id, config_path)
+    except ValueError as exc:
+        raise RecordError(f"cannot resolve Harness version: {exc}") from exc
     source_commit = load_upstream_commit(lock_path)
     model_record_id = model_record_id or f"legacy:{model_id}:unknown"
     run_id = run_id or f"run-{model_lane}-{source_commit[:12]}"

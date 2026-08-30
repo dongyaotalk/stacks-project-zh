@@ -283,7 +283,7 @@ class RenderTests(unittest.TestCase):
             self.assertIn(output / "metadata.tex", written)
             self.assertTrue(json.loads(units_path.read_text(encoding="utf-8")))
 
-    def test_render_combines_multiple_batches(self) -> None:
+    def test_render_combines_multiple_batches_and_scaffolds_partial_chapters(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             lock = root / "upstream.lock"
@@ -362,10 +362,18 @@ class RenderTests(unittest.TestCase):
             self.assertLess(contents.index("chapters/earlier"), contents.index("chapters/later"))
             self.assertEqual(
                 (output / "chapters" / "earlier.tex").read_text(encoding="utf-8"),
+                "% Generated chapter scaffold; do not edit this preview file.\n"
+                "\\chapter{Earlier}\n"
+                "\\phantomsection\n"
+                "\\label{earlier-section-phantom}\n\n"
                 "前一章。\n",
             )
             self.assertEqual(
                 (output / "chapters" / "later.tex").read_text(encoding="utf-8"),
+                "% Generated chapter scaffold; do not edit this preview file.\n"
+                "\\chapter{Later}\n"
+                "\\phantomsection\n"
+                "\\label{later-section-phantom}\n\n"
                 "后一章。\n",
             )
 
@@ -460,6 +468,11 @@ class RenderTests(unittest.TestCase):
             self.assertIn("\\label{pending-section-phantom}", pending)
             self.assertNotIn("待译", pending)
             self.assertNotIn("正文", pending)
+            translated = (output / "chapters" / "translated.tex").read_text(
+                encoding="utf-8"
+            )
+            self.assertEqual(translated.count("\\chapter{"), 1)
+            self.assertNotIn("Generated chapter scaffold", translated)
 
     def test_render_orders_same_chapter_batches_by_harvest_labels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

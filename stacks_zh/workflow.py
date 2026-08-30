@@ -254,6 +254,7 @@ def render_batch(
         else f"{len(candidate_run_ids)} runs (see translation-data/runs)"
     )
     chapter_chunks: dict[str, list[str]] = {}
+    chapters_with_rendered_titles: set[str] = set()
     chapter_order: list[str] = []
     for unit in units:
         chapter = unit["chapter"]
@@ -262,6 +263,8 @@ def render_batch(
         if chapter not in chapter_chunks:
             chapter_order.append(chapter)
             chapter_chunks[chapter] = []
+        if unit["node_kind"] == "chapter_title":
+            chapters_with_rendered_titles.add(chapter)
         candidate = candidate_by_id[unit["unit_id"]]
         placeholder_overrides: dict[str, str] = {}
         for name, value in unit["placeholders"].items():
@@ -324,11 +327,14 @@ def render_batch(
     for chapter in chapter_order:
         chapter_path = chapters_dir / f"{chapter}.tex"
         chunks = chapter_chunks.get(chapter)
-        chapter_text = (
-            "".join(chunks)
-            if chunks
-            else _empty_chapter_template(chapter, *chapter_titles[chapter])
-        )
+        if chunks:
+            chapter_text = "".join(chunks)
+            if chapter_titles and chapter not in chapters_with_rendered_titles:
+                chapter_text = (
+                    _chapter_scaffold(chapter, *chapter_titles[chapter]) + chapter_text
+                )
+        else:
+            chapter_text = _chapter_scaffold(chapter, *chapter_titles[chapter])
         chapter_path.write_text(chapter_text, encoding="utf-8")
         written.append(chapter_path)
 
@@ -386,12 +392,12 @@ def _load_chapter_title_translations(path: Path, chapters: list[str]) -> dict[st
     return titles
 
 
-def _empty_chapter_template(chapter: str, target_title: str, source_title: str) -> str:
+def _chapter_scaffold(chapter: str, target_title: str, source_title: str) -> str:
     display_title = (
         source_title if target_title == source_title else f"{target_title}（{source_title}）"
     )
     return (
-        "% Generated empty chapter scaffold; do not edit this preview file.\n"
+        "% Generated chapter scaffold; do not edit this preview file.\n"
         f"\\chapter{{{display_title}}}\n"
         "\\phantomsection\n"
         f"\\label{{{chapter}-section-phantom}}\n\n"

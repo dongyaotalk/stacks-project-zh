@@ -38,6 +38,12 @@ Translation Memory 由 `translation-data/reviewed/` 生成，SQLite 只作为查
 路径及 `READY`、`UNPREPARED` 或 `BLOCKED_NO_TAG` 状态。它既不包含译文，也不把
 尚未提取的范围伪装成可翻译 unit；更新后必须通过 `make chapter-template-check`。
 
+翻译规划是独立于上述事实数据的一层：`config/translation-priorities.json` 保存 117 章
+长期 P0–P4 政策，`docs/translation-plan.md` 是该政策与当前 template、unit、candidate、
+reviewed 状态的生成结果。priority 不写入 chapter template、unit、candidate 或
+reviewed revision；用户显式 Chapter/Tag 也只是运行时约束。详见
+`docs/translation-priority.md`。
+
 ## 2. 稳定翻译单元
 
 ### 2.1 有永久 Tag 的节点

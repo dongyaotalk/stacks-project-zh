@@ -55,6 +55,34 @@ model_lane: openai-gpt-5.6-sol
 正式译文仍只来自 reviewed revision。运行 `make init-chapters` 更新全部模板，运行
 `make chapter-template-check` 检查它们是否与锁定来源和现有 unit 一致。
 
+### 1.2 按优先级取得下一任务
+
+不确定认领范围时运行：
+
+~~~bash
+make next-task
+~~~
+
+自动选择按 `P0 → P4 → wave → chapter order → Section ordinal` 排序。准备状态决定返回
+`PREPARE_SCOPE`、`TRANSLATE`、`REVIEW` 等动作，但不会因为低优先级 Section 已经
+`READY`，就跳过高优先级章节所需的 scope preparation。
+
+用户显式范围是本次运行的最高优先级约束：
+
+~~~bash
+make next-task CHAPTER=115
+make next-task CHAPTER=obsolete TAG=0BM0
+~~~
+
+`CHAPTER` 可以是稳定 slug 或当前锁定目录中的章号。指定 Chapter 后只在该章选择；再
+指定 `TAG` 后只判断对应 Section 的下一动作。显式范围已完成时返回没有剩余工作，不会
+自动跳去其他章。只有调用者明确设置 `FALLBACK=1` 才恢复自动选择。机器调用可设置
+`JSON=1`。这些参数是运行时选择，不会改写项目的 P0–P4 长期政策。
+
+`config/translation-priorities.json` 是 117 章默认评级和 wave/order 的唯一事实源；
+`docs/translation-plan.md` 是它与当前 unit、candidate、reviewed 状态的生成结果。优先级
+不写入 chapter template、unit、candidate 或 Issue 表单，避免形成多个事实源。
+
 ## 2. 允许和禁止的范围
 
 允许的任务范围：

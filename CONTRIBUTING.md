@@ -2,7 +2,8 @@
 
 提交任何修改前，请先阅读 `WORKFLOW.md` 和与本次工作对应的 `docs/` 细则。使用
 GitHub 协作时还应阅读 `docs/github-collaboration.md` 和
-`docs/task-allocation.md`；术语、许可证或 CI 修改分别阅读对应细则。
+`docs/task-allocation.md`；选择翻译范围时阅读 `docs/translation-priority.md`；术语、
+许可证或 CI 修改分别阅读对应细则。
 
 README 的“人类贡献者指南”提供从 Fork、查找 Tag、认领喜欢的范围、生成候选、
 提交 PR 到申请 CODEOWNER 的完整操作路径。本文件只保留必须遵守的简明合同。
@@ -33,6 +34,10 @@ make harness-check HARNESS_ID=codex
 邮箱或远程仓库。
 
 ## 选择工作类型
+
+不确定从哪里开始时，先运行 `make next-task`；也可以用
+`make next-task CHAPTER=<slug-or-number> TAG=<parent-tag>` 显式锁定本次范围。显式选择
+优先于项目 P0–P4 默认政策，但不会永久改变章节评级。
 
 - 翻译候选：一个 Harness、一个具体模型、一个 Section、一个不重叠批次；
 - 人工审校：只修改指定单元的审校结果和必要的最小译文修订；

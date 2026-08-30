@@ -8,6 +8,13 @@ from .chapter_templates import initialize_chapter_templates
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
 from .harness import resolve_harness
+from .planning import (
+    build_translation_plan,
+    render_task_selection,
+    render_task_selection_json,
+    select_next_task,
+    update_translation_plan,
+)
 from .progress import update_progress_report
 from .records import RecordError
 from .provenance import ProvenanceError, validate_repository_provenance
@@ -123,6 +130,42 @@ def build_parser() -> argparse.ArgumentParser:
         "--output", type=Path, default=Path("docs/translation-progress.md")
     )
     progress.add_argument("--check", action="store_true")
+
+    plan = subparsers.add_parser(
+        "plan", help="generate or check the priority-aware translation plan"
+    )
+    plan.add_argument("--root", type=Path, default=Path("."))
+    plan.add_argument(
+        "--priorities",
+        type=Path,
+        default=Path("config/translation-priorities.json"),
+    )
+    plan.add_argument("--readme", type=Path, default=Path("README.md"))
+    plan.add_argument(
+        "--output", type=Path, default=Path("docs/translation-plan.md")
+    )
+    plan.add_argument("--check", action="store_true")
+
+    next_task = subparsers.add_parser(
+        "next-task",
+        help="select the next workflow action using an explicit scope or project priority",
+    )
+    next_task.add_argument("--root", type=Path, default=Path("."))
+    next_task.add_argument(
+        "--priorities",
+        type=Path,
+        default=Path("config/translation-priorities.json"),
+    )
+    next_task.add_argument(
+        "--chapter", help="chapter slug or one-based chapter ordinal"
+    )
+    next_task.add_argument("--tag", help="parent permanent Tag within --chapter")
+    next_task.add_argument(
+        "--fallback",
+        action="store_true",
+        help="fall back to automatic selection when the explicit scope is complete",
+    )
+    next_task.add_argument("--json", action="store_true", help="emit machine-readable JSON")
 
     harness_version = subparsers.add_parser(
         "harness-version", help="resolve a Harness version from its configured executable"
@@ -277,6 +320,48 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             action = "Checked" if args.check else "Updated"
             print(f"{action} translation progress for {count} chapter(s)")
+            return 0
+        if args.command == "plan":
+            root = args.root.resolve()
+            priority_path = (
+                args.priorities
+                if args.priorities.is_absolute()
+                else root / args.priorities
+            )
+            readme_path = args.readme if args.readme.is_absolute() else root / args.readme
+            output_path = args.output if args.output.is_absolute() else root / args.output
+            count, errors = update_translation_plan(
+                root,
+                readme_path,
+                output_path,
+                priority_path=priority_path,
+                check=args.check,
+            )
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            action = "Checked" if args.check else "Updated"
+            print(f"{action} priority-aware translation plan for {count} chapter(s)")
+            return 0
+        if args.command == "next-task":
+            root = args.root.resolve()
+            priority_path = (
+                args.priorities
+                if args.priorities.is_absolute()
+                else root / args.priorities
+            )
+            plan = build_translation_plan(root, priority_path)
+            selection = select_next_task(
+                plan,
+                chapter=args.chapter,
+                tag=args.tag,
+                fallback=args.fallback,
+            )
+            if args.json:
+                print(render_task_selection_json(selection), end="")
+            else:
+                print(render_task_selection(selection))
             return 0
     except (RecordError, ProvenanceError, OSError, ValueError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

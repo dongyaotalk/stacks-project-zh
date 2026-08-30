@@ -9,6 +9,8 @@
 - `model-provenance.md`：Harness、具体模型、run 和模型下架；
 - `progress.md`：全书与逐章翻译进度的固定分母、生成命令和更新门禁；
 - `translation-progress.md`：从当前结构化数据确定性生成的 117 章进度表；
+- `translation-priority.md`：P0–P4 政策、显式选择和任务调度规则；
+- `translation-plan.md`：从优先级与当前数据确定性生成的 117 章行动队列；
 - `candidate-selection.md`：候选保存、维护者选择和正式采用；
 - `translation-replacement.md`：新模型替换旧译文和 revision；
 - `git-conventions.md`：分支、提交、PR、合并和仓库卫生；

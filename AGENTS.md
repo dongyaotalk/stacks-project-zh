@@ -96,7 +96,10 @@
   the command must resolve a concrete version at run time.
 - Before any Git commit or PR, complete an applicable local LaTeX build with no
   errors. For translation candidates, run `make render MODEL=<model-lane>` and
-  `make pdf MODEL=<model-lane>`; for other changes, run at least `make template`.
+  `make pdf MODEL=<model-lane>`; for other changes, run the same two commands
+  against the active candidate lane (`openai-gpt-5.6-sol`). Run `make template`
+  only when the template, styles, Makefile, or rendering path is changed. A bare
+  `make pdf` is invalid and must not silently select the template lane.
   A missing TeX toolchain or failed build blocks committing, pushing, and opening
   a PR.
 - A source revision mismatch, protected-node change, unresolved critical issue, or

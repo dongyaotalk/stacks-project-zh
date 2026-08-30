@@ -89,7 +89,9 @@ make progress-check
 ## 本地编译门禁
 
 任何提交或 Pull Request 前都必须完成适用的本地 LaTeX 编译并确认命令以零状态退出。
-进度生成器、进度规范和 README 的改动至少运行 `make template`，并运行
-`make progress-check`。这里的验证只扫描 LaTeX 日志中的硬错误（例如 `LaTeX Error`、
+进度生成器、进度规范和 README 的改动针对当前候选通道运行
+`make render MODEL=openai-gpt-5.6-sol` 和 `make pdf MODEL=openai-gpt-5.6-sol`，并运行
+`make progress-check`。只有同时修改模板、样式、Makefile 或渲染路径时才另外运行
+`make template`。这里的验证只扫描 LaTeX 日志中的硬错误（例如 `LaTeX Error`、
 `Emergency stop`、`Fatal error` 和 `Undefined control sequence`）；不要求截图、逐页
 渲染或图像检查。构建产生的 TeX、PDF 和日志是临时产物，不得提交。

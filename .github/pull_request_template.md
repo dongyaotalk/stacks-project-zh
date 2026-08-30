@@ -63,7 +63,8 @@
 - [ ] 术语检查（如适用）
 - [ ] 已说明独立 critic 状态（当前无自动 critic 命令）
 - [ ] 提交前已执行 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`（翻译候选必需）
-- [ ] 提交前已执行 `make template`（其他修改必需）
+- [ ] 提交前已针对当前候选通道执行 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`（翻译候选及其他文档/工具修改必需）
+- [ ] 若修改模板、样式、Makefile 或渲染路径，已额外执行 `make template`
 - [ ] 适用的本地 LaTeX 编译以零状态退出；无错误且未修改生成文件绕过失败
 - [ ] 已检查未定义引用、重复标签、目录、链接、字体和索引
 

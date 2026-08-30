@@ -1,7 +1,7 @@
 SHELL := /bin/sh
 
 ENGINE ?= xelatex
-MODEL ?= template
+MODEL ?=
 PYTHON ?= python3
 BATCH ?=
 MODEL_DISPLAY_NAME ?= $(MODEL) 模型候选译文
@@ -321,6 +321,7 @@ harvest-check:
 			"Status: OK"
 
 validate-model:
+	@test -n "$(strip $(MODEL))" || { printf 'MODEL is required; use MODEL=<model-lane> (or make template for the smoke test)\n' >&2; exit 1; }
 	@case '$(MODEL)' in \
 		''|*[!A-Za-z0-9._-]*|*..*) \
 			printf 'Invalid MODEL: %s (use letters, digits, dot, underscore, or hyphen; no ..)\n' '$(MODEL)' >&2; \

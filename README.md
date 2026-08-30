@@ -178,7 +178,7 @@ CODEOWNER 是对某些路径承担长期审核责任的人，不是参与项目�
 
 需要 Git、Python 3.11 或更高版本，以及 XeLaTeX、BibTeX 和 makeindex。所有提交和
 PR 都有本地 LaTeX 编译门禁，因此即使只修改文档、Python 或结构化翻译数据，也不能
-省略 TeX 工具链。
+省略 TeX 工具链；验证应针对当前候选模型通道，而不是未变化的模板烟测。
 
 没有仓库写权限时，在 GitHub 点击 **Fork**，再克隆自己的 Fork。下面使用
 `canonical` 表示本项目的中文主仓库，避免把它与英文来源混淆：
@@ -561,11 +561,15 @@ make qa-all
 `make upstream-diff` 生成 JSON/Markdown 报告；报告中的受影响单元、失效状态和未解决
 映射必须在同步 PR 中逐项处理。
 
-其他修改在 Git 提交前至少还要运行：
+其他文档、进度、政策和工具修改在 Git 提交前运行当前候选通道：
 
 ~~~bash
-make template
+make render MODEL=openai-gpt-5.6-sol
+make pdf MODEL=openai-gpt-5.6-sol
 ~~~
+
+只有修改模板、样式、Makefile 或渲染路径时才另外运行 `make template`。裸
+`make pdf` 必须显式指定 `MODEL=<model-lane>`，不会再隐式选择 `template`。
 
 适用的 LaTeX 命令必须以零状态退出；缺少工具链或出现编译错误时不得提交、推送或
 创建 PR。不得编辑生成的 TeX、PDF 或日志来绕过失败。管理员 PR-only bypass 也不
@@ -829,7 +833,8 @@ make qa BATCH=<batch> MODEL=<model-lane>
 git diff --check
 ~~~
 
-如果修改模板、样式、Makefile 或渲染逻辑，还要运行 `make template`。失败时应保留
+如果修改模板、样式、Makefile 或渲染逻辑，在当前候选通道编译之外还要运行
+`make template`。失败时应保留
 错误信息并报告责任归属：数据、结构、术语、渲染器、模板或来源，而不是直接编辑
 生成文件规避错误。
 

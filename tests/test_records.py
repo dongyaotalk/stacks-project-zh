@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from stacks_zh.records import sha256_value, stamp_unit_hashes, validate_records
+from stacks_zh.records import (
+    restore_placeholders,
+    sha256_value,
+    stamp_unit_hashes,
+    validate_records,
+)
 from stacks_zh.schema_validation import validate_named_schema
 
 
@@ -55,7 +60,61 @@ def make_candidate(unit: dict[str, object]) -> dict[str, object]:
     }
 
 
+def make_grouped_bold_unit() -> dict[str, object]:
+    unit = make_unit()
+    unit["source_text"] = (
+        "There does <FORMAT_0001>not<FORMAT_0002> exist <MATH_0001>."
+    )
+    unit["placeholders"] = {
+        "FORMAT_0001": "{\\bf ",
+        "FORMAT_0002": "}",
+        "MATH_0001": "$x$",
+    }
+    return stamp_unit_hashes(unit)
+
+
 class RecordValidationTests(unittest.TestCase):
+    def test_grouped_bold_negation_restores_without_changing_scope(self) -> None:
+        unit = make_grouped_bold_unit()
+        candidate = make_candidate(unit)
+        candidate["translation"] = "<FORMAT_0001>不<FORMAT_0002>存在<MATH_0001>。"
+
+        self.assertEqual(validate_records([unit], [candidate], SOURCE_COMMIT), [])
+        self.assertEqual(
+            restore_placeholders(unit, unit["source_text"]),
+            "There does {\\bf not} exist $x$.",
+        )
+        self.assertEqual(
+            restore_placeholders(unit, candidate["translation"]),
+            "{\\bf 不}存在$x$。",
+        )
+
+    def test_grouped_bold_missing_wrapper_is_rejected(self) -> None:
+        unit = make_grouped_bold_unit()
+        for translation in (
+            "不<FORMAT_0002>存在<MATH_0001>。",
+            "<FORMAT_0001>不存在<MATH_0001>。",
+        ):
+            with self.subTest(translation=translation):
+                candidate = make_candidate(unit)
+                candidate["translation"] = translation
+                errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+                self.assertTrue(any("placeholders changed" in error for error in errors))
+
+    def test_grouped_bold_reordered_wrapper_or_adjacent_math_is_rejected(self) -> None:
+        unit = make_grouped_bold_unit()
+        for translation in (
+            "<FORMAT_0002>不<FORMAT_0001>存在<MATH_0001>。",
+            "<FORMAT_0001>不存在<MATH_0001><FORMAT_0002>。",
+        ):
+            with self.subTest(translation=translation):
+                candidate = make_candidate(unit)
+                candidate["translation"] = translation
+                errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+                self.assertTrue(
+                    any("placeholders changed or reordered" in error for error in errors)
+                )
+
     def test_candidate_schema_rejects_unknown_fields(self) -> None:
         unit = make_unit()
         candidate = make_candidate(unit)

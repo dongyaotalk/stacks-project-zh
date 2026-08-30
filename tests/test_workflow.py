@@ -36,7 +36,26 @@ class RenderTests(unittest.TestCase):
             Path("tags/tags"),
         )
 
-    def test_title_parent_tag_must_match_rendered_label(self) -> None:
+    def test_environment_title_uses_unit_tag_not_enclosing_parent_tag(self) -> None:
+        unit = {
+            "unit_id": "tag:01DE:title",
+            "parent_tag": "088X",
+            "chapter": "obsolete",
+            "node_kind": "environment_title",
+            "placeholders": {},
+            "render": {
+                "prefix": "\\begin{remark}[",
+                "suffix": "]\n\\label{remark-projective-resolution}\n",
+            },
+        }
+
+        _validate_title_permanent_tags(
+            [unit],
+            {"obsolete-remark-projective-resolution": "01DE"},
+            Path("tags/tags"),
+        )
+
+    def test_title_unit_tag_must_match_rendered_label(self) -> None:
         unit = {
             "unit_id": "tag:0007:title",
             "parent_tag": "0007",
@@ -51,7 +70,7 @@ class RenderTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             RecordError,
-            "parent_tag '0007' does not match rendered title permanent Tag",
+            "unit Tag '0007' does not match rendered title permanent Tag",
         ):
             _validate_title_permanent_tags(
                 [unit],

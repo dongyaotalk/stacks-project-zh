@@ -23,6 +23,7 @@ SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 LABEL_RE = re.compile(r"\\label\{([^{}]+)\}")
 REF_VALUE_RE = re.compile(r"^\\ref\{([^{}]+)\}$")
 TAG_RE = re.compile(r"^[0-9A-Z]+$")
+TAG_UNIT_RE = re.compile(r"^tag:(?P<tag>[0-9A-Z]+):")
 TAG_LABEL_RE = re.compile(r"^[A-Za-z0-9._:+-]+$")
 CURRENT_TRANSLATOR_PROMPT = "translator-v2"
 
@@ -466,13 +467,20 @@ def _validate_title_permanent_tags(
                 )
             full_label, tag = resolved
             mapped_tags[full_label] = tag
-        parent_tag = unit["parent_tag"]
-        if parent_tag not in mapped_tags.values():
+        unit_id = unit["unit_id"]
+        assert isinstance(unit_id, str)
+        tag_match = TAG_UNIT_RE.match(unit_id)
+        if tag_match is None:
+            raise RecordError(
+                f"{unit_id}: title unit_id does not encode a permanent Tag"
+            )
+        unit_tag = tag_match.group("tag")
+        if unit_tag not in mapped_tags.values():
             mappings = ", ".join(
                 f"{label}={tag}" for label, tag in mapped_tags.items()
             )
             raise RecordError(
-                f"{unit['unit_id']}: parent_tag {parent_tag!r} does not match "
+                f"{unit_id}: unit Tag {unit_tag!r} does not match "
                 f"rendered title permanent Tag ({mappings})"
             )
 

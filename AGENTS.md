@@ -35,6 +35,12 @@
 - Unknown terminology must be reported. Models cannot approve glossary entries.
 - Do not add explanations, examples, assumptions, conclusions, or translator notes
   that are absent from the source.
+- Translation must be faithful, not repair the English source. Record noticed
+  source typos, missing proofs or mathematical doubts as `remark` Issues or
+  non-body metadata; do not insert new LaTeX remarks, correct formulas or supply
+  proofs. Source-only remarks are not translation tasks or independent blockers
+  to candidate/review/publication workflows. Translation errors and all existing
+  structural, terminology and human-review gates still apply.
 - Models and automated checks cannot mark language or mathematics review complete.
 - Merging a candidate into `main` only records the candidate. It does not select,
   review, publish, or add the translation to authoritative translation memory.
@@ -102,5 +108,7 @@
   `make pdf` is invalid and must not silently select the template lane.
   A missing TeX toolchain or failed build blocks committing, pushing, and opening
   a PR.
-- A source revision mismatch, protected-node change, unresolved critical issue, or
-  missing required human review is an error; never silently continue.
+- A source revision mismatch, protected-node change, unresolved critical
+  translation/workflow issue, or missing required human review is an error;
+  never silently continue. Faithfully retained source limitations are recorded
+  as remarks, not classified as translation defects.

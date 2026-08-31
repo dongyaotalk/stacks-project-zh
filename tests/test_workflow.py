@@ -155,6 +155,193 @@ class RenderTests(unittest.TestCase):
                     self.assertEqual(rendered.count("\\label{lemma-claim}"), 1)
                     self.assertEqual(rendered.count("\\label{"), 1)
 
+    @classmethod
+    def numbered_proof_units(cls, kind: str = "lemma") -> list[dict[str, object]]:
+        owner = cls.proof_title_units(kind)[0]
+        pieces = [
+            ("001-title", "environment_title", "First proof <REF_0001>", "\\begin{proof}[", "]\n"),
+            ("001-p001", "proof", "First paragraph.", "", "\n\n"),
+            ("001-p002", "proof", "Second paragraph.", "\\medskip\\noindent\n", "\n\\end{proof}\n\n"),
+            ("002-title", "environment_title", "Second proof <REF_0001>", "\\begin{proof}[", "]\n"),
+            ("002-p001", "proof", "Another argument.", "", "\n\\end{proof}\n"),
+        ]
+        return [owner] + [
+            stamp_unit_hashes({
+                **owner,
+                "unit_id": f"tag:09DQ:proof-{suffix}",
+                "node_kind": node_kind,
+                "source_text": text,
+                "placeholders": {"REF_0001": "\\ref{lemma-claim}"} if node_kind.endswith("_title") else {},
+                "render": {"prefix": prefix, "suffix": end},
+            })
+            for suffix, node_kind, text, prefix, end in pieces
+        ]
+
+    def test_numbered_proof_titles_accept_complete_groups_for_each_statement_kind(self) -> None:
+        for kind in ("lemma", "proposition", "theorem", "corollary"):
+            with self.subTest(kind=kind):
+                units = self.numbered_proof_units(kind)
+                _validate_title_permanent_tags(units, {"obsolete-lemma-claim": "09DQ"}, Path("tags"))
+
+    def test_numbered_proof_titles_accept_three_groups_and_separate_owners(self) -> None:
+        units = self.numbered_proof_units()
+        third = self.numbered_proof_units()[4:]
+        for unit in third:
+            unit["unit_id"] = str(unit["unit_id"]).replace("proof-002-", "proof-003-")
+        units.extend(third)
+        other = self.numbered_proof_units()
+        for unit in other:
+            unit["unit_id"] = str(unit["unit_id"]).replace("09DQ", "09DR")
+        other[0]["render"]["prefix"] = "\\begin{lemma}\n\\label{lemma-other}\n"
+        units.extend(other)
+        _validate_title_permanent_tags(
+            units, {"obsolete-lemma-claim": "09DQ", "obsolete-lemma-other": "09DR"}, Path("tags"),
+        )
+
+    def test_numbered_proof_titles_reject_incomplete_or_malformed_chains(self) -> None:
+        cases = (
+            "no_owner", "no_body", "one_group", "owner_tag", "owner_kind", "owner_label",
+            "owner_opening", "owner_closing", "owner_extra_proof", "owner_chapter", "owner_parent",
+            "title_tag", "title_kind", "title_chapter", "title_parent", "title_label",
+            "title_opening", "title_closing", "title_closing_prefix", "title_embedded_proof",
+            "body_tag", "body_kind", "body_chapter", "body_parent", "body_opening",
+            "body_separator", "body_closing", "body_missing_closing", "body_early_closing",
+            "body_embedded_opening", "body_embedded_closing", "group_zero", "group_unpadded",
+            "group_gap", "group_duplicate", "group_reordered", "paragraph_gap",
+            "paragraph_duplicate", "paragraph_unpadded", "paragraph_zero", "first_paragraph_gap",
+            "intervening_unit", "repeated_owner", "mixed_legacy", "renamed_tail",
+        )
+        for case in cases:
+            with self.subTest(case=case):
+                units = self.numbered_proof_units()
+                owner, title, body, last, second, tail = units
+                if case == "no_owner":
+                    units = units[1:]
+                elif case == "no_body":
+                    units.pop()
+                elif case == "one_group":
+                    units = units[:4]
+                elif case in {"owner_tag", "title_tag", "body_tag"}:
+                    node = {"owner_tag": owner, "title_tag": second, "body_tag": tail}[case]
+                    node["unit_id"] = str(node["unit_id"]).replace("09DQ", "09DR")
+                elif case.endswith("_chapter") or case.endswith("_parent"):
+                    node = {"owner": owner, "title": second, "body": tail}[case.split("_")[0]]
+                    node["chapter" if case.endswith("_chapter") else "parent_tag"] = "other"
+                elif case.endswith("_kind"):
+                    {"owner_kind": owner, "title_kind": second, "body_kind": tail}[case]["node_kind"] = "paragraph"
+                elif case == "owner_label":
+                    owner["render"]["prefix"] = "\\begin{lemma}\n"
+                elif case == "owner_opening":
+                    owner["render"]["prefix"] = "\\label{lemma-claim}\n"
+                elif case == "owner_closing":
+                    owner["render"]["suffix"] = "\n"
+                elif case == "owner_extra_proof":
+                    owner["render"]["prefix"] += "\\begin{proof}"
+                elif case == "title_label":
+                    second["placeholders"]["LABEL_0001"] = "\\label{lemma-claim}"
+                elif case == "title_opening":
+                    second["render"]["prefix"] = "\\begin{remark}["
+                elif case == "title_closing":
+                    second["render"]["suffix"] = "]\n\\end{proof}\n"
+                elif case == "title_closing_prefix":
+                    second["render"]["suffix"] = " ]\n"
+                elif case == "title_embedded_proof":
+                    second["source_text"] += "\\end{proof}"
+                elif case == "body_opening":
+                    body["render"]["prefix"] = "\\begin{proof}\n"
+                elif case == "body_separator":
+                    last["render"]["prefix"] = "\\begin{proof}\n"
+                elif case == "body_closing":
+                    tail["render"]["suffix"] = "\\end{proof}\\end{proof}"
+                elif case == "body_missing_closing":
+                    tail["render"]["suffix"] = "\n"
+                elif case == "body_early_closing":
+                    body["render"]["suffix"] = "\\end{proof}"
+                elif case == "body_embedded_opening":
+                    tail["placeholders"]["FORMAT_0001"] = "\\begin{proof}"
+                elif case == "body_embedded_closing":
+                    tail["source_text"] += "\\end{proof}"
+                elif case.startswith("group_") and case != "group_reordered":
+                    number = {"group_zero": "000", "group_unpadded": "2", "group_gap": "003", "group_duplicate": "001"}[case]
+                    second["unit_id"] = f"tag:09DQ:proof-{number}-title"
+                elif case == "group_reordered":
+                    units = [owner, second, tail, title, body, last]
+                elif case.startswith("paragraph_"):
+                    number = {"paragraph_gap": "003", "paragraph_duplicate": "001", "paragraph_unpadded": "2", "paragraph_zero": "000"}[case]
+                    last["unit_id"] = f"tag:09DQ:proof-001-p{number}"
+                elif case == "first_paragraph_gap":
+                    tail["unit_id"] = "tag:09DQ:proof-002-p002"
+                elif case == "intervening_unit":
+                    units.insert(4, self.proof_title_units()[2])
+                elif case == "repeated_owner":
+                    units.insert(4, self.proof_title_units()[0])
+                elif case == "mixed_legacy":
+                    second["unit_id"] = "tag:09DQ:proof-title"
+                elif case == "renamed_tail":
+                    tail["unit_id"] = "tag:09DQ:p001"
+                    tail["node_kind"] = "paragraph"
+                else:
+                    self.fail(f"unhandled mutation {case}")
+                with self.assertRaisesRegex(RecordError, "invalid numbered proof group"):
+                    _validate_title_permanent_tags(units, {"obsolete-lemma-claim": "09DQ"}, Path("tags"))
+
+    def test_numbered_proof_titles_require_permanent_owner_tag(self) -> None:
+        for tags in ({}, {"obsolete-lemma-claim": "09DR"}):
+            with self.subTest(tags=tags), self.assertRaises(RecordError):
+                _validate_title_permanent_tags(self.numbered_proof_units(), tags, Path("tags"))
+
+    def test_render_numbered_proof_titles_preserves_references_and_batch_boundary(self) -> None:
+        for split_at in (None, 1, 4, 5):
+            with self.subTest(split_at=split_at), tempfile.TemporaryDirectory() as temp_dir:
+                root = Path(temp_dir)
+                lock = root / "upstream.lock"
+                lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+                tags = root / "tags"
+                tags.write_text("09DQ,obsolete-lemma-claim\n", encoding="utf-8")
+                units = self.numbered_proof_units()
+                translations = (
+                    "一个陈述。", "第一份证明 <REF_0001>", "第一段。", "第二段。",
+                    "第二份证明 <REF_0001>", "另一个论证。",
+                )
+                candidates = []
+                for unit, translation in zip(units, translations):
+                    context = {"instructions": "translator-v1", "unit_ids": [unit["unit_id"]]}
+                    candidates.append({
+                        "schema_version": 1, "unit_id": unit["unit_id"],
+                        "source_commit": SOURCE_COMMIT, "source_text_hash": unit["source_text_hash"],
+                        "model_id": "test/model", "model_lane": "test", "reasoning_effort": "not_exposed",
+                        "prompt_version": "translator-v1", "glossary_revision": "git:test",
+                        "context": context, "context_hash": sha256_value(context), "translation": translation,
+                        "allowed_english": [], "term_occurrences": [], "unknown_terms": [], "notes": [],
+                        "stage": "TERM_OK", "source_status": "CURRENT", "qa_status": "PASS",
+                        "term_status": "CLEAR", "publication_status": "CANDIDATE",
+                        "created_at": "2026-08-31T00:00:00+08:00",
+                    })
+                batches = (units,) if split_at is None else (units[:split_at], units[split_at:])
+                paths = []
+                for index, batch in enumerate(batches):
+                    path = root / f"units-{index}.jsonl"
+                    write_jsonl(path, batch)
+                    paths.append(path)
+                candidate_path = root / "candidates.jsonl"
+                write_jsonl(candidate_path, candidates)
+                output = root / "rendered"
+                if split_at is not None:
+                    with self.assertRaisesRegex(RecordError, "invalid numbered proof group"):
+                        render_batch(paths, candidate_path, lock, output, "test", "测试", tags_path=tags)
+                    self.assertFalse(output.exists())
+                else:
+                    render_batch(paths, candidate_path, lock, output, "test", "测试", tags_path=tags)
+                    rendered = (output / "chapters/obsolete.tex").read_text(encoding="utf-8")
+                    self.assertIn("\\begin{proof}[第一份证明 \\ref{lemma-claim}]\n第一段。", rendered)
+                    self.assertIn("\\medskip\\noindent\n第二段。\n\\end{proof}", rendered)
+                    self.assertIn("\\begin{proof}[第二份证明 \\ref{lemma-claim}]\n另一个论证。\n\\end{proof}", rendered)
+                    self.assertEqual(rendered.count("\\begin{proof}"), 2)
+                    self.assertEqual(rendered.count("\\end{proof}"), 2)
+                    self.assertEqual(rendered.count("\\label{lemma-claim}"), 1)
+                    self.assertEqual(rendered.count("\\label{"), 1)
+                    self.assertEqual(rendered.count("\\ref{lemma-claim}"), 2)
+
     def test_title_local_label_resolves_to_chapter_prefixed_permanent_tag(self) -> None:
         unit = {
             "unit_id": "tag:02BL:title",

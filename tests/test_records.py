@@ -73,7 +73,66 @@ def make_grouped_bold_unit() -> dict[str, object]:
     return stamp_unit_hashes(unit)
 
 
+def make_grouped_italic_unit(with_math: bool) -> dict[str, object]:
+    unit = make_unit()
+    unit["source_text"] = (
+        "The <FORMAT_0001><MATH_0001>-invariant<FORMAT_0002> is <MATH_0002>."
+        if with_math else
+        "The <FORMAT_0001>sum<FORMAT_0002> is <MATH_0001>."
+    )
+    unit["placeholders"] = {
+        "FORMAT_0001": "{\\it ",
+        "FORMAT_0002": "}",
+        "MATH_0001": "$\\epsilon$" if with_math else "$x$",
+    }
+    if with_math:
+        unit["placeholders"]["MATH_0002"] = "$x$"
+    return stamp_unit_hashes(unit)
+
+
 class RecordValidationTests(unittest.TestCase):
+    def test_grouped_italic_restores_plain_and_mixed_math_children(self) -> None:
+        for with_math, translation, source, restored, term in (
+            (False, "该<FORMAT_0001>和（sum）<FORMAT_0002>为<MATH_0001>。",
+             "The {\\it sum} is $x$.", "该{\\it 和（sum）}为$x$。",
+             {"source_term": "sum", "target_term": "和"}),
+            (True, "该<FORMAT_0001><MATH_0001>-不变量（invariant）<FORMAT_0002>为<MATH_0002>。",
+             "The {\\it $\\epsilon$-invariant} is $x$.",
+             "该{\\it $\\epsilon$-不变量（invariant）}为$x$。",
+             {"source_term": "invariant", "target_term": "不变量"}),
+        ):
+            with self.subTest(with_math=with_math):
+                unit = make_grouped_italic_unit(with_math)
+                candidate = make_candidate(unit)
+                candidate["translation"] = translation
+                candidate["term_occurrences"] = [term]
+                self.assertEqual(validate_records([unit], [candidate], SOURCE_COMMIT), [])
+                self.assertEqual(restore_placeholders(unit, unit["source_text"]), source)
+                self.assertEqual(restore_placeholders(unit, translation), restored)
+
+    def test_grouped_italic_missing_or_reordered_scope_and_math_is_rejected(self) -> None:
+        unit = make_grouped_italic_unit(True)
+        for translation in (
+            "<MATH_0001>-不变量<FORMAT_0002>为<MATH_0002>。",
+            "<FORMAT_0001><MATH_0001>-不变量为<MATH_0002>。",
+            "<FORMAT_0002><MATH_0001>-不变量<FORMAT_0001>为<MATH_0002>。",
+            "<MATH_0001><FORMAT_0001>-不变量<FORMAT_0002>为<MATH_0002>。",
+            "<FORMAT_0001><MATH_0001>-不变量为<MATH_0002><FORMAT_0002>。",
+        ):
+            with self.subTest(translation=translation):
+                candidate = make_candidate(unit)
+                candidate["translation"] = translation
+                errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+                self.assertTrue(any("placeholders changed" in error for error in errors))
+
+    def test_grouped_italic_wrapper_change_invalidates_source_structure_hash(self) -> None:
+        unit = make_grouped_italic_unit(True)
+        candidate = make_candidate(unit)
+        candidate["translation"] = "<FORMAT_0001><MATH_0001>-不变量<FORMAT_0002>为<MATH_0002>。"
+        unit["placeholders"]["FORMAT_0001"] = "\\textit{"
+        errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+        self.assertTrue(any("source_structure_hash mismatch" in error for error in errors))
+
     def test_grouped_bold_negation_restores_without_changing_scope(self) -> None:
         unit = make_grouped_bold_unit()
         candidate = make_candidate(unit)

@@ -235,7 +235,8 @@ def render_batch(
     }
     tags_by_label = _load_tags(tags_path) if tags_path is not None else {}
     if tags_path is not None:
-        _validate_title_permanent_tags(units, tags_by_label, tags_path)
+        for batch in unit_batches:
+            _validate_title_permanent_tags(batch, tags_by_label, tags_path)
     if chapter_source_dir is not None:
         units = _order_unit_batches_by_chapter_source(
             unit_batches, chapter_source_dir
@@ -448,28 +449,70 @@ def _permanent_tag_for_label(
     return None
 
 
+def _rendered_unit_labels(unit: dict[str, object]) -> list[str]:
+    render = unit["render"]
+    placeholders = unit["placeholders"]
+    assert isinstance(render, dict)
+    assert isinstance(placeholders, dict)
+    return [
+        label
+        for render_part in (render["prefix"], render["suffix"], *placeholders.values())
+        for label in LABEL_RE.findall(str(render_part))
+    ]
+
+
+def _proof_title_owner_labels(units: list[dict[str, object]], index: int) -> list[str]:
+    """Resolve a standalone proof title only through its adjacent statement."""
+    title = units[index]
+    render = title["render"]
+    assert isinstance(render, dict)
+    tag_match = TAG_UNIT_RE.match(str(title["unit_id"]))
+    if (
+        title["node_kind"] != "environment_title"
+        or tag_match is None
+        or title["unit_id"] != f"tag:{tag_match.group('tag')}:proof-title"
+        or render["prefix"] != "\\begin{proof}["
+        or str(render["suffix"]).rstrip() != "]"
+        or index == 0
+        or index + 1 == len(units)
+    ):
+        return []
+    owner, body = units[index - 1], units[index + 1]
+    tag = tag_match.group("tag")
+    owner_kind = owner["node_kind"]
+    owner_render, body_render = owner["render"], body["render"]
+    assert isinstance(owner_render, dict)
+    assert isinstance(body_render, dict)
+    if (
+        owner_kind not in {"lemma", "proposition", "theorem", "corollary"}
+        or owner["unit_id"] != f"tag:{tag}:statement"
+        or not str(owner_render["prefix"]).lstrip().startswith(f"\\begin{{{owner_kind}}}")
+        or str(owner_render["suffix"]).strip() != f"\\end{{{owner_kind}}}"
+        or body["node_kind"] != "proof"
+        or body["unit_id"] != f"tag:{tag}:proof-p001"
+        or str(body_render["prefix"]).strip()
+        or any(
+            neighbor[key] != title[key]
+            for neighbor in (owner, body)
+            for key in ("chapter", "parent_tag")
+        )
+    ):
+        return []
+    return _rendered_unit_labels(owner)
+
+
 def _validate_title_permanent_tags(
     units: list[dict[str, object]],
     tags_by_label: dict[str, str],
     tags_path: Path,
 ) -> None:
-    for unit in units:
+    for index, unit in enumerate(units):
         node_kind = unit["node_kind"]
         if not isinstance(node_kind, str) or not node_kind.endswith("_title"):
             continue
-        render = unit["render"]
-        placeholders = unit["placeholders"]
-        assert isinstance(render, dict)
-        assert isinstance(placeholders, dict)
-        labels = [
-            label
-            for render_part in (
-                render["prefix"],
-                render["suffix"],
-                *placeholders.values(),
-            )
-            for label in LABEL_RE.findall(str(render_part))
-        ]
+        labels = _rendered_unit_labels(unit)
+        if not labels:
+            labels = _proof_title_owner_labels(units, index)
         if not labels:
             raise RecordError(
                 f"{unit['unit_id']}: title unit has no rendered label to verify "

@@ -64,6 +64,15 @@ tag:0001:proof-p003
 
 不得把当前页码、行号或模型名称放入 `unit_id`。
 
+原文若含没有独立标签的显式证明标题，例如 `\begin{proof}[Proof (sketch)]`，
+可以将标题文字保存为所属数学陈述的 `tag:<TAG>:proof-title`，节点类型为
+`environment_title`，而不是发明新 Tag 或丢掉提纲等限定。该标题的包装只打开
+proof 环境及其可选参数并闭合参数；其后 `tag:<TAG>:proof-p001` 正文不得重复打开
+proof 环境。当前渲染器仅支持同一 batch 中紧邻完整带标签
+lemma/proposition/theorem/corollary 陈述和第一段 proof 正文的这种表示，并校验三者
+自身 Tag、chapter、parent Tag 及陈述标签的永久 Tag 对应。其他无标签标题仍需单独
+解决稳定坐标，不能借用别的章节、batch 或不相邻陈述的标签。
+
 ### 2.2 没有永久 Tag 的节点
 
 初次导入时使用以下信息建立合成 ID：

@@ -48,8 +48,15 @@
 
 - JSON/JSONL 可解析并符合版本化 Schema；
 - 单元 ID 唯一且引用存在；
-- 标题单元的 `parent_tag` 与其渲染标签在锁定 harvest `tags/tags` 中的永久 Tag
-  完全一致；
+- 有标签的标题单元，其 `unit_id` 中的永久 Tag 必须与渲染标签在锁定 harvest
+  `tags/tags` 中的永久 Tag 一致；环境标题的自身 Tag 不得误用外围 Section 的
+  `parent_tag`；
+- 原文无独立标签的显式证明标题可以使用 `tag:<TAG>:proof-title` 的
+  `environment_title` 单元，但必须在同一 batch 内紧接同 Tag、chapter、parent Tag
+  的完整带标签 lemma/proposition/theorem/corollary 陈述，并紧邻同坐标的
+  `proof-p001` 证明正文。其包装必须恰为 `\begin{proof}[` 与 `]`（闭括号后可有空白），
+  正文不得另起 proof 环境；陈述自身标签必须通过同一永久 Tag 验证。孤立、跨 batch、
+  错配或非 proof 的无标签标题仍然阻断；不得伪造标签或通过改名 node_kind 绕过检查；
 - 每个批次至少有一个渲染标签存在于锁定 harvest 的对应章源文件中；累积预览按
   批次首个所属标签在源文件中的出现顺序装配，并保持批次内部 AST 顺序；
 - 来源 commit 与 `upstream.lock` 一致；

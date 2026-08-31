@@ -19,6 +19,142 @@ SOURCE_COMMIT = "b" * 40
 
 
 class RenderTests(unittest.TestCase):
+    @staticmethod
+    def proof_title_units(kind: str = "lemma") -> list[dict[str, object]]:
+        common = {
+            "schema_version": 1,
+            "parent_tag": "0CXY",
+            "chapter": "obsolete",
+            "risk_level": "R3",
+            "source_commit": SOURCE_COMMIT,
+            "source_status": "CURRENT",
+            "placeholders": {},
+        }
+        pieces = [
+            ("statement", kind, "A claim.", f"\\begin{{{kind}}}\n\\label{{lemma-claim}}\n", f"\n\\end{{{kind}}}\n\n"),
+            ("proof-title", "environment_title", "Proof (sketch)", "\\begin{proof}[", "]\n"),
+            ("proof-p001", "proof", "A proof.", "", "\n\\end{proof}\n"),
+        ]
+        return [
+            stamp_unit_hashes({
+                **common,
+                "unit_id": f"tag:09DQ:{suffix}",
+                "node_kind": node_kind,
+                "source_text": text,
+                "render": {"prefix": prefix, "suffix": end},
+            })
+            for suffix, node_kind, text, prefix, end in pieces
+        ]
+
+    def test_unlabeled_proof_title_inherits_adjacent_statement_tag(self) -> None:
+        for kind in ("lemma", "proposition", "theorem", "corollary"):
+            with self.subTest(kind=kind):
+                _validate_title_permanent_tags(
+                    self.proof_title_units(kind),
+                    {"obsolete-lemma-claim": "09DQ"},
+                    Path("tags/tags"),
+                )
+
+    def test_unlabeled_proof_title_rejects_missing_or_mismatched_neighbors(self) -> None:
+        for case in (
+            "no_owner", "no_body", "owner_tag", "body_tag", "owner_chapter",
+            "body_chapter", "owner_parent", "body_parent", "owner_kind", "body_kind",
+            "owner_opening", "owner_closing", "owner_label", "body_opening",
+            "title_id", "title_kind", "title_opening", "title_closing", "title_closing_prefix",
+        ):
+            with self.subTest(case=case):
+                units = self.proof_title_units()
+                owner, title, body = units
+                if case == "no_owner":
+                    units = units[1:]
+                elif case == "no_body":
+                    units = units[:2]
+                elif case in {"owner_tag", "body_tag"}:
+                    node = owner if case == "owner_tag" else body
+                    node["unit_id"] = str(node["unit_id"]).replace("09DQ", "09DR")
+                elif case.endswith("_chapter") or case.endswith("_parent"):
+                    node = owner if case.startswith("owner") else body
+                    node["chapter" if case.endswith("_chapter") else "parent_tag"] = "other"
+                elif case in {"owner_kind", "body_kind"}:
+                    (owner if case == "owner_kind" else body)["node_kind"] = "paragraph"
+                elif case in {"owner_opening", "owner_label"}:
+                    owner["render"]["prefix"] = "" if case == "owner_opening" else "\\begin{lemma}\n"
+                elif case == "owner_closing":
+                    owner["render"]["suffix"] = "\n"
+                elif case == "body_opening":
+                    body["render"]["prefix"] = "\\begin{proof}\n"
+                elif case == "title_id":
+                    title["unit_id"] = "tag:09DQ:title"
+                elif case == "title_kind":
+                    title["node_kind"] = "section_title"
+                elif case == "title_opening":
+                    title["render"]["prefix"] = "\\begin{remark}["
+                elif case == "title_closing":
+                    title["render"]["suffix"] = "]\n\\end{proof}\n"
+                elif case == "title_closing_prefix":
+                    title["render"]["suffix"] = " ]\n"
+                with self.assertRaisesRegex(RecordError, "no rendered label"):
+                    _validate_title_permanent_tags(units, {"obsolete-lemma-claim": "09DQ"}, Path("tags/tags"))
+
+    def test_unlabeled_proof_title_requires_owner_label_to_resolve_to_its_tag(self) -> None:
+        for tags in ({}, {"obsolete-lemma-claim": "09DR"}):
+            with self.subTest(tags=tags), self.assertRaises(RecordError):
+                _validate_title_permanent_tags(self.proof_title_units(), tags, Path("tags/tags"))
+
+    def test_render_proof_title_preserves_wrapper_and_rejects_cross_batch_owner(self) -> None:
+        for split_owner in (False, True):
+            with self.subTest(split_owner=split_owner), tempfile.TemporaryDirectory() as temp_dir:
+                root = Path(temp_dir)
+                lock = root / "upstream.lock"
+                lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+                tags = root / "tags"
+                tags.write_text("09DQ,obsolete-lemma-claim\n", encoding="utf-8")
+                units = self.proof_title_units()
+                candidates = []
+                for unit, translation in zip(units, ("一个陈述。", "证明提纲", "一个论证。")):
+                    context = {"instructions": "translator-v1", "unit_ids": [unit["unit_id"]]}
+                    candidates.append({
+                        "schema_version": 1,
+                        "unit_id": unit["unit_id"],
+                        "source_commit": SOURCE_COMMIT,
+                        "source_text_hash": unit["source_text_hash"],
+                        "model_id": "test/model",
+                        "model_lane": "test",
+                        "reasoning_effort": "not_exposed",
+                        "prompt_version": "translator-v1",
+                        "glossary_revision": "git:test",
+                        "context": context,
+                        "context_hash": sha256_value(context),
+                        "translation": translation,
+                        "allowed_english": [],
+                        "term_occurrences": [],
+                        "unknown_terms": [],
+                        "notes": [],
+                        "stage": "TERM_OK",
+                        "source_status": "CURRENT",
+                        "qa_status": "PASS",
+                        "term_status": "CLEAR",
+                        "publication_status": "CANDIDATE",
+                        "created_at": "2026-08-25T00:00:00+08:00",
+                    })
+                unit_paths = []
+                for index, batch in enumerate(([units[0]], units[1:]) if split_owner else (units,)):
+                    path = root / f"units-{index}.jsonl"
+                    write_jsonl(path, batch)
+                    unit_paths.append(path)
+                candidate_path = root / "candidates.jsonl"
+                write_jsonl(candidate_path, candidates)
+                output = root / "rendered"
+                if split_owner:
+                    with self.assertRaisesRegex(RecordError, "no rendered label"):
+                        render_batch(unit_paths, candidate_path, lock, output, "test", "测试", tags_path=tags)
+                else:
+                    render_batch(unit_paths, candidate_path, lock, output, "test", "测试", tags_path=tags)
+                    rendered = (output / "chapters/obsolete.tex").read_text(encoding="utf-8")
+                    self.assertIn("\\begin{proof}[证明提纲]\n一个论证。\n\\end{proof}", rendered)
+                    self.assertEqual(rendered.count("\\label{lemma-claim}"), 1)
+                    self.assertEqual(rendered.count("\\label{"), 1)
+
     def test_title_local_label_resolves_to_chapter_prefixed_permanent_tag(self) -> None:
         unit = {
             "unit_id": "tag:02BL:title",

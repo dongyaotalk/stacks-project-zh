@@ -25,6 +25,8 @@ LABEL_RE = re.compile(r"\\label\{([^{}]+)\}")
 REF_VALUE_RE = re.compile(r"^\\ref\{([^{}]+)\}$")
 TAG_RE = re.compile(r"^[0-9A-Z]+$")
 TAG_UNIT_RE = re.compile(r"^tag:(?P<tag>[0-9A-Z]+):")
+NUMBERED_PROOF_RE = re.compile(r"^tag:(?P<tag>[0-9A-Z]+):proof-[0-9]+-")
+PROOF_ENV_RE = re.compile(r"\\(?:begin|end)\{proof\}")
 TAG_LABEL_RE = re.compile(r"^[A-Za-z0-9._:+-]+$")
 CURRENT_TRANSLATOR_PROMPT = "translator-v2"
 
@@ -501,16 +503,111 @@ def _proof_title_owner_labels(units: list[dict[str, object]], index: int) -> lis
     return _rendered_unit_labels(owner)
 
 
+def _numbered_proof_title_owner_labels(
+    units: list[dict[str, object]],
+) -> dict[int, list[str]]:
+    """Validate complete adjacent proof groups before borrowing their owner's labels."""
+    labels_by_index: dict[int, list[str]] = {}
+    seen_tags: set[str] = set()
+    index = 0
+    while index < len(units):
+        match = NUMBERED_PROOF_RE.match(str(units[index]["unit_id"]))
+        if match is None:
+            index += 1
+            continue
+        first = units[index]
+        tag = match.group("tag")
+
+        def require(condition: bool, reason: str) -> None:
+            if not condition:
+                raise RecordError(f"{first['unit_id']}: invalid numbered proof group: {reason}")
+
+        def same_owner(unit: dict[str, object]) -> bool:
+            return all(unit[key] == first[key] for key in ("chapter", "parent_tag"))
+
+        def has_embedded_proof(unit: dict[str, object]) -> bool:
+            return any(
+                PROOF_ENV_RE.search(str(part))
+                for part in (unit["source_text"], *unit["placeholders"].values())
+            )
+
+        require(index > 0 and tag not in seen_tags, "missing or repeated owner")
+        owner = units[index - 1]
+        kind = owner["node_kind"]
+        require(
+            kind in {"lemma", "proposition", "theorem", "corollary"}
+            and owner["unit_id"] == f"tag:{tag}:statement"
+            and same_owner(owner)
+            and str(owner["render"]["prefix"]).lstrip().startswith(f"\\begin{{{kind}}}")
+            and str(owner["render"]["suffix"]).strip() == f"\\end{{{kind}}}"
+            and not has_embedded_proof(owner)
+            and not PROOF_ENV_RE.search(
+                str(owner["render"]["prefix"]) + str(owner["render"]["suffix"])
+            ),
+            "expected an adjacent complete statement with matching coordinates",
+        )
+        labels = _rendered_unit_labels(owner)
+        require(bool(labels), "owner has no rendered label")
+        seen_tags.add(tag)
+        group = 1
+        while True:
+            title = units[index]
+            stem = f"tag:{tag}:proof-{group:03d}"
+            require(
+                group <= 999
+                and title["unit_id"] == f"{stem}-title"
+                and title["node_kind"] == "environment_title"
+                and same_owner(title)
+                and title["render"]["prefix"] == "\\begin{proof}["
+                and str(title["render"]["suffix"]).rstrip() == "]"
+                and not _rendered_unit_labels(title)
+                and not has_embedded_proof(title),
+                "expected a sequential unlabeled proof title with exact wrappers",
+            )
+            labels_by_index[index] = labels
+            index += 1
+            paragraph = 1
+            while True:
+                require(index < len(units), "missing proof body or closing wrapper")
+                body = units[index]
+                prefix = str(body["render"]["prefix"]).strip()
+                suffix = str(body["render"]["suffix"]).strip()
+                require(
+                    paragraph <= 999
+                    and body["unit_id"] == f"{stem}-p{paragraph:03d}"
+                    and body["node_kind"] == "proof"
+                    and same_owner(body)
+                    and prefix in ({""} if paragraph == 1 else {"", "\\medskip\\noindent"})
+                    and suffix in {"", "\\end{proof}"}
+                    and not has_embedded_proof(body),
+                    "expected a sequential proof paragraph with matching coordinates and wrappers",
+                )
+                index += 1
+                paragraph += 1
+                if suffix == "\\end{proof}":
+                    break
+            following = (
+                NUMBERED_PROOF_RE.match(str(units[index]["unit_id"]))
+                if index < len(units) else None
+            )
+            if following is None or following.group("tag") != tag:
+                break
+            group += 1
+        require(group >= 2, "numbered proofs require at least two complete groups")
+    return labels_by_index
+
+
 def _validate_title_permanent_tags(
     units: list[dict[str, object]],
     tags_by_label: dict[str, str],
     tags_path: Path,
 ) -> None:
+    numbered_labels = _numbered_proof_title_owner_labels(units)
     for index, unit in enumerate(units):
         node_kind = unit["node_kind"]
         if not isinstance(node_kind, str) or not node_kind.endswith("_title"):
             continue
-        labels = _rendered_unit_labels(unit)
+        labels = numbered_labels.get(index) or _rendered_unit_labels(unit)
         if not labels:
             labels = _proof_title_owner_labels(units, index)
         if not labels:

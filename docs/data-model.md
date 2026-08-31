@@ -68,9 +68,33 @@ tag:0001:proof-p003
 可以将标题文字保存为所属数学陈述的 `tag:<TAG>:proof-title`，节点类型为
 `environment_title`，而不是发明新 Tag 或丢掉提纲等限定。该标题的包装只打开
 proof 环境及其可选参数并闭合参数；其后 `tag:<TAG>:proof-p001` 正文不得重复打开
-proof 环境。当前渲染器仅支持同一 batch 中紧邻完整带标签
-lemma/proposition/theorem/corollary 陈述和第一段 proof 正文的这种表示，并校验三者
-自身 Tag、chapter、parent Tag 及陈述标签的永久 Tag 对应。其他无标签标题仍需单独
+proof 环境。单份显式标题使用上述既有坐标，必须在同一 batch 中紧接完整带标签的
+lemma/proposition/theorem/corollary 陈述，并紧邻第一段 proof 正文，同时校验三者
+自身 Tag、chapter、parent Tag 及陈述标签的永久 Tag 对应。
+
+同一陈述有多份显式带标题的证明时，使用编号证明组，例如：
+
+```text
+tag:02TF:statement
+tag:02TF:proof-001-title
+tag:02TF:proof-001-p001
+tag:02TF:proof-001-p002
+tag:02TF:proof-002-title
+tag:02TF:proof-002-p001
+```
+
+这是所属永久 Tag 内持久化的子坐标，不是新的永久 Tag，也不迁移既有单份证明 ID。
+同一 batch 必须包含一个完整带标签陈述及其至少两份完整证明，保持原文顺序且中间
+不得夹入无关单元。证明组和组内段落都从 `001` 连续编号，采用三位数字；每组标题
+仍为 `environment_title`，正文为 `proof`，所有单元共享自身 Tag、chapter 和 parent Tag。
+标题包装恰为 `\begin{proof}[` 与 `]`（右括号后可有空白），标题文字和引用占位符
+不得遗漏或隐藏于包装中。第一段正文前只能有空白；后续段落前可有空白或原文的
+`\medskip\noindent`。非末段后只能有空白；末段后必须且只能有一个 `\end{proof}`
+及空白，正文和占位符不得暗藏额外 proof 开闭命令。后续标题只能沿同批完整证明链
+继承首个陈述的真实标签；不能伪造标题标签、重复陈述或跨文件寻找所属引理。
+每个标题的继承标签仍须解析为该陈述自身的永久 Tag。
+
+其他无标签标题仍需单独
 解决稳定坐标，不能借用别的章节、batch 或不相邻陈述的标签。
 
 ### 2.2 没有永久 Tag 的节点

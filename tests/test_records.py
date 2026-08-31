@@ -90,7 +90,53 @@ def make_grouped_italic_unit(with_math: bool) -> dict[str, object]:
     return stamp_unit_hashes(unit)
 
 
+def make_control_space_unit() -> dict[str, object]:
+    unit = make_unit()
+    unit["source_text"] = "See <REF_0001>, resp.<SPACE_0001><REF_0002>."
+    unit["placeholders"] = {
+        "REF_0001": "\\ref{first}",
+        "SPACE_0001": "\\ ",
+        "REF_0002": "\\ref{second}",
+    }
+    return stamp_unit_hashes(unit)
+
+
 class RecordValidationTests(unittest.TestCase):
+    def test_control_space_restores_without_hiding_abbreviation(self) -> None:
+        unit = make_control_space_unit()
+        candidate = make_candidate(unit)
+        candidate["translation"] = "分别见<REF_0001><SPACE_0001>和<REF_0002>。"
+        self.assertEqual(validate_records([unit], [candidate], SOURCE_COMMIT), [])
+        self.assertEqual(
+            restore_placeholders(unit, unit["source_text"]),
+            "See \\ref{first}, resp.\\ \\ref{second}.",
+        )
+        self.assertEqual(
+            restore_placeholders(unit, candidate["translation"]),
+            "分别见\\ref{first}\\ 和\\ref{second}。",
+        )
+
+    def test_control_space_deletion_or_reordering_is_rejected(self) -> None:
+        unit = make_control_space_unit()
+        for translation in (
+            "分别见<REF_0001>和<REF_0002>。",
+            "分别见<SPACE_0001><REF_0001>和<REF_0002>。",
+            "分别见<REF_0001>和<REF_0002><SPACE_0001>。",
+        ):
+            with self.subTest(translation=translation):
+                candidate = make_candidate(unit)
+                candidate["translation"] = translation
+                errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+                self.assertTrue(any("placeholders changed" in error for error in errors))
+
+    def test_control_space_replacement_invalidates_source_structure_hash(self) -> None:
+        unit = make_control_space_unit()
+        candidate = make_candidate(unit)
+        candidate["translation"] = "分别见<REF_0001><SPACE_0001>和<REF_0002>。"
+        unit["placeholders"]["SPACE_0001"] = "\\,"
+        errors = validate_records([unit], [candidate], SOURCE_COMMIT)
+        self.assertTrue(any("source_structure_hash mismatch" in error for error in errors))
+
     def test_grouped_italic_restores_plain_and_mixed_math_children(self) -> None:
         for with_math, translation, source, restored, term in (
             (False, "该<FORMAT_0001>和（sum）<FORMAT_0002>为<MATH_0001>。",

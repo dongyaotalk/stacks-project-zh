@@ -59,6 +59,21 @@ tooling, documentation, blocked, claimed
 PDF 页码、源文件行号或“这一节后半部分”等不稳定描述。详细规则见
 `docs/task-allocation.md`。
 
+### 原文 typo 的标记与收尾
+
+确认是英文原文 typo 时，按“指出并保留原文”处理，不默认安排纠错 PR：
+
+- 使用 `source-typo` 标签，记录来源 commit、永久 Tag、原文字样、核对依据及不修改的决定；
+- 保留原 Issue 和诊断历史；仅含已确认 typo 的 Issue 可用 GitHub `not planned` 原因关闭，
+  并明确说明“已标记，原文未修复”，不使用自动修复的 closing relation 冒充源文修复；
+- 不为标记创建空提交或空 PR，不改写历史候选/run，不更新 source lock，也不向原文或
+  译文正文插入说明；
+- 缺失证明、实质推导问题和仍未确认的数学符号不是可直接收尾的 typo。混合 Issue
+  可以标记其中的 typo，但必须继续保留未决部分；
+- 标签和关闭状态不替代人工语言/数学审校，也不解除正确性问题的发布门禁。
+
+若维护者以后明确要求修复原文，再另行认领独立的源文勘误或上游同步任务。
+
 ## 4. 分支和 PR
 
 分支、提交标题和 trailer 按 `docs/git-conventions.md` 执行。一个翻译 PR：

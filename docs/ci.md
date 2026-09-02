@@ -85,6 +85,10 @@ CI 不应把英文仓库作为中文仓库的 Git remote，也不应把英文源
 - 翻译结构化数据中的实际 `unit_id`、`source_commit`、chapter 和 parent Tag 均在
   Issue 的任务坐标内。
 
+单范围 Issue 使用 `parent_tag`；batch Issue 改用 `parent_tags` 声明 2–8 个唯一永久
+Tag，两者不得同时出现。校验器会同时检查结构化记录的 `parent_tag` 和
+`tag:<TAG>:...` unit ID 前缀，拒绝超出 batch 集合的内容；旧的单 Tag Issue 保持兼容。
+
 `pr-contract` 只检出默认分支，不检出或执行 PR head 中的代码；PR 中对校验器的修改
 必须先合并，后续 PR 才会使用。它只有 contents、Issues 和 Pull Requests 的只读权限。
 

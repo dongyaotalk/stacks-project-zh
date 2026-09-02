@@ -55,6 +55,11 @@ FIELD_ALIASES = {
         "Section or parent Tag",
         "Permanent Tag or full label",
     ),
+    "parent_tags": (
+        "parent_tags",
+        "Section or parent Tags",
+        "Permanent Tags",
+    ),
     "unit_ids": ("unit_ids", "Unit IDs"),
 }
 
@@ -67,6 +72,8 @@ TRANSLATION_DATA_PREFIXES = (
     "review/language/",
     "review/mathematics/",
 )
+PERMANENT_TAG_RE = re.compile(r"^[0-9A-Z]+$")
+TAG_UNIT_ID_RE = re.compile(r"^tag:(?P<tag>[0-9A-Z]+):")
 
 
 class ContractApiError(RuntimeError):
@@ -279,11 +286,45 @@ def validate_pr_contract(
 
     chapter = _field_value(issue_body, "chapter")
     parent_tag = _field_value(issue_body, "parent_tag")
+    parent_tags_value = _field_value(issue_body, "parent_tags")
+    parent_tags: list[str] = []
+    if parent_tag and parent_tags_value:
+        errors.append(
+            f"translation task Issue #{issue_number} must declare parent_tag or "
+            "parent_tags, not both"
+        )
+    elif parent_tag:
+        parent_tags = [parent_tag]
+    elif parent_tags_value:
+        parent_tags = _list_values(parent_tags_value)
+        if not 2 <= len(parent_tags) <= 8:
+            errors.append(
+                f"translation batch Issue #{issue_number} parent_tags must contain "
+                "2 to 8 Tags"
+            )
+        duplicates = sorted(
+            tag for tag in set(parent_tags) if parent_tags.count(tag) > 1
+        )
+        if duplicates:
+            errors.append(
+                f"translation batch Issue #{issue_number} parent_tags contains "
+                f"duplicates: {', '.join(duplicates)}"
+            )
+        invalid_tags = sorted(
+            tag for tag in set(parent_tags) if not PERMANENT_TAG_RE.fullmatch(tag)
+        )
+        if invalid_tags:
+            errors.append(
+                f"translation batch Issue #{issue_number} parent_tags contains "
+                f"invalid permanent Tags: {', '.join(invalid_tags)}"
+            )
     declared_unit_ids = set(_list_values(_field_value(issue_body, "unit_ids")))
     if not chapter:
         errors.append(f"translation task Issue #{issue_number} is missing chapter")
-    if not parent_tag:
-        errors.append(f"translation task Issue #{issue_number} is missing parent_tag")
+    if not parent_tag and not parent_tags_value:
+        errors.append(
+            f"translation task Issue #{issue_number} is missing parent_tag or parent_tags"
+        )
     if not declared_unit_ids:
         errors.append(f"translation task Issue #{issue_number} is missing unit_ids")
 
@@ -316,12 +357,21 @@ def validate_pr_contract(
         for actual in sorted(actual_chapters - {chapter}):
             errors.append(f"changed structured record chapter {actual!r} differs from Issue")
 
+    declared_parent_tags = set(parent_tags)
     actual_parent_tags = _record_values(records, "parent_tag")
-    if parent_tag:
-        for actual in sorted(actual_parent_tags - {parent_tag}):
+    if declared_parent_tags:
+        for actual in sorted(actual_parent_tags - declared_parent_tags):
             errors.append(
-                f"changed structured record parent_tag {actual!r} differs from Issue"
+                f"changed structured record parent_tag {actual!r} is outside Issue "
+                "parent Tag scope"
             )
+        for unit_id in sorted(actual_unit_ids):
+            match = TAG_UNIT_ID_RE.match(unit_id)
+            if match and match.group("tag") not in declared_parent_tags:
+                errors.append(
+                    f"changed structured record unit_id {unit_id!r} has Tag "
+                    f"{match.group('tag')!r} outside Issue parent Tag scope"
+                )
     return errors
 
 

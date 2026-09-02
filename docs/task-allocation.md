@@ -40,6 +40,18 @@ model_lane: openai-gpt-5.6-sol
 `unit_id` 优先使用 `tag:<TAG>:<sub-id>`。没有永久 Tag 的单元仍必须使用已保存的
 合成 ID；不能因为上游移动或换页重新编号。
 
+同一章需要一次处理多个相邻 Tag 时，用复数坐标替代单数坐标：
+
+~~~yaml
+parent_tags:
+  - 04AO
+  - 04AP
+~~~
+
+`parent_tag` 与 `parent_tags` 必须且只能填写一个。复数形式限 2–8 个唯一、相邻的永久
+Tag；所有 `unit_ids`、unit/candidate 文件和 run manifest 必须完整落在该集合内。这样的
+batch 共享一个 Issue、一次模型运行和一个 PR，但每个 Tag 的事实文件仍保持独立。
+
 ### 1.1 从任意章节开始
 
 `translation-data/chapter-templates/<chapter>.json` 预先初始化锁定上游的全部章节，
@@ -90,6 +102,7 @@ make next-task CHAPTER=obsolete TAG=0BM0
 - 一个 Section；
 - 一个 parent Tag 下的相邻 unit；
 - 一个明确的候选 batch 文件；
+- 同一章内由 `parent_tags` 声明的 2–8 个相邻 Tag batch；
 - 一个独立的术语、审校、QA 或上游同步任务。
 
 禁止的范围：
@@ -129,7 +142,7 @@ AVAILABLE ← ABANDONED
 认领步骤：
 
 1. 创建或更新翻译任务 Issue；
-2. 填写 `source_commit`、Tag 和完整 unit 列表；
+2. 填写 `source_commit`、一个 `parent_tag` 或 2–8 个 `parent_tags`，以及完整 unit 列表；
 3. 由负责人认领 Issue，并写入分支名；
 4. 从最新 `main` 创建任务分支；
 5. 只写任务声明的文件；

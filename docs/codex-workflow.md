@@ -117,13 +117,15 @@ make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 
 文件列表按位置配对；接口会分别执行每个 pair 的确定性 QA，再检查 batch 内没有重复
 `unit_id`，且所有候选使用同一具体模型、model lane、Harness 和 `run_id`。一个 pair
-失败不会让其他 pair 的事实文件被改写，修复后可只重跑失败范围。建议一次放入 2–8 个
-相邻、语义完整的 Section；不要把证明链或一个 PR 的写入边界切开。
+失败不会让其他 pair 的事实文件被改写，修复后可只重跑失败范围。任务 Issue 使用
+`parent_tags` 声明同一章内 2–8 个相邻、语义完整的 Tag；它们共享一次模型运行和一个
+PR，但各自保持独立事实文件。不要跨章或切断证明链。
 
 这条开发路径只减少重复的进程启动和共享检查，不会把独立 batch 合并成新的事实来源，
 也不会跳过最终门禁。若要减少模型 token，应让一次模型请求返回多个 unit 的结构化草稿，
-随后按 `unit_id` 拆回每个 batch，再分别 `assemble`；模型输出仍需经过逐 batch 溯源、QA、
-人工审校和 PR 检查。提交前仍执行完整模型通道的 `qa-all`、`render`、`pdf` 和 CI。
+随后按 `unit_id` 拆回每个 batch，再分别 `assemble`；模型输出仍需经过逐 batch 溯源、QA
+和人工审校。整个 batch 提交前统一执行一次完整模型通道的 `qa-all`、`render`、`pdf`
+和 CI，合并后统一执行一次进度/计划同步。
 
 ## 6. 多模型比较
 

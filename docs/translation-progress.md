@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 92 / 3,299（2.8%） | 13 | 3,194 |
+| 模型候选译文 | 96 / 3,299（2.9%） | 10 | 3,193 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -39,7 +39,7 @@
 | 1 | 引言（`introduction`） | 候选译文完成，待审校 | 2 / 2（100.0%） | 0 | 0 | 0 | 0 |
 | 2 | 约定（`conventions`） | 候选译文完成，待审校 | 5 / 5（100.0%） | 0 | 0 | 0 | 0 |
 | 3 | 集合论（`sets`） | 候选译文完成，待审校 | 12 / 12（100.0%） | 0 | 0 | 0 | 0 |
-| 4 | 范畴（`categories`） | 翻译中 | 8 / 44（18.2%） | 13 | 23 | 0 | 0 |
+| 4 | 范畴（`categories`） | 翻译中 | 12 / 44（27.3%） | 10 | 22 | 0 | 0 |
 | 5 | 拓扑（`topology`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 6 | 空间上的层（`sheaves`） | 未开始 | 0 / 33（0.0%） | 0 | 33 | 0 | 0 |
 | 7 | 位点与层（`sites`） | 未开始 | 0 / 52（0.0%） | 0 | 52 | 0 | 0 |
@@ -198,7 +198,7 @@
 
 ### 第 4 章 范畴（`categories`）
 
-共 44 个 Section：候选完成 8，翻译中 13，未开始 23。
+共 44 个 Section：候选完成 12，翻译中 10，未开始 22。
 
 | Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
 | ---: | --- | --- | --- | --- | --- |
@@ -216,10 +216,10 @@
 | 12 | `002B` | Initial and final objects | 完成 | 未开始 | 未开始 |
 | 13 | `003A` | Monomorphisms and Epimorphisms | 进行中 | 未开始 | 未开始 |
 | 14 | `002D` | Limits and colimits | 进行中 | 未开始 | 未开始 |
-| 15 | `002U` | Limits and colimits in the category of sets | 未开始 | 未开始 | 未开始 |
-| 16 | `04AQ` | Connected limits | 进行中 | 未开始 | 未开始 |
-| 17 | `09WN` | Cofinal and initial categories | 进行中 | 未开始 | 未开始 |
-| 18 | `04AS` | Finite limits and colimits | 进行中 | 未开始 | 未开始 |
+| 15 | `002U` | Limits and colimits in the category of sets | 完成 | 未开始 | 未开始 |
+| 16 | `04AQ` | Connected limits | 完成 | 未开始 | 未开始 |
+| 17 | `09WN` | Cofinal and initial categories | 完成 | 未开始 | 未开始 |
+| 18 | `04AS` | Finite limits and colimits | 完成 | 未开始 | 未开始 |
 | 19 | `04AX` | Filtered colimits | 未开始 | 未开始 | 未开始 |
 | 20 | `04AY` | Cofiltered limits | 未开始 | 未开始 | 未开始 |
 | 21 | `002Z` | Limits and colimits over preordered sets | 进行中 | 未开始 | 未开始 |

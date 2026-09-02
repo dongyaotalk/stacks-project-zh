@@ -686,7 +686,14 @@ def _recommended_chapter_tasks(
     limit: int,
     actions: frozenset[str] | None = None,
 ) -> tuple[TranslationTask, ...]:
-    tasks = [chapter.next_task for chapter in plan.chapters]
+    tasks = [
+        (
+            next((task for task in chapter.tasks if task.action in actions), None)
+            if actions is not None
+            else chapter.next_task
+        )
+        for chapter in plan.chapters
+    ]
     return tuple(
         sorted(
             (
@@ -709,7 +716,7 @@ def render_readme_plan(plan: TranslationPlan) -> str:
         *_recommended_table(tasks),
         "",
         "运行 `make next-task` 获取当前自动任务；也可用",
-        "`make next-task CHAPTER=115` 或 `make next-task CHAPTER=115 TAG=0BM0`",
+        "`make next-task CHAPTER=4` 或 `make next-task CHAPTER=categories TAG=001L`",
         "锁定本次范围。完整政策和 117 章队列见",
         "[翻译优先级](docs/translation-priority.md)与",
         "[当前翻译计划](docs/translation-plan.md)。",

@@ -250,6 +250,79 @@ class RenderTests(unittest.TestCase):
                 chapter.index("\\end{enumerate}"), chapter.index("\\end{definition}")
             )
 
+    def test_render_closes_split_lemma_list_before_lemma(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            specs = [
+                (
+                    "tag:TEST:statement",
+                    "lemma",
+                    "Lemma statement.",
+                    "\\begin{lemma}\n",
+                    "\\begin{enumerate}\n",
+                    "引理：",
+                ),
+                (
+                    "tag:TEST:item001",
+                    "list_item",
+                    "Lemma item.",
+                    "\\item ",
+                    "\n",
+                    "条目。",
+                ),
+                (
+                    "tag:TEST:p001",
+                    "paragraph",
+                    "Lemma conclusion.",
+                    "",
+                    "\n\\end{enumerate}\n\\end{lemma}\n",
+                    "结论。",
+                ),
+            ]
+            units = []
+            candidates = []
+            for unit_id, node_kind, source_text, prefix, suffix, translation in specs:
+                unit = stamp_unit_hashes(
+                    {
+                        "schema_version": 1,
+                        "unit_id": unit_id,
+                        "parent_tag": "TEST",
+                        "chapter": "test",
+                        "node_kind": node_kind,
+                        "risk_level": "R1",
+                        "source_commit": SOURCE_COMMIT,
+                        "source_text": source_text,
+                        "source_status": "CURRENT",
+                        "placeholders": {},
+                        "render": {"prefix": prefix, "suffix": suffix},
+                    }
+                )
+                candidate = make_batch_candidate(unit)
+                candidate["translation"] = translation
+                units.append(unit)
+                candidates.append(candidate)
+
+            units_path = root / "units.jsonl"
+            candidates_path = root / "candidates.jsonl"
+            write_jsonl(units_path, units)
+            write_jsonl(candidates_path, candidates)
+            output = root / "rendered"
+            render_batch(
+                units_path,
+                candidates_path,
+                lock,
+                output,
+                "test",
+                "测试候选",
+            )
+
+            chapter = (output / "chapters" / "test.tex").read_text(encoding="utf-8")
+            self.assertLess(
+                chapter.index("\\end{enumerate}"), chapter.index("\\end{lemma}")
+            )
+
     @staticmethod
     def proof_title_units(kind: str = "lemma") -> list[dict[str, object]]:
         common = {

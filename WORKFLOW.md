@@ -134,12 +134,13 @@ make render-batch \
 `model_lane`、具体模型、Harness 或 `run_id`。错误仍按 batch 报告，修复后可以只重跑
 失败 pair。
 
-这里的 batch 是开发调度边界，不是新的翻译事实文件：每个 Section 仍保留独立 unit、
-candidate、run 溯源和 PR 写入所有权。建议一次选择 2–8 个相邻且语义完整的 Section，
-避免跨章节或切断证明链。模型生成若要节省 token，应一次请求多个 unit，并在装配前按
-`unit_id` 拆回各自的草稿和 candidate 文件；当前 batch 命令不会合并这些事实，也不会
-自动提升审校状态。提交或合并前仍必须对完整模型通道执行 `make qa-all`、完整
-`make render`、`make pdf` 和 CI 门禁。
+这里的 batch 是开发调度边界，不是新的翻译事实文件：每个 Tag 仍保留独立 unit 和
+candidate 文件及可审计溯源。一个 batch 任务可以在同一章用 `parent_tags` 声明 2–8 个
+相邻、语义完整的 Tag，并共享一次模型运行、一个 Issue 和一个 PR；不得跨章节、切断证明链
+或与其他任务共享写入文件。模型生成应一次请求多个 unit，再按 `unit_id` 拆回各自的草稿
+和 candidate 文件；batch 命令不会合并这些事实，也不会自动提升审校状态。整个 batch
+提交前只需统一执行一次完整模型通道的 `make qa-all`、`make render`、`make pdf` 和 CI
+门禁，合并后也只做一次独立进度/计划同步。
 
 ## 5. 状态模型
 

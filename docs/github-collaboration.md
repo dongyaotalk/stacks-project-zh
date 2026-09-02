@@ -55,8 +55,10 @@ translation, review, mathematics, terminology, upstream-sync,
 tooling, documentation, blocked, claimed
 ~~~
 
-一个任务的规范坐标是 `source_commit + chapter + parent_tag + unit_id`。不要使用
-PDF 页码、源文件行号或“这一节后半部分”等不稳定描述。详细规则见
+单范围任务的规范坐标是 `source_commit + chapter + parent_tag + unit_id`；同章 batch
+任务使用 `source_commit + chapter + parent_tags + unit_ids`，其中 `parent_tags` 必须是
+2–8 个唯一且相邻的永久 Tag。不要使用 PDF 页码、源文件行号或“这一节后半部分”等
+不稳定描述。详细规则见
 `docs/task-allocation.md`。
 
 ### 原文问题的 remark 标记与收尾
@@ -82,12 +84,15 @@ PDF 页码、源文件行号或“这一节后半部分”等不稳定描述。�
 
 分支、提交标题和 trailer 按 `docs/git-conventions.md` 执行。一个翻译 PR：
 
-- 只处理一个 Section 或明确连续的 unit；
+- 只处理一个 Section、一个明确连续的 unit 范围，或同章 2–8 个相邻 Tag 的 batch；
 - 只使用一个 Harness、具体模型和不可变 run；
 - 必须在 run manifest 中写明 provider/model ID、模型记录和模型 snapshot（如有）；
 - 不夹带术语批准、上游同步、工具重构或模板改动；
 - 不能修改未声明的 unit、共享政策文件或生成目录；
 - 必须附双语 diff、QA 摘要、来源信息和未决问题。
+
+batch PR 用一个 Issue 的 `parent_tags` 声明完整范围，可共享一次模型 run 和一次最终
+全量构建；各 Tag 的 unit/candidate 文件仍独立，不能借 batch 混入不相邻范围。
 
 审校 PR 只做审校发现所需的最小修订；术语 PR 与译文应用 PR 分离；上游同步 PR
 只处理一个旧 commit 到新 commit 的范围。

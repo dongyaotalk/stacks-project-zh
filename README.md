@@ -64,7 +64,7 @@ TeX 和 PDF 都不是翻译事实来源。
 
 | 优先级 | 章 | 当前范围 | 准备状态 | 下一动作 |
 | --- | --- | --- | --- | --- |
-| P0 | 第 4 章 范畴（`categories`） | Section 5 / `04AN` | `READY` | `TRANSLATE` |
+| P0 | 第 4 章 范畴（`categories`） | Section 15 / `002U` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 105 章 代数栈导论（`stacks-introduction`） | Section 1 / `072I` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `UNPREPARED` | `PREPARE_SCOPE` |

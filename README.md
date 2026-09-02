@@ -64,7 +64,7 @@ TeX 和 PDF 都不是翻译事实来源。
 
 | 优先级 | 章 | 当前范围 | 准备状态 | 下一动作 |
 | --- | --- | --- | --- | --- |
-| P0 | 第 4 章 范畴（`categories`） | Section 5 / `04AN` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 4 章 范畴（`categories`） | Section 5 / `04AN` | `READY` | `TRANSLATE` |
 | P0 | 第 105 章 代数栈导论（`stacks-introduction`） | Section 1 / `072I` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -523,12 +523,37 @@ translation revision 中。
 接受当前 `translator-v2`；`translator-v1` 只用于历史候选复现和兼容测试，详见
 [`prompts/README.md`](prompts/README.md)。
 
+#### 开发阶段 batch 模式
+
+如果一次模型运行覆盖多个不重叠的 Section，可以在候选文件生成后合并本地检查和预览：
+
+~~~bash
+make qa-batch \
+  BATCHES="categories-001M categories-001N" \
+  MODEL=openai-gpt-5.6-sol
+make render-batch \
+  BATCHES="categories-001M categories-001N" \
+  MODEL=openai-gpt-5.6-sol
+~~~
+
+`BATCHES` 中的名称按位置分别对应 `translation-data/units/<batch>.jsonl` 和
+`translation-data/candidates/<model-lane>/<batch>.jsonl`。`qa-batch` 会在一个进程中
+完成每个 pair 的 QA，并共享一次来源、Schema、溯源和决策检查；它拒绝缺失文件、跨文件
+重复 `unit_id` 以及混用模型、Harness 或 `run_id`。`render-batch` 只生成选定范围的
+忽略目录预览；某个 pair 失败时可以单独修复和重跑。
+
+建议一次选择 2–8 个相邻且语义完整的 Section，不跨章节、不切断证明链。batch 只是开发
+调度边界，每个 unit、candidate、run manifest 和 PR 写入所有权仍保持独立。若要真正减少
+模型 token，应让一次请求返回多个 unit 的结构化草稿，再按 `unit_id` 拆回各 batch 后分别
+`assemble`；不能把候选事实合并或自动提升审校状态。提交前仍要运行完整模型通道的
+`make qa-all`、`make render`、`make pdf` 和 CI 门禁。
+
 ### 5. 贡献 Python、工具、Schema、CI 或文档
 
 代码贡献从一个描述问题和验收标准的 Issue 开始；小型文档拼写修复也不例外，避免
 再次出现无法追溯任务范围的直接 PR。改变数据格式、状态机、来源匹配、Tag 索引、
 翻译 QA 或渲染语义时，必须先讨论
-兼容性和既有 108 个 batch 的迁移方案。
+兼容性和既有候选 batch 的迁移方案。
 
 推荐步骤：
 
@@ -581,6 +606,15 @@ make qa BATCH=<batch> MODEL=<model-lane>
 make render MODEL=<model-lane>
 make pdf MODEL=<model-lane>
 ~~~
+
+开发阶段可用多个 batch 一次完成本地 QA 和选定范围预览：
+
+~~~bash
+make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
+make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
+~~~
+
+这不会替代提交前的完整模型通道构建和 CI 全量检查。
 
 后两条命令必须在 Git 提交前成功，以确认本次候选所在模型通道可以完整编译。
 

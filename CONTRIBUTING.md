@@ -65,10 +65,18 @@ TeX 或手工发明 unit ID。
 4. 只写入指定 Harness、模型、run 和单元的候选数据；
 5. 运行结构、术语和语义检查；
 6. 生成双语 diff 与 QA 摘要；
-7. 执行 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`，确认本次
+7. 开发阶段如一次处理多个不重叠 Section，可执行
+   `make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>` 和
+   `make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>`；文件仍按
+   batch 独立保存；
+8. 执行完整 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`，确认本次
    候选所在模型通道的 LaTeX 编译无错误；
-8. 按 `.gitmessage` 写原子提交；
-9. 使用 PR 模板提交，不自行提升人工审校状态。
+9. 按 `.gitmessage` 写原子提交；
+10. 使用 PR 模板提交，不自行提升人工审校状态。
+
+批量模型请求可以减少上下文和启动开销，但必须在装配前按 `unit_id` 拆回独立草稿和
+candidate 文件。batch 只用于开发迭代；提交前的 `qa-all`、完整渲染、PDF 和 CI 门禁
+仍不可省略。
 
 ## 提交术语
 

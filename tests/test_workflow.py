@@ -12,10 +12,168 @@ from stacks_zh.workflow import (
     _validate_title_permanent_tags,
     assemble_candidates,
     render_batch,
+    validate_batches,
 )
 
 
 SOURCE_COMMIT = "b" * 40
+
+
+def make_batch_unit(unit_id: str) -> dict[str, object]:
+    return stamp_unit_hashes(
+        {
+            "schema_version": 1,
+            "unit_id": unit_id,
+            "parent_tag": "TEST",
+            "chapter": "test",
+            "node_kind": "paragraph",
+            "risk_level": "R1",
+            "source_commit": SOURCE_COMMIT,
+            "source_text": f"Source text for {unit_id}.",
+            "source_status": "CURRENT",
+            "placeholders": {},
+            "render": {"prefix": "", "suffix": "\n"},
+        }
+    )
+
+
+def make_batch_candidate(
+    unit: dict[str, object],
+    *,
+    model_id: str = "test/model",
+    model_lane: str = "test",
+    harness_id: str = "codex",
+    run_id: str = "run-test",
+) -> dict[str, object]:
+    context = {"unit_ids": [unit["unit_id"]]}
+    return {
+        "schema_version": 1,
+        "unit_id": unit["unit_id"],
+        "source_commit": SOURCE_COMMIT,
+        "source_text_hash": unit["source_text_hash"],
+        "model_id": model_id,
+        "model_lane": model_lane,
+        "harness_id": harness_id,
+        "run_id": run_id,
+        "reasoning_effort": "not_exposed",
+        "prompt_version": "translator-v1",
+        "glossary_revision": "git:test",
+        "context": context,
+        "context_hash": sha256_value(context),
+        "translation": "这是一条译文。",
+        "allowed_english": [],
+        "term_occurrences": [],
+        "unknown_terms": [],
+        "notes": [],
+        "stage": "TERM_OK",
+        "source_status": "CURRENT",
+        "qa_status": "PASS",
+        "term_status": "CLEAR",
+        "publication_status": "CANDIDATE",
+        "created_at": "2026-08-25T00:00:00+08:00",
+    }
+
+
+class BatchValidationTests(unittest.TestCase):
+    def write_pair(
+        self,
+        root: Path,
+        name: str,
+        unit: dict[str, object],
+        candidate: dict[str, object],
+    ) -> tuple[Path, Path]:
+        unit_path = root / f"units-{name}.jsonl"
+        candidate_path = root / f"candidates-{name}.jsonl"
+        write_jsonl(unit_path, [unit])
+        write_jsonl(candidate_path, [candidate])
+        return unit_path, candidate_path
+
+    def test_validates_multiple_aligned_pairs_in_one_call(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            pairs = []
+            for index in (1, 2):
+                unit = make_batch_unit(f"tag:TEST:p00{index}")
+                pairs.append(
+                    self.write_pair(
+                        root, str(index), unit, make_batch_candidate(unit)
+                    )
+                )
+
+            count, errors = validate_batches(
+                [pair[0] for pair in pairs],
+                [pair[1] for pair in pairs],
+                lock,
+            )
+
+            self.assertEqual((count, errors), (2, []))
+
+    def test_rejects_unaligned_file_lists_and_missing_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            unit = make_batch_unit("tag:TEST:p001")
+            unit_path, candidate_path = self.write_pair(
+                root, "one", unit, make_batch_candidate(unit)
+            )
+
+            with self.assertRaisesRegex(RecordError, "same number"):
+                validate_batches([unit_path], [candidate_path, candidate_path], lock)
+
+            count, errors = validate_batches(
+                [unit_path], [root / "missing-candidates.jsonl"], lock
+            )
+            self.assertEqual(count, 0)
+            self.assertTrue(any("cannot read" in error for error in errors))
+
+    def test_rejects_duplicates_across_pairs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            first = make_batch_unit("tag:TEST:p001")
+            first_pair = self.write_pair(
+                root, "one", first, make_batch_candidate(first)
+            )
+            duplicate_unit = dict(first)
+            duplicate_unit_pair = self.write_pair(
+                root, "two", duplicate_unit, make_batch_candidate(first)
+            )
+
+            _, errors = validate_batches(
+                [first_pair[0], duplicate_unit_pair[0]],
+                [first_pair[1], duplicate_unit_pair[1]],
+                lock,
+            )
+
+            self.assertTrue(any("duplicate unit_id" in error for error in errors))
+            self.assertTrue(any("duplicate candidate" in error for error in errors))
+
+    def test_rejects_mixed_model_harness_and_run_metadata(self) -> None:
+        for key in ("model_lane", "model_id", "harness_id", "run_id"):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as temp_dir:
+                root = Path(temp_dir)
+                lock = root / "upstream.lock"
+                lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+                first = make_batch_unit("tag:TEST:p001")
+                second = make_batch_unit("tag:TEST:p002")
+                first_pair = self.write_pair(
+                    root, "one", first, make_batch_candidate(first)
+                )
+                changed = make_batch_candidate(second)
+                changed[key] = f"other-{key}"
+                second_pair = self.write_pair(root, "two", second, changed)
+
+                _, errors = validate_batches(
+                    [first_pair[0], second_pair[0]],
+                    [first_pair[1], second_pair[1]],
+                    lock,
+                )
+
+                self.assertTrue(any(f"mismatch for {key}" in error for error in errors))
 
 
 class RenderTests(unittest.TestCase):

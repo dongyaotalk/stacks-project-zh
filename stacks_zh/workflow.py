@@ -45,6 +45,87 @@ def validate_batch(unit_path: Path, candidate_path: Path, lock_path: Path) -> tu
     return len(candidates), errors
 
 
+def validate_batches(
+    unit_paths: Iterable[Path],
+    candidate_paths: Iterable[Path],
+    lock_path: Path,
+) -> tuple[int, list[str]]:
+    """Validate several candidate batches in one process.
+
+    Each unit/candidate path pair remains an independent fact boundary.  The
+    batch wrapper adds only cross-pair checks needed for a single model run:
+    no duplicate units and one model, Harness, and run across the batch.
+    """
+    unit_paths = list(unit_paths)
+    candidate_paths = list(candidate_paths)
+    if not unit_paths or not candidate_paths:
+        raise RecordError("batch validation requires at least one unit/candidate pair")
+    if len(unit_paths) != len(candidate_paths):
+        raise RecordError(
+            "batch validation requires the same number of unit and candidate files "
+            f"(got {len(unit_paths)} and {len(candidate_paths)})"
+        )
+
+    source_commit = load_upstream_commit(lock_path)
+    errors: list[str] = []
+    seen_unit_ids: dict[str, Path] = {}
+    seen_candidate_ids: dict[str, Path] = {}
+    metadata: dict[str, object] = {}
+    total_candidates = 0
+    for index, (unit_path, candidate_path) in enumerate(
+        zip(unit_paths, candidate_paths, strict=True), start=1
+    ):
+        try:
+            units = load_jsonl(unit_path)
+            candidates = load_jsonl(candidate_path)
+        except RecordError as exc:
+            errors.append(f"batch {index}: {exc}")
+            continue
+
+        pair_errors = validate_records(units, candidates, source_commit)
+        errors.extend(
+            f"batch {index} ({unit_path.name}): {error}" for error in pair_errors
+        )
+        total_candidates += len(candidates)
+        for unit in units:
+            unit_id = unit.get("unit_id")
+            if not isinstance(unit_id, str) or not unit_id:
+                continue
+            previous = seen_unit_ids.get(unit_id)
+            if previous is not None:
+                errors.append(
+                    f"batch {index} ({unit_path.name}): duplicate unit_id {unit_id} "
+                    f"also present in {previous}"
+                )
+            else:
+                seen_unit_ids[unit_id] = unit_path
+        for candidate in candidates:
+            unit_id = candidate.get("unit_id")
+            if not isinstance(unit_id, str) or not unit_id:
+                continue
+            previous = seen_candidate_ids.get(unit_id)
+            if previous is not None:
+                errors.append(
+                    f"batch {index} ({candidate_path.name}): duplicate candidate "
+                    f"unit_id {unit_id} also present in {previous}"
+                )
+            else:
+                seen_candidate_ids[unit_id] = candidate_path
+            for key in ("model_lane", "model_id", "harness_id", "run_id"):
+                value = candidate.get(key)
+                if value is None:
+                    continue
+                expected = metadata.get(key)
+                if expected is None:
+                    metadata[key] = value
+                elif expected != value:
+                    errors.append(
+                        f"batch {index} ({candidate_path.name}): batch metadata "
+                        f"mismatch for {key}: expected {expected!r}, got {value!r}"
+                    )
+    return total_candidates, errors
+
+
 def assemble_candidates(
     unit_path: Path,
     draft_path: Path,

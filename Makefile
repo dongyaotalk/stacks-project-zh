@@ -4,6 +4,7 @@ ENGINE ?= xelatex
 MODEL ?=
 PYTHON ?= python3
 BATCH ?=
+BATCHES ?=
 MODEL_DISPLAY_NAME ?= $(MODEL) 模型候选译文
 -include config/local.mk
 HARVEST_DIR ?= ../stacks-project
@@ -130,6 +131,9 @@ CANDIDATE_FILE := translation-data/candidates/$(MODEL)/$(BATCH).jsonl
 MODEL_CANDIDATE_FILES = $(sort $(wildcard translation-data/candidates/$(MODEL)/*.jsonl))
 MODEL_BATCHES = $(notdir $(basename $(MODEL_CANDIDATE_FILES)))
 MODEL_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(MODEL_BATCHES)))
+BATCH_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(BATCHES)))
+BATCH_CANDIDATE_FILES = $(addprefix translation-data/candidates/$(MODEL)/,$(addsuffix .jsonl,$(BATCHES)))
+BATCH_RENDER_DIR ?= build/batch-render/$(MODEL)
 NEXT_TASK_ARGS = $(if $(strip $(CHAPTER)),--chapter "$(CHAPTER)",) $(if $(strip $(TAG)),--tag "$(TAG)",) $(if $(filter 1 true yes,$(FALLBACK)),--fallback,) $(if $(filter 1 true yes,$(JSON)),--json,)
 
 SOURCE_REVISION ?= $(shell printf '%s' '$(UPSTREAM_COMMIT)' | cut -c1-12)
@@ -145,7 +149,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all render validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all qa-batch render render-batch validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -246,6 +250,21 @@ qa: validate-model validate-batch workflow-check harvest-check upstream-index-ch
 		--candidates "$(CANDIDATE_FILE)" \
 		--lock "$(UPSTREAM_LOCK)"
 
+qa-batch: validate-model workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
+	@test -n "$(strip $(BATCHES))" || { printf 'BATCHES is required; use BATCHES="batch-a batch-b"\n' >&2; exit 1; }
+	@test "$(MODEL)" != template || { printf 'MODEL must identify a candidate lane\n' >&2; exit 1; }
+	@test "$(words $(BATCH_UNIT_FILES))" -eq "$(words $(BATCH_CANDIDATE_FILES))" || { printf 'BATCHES expansion mismatch\n' >&2; exit 1; }
+	@set -eu; for batch in $(BATCHES); do \
+		case "$$batch" in ''|*[!A-Za-z0-9._-]*) printf 'Invalid batch name: %s\n' "$$batch" >&2; exit 1 ;; esac; \
+	done; \
+	for file in $(BATCH_UNIT_FILES) $(BATCH_CANDIDATE_FILES); do \
+		test -f "$$file" || { printf 'Missing batch file: %s\n' "$$file" >&2; exit 1; }; \
+	done
+	$(PYTHON) stacks_zh.py validate-many \
+		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
+		--candidates $(foreach file,$(BATCH_CANDIDATE_FILES),"$(file)") \
+		--lock "$(UPSTREAM_LOCK)"
+
 qa-all: workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
 	@set -eu; count=0; \
 		for candidate in translation-data/candidates/*/*.jsonl; do \
@@ -276,6 +295,19 @@ render: validate-model validate-render workflow-check harvest-check
 		--chapter-source-dir "$(CHAPTER_SOURCE_DIR)" \
 		--tags-file "$(TAGS_FILE)" \
 		--output-dir "$(MODEL_DIR)"
+
+render-batch: qa-batch
+	$(PYTHON) stacks_zh.py render \
+		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
+		--candidates $(foreach file,$(BATCH_CANDIDATE_FILES),"$(file)") \
+		--lock "$(UPSTREAM_LOCK)" \
+		--model-lane "$(MODEL)" \
+		--display-name "$(MODEL_DISPLAY_NAME)" \
+		--chapter-manifest "$(CHAPTER_MANIFEST)" \
+		--chapter-title-map "$(CHAPTER_TITLE_MAP)" \
+		--chapter-source-dir "$(CHAPTER_SOURCE_DIR)" \
+		--tags-file "$(TAGS_FILE)" \
+		--output-dir "$(BATCH_RENDER_DIR)"
 
 check: validate-model workflow-check harvest-check
 	@command -v "$(ENGINE)" >/dev/null || { printf 'Missing TeX engine: %s\n' "$(ENGINE)" >&2; exit 1; }
@@ -367,8 +399,10 @@ help:
 		'make harness-check HARNESS_ID=codex  Resolve the current Harness version' \
 		'make upstream-diff OLD_UNITS=... NEW_UNITS=... NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...' \
 		'make qa BATCH=<batch> MODEL=<model>       Validate one candidate batch' \
+		'make qa-batch BATCHES="batch-a batch-b" MODEL=<model>  Validate several batches once' \
 		'make qa-all                     Validate every tracked candidate batch' \
 		'make render MODEL=<model>                 Render all batches in a model lane' \
+		'make render-batch BATCHES="batch-a batch-b" MODEL=<model>  Render selected batches' \
 		'make template                   Build the template smoke test' \
 		'make pdf MODEL=<model>          Build springer-template/translations/<model>' \
 		'make list-models                List configured translation model lanes' \

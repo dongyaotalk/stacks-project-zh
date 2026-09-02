@@ -100,6 +100,31 @@ Harness 版本命令；不能沿用上一运行的版本，也不能把 `unknown
 
 多代理不是默认要求。只有用户或任务合同明确要求，并且子任务真正独立时才使用。
 
+### 5.1 开发阶段 batch 循环
+
+需要一次处理多个不重叠 Section 时，使用 `validate-many` 或对应的 Make 封装：
+
+```bash
+python3 stacks_zh.py validate-many \
+  --units translation-data/units/<batch-a>.jsonl translation-data/units/<batch-b>.jsonl \
+  --candidates translation-data/candidates/<model-lane>/<batch-a>.jsonl \
+    translation-data/candidates/<model-lane>/<batch-b>.jsonl \
+  --lock upstream.lock
+
+make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
+make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
+```
+
+文件列表按位置配对；接口会分别执行每个 pair 的确定性 QA，再检查 batch 内没有重复
+`unit_id`，且所有候选使用同一具体模型、model lane、Harness 和 `run_id`。一个 pair
+失败不会让其他 pair 的事实文件被改写，修复后可只重跑失败范围。建议一次放入 2–8 个
+相邻、语义完整的 Section；不要把证明链或一个 PR 的写入边界切开。
+
+这条开发路径只减少重复的进程启动和共享检查，不会把独立 batch 合并成新的事实来源，
+也不会跳过最终门禁。若要减少模型 token，应让一次模型请求返回多个 unit 的结构化草稿，
+随后按 `unit_id` 拆回每个 batch，再分别 `assemble`；模型输出仍需经过逐 batch 溯源、QA、
+人工审校和 PR 检查。提交前仍执行完整模型通道的 `qa-all`、`render`、`pdf` 和 CI。
+
 ## 6. 多模型比较
 
 多模型运行必须保证：

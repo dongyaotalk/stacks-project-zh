@@ -21,7 +21,13 @@ from .provenance import ProvenanceError, validate_repository_provenance
 from .schema_validation import validate_repository_schemas
 from .tool_version import VERSION
 from .upstream import validate_upstream_index
-from .workflow import assemble_candidates, render_batch, stamp_units, validate_batch
+from .workflow import (
+    assemble_candidates,
+    render_batch,
+    stamp_units,
+    validate_batch,
+    validate_batches,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -56,6 +62,14 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--units", required=True, type=Path)
     validate.add_argument("--candidates", required=True, type=Path)
     validate.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+
+    validate_many = subparsers.add_parser(
+        "validate-many",
+        help="run deterministic candidate QA for several batches in one process",
+    )
+    validate_many.add_argument("--units", required=True, type=Path, nargs="+")
+    validate_many.add_argument("--candidates", required=True, type=Path, nargs="+")
+    validate_many.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
 
     assemble = subparsers.add_parser(
         "assemble", help="attach provenance and deterministic status to translator output"
@@ -219,6 +233,17 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"ERROR: {error}", file=sys.stderr)
                 return 1
             print(f"Candidate QA: PASS ({count} unit(s))")
+            return 0
+        if args.command == "validate-many":
+            count, errors = validate_batches(args.units, args.candidates, args.lock)
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            print(
+                "Candidate batch QA: PASS "
+                f"({count} unit(s) across {len(args.units)} batch(es))"
+            )
             return 0
         if args.command == "assemble":
             harness_config = (

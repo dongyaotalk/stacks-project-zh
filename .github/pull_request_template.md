@@ -57,6 +57,7 @@
 - [ ] `make provenance-check`（模型候选/run 变更必需）
 - [ ] `make decision-check`（selection/review/revision 变更必需）
 - [ ] `make qa BATCH=<batch> MODEL=<model-lane>`（翻译候选必需）
+- [ ] 若使用开发阶段 batch：`make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>`；各 batch 文件仍独立
 - [ ] `make progress-check`（独立进度报告 PR 必需）
 - [ ] `git diff --check`
 - [ ] 结构检查（如适用）

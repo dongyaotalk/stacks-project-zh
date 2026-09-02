@@ -115,6 +115,32 @@ HARNESS_ID=<harness-id>`，并让 `assemble` 默认的 `--harness-version auto` 
 有隐式 `template` 默认值，必须显式指定 `MODEL`。缺少 TeX 工具链或出现编译错误时不得
 提交、推送或创建 PR，也不得通过修改生成的 TeX、PDF 或日志绕过失败。生成产物仍不得提交。
 
+### 4.8 开发阶段 batch 模式
+
+当一次模型运行覆盖多个不重叠的 Section 时，可以把候选文件按位置成对交给批量接口：
+
+```bash
+make qa-batch \
+  BATCHES="categories-001M categories-001N" \
+  MODEL=openai-gpt-5.6-sol
+make render-batch \
+  BATCHES="categories-001M categories-001N" \
+  MODEL=openai-gpt-5.6-sol
+```
+
+`qa-batch` 在一个进程中校验多个 `unit`/candidate pair，并只运行一次共享的工作流、
+来源、Schema、溯源和决策检查；`render-batch` 只生成选定范围的忽略目录预览。两个命令
+都要求 unit/candidate 文件数量相同，拒绝缺失文件、跨文件重复 `unit_id` 以及混用
+`model_lane`、具体模型、Harness 或 `run_id`。错误仍按 batch 报告，修复后可以只重跑
+失败 pair。
+
+这里的 batch 是开发调度边界，不是新的翻译事实文件：每个 Section 仍保留独立 unit、
+candidate、run 溯源和 PR 写入所有权。建议一次选择 2–8 个相邻且语义完整的 Section，
+避免跨章节或切断证明链。模型生成若要节省 token，应一次请求多个 unit，并在装配前按
+`unit_id` 拆回各自的草稿和 candidate 文件；当前 batch 命令不会合并这些事实，也不会
+自动提升审校状态。提交或合并前仍必须对完整模型通道执行 `make qa-all`、完整
+`make render`、`make pdf` 和 CI 门禁。
+
 ## 5. 状态模型
 
 主阶段 `stage`：
@@ -187,10 +213,12 @@ make pdf MODEL=template
 make tool-test
 make schema-check
 make qa BATCH=<batch> MODEL=<model>
+make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make qa-all
 make provenance-check
 make decision-check
 make render MODEL=<model>
+make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
   OUTPUT_JSON=<path> OUTPUT_MD=<path>
 ```

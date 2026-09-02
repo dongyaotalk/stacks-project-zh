@@ -34,6 +34,23 @@ make render MODEL=<model-lane>
 make pdf MODEL=<model-lane>
 ~~~
 
+开发阶段可以把多个不重叠、按位置成对的 batch 一次交给本地检查，以减少重复启动：
+
+~~~bash
+make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
+make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
+~~~
+
+`qa-batch` 共享一次工作流、来源、Schema、溯源和决策检查，并对每个 pair 执行候选 QA；
+它会拒绝缺失文件、重复 unit/candidate 以及跨模型、Harness 或 run。`render-batch` 只
+写入选定 batch 的忽略目录。该模式是快速本地迭代，不是 CI 增量门禁；PR 前仍须执行
+目标模型通道的完整 `make render`、`make pdf`，CI 仍运行全量 `make qa-all` 和其他
+必需检查。
+
+如果目标是减少模型 token，而不只是减少 QA 进程，应让一次请求覆盖多个 unit，并在
+`assemble` 前按 `unit_id` 拆分草稿。拆分后仍保持每个 batch 的独立 candidate、run
+manifest 和写入所有权；批量请求不能合并事实文件、混用未经审校候选或自动提升状态。
+
 当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
 changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用的本地 LaTeX 编译：
 翻译候选编译对应模型通道，其他文档、进度、政策和工具修改也编译当前候选通道

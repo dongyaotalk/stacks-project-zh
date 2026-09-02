@@ -200,6 +200,14 @@ class RenderTests(unittest.TestCase):
                     "条目。",
                 ),
                 (
+                    "tag:TEST:item002",
+                    "list_item",
+                    "Definition item two.",
+                    "\\item ",
+                    "\n",
+                    "第二条目。",
+                ),
+                (
                     "tag:TEST:p001",
                     "paragraph",
                     "Definition conclusion.",

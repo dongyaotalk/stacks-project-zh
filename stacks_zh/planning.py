@@ -36,6 +36,14 @@ ACTION_LABELS = {
     "DONE": "已完成",
     "NOT_APPLICABLE": "不适用",
 }
+TRANSLATION_ACTIONS = frozenset(
+    {
+        "RESOLVE_TAG",
+        "PREPARE_SCOPE",
+        "TRANSLATE",
+        "CONTINUE_TRANSLATION",
+    }
+)
 SELECTION_ORDER = [
     "explicit_user_scope",
     "priority_rank",
@@ -674,19 +682,26 @@ def _recommended_table(tasks: Iterable[TranslationTask]) -> list[str]:
 
 
 def _recommended_chapter_tasks(
-    plan: TranslationPlan, limit: int
+    plan: TranslationPlan,
+    limit: int,
+    actions: frozenset[str] | None = None,
 ) -> tuple[TranslationTask, ...]:
     tasks = [chapter.next_task for chapter in plan.chapters]
     return tuple(
         sorted(
-            (task for task in tasks if task is not None),
+            (
+                task
+                for task in tasks
+                if task is not None
+                and (actions is None or task.action in actions)
+            ),
             key=lambda task: task.sort_key,
         )[:limit]
     )
 
 
 def render_readme_plan(plan: TranslationPlan) -> str:
-    tasks = _recommended_chapter_tasks(plan, 10)
+    tasks = _recommended_chapter_tasks(plan, 10, TRANSLATION_ACTIONS)
     lines = [
         f"优先级方法：`{plan.method_revision}`。用户显式指定的 Chapter/Tag 始终高于",
         "项目默认优先级；未指定时才按 P0 → P4、wave、章内 Section 顺序选择。",

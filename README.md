@@ -64,16 +64,16 @@ TeX 和 PDF 都不是翻译事实来源。
 
 | 优先级 | 章 | 当前范围 | 准备状态 | 下一动作 |
 | --- | --- | --- | --- | --- |
-| P0 | 第 115 章 已废弃内容（`obsolete`） | Section 1 / `073U` | `READY` | `REVIEW` |
-| P0 | 第 116 章 GNU 自由文档许可证（`fdl`） | Section 1 / `05BG` | `READY` | `REVIEW` |
-| P0 | 第 112 章 文献指南（`guide`） | Section 1 / `03B1` | `READY` | `REVIEW` |
-| P0 | 第 113 章 期望事项（`desirables`） | Section 1 / `02B5` | `READY` | `REVIEW` |
-| P0 | 第 114 章 编码风格（`coding`） | Section 1 / `02BZ` | `READY` | `REVIEW` |
 | P0 | 第 105 章 代数栈导论（`stacks-introduction`） | Section 1 / `072I` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 1 章 引言（`introduction`） | Section 1 / `0001` | `READY` | `REVIEW` |
 | P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 26 章 概形（`schemes`） | Section 1 / `01H9` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 28 章 概形的性质（`properties`） | Section 1 / `01OI` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 29 章 概形的态射（`morphisms`） | Section 1 / `01QM` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 34 章 概形上的拓扑（`topologies`） | Section 1 / `020L` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 35 章 下降（`descent`） | Section 1 / `0239` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 41 章 概形的平展态射（`etale`） | Section 1 / `024K` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 65 章 代数空间（`spaces`） | Section 1 / `025S` | `UNPREPARED` | `PREPARE_SCOPE` |
 
 运行 `make next-task` 获取当前自动任务；也可用
 `make next-task CHAPTER=115` 或 `make next-task CHAPTER=115 TAG=0BM0`

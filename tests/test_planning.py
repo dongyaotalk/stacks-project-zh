@@ -211,6 +211,81 @@ class PlanningTests(unittest.TestCase):
             )
             self.assertEqual(check_errors, [])
 
+    def test_readme_uses_next_translation_task_within_partial_chapter(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.initialize_root(root)
+            write_json(
+                root / "config/chapter-titles.json",
+                {"schema_version": 1, "titles": {"alpha": "甲"}},
+            )
+            write_json(
+                root / "config/translation-priorities.json",
+                priority_config({"alpha": chapter_policy("P0", 1)}),
+            )
+            write_json(
+                root / "translation-data/chapter-templates/alpha.json",
+                {
+                    "source_commit": SOURCE_COMMIT,
+                    "chapter": "alpha",
+                    "chapter_ordinal": 1,
+                    "source_title": "Alpha",
+                    "source_state": "CURRENT",
+                    "sections": [
+                        section(
+                            1,
+                            "A001",
+                            "READY",
+                            ["translation-data/units/alpha-A001.jsonl"],
+                        ),
+                        section(2, "A002", "UNPREPARED"),
+                    ],
+                },
+            )
+            write_jsonl(
+                root / "translation-data/units/alpha-A001.jsonl",
+                [
+                    {
+                        "unit_id": "tag:A001:p001",
+                        "source_commit": SOURCE_COMMIT,
+                        "source_status": "CURRENT",
+                        "risk_level": "R1",
+                    }
+                ],
+            )
+            write_jsonl(
+                root / "translation-data/candidates/model/alpha-A001.jsonl",
+                [
+                    {
+                        "unit_id": "tag:A001:p001",
+                        "source_commit": SOURCE_COMMIT,
+                        "source_status": "CURRENT",
+                    }
+                ],
+            )
+            readme = root / "README.md"
+            readme.write_text(
+                "# Test\n\n<!-- translation-plan:start -->\nold\n"
+                "<!-- translation-plan:end -->\n",
+                encoding="utf-8",
+            )
+            report = root / "docs/translation-plan.md"
+
+            update_translation_plan(root, readme, report, check=False)
+
+            readme_text = readme.read_text(encoding="utf-8")
+            self.assertIn(
+                "| P0 | 第 1 章 甲（`alpha`） | Section 2 / `A002` | "
+                "`UNPREPARED` | `PREPARE_SCOPE` |",
+                readme_text,
+            )
+            self.assertNotIn("`REVIEW`", readme_text)
+            self.assertIn(
+                "| P0 | 第 1 章 甲（`alpha`） | Section 1 / `A001` | "
+                "`READY` | `REVIEW` |",
+                report.read_text(encoding="utf-8"),
+            )
+
     def test_workflow_state_resolves_to_specific_action(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -398,53 +473,49 @@ class PlanningTests(unittest.TestCase):
                 [expected for _, _, _, expected in cases],
             )
 
-    def test_repository_policy_prioritizes_active_chapters_112_through_117(self) -> None:
+    def test_repository_policy_prioritizes_chapter_4_then_scarce_core(self) -> None:
         root = Path(__file__).resolve().parents[1]
         plan = build_translation_plan(root)
-        active_order = (115, 116, 117, 112, 113, 114)
-        active = {
-            chapter.ordinal: chapter
-            for chapter in plan.chapters
-            if chapter.ordinal in active_order
-        }
-        self.assertEqual(set(active), set(active_order))
+
+        categories = next(chapter for chapter in plan.chapters if chapter.slug == "categories")
+        self.assertEqual(categories.ordinal, 4)
+        self.assertEqual(categories.policy.priority, "P0")
+        self.assertEqual((categories.policy.wave, categories.policy.order), (1, 1))
         self.assertEqual(
-            tuple(
-                chapter.ordinal
-                for chapter in sorted(
-                    active.values(), key=lambda chapter: chapter.policy.order
-                )
-            ),
-            active_order,
+            [chapter.slug for chapter in plan.chapters if chapter.policy.priority == "P0" and chapter.policy.wave == 1],
+            ["categories"],
         )
-        self.assertTrue(
-            all(
-                chapter.policy.priority == "P0"
-                and chapter.policy.wave == 1
-                and chapter.policy.order <= len(active_order)
-                for chapter in active.values()
-            )
+
+        scarce_core = {
+            "stacks-introduction", "sites", "stacks", "topologies", "descent",
+            "etale", "sites-cohomology", "etale-cohomology", "spaces",
+            "spaces-topologies", "spaces-descent", "spaces-groupoids",
+            "groupoids-quotients", "algebraic", "criteria", "formal-defos",
+            "defos", "cotangent", "algebraization", "artin",
+            "stacks-properties", "stacks-morphisms", "moduli",
+        }
+        self.assertEqual(
+            {
+                chapter.slug
+                for chapter in plan.chapters
+                if chapter.policy.priority == "P0" and chapter.policy.wave == 2
+            },
+            scarce_core,
         )
-        other_p0_wave1 = [
-            chapter
-            for chapter in plan.chapters
-            if chapter.ordinal not in active_order
-            and chapter.policy.priority == "P0"
-            and chapter.policy.wave == 1
-        ]
-        self.assertTrue(
-            all(chapter.policy.order > len(active_order) for chapter in other_p0_wave1)
+
+        maintenance = {"guide", "desirables", "coding", "obsolete", "fdl", "index"}
+        self.assertEqual(
+            {
+                chapter.slug
+                for chapter in plan.chapters
+                if chapter.policy.priority == "P4"
+            },
+            maintenance,
         )
-        active_tasks = [
-            task
-            for chapter in active.values()
-            for task in chapter.tasks
-            if task.actionable
-        ]
-        if active_tasks:
-            selected = select_next_task(plan)
-            self.assertIsNotNone(selected.task)
-            self.assertIn(selected.task.chapter_ordinal, active_order)
+
+        selected = select_next_task(plan)
+        self.assertIsNotNone(selected.task)
+        self.assertEqual(selected.task.chapter, "categories")
 
 
 if __name__ == "__main__":

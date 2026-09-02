@@ -59,24 +59,24 @@ TeX 和 PDF 都不是翻译事实来源。
 ## 推荐翻译顺序
 
 <!-- translation-plan:start -->
-优先级方法：`reader-value-v2-active-112-117`。用户显式指定的 Chapter/Tag 始终高于
+优先级方法：`reader-value-v3-importance-scarcity-ch4`。用户显式指定的 Chapter/Tag 始终高于
 项目默认优先级；未指定时才按 P0 → P4、wave、章内 Section 顺序选择。
 
 | 优先级 | 章 | 当前范围 | 准备状态 | 下一动作 |
 | --- | --- | --- | --- | --- |
+| P0 | 第 4 章 范畴（`categories`） | Section 5 / `04AN` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 105 章 代数栈导论（`stacks-introduction`） | Section 1 / `072I` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 26 章 概形（`schemes`） | Section 1 / `01H9` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 28 章 概形的性质（`properties`） | Section 1 / `01OI` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 29 章 概形的态射（`morphisms`） | Section 1 / `01QM` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 34 章 概形上的拓扑（`topologies`） | Section 1 / `020L` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 35 章 下降（`descent`） | Section 1 / `0239` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 41 章 概形的平展态射（`etale`） | Section 1 / `024K` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 21 章 位点上的上同调（`sites-cohomology`） | Section 1 / `01FR` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 59 章 平展上同调（`etale-cohomology`） | Section 1 / `03N2` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 65 章 代数空间（`spaces`） | Section 1 / `025S` | `UNPREPARED` | `PREPARE_SCOPE` |
 
 运行 `make next-task` 获取当前自动任务；也可用
-`make next-task CHAPTER=115` 或 `make next-task CHAPTER=115 TAG=0BM0`
+`make next-task CHAPTER=4` 或 `make next-task CHAPTER=categories TAG=001L`
 锁定本次范围。完整政策和 117 章队列见
 [翻译优先级](docs/translation-priority.md)与
 [当前翻译计划](docs/translation-plan.md)。

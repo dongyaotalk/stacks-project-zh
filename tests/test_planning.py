@@ -172,6 +172,16 @@ class PlanningTests(unittest.TestCase):
             with self.assertRaisesRegex(RecordError, "--tag requires --chapter"):
                 select_next_task(plan, tag="AAAA")
 
+            write_jsonl(
+                root / "translation-data/candidates/model/alpha.jsonl",
+                [
+                    {
+                        "unit_id": "tag:AAAA:p001",
+                        "source_commit": SOURCE_COMMIT,
+                        "source_status": "CURRENT",
+                    }
+                ],
+            )
             readme = root / "README.md"
             readme.write_text(
                 "# Test\n\n<!-- translation-plan:start -->\nold\n"
@@ -184,8 +194,18 @@ class PlanningTests(unittest.TestCase):
             )
             self.assertEqual(count, 2)
             self.assertEqual(errors, [])
-            self.assertIn("第 2 章 乙", readme.read_text(encoding="utf-8"))
-            self.assertIn("全部 2 章", report.read_text(encoding="utf-8"))
+            readme_text = readme.read_text(encoding="utf-8")
+            report_text = report.read_text(encoding="utf-8")
+            self.assertIn("第 2 章 乙", readme_text)
+            self.assertNotIn("第 1 章 甲", readme_text)
+            self.assertIn(
+                "| P1 | 第 1 章 甲（`alpha`） | Section 1 / `AAAA` | "
+                "`READY` | `REVIEW` |",
+                report_text,
+            )
+            self.assertIn("全部 2 章", report_text)
+            review = select_next_task(build_translation_plan(root), chapter="alpha")
+            self.assertEqual(review.task.action, "REVIEW")
             _, check_errors = update_translation_plan(
                 root, readme, report, check=True
             )

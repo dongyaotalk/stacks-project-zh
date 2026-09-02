@@ -90,6 +90,11 @@ make next-task CHAPTER=115 TAG=0BM0 JSON=1
 的政策、当前下一范围和动作。`make plan-check` 验证生成结果与配置和结构化数据完全
 一致，并由 CI 执行。
 
+README 的区间名为“推荐翻译顺序”，因此只展示仍需补 Tag、准备范围、生成候选或继续
+候选翻译的章节。候选译文已经完整、下一动作进入 `REVIEW` 或后续审校/发布阶段的章节
+不再占用这张翻译推荐表，但仍完整保留在 `docs/translation-plan.md` 的当前任务和
+117 章总表中；自动选择器和显式 Chapter/Tag 选择也继续使用完整动作状态机。
+
 修改优先级属于独立政策变更，需要说明 method revision 和评级理由；不得在普通候选
 翻译中顺手调整。chapter template 是可再生任务骨架，unit/candidate/reviewed 是翻译
 事实，均不得承载 P0–P4 字段。current unit、candidate 或 reviewed 数据合并后，应像

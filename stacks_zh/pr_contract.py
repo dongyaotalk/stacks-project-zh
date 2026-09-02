@@ -73,7 +73,6 @@ TRANSLATION_DATA_PREFIXES = (
     "review/mathematics/",
 )
 PERMANENT_TAG_RE = re.compile(r"^[0-9A-Z]+$")
-TAG_UNIT_ID_RE = re.compile(r"^tag:(?P<tag>[0-9A-Z]+):")
 
 
 class ContractApiError(RuntimeError):
@@ -365,13 +364,6 @@ def validate_pr_contract(
                 f"changed structured record parent_tag {actual!r} is outside Issue "
                 "parent Tag scope"
             )
-        for unit_id in sorted(actual_unit_ids):
-            match = TAG_UNIT_ID_RE.match(unit_id)
-            if match and match.group("tag") not in declared_parent_tags:
-                errors.append(
-                    f"changed structured record unit_id {unit_id!r} has Tag "
-                    f"{match.group('tag')!r} outside Issue parent Tag scope"
-                )
     return errors
 
 

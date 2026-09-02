@@ -199,6 +199,30 @@ class PrContractTests(unittest.TestCase):
         )
         self.assertEqual(errors, [])
 
+    def test_accepts_nested_unit_tag_with_batch_parent_tag(self) -> None:
+        value = payload()
+        value["body"] = (
+            f"Closes #42\n\nTask: guide-batch-scope\nSource: {SOURCE_COMMIT}"
+        )
+        value["closingIssuesReferences"]["nodes"][0]["body"] = batch_issue_body(
+            unit_ids=["tag:04AT:statement"]
+        )
+        errors = validate_pr_contract(
+            REPOSITORY,
+            value,
+            {
+                UNIT_PATH: json.dumps(
+                    {
+                        "unit_id": "tag:04AT:statement",
+                        "source_commit": SOURCE_COMMIT,
+                        "chapter": "guide",
+                        "parent_tag": "04V1",
+                    }
+                )
+            },
+        )
+        self.assertEqual(errors, [])
+
     def test_rejects_both_parent_tag_forms(self) -> None:
         value = payload()
         value["closingIssuesReferences"]["nodes"][0]["body"] = batch_issue_body(
@@ -260,7 +284,7 @@ class PrContractTests(unittest.TestCase):
             },
         )
         self.assertTrue(any("parent_tag '04V3' is outside" in error for error in errors))
-        self.assertTrue(any("unit_id 'tag:04V3:title' has Tag" in error for error in errors))
+        self.assertFalse(any("unit_id 'tag:04V3:title' has Tag" in error for error in errors))
 
     def test_fetches_deleted_structured_file_from_base(self) -> None:
         value = payload()

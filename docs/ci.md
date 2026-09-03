@@ -47,9 +47,11 @@ make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 目标模型通道的完整 `make render`、`make pdf`，CI 仍运行全量 `make qa-all` 和其他
 必需检查。
 
-如果目标是减少模型 token，而不只是减少 QA 进程，应让一次请求覆盖多个 unit，并在
-`assemble` 前按 `unit_id` 拆分草稿。拆分后仍保持每个 batch 的独立 candidate、run
-manifest 和写入所有权；批量请求不能合并事实文件、混用未经审校候选或自动提升状态。
+如果目标是减少模型 token，而不只是减少 QA 进程，应先运行 `make batch-pack`，让一次
+请求覆盖多个同章 unit，再运行 `make assemble-batch` 按 `unit_id` 拆分草稿。拆分后仍
+保持每个 batch 的独立 candidate、run manifest 和写入所有权；批量请求不能合并事实文件、
+混用未经审校候选或自动提升状态。开发阶段可以只重复 `qa-batch`/`render-batch`；提交
+前仍统一运行完整的 `qa-all`、`render`、`pdf` 和 CI。
 
 当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
 changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用的本地 LaTeX 编译：

@@ -113,8 +113,12 @@ make next-task CHAPTER=obsolete TAG=0BM0
 - 修改任务清单之外的 unit；
 - 以“顺手修复”为理由修改术语表、`upstream.lock`、reviewed 数据或模板。
 
-默认候选单元总量以 `config/workflow.yml` 中的 300–1500 英文词为宜。标题、短注记、
-不可拆的定义或证明可以低于下限；超过上限应拆成语义完整的子任务。
+默认一次模型 batch 以 `config/workflow.yml` 中的 300–1500 英文词为宜，并包含同章
+2–8 个相邻、语义完整的 Tag。标题、短注记、不可拆的定义或证明可以低于下限；超过
+上限应拆成语义完整的子任务，只有确实不可拆时才用
+CLI 的 `--allow-outside-preferred-range`（Make 接口为
+`ALLOW_OUTSIDE_PREFERRED_RANGE=1`）明确记录例外。`batch-pack` 和 `assemble-batch` 只
+改变调度与装配效率；每个 Tag 的 unit、candidate、run manifest 和写入所有权仍独立。
 
 ## 3. 写入所有权
 

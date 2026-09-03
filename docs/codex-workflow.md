@@ -102,7 +102,31 @@ Harness 版本命令；不能沿用上一运行的版本，也不能把 `unknown
 
 ### 5.1 开发阶段 batch 循环
 
-需要一次处理多个不重叠 Section 时，使用 `validate-many` 或对应的 Make 封装：
+需要一次处理多个不重叠 Section 时，使用 `batch-pack`、`assemble-many` 和对应的
+Make 封装。推荐把模型请求控制在同章 2–8 个相邻 Tag、约 300–1500 个英文词：
+
+```bash
+make batch-pack \
+  BATCHES="categories-003G categories-02X8" \
+  BATCH_PACKAGE=tmp/categories-003g-02x8-package.json
+
+# 模型依据 package.model_input 返回 tmp/categories-003g-02x8-drafts.jsonl
+make assemble-batch \
+  BATCHES="categories-003G categories-02X8" \
+  DRAFTS=tmp/categories-003g-02x8-drafts.jsonl \
+  MODEL=openai-gpt-5.6-sol MODEL_ID=gpt-5.6-sol \
+  MODEL_RECORD_ID=openai:gpt-5.6-sol:owner-confirmed RUN_ID=<run-id> \
+  POLICY_REVISION=git:<sha> GLOSSARY_REVISION=git:<sha> \
+  CREATED_AT=<timestamp> HARNESS_ID=codex MODEL_IDENTITY_CONFIDENCE=owner-confirmed
+```
+
+`batch-pack` 只发送抽取后的 `source_text` 和受保护 token，不发送整份 TeX；它验证同章、
+唯一输入、2–8 个文件、按 chapter template 排序且相邻的 Section，以及来源词数。小于或大于偏好范围的不可拆 Section 必须显式传入
+CLI 的 `--allow-outside-preferred-range`（Make 接口为
+`ALLOW_OUTSIDE_PREFERRED_RANGE=1`）。`assemble-many` 先检查合并草稿是否精确覆盖全部
+`unit_id`，拒绝重复、缺失和额外记录，再只解析一次 Harness 版本并分别写 candidate。
+
+随后使用 `validate-many` 或对应的 Make 封装进行快速迭代：
 
 ```bash
 python3 stacks_zh.py validate-many \
@@ -121,9 +145,8 @@ make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 `parent_tags` 声明同一章内 2–8 个相邻、语义完整的 Tag；它们共享一次模型运行和一个
 PR，但各自保持独立事实文件。不要跨章或切断证明链。
 
-这条开发路径只减少重复的进程启动和共享检查，不会把独立 batch 合并成新的事实来源，
-也不会跳过最终门禁。若要减少模型 token，应让一次模型请求返回多个 unit 的结构化草稿，
-随后按 `unit_id` 拆回每个 batch，再分别 `assemble`；模型输出仍需经过逐 batch 溯源、QA
+这条开发路径只减少重复的模型请求、进程启动和共享检查，不会把独立 batch 合并成新的事实来源，
+也不会跳过最终门禁。模型输出仍需经过逐 batch 溯源、QA
 和人工审校。整个 batch 提交前统一执行一次完整模型通道的 `qa-all`、`render`、`pdf`
 和 CI，合并后统一执行一次进度/计划同步。
 

@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 101 / 3,299（3.1%） | 10 | 3,188 |
+| 模型候选译文 | 102 / 3,299（3.1%） | 11 | 3,186 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -39,7 +39,7 @@
 | 1 | 引言（`introduction`） | 候选译文完成，待审校 | 2 / 2（100.0%） | 0 | 0 | 0 | 0 |
 | 2 | 约定（`conventions`） | 候选译文完成，待审校 | 5 / 5（100.0%） | 0 | 0 | 0 | 0 |
 | 3 | 集合论（`sets`） | 候选译文完成，待审校 | 12 / 12（100.0%） | 0 | 0 | 0 | 0 |
-| 4 | 范畴（`categories`） | 翻译中 | 17 / 44（38.6%） | 10 | 17 | 0 | 0 |
+| 4 | 范畴（`categories`） | 翻译中 | 18 / 44（40.9%） | 11 | 15 | 0 | 0 |
 | 5 | 拓扑（`topology`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 6 | 空间上的层（`sheaves`） | 未开始 | 0 / 33（0.0%） | 0 | 33 | 0 | 0 |
 | 7 | 位点与层（`sites`） | 未开始 | 0 / 52（0.0%） | 0 | 52 | 0 | 0 |
@@ -198,7 +198,7 @@
 
 ### 第 4 章 范畴（`categories`）
 
-共 44 个 Section：候选完成 17，翻译中 10，未开始 17。
+共 44 个 Section：候选完成 18，翻译中 11，未开始 15。
 
 | Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
 | ---: | --- | --- | --- | --- | --- |
@@ -223,15 +223,15 @@
 | 19 | `04AX` | Filtered colimits | 完成 | 未开始 | 未开始 |
 | 20 | `04AY` | Cofiltered limits | 完成 | 未开始 | 未开始 |
 | 21 | `002Z` | Limits and colimits over preordered sets | 完成 | 未开始 | 未开始 |
-| 22 | `05PT` | Essentially constant systems | 进行中 | 未开始 | 未开始 |
+| 22 | `05PT` | Essentially constant systems | 完成 | 未开始 | 未开始 |
 | 23 | `0033` | Exact functors | 进行中 | 未开始 | 未开始 |
 | 24 | `0036` | Adjoint functors | 进行中 | 未开始 | 未开始 |
 | 25 | `0AHM` | A criterion for representability | 完成 | 未开始 | 未开始 |
 | 26 | `0FWW` | Categorically compact objects | 完成 | 未开始 | 未开始 |
 | 27 | `04VB` | Localization in categories | 未开始 | 未开始 | 未开始 |
 | 28 | `003D` | Formal properties | 进行中 | 未开始 | 未开始 |
-| 29 | `003G` | 2-categories | 未开始 | 未开始 | 未开始 |
-| 30 | `02X8` | (2, 1)-categories | 未开始 | 未开始 | 未开始 |
+| 29 | `003G` | 2-categories | 进行中 | 未开始 | 未开始 |
+| 30 | `02X8` | (2, 1)-categories | 进行中 | 未开始 | 未开始 |
 | 31 | `003O` | 2-fibre products | 未开始 | 未开始 | 未开始 |
 | 32 | `02XG` | Categories over categories | 未开始 | 未开始 | 未开始 |
 | 33 | `02XJ` | Fibred categories | 未开始 | 未开始 | 未开始 |

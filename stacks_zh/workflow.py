@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import tempfile
 from pathlib import Path
 from typing import Iterable
 
@@ -126,6 +128,28 @@ def validate_batches(
     return total_candidates, errors
 
 
+def _load_translator_drafts(draft_path: Path) -> dict[str, dict[str, object]]:
+    drafts = load_jsonl(draft_path)
+    draft_by_id: dict[str, dict[str, object]] = {}
+    for draft in drafts:
+        unit_id = draft.get("unit_id")
+        location = draft.get("_record_location", str(draft_path))
+        if not isinstance(unit_id, str) or not unit_id:
+            raise RecordError(f"{location}: draft requires a non-empty unit_id")
+        if unit_id in draft_by_id:
+            raise RecordError(f"{location}: duplicate draft unit_id {unit_id}")
+        schema_value = {
+            key: value for key, value in draft.items() if not key.startswith("_")
+        }
+        schema_errors = validate_named_schema(
+            schema_value, "translator-output.schema.json", str(location)
+        )
+        if schema_errors:
+            raise RecordError("translator output schema failed:\n" + "\n".join(schema_errors))
+        draft_by_id[unit_id] = draft
+    return draft_by_id
+
+
 def assemble_candidates(
     unit_path: Path,
     draft_path: Path,
@@ -165,28 +189,51 @@ def assemble_candidates(
         harness_version = resolve_harness_version(harness_id, config_path)
     except ValueError as exc:
         raise RecordError(f"cannot resolve Harness version: {exc}") from exc
+    return _assemble_candidates_with_harness_version(
+        unit_path,
+        draft_path,
+        output_path,
+        lock_path,
+        model_id,
+        model_lane,
+        reasoning_effort,
+        prompt_version,
+        policy_revision,
+        glossary_revision,
+        created_at,
+        harness_id,
+        harness_version,
+        model_record_id,
+        run_id,
+        model_snapshot,
+        model_identity_confidence,
+    )
+
+
+def _assemble_candidates_with_harness_version(
+    unit_path: Path,
+    draft_path: Path,
+    output_path: Path,
+    lock_path: Path,
+    model_id: str,
+    model_lane: str,
+    reasoning_effort: str,
+    prompt_version: str,
+    policy_revision: str,
+    glossary_revision: str,
+    created_at: str,
+    harness_id: str,
+    harness_version: str,
+    model_record_id: str | None,
+    run_id: str | None,
+    model_snapshot: str | None,
+    model_identity_confidence: str,
+) -> int:
     source_commit = load_upstream_commit(lock_path)
     model_record_id = model_record_id or f"legacy:{model_id}:unknown"
     run_id = run_id or f"run-{model_lane}-{source_commit[:12]}"
     units = load_jsonl(unit_path)
-    drafts = load_jsonl(draft_path)
-    draft_by_id: dict[str, dict[str, object]] = {}
-    for draft in drafts:
-        unit_id = draft.get("unit_id")
-        location = draft.get("_record_location", str(draft_path))
-        if not isinstance(unit_id, str) or not unit_id:
-            raise RecordError(f"{location}: draft requires a non-empty unit_id")
-        if unit_id in draft_by_id:
-            raise RecordError(f"{location}: duplicate draft unit_id {unit_id}")
-        schema_value = {
-            key: value for key, value in draft.items() if not key.startswith("_")
-        }
-        schema_errors = validate_named_schema(
-            schema_value, "translator-output.schema.json", str(location)
-        )
-        if schema_errors:
-            raise RecordError("translator output schema failed:\n" + "\n".join(schema_errors))
-        draft_by_id[unit_id] = draft
+    draft_by_id = _load_translator_drafts(draft_path)
     unit_ids = [unit["unit_id"] for unit in units]
     if set(draft_by_id) != set(unit_ids):
         missing = sorted(set(unit_ids) - set(draft_by_id))
@@ -276,6 +323,159 @@ def assemble_candidates(
         raise RecordError("assembled candidate promotion failed:\n" + "\n".join(errors))
     write_jsonl(output_path, candidates)
     return len(candidates)
+
+
+def assemble_candidates_many(
+    unit_paths: Iterable[Path],
+    draft_path: Path,
+    output_paths: Iterable[Path],
+    lock_path: Path,
+    model_id: str,
+    model_lane: str,
+    reasoning_effort: str,
+    prompt_version: str,
+    policy_revision: str,
+    glossary_revision: str,
+    created_at: str,
+    harness_id: str,
+    harness_version: str = "auto",
+    model_record_id: str | None = None,
+    run_id: str | None = None,
+    model_snapshot: str | None = None,
+    model_identity_confidence: str = "unknown",
+    harness_config_path: Path | None = None,
+) -> int:
+    """Assemble one combined translator JSONL into independent candidates atomically."""
+
+    unit_paths = list(unit_paths)
+    output_paths = list(output_paths)
+    if len(unit_paths) != len(output_paths):
+        raise RecordError(
+            "batch assembly requires the same number of unit and output files"
+        )
+    if not 2 <= len(unit_paths) <= 8:
+        raise RecordError(
+            f"batch assembly requires 2-8 unit/output pairs (got {len(unit_paths)})"
+        )
+    normalized_outputs = [path.resolve() for path in output_paths]
+    if len(set(normalized_outputs)) != len(normalized_outputs):
+        raise RecordError("batch assembly output files must be unique")
+    protected_inputs = {
+        path.resolve() for path in (*unit_paths, draft_path, lock_path)
+    }
+    overlaps = sorted(str(path) for path in set(normalized_outputs) & protected_inputs)
+    if overlaps:
+        raise RecordError(
+            "batch assembly outputs must not overwrite inputs: " + ", ".join(overlaps)
+        )
+    if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
+        raise RecordError(f"invalid model lane {model_lane!r}")
+    if prompt_version != CURRENT_TRANSLATOR_PROMPT:
+        raise RecordError(
+            f"new candidate assembly requires {CURRENT_TRANSLATOR_PROMPT}; "
+            f"{prompt_version!r} is not a current production prompt"
+        )
+    if not harness_id or harness_id == "unknown":
+        raise RecordError("new candidate assembly requires a registered harness_id")
+    if harness_version != "auto":
+        raise RecordError(
+            "new candidate assembly resolves harness_version dynamically; "
+            "use --harness-version auto"
+        )
+
+    source_commit = load_upstream_commit(lock_path)
+    units_by_path: list[list[dict[str, object]]] = []
+    unit_owner: dict[str, int] = {}
+    unit_ids: list[str] = []
+    chapter: str | None = None
+    for index, path in enumerate(unit_paths):
+        units = load_jsonl(path)
+        units_by_path.append(units)
+        for unit in units:
+            unit_id = unit.get("unit_id")
+            if not isinstance(unit_id, str) or not unit_id:
+                raise RecordError(f"{path}: unit requires a non-empty unit_id")
+            if unit_id in unit_owner:
+                raise RecordError(
+                    f"{path}: duplicate unit_id {unit_id} also present in "
+                    f"{unit_paths[unit_owner[unit_id]]}"
+                )
+            if unit.get("source_commit") != source_commit:
+                raise RecordError(f"{path}: unit does not match upstream.lock")
+            unit_chapter = unit.get("chapter")
+            if not isinstance(unit_chapter, str) or not unit_chapter:
+                raise RecordError(f"{path}: unit requires a non-empty chapter")
+            if chapter is None:
+                chapter = unit_chapter
+            elif chapter != unit_chapter:
+                raise RecordError(
+                    f"{path}: batch assembly cannot cross chapters "
+                    f"({chapter!r} and {unit_chapter!r})"
+                )
+            unit_owner[unit_id] = index
+            unit_ids.append(unit_id)
+
+    drafts_by_id = _load_translator_drafts(draft_path)
+    missing = sorted(set(unit_ids) - set(drafts_by_id))
+    extra = sorted(set(drafts_by_id) - set(unit_ids))
+    if missing or extra:
+        details: list[str] = []
+        if missing:
+            details.append("missing: " + ", ".join(missing))
+        if extra:
+            details.append("unknown: " + ", ".join(extra))
+        raise RecordError("draft coverage mismatch (" + "; ".join(details) + ")")
+
+    config_path = harness_config_path or Path("config/harnesses.yml")
+    try:
+        resolved_version = resolve_harness_version(harness_id, config_path)
+    except ValueError as exc:
+        raise RecordError(f"cannot resolve Harness version: {exc}") from exc
+
+    temp_outputs: list[tuple[Path, Path]] = []
+    temporary_paths: set[Path] = set()
+    try:
+        for index, (units, output_path) in enumerate(
+            zip(units_by_path, output_paths, strict=True)
+        ):
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            fd, temp_name = tempfile.mkstemp(
+                prefix=f".{output_path.name}.", suffix=".tmp", dir=output_path.parent
+            )
+            os.close(fd)
+            temp_output = Path(temp_name)
+            temp_draft = temp_output.with_suffix(".draft.jsonl")
+            temporary_paths.update((temp_output, temp_draft))
+            write_jsonl(temp_draft, (drafts_by_id[unit["unit_id"]] for unit in units))
+            _assemble_candidates_with_harness_version(
+                unit_paths[index],
+                temp_draft,
+                temp_output,
+                lock_path,
+                model_id,
+                model_lane,
+                reasoning_effort,
+                prompt_version,
+                policy_revision,
+                glossary_revision,
+                created_at,
+                harness_id,
+                resolved_version,
+                model_record_id,
+                run_id,
+                model_snapshot,
+                model_identity_confidence,
+            )
+            temp_draft.unlink(missing_ok=True)
+            temporary_paths.discard(temp_draft)
+            temp_outputs.append((temp_output, output_path))
+        for temp_output, output_path in temp_outputs:
+            os.replace(temp_output, output_path)
+            temporary_paths.discard(temp_output)
+    finally:
+        for temporary_path in temporary_paths:
+            temporary_path.unlink(missing_ok=True)
+    return len(unit_ids)
 
 
 def render_batch(

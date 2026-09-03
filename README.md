@@ -518,21 +518,35 @@ append-only revision。
 只保存候选，不等于正式采用；维护者选择和新模型替换分别记录在 `selections/` 和
 translation revision 中。
 
-这些 JSON Schema 不是只供阅读的示例：`assemble`、`make schema-check`、
-`make qa-all`、`make provenance-check` 和 `make decision-check` 会执行对应机器合同。新候选装配只
+这些 JSON Schema 不是只供阅读的示例：`assemble`、`assemble-many`、`batch-pack`、
+`make schema-check`、`make qa-all`、`make provenance-check` 和 `make decision-check`
+会执行对应机器合同。新候选装配只
 接受当前 `translator-v2`；`translator-v1` 只用于历史候选复现和兼容测试，详见
 [`prompts/README.md`](prompts/README.md)。
 
 #### 开发阶段 batch 模式
 
-如果一次模型运行覆盖多个不重叠的 Section，可以在候选文件生成后合并本地检查和预览：
+如果一次模型运行覆盖多个不重叠的 Section，先打包输入并一次生成多 unit 草稿，再装配候选：
 
 ~~~bash
+make batch-pack \
+  BATCHES="categories-003G categories-02X8" \
+  BATCH_PACKAGE=tmp/categories-003g-02x8-package.json
+
+# 模型读取 package.model_input，输出一行对应一个 required_unit_ids 的 JSONL 草稿
+make assemble-batch \
+  BATCHES="categories-003G categories-02X8" \
+  DRAFTS=tmp/categories-003g-02x8-drafts.jsonl \
+  MODEL=openai-gpt-5.6-sol MODEL_ID=gpt-5.6-sol \
+  MODEL_RECORD_ID=openai:gpt-5.6-sol:owner-confirmed RUN_ID=<run-id> \
+  POLICY_REVISION=git:<sha> GLOSSARY_REVISION=git:<sha> \
+  CREATED_AT=<timestamp> HARNESS_ID=codex MODEL_IDENTITY_CONFIDENCE=owner-confirmed
+
 make qa-batch \
-  BATCHES="categories-001M categories-001N" \
+  BATCHES="categories-003G categories-02X8" \
   MODEL=openai-gpt-5.6-sol
 make render-batch \
-  BATCHES="categories-001M categories-001N" \
+  BATCHES="categories-003G categories-02X8" \
   MODEL=openai-gpt-5.6-sol
 ~~~
 
@@ -542,10 +556,11 @@ make render-batch \
 重复 `unit_id` 以及混用模型、Harness 或 `run_id`。`render-batch` 只生成选定范围的
 忽略目录预览；某个 pair 失败时可以单独修复和重跑。
 
-建议一次选择 2–8 个相邻且语义完整的 Section，不跨章节、不切断证明链。batch 只是开发
-调度边界，每个 unit、candidate、run manifest 和 PR 写入所有权仍保持独立。若要真正减少
-模型 token，应让一次请求返回多个 unit 的结构化草稿，再按 `unit_id` 拆回各 batch 后分别
-`assemble`；不能把候选事实合并或自动提升审校状态。提交前仍要运行完整模型通道的
+建议一次选择 2–8 个相邻且语义完整的 Section，不跨章节、不切断证明链，来源词数尽量
+保持在 300–1500。`batch-pack` 会拒绝跨章节、重复 unit 和未确认的范围越界；
+`assemble-batch` 会在任何写入前拒绝缺失/额外/重复 `unit_id`，解析一次 Harness 版本，
+再分别写入 candidate。batch 只是开发调度边界，每个 unit、candidate、run manifest 和
+PR 写入所有权仍保持独立，不能把候选事实合并或自动提升审校状态。提交前仍要运行完整模型通道的
 `make qa-all`、`make render`、`make pdf` 和 CI 门禁。
 
 ### 5. 贡献 Python、工具、Schema、CI 或文档

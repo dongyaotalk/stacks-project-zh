@@ -117,16 +117,37 @@ HARNESS_ID=<harness-id>`，并让 `assemble` 默认的 `--harness-version auto` 
 
 ### 4.8 开发阶段 batch 模式
 
-当一次模型运行覆盖多个不重叠的 Section 时，可以把候选文件按位置成对交给批量接口：
+当一次模型运行覆盖多个不重叠的 Section 时，先把 unit 打包为一个模型输入，再把合并
+JSONL 草稿按 `unit_id` 拆回独立候选文件：
 
 ```bash
+make batch-pack \
+  BATCHES="categories-003G categories-02X8" \
+  BATCH_PACKAGE=tmp/categories-003g-02x8-package.json
+
+# 模型读取 package.model_input，并将每个 required_unit_ids 写成一行 JSONL。
+make assemble-batch \
+  BATCHES="categories-003G categories-02X8" \
+  DRAFTS=tmp/categories-003g-02x8-drafts.jsonl \
+  MODEL=openai-gpt-5.6-sol MODEL_ID=gpt-5.6-sol \
+  MODEL_RECORD_ID=openai:gpt-5.6-sol:owner-confirmed RUN_ID=<immutable-run-id> \
+  POLICY_REVISION=git:<sha> GLOSSARY_REVISION=git:<sha> \
+  CREATED_AT=<timestamp> HARNESS_ID=codex \
+  MODEL_IDENTITY_CONFIDENCE=owner-confirmed
+
 make qa-batch \
-  BATCHES="categories-001M categories-001N" \
+  BATCHES="categories-003G categories-02X8" \
   MODEL=openai-gpt-5.6-sol
 make render-batch \
-  BATCHES="categories-001M categories-001N" \
+  BATCHES="categories-003G categories-02X8" \
   MODEL=openai-gpt-5.6-sol
 ```
+
+`batch-pack` 要求 2–8 个同章输入文件，并报告 unit 数、来源词数和 300–1500 词偏好范围；
+超出范围时，Make 接口要求 `ALLOW_OUTSIDE_PREFERRED_RANGE=1` 显式说明不可拆分。
+`assemble-many`/`assemble-batch` 在任何输出替换前检查
+完整的 `unit_id` 覆盖、重复、来源提交和草稿 schema，并一次解析 Harness 版本；输出仍
+按输入位置写入独立 candidate 文件。
 
 `qa-batch` 在一个进程中校验多个 `unit`/candidate pair，并只运行一次共享的工作流、
 来源、Schema、溯源和决策检查；`render-batch` 只生成选定范围的忽略目录预览。两个命令
@@ -137,8 +158,9 @@ make render-batch \
 这里的 batch 是开发调度边界，不是新的翻译事实文件：每个 Tag 仍保留独立 unit 和
 candidate 文件及可审计溯源。一个 batch 任务可以在同一章用 `parent_tags` 声明 2–8 个
 相邻、语义完整的 Tag，并共享一次模型运行、一个 Issue 和一个 PR；不得跨章节、切断证明链
-或与其他任务共享写入文件。模型生成应一次请求多个 unit，再按 `unit_id` 拆回各自的草稿
-和 candidate 文件；batch 命令不会合并这些事实，也不会自动提升审校状态。整个 batch
+或与其他任务共享写入文件。模型生成应一次请求多个 unit，再用 `assemble-batch` 按
+`unit_id` 拆回各自的草稿和 candidate 文件；batch 命令不会合并这些事实，也不会自动
+提升审校状态。整个 batch
 提交前只需统一执行一次完整模型通道的 `make qa-all`、`make render`、`make pdf` 和 CI
 门禁，合并后也只做一次独立进度/计划同步。
 
@@ -214,6 +236,8 @@ make pdf MODEL=template
 make tool-test
 make schema-check
 make qa BATCH=<batch> MODEL=<model>
+make batch-pack BATCHES="<batch-a> <batch-b>"
+make assemble-batch BATCHES="<batch-a> <batch-b>" DRAFTS=<jsonl> MODEL=<model> ...
 make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make qa-all
 make provenance-check

@@ -118,7 +118,9 @@ WORKFLOW_FILES := \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \
 	stacks_zh/upstream.py \
+	stacks_zh/batching.py \
 	stacks_zh/workflow.py \
+	tests/test_batching.py \
 	tests/test_planning.py \
 	upstream-index/README.md \
 	translation-data/chapter-templates/README.md
@@ -134,6 +136,11 @@ MODEL_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(MODE
 BATCH_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(BATCHES)))
 BATCH_CANDIDATE_FILES = $(addprefix translation-data/candidates/$(MODEL)/,$(addsuffix .jsonl,$(BATCHES)))
 BATCH_RENDER_DIR ?= build/batch-render/$(MODEL)
+BATCH_PACKAGE ?= tmp/translation-batch-package.json
+BATCH_PROMPT ?= prompts/translator-v2.md
+BATCH_STYLE_GUIDE ?= config/style-guide.md
+BATCH_WORKFLOW_CONFIG ?= config/workflow.yml
+BATCH_CHAPTER_TEMPLATES ?= translation-data/chapter-templates
 NEXT_TASK_ARGS = $(if $(strip $(CHAPTER)),--chapter "$(CHAPTER)",) $(if $(strip $(TAG)),--tag "$(TAG)",) $(if $(filter 1 true yes,$(FALLBACK)),--fallback,) $(if $(filter 1 true yes,$(JSON)),--json,)
 
 SOURCE_REVISION ?= $(shell printf '%s' '$(UPSTREAM_COMMIT)' | cut -c1-12)
@@ -149,7 +156,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all qa-batch render render-batch validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all qa-batch render render-batch batch-pack assemble-batch validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -264,6 +271,48 @@ qa-batch: validate-model workflow-check harvest-check upstream-index-check chapt
 		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
 		--candidates $(foreach file,$(BATCH_CANDIDATE_FILES),"$(file)") \
 		--lock "$(UPSTREAM_LOCK)"
+
+batch-pack:
+	@test -n "$(strip $(BATCHES))" || { printf 'BATCHES is required; use BATCHES="batch-a batch-b"\n' >&2; exit 1; }
+	@test -n "$(strip $(BATCH_PACKAGE))" || { printf 'BATCH_PACKAGE is required\n' >&2; exit 1; }
+	@set -eu; for batch in $(BATCHES); do \
+		case "$$batch" in ''|*[!A-Za-z0-9._-]*) printf 'Invalid batch name: %s\n' "$$batch" >&2; exit 1 ;; esac; \
+		test -f "translation-data/units/$$batch.jsonl" || { printf 'Missing unit file: %s\n' "translation-data/units/$$batch.jsonl" >&2; exit 1; }; \
+	done
+	$(PYTHON) stacks_zh.py batch-pack \
+		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
+		--output "$(BATCH_PACKAGE)" --lock "$(UPSTREAM_LOCK)" \
+		--prompt "$(BATCH_PROMPT)" --style-guide "$(BATCH_STYLE_GUIDE)" \
+		--workflow-config "$(BATCH_WORKFLOW_CONFIG)" --chapter-templates "$(BATCH_CHAPTER_TEMPLATES)" \
+		$(if $(filter 1 true yes,$(ALLOW_OUTSIDE_PREFERRED_RANGE)),--allow-outside-preferred-range,)
+
+assemble-batch: validate-model
+	@test -n "$(strip $(BATCHES))" || { printf 'BATCHES is required; use BATCHES="batch-a batch-b"\n' >&2; exit 1; }
+	@test -n "$(strip $(DRAFTS))" || { printf 'DRAFTS is required (combined translator JSONL)\n' >&2; exit 1; }
+	@test -f "$(DRAFTS)" || { printf 'Missing drafts file: %s\n' "$(DRAFTS)" >&2; exit 1; }
+	@test -n "$(strip $(MODEL_RECORD_ID))" || { printf 'MODEL_RECORD_ID is required\n' >&2; exit 1; }
+	@test -n "$(strip $(RUN_ID))" || { printf 'RUN_ID is required\n' >&2; exit 1; }
+	@test -n "$(strip $(POLICY_REVISION))" || { printf 'POLICY_REVISION is required\n' >&2; exit 1; }
+	@test -n "$(strip $(GLOSSARY_REVISION))" || { printf 'GLOSSARY_REVISION is required\n' >&2; exit 1; }
+	@test -n "$(strip $(CREATED_AT))" || { printf 'CREATED_AT is required\n' >&2; exit 1; }
+	@test -n "$(strip $(HARNESS_ID))" || { printf 'HARNESS_ID is required\n' >&2; exit 1; }
+	@test -n "$(strip $(MODEL_ID))" || { printf 'MODEL_ID is required\n' >&2; exit 1; }
+	@test -n "$(strip $(MODEL_IDENTITY_CONFIDENCE))" || { printf 'MODEL_IDENTITY_CONFIDENCE is required\n' >&2; exit 1; }
+	@set -eu; for batch in $(BATCHES); do \
+		case "$$batch" in ''|*[!A-Za-z0-9._-]*) printf 'Invalid batch name: %s\n' "$$batch" >&2; exit 1 ;; esac; \
+		test -f "translation-data/units/$$batch.jsonl" || { printf 'Missing unit file: %s\n' "translation-data/units/$$batch.jsonl" >&2; exit 1; }; \
+	done
+	$(PYTHON) stacks_zh.py assemble-many \
+		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
+		--drafts "$(DRAFTS)" --output $(foreach file,$(BATCH_CANDIDATE_FILES),"$(file)") \
+		--lock "$(UPSTREAM_LOCK)" --model-id "$(MODEL_ID)" --model-lane "$(MODEL)" \
+		--reasoning-effort "$(or $(REASONING_EFFORT),not_exposed)" \
+		--prompt-version "$(or $(PROMPT_VERSION),translator-v2)" \
+		--policy-revision "$(POLICY_REVISION)" --glossary-revision "$(GLOSSARY_REVISION)" \
+		--created-at "$(CREATED_AT)" --harness-id "$(HARNESS_ID)" \
+		--harness-config "$(HARNESS_CONFIG)" --model-record-id "$(MODEL_RECORD_ID)" \
+		--run-id "$(RUN_ID)" --model-identity-confidence "$(MODEL_IDENTITY_CONFIDENCE)" \
+		$(if $(strip $(MODEL_SNAPSHOT)),--model-snapshot "$(MODEL_SNAPSHOT)",)
 
 qa-all: workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
 	@set -eu; count=0; \
@@ -399,6 +448,8 @@ help:
 		'make harness-check HARNESS_ID=codex  Resolve the current Harness version' \
 		'make upstream-diff OLD_UNITS=... NEW_UNITS=... NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...' \
 		'make qa BATCH=<batch> MODEL=<model>       Validate one candidate batch' \
+		'make batch-pack BATCHES="batch-a batch-b"  Build one protected model input package' \
+		'make assemble-batch BATCHES="..." DRAFTS=<jsonl> MODEL=<model> ...  Split combined drafts' \
 		'make qa-batch BATCHES="batch-a batch-b" MODEL=<model>  Validate several batches once' \
 		'make qa-all                     Validate every tracked candidate batch' \
 		'make render MODEL=<model>                 Render all batches in a model lane' \

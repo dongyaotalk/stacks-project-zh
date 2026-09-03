@@ -5,12 +5,14 @@ import shlex
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from stacks_zh.records import RecordError, sha256_value, stamp_unit_hashes, write_jsonl
 from stacks_zh.workflow import (
     _validate_title_permanent_tags,
     assemble_candidates,
+    assemble_candidates_many,
     render_batch,
     validate_batches,
 )
@@ -1239,6 +1241,161 @@ class RenderTests(unittest.TestCase):
 
 
 class AssemblyTests(unittest.TestCase):
+    def test_assemble_many_splits_combined_drafts_and_resolves_harness_once(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            unit_paths: list[Path] = []
+            output_paths: list[Path] = []
+            drafts: list[dict[str, object]] = []
+            for index in range(2):
+                unit = make_batch_unit(f"tag:TEST{index}:p001")
+                unit["parent_tag"] = f"TEST{index}"
+                unit = stamp_unit_hashes(unit)
+                unit_path = root / f"units-{index}.jsonl"
+                output_path = root / "candidates" / f"batch-{index}.jsonl"
+                write_jsonl(unit_path, [unit])
+                unit_paths.append(unit_path)
+                output_paths.append(output_path)
+                drafts.append(
+                    {
+                        "unit_id": unit["unit_id"],
+                        "translation": f"第 {index + 1} 个译文。",
+                        "allowed_english": [],
+                        "term_occurrences": [],
+                        "unknown_terms": [],
+                        "notes": [],
+                    }
+                )
+            draft_path = root / "combined-drafts.jsonl"
+            write_jsonl(draft_path, reversed(drafts))
+
+            with mock.patch(
+                "stacks_zh.workflow.resolve_harness_version", return_value="7.8.9"
+            ) as resolver:
+                count = assemble_candidates_many(
+                    unit_paths,
+                    draft_path,
+                    output_paths,
+                    lock,
+                    "test/model",
+                    "test-lane",
+                    "not_exposed",
+                    "translator-v2",
+                    "git:policy",
+                    "git:glossary",
+                    "2026-09-03T00:00:00+08:00",
+                    "codex",
+                    model_record_id="test:model:declared",
+                    run_id="run-test-batch",
+                    model_identity_confidence="declared",
+                    harness_config_path=root / "harnesses.yml",
+                )
+
+            self.assertEqual(count, 2)
+            resolver.assert_called_once()
+            for index, output_path in enumerate(output_paths):
+                candidate = json.loads(output_path.read_text(encoding="utf-8"))
+                self.assertEqual(candidate["unit_id"], f"tag:TEST{index}:p001")
+                self.assertEqual(candidate["harness_version"], "7.8.9")
+                self.assertEqual(candidate["run_id"], "run-test-batch")
+
+    def test_assemble_many_rejects_coverage_before_replacing_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            unit_paths = [root / "one.jsonl", root / "two.jsonl"]
+            output_paths = [root / "one-output.jsonl", root / "two-output.jsonl"]
+            for index, path in enumerate(unit_paths):
+                write_jsonl(path, [make_batch_unit(f"tag:TEST:p00{index + 1}")])
+            draft_path = root / "drafts.jsonl"
+            write_jsonl(
+                draft_path,
+                [
+                    {
+                        "unit_id": "tag:TEST:p001",
+                        "translation": "译文。",
+                        "allowed_english": [],
+                        "term_occurrences": [],
+                        "unknown_terms": [],
+                        "notes": [],
+                    }
+                ],
+            )
+            for path in output_paths:
+                path.write_text("unchanged\n", encoding="utf-8")
+
+            with mock.patch("stacks_zh.workflow.resolve_harness_version") as resolver:
+                with self.assertRaisesRegex(RecordError, "draft coverage mismatch"):
+                    assemble_candidates_many(
+                        unit_paths,
+                        draft_path,
+                        output_paths,
+                        lock,
+                        "test/model",
+                        "test-lane",
+                        "not_exposed",
+                        "translator-v2",
+                        "git:policy",
+                        "git:glossary",
+                        "2026-09-03T00:00:00+08:00",
+                        "codex",
+                    )
+            resolver.assert_not_called()
+            self.assertEqual(
+                [path.read_text(encoding="utf-8") for path in output_paths],
+                ["unchanged\n", "unchanged\n"],
+            )
+
+    def test_assemble_many_rejects_cross_chapter_and_input_overwrite(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / "upstream.lock"
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
+            first = make_batch_unit("tag:FIRST:p001")
+            second = make_batch_unit("tag:SECOND:p001")
+            second["chapter"] = "other"
+            second = stamp_unit_hashes(second)
+            unit_paths = [root / "first.jsonl", root / "second.jsonl"]
+            write_jsonl(unit_paths[0], [first])
+            write_jsonl(unit_paths[1], [second])
+            drafts = root / "drafts.jsonl"
+            write_jsonl(drafts, [{"unit_id": "unused"}])
+
+            with self.assertRaisesRegex(RecordError, "must not overwrite inputs"):
+                assemble_candidates_many(
+                    unit_paths,
+                    drafts,
+                    [unit_paths[0], root / "output.jsonl"],
+                    lock,
+                    "model",
+                    "lane",
+                    "not_exposed",
+                    "translator-v2",
+                    "git:policy",
+                    "git:glossary",
+                    "2026-09-03T00:00:00Z",
+                    "codex",
+                )
+
+            with self.assertRaisesRegex(RecordError, "cannot cross chapters"):
+                assemble_candidates_many(
+                    unit_paths,
+                    drafts,
+                    [root / "first-output.jsonl", root / "second-output.jsonl"],
+                    lock,
+                    "model",
+                    "lane",
+                    "not_exposed",
+                    "translator-v2",
+                    "git:policy",
+                    "git:glossary",
+                    "2026-09-03T00:00:00Z",
+                    "codex",
+                )
+
     def test_assemble_attaches_provenance_and_promotes_structure(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

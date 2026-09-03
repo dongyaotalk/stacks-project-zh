@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from .batching import write_batch_package
 from .chapter_templates import initialize_chapter_templates
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
@@ -23,6 +24,7 @@ from .tool_version import VERSION
 from .upstream import validate_upstream_index
 from .workflow import (
     assemble_candidates,
+    assemble_candidates_many,
     render_batch,
     stamp_units,
     validate_batch,
@@ -102,6 +104,68 @@ def build_parser() -> argparse.ArgumentParser:
         "--model-identity-confidence",
         required=True,
         choices=["runtime-resolved", "owner-confirmed", "declared", "unknown"],
+    )
+
+    assemble_many = subparsers.add_parser(
+        "assemble-many",
+        help="split one combined translator JSONL into independent candidate files",
+    )
+    assemble_many.add_argument("--units", required=True, type=Path, nargs="+")
+    assemble_many.add_argument("--drafts", required=True, type=Path)
+    assemble_many.add_argument("--output", required=True, type=Path, nargs="+")
+    assemble_many.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+    assemble_many.add_argument("--model-id", required=True)
+    assemble_many.add_argument("--model-lane", required=True)
+    assemble_many.add_argument("--reasoning-effort", required=True)
+    assemble_many.add_argument("--prompt-version", required=True)
+    assemble_many.add_argument("--policy-revision", required=True)
+    assemble_many.add_argument("--glossary-revision", required=True)
+    assemble_many.add_argument("--created-at", required=True)
+    assemble_many.add_argument("--harness-id", required=True)
+    assemble_many.add_argument(
+        "--harness-version",
+        default="auto",
+        choices=["auto"],
+        help="resolve the registered Harness version once (default: auto)",
+    )
+    assemble_many.add_argument(
+        "--harness-config", type=Path, default=Path("config/harnesses.yml")
+    )
+    assemble_many.add_argument("--model-record-id", required=True)
+    assemble_many.add_argument("--run-id", required=True)
+    assemble_many.add_argument("--model-snapshot")
+    assemble_many.add_argument(
+        "--model-identity-confidence",
+        required=True,
+        choices=["runtime-resolved", "owner-confirmed", "declared", "unknown"],
+    )
+
+    batch_pack = subparsers.add_parser(
+        "batch-pack",
+        help="package adjacent unit files for one structured model request",
+    )
+    batch_pack.add_argument("--units", required=True, type=Path, nargs="+")
+    batch_pack.add_argument("--output", required=True, type=Path)
+    batch_pack.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+    batch_pack.add_argument(
+        "--prompt", type=Path, default=Path("prompts/translator-v2.md")
+    )
+    batch_pack.add_argument(
+        "--style-guide", type=Path, default=Path("config/style-guide.md")
+    )
+    batch_pack.add_argument(
+        "--workflow-config", type=Path, default=Path("config/workflow.yml")
+    )
+    batch_pack.add_argument(
+        "--chapter-templates",
+        type=Path,
+        default=Path("translation-data/chapter-templates"),
+        help="chapter template directory used to enforce adjacent Section order",
+    )
+    batch_pack.add_argument(
+        "--allow-outside-preferred-range",
+        action="store_true",
+        help="allow an indivisible scope outside the preferred source-word range",
     )
 
     render = subparsers.add_parser("render", help="generate an ignored LaTeX preview directory")
@@ -272,6 +336,53 @@ def main(argv: list[str] | None = None) -> int:
                 harness_config_path=harness_config,
             )
             print(f"Assembled {count} candidate record(s): {args.output}")
+            return 0
+        if args.command == "assemble-many":
+            harness_config = (
+                args.harness_config
+                if args.harness_config.is_absolute()
+                else Path.cwd() / args.harness_config
+            )
+            count = assemble_candidates_many(
+                args.units,
+                args.drafts,
+                args.output,
+                args.lock,
+                args.model_id,
+                args.model_lane,
+                args.reasoning_effort,
+                args.prompt_version,
+                args.policy_revision,
+                args.glossary_revision,
+                args.created_at,
+                args.harness_id,
+                args.harness_version,
+                args.model_record_id,
+                args.run_id,
+                args.model_snapshot,
+                args.model_identity_confidence,
+                harness_config_path=harness_config,
+            )
+            print(
+                f"Assembled {count} candidate record(s) across "
+                f"{len(args.output)} batch(es)"
+            )
+            return 0
+        if args.command == "batch-pack":
+            summary = write_batch_package(
+                args.units,
+                args.output,
+                args.lock,
+                args.prompt,
+                args.style_guide,
+                args.workflow_config,
+                allow_outside_preferred_range=args.allow_outside_preferred_range,
+                chapter_templates_path=args.chapter_templates,
+            )
+            print(
+                f"Packed {summary.unit_count} unit(s) across {summary.batch_count} "
+                f"batch(es), {summary.source_word_count} source word(s): {summary.output_path}"
+            )
             return 0
         if args.command == "harness-version":
             config_path = args.config if args.config.is_absolute() else Path.cwd() / args.config

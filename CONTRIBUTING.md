@@ -61,22 +61,27 @@ TeX 或手工发明 unit ID。
 
 1. 从最新 `main` 建立 `translate/<chapter>/<tag>/<model>` 分支，并在 Issue 中声明 Harness、具体模型和 run ID；Harness 版本必须由 `make harness-check HARNESS_ID=<harness-id>` 动态获取；
 2. 验证 harvest 与 `upstream.lock`；
-3. 生成冻结的输入包；
-4. 只写入指定 Harness、模型、run 和单元的候选数据；
-5. 运行结构、术语和语义检查；
-6. 生成双语 diff 与 QA 摘要；
-7. 开发阶段如一次处理多个不重叠 Section，可执行
+3. 选择同一章节内 2–8 个相邻、语义完整且总量约 300–1500 个英文词的 batch；
+4. 用 `make batch-pack BATCHES="<batch-a> <batch-b>"` 生成一个冻结的模型输入包，
+   让一次模型请求返回所有 unit 的 JSONL 草稿；
+5. 用 `make assemble-batch BATCHES="<batch-a> <batch-b>" DRAFTS=<drafts.jsonl>
+   MODEL=<model-lane> ...` 按 `unit_id` 拆回独立候选文件；
+6. 运行结构、术语和语义检查；
+7. 生成双语 diff 与 QA 摘要；
+8. 开发阶段如一次处理多个不重叠 Section，可执行
    `make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>` 和
    `make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>`；文件仍按
    batch 独立保存；
-8. 执行完整 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`，确认本次
+9. 执行完整 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`，确认本次
    候选所在模型通道的 LaTeX 编译无错误；
-9. 按 `.gitmessage` 写原子提交；
-10. 使用 PR 模板提交，不自行提升人工审校状态。
+10. 按 `.gitmessage` 写原子提交；
+11. 使用 PR 模板提交，不自行提升人工审校状态。
 
-批量模型请求可以减少上下文和启动开销，但必须在装配前按 `unit_id` 拆回独立草稿和
-candidate 文件。batch 只用于开发迭代；提交前的 `qa-all`、完整渲染、PDF 和 CI 门禁
-仍不可省略。
+`batch-pack` 会拒绝跨章节、重复 unit、少于 2 或多于 8 个输入文件，并在超出
+300–1500 词偏好范围时要求显式确认不可拆分的语义边界。`assemble-batch` 会先验证
+所有 unit 与草稿的完整覆盖、重复和来源，再一次性写出各自 candidate；Harness 版本
+只解析一次。batch 只用于开发调度，不合并翻译事实、不改变 schema、不覆盖旧 run，
+也不提升人工审校状态。提交前的 `qa-all`、完整渲染、PDF 和 CI 门禁仍不可省略。
 
 ## 提交术语
 

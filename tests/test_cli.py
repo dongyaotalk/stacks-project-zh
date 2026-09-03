@@ -140,7 +140,93 @@ class ValidateManyCliTests(unittest.TestCase):
             self.assertIn("cannot read", stderr)
 
 
+class BatchWorkflowCliTests(unittest.TestCase):
+    def call_cli(self, *arguments: str) -> tuple[int, str, str]:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            result = main(list(arguments))
+        return result, stdout.getvalue(), stderr.getvalue()
+
+    def test_assemble_many_rejects_unaligned_outputs(self) -> None:
+        result, stdout, stderr = self.call_cli(
+            "assemble-many",
+            "--units",
+            "one.jsonl",
+            "two.jsonl",
+            "--drafts",
+            "drafts.jsonl",
+            "--output",
+            "one-output.jsonl",
+            "--model-id",
+            "test-model",
+            "--model-lane",
+            "test-lane",
+            "--reasoning-effort",
+            "not_exposed",
+            "--prompt-version",
+            "translator-v2",
+            "--policy-revision",
+            "git:policy",
+            "--glossary-revision",
+            "git:glossary",
+            "--created-at",
+            "2026-09-03T00:00:00Z",
+            "--harness-id",
+            "codex",
+            "--model-record-id",
+            "test:model:declared",
+            "--run-id",
+            "run-test",
+            "--model-identity-confidence",
+            "declared",
+        )
+        self.assertEqual(result, 1)
+        self.assertEqual(stdout, "")
+        self.assertIn("same number", stderr)
+
+
 class BatchMakefileTests(unittest.TestCase):
+    def test_batch_pack_and_assembly_targets_reuse_ordered_batches(self) -> None:
+        pack = subprocess.run(
+            ["make", "-n", "batch-pack", "BATCHES=alpha beta"],
+            cwd=REPOSITORY_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(pack.returncode, 0, pack.stderr)
+        self.assertIn("stacks_zh.py batch-pack", pack.stdout)
+        self.assertLess(pack.stdout.index("alpha.jsonl"), pack.stdout.index("beta.jsonl"))
+
+        assembly = subprocess.run(
+            [
+                "make",
+                "-n",
+                "assemble-batch",
+                "BATCHES=alpha beta",
+                "DRAFTS=tmp/drafts.jsonl",
+                "MODEL=test-lane",
+                "MODEL_ID=test-model",
+                "MODEL_RECORD_ID=test:model:declared",
+                "RUN_ID=run-test",
+                "POLICY_REVISION=git:policy",
+                "GLOSSARY_REVISION=git:glossary",
+                "CREATED_AT=2026-09-03T00:00:00Z",
+                "HARNESS_ID=codex",
+                "MODEL_IDENTITY_CONFIDENCE=declared",
+            ],
+            cwd=REPOSITORY_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(assembly.returncode, 0, assembly.stderr)
+        self.assertIn("stacks_zh.py assemble-many", assembly.stdout)
+        self.assertIn("--drafts \"tmp/drafts.jsonl\"", assembly.stdout)
+        self.assertIn("translation-data/candidates/test-lane/alpha.jsonl", assembly.stdout)
+        self.assertIn("translation-data/candidates/test-lane/beta.jsonl", assembly.stdout)
+
     def test_batch_targets_expand_aligned_files(self) -> None:
         result = subprocess.run(
             [

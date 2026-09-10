@@ -127,7 +127,8 @@ make pdf MODEL=openai-gpt-5.6-sol
 只有修改模板、样式、Makefile 或渲染路径时才另外执行 `make template`。裸
 `make pdf` 必须显式指定 `MODEL`，不会再隐式编译 `template`。
 
-上述命令必须以零状态退出。缺少 XeLaTeX、BibTeX 或 makeindex，或者出现编译错误时，
+上述命令必须以零状态退出。默认 AJbook 构建缺少 XeLaTeX、Biber 或 makeindex，或者
+出现编译错误时，
 不得提交、推送或创建 PR。不得编辑生成文件来掩盖失败。
 
 不要提交 `build/`、`output/`、`.harvest/`、`source-ir/`、生成的模型 TeX、PDF

@@ -6,6 +6,7 @@
 | 文件或目录 | 已知来源/用途 | 当前状态 | 公开发布前处理 |
 | --- | --- | --- | --- |
 | `stacks-project` 英文来源及结构化快照 | Stacks Project；GFDL 1.2 或更高版本 | 来源许可已知，修改版本义务待完整落实 | 随发行物附 GFDL 全文、来源和修改声明 |
+| `ajbook-template/AJbook.cls`、`font-setup-open.tex`、`titles-setup.tex`、`cover.tex` | Wen-Wei Li（李文威）的 AlJabr-1；默认中文数学书模板及封面标题框架 | CC BY 4.0；本项目已修改入口、定理计数和适配，并重绘封面永久 Tag 网络 | 保留原作者、来源链接、CC BY 4.0 全文及修改说明 |
 | `springer-template/svmono.cls` | Springer SVMono 5.10 模板类 | 文件头未见明确再分发许可 | 确认书面许可，或从公开仓库移除并要求用户自行取得 |
 | `springer-template/fonts/` | 模板附带字体 | 来源和授权范围待核实 | 逐个记录字体作者、来源和许可；未确认项移除 |
 | `springer-template/images/Springer-logo.png` | Springer logo 兼容资源 | 版权和商标使用待核实 | 不用于成品；公开分发前确认或移除 |
@@ -18,8 +19,10 @@
 
 - 根目录 `LICENSE` 提供 GFDL 1.2 全文，独立软件工具的 MIT 全文位于
   `LICENSES/MIT.txt`；
+- 默认 AJbook 核心的 CC BY 4.0 全文位于 `ajbook-template/LICENSE`，其 README
+  记录原作者、来源和修改；
 - 上述许可证不覆盖本表中授权尚未确认的第三方文件；
-- `svmono.cls`、字体、logo 和示例资源仍是公开发布 blocker；
+- 旧 `springer-template/` 中的 `svmono.cls`、字体、logo 和示例资源仍是公开发布 blocker；
 - 在 blocker 关闭前，仓库和 PDF 不应被描述为可自由再分发的正式出版物；
 - 删除、替换或取得授权后，必须更新本清单和 `docs/licensing.md`。
 

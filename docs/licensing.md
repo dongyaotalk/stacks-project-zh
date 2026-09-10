@@ -49,6 +49,8 @@ License；MIT 全文位于 `LICENSES/MIT.txt`。当前范围包括：
 | 路径或类别 | 处理要求 |
 | --- | --- |
 | `translation-data/` 中基于英文 harvest 的事实数据 | 按 Stacks Project 许可和翻译修改版本要求处理 |
+| `ajbook-template/AJbook.cls`、`font-setup-open.tex`、`titles-setup.tex`、`cover.tex` | 源自 Wen-Wei Li 的 AlJabr-1，CC BY 4.0；保留作者、许可、来源链接和本项目修改说明；封面永久 Tag 网络由本项目重绘 |
+| `ajbook-template/LICENSE` | AJbook 核心文件适用的 CC BY 4.0 全文；不得误述为覆盖 Stacks 译文或本项目软件 |
 | `springer-template/svmono.cls` | 当前文件头没有明确再分发许可；在确认前是发布 blocker |
 | `springer-template/styles/` | 逐个确认自有改写、上游模板和第三方样式的许可证 |
 | `springer-template/fonts/` | 记录字体名称、来源、授权范围和是否允许随源包分发 |
@@ -76,8 +78,9 @@ THIRD_PARTY_NOTICES.md
 - 本仓库的分发方式；
 - 必要的版权、商标或免责声明。
 
-根目录许可证和 MIT 工具许可证已经建立，但它们不解决第三方模板、字体、图片和
-商标的授权问题，也不能覆盖 `THIRD_PARTY_NOTICES.md` 中的待决项。
+根目录许可证和 MIT 工具许可证已经建立；AJbook 核心另由
+`ajbook-template/LICENSE` 中的 CC BY 4.0 覆盖。它们不解决旧 Springer 模板、字体、
+图片和商标的授权问题，也不能覆盖 `THIRD_PARTY_NOTICES.md` 中的待决项。
 
 ## 4. 解决不确定文件的可选方案
 
@@ -99,7 +102,8 @@ CI 可以检查文件清单、来源页、PDF 元数据和 manifest 是否齐全
 - `docs/release.md` 的许可证门禁已满足；
 - `LICENSE` 和 `THIRD_PARTY_NOTICES.md` 已提交；
 - PDF、源代码包和 Release artifact 使用一致的许可声明；
+- AJbook 核心保留 Wen-Wei Li 署名、AlJabr-1 来源、CC BY 4.0 链接和修改说明；
 - 没有 API key、私有字体、访问令牌或本地绝对路径；
 - 不会把 Springer logo 或出版关系表述成官方授权。
 
-当前模板许可不明确时，状态必须保持为发布 blocker。
+旧 Springer 兼容模板许可不明确且仍包含在公开分发物中时，状态必须保持为发布 blocker。

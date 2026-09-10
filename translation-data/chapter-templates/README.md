@@ -16,4 +16,4 @@
 模型预览渲染会读取同一份上游章节清单：已有候选的章节渲染候选内容，其余章节使用
 `config/chapter-titles.json` 中的双语标题生成带永久章节标签的空白 LaTeX 骨架，不显示
 “待译”提示。因此完整 PDF 可展示全部章节，但生成目录
-`springer-template/translations/<model-lane>/` 仍是可覆盖的预览产物，不应直接填入译文。
+`ajbook-template/translations/<model-lane>/` 仍是可覆盖的默认预览产物，不应直接填入译文。

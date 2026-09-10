@@ -2,6 +2,7 @@ SHELL := /bin/sh
 
 ENGINE ?= xelatex
 MODEL ?=
+BOOK_TEMPLATE ?= ajbook
 PYTHON ?= python3
 BATCH ?=
 BATCHES ?=
@@ -24,10 +25,21 @@ UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTR
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT_DATE := $(shell sed -n 's/^commit_date = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 
-TEMPLATE_DIR := springer-template
+ifeq ($(BOOK_TEMPLATE),ajbook)
+DEFAULT_TEMPLATE_DIR := ajbook-template
+DEFAULT_BIB_PROCESSOR := biber
+else ifeq ($(BOOK_TEMPLATE),springer)
+DEFAULT_TEMPLATE_DIR := springer-template
+DEFAULT_BIB_PROCESSOR := bibtex
+else
+$(error Unsupported BOOK_TEMPLATE=$(BOOK_TEMPLATE); use ajbook or springer)
+endif
+
+TEMPLATE_DIR ?= $(DEFAULT_TEMPLATE_DIR)
+BIB_PROCESSOR ?= $(DEFAULT_BIB_PROCESSOR)
 MAIN := stacks-project-zh.tex
 MODEL_DIR := $(TEMPLATE_DIR)/translations/$(MODEL)
-BUILD_DIR := $(BUILD_ROOT)/$(MODEL)
+BUILD_DIR := $(BUILD_ROOT)/$(BOOK_TEMPLATE)/$(MODEL)
 ABS_BUILD_DIR := $(abspath $(BUILD_DIR))
 JOBNAME := stacks-project-zh-$(MODEL)
 PDF := $(BUILD_DIR)/$(JOBNAME).pdf
@@ -125,6 +137,31 @@ WORKFLOW_FILES := \
 	upstream-index/README.md \
 	translation-data/chapter-templates/README.md
 
+AJBOOK_TEMPLATE_FILES := \
+	ajbook-template/AJbook.cls \
+	ajbook-template/LICENSE \
+	ajbook-template/README.md \
+	ajbook-template/cover.tex \
+	ajbook-template/font-setup-open.tex \
+	ajbook-template/frontmatter/preface.tex \
+	ajbook-template/frontmatter/project-info.tex \
+	ajbook-template/project-metadata.tex \
+	ajbook-template/stacks-project-zh.tex \
+	ajbook-template/styles/reference-template-compat.sty \
+	ajbook-template/styles/stacks-project-macros.sty \
+	ajbook-template/styles/stacks-project-zh.sty \
+	ajbook-template/styles/svind-zh.ist \
+	ajbook-template/titles-setup.tex \
+	ajbook-template/translations/README.md \
+	ajbook-template/translations/template/appendices.tex \
+	ajbook-template/translations/template/backmatter.tex \
+	ajbook-template/translations/template/chapters/template-check.tex \
+	ajbook-template/translations/template/contents.tex \
+	ajbook-template/translations/template/frontmatter.tex \
+	ajbook-template/translations/template/metadata.tex
+
+WORKFLOW_FILES += $(AJBOOK_TEMPLATE_FILES)
+
 BASELINE_REPORT := sync-reports/baseline-a04446e5.json
 BASELINE_INDEX_MANIFEST := upstream-index/manifests/$(UPSTREAM_COMMIT).json
 
@@ -163,8 +200,11 @@ all: pdf
 pdf: check
 	@mkdir -p "$(BUILD_DIR)" "$(OUTPUT_DIR)"
 	$(LATEX_COMMAND)
-	@if grep -q '^\\bibdata' "$(BUILD_DIR)/$(JOBNAME).aux"; then \
-		cd "$(BUILD_DIR)" && BIBINPUTS="$(BIB_SEARCH_PATH)" BSTINPUTS="$(BST_SEARCH_PATH)" bibtex "$(JOBNAME)"; \
+	@if test "$(BIB_PROCESSOR)" = biber; then \
+		test -s "$(BUILD_DIR)/$(JOBNAME).bcf" || { printf 'Missing Biber control file: %s\n' "$(BUILD_DIR)/$(JOBNAME).bcf" >&2; exit 1; }; \
+		cd "$(BUILD_DIR)" && BIBINPUTS="$(BIB_SEARCH_PATH)" "$(BIB_PROCESSOR)" "$(JOBNAME)"; \
+	elif grep -q '^\\bibdata' "$(BUILD_DIR)/$(JOBNAME).aux"; then \
+		cd "$(BUILD_DIR)" && BIBINPUTS="$(BIB_SEARCH_PATH)" BSTINPUTS="$(BST_SEARCH_PATH)" "$(BIB_PROCESSOR)" "$(JOBNAME)"; \
 	fi
 	@if test -s "$(BUILD_DIR)/$(JOBNAME).idx"; then \
 		makeindex -s "$(CURDIR)/$(INDEX_STYLE)" \
@@ -360,7 +400,7 @@ render-batch: qa-batch
 
 check: validate-model workflow-check harvest-check
 	@command -v "$(ENGINE)" >/dev/null || { printf 'Missing TeX engine: %s\n' "$(ENGINE)" >&2; exit 1; }
-	@command -v bibtex >/dev/null || { printf 'Missing command: bibtex\n' >&2; exit 1; }
+	@command -v "$(BIB_PROCESSOR)" >/dev/null || { printf 'Missing command: %s\n' "$(BIB_PROCESSOR)" >&2; exit 1; }
 	@command -v makeindex >/dev/null || { printf 'Missing command: makeindex\n' >&2; exit 1; }
 	@test -f "$(MODEL_DIR)/metadata.tex" || { printf 'Missing model metadata: %s/metadata.tex\n' "$(MODEL_DIR)" >&2; exit 1; }
 	@test -f "$(MODEL_DIR)/contents.tex" || { printf 'Missing model contents: %s/contents.tex\n' "$(MODEL_DIR)" >&2; exit 1; }
@@ -454,13 +494,13 @@ help:
 		'make qa-all                     Validate every tracked candidate batch' \
 		'make render MODEL=<model>                 Render all batches in a model lane' \
 		'make render-batch BATCHES="batch-a batch-b" MODEL=<model>  Render selected batches' \
-		'make template                   Build the template smoke test' \
-		'make pdf MODEL=<model>          Build springer-template/translations/<model>' \
+		'make template                   Build the AJbook template smoke test' \
+		'make pdf MODEL=<model>          Build ajbook-template/translations/<model>' \
 		'make list-models                List configured translation model lanes' \
 		'make clean MODEL=<model>        Remove one model build directory' \
 		'make distclean                  Remove all generated files' \
 		'' \
-		'Optional: HARVEST_DIR=/path/to/stacks-project ENGINE=xelatex' \
+		'Optional: HARVEST_DIR=/path/to/stacks-project ENGINE=xelatex BOOK_TEMPLATE=springer' \
 		'Local override: config/local.mk (ignored by Git)'
 
 clean: validate-model

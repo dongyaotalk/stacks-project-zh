@@ -61,6 +61,8 @@ changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用�
 `policy-and-data` job 不安装 TeX，也不会自动完成该构建，因此 PR 清单中的本地编译
 结果是必需声明，不是 CI 已代为执行的项目。缺少工具链或构建失败时不得提交、推送
 或创建 PR，也不能通过编辑生成的 TeX 绕过。管理员 PR-only bypass 不豁免此门禁。
+这些命令默认以 `BOOK_TEMPLATE=ajbook` 使用 XeLaTeX、Biber 和 makeindex；
+`BOOK_TEMPLATE=springer` 只用于显式的旧模板兼容检查，并改用 BibTeX。
 
 ## 2. 来源 checkout
 

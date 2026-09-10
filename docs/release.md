@@ -4,7 +4,7 @@
 
 项目区分：
 
-- `template`：只验证 Springer 模板，不含正式译文；
+- `template`：只验证默认 AJbook 模板，不含正式译文；
 - `<model-lane>`：具体模型候选预览，必须显示 Harness、具体模型和“未经完整人工审校”；
 - `reviewed`：满足人工审校要求的正式通道；
 - `release`：从 `reviewed` 的冻结 Git commit 构建的发布产物。
@@ -47,7 +47,7 @@ zh-2026.09.r1-stacks-a04446e
 - R3 及指定 R2 单元完成数学审校；
 - 没有未关闭 blocker、critical 或待决术语；
 - 数据 Schema、结构、术语和语义检查通过；
-- XeLaTeX、BibTeX、makeindex 全流程成功；
+- 默认 AJbook 的 XeLaTeX、Biber、makeindex 全流程成功；
 - 没有未定义引用、引用键或重复标签；
 - 目录、蓝色链接、索引、字体、公式和分页完成视觉检查；
 - PDF 元数据和来源页准确；
@@ -91,10 +91,11 @@ manifest 与 PDF 一起作为 Release 产物，不依赖本机绝对路径。
 根目录 `LICENSE` 提供 GFDL 1.2 全文；独立软件工具的 MIT 许可见
 `LICENSES/MIT.txt`。两者均不覆盖许可未确认的第三方模板、字体、图片或商标。
 
-当前 `springer-template/svmono.cls` 文件头没有明确再分发许可。正式公开仓库或发布
-包含该文件的源包前，必须确认授权，或改为由使用者自行取得兼容模板。该事项是
-发布 blocker，不能通过技术 QA 自动关闭。第三方文件核查和当前待决清单见
-`docs/licensing.md` 与 `THIRD_PARTY_NOTICES.md`。
+默认 `ajbook-template/` 衍生自 Wen-Wei Li（李文威）的 AlJabr-1，按 CC BY 4.0
+使用和修改，必须保留署名、许可链接与修改说明。旧 `springer-template/svmono.cls`
+文件头没有明确再分发许可；正式公开仓库或发布仍包含该文件的源包前，必须确认授权
+或移除该兼容模板。该事项是发布 blocker，不能通过技术 QA 自动关闭。第三方文件核查
+和当前待决清单见 `docs/licensing.md` 与 `THIRD_PARTY_NOTICES.md`。
 
 ## 6. 产物管理
 

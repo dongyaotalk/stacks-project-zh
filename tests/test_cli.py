@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 from stacks_zh.cli import main
+from stacks_zh.constants import DEFAULT_RENDER_ROOT
 from stacks_zh.records import sha256_value, stamp_unit_hashes, write_jsonl
 
 
@@ -187,6 +188,22 @@ class BatchWorkflowCliTests(unittest.TestCase):
 
 
 class BatchMakefileTests(unittest.TestCase):
+    def test_ajbook_is_the_default_render_and_pdf_template(self) -> None:
+        self.assertEqual(
+            DEFAULT_RENDER_ROOT,
+            REPOSITORY_ROOT / "ajbook-template" / "translations",
+        )
+        result = subprocess.run(
+            ["make", "-n", "template"],
+            cwd=REPOSITORY_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('cd "ajbook-template"', result.stdout)
+        self.assertIn('"biber" "stacks-project-zh-template"', result.stdout)
+
     def test_batch_pack_and_assembly_targets_reuse_ordered_batches(self) -> None:
         pack = subprocess.run(
             ["make", "-n", "batch-pack", "BATCHES=alpha beta"],

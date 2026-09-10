@@ -175,9 +175,9 @@ review/
 `review/issues/` 是独立 critic 记录的规划接口，当前目录、Schema 和 `make critic`
 命令尚未实现；critic 结果暂由 PR 人工说明，不能声称已有自动 critic 门禁。
 
-`translation-data/` 是翻译事实来源。`springer-template/translations/<model>/`、
+`translation-data/` 是翻译事实来源。默认的 `ajbook-template/translations/<model>/`、
 `build/`、`output/`、`.harvest/`、`source-ir/`、SQLite 索引和报告均为
-可再生数据，不要提交。`springer-template/translations/template/` 是唯一跟踪的
+可再生数据，不要提交。`ajbook-template/translations/template/` 是唯一跟踪的
 模板冒烟测试书稿，不是正式译文数据库。
 
 候选记录必须记录来源 commit、`unit_id`、Harness、具体模型、模型记录、`run_id`、
@@ -205,7 +205,8 @@ CODEOWNER 是对某些路径承担长期审核责任的人，不是参与项目�
 
 ### 2. GitHub 账号、Fork 和首次设置
 
-需要 Git、Python 3.11 或更高版本，以及 XeLaTeX、BibTeX 和 makeindex。所有提交和
+需要 Git、Python 3.11 或更高版本，以及 XeLaTeX、Biber 和 makeindex；显式构建旧
+Springer 模板时另需 BibTeX。所有提交和
 PR 都有本地 LaTeX 编译门禁，因此即使只修改文档、Python 或结构化翻译数据，也不能
 省略 TeX 工具链；验证应针对当前候选模型通道，而不是未变化的模板烟测。
 
@@ -650,6 +651,10 @@ make render MODEL=openai-gpt-5.6-sol
 make pdf MODEL=openai-gpt-5.6-sol
 ~~~
 
+上述命令默认使用 `BOOK_TEMPLATE=ajbook`，从
+`ajbook-template/translations/<model-lane>/` 构建。旧 Springer 模板仅用于兼容检查，
+可显式执行 `make pdf MODEL=<model-lane> BOOK_TEMPLATE=springer`。
+
 只有修改模板、样式、Makefile 或渲染路径时才另外运行 `make template`。裸
 `make pdf` 必须显式指定 `MODEL=<model-lane>`，不会再隐式选择 `template`。
 
@@ -961,8 +966,9 @@ UNTRANSLATED
 - PDF SHA-256；
 - GFDL 全文和翻译/修改声明。
 
-公开发布前还必须解决 `springer-template/svmono.cls` 以及相关字体、图片和 logo
-的再分发许可问题；详见 [`docs/release.md`](docs/release.md) 和本 README 的版权说明。
+AJbook 默认模板的核心文件按 CC BY 4.0 使用并保留署名。若公开仓库或源代码包仍包含
+旧 `springer-template/`，还必须解决其中 `svmono.cls`、字体、图片和 logo 的再分发
+许可问题；详见 [`docs/release.md`](docs/release.md) 和本 README 的版权说明。
 
 ## GitHub 仓库和权限（当前状态）
 
@@ -1002,9 +1008,10 @@ git push -u origin translate/<chapter>/<tag>/<model>
 翻译和修改，不得暗示 Stacks Project 作者、Springer 或其他机构批准或保证中文
 译文。
 
-当前 `springer-template/svmono.cls` 的文件头没有明确的再分发许可。公开发布包含
-该文件的仓库或源代码包前，必须确认授权，或改为由使用者自行取得兼容模板。该事项
-是发布 blocker，不能由自动 QA 关闭。
+默认 `ajbook-template/` 衍生自 Wen-Wei Li（李文威）的 AlJabr-1，采用 CC BY 4.0，
+许可全文位于 `ajbook-template/LICENSE`。旧 `springer-template/svmono.cls` 的文件头
+没有明确的再分发许可；公开发布仍包含该文件的仓库或源代码包前，必须确认授权，
+或移除该兼容模板。该事项是发布 blocker，不能由自动 QA 关闭。
 
 ## 许可证
 

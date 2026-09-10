@@ -66,7 +66,7 @@ docs/translation-workflow
 - `term`：术语提议或决定；
 - `sync`：英文上游同步；
 - `tool`：解析、翻译、检查和渲染工具；
-- `template`：Springer/LaTeX 模板；
+- `template`：AJbook、旧 Springer 或其他 LaTeX 模板；
 - `docs`：规范和说明；
 - `test`：测试和固定样例；
 - `build`：CI、构建和打包；

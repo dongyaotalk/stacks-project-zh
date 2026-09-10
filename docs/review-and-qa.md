@@ -112,7 +112,7 @@
 
 ### 4.5 TeX 和 PDF 检查
 
-- 日常翻译和候选 PR 默认以 XeLaTeX、BibTeX、makeindex 全流程无报错完成作为 PDF
+- 日常翻译和候选 PR 默认以 AJbook 的 XeLaTeX、Biber、makeindex 全流程无报错完成作为 PDF
   门禁；除非用户明确要求页面检查，不生成 PDF 页面截图，也不进行逐页或抽页目视验证；
 - 候选预览没有未定义引用、引用键或重复标签；尚未译入的跨章 `\ref` 应显示为
   可点击的 `Tag XXXX（待译）`，且永久 Tag 必须来自锁定 harvest 的 `tags/tags`；

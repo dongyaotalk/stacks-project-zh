@@ -71,9 +71,12 @@
 ## Source and generated files
 
 - `translation-data/` is the current structured translation source of truth.
-- `springer-template/translations/template/` is the tracked smoke-test manuscript.
-- Other directories under `springer-template/translations/` are generated model
+- `ajbook-template/translations/template/` is the tracked smoke-test manuscript for
+  the default AJbook build.
+- Other directories under `ajbook-template/translations/` are generated model
   previews and must not become the translation database.
+- `springer-template/` is a legacy compatibility template, not the default render
+  destination.
 - Treat `build/`, `output/`, `.harvest/`, `source-ir/`, generated reports, and
   SQLite indexes as generated data.
 - Never commit local absolute harvest paths, `config/local.mk`, credentials, PDFs,

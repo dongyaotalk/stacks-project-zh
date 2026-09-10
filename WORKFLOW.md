@@ -6,7 +6,7 @@
 ## 1. 项目目标
 
 项目以只读英文 harvest 为输入，维护可追踪、可审校、可随上游更新的中文译文，
-并通过完整的 Springer LaTeX 模板生成模型预览版和人工审校版 PDF。
+并通过默认的 AJbook 中文数学书模板生成模型预览版和人工审校版 PDF。
 
 本项目不把模型对话、生成后的 TeX 或 PDF 当作翻译事实来源。翻译事实必须保存
 为可审查的结构化数据，并记录英文提交、翻译单元、模型、提示词和审校信息。
@@ -33,7 +33,8 @@
 - `stacks-project-zh` 是独立 Git 仓库，禁止合并英文仓库历史。
 - 英文版本由 `upstream.lock` 中的完整 commit 决定；本地路径不决定版本。
 - `translation-data/` 是译文事实来源。
-- `springer-template/translations/<model>/` 是渲染输出，不是翻译数据库。
+- `ajbook-template/translations/<model>/` 是默认渲染输出，不是翻译数据库。
+- `springer-template/` 仅作兼容参考；需要时以 `BOOK_TEMPLATE=springer` 显式选择。
 - `build/`、`output/`、`source-ir/`、`.harvest/` 和 SQLite 索引均为可再生数据。
 - 未经专门的上游同步 PR，不得修改 `upstream.lock`。
 
@@ -114,6 +115,8 @@ HARNESS_ID=<harness-id>`，并让 `assemble` 默认的 `--harness-version auto` 
 模板、样式、Makefile 或渲染路径发生变化时才追加 `make template`。裸 `make pdf` 不再
 有隐式 `template` 默认值，必须显式指定 `MODEL`。缺少 TeX 工具链或出现编译错误时不得
 提交、推送或创建 PR，也不得通过修改生成的 TeX、PDF 或日志绕过失败。生成产物仍不得提交。
+默认 `BOOK_TEMPLATE=ajbook`，书目由 Biber 处理；旧 Springer 模板只可通过
+`BOOK_TEMPLATE=springer` 显式选用，并使用 BibTeX。
 
 ### 4.8 开发阶段 batch 模式
 

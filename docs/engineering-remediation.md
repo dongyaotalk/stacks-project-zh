@@ -127,6 +127,12 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- S3 术语工具：Issue [#546](https://github.com/dongyaotalk/stacks-project-zh/issues/546)，
+  分支 `tool/source-term-inventory`。独立英语目录及定义声明产生逐次来源清单，
+  校验候选显示、原词形、重复/漏报和真实待决证据。报告绑定来源/目录 hash，
+  英文证据按完整 source TeX 核验；本次提供只读审计，不改变当前翻译事实，也
+  不把尚未完成的数据修复或强制 QA/CI 接入标为完成。
+
 - S0：Issue [#530](https://github.com/dongyaotalk/stacks-project-zh/issues/530)，
   PR [#532](https://github.com/dongyaotalk/stacks-project-zh/pull/532)。计划文档完成本地
   workflow/harvest/index/tools/schema/provenance/decision/qa-all 和当前候选整书编译；

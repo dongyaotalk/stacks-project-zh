@@ -21,6 +21,7 @@
 - `github-collaboration.md`：GitHub 角色、Issue、PR、权限和分支保护；
 - `task-allocation.md`：使用 source commit、Tag 和 unit_id 指定翻译范围；
 - `terminology.md`：术语提议、批准、废弃和迁移；
+- `source-term-inventory.md`：独立来源词形清单、双语覆盖审计和自动识别范围；
 - `licensing.md`：许可证、模板资源和第三方文件清单；
 - `ci.md`：GitHub Actions、来源 checkout 和自动门禁合同；
 - `release.md`：正式发布门禁、版本和许可证。

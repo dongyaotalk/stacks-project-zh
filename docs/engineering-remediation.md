@@ -158,3 +158,7 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   Categories `003O:p002` 的长脚注仍被整段锁定，`02XJ:definition-003` 的长脚注
   只被译成摘要。它们纳入 F1/F6 的完整来源验收；长脚注必须另建真实模型 run，
   不能借机械派生夹带自由重译。最初 F6 两处固定脚注可用受限工具变换。
+- S6 字体：Issue [#540](https://github.com/dongyaotalk/stacks-project-zh/issues/540)，
+  分支 `template/greek-text-font`。正文字体使用 TeX Live 提供的 Libertinus Serif，
+  模板添加 Unicode 希腊字母普通/粗体/斜体/粗斜体烟测；不改数学字体和译文事实，
+  不复制第三方字体二进制。最终构建日志硬门禁另行提交，不以字体修复代替 F6。

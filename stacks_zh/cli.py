@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from .planning import (
 )
 from .progress import update_progress_report
 from .records import RecordError
+from .source_integrity import audit_repository_source, require_audit_output
 from .provenance import ProvenanceError, validate_repository_provenance
 from .schema_validation import validate_repository_schemas
 from .tool_version import VERSION
@@ -179,6 +181,11 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--chapter-source-dir", type=Path)
     render.add_argument("--tags-file", type=Path)
     render.add_argument("--output-dir", type=Path)
+
+    source_audit = subparsers.add_parser("audit-source", help="audit statement Tags, TeX controls and hidden footnotes")
+    source_audit.add_argument("--root", type=Path, default=Path("."))
+    source_audit.add_argument("--tags", required=True, type=Path)
+    source_audit.add_argument("--output", type=Path)
 
     provenance = subparsers.add_parser(
         "provenance-check", help="verify candidates against immutable run manifests"
@@ -406,6 +413,16 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"Rendered {len(written)} file(s): {output_dir}")
             return 0
+        if args.command == "audit-source":
+            proposal, errors = audit_repository_source(args.root.resolve(), args.tags)
+            if args.output:
+                require_audit_output(args.root.resolve(), args.output)
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(json.dumps(proposal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            for error in errors:
+                print(f"ERROR: {error}", file=sys.stderr)
+            print(f"Source integrity: {len(errors)} issue(s); {proposal['wrong_statement_tags']} statement Tag mismatches, {proposal['unprotected_node_pairs']} raw TeX pairs, {proposal['hidden_footnotes']} hidden footnotes")
+            return 1 if errors else 0
         if args.command == "provenance-check":
             errors = validate_repository_provenance(args.root.resolve())
             if errors:

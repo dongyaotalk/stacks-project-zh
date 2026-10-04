@@ -563,6 +563,10 @@ def render_batch(
             label = reference_match.group(1)
             if label in resolved_labels:
                 continue
+            qualified_label = f"{chapter}-{label}"
+            if qualified_label in resolved_labels:
+                placeholder_overrides[name] = f"\\ref{{{qualified_label}}}"
+                continue
             if tags_path is None:
                 continue
             resolved = _permanent_tag_for_label(label, chapter, tags_by_label)
@@ -571,7 +575,10 @@ def render_batch(
                     f"{unit['unit_id']}: unresolved reference {label!r} has no permanent "
                     f"Tag in {tags_path}"
                 )
-            _, tag = resolved
+            full_label, tag = resolved
+            if full_label in resolved_labels:
+                placeholder_overrides[name] = f"\\ref{{{full_label}}}"
+                continue
             placeholder_overrides[name] = (
                 f"\\href{{https://stacks.math.columbia.edu/tag/{tag}}}"
                 f"{{Tag {tag}（待译）}}"

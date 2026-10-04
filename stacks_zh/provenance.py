@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .derivations import load_repository_derivations
+from .model_corrections import load_repository_corrections
 from .schema_validation import validate_named_schema
 
 
@@ -60,7 +61,9 @@ def validate_repository_provenance(root: Path) -> list[str]:
     candidates_root = root / "translation-data" / "candidates"
     manifests: dict[str, tuple[Path, dict[str, Any]]] = {}
     candidate_context_hashes: dict[str, list[str]] = {}
-    origins, errors = load_repository_derivations(root)
+    corrections, errors = load_repository_corrections(root)
+    origins, derivation_errors = load_repository_derivations(root, corrections)
+    errors.extend(derivation_errors)
     harness_registry = (root / "config" / "harnesses.yml").read_text(encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
     model_registry = (root / "config" / "models.yml").read_text(encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""
     model_lanes = _parse_registry_section(model_registry, "lanes")
@@ -99,8 +102,9 @@ def validate_repository_provenance(root: Path) -> list[str]:
             errors.append(f"duplicate run manifest: {run_id}")
         manifests[run_id] = (manifest_path, manifest)
 
-    for candidate_path in sorted(candidates_root.glob("*/*.jsonl")):
-        lane = candidate_path.parent.name
+    correction_paths = {entry['candidate_path']: entry['candidate']['model_lane'] for entry in corrections.values()}
+    for candidate_path in [*sorted(candidates_root.glob("*/*.jsonl")), *sorted(correction_paths)]:
+        lane = correction_paths.get(candidate_path, candidate_path.parent.name)
         try:
             lines = candidate_path.read_text(encoding="utf-8").splitlines()
         except OSError as exc:

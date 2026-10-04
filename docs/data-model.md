@@ -18,6 +18,8 @@ translation-data/
 ├── units/                       # 稳定单元索引，不复制整份 TeX
 ├── runs/<run-id>.json           # Harness、具体模型和冻结输入的 manifest
 ├── candidates/<model-lane>/     # 各模型候选 JSONL
+├── derivations/                 # 当前工具派生的原字节、映射和重放证据
+├── model-corrections/           # 独立实际模型修订与完整冻结输出证据
 ├── selections/                  # 维护者对候选的选择/拒绝决定
 ├── reviewed/                    # 正式结构化译文
 └── retired/                     # 上游删除后的历史记录
@@ -291,3 +293,11 @@ revision 进入正式数据。
 sync report 执行机器合同；`make provenance-check` 和 `make decision-check` 再检查
 跨文件引用链。Schema 中的必填字段、类型、枚举、格式和 `additionalProperties`
 均是可执行约束。
+
+## 10. 复合来源的模型修订
+
+修订快照位于 `retired/model-corrections/<id>/`，只进入 schema/provenance 验证；
+不作为另一份当前候选加入进度、渲染或 TM。当前候选以 `model_correction_id`
+引用完整新模型输出，依旧以原 model/run 标识原始生成；预览披露两种身份。
+selection、review、正式 revision 对这种候选必须绑定完整 `provenance_hash`。
+证据和重放合同见 `docs/model-provenance.md` §7，旧正文 hash 不代表新的来源链。

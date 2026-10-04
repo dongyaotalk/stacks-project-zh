@@ -7,6 +7,8 @@ from typing import Any
 from .records import sha256_value
 from .schema_validation import validate_named_schema
 from .terminology import load_approved_term_pairs
+from .model_corrections import candidate_provenance_hash
+from .provenance import validate_repository_provenance
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -124,10 +126,27 @@ def _validate_revision_chains(revisions: dict[str, tuple[Path, dict[str, Any]]])
     return errors
 
 
+def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, Any], location: str, errors: list[str]) -> None:
+    if 'model_correction_id' in candidate:
+        expected = candidate.get('_provenance_hash')
+        if not isinstance(expected, str) or decision.get('provenance_hash') != expected:
+            errors.append(f'{location}: corrected candidate requires its complete composite provenance_hash')
+
+
 def validate_repository_decisions(root: Path) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
     errors: list[str] = []
     candidates = _candidate_index(root, errors)
+    corrected = [candidate for candidate in candidates.values() if 'model_correction_id' in candidate]
+    if corrected:
+        provenance_errors = validate_repository_provenance(root)
+        errors.extend(provenance_errors)
+        if not provenance_errors:
+            for candidate in corrected:
+                try:
+                    candidate['_provenance_hash'] = candidate_provenance_hash(root, candidate)
+                except (OSError, ValueError, KeyError, TypeError) as exc:
+                    errors.append(f"{candidate.get('unit_id')}: invalid composite provenance: {exc}")
     unit_facts = _unit_facts(root, errors)
     approved_terms: set[tuple[str, str]] | None = None
 
@@ -158,6 +177,8 @@ def validate_repository_decisions(root: Path) -> list[str]:
             errors.append(f"{path}: selection does not reference an exact candidate {key!r}")
         elif selection.get("source_commit") != candidate.get("source_commit"):
             errors.append(f"{path}: source_commit does not match selected candidate")
+        if candidate is not None:
+            _require_provenance_binding(candidate, selection, str(path), errors)
         if selection.get("decision") not in {
             "accept-candidate",
             "reject-candidate",
@@ -197,6 +218,8 @@ def validate_repository_decisions(root: Path) -> list[str]:
                 errors.append(f"{path}: candidate_hash/run_id/unit_id does not identify a candidate")
             elif review.get("source_commit") != matching[0].get("source_commit"):
                 errors.append(f"{path}: source_commit does not match reviewed candidate")
+            if matching:
+                _require_provenance_binding(matching[0], review, str(path), errors)
 
     revisions: dict[str, tuple[Path, dict[str, Any]]] = {}
     current_by_unit: dict[str, str] = {}
@@ -268,6 +291,7 @@ def validate_repository_decisions(root: Path) -> list[str]:
             if selected_candidate is None:
                 errors.append(f"{path}: selection does not identify a candidate")
             else:
+                _require_provenance_binding(selected_candidate, revision, str(path), errors)
                 if revision.get("translation_hash") != selected_candidate.get("translation_hash"):
                     errors.append(f"{path}: translation_hash does not match selected candidate")
                 if revision.get("source_text_hash") != selected_candidate.get("source_text_hash"):

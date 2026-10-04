@@ -200,3 +200,15 @@ python3 scripts/repair_source_integrity.py --root . --tags <harvest>/tags/tags -
 - 对应 PDF 预览位置或 CI 产物。
 
 整章或整书的大型 PR 不符合审查粒度，应拆成 Section。
+
+## 9. 模型修订的追加门禁
+
+实际模型 revision 原输出须与当前派生的全部译文和术语元数据相等，冻结的完整
+source unit、原 unit/candidate 输入、run 和模型登记均需核验。v1 纯工具不得自由
+重译，v2 也不能通过修订名义改公式、身份或审批。所有新证据一旦加入 Git 即保留
+第一次加入的原字节，重算 hash 不能绕过不可变性。
+
+含模型修订的 selection、人工 review 和正式 revision 必须绑定完整
+`provenance_hash`；正文相同但新增来源链也需要新的明确选择/审校绑定。绑定不会
+授予语言、数学或术语批准，普通候选的既有门禁继续执行。预览同时披露原生成和
+修订模型/Harness/run；证据不完整时不生成预览。

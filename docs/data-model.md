@@ -205,6 +205,12 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
 候选进入 `main` 只表示候选运行被保存。维护者选择写入 `selections/`，正式采用的
 版本另有 translation revision；模型下架或新模型替换都不能覆盖旧候选。
 
+工具派生候选另有 `derivation_id`，合同位于 `schema/derivation.schema.json`。
+它绑定原字节快照及可达的中文 `origin_commit`，同时记录当前输出 hash、完整坐标
+映射和逐单元操作。`make provenance-check` 用原候选核对不可变 run，再重放验证
+当前数据；原 Harness/model/created_at 仅表示原始生成，派生时间另存。
+预览显示派生声明；这些记录仍不代表人工审校或正式采用。
+
 `term_occurrences` 按译文中的出现顺序逐项记录；同一术语出现两次就记录两次。
 渲染文本中的对应字面形式必须是 `target_term（source_term）`。该字段记录显示
 约束，不代表术语已经批准；批准状态仍由词表和 `unknown_terms` 决定。

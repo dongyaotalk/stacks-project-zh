@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .derivations import load_repository_derivations
 from .schema_validation import validate_named_schema
 
 
@@ -59,7 +60,7 @@ def validate_repository_provenance(root: Path) -> list[str]:
     candidates_root = root / "translation-data" / "candidates"
     manifests: dict[str, tuple[Path, dict[str, Any]]] = {}
     candidate_context_hashes: dict[str, list[str]] = {}
-    errors: list[str] = []
+    origins, errors = load_repository_derivations(root)
     harness_registry = (root / "config" / "harnesses.yml").read_text(encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
     model_registry = (root / "config" / "models.yml").read_text(encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""
     model_lanes = _parse_registry_section(model_registry, "lanes")
@@ -117,6 +118,12 @@ def validate_repository_provenance(root: Path) -> list[str]:
             if not isinstance(candidate, dict):
                 errors.append(f"{location}: candidate must be an object")
                 continue
+            if candidate.get("derivation_id"):
+                origin = origins.get((candidate_path.relative_to(root).as_posix(), candidate.get("unit_id")))
+                if origin is None:
+                    errors.append(f"{location}: missing validated original candidate")
+                    continue
+                candidate = origin
             if candidate.get("schema_version") != 2:
                 errors.append(f"{location}: candidate must use schema_version 2")
                 continue

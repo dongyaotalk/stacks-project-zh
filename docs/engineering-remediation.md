@@ -162,3 +162,8 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   分支 `template/greek-text-font`。正文字体使用 TeX Live 提供的 Libertinus Serif，
   模板添加 Unicode 希腊字母普通/粗体/斜体/粗斜体烟测；不改数学字体和译文事实，
   不复制第三方字体二进制。最终构建日志硬门禁另行提交，不以字体修复代替 F6。
+- 模型修订规范：Issue [#542](https://github.com/dongyaotalk/stacks-project-zh/issues/542)，
+  分支 `docs/model-correction-provenance`。长脚注和自由自然语言修订另建实际模型
+  revision run、冻结输入与完整原输出；原生成及新增修订同时披露，纯工具变换仍
+  禁止自由重译。当前 turn 元数据确认 `gpt-6.1-sol`，注册 declared 身份、null
+  snapshot 与不可保证重放，不虚构原 GPT-5.6 的新输出。机器实现另开 Issue。

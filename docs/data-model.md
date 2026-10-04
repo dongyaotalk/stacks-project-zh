@@ -216,6 +216,9 @@ TeX。LaTeX 原始位置由 `chapter`、Tag 和 AST 定位信息表达。
 映射和逐单元操作。`make provenance-check` 用原候选核对不可变 run，再重放验证
 当前数据；原 Harness/model/created_at 仅表示原始生成，派生时间另存。
 预览显示派生声明；这些记录仍不代表人工审校或正式采用。
+自由自然语言修订须另有实际模型 run 和冻结完整输出，并在派生记录明确引用。
+原生成模型与新增修订模型的身份同时保留；`docs/model-provenance.md` §7 的扩展
+合同须由独立工具实现后才可应用，纯工具派生目前仍禁止自由重译。
 
 `term_occurrences` 按译文中的出现顺序逐项记录；同一术语出现两次就记录两次。
 渲染文本中的对应字面形式必须是 `target_term（source_term）`。该字段记录显示

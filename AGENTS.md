@@ -71,6 +71,11 @@
   tool derivation; changed content never inherits human approval. Historical
   snapshots under `retired/derivations/` are excluded from active QA, progress,
   rendering, and translation memory, but remain subject to provenance validation.
+- Free natural-language corrections require a separate actual model revision run,
+  frozen units/context, and immutable model output. A derived active candidate
+  must disclose both its original run and any correction run; origin identity is
+  not the identity of every word in the corrected text. Do not implement this
+  extension in data before the matching schema/provenance tooling is available.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch
   protection, releases, or pushed history unless the task explicitly authorizes

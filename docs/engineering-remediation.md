@@ -138,3 +138,9 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 - F4 后续扫描：当前有 7 个 unit/candidate 的原始 TeX 控制序列不一致，涉及控制
   空格、分组括号和图表换行。因此 S3/S4 还必须修复现存提取/包装遗漏，并以锁定
   英文源结构核对，不能只新增针对 `%` 的检测后宣称结构保护已完成。
+- S1：PR [#534](https://github.com/dongyaotalk/stacks-project-zh/pull/534) 使用前序
+  分支为 base；已通过 GitHub 原生关联连接 Issue #531，保留一个关闭 Issue 的合同。
+- S2 规范：Issue [#533](https://github.com/dongyaotalk/stacks-project-zh/issues/533)，
+  分支 `docs/immutable-derivations`。统一原 run/原输出不可变、工具派生须快照与重放、
+  活跃目录单版本及旧人工批准不继承的合同。Schema/工具另开 Issue/PR，本次不迁移
+  unit/candidate/run 数据，不将尚未实现的接口描述为现有机器能力。

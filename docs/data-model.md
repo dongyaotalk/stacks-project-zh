@@ -113,8 +113,11 @@ tag:02TF:proof-002-p001
 如果历史导入时暂时使用了 `label:<label>:<suffix>`，而锁定的 `tags/tags` 后来证明
 该节点本身拥有永久 Tag，则必须执行一次显式坐标迁移，改为
 `tag:<TAG>:<suffix>`。迁移只改变坐标及包含坐标的上下文 hash，不改英文快照、数学
-片段或译文。旧、新 ID 保存在 `migration/unit-id-map.json`，候选和 run manifest
-必须同时更新；外部任务引用旧 ID 时先查该映射，不能静默创建第二个单元。
+片段或译文。旧、新 ID 保存在 `migration/unit-id-map.json` 和独立派生记录；活跃
+unit/candidate 更新，但原始 run manifest 不回写。原文件须按原字节保存至
+`retired/derivations/`，派生记录引用快照和输入/输出 hash，并能确定性重放。
+外部任务引用旧 ID 时先查该映射，不能静默创建第二个单元。来源提取或双语显示
+修复属于另外声明的变换，不得混称为纯坐标迁移。详见 `docs/model-provenance.md`。
 
 ## 3. 来源 hash
 

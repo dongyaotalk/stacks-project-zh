@@ -63,6 +63,14 @@
   `--harness-version auto` and fails if resolution fails.
 - Do not modify `upstream.lock`, the glossary, reviewed data, or shared manifests
   unless the task explicitly names that resource.
+- Historical run manifests and raw model output are immutable, including during
+  permanent-Tag migration. Preserve exact input snapshots and record any active
+  coordinate, extraction, or display correction in a separate derivation with
+  input/output hashes, a deterministic transform, and an old-to-new ID map.
+  Derived candidates retain the original model origin but must also disclose the
+  tool derivation; changed content never inherits human approval. Historical
+  snapshots under `retired/derivations/` are excluded from active QA, progress,
+  rendering, and translation memory, but remain subject to provenance validation.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch
   protection, releases, or pushed history unless the task explicitly authorizes

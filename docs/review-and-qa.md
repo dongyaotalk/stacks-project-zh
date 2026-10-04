@@ -156,6 +156,24 @@
 
 ## 7. 失败和重试
 
+来源结构审计使用：
+
+```bash
+python3 stacks_zh.py audit-source --root . --tags <harvest>/tags/tags --output build/source-audit.json
+python3 scripts/repair_source_integrity.py --root . --tags <harvest>/tags/tags --output build/source-proposal.json
+```
+
+审计有缺陷时返回非零状态，逐项列出数学陈述/证明的永久 Tag、所有未保护 TeX
+控制字符和整段锁定的脚注。报告是提案，不是已应用的数据迁移或审校结果；程序
+只能在忽略的 `build/` 或仓库外写报告，不能覆盖事实或历史映射。现存历史数据尚待
+独立修复 PR；修复完成后才在全量候选 QA 中启用严格来源门禁，不能把旧 QA 通过
+误称为已通过这项新增审计。
+
+`protect_fragments` 接受有输入字面量和源/目标位置的显式结构跨度注释，生成提案，
+不猜测中文边界，也不修改事实文件。脚注固定短语 `See Remark` 可由工具展开为
+包装、可译正文和独立引用；其他锁定脚注必须另建翻译任务。派生重放还要验证
+完整来源 TeX 及中文正文保持不变，只有通过该合同的提案才能应用。
+
 - 结构或占位符失败：拒绝候选，重新生成，不做文本级猜测修复；
 - 历史提取/坐标缺陷：由声明完整范围的修复 Issue 按派生合同保留快照、重放
   明确变换并重新验收，不直接覆盖旧 run 或把结构变化冒充原模型输出；

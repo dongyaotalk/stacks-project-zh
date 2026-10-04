@@ -177,6 +177,18 @@ def placeholder_names(text: str) -> list[str]:
     return PLACEHOLDER_TOKEN_RE.findall(text)
 
 
+def validate_tex_controls(unit: dict[str, Any], candidate: dict[str, Any]) -> list[str]:
+    """Reject every unprotected TeX control in source and translated prose."""
+    errors = []
+    for field, text in (("source_text", unit.get("source_text", "")), ("translation", candidate.get("translation", ""))):
+        if not isinstance(text, str):
+            errors.append(f"{unit.get('unit_id')}: {field} must be a string")
+            continue
+        if re.search(r"\\(?:[A-Za-z@]+|.)|[%#$&_^~{}]", PLACEHOLDER_TOKEN_RE.sub("", text)):
+            errors.append(f"{unit.get('unit_id')}: {field} contains unprotected TeX controls")
+    return errors
+
+
 def _validate_unit(unit: dict[str, Any], source_commit: str) -> list[str]:
     errors: list[str] = []
     location = unit.get("_record_location", "unit")

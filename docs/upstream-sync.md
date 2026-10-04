@@ -36,10 +36,11 @@ sync/<old-short-sha>-<new-short-sha>
 匹配有歧义时不得选择相似度最高者后静默继续，必须生成人工映射问题。
 
 同步前先用锁定 harvest 的 `tags/tags` 检查本地 unit 是否仍把有永久 Tag 的自身
-label 写成 `label:` ID。若发现这种历史坐标，先运行
+label 写成 `label:` ID 或外围 Section Tag。若发现这种历史坐标，先运行
 `python3 scripts/migrate_permanent_tags.py --root . --tags <harvest>/tags/tags
---map migration/unit-id-map.json`，并把映射作为独立迁移事实审查；不要在同步 diff
-中把坐标迁移误报成英文内容变化。
+--map build/permanent-tag-proposal.json`。该旧命令现在只输出审查提案，有缺陷时
+非零退出，不改 unit/candidate/run 或历史映射。实际应用通过独立 Issue 的不可变
+工具派生完成，旧 run 不回写；不要在同步 diff 中把坐标迁移误报成英文内容变化。
 
 ## 4. 变化分类
 

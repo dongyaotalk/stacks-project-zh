@@ -6,6 +6,7 @@ from typing import Any
 
 from .records import sha256_value
 from .schema_validation import validate_named_schema
+from .terminology import load_approved_term_pairs
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -63,11 +64,72 @@ def _unit_facts(root: Path, errors: list[str]) -> dict[str, dict[str, str]]:
     return result
 
 
+def _term_pairs(candidate: dict[str, Any], location: str, errors: list[str]) -> set[tuple[str, str]]:
+    pairs: set[tuple[str, str]] = set()
+    for field in ("term_occurrences", "unknown_terms"):
+        values = candidate.get(field)
+        if not isinstance(values, list):
+            errors.append(f"{location}: selected candidate {field} must be an array")
+            continue
+        for index, value in enumerate(values):
+            if not isinstance(value, dict) or not all(
+                isinstance(value.get(key), str) and value[key]
+                for key in ("source_term", "target_term")
+            ):
+                errors.append(f"{location}: invalid selected candidate {field}[{index}]")
+                continue
+            pairs.add((value["source_term"], value["target_term"]))
+    if candidate.get("term_status") == "DECISION_REQUIRED" and not pairs:
+        errors.append(f"{location}: selected candidate has unresolved terminology without term evidence")
+    return pairs
+
+
+def _validate_revision_chains(revisions: dict[str, tuple[Path, dict[str, Any]]]) -> list[str]:
+    errors: list[str] = []
+    by_unit: dict[str, list[str]] = {}
+    successors: dict[str, list[str]] = {}
+    for revision_id, (_, revision) in revisions.items():
+        by_unit.setdefault(str(revision.get("unit_id", "")), []).append(revision_id)
+        predecessor = revision.get("supersedes_revision_id")
+        if isinstance(predecessor, str) and predecessor in revisions:
+            previous = revisions[predecessor][1]
+            if previous.get("unit_id") == revision.get("unit_id"):
+                successors.setdefault(predecessor, []).append(revision_id)
+
+    for unit_id, revision_ids in by_unit.items():
+        roots = [item for item in revision_ids if revisions[item][1].get("supersedes_revision_id") is None]
+        if len(roots) > 1:
+            errors.append(f"unit {unit_id}: multiple revision roots: {', '.join(sorted(roots))}")
+        visited: set[str] = set()
+        for revision_id in revision_ids:
+            path, revision = revisions[revision_id]
+            children = successors.get(revision_id, [])
+            if len(children) > 1:
+                errors.append(f"{path}: revision has multiple successors: {', '.join(sorted(children))}")
+            if revision.get("status") == "superseded" and not children:
+                errors.append(f"{path}: superseded revision has no successor")
+            trail: set[str] = set()
+            cursor: str | None = revision_id
+            while cursor is not None and cursor not in visited:
+                if cursor in trail:
+                    errors.append(f"{path}: revision replacement cycle includes {cursor}")
+                    break
+                trail.add(cursor)
+                entry = revisions.get(cursor)
+                if entry is None or entry[1].get("unit_id") != unit_id:
+                    break
+                predecessor = entry[1].get("supersedes_revision_id")
+                cursor = predecessor if isinstance(predecessor, str) else None
+            visited.update(trail)
+    return errors
+
+
 def validate_repository_decisions(root: Path) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
     errors: list[str] = []
     candidates = _candidate_index(root, errors)
     unit_facts = _unit_facts(root, errors)
+    approved_terms: set[tuple[str, str]] | None = None
 
     selections: dict[str, tuple[Path, dict[str, Any]]] = {}
     for path in sorted((root / "translation-data" / "selections").glob("*.json")):
@@ -210,6 +272,24 @@ def validate_repository_decisions(root: Path) -> list[str]:
                     errors.append(f"{path}: translation_hash does not match selected candidate")
                 if revision.get("source_text_hash") != selected_candidate.get("source_text_hash"):
                     errors.append(f"{path}: source_text_hash does not match selected candidate")
+                if selected_candidate.get("source_status") != "CURRENT":
+                    errors.append(f"{path}: selected candidate source_status must be CURRENT")
+                if selected_candidate.get("qa_status") != "PASS":
+                    errors.append(f"{path}: selected candidate qa_status must be PASS")
+                if selected_candidate.get("stage") not in {"STRUCTURE_OK", "TERM_OK"}:
+                    errors.append(f"{path}: selected candidate must have passed structural validation")
+                required_terms = _term_pairs(selected_candidate, str(path), errors)
+                if required_terms and approved_terms is None:
+                    try:
+                        approved_terms = load_approved_term_pairs(root / "config" / "glossary.yml")
+                    except ValueError as exc:
+                        errors.append(str(exc))
+                        approved_terms = set()
+                for source_term, target_term in sorted(required_terms - (approved_terms or set())):
+                    errors.append(
+                        f"{path}: selected candidate term {target_term}（{source_term}） "
+                        "has no approved glossary decision"
+                    )
         unit_fact = unit_facts.get(str(revision.get("unit_id", "")))
         if unit_fact is None:
             errors.append(f"{path}: revision references an unknown unit")
@@ -280,6 +360,8 @@ def validate_repository_decisions(root: Path) -> list[str]:
             errors.append(f"{path}: PUBLISHED requires publication_status RELEASED")
         supersedes = revision.get("supersedes_revision_id")
         if supersedes is not None:
+            if supersedes == revision_id:
+                errors.append(f"{path}: revision cannot supersede itself")
             previous = revisions.get(str(supersedes))
             if previous is None:
                 errors.append(f"{path}: supersedes_revision_id does not exist")
@@ -289,13 +371,5 @@ def validate_repository_decisions(root: Path) -> list[str]:
                     errors.append(f"{path}: superseded revision belongs to another unit")
                 if previous_revision.get("status") != "superseded":
                     errors.append(f"{previous_path}: replaced revision must have status superseded")
-        elif revision.get("status") != "retired":
-            # A first revision has no predecessor; later revisions must declare one.
-            same_unit = [
-                item
-                for item, (_, value) in revisions.items()
-                if item != revision_id and value.get("unit_id") == revision.get("unit_id")
-            ]
-            if same_unit:
-                errors.append(f"{path}: multiple revisions require an explicit supersedes link")
+    errors.extend(_validate_revision_chains(revisions))
     return errors

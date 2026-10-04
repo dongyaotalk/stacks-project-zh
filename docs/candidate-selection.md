@@ -59,3 +59,13 @@
 `supersedes_revision_id`；只存 hash 不能生成正式译文。正式译文只从 `reviewed/`
 生成，候选目录不参与权威 Translation Memory。`make decision-check` 会验证这些
 引用和审校链。
+
+正式 revision 的 `term_status=CLEAR` 不是术语批准证据。决策检查还会核验所选
+candidate 的来源为 `CURRENT`、QA 为 `PASS`，且已达到 `STRUCTURE_OK` 或 `TERM_OK`。
+`term_occurrences` 与 `unknown_terms` 中的每个英文/中文组合都必须有权威词表的
+`approved` 条目；缺失、`proposed`、`deprecated` 或仅批准另一译法均不能通过。
+词表缺失或无法可靠解析时检查失败，不由模型推断批准。
+
+历史 candidate 可以保留生成时的 `DECISION_REQUIRED`。后来独立术语 PR 的真实
+批准可以支持正式采用，无需回写历史模型输出；只有修改 revision 的状态、selection
+说明或审校记录，不能代替词表批准。

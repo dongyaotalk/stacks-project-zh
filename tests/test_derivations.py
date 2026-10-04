@@ -101,7 +101,7 @@ def save_fixture(root):
     record['origin_commit'] = git('rev-parse', 'HEAD')
     active_units.write_bytes(derived_unit_bytes)
     active_candidates.write_bytes(derived_candidate_bytes)
-    derivation = root / 'translation-data/derivations/fixture-derive.json' 
+    derivation = root / 'translation-data/derivations/fixture-derive.json'
     derivation.parent.mkdir(parents=True)
     derivation.write_text(json.dumps(record))
     return record, derivation, run

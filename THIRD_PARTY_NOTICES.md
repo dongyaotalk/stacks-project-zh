@@ -9,6 +9,7 @@
 | `ajbook-template/AJbook.cls`、`font-setup-open.tex`、`titles-setup.tex`、`cover.tex` | Wen-Wei Li（李文威）的 AlJabr-1；默认中文数学书模板及封面标题框架 | CC BY 4.0；本项目已修改入口、定理计数和适配，并重绘封面永久 Tag 网络 | 保留原作者、来源链接、CC BY 4.0 全文及修改说明 |
 | `springer-template/svmono.cls` | Springer SVMono 5.10 模板类 | 文件头未见明确再分发许可 | 确认书面许可，或从公开仓库移除并要求用户自行取得 |
 | `springer-template/fonts/` | 模板附带字体 | 来源和授权范围待核实 | 逐个记录字体作者、来源和许可；未确认项移除 |
+| AJbook 正文字体 `Libertinus Serif`（由 TeX Live 提供，不复制字体文件到仓库） | The Libertinus Project Authors，版权 2012–2024 | SIL Open Font License 1.1；来源 [Libertinus](https://github.com/alerque/libertinus) | 使用发行版原字体及其 OFL；字体原许可和作者记录随 TeX Live 字体包保留；希腊字母正文采用此字体 |
 | `springer-template/images/Springer-logo.png` | Springer logo 兼容资源 | 版权和商标使用待核实 | 不用于成品；公开分发前确认或移除 |
 | `springer-template/images/figure.eps` | 模板示例图片 | 来源和许可待核实 | 确认或移除 |
 | `springer-template/styles/*.bst` | Springer/BibTeX 样式 | 文件声明和再分发条件待核实 | 逐个登记来源、版权和许可证 |

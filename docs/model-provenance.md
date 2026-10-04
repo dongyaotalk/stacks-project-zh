@@ -117,3 +117,35 @@ unknown            无法确认
 
 为了溯源，应保存可见的输入、输出、提示词版本、上下文 hash 和配置；不要求保存
 模型的隐藏推理或内部思维链。模型身份和翻译结果必须可审查，隐藏推理不是项目事实来源。
+
+## 6. 历史候选的工具派生合同
+
+坐标、提取包装和已有译文的机械显示修复不创建伪造的模型 run，也不改写原 run。
+该接口在独立 tooling PR 完成前只是迁移合同，不能据此直接修改事实数据。
+
+```text
+translation-data/derivations/<derivation-id>.json
+translation-data/retired/derivations/<derivation-id>/units.jsonl
+translation-data/retired/derivations/<derivation-id>/candidates.jsonl
+```
+
+每个派生记录必须声明：schema 版本、唯一派生 ID、工具 ID/版本、源 commit、
+生成时间、活跃 unit/candidate 路径、原字节快照路径及四个文件的 sha256、完整
+旧→新 unit 映射、逐单元操作与理由。操作必须可以从输入快照重放，输出字节和
+记录 hash 必须与活跃数据一致；路径只能位于本仓库声明的目录，不能引用外部文件。
+工具校验还须拒绝 ID 冲突、快照覆盖、重复派生和未经声明的模型/审批字段变化。
+
+当前候选使用 `derivation_id` 引用工具派生；原 Harness/model/run/created_at 保留为
+原始生成的身份和时间，派生时间独立记录。溯源检查先用原候选快照核对原 run 的
+unit_ids/context_hashes，再核对变换后的当前候选。不能把新坐标 hash 回写到原 run
+来绕过检查。原单位和模型输出快照保留原字节；历史 manifest 仍位于 `runs/`。
+
+工具操作的范围须明确：永久 Tag 坐标重映射、源包装/占位符重提取、根据已声明
+source/target 配对补齐双语显示，以及固定短语的脚注显示变换。自由生成或重译
+自然语言必须另建实际身份可验证的新模型 run，不能作为工具操作夹带。未批准
+术语仍为 `DECISION_REQUIRED`；模型和工具无权新增人工 approved 条目。
+
+派生不得改动来源锁、公式内容、引用指向或原始模型身份。当前数据重跑 schema、
+provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒绝沿用，
+由独立审校/替换任务处理。活跃目录只保存一个当前版本，历史快照不进入当前
+进度、渲染和权威 TM。预览必须明示工具派生，不能只显示原模型名称。

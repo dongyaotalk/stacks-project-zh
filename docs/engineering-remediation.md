@@ -144,3 +144,7 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   分支 `docs/immutable-derivations`。统一原 run/原输出不可变、工具派生须快照与重放、
   活跃目录单版本及旧人工批准不继承的合同。Schema/工具另开 Issue/PR，本次不迁移
   unit/candidate/run 数据，不将尚未实现的接口描述为现有机器能力。
+- S2 工具：Issue [#535](https://github.com/dongyaotalk/stacks-project-zh/issues/535)，
+  分支 `tool/immutable-derivations`。实现独立 Schema、原字节/Git 来源绑定、受限
+  机械重放和预览标记；17 项独立派生回归覆盖篡改、身份伪造、自由重译、路径逃逸、
+  术语伪批准和孤立/重复记录。不修改现有 unit、candidate、run 或词表。

@@ -537,6 +537,11 @@ def render_batch(
         if len(candidate_run_ids) == 1
         else f"{len(candidate_run_ids)} runs (see translation-data/runs)"
     )
+    derivation_ids = {candidate["derivation_id"] for candidate in candidates if candidate.get("derivation_id")}
+    derivation_notice = (
+        f"含 {len(derivation_ids)} 份工具派生修复记录（translation-data/derivations），模型身份仅表示原始生成；"
+        if derivation_ids else ""
+    )
     chapter_chunks: dict[str, list[str]] = {}
     chapters_with_rendered_titles: set[str] = set()
     chapter_order: list[str] = []
@@ -630,6 +635,7 @@ def render_batch(
         "\\renewcommand{\\TranslationStatus}{未经人工审校的模型候选译文}\n"
         f"\\renewcommand{{\\TranslationNotice}}{{本预览依据英文源提交 {source_commit[:12]}；"
         f"Harness={harness_id}；模型={model_id}；运行={run_summary}；"
+        f"{derivation_notice}"
         "尚未完成人工语言或数学审校，不得作为正式译本发布。}\n",
         encoding="utf-8",
     )

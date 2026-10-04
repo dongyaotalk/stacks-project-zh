@@ -121,7 +121,8 @@ unknown            无法确认
 ## 6. 历史候选的工具派生合同
 
 坐标、提取包装和已有译文的机械显示修复不创建伪造的模型 run，也不改写原 run。
-该接口在独立 tooling PR 完成前只是迁移合同，不能据此直接修改事实数据。
+机器合同位于 `schema/derivation.schema.json` 与 `stacks_zh/derivations.py`；
+`schema-check` 检查记录，`provenance-check` 检查快照、Git 原字节和重放结果。
 
 ```text
 translation-data/derivations/<derivation-id>.json
@@ -130,8 +131,11 @@ translation-data/retired/derivations/<derivation-id>/candidates.jsonl
 ```
 
 每个派生记录必须声明：schema 版本、唯一派生 ID、工具 ID/版本、源 commit、
+中文仓库的 `origin_commit`、
 生成时间、活跃 unit/candidate 路径、原字节快照路径及四个文件的 sha256、完整
-旧→新 unit 映射、逐单元操作与理由。操作必须可以从输入快照重放，输出字节和
+旧→新 unit 映射、逐单元操作与理由。输入快照还须与可达 `origin_commit` 中原活跃
+路径的 Git blob 原字节相同；原 run 也须与该 commit 的字节相同。只重算快照 hash
+不能篡改原输出。校验环境须具备对应中文 Git 历史。操作必须可以从输入快照重放，输出字节和
 记录 hash 必须与活跃数据一致；路径只能位于本仓库声明的目录，不能引用外部文件。
 工具校验还须拒绝 ID 冲突、快照覆盖、重复派生和未经声明的模型/审批字段变化。
 
@@ -144,6 +148,14 @@ unit_ids/context_hashes，再核对变换后的当前候选。不能把新坐标
 source/target 配对补齐双语显示，以及固定短语的脚注显示变换。自由生成或重译
 自然语言必须另建实际身份可验证的新模型 run，不能作为工具操作夹带。未批准
 术语仍为 `DECISION_REQUIRED`；模型和工具无权新增人工 approved 条目。
+
+当前版本只支持一层派生，原快照不能是另一份派生候选。同一活跃 batch 只能归属
+一份记录；后续多项机械修复须合并为从原始快照重放的操作清单，不能覆盖已提交
+派生记录。操作只允许修改提取字段及显示/术语元数据，模型、来源、审批、阶段和
+时间字段不能由操作改写。来源恢复后的 TeX 必须逐字相同；剥离机械双语英文插入
+与结构控制字符后中文正文须保持相同。阶段由工具重算且最高到候选结构/术语阶段。派生输出的自然语言节点不得残留
+未保护的 TeX 控制字符；历史提取缺陷必须在同一派生操作中修复。
+脚注只允许固定短语 `See Remark` → `见注` 的显示变换，不开放自由重译接口。
 
 派生不得改动来源锁、公式内容、引用指向或原始模型身份。当前数据重跑 schema、
 provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒绝沿用，

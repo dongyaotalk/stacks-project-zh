@@ -55,6 +55,39 @@ class SourceIntegrityTests(unittest.TestCase):
                 with self.assertRaisesRegex(RecordError, 'crosses'):
                     permanent_tag_mapping([unit(), proof], {'test-lemma-test': 'OWN1'})
 
+    def test_every_proof_child_inherits_the_statement_tag(self):
+        rows = [unit(), unit('tag:SECT:proof-p001', 'proof', '\\begin{proof}\n', '\n')]
+        for index, kind in enumerate(['list_item', 'display_math', 'proof_paragraph', 'paragraph']):
+            rows.append(unit(f'tag:SECT:proof-child{index}', kind, '', '\n'))
+        rows.append(unit('tag:SECT:proof-last', 'proof_paragraph', '', '\n\\end{proof}\n'))
+        mapping = permanent_tag_mapping(rows, {'test-lemma-test': 'OWN1'})
+        for row in rows:
+            self.assertEqual(mapping[row['unit_id']], row['unit_id'].replace('tag:SECT:', 'tag:OWN1:'))
+
+    def test_proof_child_scope_and_own_label_are_checked(self):
+        opening = unit('tag:SECT:proof-p001', 'proof', '\\begin{proof}\n', '\n')
+        child = unit('tag:SECT:proof-item', 'list_item', '', '\n\\end{proof}\n')
+        for field in ['chapter', 'parent_tag']:
+            with self.subTest(field=field):
+                foreign = copy.deepcopy(child)
+                foreign[field] = 'OTHER'
+                with self.assertRaisesRegex(RecordError, 'crosses'):
+                    permanent_tag_mapping([unit(), opening, foreign], {'test-lemma-test': 'OWN1'})
+        child['render']['prefix'] = '\\item\\label{item-test}\n'
+        child['parent_tag'] = 'ITEM'
+        mapping = permanent_tag_mapping([unit(), opening, child], {'test-lemma-test': 'OWN1', 'test-item-test': 'ITEM'})
+        self.assertEqual(mapping[child['unit_id']], 'tag:ITEM:proof-item')
+
+    def test_proof_wrappers_on_nonproof_nodes_open_and_close_ownership(self):
+        opening = unit('tag:SECT:proof-item', 'list_item', '\\begin{proof}\n\\item ', '\n\\end{proof}\n')
+        paragraph = unit('tag:SECT:p002', 'paragraph', '', '\n')
+        mapping = permanent_tag_mapping([unit(), opening, paragraph], {'test-lemma-test': 'OWN1'})
+        self.assertEqual(mapping[opening['unit_id']], 'tag:OWN1:proof-item')
+        self.assertEqual(mapping[paragraph['unit_id']], paragraph['unit_id'])
+        another_proof = unit('tag:SECT:proof-second', 'proof', '\\begin{proof}\n', '\n\\end{proof}\n')
+        with self.assertRaisesRegex(RecordError, 'no adjacent'):
+            permanent_tag_mapping([unit(), opening, paragraph, another_proof], {'test-lemma-test': 'OWN1'})
+
     def test_statement_wrapper_around_slogan_can_own_proof(self):
         slogan = unit('tag:OWN1:slogan', 'slogan', '\\begin{lemma}\n\\label{lemma-test}\n\\begin{slogan}\n', '\n\\end{slogan}\n')
         body = unit('tag:OWN1:statement', 'lemma', '', '\n\\end{lemma}\n')

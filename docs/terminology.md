@@ -90,3 +90,21 @@ AI 可以发现并报告未知术语、提出候选译法和生成 `unknown_term
 - 用多数模型投票代替人工决定；
 - 在普通翻译 PR 中夹带术语批准；
 - 用批准前的 `proposed` 词条作为权威 Translation Memory。
+
+## 7. 正式采用的机器检查
+
+`make decision-check` 从 `config/glossary.yml` 读取真实批准，对所选候选的
+`term_occurrences` 和 `unknown_terms` 按精确的 `source_term + target_term` 组合核验。
+revision 自报 `CLEAR`、语言/数学审校或候选把未知术语数组清空，都不能批准词条。
+候选的术语显示完整性另由来源侧检查负责；这一门禁不声称已经识别所有数学术语。
+
+为保持 Python 标准库运行，词表读取支持当前 `entries: []`、缩进一致的 YAML
+block list，以及采用 JSON 语法的完整文档/flow value。字符串可以是普通、单引号或
+JSON 双引号形式；定义/语境可用 `|`、`>` 文本块，证据可用 block list 或 JSON
+数组。每个 entry 的 `source_term`、`target_term`、`status`、`definition_or_context`
+必须是非空字符串，`evidence` 必须是非空数组。证据内容的适用语境仍由术语维护者
+核验，证据内部的 `status` 不会被当作词条批准状态。
+
+重复 entries 段、重复字段、不合法的批准状态、缺失证据和无法可靠识别的语法都
+导致检查失败。YAML tag、anchor、alias 不属于该读取合同，不能用它们隐藏批准
+字段；需要复杂表达式时使用可审查的 JSON 文档，不执行输入中的指令。

@@ -124,3 +124,17 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 - [ ] 每个 PR 都有更早的 claimed Issue，已推送且 GitHub 必需检查通过。
 
 此清单只有取得对应的实际文件、命令和 GitHub 状态证据后才能勾选。
+
+## 7. 执行记录
+
+- S0：Issue [#530](https://github.com/dongyaotalk/stacks-project-zh/issues/530)，
+  PR [#532](https://github.com/dongyaotalk/stacks-project-zh/pull/532)。计划文档完成本地
+  workflow/harvest/index/tools/schema/provenance/decision/qa-all 和当前候选整书编译；
+  98 项测试、239 个候选 batch 通过，保留已知 F6/F7/F8 后续事项。
+- S1：Issue [#531](https://github.com/dongyaotalk/stacks-project-zh/issues/531)，
+  分支 `tool/decision-gates`。实现 F3/F5 和独立回归，已通过 121 项工具测试、239 个
+  batch 的全量 QA 与当前候选整书编译；GitHub 验收随 PR 记录；
+  词表、模型输出、run manifest、reviewed 数据与英文来源均不改写。
+- F4 后续扫描：当前有 7 个 unit/candidate 的原始 TeX 控制序列不一致，涉及控制
+  空格、分组括号和图表换行。因此 S3/S4 还必须修复现存提取/包装遗漏，并以锁定
+  英文源结构核对，不能只新增针对 `%` 的检测后宣称结构保护已完成。

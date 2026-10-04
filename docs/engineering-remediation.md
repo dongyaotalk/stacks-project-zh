@@ -167,3 +167,13 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   revision run、冻结输入与完整原输出；原生成及新增修订同时披露，纯工具变换仍
   禁止自由重译。当前 turn 元数据确认 `gpt-6.1-sol`，注册 declared 身份、null
   snapshot 与不可保证重放，不虚构原 GPT-5.6 的新输出。机器实现另开 Issue。
+
+- 已集成的前置 PR：#532、#534、#536、#538、#539、#541、#544 在各自最新检查通过后，
+  按依赖顺序由维护者授权的管理员 bypass squash 合并到 main。后续分支同步 main，
+  没有重写公开历史；#539 合并前补齐证明子节点归属并通过 161 项测试。
+- 模型修订工具：Issue [#543](https://github.com/dongyaotalk/stacks-project-zh/issues/543)，
+  分支 `tool/model-corrections`。v2 重放核对完整冻结输入、新原输出及两个来源；
+  selection/review/revision 绑定完整来源 hash，预览披露复合来源。新证据保留首次
+  Git 加入字节；本次仅 Schema/工具/测试/文档，尚未产生或迁移修订 run/事实数据。
+  已通过 177 项工具测试（新增 16 项修订回归）、239 批 qa-all、全部来源/Schema/
+  决策检查及整书 render/pdf 和模板烟测；数据修复仍属后续阶段。

@@ -20,6 +20,8 @@ from .records import (
     write_jsonl,
 )
 from .schema_validation import validate_named_schema
+from .model_corrections import load_repository_corrections
+from .provenance import validate_repository_provenance
 
 
 SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -542,6 +544,29 @@ def render_batch(
         f"含 {len(derivation_ids)} 份工具派生修复记录（translation-data/derivations），模型身份仅表示原始生成；"
         if derivation_ids else ""
     )
+    correction_keys = {(candidate['model_correction_id'], candidate['unit_id'])
+                       for candidate in candidates if 'model_correction_id' in candidate}
+    correction_notice = correction_name = ''
+    if correction_keys:
+        root = lock_path.parent
+        provenance_errors = validate_repository_provenance(root)
+        if provenance_errors:
+            raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
+        corrections, correction_errors = load_repository_corrections(root)
+        if correction_errors or not correction_keys <= corrections.keys():
+            raise RecordError('render has no complete model-correction evidence')
+        raw = [corrections[key]['candidate'] for key in sorted(correction_keys)]
+        model_names = sorted({row['model_id'] for row in raw})
+        harness_names = sorted({row['harness_id'] + ' ' + row['harness_version'] for row in raw})
+        for name in [*model_names, *(row['harness_id'] for row in raw), *(row['harness_version'] for row in raw)]:
+            if not re.fullmatch(r'[A-Za-z0-9._+-]+', name):
+                raise RecordError('model-correction preview identity contains unsafe TeX characters')
+        models = ', '.join(model_names).replace('_', r'\_')
+        harnesses = ', '.join(harness_names).replace('_', r'\_')
+        correction_name = f'；复合来源修订：{models}'
+        correction_notice = (f'复合来源：原模型仅表示原始生成；修订模型={models}；'
+                             f'修订 Harness={harnesses}；修订运行={len({row["run_id"] for row in raw})}；'
+                             '完整来源见 translation-data/model-corrections；')
     chapter_chunks: dict[str, list[str]] = {}
     chapters_with_rendered_titles: set[str] = set()
     chapter_order: list[str] = []
@@ -637,12 +662,13 @@ def render_batch(
     metadata = output_dir / "metadata.tex"
     metadata.write_text(
         "% Generated from translation-data; do not edit.\n"
-        f"\\renewcommand{{\\TranslationModelName}}{{{display_name} ({model_id})}}\n"
+        f"\\renewcommand{{\\TranslationModelName}}{{{display_name} ({model_id}){correction_name}}}\n"
         "\\renewcommand{\\TranslationMaintainer}{OpenSSL}\n"
         "\\renewcommand{\\TranslationStatus}{未经人工审校的模型候选译文}\n"
         f"\\renewcommand{{\\TranslationNotice}}{{本预览依据英文源提交 {source_commit[:12]}；"
         f"Harness={harness_id}；模型={model_id}；运行={run_summary}；"
         f"{derivation_notice}"
+        f"{correction_notice}"
         "尚未完成人工语言或数学审校，不得作为正式译本发布。}\n",
         encoding="utf-8",
     )

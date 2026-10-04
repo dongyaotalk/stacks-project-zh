@@ -164,8 +164,9 @@ provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒
 
 ## 7. 独立模型修订与复合来源合同
 
-本节为新增修订合同；当前纯工具重放不支持自由重译，必须先由独立 tooling PR
-实现对应 Schema、输入/输出校验和预览披露，再应用事实数据。
+修订证据由 `schema/model-correction.schema.json` 和 `stacks_zh/model_corrections.py`
+校验，并通过现有 schema/provenance/decision/render 接口执行。纯工具 v1 仍不允许
+自由重译；只有 v2 中明确引用完整修订证据的 `model-revision` 操作允许改变自然语言。
 
 较长脚注、漏译或需要改变中文表达的术语补齐不是纯机械操作。它们使用新的
 `run_kind: revision`：实际模型身份、动态 Harness 版本、当前 source commit、
@@ -191,3 +192,33 @@ provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒
 当前新增模型登记为 `openai:gpt-6.1-sol:declared`。依据是实际 Codex turn 元数据，
 模型字段明确为 `gpt-6.1-sol`；供应商 snapshot 未暴露，登记 `snapshot: null` 和
 `replayable: false`，不虚构 owner-confirmed、后端 snapshot 或可保证重放。
+
+### 7.1 可核验文件与输入
+
+```text
+translation-data/model-corrections/<correction-id>.json
+translation-data/retired/model-corrections/<correction-id>/units.jsonl
+translation-data/retired/model-corrections/<correction-id>/candidates.jsonl
+```
+
+证据记录保存 source commit、修订 run、生成时间、完整有序 unit 列表、每个 unit
+对应的派生 ID，以及两个原字节快照的路径/hash。一份修订 run 对应一份完整证据，
+可以在同章关联多个派生批次。冻结 unit 必须与当前派生的完整 source/render/hash
+相等；新原输出的 `context.source_unit` 保存该 unit，`context.revision_input` 使用
+`kind: candidate-to-revise`、完整原 unit（`source_unit`）和完整原 `candidate`。重放
+核对两个原输入完全相等，不能把旧候选混称 approved TM，或替换为相同正文但
+不同来源的输入。原 unit 只用于解释旧候选的占位符，译文使用当前冻结 source。
+
+当前 translation、allowed_english、term_occurrences、unknown_terms、notes 全部与
+新原输出相等；model/run/time 保留原生成身份，另有 `model_correction_id`。两个
+来源分别按模型登记和 run 核验；未知身份、unknown Harness、过期源、不同上下文、
+重复/孤立输出、伪术语批准或未披露修订均失败。证据、快照和修订 run 一旦进入
+Git，其字节必须等于可达历史中的第一次加入，不能通过重算 hash 覆盖。
+
+### 7.2 正式选择与审校的来源绑定
+
+含 `model_correction_id` 的候选，其 selection、语言/数学 review 及正式 revision
+必须提供 `provenance_hash`。该 hash 覆盖完整当前候选、派生、修订证据、原 run 和
+修订 run；通过 `candidate_provenance_hash(root, candidate)` 在溯源全部通过后计算。
+正文 hash 相同也不能沿用不含完整来源绑定的旧批准。普通历史候选不要求新增字段。
+这个绑定不授予批准：术语和人工审校门禁继续独立执行。

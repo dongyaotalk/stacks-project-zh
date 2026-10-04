@@ -2,6 +2,9 @@
 
 `WORKFLOW.md` 是规范入口；本目录保存各环节细则。
 
+当前工程修复设计见 [2026-10 项目审查修复开发计划](engineering-remediation.md)，
+包含八项审查问题、实施顺序、历史溯源处理和本地/GitHub 验收合同。
+
 - `data-model.md`：翻译数据、稳定 ID、来源 hash、上下文包和记忆；
 - `translation-rules.md`：中文风格、数学语义和 LaTeX 节点规则；
 - `review-and-qa.md`：状态授权、风险分级、自动检查和人工审校；

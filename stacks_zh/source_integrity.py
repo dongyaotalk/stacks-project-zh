@@ -62,12 +62,13 @@ def permanent_tag_mapping(units: list[dict[str, Any]], tags: dict[str, str]) -> 
         legacy = LABEL_UNIT.fullmatch(old_id)
         if match is None and legacy is None:
             raise RecordError(f'{old_id}: unsupported persistent unit coordinate')
-        tag = _own_tag(unit, tags)
+        own_tag = _own_tag(unit, tags)
+        tag = own_tag
         suffix = match.group(2) if match else legacy.group(2)
         if legacy:
             tag = tag or tags.get(legacy.group(1)) or tags.get(f"{unit['chapter']}-{legacy.group(1)}")
         statement_wrapper = re.search(r'\\begin\{(lemma|definition|proposition|theorem|corollary|remark|example|exercise|situation)\}', unit['render']['prefix'])
-        if _own_tag(unit, tags) and (unit['node_kind'] in STATEMENTS or statement_wrapper):
+        if own_tag and (unit['node_kind'] in STATEMENTS or statement_wrapper):
             owner_tag = tag
             owner_scope = (unit['chapter'], unit['parent_tag'])
             owner_kind = statement_wrapper.group(1) if statement_wrapper else unit['node_kind']
@@ -76,24 +77,24 @@ def permanent_tag_mapping(units: list[dict[str, Any]], tags: dict[str, str]) -> 
         elif unit['node_kind'].endswith('_title') and unit['node_kind'] != 'environment_title':
             owner_tag = owner_kind = owner_scope = None
             statement_open = in_proof = False
-        if unit['node_kind'] in {'proof', 'environment_title'}:
-            prefix = unit['render']['prefix'].lstrip()
-            if prefix.startswith(r'\begin{proof}'):
-                if owner_tag is None:
-                    raise RecordError(f'{old_id}: proof has no adjacent labelled statement owner')
-                in_proof = True
-            if in_proof:
-                if owner_scope != (unit['chapter'], unit['parent_tag']):
-                    raise RecordError(f'{old_id}: proof crosses its owner chapter/parent Tag')
-                tag = owner_tag
-            if r'\end{proof}' in unit['render']['suffix']:
-                in_proof = False
+        # The wrapper, rather than the prose node kind, defines proof scope:
+        # lists, displays and paragraphs can start, continue or close a proof.
+        if r'\begin{proof}' in unit['render']['prefix']:
+            if owner_tag is None:
+                raise RecordError(f'{old_id}: proof has no adjacent labelled statement owner')
+            in_proof = True
+        if in_proof:
+            if owner_scope[0] != unit['chapter'] or (owner_scope[1] != unit['parent_tag'] and own_tag != unit['parent_tag']):
+                raise RecordError(f'{old_id}: proof crosses its owner chapter/parent Tag')
+            tag = own_tag or owner_tag
         elif unit['node_kind'] == 'paragraph' and not statement_open:
             owner_tag = owner_kind = owner_scope = None
         elif statement_open:
-            if owner_scope[0] != unit['chapter'] or (owner_scope[1] != unit['parent_tag'] and _own_tag(unit, tags) != unit['parent_tag']):
+            if owner_scope[0] != unit['chapter'] or (owner_scope[1] != unit['parent_tag'] and own_tag != unit['parent_tag']):
                 raise RecordError(f'{old_id}: statement child crosses its owner chapter/parent Tag')
-            tag = _own_tag(unit, tags) or owner_tag
+            tag = own_tag or owner_tag
+        if r'\end{proof}' in unit['render']['suffix']:
+            in_proof = False
         if statement_open and owner_kind and f"\\end{{{owner_kind}}}" in unit['render']['suffix']:
             statement_open = False
         mapping[old_id] = (f'tag:{tag}' + (f':{suffix}' if suffix else '')) if tag else old_id

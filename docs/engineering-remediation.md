@@ -127,6 +127,16 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- S6 编译日志门禁：Issue [#570](https://github.com/dongyaotalk/stacks-project-zh/issues/570)，
+  分支 `build/final-tex-log-gate`。最后一轮日志必须完整，无缺字、未定义引用/引用键
+  或重复标签；PDF 复制前强制执行，普通字体回退不误报。模拟零退出编译器回归
+  验证阻断及旧产物保持，CI 的 tool-test 运行这些回归但仍不完成整书 TeX 编译。
+- S4 固定短脚注：数据 PR [#565](https://github.com/dongyaotalk/stacks-project-zh/pull/565)
+  与 [#568](https://github.com/dongyaotalk/stacks-project-zh/pull/568) 分别修订 0AHM、0FWW，
+  完整保留原快照与实际模型修订溯源。两处脚注有中文正文和正确引用；整书最终
+  日志无缺字、未定义引用或重复标签。独立进度 Issue #566、#569 在合并后的 main
+  生成并核验报告，无差异，不制造空 PR。其他来源/术语数据与最终集成仍未完成。
+
 - S3 数学语境校准：Issue [#562](https://github.com/dongyaotalk/stacks-project-zh/issues/562)，
   分支 `tool/source-math-contexts`。区分赋值 set 与集合名词；FDL 普通法律/文档
   用词及两处明确普通用法以英语标题/TeX hash/逐次证据分类。splitting 的英语

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .batching import write_batch_package
+from .build_logs import validate_final_tex_log
 from .chapter_templates import initialize_chapter_templates
 from .constants import DEFAULT_LOCK_FILE, DEFAULT_RENDER_ROOT
 from .decisions import validate_repository_decisions
@@ -182,6 +183,9 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--chapter-source-dir", type=Path)
     render.add_argument("--tags-file", type=Path)
     render.add_argument("--output-dir", type=Path)
+
+    build_log = subparsers.add_parser("check-build-log", help="reject defects in a completed final TeX log")
+    build_log.add_argument("--log", required=True, type=Path)
 
     source_audit = subparsers.add_parser("audit-source", help="audit statement Tags, TeX controls and hidden footnotes")
     source_audit.add_argument("--root", type=Path, default=Path("."))
@@ -417,6 +421,14 @@ def main(argv: list[str] | None = None) -> int:
                 args.chapter_title_map,
             )
             print(f"Rendered {len(written)} file(s): {output_dir}")
+            return 0
+        if args.command == "check-build-log":
+            errors = validate_final_tex_log(args.log)
+            for error in errors:
+                print(f"ERROR: {error}", file=sys.stderr)
+            if errors:
+                return 1
+            print(f"Final TeX log: PASS ({args.log})")
             return 0
         if args.command == "audit-source":
             proposal, errors = audit_repository_source(args.root.resolve(), args.tags)

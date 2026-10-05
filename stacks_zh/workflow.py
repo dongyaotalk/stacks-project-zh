@@ -14,6 +14,7 @@ from .records import (
     load_jsonl,
     load_upstream_commit,
     restore_placeholders,
+    delimit_tex_control_word,
     sha256_value,
     stamp_unit_hashes,
     validate_records,
@@ -609,10 +610,11 @@ def render_batch(
                 f"{{Tag {tag}（待译）}}"
             )
         translated = restore_placeholders(
-            unit, candidate["translation"], placeholder_overrides
+            unit, candidate["translation"], placeholder_overrides,
+            delimit_commands=True,
         )
         render = unit["render"]
-        chapter_chunks[chapter].append(render["prefix"] + translated + render["suffix"])
+        chapter_chunks[chapter].append(delimit_tex_control_word(render["prefix"]) + translated + render["suffix"])
 
     chapter_titles: dict[str, tuple[str, str]] = {}
     if chapter_manifest_path is not None:

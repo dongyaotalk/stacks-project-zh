@@ -127,6 +127,12 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- S3/F4 渲染边界：Issue [#551](https://github.com/dongyaotalk/stacks-project-zh/issues/551)，
+  分支 `tool/tex-command-boundaries`。003G 的冻结实际修订通过结构/术语/溯源，
+  但编译发现 `\item` 与中文拼成新命令。恢复时补充分隔，由 TeX 吞掉空白；
+  默认源文恢复和派生 source TeX 比对保持原字节。数据在 Issue #549 独立保存，
+  本工具修复不改写模型输出，也不把未通过整书验收的数据提交或合并。
+
 - S3 显示边界：Issue [#548](https://github.com/dongyaotalk/stacks-project-zh/issues/548)，
   分支 `tool/term-format-display`。003G 的垂直/水平复合跨斜体边界，需要在显示
   核对中忽略字体包装，避免把单元专用 token 塞进词条；公式、引用、结构和

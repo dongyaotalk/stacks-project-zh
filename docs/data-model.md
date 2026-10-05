@@ -154,6 +154,15 @@ prefix 以 opening bracket 结束，source_text 从英文标题开始，其后�
 
 ## 3. 来源 hash
 
+占位符的原 payload 和默认 `restore_placeholders` 恢复结果保持原字节。实际渲染
+使用 `delimit_commands=True` 时，控制词与后续正文分隔；对历史 `SPACE_####`
+角色中恰为单个反斜线的 payload，其后若没有已有空白，补一个空白构成 TeX
+控制空格。这保证紧接的中文或字体组不会被吞入命令。已有空白不重复补充，
+原 source_text 必须在 token 后提供 TeX ASCII 空白（space/tab/CR/LF）作为证据，
+否则渲染报错；译文后已有空白也仅按这一集合判断，全角空白不能冒充词法分隔。
+完整控制空格、细空格、双反斜线及其他角色不套用该规则；它不改变源文、数学、
+记录或 hash，也不许可任意未知控制序列。渲染产物不能回写为事实数据。
+
 每个单元至少记录三类 hash：
 
 - `source_text_hash`：规范化自然语言文本；

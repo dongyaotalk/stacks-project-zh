@@ -920,6 +920,30 @@ class RenderTests(unittest.TestCase):
             self.assertIn(output / "metadata.tex", written)
             self.assertTrue(json.loads(units_path.read_text(encoding="utf-8")))
 
+    def test_render_legacy_spaces_before_chinese_and_font_group(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lock = root / 'upstream.lock'
+            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n')
+            unit = make_batch_unit('tag:TEST:p001')
+            unit['source_text'] = ('resp.<SPACE_0001> inverse and resp.<SPACE_0002> '
+                                   '<TEXTITOPEN_0001>directed<TEXTITCLOSE_0001>.')
+            unit['placeholders'] = {'SPACE_0001': '\\', 'SPACE_0002': '\\',
+                                    'TEXTITOPEN_0001': '{\\it ', 'TEXTITCLOSE_0001': '}'}
+            unit = stamp_unit_hashes(unit)
+            candidate = make_batch_candidate(unit)
+            candidate['translation'] = ('分别<SPACE_0001>逆系统及分别<SPACE_0002>'
+                                        '<TEXTITOPEN_0001>有向系统<TEXTITCLOSE_0001>。')
+            units_path, candidates_path = root / 'units.jsonl', root / 'candidates.jsonl'
+            write_jsonl(units_path, [unit])
+            write_jsonl(candidates_path, [candidate])
+            frozen = [p.read_bytes() for p in (units_path, candidates_path)]
+            output = root / 'rendered'
+            render_batch(units_path, candidates_path, lock, output, 'test', '测试候选')
+            chapter = (output / 'chapters/test.tex').read_text()
+            self.assertIn('分别\\ 逆系统及分别\\ {\\it 有向系统}。', chapter)
+            self.assertEqual([p.read_bytes() for p in (units_path, candidates_path)], frozen)
+
     def test_render_combines_multiple_batches_and_scaffolds_partial_chapters(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

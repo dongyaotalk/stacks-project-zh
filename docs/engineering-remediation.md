@@ -127,6 +127,18 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 控制空格渲染边界：Issue [#589](https://github.com/dongyaotalk/stacks-project-zh/issues/589)，
+  分支 `tool/legacy-control-space-boundaries`。002Z 完整实际修订的首次编译把
+  legacy SPACE 的裸反斜线与中文连成未定义命令，数据未提交；完整新 run/原输出
+  已冻结并保存在恢复快照，另开工具修复。渲染仅对 `SPACE_####` 的裸反斜线补
+  TeX 控制空格，先核对 source_text 中真实 ASCII 空白证据；证据缺失直接报错，
+  不把误标的未知命令改成空格。已有 TeX 空白不重复，全角空白不冒充词法分隔，
+  其他角色/控制序列保持。默认源文恢复、payload、所有 hash 与原输出不变。
+  回归先复现中文/ASCII/字体组/数学边界错误，再核验修复、源证据阻断和正式
+  renderer 集成；已核对完整冻结 002Z 原输出的两处控制空格及所有当前来源证据。
+  工具不修改真实数据，Issue #588 须在工具合并后恢复原输出并重跑完整验收；
+  F4/S4/S5/S7 与其他批次继续处理。
+
 - 0AHM 后续标题修订：Issue [#585](https://github.com/dongyaotalk/stacks-project-zh/issues/585)，
   分支 `translate/categories/0ahm-title/openai-gpt-6-1-sol`。首次真实使用 §8 归档合同，
   保存前一派生 `audit-categories-0ahm-20261005` 的完整七个输出原字节、原记录

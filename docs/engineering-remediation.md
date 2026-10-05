@@ -127,6 +127,20 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 001P 实际来源/标题修订：Issue [#582](https://github.com/dongyaotalk/stacks-project-zh/issues/582)，
+  分支 `translate/categories/001p/openai-gpt-6-1-sol`。保留三个旧 unit/candidate
+  原字节及 legacy run，暴露 Yoneda lemma 标题并双语翻译；证明通过锁定 Git
+  `categories.tex` / `lemma-yoneda` / Tag 001P / proof index 1 的不可变恢复证据
+  保留七处内联公式，补回旧提取丢失的 `$s$` 和原词/公式关系。其 source TeX
+  恰等于完整 Git 片段，陈述/display 的 source TeX 不变，三个永久 ID 不变。
+  实际 GPT-6.1-sol/xhigh revision 冻结完整新 source 与确切旧输入，动态 Harness
+  为 0.160.0，原输出全部五字段由 v2 重放消费；原模型仅表示原生成，预览披露
+  新修订和来源恢复。10 次所辖来源术语出现全部匹配，未批准译法只报告待决。
+  全库独立审计仍有 3091 个 term 问题/924 个不合格候选、6486 次要求出现；
+  source 101 问题（36 陈述 Tag、11 raw TeX pairs、1 长脚注、1 隐藏标题）；
+  proof 187 组/291 单元为 166 匹配、21 差异、0 未支持。本范围已清零，其他数据
+  及 S4/S5/S7 继续处理，不据旧 QA 成功宣称全库验收或人工批准。
+
 - 锁定来源恢复工具：Issue [#580](https://github.com/dongyaotalk/stacks-project-zh/issues/580)，
   分支 `tool/locked-source-restoration`。新增不可变来源证据、锁定 English Git
   selector、简单单单元证明的确定性内联数学提取，以及 v2/v3 的受限恢复例外；

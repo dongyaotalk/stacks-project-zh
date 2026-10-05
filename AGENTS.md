@@ -92,6 +92,14 @@
   revision; retain the defective original input. Other operations still require
   source TeX equality. Declare concrete data in its own translation task.
   Never repair missing source math only in Chinese or relax the normal guard.
+- Complete source-container restoration and changes to historical segmentation
+  are specified separately in `docs/model-provenance.md` section 10 and
+  `docs/source-container-restoration.md`. This is a development contract pending
+  its own Schema/tool implementation and acceptance. Do not use it in fact data
+  before that implementation is merged. Existing v1/v2/v3 and section 9 retain
+  their current restrictions. Planned v4 must freeze the full previous batch,
+  verify every old/new group and locked-Git container, retain all ancestry, and
+  consume a complete actual model revision for every new output unit.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch
   protection, releases, or pushed history unless the task explicitly authorizes

@@ -127,6 +127,21 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 完整容器恢复与分组历史合同：Issue
+  [#603](https://github.com/dongyaotalk/stacks-project-zh/issues/603)，分支
+  `docs/source-container-restoration-contract`。本任务基线 main 为
+  `6a5c6c817d9d2ab7e82d900babcef3fc747adb82`；最近相邻 09WN/04AS 与 04AX/04AY
+  数据修订及独立进度复核已合并/完成。当前仍有861个术语问题候选、76个坐标、
+  96条source诊断和21组proof差异，原八项总验收未完成。
+  现有§9只支持单单元简单证明，无法采用全库库存中的完整定义/列表及分段proof。
+  先在 `docs/source-container-restoration.md` 写明锁定Git完整容器、原字节证据、
+  旧新多对多分组、全部祖先历史、真实完整模型修订、审批绑定和失败回归，再另开
+  Schema/工具任务实现v4。当前版本与数据不变，未实现前禁止写真实v4记录；
+  具体数据仍另开任务，不能用更小的可通过范围代替F1–F8、S4/S5/S7的全量目标。
+  本次六份规范/开发文档范围验收通过：304项既有工具测试、239batch QA、117章
+  progress/plan和全部适用来源/Schema/溯源门禁成功，当前通道459页整书最终日志
+  PASS；Schema/工具/事实尚未按新合同改变，完整容器采用留待第2/3步实现。
+
 - 当前译文来源对应与统一修订队列：Issue
   [#595](https://github.com/dongyaotalk/stacks-project-zh/issues/595)，分支
   `tool/source-alignment-repair-queue`。先写 `docs/source-alignment.md`，再实现只读

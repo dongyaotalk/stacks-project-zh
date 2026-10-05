@@ -152,6 +152,14 @@ prefix 以 opening bracket 结束，source_text 从英文标题开始，其后�
 操作仍要求新旧 source TeX 相等。合同见 `docs/model-provenance.md` §9。旧缺陷输入
 保持原字节，新的受保护英文输入由实际新模型修订完整冻结，不冒用旧 run 身份。
 
+完整语义容器的来源恢复及旧分段合并/拆分使用另行规划的 v4 合同，见
+`docs/model-provenance.md` §10 与 `source-container-restoration.md`。v1/v2/v3 的一对一
+映射和现有 Schema 不变；新合同的 Schema/工具合并验收前不能写入 v4 事实。
+后续 v4 用显式旧新分组覆盖完整上一 batch，每个旧单元与新单元各属于唯一分组，
+完整 Git 容器逐字验证且每个新单元有实际模型修订；所有旧 run、原输出及祖先归档
+保留。单元数变化须对应可验证的语义边界和完整原文覆盖，进度只统计新的活跃事实，
+不得通过归档未修单元、静默换 ID 或重复候选来降低待办。
+
 ## 3. 来源 hash
 
 占位符的原 payload 和默认 `restore_placeholders` 恢复结果保持原字节。实际渲染

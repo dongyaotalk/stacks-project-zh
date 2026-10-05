@@ -13,7 +13,8 @@ from .records import (
     stamp_unit_hashes, validate_records, PLACEHOLDER_TOKEN_RE,
 )
 from .schema_validation import validate_named_schema
-from .model_corrections import load_repository_corrections
+from .model_corrections import load_repository_corrections, _first_addition_is_immutable
+from .derivation_archives import load_derivation_archives
 
 TOOL_ID = "stacks-zh-derive"
 TOOL_VERSION = "1"
@@ -88,19 +89,30 @@ def _remap(value: Any, mapping: dict[str, str]) -> Any:
 def replay_derivation(
     record: dict[str, Any], units: list[dict[str, Any]], candidates: list[dict[str, Any]],
     corrections: dict[tuple[str, str], dict[str, Any]] | None = None,
+    previous_outputs: tuple[list[dict[str, Any]], list[dict[str, Any]]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Replay explicit corrections without mutating origin rows or run facts."""
     errors = validate_named_schema(record, "derivation.schema.json", "derivation")
     if errors:
         raise DerivationError("\n".join(errors))
-    if record["tool"]["id"] != TOOL_ID or record["tool"]["version"] not in {TOOL_VERSION, "2"}:
+    version = record["tool"]["version"]
+    if record["tool"]["id"] != TOOL_ID or version not in {TOOL_VERSION, "2", "3"}:
         raise DerivationError("unsupported derivation tool/version")
     units = [clean(row) for row in units]
     candidates = [clean(row) for row in candidates]
     ids = [row["unit_id"] for row in units]
     if len(ids) != len(set(ids)) or [row["unit_id"] for row in candidates] != ids:
         raise DerivationError("origin unit/candidate IDs must be unique and ordered equally")
-    if any("derivation_id" in row or "model_correction_id" in row for row in candidates):
+    if version == "3":
+        previous = record.get("previous_derivation_id")
+        if (not previous or previous == record["derivation_id"] or previous_outputs is None
+                or units != [clean(row) for row in previous_outputs[0]]
+                or candidates != [clean(row) for row in previous_outputs[1]]
+                or any(row.get("derivation_id") != previous for row in candidates)):
+            raise DerivationError("v3 requires exact validated previous derived output")
+    elif record.get("previous_derivation_id") or previous_outputs is not None:
+        raise DerivationError("v1/v2 cannot declare a previous derivation")
+    elif any("derivation_id" in row or "model_correction_id" in row for row in candidates):
         raise DerivationError("origin snapshot must contain raw model output, not another derivation")
     if any(row["source_commit"] != record["source_commit"] for row in units + candidates):
         raise DerivationError("derivation source_commit differs from origin")
@@ -119,14 +131,18 @@ def replay_derivation(
             raise DerivationError("operation changes immutable identity, status or approval fields")
         if bool(op.get("model_correction_id")) != ("model-revision" in op["kinds"]):
             raise DerivationError("model revision needs both a declared operation and correction ID")
-        if op.get("model_correction_id") and record["tool"]["version"] != "2":
-            raise DerivationError("model revision requires derivation tool version 2")
+        if op.get("model_correction_id") and version not in {"2", "3"}:
+            raise DerivationError("model revision requires derivation tool version 2 or 3")
         if mapping[old_id] != old_id and "coordinates" not in op["kinds"]:
             raise DerivationError("coordinate change lacks a declared coordinate operation")
         if op["unit_updates"] and not set(op["kinds"]) & {"protected-extraction", "footnote-display"}:
             raise DerivationError("source extraction change lacks a declared operation")
         if op["candidate_updates"] and not set(op["kinds"]) & {"protected-extraction", "term-display", "footnote-display", "model-revision"}:
             raise DerivationError("candidate display change lacks a declared operation")
+    if version == "3" and (set(operations) != set(ids) or any(
+            not operations[old_id].get("model_correction_id")
+            or set(operations[old_id]["candidate_updates"]) != CANDIDATE_FIELDS for old_id in ids)):
+        raise DerivationError("v3 requires a complete actual model revision for every previous unit")
     if any(mapping[old_id] != old_id and old_id not in operations for old_id in ids):
         raise DerivationError("coordinate change has no operation/reason")
     new_units, new_candidates = [], []
@@ -189,80 +205,136 @@ def replay_derivation(
 def load_repository_derivations(
     root: Path, corrections: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> tuple[dict[tuple[str, str], dict[str, Any]], list[str]]:
-    """Return original candidates for run validation after checking every replay."""
-    origins: dict[tuple[str, str], dict[str, Any]] = {}
-    errors: list[str] = []
+    """Validate every historical replay and return ultimate origins of leaves."""
+    origins, errors = {}, []
     if corrections is None:
         corrections, correction_errors = load_repository_corrections(root)
         errors.extend(correction_errors)
-    used_corrections: set[tuple[str, str]] = set()
-    seen_outputs: set[str] = set()
-    seen_snapshots: set[str] = set()
+    archives, archive_errors = load_derivation_archives(root)
+    errors.extend(archive_errors)
+    records = {}
     for path in sorted((root / "translation-data/derivations").glob("*.json")):
         try:
             record = json.loads(path.read_text(encoding="utf-8"))
             schema_errors = validate_named_schema(record, "derivation.schema.json", str(path))
             if schema_errors:
                 raise DerivationError("\n".join(schema_errors))
-            derivation_id = record["derivation_id"]
-            if path.stem != derivation_id:
-                raise DerivationError("derivation filename differs from ID")
-            input_pattern = rf"translation-data/retired/derivations/{re.escape(derivation_id)}/(?:units|candidates)\.jsonl"
-            entries = record["files"]
-            resolved = {}
-            for key, pattern in (
-                ("input_units", input_pattern), ("input_candidates", input_pattern),
-                ("output_units", r"translation-data/units/[A-Za-z0-9._-]+\.jsonl"),
-                ("output_candidates", r"translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl"),
-            ):
-                entry = entries[key]
-                resolved[key] = _path(root, entry["path"], pattern)
-                if byte_hash(resolved[key].read_bytes()) != entry["hash"]:
-                    raise DerivationError(f"{key}: file hash mismatch")
+            if path.stem != record["derivation_id"] or ".." in path.stem:
+                raise DerivationError("derivation filename differs from ID or is unsafe")
+            _path(root, path.relative_to(root).as_posix(), r"translation-data/derivations/[A-Za-z0-9._-]+\.json")
+            _first_addition_is_immutable(root, path)
+            records[path.stem] = record
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors.append(f"{path}: {exc}")
+    used_corrections = set()
+    seen_snapshots, seen_outputs = set(), set()
+    cache, visiting, failed = {}, set(), set()
+
+    def visit(identifier):
+        if identifier in cache:
+            return cache[identifier]
+        if identifier in visiting:
+            raise DerivationError("cyclic derivation history")
+        if identifier in failed or identifier not in records:
+            raise DerivationError("derivation has no valid predecessor record")
+        visiting.add(identifier)
+        record = records[identifier]
+        try:
+            entries, resolved = record["files"], {}
+            input_pattern = rf"translation-data/retired/derivations/{re.escape(identifier)}/(?:units|candidates)\.jsonl"
+            for role in ("input_units", "input_candidates"):
+                entry = entries[role]
+                resolved[role] = _path(root, entry["path"], input_pattern)
+                if byte_hash(resolved[role].read_bytes()) != entry["hash"]:
+                    raise DerivationError(f"{role}: file hash mismatch")
+                _first_addition_is_immutable(root, resolved[role])
+                if entry["path"] in seen_snapshots:
+                    raise DerivationError("snapshot belongs to multiple derivations")
+                seen_snapshots.add(entry["path"])
             if resolved["input_units"].name != "units.jsonl" or resolved["input_candidates"].name != "candidates.jsonl":
                 raise DerivationError("snapshot roles are reversed")
-            if resolved["output_units"].name != resolved["output_candidates"].name:
+            for role, pattern in [("output_units", r"translation-data/units/[A-Za-z0-9._-]+\.jsonl"),
+                                  ("output_candidates", r"translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl")]:
+                logical = _path(root, entries[role]["path"], pattern)
+                if identifier in archives:
+                    resolved[role] = archives[identifier]["outputs"][role]
+                    seen_snapshots.add(resolved[role].relative_to(root).as_posix())
+                else:
+                    resolved[role] = logical
+                    if entries[role]["path"] in seen_outputs:
+                        raise DerivationError("active file belongs to multiple derivations")
+                    seen_outputs.add(entries[role]["path"])
+                if byte_hash(resolved[role].read_bytes()) != entries[role]["hash"]:
+                    raise DerivationError(f"{role}: file hash mismatch")
+            if Path(entries["output_units"]["path"]).name != Path(entries["output_candidates"]["path"]).name:
                 raise DerivationError("active unit/candidate batch names differ")
-            for key in ("output_units", "output_candidates"):
-                value = entries[key]["path"]
-                if value in seen_outputs:
-                    raise DerivationError("active file belongs to multiple derivations")
-                seen_outputs.add(value)
-            for key in ("input_units", "input_candidates"):
-                value = entries[key]["path"]
-                if value in seen_snapshots:
-                    raise DerivationError("snapshot belongs to multiple derivations")
-                seen_snapshots.add(value)
             units = load_jsonl(resolved["input_units"])
-            raw_candidates = load_jsonl(resolved["input_candidates"])
-            for input_role, output_role in (("input_units", "output_units"), ("input_candidates", "output_candidates")):
+            candidates = load_jsonl(resolved["input_candidates"])
+            previous_outputs = parent_origins = None
+            if record["tool"]["version"] == "3":
+                previous = record.get("previous_derivation_id")
+                if previous not in archives:
+                    raise DerivationError("v3 predecessor has no validated archive")
+                archive = archives[previous]["manifest"]
+                if archive["successor_derivation_id"] != identifier or archive["origin_commit"] != record["origin_commit"]:
+                    raise DerivationError("archive has a different successor/origin commit")
+                parent = records.get(previous)
+                if parent is None or any(parent["files"][role]["path"] != entries[role]["path"] for role in ("output_units", "output_candidates")):
+                    raise DerivationError("v3 must replace the same complete logical batch")
+                parent_units, parent_candidates, parent_origins = visit(previous)
+                previous_outputs = (parent_units, parent_candidates)
+            for input_role, output_role in [("input_units", "output_units"), ("input_candidates", "output_candidates")]:
                 if resolved[input_role].read_bytes() != _git_origin_bytes(root, record["origin_commit"], entries[output_role]["path"]):
                     raise DerivationError(f"{input_role}: snapshot differs from original Git bytes")
-            for run_id in {candidate.get("run_id") for candidate in raw_candidates}:
+            if parent_origins is None:
+                raw_origins = {row["unit_id"]: clean(row) for row in candidates}
+            else:
+                raw_origins = parent_origins
+            for run_id in {candidate.get("run_id") for candidate in raw_origins.values()}:
                 if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", run_id) or ".." in run_id:
                     raise DerivationError("origin candidate has invalid run ID")
                 run_path = f"translation-data/runs/{run_id}.json"
                 if (root / run_path).read_bytes() != _git_origin_bytes(root, record["origin_commit"], run_path):
                     raise DerivationError(f"{run_path}: original run bytes have changed")
-            derived_units, derived_candidates = replay_derivation(record, units, raw_candidates, corrections)
-            for key, rows in (("output_units", derived_units), ("output_candidates", derived_candidates)):
-                if jsonl_bytes(rows) != resolved[key].read_bytes():
-                    raise DerivationError(f"{key}: active output does not match replay")
-            for raw, derived in zip(raw_candidates, derived_candidates, strict=True):
-                key = (entries["output_candidates"]["path"], derived["unit_id"])
-                origins[key] = clean(raw)
-                if derived.get("model_correction_id"):
-                    correction_key = (derived["model_correction_id"], derived["unit_id"])
-                    if correction_key in used_corrections:
+            output_units, output_candidates = replay_derivation(record, units, candidates, corrections, previous_outputs)
+            for role, rows in [("output_units", output_units), ("output_candidates", output_candidates)]:
+                if jsonl_bytes(rows) != resolved[role].read_bytes():
+                    raise DerivationError(f"{role}: active output does not match replay")
+            mapped_origins = {}
+            for previous_candidate, output in zip(candidates, output_candidates, strict=True):
+                mapped_origins[output["unit_id"]] = raw_origins[previous_candidate["unit_id"]]
+                if output.get("model_correction_id"):
+                    key = (output["model_correction_id"], output["unit_id"])
+                    if key in used_corrections:
                         raise DerivationError("frozen model correction is applied more than once")
-                    used_corrections.add(correction_key)
+                    used_corrections.add(key)
+            result = output_units, output_candidates, mapped_origins
+            cache[identifier] = result
+            return result
+        except (OSError, ValueError, KeyError, TypeError):
+            failed.add(identifier)
+            raise
+        finally:
+            visiting.remove(identifier)
+
+    for identifier in records:
+        try:
+            units, candidates, raw_origins = visit(identifier)
+            if identifier not in archives:
+                for candidate in candidates:
+                    key = (records[identifier]["files"]["output_candidates"]["path"], candidate["unit_id"])
+                    origins[key] = clean(raw_origins[candidate["unit_id"]])
         except (OSError, ValueError, KeyError, TypeError) as exc:
-            errors.append(f"{path}: {exc}")
+            errors.append(f"translation-data/derivations/{identifier}.json: {exc}")
+    for prior, entry in archives.items():
+        successor = entry["manifest"]["successor_derivation_id"]
+        if prior not in cache or successor not in cache or records[successor].get("previous_derivation_id") != prior:
+            errors.append(f"archive {prior}: missing valid direct successor/replay")
     for path in sorted((root / "translation-data/retired/derivations").glob("*/*.jsonl")):
         if path.relative_to(root).as_posix() not in seen_snapshots:
             errors.append(f"{path}: orphaned raw derivation snapshot")
-    for correction_key in corrections.keys() - used_corrections:
-        errors.append(f"model correction {correction_key}: frozen output has no active derived candidate")
+    for key in corrections.keys() - used_corrections:
+        errors.append(f"model correction {key}: frozen output has no active derived candidate or validated historical replay")
     for path in sorted((root / "translation-data/candidates").glob("*/*.jsonl")):
         try:
             for row in load_jsonl(path):

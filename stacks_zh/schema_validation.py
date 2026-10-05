@@ -76,6 +76,8 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/candidates/*/*.jsonl", "candidate.schema.json"),
         ("translation-data/retired/derivations/*/units.jsonl", "unit.schema.json"),
         ("translation-data/retired/derivations/*/candidates.jsonl", "candidate.schema.json"),
+        ("translation-data/retired/derivations/*/output-units.jsonl", "unit.schema.json"),
+        ("translation-data/retired/derivations/*/output-candidates.jsonl", "candidate.schema.json"),
         ("translation-data/retired/model-corrections/*/units.jsonl", "unit.schema.json"),
         ("translation-data/retired/model-corrections/*/candidates.jsonl", "candidate.schema.json"),
     )
@@ -85,6 +87,7 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/chapter-templates/*.json", "chapter-template.schema.json"),
         ("translation-data/runs/*.json", "run-manifest.schema.json"),
         ("translation-data/derivations/*.json", "derivation.schema.json"),
+        ("translation-data/derivation-archives/*.json", "derivation-archive.schema.json"),
         ("translation-data/model-corrections/*.json", "model-correction.schema.json"),
         ("translation-data/selections/*.json", "selection.schema.json"),
         ("translation-data/reviewed/**/*.json", "translation-revision.schema.json"),

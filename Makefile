@@ -92,6 +92,8 @@ WORKFLOW_FILES := \
 	schema/chapter-template.schema.json \
 	schema/translation-priorities.schema.json \
 	schema/candidate.schema.json \
+	schema/derivation.schema.json \
+	schema/derivation-archive.schema.json \
 	schema/review.schema.json \
 	schema/run-manifest.schema.json \
 	schema/selection.schema.json \
@@ -132,9 +134,11 @@ WORKFLOW_FILES := \
 	stacks_zh/upstream.py \
 	stacks_zh/batching.py \
 	stacks_zh/build_logs.py \
+	stacks_zh/derivation_archives.py \
 	stacks_zh/workflow.py \
 	tests/test_batching.py \
 	tests/test_build_logs.py \
+	tests/test_derivation_archives.py \
 	tests/test_planning.py \
 	upstream-index/README.md \
 	translation-data/chapter-templates/README.md

@@ -127,6 +127,13 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 后续修订工具：Issue [#574](https://github.com/dongyaotalk/stacks-project-zh/issues/574)，
+  分支 `tool/derivation-archives`。归档绑定前一记录、Git 活跃输出和确定性重放；
+  v3 完整替换上一 batch，逐单元要求新的实际模型修订，保留原始模型 origin。
+  来源 hash 与预览包含全部历史模型修订，Schema 覆盖历史输出，旧证据首次加入
+  Git 后不可改写。回归仅使用 synthetic Git Fixture，未创建真实归档或修改候选。
+  命名标题提取与具体数据另开任务，S4/S5 及八项最终验收仍未完成。
+
 - 后续修订规范：Issue [#572](https://github.com/dongyaotalk/stacks-project-zh/issues/572)，
   分支 `docs/revision-archive-provenance`。核对发现 001P 的 Yoneda lemma 与 0AHQ 的
   Adjoint functor theorem 仍在命名环境包装内。已派生 0AHM 不能回写冻结输出或

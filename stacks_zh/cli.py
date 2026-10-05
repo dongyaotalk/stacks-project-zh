@@ -21,6 +21,7 @@ from .planning import (
 from .progress import update_progress_report
 from .records import RecordError
 from .extraction import write_inventory
+from .source_alignment import write_alignment
 from .source_integrity import audit_repository_source, require_audit_output
 from .source_terms import audit_repository_terms
 from .source_reextractions import audit_repository_proofs
@@ -58,6 +59,15 @@ def build_parser() -> argparse.ArgumentParser:
     extract.add_argument("--chapter", action="append")
     extract.add_argument("--check", action="store_true")
     extract.add_argument("--require-ready", action="store_true")
+
+    alignment = subparsers.add_parser(
+        "source-alignment", help="align current units with locked source and prepare a repair queue"
+    )
+    alignment.add_argument("--root", type=Path, default=Path("."))
+    alignment.add_argument("--harvest", required=True, type=Path)
+    alignment.add_argument("--inventory", type=Path, default=Path("source-ir/extraction"))
+    alignment.add_argument("--output", type=Path, default=Path("build/source-alignment"))
+    alignment.add_argument("--check", action="store_true")
 
     init_chapters = subparsers.add_parser(
         "init-chapters",
@@ -312,6 +322,16 @@ def main(argv: list[str] | None = None) -> int:
             if args.require_ready and not inventory['translation_ready']:
                 print("ERROR: source inventory still contains blockers or unavailable chapters", file=sys.stderr)
                 return 1
+            return 0
+        if args.command == "source-alignment":
+            root = args.root.resolve()
+            inventory = args.inventory if args.inventory.is_absolute() else root / args.inventory
+            output = args.output if args.output.is_absolute() else root / args.output
+            report = write_alignment(root, args.harvest.resolve(), inventory, output, check=args.check)
+            print(f"Source alignment: {report['unit_count']} current units in {report['batch_count']} batches; "
+                  f"{json.dumps(report['match_counts'], sort_keys=True)}; "
+                  f"{report['term_candidate_failures']} term candidate failures; "
+                  f"{report['proof_mismatches']} proof mismatches. Adopted: false. Repairs complete: false.")
             return 0
         if args.command == "init-chapters":
             root = args.root.resolve()

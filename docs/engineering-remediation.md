@@ -127,6 +127,22 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 当前译文来源对应与统一修订队列：Issue
+  [#595](https://github.com/dongyaotalk/stacks-project-zh/issues/595)，分支
+  `tool/source-alignment-repair-queue`。先写 `docs/source-alignment.md`，再实现只读
+  对应和集中清单。全库库存保持锁定英文来源；当前239batch/1480unit按真实
+  owner/proof链限定、唯一连续token定位，数学、网址、引用键和literal按原字节。
+  当前文件/审计政策hash、来源byte span、真实Tag提案和三份原审计集中保存，
+  不改写任何事实、历史run或来源恢复合同。对应1个BYTE_EXACT、1209个
+  PRESENTATION_EQUIVALENT、267个SOURCE_DIFFERENCE、3个AMBIGUOUS；79个坐标、
+  907个坏术语候选/3027条术语诊断、99条来源诊断和21组proof差异均保留。
+  proof差异14组可作排版/已核实别名定位、7组仍有严格来源差异，全部原mismatch
+  与节点/正文diff仍保留；工具成功不表示来源修复、译文修订或人工审校完成。
+  独立synthetic回归验证owner/重复/顺序、多proof与split链、保护参数、缓存和
+  快照篡改、安全输出及确定性check；本任务不创建实际模型run或授予词条批准。
+  完整239batch/1480unit清单生成及check通过，三份原审计全部残项保持可追踪；
+  当前通道457页整书和12页模板编译通过，最终日志门禁通过。
+
 - 全库通用来源抽取：Issue [#592](https://github.com/dongyaotalk/stacks-project-zh/issues/592)，
   分支 `tool/universal-source-extractor`。按用户要求先集中准备来源与问题库存，新增
   `extract-all`/确定性 check；默认枚举锁定 Git 的全部 117 章，产物只写 ignored

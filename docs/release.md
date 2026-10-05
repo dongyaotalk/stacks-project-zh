@@ -54,6 +54,11 @@ zh-2026.09.r1-stacks-a04446e
 - 许可证和非官方翻译声明完整；
 - release manifest 与产物 hash 已生成。
 
+`make pdf` 在最后一轮 TeX 结束后验证完整 log，缺字、未定义引用/引用键或重复
+标签均使构建失败并阻止复制产物，不能仅凭引擎退出码或已有 PDF 声称通过。
+`make build-log-check MODEL=<lane>` 可单独复查现有日志；它不验证修订或文件
+新鲜度，不替代本次构建、视觉检查、人工审校及上述发布门禁。
+
 ## 4. Release manifest
 
 每个正式产物应生成机器可读 manifest，至少包含：

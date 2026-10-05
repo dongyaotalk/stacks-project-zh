@@ -131,8 +131,10 @@ WORKFLOW_FILES := \
 	stacks_zh/schema_validation.py \
 	stacks_zh/upstream.py \
 	stacks_zh/batching.py \
+	stacks_zh/build_logs.py \
 	stacks_zh/workflow.py \
 	tests/test_batching.py \
+	tests/test_build_logs.py \
 	tests/test_planning.py \
 	upstream-index/README.md \
 	translation-data/chapter-templates/README.md
@@ -193,7 +195,7 @@ LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
 	-output-directory="$(ABS_BUILD_DIR)" -jobname="$(JOBNAME)" \
 	"\def\TranslationModel{$(MODEL)}\def\StacksSourceRevision{$(SOURCE_REVISION)}\def\StacksSourceDate{$(SOURCE_DATE)}\input{$(MAIN)}"
 
-.PHONY: all pdf template check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all qa-batch render render-batch batch-pack assemble-batch validate-batch validate-render validate-model list-models help clean distclean
+.PHONY: all pdf template check build-log-check repo-setup workflow-check harvest-check upstream-index-check chapter-template-check init-chapters progress progress-check plan plan-check next-task tool-test schema-check provenance-check decision-check harness-version harness-check upstream-diff qa qa-all qa-batch render render-batch batch-pack assemble-batch validate-batch validate-render validate-model list-models help clean distclean
 
 all: pdf
 
@@ -212,8 +214,12 @@ pdf: check
 	fi
 	$(LATEX_COMMAND)
 	$(LATEX_COMMAND)
+	$(PYTHON) stacks_zh.py check-build-log --log "$(BUILD_DIR)/$(JOBNAME).log"
 	cp "$(PDF)" "$(OUTPUT_PDF)"
 	@printf 'Built %s\n' "$(OUTPUT_PDF)"
+
+build-log-check: validate-model
+	$(PYTHON) stacks_zh.py check-build-log --log "$(BUILD_DIR)/$(JOBNAME).log"
 
 # Backward-compatible, deterministic smoke-test target.
 template:
@@ -474,6 +480,7 @@ help:
 	@printf '%s\n' \
 		'make repo-setup                  Configure repository-local Git rules' \
 		'make workflow-check              Verify required workflow policy files' \
+		'make build-log-check MODEL=<lane>  Check the completed final TeX log' \
 		'make harvest-check              Verify harvest remote, revision, and cleanliness' \
 		'make upstream-index-check       Verify locked Tag/chapter index and sync history' \
 		'make progress                   Refresh README and per-chapter translation progress' \

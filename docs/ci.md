@@ -64,6 +64,19 @@ changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用�
 这些命令默认以 `BOOK_TEMPLATE=ajbook` 使用 XeLaTeX、Biber 和 makeindex；
 `BOOK_TEMPLATE=springer` 只用于显式的旧模板兼容检查，并改用 BibTeX。
 
+`make pdf` 在最后一次 TeX 后、复制到输出目录前调用 `check-build-log`。本次最后
+一轮日志中的缺字、未定义引用/引用键或重复标签使命令失败，即使引擎返回 0。
+缺失、空白、不完整日志也失败；前几轮暂时的引用警告以最后轮结果为准。普通
+字体 shape 回退、坏盒或重跑提示不按引用错误处理。失败时输出目录原 PDF 保持。
+可以用 `make build-log-check MODEL=<lane>` 或
+`python3 -m stacks_zh check-build-log --log <path>` 只读检查已存在的最后轮日志；
+单独检查不证明日志来自当前修订，不能代替本次 render/pdf。该命令不编辑日志或
+PDF，也没有忽略错误的开关。
+
+CI 的 `tool-test` 包含日志解析和真实 Make recipe 的模拟编译器回归：引擎零退出
+但最终日志有错误时必须阻断复制，首轮警告而最后轮干净时必须通过。这些测试
+不安装或运行 TeX；当前 CI 仍未执行整书编译，本地完整构建声明仍是必需证据。
+
 ## 2. 来源 checkout
 
 Runner 必须：
@@ -176,7 +189,7 @@ CODEOWNERS 必须与 `MAINTAINERS.md` 一致。CODEOWNERS 审批不能替代语�
 `make decision-check` 和全量
 `make qa-all` 已可执行，且同一组
 检查由 GitHub Actions 的 `policy-and-data` job 运行。CI 当前对全部已跟踪候选 batch
-执行 QA（目前为 108 个 batch），不是按 PR changed-path 做增量筛选。
+执行 QA，不是按 PR changed-path 做增量筛选。
 
 优先级配置、计划生成器、计划文档、README 推荐区间或相关测试发生变化时，CI 另外
 执行 `make plan-check`。current unit、candidate 或 reviewed 数据合并后，计划像进度

@@ -122,6 +122,16 @@ class SourceTermsTests(unittest.TestCase):
         row = unit("We say it <TEXTITOPEN_0001>lies over<TEXTITCLOSE_0001> the point.", {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})
         self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["lies over"])
 
+    def test_term_display_can_cross_font_wrapper_but_not_footnote_boundary(self):
+        row = unit("<TEXTITOPEN_0001>Vertical<TEXTITCLOSE_0001> composition.", {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})
+        output = candidate([("Vertical composition", "垂直复合")])
+        output["translation"] = "<TEXTITOPEN_0001>垂直<TEXTITCLOSE_0001>复合（Vertical composition）。"
+        scope = catalog(row); scope["terms"].append({"id": "vertical-composition", "forms": ["vertical composition"], "chapters": [], "evidence": []})
+        self.assertEqual(validate_source_terms(row, output, scope), [])
+        row = unit("Vertical<FOOTNOTEOPEN_0001>composition<FOOTNOTECLOSE_0001>.", {"FOOTNOTEOPEN_0001": r"\footnote{", "FOOTNOTECLOSE_0001": "}"})
+        scope = catalog(row); scope["terms"].append({"id": "vertical-composition", "forms": ["vertical composition"], "chapters": [], "evidence": []})
+        self.assertEqual(source_inventory(row, scope)["occurrences"], [])
+
     def test_articles_and_target_reordering_preserve_exact_english_source(self):
         self.assertEqual(validate_source_terms(unit(), candidate([("morphisms", "态射"), ("objects", "对象"), ("A category", "一个范畴")]), catalog()), [])
 

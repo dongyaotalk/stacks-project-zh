@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .records import RecordError, PLACEHOLDER_TOKEN_RE, expected_unit_hashes, load_jsonl, load_upstream_commit, restore_placeholders, sha256_value
+from .records import RecordError, PLACEHOLDER_TOKEN_RE, expected_unit_hashes, is_font_wrapper, load_jsonl, load_upstream_commit, restore_placeholders, sha256_value, term_display_text
 from .schema_validation import validate_named_schema
 from .terminology import load_approved_term_pairs
 
@@ -44,7 +44,10 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
                             phrase = re.sub(r"\s+(?:of|over|in|between|with|to|on|from)$", "", phrase, flags=re.IGNORECASE)
                         if phrase and re.search(r"[A-Za-z]", phrase):
                             declarations.append(phrase)
-            # Natural-language formatting and footnote wrappers are transparent.
+            if not is_font_wrapper(match.group(0), unit["placeholders"]):
+                # Footnotes and other semantic wrappers are boundaries; their
+                # prose is scanned, but phrases cannot bridge those boundaries.
+                pieces.append(match.group(0))
         else:
             pieces.append(match.group(0))
         cursor = match.end()
@@ -149,8 +152,8 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
         if (english, chinese) not in (approved or set()):
             if (english, chinese) not in pending or candidate.get("term_status") != "DECISION_REQUIRED":
                 errors.append(f"{uid}: unapproved term lacks pending contextual evidence: {english}")
-        literal = f"{chinese}（{english}）"
-        position = translation.find(literal, target_cursor)
+        literal = term_display_text(f"{chinese}（{english}）", unit["placeholders"])
+        position = term_display_text(translation, unit["placeholders"]).find(literal, target_cursor)
         if position < 0:
             errors.append(f"{uid}: missing or repeated bilingual display: {literal}")
         else:

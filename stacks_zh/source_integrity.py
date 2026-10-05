@@ -15,6 +15,71 @@ LABEL_UNIT = re.compile(r"^label:(.+):([^:]+)$")
 STATEMENTS = {'definition', 'lemma', 'proposition', 'theorem', 'corollary', 'remark',
               'remarks', 'example', 'exercise', 'situation'}
 FOOTNOTE = re.compile(r"^\\footnote\{See Remark (\\ref\{[^{}]+\})\.\}$")
+STATEMENT_NAMES = '|'.join(sorted(STATEMENTS))
+NAMED_BEGIN = re.compile(rf'\\begin\{{(?:{STATEMENT_NAMES})\}}\s*\[')
+NAMED_OPEN = re.compile(rf'\s*\\begin\{{(?:{STATEMENT_NAMES})\}}\s*\[')
+PLAIN_TITLE = r"[A-Za-z]+(?:[-'][A-Za-z]+)*(?:[ \t]+[A-Za-z]+(?:[-'][A-Za-z]+)*)*"
+TITLE_END = re.compile(r'\]\s*\\label\{([A-Za-z0-9._:+-]+)\}\s*')
+
+
+def _named_title_label(unit: dict[str, Any]) -> str | None:
+    """Only a leading, validated named-argument closure can own a label."""
+    names = sorted({name for name in [*unit['placeholders'], *placeholder_names(unit['source_text'])]
+                    if name.startswith('ENVARGEND_')})
+    opening = NAMED_OPEN.fullmatch(unit['render']['prefix'])
+    # Earlier extraction already gave some headings their own title unit. Its
+    # suffix closes the argument and owns the label; no body token is needed.
+    if opening and unit['node_kind'] == 'environment_title' and not names:
+        ending = TITLE_END.fullmatch(unit['render']['suffix'])
+        if ending is None or not unit['source_text'].strip() or validate_tex_controls(unit, {'translation': unit['source_text']}):
+            raise RecordError(f"{unit['unit_id']}: invalid separate named environment title boundary")
+        return ending.group(1)
+    if not opening and not names:
+        return None
+    if not opening or unit['node_kind'] not in STATEMENTS or len(names) != 1:
+        raise RecordError(f"{unit['unit_id']}: invalid named environment title boundary")
+    name = names[0]
+    if not re.fullmatch(r'ENVARGEND_[0-9]{4}', name) or name not in unit['placeholders']:
+        raise RecordError(f"{unit['unit_id']}: invalid named environment title token")
+    head = re.match(rf'({PLAIN_TITLE})<{name}>', unit['source_text'])
+    ending = TITLE_END.fullmatch(unit['placeholders'][name])
+    if head is None or ending is None or placeholder_names(unit['source_text']).count(name) != 1:
+        raise RecordError(f"{unit['unit_id']}: missing, moved or malformed named environment title closure")
+    return ending.group(1)
+
+
+def environment_title_errors(unit: dict[str, Any]) -> list[str]:
+    try:
+        if _named_title_label(unit) is not None:
+            return []
+    except RecordError as exc:
+        return [str(exc)]
+    return [f"{unit['unit_id']}: named environment title is hidden in render.prefix"
+            for _ in NAMED_BEGIN.finditer(unit['render']['prefix'])]
+
+
+def expose_environment_title(unit: dict[str, Any]) -> dict[str, Any]:
+    """Expose a simple English title without translating or changing source TeX.
+
+    This helper accepts one complete statement wrapper, its simple title and
+    adjacent own label. Complex TeX titles need an explicit extraction task.
+    """
+    unit = copy.deepcopy(unit)
+    if _named_title_label(unit) is not None:
+        return unit
+    prefix = unit['render']['prefix']
+    opening = NAMED_OPEN.match(prefix)
+    if opening is None or unit['node_kind'] not in STATEMENTS:
+        raise RecordError(f"{unit['unit_id']}: named title needs an explicit extraction task")
+    match = re.fullmatch(rf'({PLAIN_TITLE})(\]\s*\\label\{{[A-Za-z0-9._:+-]+\}}\s*)', prefix[opening.end():])
+    if match is None:
+        raise RecordError(f"{unit['unit_id']}: complex named title needs an explicit extraction task")
+    name = 'ENVARGEND_0001'
+    unit['render']['prefix'] = prefix[:opening.end()]
+    unit['placeholders'][name] = match.group(2)
+    unit['source_text'] = match.group(1) + f'<{name}>' + unit['source_text']
+    _named_title_label(unit)
+    return stamp_unit_hashes(unit)
 
 
 def load_tags(path: Path) -> dict[str, str]:
@@ -39,6 +104,9 @@ def _own_tag(unit: dict[str, Any], tags: dict[str, str]) -> str | None:
     # nested in diagrams/equations are separate children, never statement Tags.
     wrapper = unit['render']['prefix'] + unit['render']['suffix']
     labels = LABEL.findall(wrapper)
+    named_label = _named_title_label(unit)
+    if named_label is not None and named_label not in labels:
+        labels.append(named_label)
     if not labels:
         return None
     resolved = set()
@@ -187,7 +255,7 @@ def audit_repository_source(root: Path, tags_path: Path) -> tuple[dict[str, Any]
     tags = load_tags(tags_path)
     source_commit = load_upstream_commit(root / 'upstream.lock')
     errors, proposals = [], []
-    statements = raw_nodes = hidden = 0
+    statements = raw_nodes = hidden = hidden_titles = 0
     for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
         units = load_jsonl(path)
         for unit in units:
@@ -207,6 +275,9 @@ def audit_repository_source(root: Path, tags_path: Path) -> tuple[dict[str, Any]
             footnotes = hidden_footnote_errors(unit)
             hidden += len(footnotes)
             errors.extend(footnotes)
+            title_errors = environment_title_errors(unit)
+            hidden_titles += len(title_errors)
+            errors.extend(title_errors)
         for candidate_path in sorted((root / 'translation-data/candidates').glob(f'*/{path.name}')):
             candidates = {c['unit_id']: c for c in load_jsonl(candidate_path)}
             for unit in units:
@@ -222,4 +293,5 @@ def audit_repository_source(root: Path, tags_path: Path) -> tuple[dict[str, Any]
             proposals.append({'unit_path': path.relative_to(root).as_posix(), 'input_hash': sha256_value(path.read_text()), 'unit_id_map': mapping})
     return {'schema_version': 1, 'source_commit': source_commit,
             'wrong_statement_tags': statements, 'unprotected_node_pairs': raw_nodes,
-            'hidden_footnotes': hidden, 'coordinate_proposals': proposals}, errors
+            'hidden_footnotes': hidden, 'hidden_environment_titles': hidden_titles,
+            'coordinate_proposals': proposals}, errors

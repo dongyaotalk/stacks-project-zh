@@ -93,8 +93,23 @@ harvest、`upstream.lock`、受保护公式或占位符，不向译文插入新�
 - `\emph`、`\textit`、`\textbf`、`\footnote` 内的自然语言；
 - `\href{URL}{显示文字}` 的第二个参数；
 - 定理、定义、例子和证明环境中的自然语言节点。
+- 陈述环境 `\begin{lemma}[Yoneda lemma]` 等可选命名参数中的自然语言标题。
 
 外层命令和参数结构必须保持不变。
+
+`expose_environment_title` 支持一个完整陈述包装、纯英文词组标题和紧随其后的
+own label；只重提取 source，不生成中文。opening bracket 留在 `render.prefix`，
+标题进入 `source_text`，closing bracket、原空白与 own label 锁在一个
+`ENVARGEND_####` 中。完整源 TeX 字节、公式和引用保持一致，标题的每个数学术语
+同样逐次显示双语。含公式、命令、嵌套参数或不明确包装的标题须显式提取任务，
+工具不能猜测或把整个标题永久锁定。具体候选仍用独立实际模型修订及冻结原输出。
+既有独立 `environment_title` 单元的 suffix 闭合参数并保存 own label；保持这个
+已暴露的结构，不为新 helper 改写历史单元。其受保护公式仍保持不透明。
+
+永久 Tag 校验只从严格的 leading 命名参数边界识别 own label；该 closing token
+必须紧接完整源标题、只出现一次，payload 仅含 closing bracket/空白/标签。任意
+正文、公式中的标签及伪造、移动或重复 token 都不能变成环境 owner；多 own Tag
+仍失败。正文里的受保护公式标签继续作为独立子节点处理。
 
 旧式字体声明 `\bf` 只允许显式分组的 `{\bf 自然语言}` 形式：把开组花括号、
 声明及其分隔空白整体锁定为一个占位符，把对应的闭组花括号锁定为另一个占位符，

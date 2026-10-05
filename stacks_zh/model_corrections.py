@@ -41,13 +41,13 @@ def _first_addition_is_immutable(root: Path, path: Path) -> None:
         capture_output=True, text=True,
     )
     if history.returncode:
-        raise RecordError('model-correction evidence requires a readable Git history')
+        raise RecordError('immutable evidence requires a readable Git history')
     commits = history.stdout.splitlines()
     if not commits:
         return
     original = subprocess.run(['git', '-C', str(root), 'show', f'{commits[0]}:{relative}'], capture_output=True)
     if original.returncode or original.stdout != path.read_bytes():
-        raise RecordError(f'{relative}: immutable correction evidence differs from its first Git addition')
+        raise RecordError(f'{relative}: immutable evidence differs from its first Git addition')
 
 
 def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[str, Any]], list[str]]:
@@ -148,7 +148,7 @@ def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[
 
 
 def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
-    """Bind selection/review to all current content and both immutable run origins.
+    """Bind selection/review to current content and its immutable lineage.
 
     Call only after repository provenance validation; this is a binding hash,
     not a replacement for validating the files or their identity.
@@ -161,10 +161,31 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
     def read(relative: str) -> dict[str, Any]:
         return json.loads((root / relative).read_text(encoding='utf-8'))
     correction = read(f'translation-data/model-corrections/{correction_id}.json')
-    return sha256_value({
+    binding = {
         'candidate': _clean(candidate),
         'derivation': read(f'translation-data/derivations/{derivation_id}.json'),
         'correction': correction,
         'origin_run': read(f"translation-data/runs/{candidate['run_id']}.json"),
         'correction_run': read(f"translation-data/runs/{correction['run_id']}.json"),
-    })
+    }
+    # Preserve the existing single-level binding for existing decisions. Only
+    # archived successors gain a history field; their old approvals cannot match.
+    from .derivation_archives import derivation_history
+    history = derivation_history(root, derivation_id)
+    if len(history) > 1:
+        correction_ids = sorted({
+            operation['model_correction_id']
+            for entry in history for operation in entry['derivation']['operations']
+            if operation.get('model_correction_id')
+        })
+        historical_corrections = []
+        for identifier in correction_ids:
+            if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier) or '..' in identifier:
+                raise RecordError('invalid historical correction ID')
+            evidence = read(f'translation-data/model-corrections/{identifier}.json')
+            historical_corrections.append({
+                'correction': evidence,
+                'run': read(f"translation-data/runs/{evidence['run_id']}.json"),
+            })
+        binding['history'] = {'derivations': history, 'corrections': historical_corrections}
+    return sha256_value(binding)

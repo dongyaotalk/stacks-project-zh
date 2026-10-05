@@ -127,12 +127,13 @@ unit/candidate 更新，但原始 run manifest 不回写。原文件须按原字
 外部任务引用旧 ID 时先查该映射，不能静默创建第二个单元。来源提取或双语显示
 修复属于另外声明的变换，不得混称为纯坐标迁移。详见 `docs/model-provenance.md`。
 
-再次修订已派生版本时，前一版本不成为第二份当前候选。规划的归档清单位于
+再次修订已派生版本时，前一版本不成为第二份当前候选。归档清单位于
 `derivation-archives/`，历史完整输出位于原 `retired/derivations/<id>/` 的
 `output-units.jsonl`、`output-candidates.jsonl`；旧派生记录、原输入及所有模型
 run/输出保持原字节。新旧版本必须按完整 batch 一对一替换并验证全部历史，
-历史输出不进入当前 QA、进度、渲染或 TM。该扩展尚未实现，合同和启用条件见
-`docs/model-provenance.md` §8，不得提前写入归档或 v3 事实数据。
+历史输出不进入当前 QA、进度、渲染或 TM。Schema 与 provenance 校验覆盖归档和
+历史输出；v3 要求完整 batch 的实际模型修订，具体数据由独立任务声明。合同和
+校验规则见 `docs/model-provenance.md` §8。
 
 ## 3. 来源 hash
 

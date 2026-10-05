@@ -22,6 +22,7 @@ from .records import (
 )
 from .schema_validation import validate_named_schema
 from .model_corrections import load_repository_corrections
+from .derivation_archives import derivation_history
 from .provenance import validate_repository_provenance
 
 
@@ -553,6 +554,13 @@ def render_batch(
         provenance_errors = validate_repository_provenance(root)
         if provenance_errors:
             raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
+        for derivation_id in sorted(derivation_ids):
+            for entry in derivation_history(root, derivation_id):
+                record = entry['derivation']
+                correction_keys.update(
+                    (operation['model_correction_id'], record['unit_id_map'][operation['unit_id']])
+                    for operation in record['operations'] if operation.get('model_correction_id')
+                )
         corrections, correction_errors = load_repository_corrections(root)
         if correction_errors or not correction_keys <= corrections.keys():
             raise RecordError('render has no complete model-correction evidence')

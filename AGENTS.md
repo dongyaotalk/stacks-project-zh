@@ -79,9 +79,11 @@
 - Correcting an already-derived candidate again requires the separately specified
   archival contract in `docs/model-provenance.md` section 8. Preserve all earlier
   records and outputs, validate their history, and freeze the exact previous
-  candidate as the new revision input. Existing v1/v2 tooling remains single-level;
-  do not create archives or v3 data until its schema/provenance implementation is
-  merged. Archiving cannot discard unresolved current units or confer approval.
+  candidate as the new revision input. v1/v2 remain single-level; v3 requires a
+  complete actual model revision for every previous unit, immutable archives,
+  and validated historical replay with one current leaf per batch. Archiving
+  cannot discard unresolved current units or confer approval. Concrete data and
+  source re-extraction still require their own declared translation tasks.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch
   protection, releases, or pushed history unless the task explicitly authorizes

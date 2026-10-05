@@ -145,6 +145,12 @@ prefix 以 opening bracket 结束，source_text 从英文标题开始，其后�
 既有独立 `environment_title` 单元仍可把 closing bracket/own label 保存在 suffix；
 这些标题已经暴露，不需要 ENVARGEND，也不应为采用新 helper 而拆分、合并或重编号。
 
+旧 source unit 已经丢掉上游节点时，内部 hash 及无损派生不能证明英文输入完整。
+后续来源恢复证据规划位于 `source-reextractions/`，同时绑定完整旧/新 unit、派生、
+锁定英文 Git 片段和受限 selector；对应 Schema/工具尚未实现，现有新旧 source
+TeX 相等的保护不提前放宽。合同见 `docs/model-provenance.md` §9。旧缺陷输入
+保持原字节，新的受保护英文输入由实际新模型修订完整冻结，不冒用旧 run 身份。
+
 ## 3. 来源 hash
 
 每个单元至少记录三类 hash：

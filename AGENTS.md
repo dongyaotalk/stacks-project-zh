@@ -84,6 +84,13 @@
   and validated historical replay with one current leaf per batch. Archiving
   cannot discard unresolved current units or confer approval. Concrete data and
   source re-extraction still require their own declared translation tasks.
+- A defective historical extraction can be restored only under the separate
+  locked-upstream contract in `docs/model-provenance.md` section 9. Current tools
+  still require source TeX equality with the previous unit; do not create source
+  restoration evidence or source-changing data before its Schema/validator is
+  merged. The future exception must verify exact locked English Git fragments,
+  retain the defective original input, and require a new actual model revision.
+  Never repair missing source math only in Chinese or relax the normal guard.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch
   protection, releases, or pushed history unless the task explicitly authorizes

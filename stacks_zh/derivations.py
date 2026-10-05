@@ -15,6 +15,7 @@ from .records import (
 from .schema_validation import validate_named_schema
 from .model_corrections import load_repository_corrections, _first_addition_is_immutable
 from .derivation_archives import load_derivation_archives
+from .source_reextractions import load_source_reextractions, validate_reextraction_operation
 
 TOOL_ID = "stacks-zh-derive"
 TOOL_VERSION = "1"
@@ -90,6 +91,7 @@ def replay_derivation(
     record: dict[str, Any], units: list[dict[str, Any]], candidates: list[dict[str, Any]],
     corrections: dict[tuple[str, str], dict[str, Any]] | None = None,
     previous_outputs: tuple[list[dict[str, Any]], list[dict[str, Any]]] | None = None,
+    source_reextractions: dict[str, dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Replay explicit corrections without mutating origin rows or run facts."""
     errors = validate_named_schema(record, "derivation.schema.json", "derivation")
@@ -133,6 +135,10 @@ def replay_derivation(
             raise DerivationError("model revision needs both a declared operation and correction ID")
         if op.get("model_correction_id") and version not in {"2", "3"}:
             raise DerivationError("model revision requires derivation tool version 2 or 3")
+        if op.get("source_reextraction_id") and (version not in {"2", "3"}
+                or not op.get("model_correction_id") or "protected-extraction" not in op["kinds"]
+                or set(op["candidate_updates"]) != CANDIDATE_FIELDS):
+            raise DerivationError("source re-extraction requires v2/v3 protected extraction and a complete actual model revision")
         if mapping[old_id] != old_id and "coordinates" not in op["kinds"]:
             raise DerivationError("coordinate change lacks a declared coordinate operation")
         if op["unit_updates"] and not set(op["kinds"]) & {"protected-extraction", "footnote-display"}:
@@ -156,7 +162,14 @@ def replay_derivation(
             if re.search(r"\\(?:[A-Za-z@]+|.)|[%#$&_^~{}]", PLACEHOLDER_TOKEN_RE.sub("", text)):
                 raise DerivationError(f"{old_id}: derived {field} has unprotected TeX controls")
         try:
-            if _source_tex(unit) != _source_tex(old_unit):
+            reextraction_id = op.get("source_reextraction_id")
+            if reextraction_id:
+                source_evidence = (source_reextractions or {}).get(reextraction_id)
+                if source_evidence is None:
+                    raise DerivationError(f"{old_id}: source re-extraction has no validated locked-Git evidence")
+                validate_reextraction_operation(source_evidence, record, units, old_unit,
+                                               stamp_unit_hashes({**unit, "unit_id": mapping[old_id]}))
+            elif _source_tex(unit) != _source_tex(old_unit):
                 raise DerivationError(f"{old_id}: tool operation changes source TeX")
             correction_id = op.get("model_correction_id")
             if correction_id:
@@ -204,6 +217,7 @@ def replay_derivation(
 
 def load_repository_derivations(
     root: Path, corrections: dict[tuple[str, str], dict[str, Any]] | None = None,
+    harvest: Path | None = None,
 ) -> tuple[dict[tuple[str, str], dict[str, Any]], list[str]]:
     """Validate every historical replay and return ultimate origins of leaves."""
     origins, errors = {}, []
@@ -212,6 +226,8 @@ def load_repository_derivations(
         errors.extend(correction_errors)
     archives, archive_errors = load_derivation_archives(root)
     errors.extend(archive_errors)
+    reextractions, reextraction_errors = load_source_reextractions(root, harvest)
+    errors.extend(reextraction_errors)
     records = {}
     for path in sorted((root / "translation-data/derivations").glob("*.json")):
         try:
@@ -227,6 +243,7 @@ def load_repository_derivations(
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f"{path}: {exc}")
     used_corrections = set()
+    used_reextractions = set()
     seen_snapshots, seen_outputs = set(), set()
     cache, visiting, failed = {}, set(), set()
 
@@ -296,11 +313,17 @@ def load_repository_derivations(
                 run_path = f"translation-data/runs/{run_id}.json"
                 if (root / run_path).read_bytes() != _git_origin_bytes(root, record["origin_commit"], run_path):
                     raise DerivationError(f"{run_path}: original run bytes have changed")
-            output_units, output_candidates = replay_derivation(record, units, candidates, corrections, previous_outputs)
+            output_units, output_candidates = replay_derivation(record, units, candidates, corrections, previous_outputs, reextractions)
             for role, rows in [("output_units", output_units), ("output_candidates", output_candidates)]:
                 if jsonl_bytes(rows) != resolved[role].read_bytes():
                     raise DerivationError(f"{role}: active output does not match replay")
             mapped_origins = {}
+            for operation in record['operations']:
+                identifier_used = operation.get('source_reextraction_id')
+                if identifier_used:
+                    if identifier_used in used_reextractions:
+                        raise DerivationError('source re-extraction is applied more than once')
+                    used_reextractions.add(identifier_used)
             for previous_candidate, output in zip(candidates, output_candidates, strict=True):
                 mapped_origins[output["unit_id"]] = raw_origins[previous_candidate["unit_id"]]
                 if output.get("model_correction_id"):
@@ -335,6 +358,8 @@ def load_repository_derivations(
             errors.append(f"{path}: orphaned raw derivation snapshot")
     for key in corrections.keys() - used_corrections:
         errors.append(f"model correction {key}: frozen output has no active derived candidate or validated historical replay")
+    for identifier in reextractions.keys() - used_reextractions:
+        errors.append(f"source re-extraction {identifier}: evidence has no validated historical replay")
     for path in sorted((root / "translation-data/candidates").glob("*/*.jsonl")):
         try:
             for row in load_jsonl(path):

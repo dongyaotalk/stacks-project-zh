@@ -236,10 +236,14 @@ tool-test:
 	$(PYTHON) -m unittest discover -s tests -p 'test_*.py'
 
 provenance-check:
-	$(PYTHON) stacks_zh.py provenance-check --root .
+	$(PYTHON) stacks_zh.py provenance-check --root . --harvest "$(HARVEST_DIR)"
 
 decision-check:
-	$(PYTHON) stacks_zh.py decision-check --root .
+	$(PYTHON) stacks_zh.py decision-check --root . --harvest "$(HARVEST_DIR)"
+
+.PHONY: proof-source-audit
+proof-source-audit:
+	$(PYTHON) stacks_zh.py audit-proof-source --root . --harvest "$(HARVEST_DIR)" --output build/proof-source-audit.json
 
 schema-check:
 	$(PYTHON) stacks_zh.py schema-check --root .

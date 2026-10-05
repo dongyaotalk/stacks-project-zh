@@ -85,11 +85,12 @@
   cannot discard unresolved current units or confer approval. Concrete data and
   source re-extraction still require their own declared translation tasks.
 - A defective historical extraction can be restored only under the separate
-  locked-upstream contract in `docs/model-provenance.md` section 9. Current tools
-  still require source TeX equality with the previous unit; do not create source
-  restoration evidence or source-changing data before its Schema/validator is
-  merged. The future exception must verify exact locked English Git fragments,
-  retain the defective original input, and require a new actual model revision.
+  locked-upstream contract in `docs/model-provenance.md` section 9. v2/v3 may
+  reference immutable source-reextraction evidence for a supported complete
+  single-unit proof, verified against locked English Git bytes and its frozen
+  full-batch ownership chain. Require all five fields of a new actual model
+  revision; retain the defective original input. Other operations still require
+  source TeX equality. Declare concrete data in its own translation task.
   Never repair missing source math only in Chinese or relax the normal guard.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch

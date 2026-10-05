@@ -133,13 +133,13 @@ def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, A
             errors.append(f'{location}: corrected candidate requires its complete composite provenance_hash')
 
 
-def validate_repository_decisions(root: Path) -> list[str]:
+def validate_repository_decisions(root: Path, harvest: Path | None = None) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
     errors: list[str] = []
     candidates = _candidate_index(root, errors)
     corrected = [candidate for candidate in candidates.values() if 'model_correction_id' in candidate]
     if corrected:
-        provenance_errors = validate_repository_provenance(root)
+        provenance_errors = validate_repository_provenance(root, harvest)
         errors.extend(provenance_errors)
         if not provenance_errors:
             for candidate in corrected:

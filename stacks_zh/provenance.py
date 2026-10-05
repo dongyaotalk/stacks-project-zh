@@ -56,13 +56,13 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def validate_repository_provenance(root: Path) -> list[str]:
+def validate_repository_provenance(root: Path, harvest: Path | None = None) -> list[str]:
     runs_root = root / "translation-data" / "runs"
     candidates_root = root / "translation-data" / "candidates"
     manifests: dict[str, tuple[Path, dict[str, Any]]] = {}
     candidate_context_hashes: dict[str, list[str]] = {}
     corrections, errors = load_repository_corrections(root)
-    origins, derivation_errors = load_repository_derivations(root, corrections)
+    origins, derivation_errors = load_repository_derivations(root, corrections, harvest)
     errors.extend(derivation_errors)
     harness_registry = (root / "config" / "harnesses.yml").read_text(encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
     model_registry = (root / "config" / "models.yml").read_text(encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""

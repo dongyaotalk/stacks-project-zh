@@ -127,6 +127,12 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 命名环境标题工具：Issue [#576](https://github.com/dongyaotalk/stacks-project-zh/issues/576)，
+  分支 `tool/named-environment-titles`。source helper 无损暴露简单英文词组标题，
+  保留 own label 的严格边界与陈述/证明归属；只读来源审计增加隐藏/无效标题计数。
+  标题术语和正文术语分别逐次核对，复杂标题不猜测。当前 001P/0AHQ 标题尚未
+  实际修订，本工具不改写候选、run 或归档；具体数据及全库 S4/S5 仍待后续完成。
+
 - 后续修订工具：Issue [#574](https://github.com/dongyaotalk/stacks-project-zh/issues/574)，
   分支 `tool/derivation-archives`。归档绑定前一记录、Git 活跃输出和确定性重放；
   v3 完整替换上一 batch，逐单元要求新的实际模型修订，保留原始模型 origin。

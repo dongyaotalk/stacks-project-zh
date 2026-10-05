@@ -438,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.output.write_text(json.dumps(proposal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             for error in errors:
                 print(f"ERROR: {error}", file=sys.stderr)
-            print(f"Source integrity: {len(errors)} issue(s); {proposal['wrong_statement_tags']} statement Tag mismatches, {proposal['unprotected_node_pairs']} raw TeX pairs, {proposal['hidden_footnotes']} hidden footnotes")
+            print(f"Source integrity: {len(errors)} issue(s); {proposal['wrong_statement_tags']} statement Tag mismatches, {proposal['unprotected_node_pairs']} raw TeX pairs, {proposal['hidden_footnotes']} hidden footnotes, {proposal['hidden_environment_titles']} hidden/invalid named titles")
             return 1 if errors else 0
         if args.command == "audit-terms":
             report, errors = audit_repository_terms(args.root.resolve())

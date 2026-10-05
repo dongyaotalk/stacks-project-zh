@@ -10,6 +10,7 @@ from pathlib import Path
 
 from stacks_zh.records import RecordError, restore_placeholders, stamp_unit_hashes, validate_tex_controls
 from stacks_zh.source_integrity import (
+    audit_repository_source, environment_title_errors, expose_environment_title,
     expand_fixed_footnotes, hidden_footnote_errors, load_tags, permanent_tag_mapping,
     protect_fragments, require_audit_output,
 )
@@ -27,6 +28,137 @@ def unit(uid='tag:SECT:statement', kind='lemma', prefix='\\begin{lemma}\n\\label
 
 
 class SourceIntegrityTests(unittest.TestCase):
+    def test_existing_separate_environment_titles_keep_their_source_and_ownership(self):
+        title = unit('tag:OWN1:title', 'environment_title', '\\begin{remark}[', ']\n\\label{remark-test}\n')
+        title['source_text'] = 'Construction of <MATH_0001> obstruction class'
+        title['placeholders'] = {'MATH_0001': r'$x\label{equation-test}$'}
+        title = stamp_unit_hashes(title)
+        body = unit('tag:OWN1:p001', 'paragraph', '', '\n\\end{remark}\n')
+        proof = unit('tag:OWN1:proof-p001', 'proof', '\\begin{proof}\n', '\n\\end{proof}\n')
+        before = copy.deepcopy(title)
+        self.assertEqual(environment_title_errors(title), [])
+        self.assertEqual(expose_environment_title(title), before)
+        self.assertEqual(title, before)
+        mapping = permanent_tag_mapping([title, body, proof], {'test-remark-test': 'OWN1', 'test-equation-test': 'EQ01'})
+        self.assertEqual(mapping, {row['unit_id']: row['unit_id'] for row in [title, body, proof]})
+        title['render']['suffix'] = ']\n$x\\label{equation-test}$\n'
+        self.assertTrue(environment_title_errors(title))
+
+    def test_named_title_extraction_preserves_source_bytes_and_inputs(self):
+        from stacks_zh.source_terms import source_projection, source_tex_hash
+        for title, environment in [('Yoneda lemma', 'lemma'), ('Adjoint functor theorem', 'theorem')]:
+            with self.subTest(title=title):
+                row = unit(kind=environment, prefix=f'\\begin{{{environment}}}[{title}]\n\\label{{lemma-test}}\n')
+                before = copy.deepcopy(row)
+                self.assertEqual(len(environment_title_errors(row)), 1)
+                extracted = expose_environment_title(row)
+                self.assertEqual(row, before)
+                self.assertEqual(source_tex_hash(extracted), source_tex_hash(row))
+                self.assertEqual(extracted['unit_id'], row['unit_id'])
+                self.assertEqual(extracted['source_math_hash'], row['source_math_hash'])
+                self.assertTrue(source_projection(extracted)[0].startswith(title))
+                self.assertEqual(environment_title_errors(extracted), [])
+                self.assertEqual(expose_environment_title(extracted), extracted)
+
+    def test_named_title_and_body_have_separate_source_term_occurrences(self):
+        from stacks_zh.source_terms import source_inventory, source_tex_hash, validate_source_terms
+        row = unit(prefix='\\begin{lemma}[Yoneda lemma]\n\\label{lemma-test}\n')
+        row['source_text'] = 'Use the Yoneda lemma.'
+        row = expose_environment_title(stamp_unit_hashes(row))
+        catalog = {'schema_version': 1, 'source_commit': COMMIT, 'nonmathematical_declarations': {},
+                   'terms': [{'id': 'yoneda-lemma', 'forms': ['yoneda lemma'], 'chapters': [],
+                              'evidence': [{'chapter': 'test', 'unit_id': row['unit_id'],
+                                            'source_term': 'Yoneda lemma', 'source_tex_hash': source_tex_hash(row)}]}]}
+        self.assertEqual([item['source_term'] for item in source_inventory(row, catalog)['occurrences']], ['Yoneda lemma'] * 2)
+        term = {'source_term': 'Yoneda lemma', 'target_term': '米田引理'}
+        candidate = {'unit_id': row['unit_id'], 'translation': '米田引理（Yoneda lemma）<ENVARGEND_0001>使用米田引理（Yoneda lemma）。',
+                     'term_occurrences': [term] * 2, 'unknown_terms': [{**term, 'context': 'Synthetic pending'}] * 2,
+                     'term_status': 'DECISION_REQUIRED'}
+        self.assertEqual(validate_source_terms(row, candidate, catalog), [])
+        candidate['term_occurrences'].pop()
+        self.assertTrue(validate_source_terms(row, candidate, catalog))
+
+    def test_extracted_own_label_controls_proof_and_ignores_nested_labels(self):
+        row = unit(prefix='\\begin{lemma}[Yoneda lemma]\n\\label{lemma-test}\n')
+        row['source_text'] = 'Source <MATH_0001>.'
+        row['placeholders']['MATH_0001'] = r'$x\label{equation-test}$'
+        row = expose_environment_title(stamp_unit_hashes(row))
+        proof = unit('tag:SECT:proof-p001', 'proof', '\\begin{proof}\n', '\n\\end{proof}\n')
+        tags = {'test-lemma-test': 'OWN1', 'test-equation-test': 'EQ01'}
+        mapping = permanent_tag_mapping([row, proof], tags)
+        self.assertEqual(mapping[row['unit_id']], 'tag:OWN1:statement')
+        self.assertEqual(mapping[proof['unit_id']], 'tag:OWN1:proof-p001')
+        with self.assertRaisesRegex(RecordError, 'no permanent Tag'):
+            permanent_tag_mapping([row], {'test-equation-test': 'EQ01'})
+        row['render']['suffix'] += '\\label{second}\n'
+        with self.assertRaisesRegex(RecordError, 'multiple permanent Tags'):
+            permanent_tag_mapping([row], {**tags, 'test-second': 'OWN2'})
+
+    def test_missing_moved_duplicate_and_forged_title_boundaries_fail(self):
+        for fault in ['missing', 'moved', 'duplicate', 'fake-prefix', 'nested-label', 'wrong-kind', 'extra-token', 'missing-payload', 'orphan-token']:
+            with self.subTest(fault=fault):
+                row = expose_environment_title(unit(prefix='\\begin{lemma}[Yoneda lemma]\n\\label{lemma-test}\n'))
+                if fault == 'missing': row['source_text'] = row['source_text'].replace('<ENVARGEND_0001>', '')
+                if fault == 'moved': row['source_text'] = 'Source.<ENVARGEND_0001>Yoneda lemma'
+                if fault == 'duplicate': row['source_text'] += '<ENVARGEND_0001>'
+                if fault == 'fake-prefix': row['render']['prefix'] = '\\begin{lemma}\n'
+                if fault == 'nested-label': row['placeholders']['ENVARGEND_0001'] = ']\n$x\\label{equation-test}$\n'
+                if fault == 'wrong-kind': row['node_kind'] = 'display_math'
+                if fault == 'extra-token': row['placeholders']['ENVARGEND_0002'] = ']'
+                if fault == 'missing-payload': row['placeholders'].pop('ENVARGEND_0001')
+                if fault == 'orphan-token':
+                    row['placeholders'].pop('ENVARGEND_0001'); row['render']['prefix'] = '\\begin{lemma}\n'
+                self.assertTrue(environment_title_errors(row))
+                with self.assertRaises(RecordError):
+                    permanent_tag_mapping([row], {'test-lemma-test': 'OWN1', 'test-equation-test': 'EQ01'})
+
+    def test_complex_or_ambiguous_named_wrappers_require_explicit_extraction(self):
+        for title in [r'Yoneda $x$', r'\emph{Yoneda lemma}', 'Nested [title]', '', 'Leading. sentence']:
+            with self.subTest(title=title):
+                row = unit(prefix=f'\\begin{{lemma}}[{title}]\n\\label{{lemma-test}}\n')
+                self.assertTrue(environment_title_errors(row))
+                with self.assertRaisesRegex(RecordError, 'explicit extraction'):
+                    expose_environment_title(row)
+        for prefix in ['\\begin{unknown}[Title]\n\\label{lemma-test}\n',
+                       '\\begin{lemma}[Title]\n',
+                       '\\begin{lemma}[Title]\n\\label{first}\n\\label{second}\n',
+                       '\\begin{proof}\n\\begin{lemma}[Title]\n\\label{lemma-test}\n']:
+            with self.subTest(prefix=prefix), self.assertRaisesRegex(RecordError, 'explicit extraction'):
+                expose_environment_title(unit(prefix=prefix))
+
+    def test_source_audit_counts_hidden_titles_and_accepts_exposed_ones(self):
+        from stacks_zh.records import write_jsonl
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); path = root / 'translation-data/units/test.jsonl'
+            row = unit('tag:OWN1:statement', prefix='\\begin{lemma}[Yoneda lemma]\n\\label{lemma-test}\n')
+            write_jsonl(path, [row]); (root / 'upstream.lock').write_text(f'commit = "{COMMIT}"\n')
+            tags = root / 'tags'; tags.write_text('OWN1,test-lemma-test\n')
+            report, errors = audit_repository_source(root, tags)
+            self.assertEqual(report['hidden_environment_titles'], 1)
+            self.assertTrue(any('hidden in render.prefix' in error for error in errors))
+            write_jsonl(path, [expose_environment_title(row)])
+            report, errors = audit_repository_source(root, tags)
+            self.assertEqual(errors, []); self.assertEqual(report['hidden_environment_titles'], 0)
+
+    def test_render_restores_translated_named_argument_and_original_own_label(self):
+        from test_workflow import make_batch_candidate
+        from stacks_zh.records import write_jsonl
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            row = expose_environment_title(unit('tag:OWN1:statement', prefix='\\begin{lemma}[Yoneda lemma]\n\\label{lemma-test}\n'))
+            candidate = make_batch_candidate(row)
+            candidate['translation'] = '米田引理（Yoneda lemma）<ENVARGEND_0001>正文。'
+            candidate['term_occurrences'] = [{'source_term': 'Yoneda lemma', 'target_term': '米田引理'}]
+            candidate['unknown_terms'] = [{'source_term': 'Yoneda lemma', 'target_term': '米田引理', 'context': 'Synthetic pending'}]
+            candidate.update(term_status='DECISION_REQUIRED', stage='STRUCTURE_OK')
+            units, candidates = root / 'units.jsonl', root / 'candidates.jsonl'
+            write_jsonl(units, [row]); write_jsonl(candidates, [candidate])
+            lock = root / 'upstream.lock'; lock.write_text(f'commit = "{COMMIT}"\n')
+            render_batch(units, candidates, lock, root / 'preview', 'test', 'Fixture')
+            tex = (root / 'preview/chapters/test.tex').read_text()
+            self.assertIn('\\begin{lemma}[米田引理（Yoneda lemma）]\n\\label{lemma-test}\n正文。', tex)
+            self.assertIn('\\end{lemma}', tex)
+
     def test_statement_and_its_proof_get_own_permanent_tag(self):
         statement = unit()
         proof = unit('tag:SECT:proof-p001', 'proof', '\\begin{proof}\n', '\n\\end{proof}\n')

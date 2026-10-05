@@ -135,6 +135,16 @@ run/输出保持原字节。新旧版本必须按完整 batch 一对一替换并
 历史输出；v3 要求完整 batch 的实际模型修订，具体数据由独立任务声明。合同和
 校验规则见 `docs/model-provenance.md` §8。
 
+命名陈述环境的自然语言标题与正文保存在同一 unit 中，不增加当前单元或重编号。
+简单标题可以通过 `expose_environment_title` 从完整 `render.prefix` 重提取：
+prefix 以 opening bracket 结束，source_text 从英文标题开始，其后的
+`ENVARGEND_####` 保存 closing bracket、原空白及紧邻 own label。源 TeX 原字节
+保持不变，Tag 校验严格识别这一边界，证明继承同一陈述 owner。复杂标题须显式
+提取任务，不能用任意正文/公式占位符中的标签替代 own label。历史快照保持原样；
+当前源重新提取后由独立模型修订冻结新的完整 unit，不回写旧 run 或输出。
+既有独立 `environment_title` 单元仍可把 closing bracket/own label 保存在 suffix；
+这些标题已经暴露，不需要 ENVARGEND，也不应为采用新 helper 而拆分、合并或重编号。
+
 ## 3. 来源 hash
 
 每个单元至少记录三类 hash：

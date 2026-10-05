@@ -97,6 +97,12 @@ harvest、`upstream.lock`、受保护公式或占位符，不向译文插入新�
 
 外层命令和参数结构必须保持不变。
 
+旧提取遗漏英文节点时，公式等保护要求针对锁定英文来源，不能误解为永久保留
+提取错误。当前派生仍要求新旧 source TeX 相等；恢复此类输入缺陷须先独立落实
+`docs/model-provenance.md` §9 的 Git 片段证据与验证工具，再实际重译。不能只在
+中文猜补公式、回写旧模型输入或把提取缺失登记成英文源文问题。该规划合同
+尚未实现，不提前授权更改事实数据或旧审批。
+
 `expose_environment_title` 支持一个完整陈述包装、纯英文词组标题和紧随其后的
 own label；只重提取 source，不生成中文。opening bracket 留在 `render.prefix`，
 标题进入 `source_text`，closing bracket、原空白与 own label 锁在一个

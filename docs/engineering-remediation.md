@@ -127,6 +127,12 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- S3 声明语法边界：Issue [#557](https://github.com/dongyaotalk/stacks-project-zh/issues/557)，
+  分支 `tool/source-declaration-quotes`。02X8 的真实斜体措辞句在无损包装重提取后
+  被拆成 let、be the 等伪声明；区分带数学参数的祈使措辞句与概念命名，仍强制
+  句内目录术语及同单元其他真实新声明。仅真实字体 payload 可产生斜体声明。
+  数据 Issue #556 独立保存来源快照，本工具修复不生成译文或改变词表批准。
+
 - S3/F4 渲染边界：Issue [#551](https://github.com/dongyaotalk/stacks-project-zh/issues/551)，
   分支 `tool/tex-command-boundaries`。003G 的冻结实际修订通过结构/术语/溯源，
   但编译发现 `\item` 与中文拼成新命令。恢复时补充分隔，由 TeX 吞掉空白；

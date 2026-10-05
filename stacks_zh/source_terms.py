@@ -33,12 +33,17 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
             base = name.removesuffix("OPEN").removesuffix("CLOSE")
             if base in {"TEXTIT", "EMPH"}:
                 key = (base, number)
-                if name.endswith("OPEN"):
+                if name.endswith("OPEN") and is_font_wrapper(match.group(0), unit["placeholders"]):
                     opened[key] = len("".join(pieces))
-                elif key in opened:
+                elif name.endswith("CLOSE") and key in opened and is_font_wrapper(match.group(0), unit["placeholders"]):
                     body = "".join(pieces)[opened.pop(key):]
+                    # An italic imperative with mathematical arguments quotes
+                    # wording to use, rather than naming a lexical concept.
+                    # Its prose remains visible to the ordinary catalog scan.
+                    usage_clause = (re.match(r"^(?:let|assume|suppose)\b", _space(body), re.IGNORECASE)
+                                    and PLACEHOLDER_TOKEN_RE.search(body))
                     # Math-qualified declarations still expose their prose parts.
-                    for phrase in PLACEHOLDER_TOKEN_RE.split(body)[::2]:
+                    for phrase in ([] if usage_clause else PLACEHOLDER_TOKEN_RE.split(body)[::2]):
                         phrase = _space(phrase).strip(" -.,:;`'\"()")
                         if PLACEHOLDER_TOKEN_RE.search(body):
                             phrase = re.sub(r"\s+(?:of|over|in|between|with|to|on|from)$", "", phrase, flags=re.IGNORECASE)

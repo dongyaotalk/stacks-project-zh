@@ -118,6 +118,34 @@ class SourceTermsTests(unittest.TestCase):
         row = unit("Read <EMPHOPEN_0001>The Book<EMPHCLOSE_0001>.", {"EMPHOPEN_0001": r"\emph{", "EMPHCLOSE_0001": "}"}, "paragraph")
         self.assertEqual(source_inventory(row, catalog(row))["occurrences"], [])
 
+    def test_italic_imperatives_do_not_name_terms_but_catalog_coverage_is_required(self):
+        for imperative in ["let", "Assume", "suppose"]:
+            with self.subTest(imperative=imperative):
+                row = unit(f"We will say ``<TEXTITOPEN_0001>{imperative} <MATH_0001> be the category associated to <MATH_0002><TEXTITCLOSE_0001>''.",
+                           {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}",
+                            "MATH_0001": "$C$", "MATH_0002": "$D$"}, "paragraph")
+                self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["category"])
+                self.assertTrue(validate_source_terms(row, candidate([]), catalog(row)))
+                self.assertEqual(validate_source_terms(row, candidate([("category", "范畴")]), catalog(row)), [])
+
+    def test_quoted_usage_does_not_disable_other_new_definitions(self):
+        row = unit("A <TEXTITOPEN_0001>frobulator<TEXTITCLOSE_0001> has a name. We say ``<TEXTITOPEN_0002>let <MATH_0001> be a category<TEXTITCLOSE_0002>''. The frobulator is unique.",
+                   {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}",
+                    "TEXTITOPEN_0002": r"{\it ", "TEXTITCLOSE_0002": "}", "MATH_0001": "$C$"})
+        self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["frobulator", "category", "frobulator"])
+        self.assertTrue(validate_source_terms(row, candidate([("category", "范畴")]), catalog(row)))
+
+    def test_say_still_introduces_a_short_uncatalogued_term(self):
+        row = unit("We say <EMPHOPEN_0001>frobulator<EMPHCLOSE_0001> in this setting.",
+                   {"EMPHOPEN_0001": r"\emph{", "EMPHCLOSE_0001": "}"}, "paragraph")
+        self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["frobulator"])
+        self.assertTrue(validate_source_terms(row, candidate([]), catalog(row)))
+
+    def test_nonfont_payload_cannot_create_an_italic_declaration(self):
+        row = unit("We call <TEXTITOPEN_0001>frobulator<TEXTITCLOSE_0001> here.",
+                   {"TEXTITOPEN_0001": "$x$", "TEXTITCLOSE_0001": "}"})
+        self.assertEqual(source_inventory(row, catalog(row))["occurrences"], [])
+
     def test_relation_phrase_keeps_its_preposition_without_math_inside(self):
         row = unit("We say it <TEXTITOPEN_0001>lies over<TEXTITCLOSE_0001> the point.", {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})
         self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["lies over"])

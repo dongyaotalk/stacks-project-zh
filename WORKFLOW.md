@@ -272,6 +272,8 @@ make qa-all
 make provenance-check
 make decision-check
 make proof-source-audit
+make extract-all
+make extract-all-check
 make render MODEL=<model>
 make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
@@ -289,6 +291,11 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
 范围约束，优先于 `config/translation-priorities.json` 中的长期默认政策；没有显式范围
 时才按 P0–P4、wave 和 Section 顺序自动选择。`make plan` 确定性生成全书当前行动
 队列。详见 `docs/translation-priority.md`。
+
+`make extract-all` 一次扫描锁定 Git 中的全部章源，生成 ignored 来源库存、受保护的
+提议单元和统一诊断；`make extract-all-check` 验证确定性产物。库存有逐字回放与
+READY/BLOCKED 覆盖报告，不自动写入现有 unit/candidate 或授予审校状态。详见
+`docs/source-extraction.md`。事实采用和下面的章节级提取接口仍须独立范围准备。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 

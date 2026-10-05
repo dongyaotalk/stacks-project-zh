@@ -1,0 +1,679 @@
+"""Lossless, non-executing source inventory, separate from adopted translations.
+
+Every byte belongs to a proposed unit or a locked segment. Unsupported syntax
+is retained and reported; writing an inventory does not make it adoptable.
+"""
+from __future__ import annotations
+
+import ast
+import bisect
+import collections
+import json
+import re
+import shutil
+import subprocess
+import tempfile
+from array import array
+from pathlib import Path
+from typing import Any
+
+from .chapter_templates import manifest_chapters
+from .records import RecordError, stamp_unit_hashes
+from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
+
+VERSION = 'source-extraction-v1'
+COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
+ENVIRONMENT = re.compile(r'\\(begin|end)\{([A-Za-z][A-Za-z0-9*_-]*)\}')
+WORD = re.compile(r'[A-Za-z]{2,}')
+STATEMENTS = {'definition', 'lemma', 'proposition', 'theorem', 'corollary',
+              'remark', 'remarks', 'example', 'exercise', 'situation'}
+SCAFFOLD = {'item', 'noindent', 'medskip', 'smallskip', 'bigskip', 'par',
+            'maketitle', 'phantomsection', 'tableofcontents',
+            'bibliography', 'bibliographystyle'}
+
+
+class SyntaxProblem(RecordError):
+    def __init__(self, message: str, offset: int):
+        super().__init__(message)
+        self.offset = offset
+
+
+class Policy:
+    """Read the current explicit YAML subset; never infer unknown macro policy."""
+    def __init__(self, text: str):
+        if not all(re.search(r'(?m)^' + name + r': block\s*$', text)
+                   for name in ('default_command_policy', 'default_environment_policy')):
+            raise RecordError('extraction requires explicit blocking defaults in macro policy')
+        self.commands: dict[str, str] = {}
+        self.math: set[str] = set()
+        self.literal: set[str] = set()
+        self.metadata: set[str] = set()
+        self.body: set[str] = set()
+        self.accents: set[str] = set()
+        self.special: set[str] = set()
+        section = group = command = ''
+        for line in text.splitlines():
+            if not line.strip() or line.lstrip().startswith('#'):
+                continue
+            if not line.startswith(' '):
+                section = line.partition(':')[0]
+                group = command = ''
+            elif section == 'commands' and re.match(r'^  \S', line):
+                key = line.strip().removesuffix(':')
+                command = ast.literal_eval(key) if key[:1] in {'"', "'"} else key
+            elif section == 'commands' and line.startswith('    policy:'):
+                self.commands[command] = line.partition(':')[2].strip()
+            elif section == 'locked_environment_groups' and re.match(r'^  \S', line):
+                group = line.strip().removesuffix(':')
+            elif section == 'locked_environment_groups' and line.strip().startswith('- '):
+                if group not in {'math', 'literal', 'editorial_metadata'}:
+                    raise RecordError('unsupported locked environment policy group')
+                destination = {'math': self.math, 'literal': self.literal,
+                               'editorial_metadata': self.metadata}[group]
+                destination.add(line.strip()[2:])
+            elif section == 'translatable_body_environments' and line.strip().startswith('- '):
+                self.body.add(line.strip()[2:])
+            elif section == 'special_environments' and re.match(r'^  \S', line):
+                self.special.add(line.strip().removesuffix(':'))
+            elif section == 'text_accent_commands' and line.strip().startswith('- '):
+                self.accents.add(ast.literal_eval(line.strip()[2:]))
+        supported = {'locked', 'mixed', 'translate_arguments',
+                     'preserve_wrapper_translate_children',
+                     'preserve_scoped_declaration_translate_children',
+                     'special_index_record', 'lock_structure_translate_explicit_text_nodes'}
+        if not self.commands or set(self.commands.values()) - supported:
+            raise RecordError('unsupported extraction command policy')
+
+
+class Scanner:
+    def __init__(self, text: str, policy: Policy):
+        self.text, self.policy = text, policy
+
+    def comment_end(self, offset: int) -> int:
+        end = self.text.find('\n', offset)
+        return len(self.text) if end < 0 else end + 1
+
+    def skip_space(self, offset: int) -> int:
+        while offset < len(self.text):
+            if self.text[offset].isspace():
+                offset += 1
+            elif self.text[offset] == '%':
+                offset = self.comment_end(offset)
+            else:
+                break
+        return offset
+
+    def math_end(self, start: int) -> int:
+        text = self.text
+        opening = text[start:start + 2]
+        if opening not in {'$$', r'\[', r'\('}:
+            opening = '$'
+        closing = {'$$': '$$', '$': '$', r'\[': r'\]', r'\(': r'\)'}[opening]
+        i = start + len(opening)
+        while i < len(text):
+            if text.startswith(closing, i):
+                if closing == '$' and text.startswith('$$', i):
+                    raise SyntaxProblem('ambiguous dollar math', i)
+                return i + len(closing)
+            if text[i] == '%':
+                i = self.comment_end(i)
+            elif text[i] == '\\':
+                match = COMMAND.match(text, i)
+                i = match.end() if match else i + 1
+            else:
+                i += 1
+        raise SyntaxProblem('unclosed math', start)
+
+    def argument_end(self, start: int) -> int:
+        opening = self.text[start]
+        closing = {'{': '}', '[': ']'}[opening]
+        depth, brace_depth, i = 1, 0, start + 1
+        while i < len(self.text):
+            c = self.text[i]
+            if c == '%':
+                i = self.comment_end(i)
+            elif c == '$' or self.text.startswith((r'\[', r'\('), i):
+                i = self.math_end(i)
+            elif c == '\\':
+                match = COMMAND.match(self.text, i)
+                i = match.end() if match else i + 1
+            else:
+                if opening == '[':
+                    brace_depth += (c == '{') - (c == '}')
+                    if brace_depth < 0:
+                        raise SyntaxProblem('unbalanced group in optional argument', i)
+                if not brace_depth and c == opening:
+                    depth += 1
+                elif not brace_depth and c == closing:
+                    depth -= 1
+                    if depth == 0:
+                        return i + 1
+                i += 1
+        raise SyntaxProblem('unclosed command argument', start)
+
+    def environment_end(self, start: int) -> int:
+        first = ENVIRONMENT.match(self.text, start)
+        if first is None or first[1] != 'begin':
+            raise SyntaxProblem('expected environment opening', start)
+        name = first[2]
+        if name in self.policy.literal:
+            end = self.text.find(r'\end{' + name + '}', first.end())
+            if end < 0:
+                raise SyntaxProblem('unclosed literal environment', start)
+            return end + len(name) + 6
+        stack, i = [name], first.end()
+        while i < len(self.text):
+            if self.text[i] == '%':
+                i = self.comment_end(i)
+            elif self.text[i] == '$' or self.text.startswith((r'\[', r'\('), i):
+                i = self.math_end(i)
+            elif self.text[i] == '\\':
+                match = ENVIRONMENT.match(self.text, i)
+                if match:
+                    action, child = match[1], match[2]
+                    if action == 'begin' and child in self.policy.literal:
+                        i = self.environment_end(i)
+                        continue
+                    if action == 'begin':
+                        stack.append(child)
+                    elif not stack or stack.pop() != child:
+                        raise SyntaxProblem('mismatched environment closing', i)
+                    if not stack:
+                        return match.end()
+                    i = match.end()
+                else:
+                    command = COMMAND.match(self.text, i)
+                    i = command.end() if command else i + 1
+            else:
+                i += 1
+        raise SyntaxProblem('unclosed environment', start)
+
+    def command_arguments(self, start: int, count: int = 1, optional: bool = False) -> tuple[int, list[tuple[int, int]]]:
+        match = COMMAND.match(self.text, start)
+        if match is None:
+            raise SyntaxProblem('incomplete command', start)
+        i, args = match.end(), []
+        if self.text[i:i + 1] == '*':
+            i += 1
+        if optional:
+            while self.text[self.skip_space(i):self.skip_space(i) + 1] == '[':
+                i = self.argument_end(self.skip_space(i))
+        for _ in range(count):
+            opening = self.skip_space(i)
+            if self.text[opening:opening + 1] != '{':
+                raise SyntaxProblem('missing command argument: ' + match.group(), start)
+            i = self.argument_end(opening)
+            args.append((opening, i))
+        return i, args
+
+    def protect(self, start: int, end: int) -> tuple[str, dict[str, str], list[dict[str, Any]]]:
+        placeholders: dict[str, str] = {}
+        counts: collections.Counter[str] = collections.Counter()
+        diagnostics: list[dict[str, Any]] = []
+
+        def lock(role: str, a: int, b: int) -> str:
+            counts[role] += 1
+            if counts[role] > 9999:
+                raise SyntaxProblem('unit exceeds protected token capacity', a)
+            name = f'{role}_{counts[role]:04d}'
+            placeholders[name] = self.text[a:b]
+            return '<' + name + '>'
+
+        def issue(kind: str, a: int, b: int, message: str):
+            diagnostics.append({'kind': kind, 'start': a, 'end': b, 'message': message,
+                                'source': self.text[a:b], 'severity': 'BLOCKED'})
+
+        def math(a: int, b: int) -> str:
+            # The current policy locks math. Inventory explicit language too;
+            # adopting translated math text needs its own verified contract.
+            fragment = self.text[a:b]
+            child = Scanner(fragment, self.policy)
+            i = 0
+            while i < len(fragment):
+                if fragment[i] == '%':
+                    i = child.comment_end(i)
+                    continue
+                match = COMMAND.match(fragment, i) if fragment[i] == '\\' else None
+                if match:
+                    opening = child.skip_space(match.end())
+                    if match.group()[1:] in {'text', 'textit', 'textbf'} and fragment[opening:opening + 1] == '{':
+                        try:
+                            close = child.argument_end(opening)
+                        except SyntaxProblem:
+                            close = opening + 1
+                        value = fragment[opening + 1:close - 1]
+                        if WORD.search(value):
+                            issue('math-text', a + opening + 1, a + close - 1,
+                                  'explicit text inside locked math requires classification before adoption')
+                    i = match.end()
+                else:
+                    i += 1
+            return lock('MATH', a, b)
+
+        def walk(a: int, b: int) -> str:
+            out: list[str] = []
+            i = a
+            while i < b:
+                c = self.text[i]
+                if c == '%':
+                    stop = min(self.comment_end(i), b)
+                    out.append(lock('COMMENT', i, stop)); i = stop
+                elif c == '$' or self.text.startswith((r'\[', r'\('), i):
+                    stop = self.math_end(i)
+                    if stop > b:
+                        raise SyntaxProblem('math crosses source unit boundary', i)
+                    out.append(math(i, stop)); i = stop
+                elif c == '{':
+                    stop = self.argument_end(i)
+                    inner = self.skip_space(i + 1)
+                    declaration = COMMAND.match(self.text, inner)
+                    if declaration and declaration.group()[1:] in {'it', 'bf'}:
+                        opening_end = declaration.end()
+                        if self.text[opening_end:opening_end + 1].isspace():
+                            opening_end += 1
+                        out.append(lock('TEXTITOPEN' if declaration.group() == r'\it' else 'TEXTBFOPEN', i, opening_end))
+                        out.append(walk(opening_end, stop - 1))
+                        out.append(lock('TEXTITCLOSE' if declaration.group() == r'\it' else 'TEXTBFCLOSE', stop - 1, stop))
+                    else:
+                        out.extend([lock('GROUPOPEN', i, i + 1), walk(i + 1, stop - 1), lock('GROUPCLOSE', stop - 1, stop)])
+                    i = stop
+                elif c == '\\':
+                    environment = ENVIRONMENT.match(self.text, i)
+                    if environment:
+                        action, name = environment[1], environment[2]
+                        if action == 'begin' and name in self.policy.math:
+                            stop = self.environment_end(i); out.append(math(i, stop)); i = stop; continue
+                        if action == 'begin' and name in self.policy.literal | self.policy.metadata:
+                            stop = self.environment_end(i); out.append(lock('LOCKED', i, stop)); i = stop; continue
+                        if name not in self.policy.body:
+                            stop = self.environment_end(i) if action == 'begin' else environment.end()
+                            issue('unknown-environment', i, stop, 'environment is not a supported translatable body')
+                            out.append(lock('UNKNOWN', i, stop)); i = stop; continue
+                        out.append(lock('STRUCT', i, environment.end())); i = environment.end()
+                        if action == 'begin' and self.text[self.skip_space(i):self.skip_space(i) + 1] == '[':
+                            opening = self.skip_space(i); stop = self.argument_end(opening)
+                            out.extend([lock('ENVARGOPEN', i, opening + 1), walk(opening + 1, stop - 1), lock('ENVARGEND', stop - 1, stop)])
+                            i = stop
+                        continue
+                    match = COMMAND.match(self.text, i)
+                    if not match:
+                        raise SyntaxProblem('incomplete command', i)
+                    name, stop = match.group()[1:], match.end()
+                    if name in self.policy.accents:
+                        token = self.skip_space(stop)
+                        stop = self.argument_end(token) if self.text[token:token + 1] == '{' else token + 1
+                        if stop > b:
+                            raise SyntaxProblem('incomplete text accent', i)
+                        out.append(lock('ACCENT', i, stop))
+                    elif name in {' ', '\t', '\r', '\n', ',', ';', ':', '!', '/', '\\', '%', '#', '$', '&', '_', '{', '}'}:
+                        out.append(lock('SPACE' if name.isspace() else 'STRUCT', i, stop))
+                    elif name in SCAFFOLD:
+                        if name in {'bibliography', 'bibliographystyle'}:
+                            stop, _ = self.command_arguments(i)
+                        elif name == 'item' and self.text[self.skip_space(stop):self.skip_space(stop) + 1] == '[':
+                            opening = self.skip_space(stop); stop = self.argument_end(opening)
+                            out.extend([lock('ITEMOPEN', i, opening + 1), walk(opening + 1, stop - 1), lock('ITEMCLOSE', stop - 1, stop)])
+                            i = stop; continue
+                        out.append(lock('STRUCT', i, stop))
+                    elif self.policy.commands.get(name) == 'locked':
+                        stop, _ = self.command_arguments(i, optional=True)
+                        out.append(lock('REF' if name in {'ref', 'eqref', 'pageref', 'cite'} else 'LOCKED', i, stop))
+                    elif self.policy.commands.get(name) in {'translate_arguments', 'preserve_wrapper_translate_children', 'mixed'}:
+                        stop, args = self.command_arguments(i, 2 if name == 'href' else 1)
+                        opening, closing = args[-1]
+                        role = {'footnote': 'FOOTNOTE', 'textit': 'TEXTIT', 'textbf': 'TEXTBF', 'emph': 'EMPH'}.get(name, 'TEXT')
+                        out.extend([lock(role + 'OPEN', i, opening + 1), walk(opening + 1, closing - 1), lock(role + 'CLOSE', closing - 1, stop)])
+                    elif self.policy.commands.get(name) == 'special_index_record':
+                        stop, _ = self.command_arguments(i)
+                        issue('index-record', i, stop, 'index entry needs the separate index-record translation contract')
+                        out.append(lock('INDEX', i, stop))
+                    else:
+                        if name in {'verb', 'Verb'}:
+                            delimiter = self.text[stop:stop + 1]
+                            close = self.text.find(delimiter, stop + 1) if delimiter else -1
+                            stop = close + 1 if close >= 0 else b
+                        else:
+                            while self.text[self.skip_space(stop):self.skip_space(stop) + 1] == '{':
+                                stop = self.argument_end(self.skip_space(stop))
+                        issue('unknown-command', i, stop, 'unknown command or unsupported scoped command: ' + name)
+                        out.append(lock('UNKNOWN', i, stop))
+                    i = stop
+                elif c == '}':
+                    raise SyntaxProblem('unexpected closing text group', i)
+                elif c in '&_#^~':
+                    out.append(lock('STRUCT', i, i + 1)); i += 1
+                elif c in '<>':
+                    out.append(lock('LITERAL', i, i + 1)); i += 1
+                else:
+                    stop = i + 1
+                    while stop < b and self.text[stop] not in '%$\\{}&_#^~<>':
+                        stop += 1
+                    out.append(self.text[i:stop]); i = stop
+            return ''.join(out)
+
+        return walk(start, end), placeholders, diagnostics
+
+
+def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str],
+                      policy: Policy, existing: dict[tuple[str, str], list[dict[str, Any]]] | None = None):
+    text = raw.decode('utf-8')
+    scanner = Scanner(text, policy)
+    byte_offsets = array('Q', [0])
+    for char in text:
+        byte_offsets.append(byte_offsets[-1] + len(char.encode('utf-8')))
+    newlines = [i for i, c in enumerate(text) if c == '\n']
+    units, segments, diagnostics = [], [], []
+    section = tags.get(chapter + '-section-phantom')
+    previous_statement = None
+    ordinals: collections.Counter[tuple[str | None, str]] = collections.Counter()
+
+    def location(a: int, b: int):
+        return {'file': chapter + '.tex', 'byte_start': byte_offsets[a], 'byte_end': byte_offsets[b],
+                'line_start': bisect.bisect_left(newlines, a) + 1,
+                'line_end': bisect.bisect_left(newlines, max(a, b - 1)) + 1,
+                'fragment_hash': byte_hash(text[a:b])}
+
+    def locked(a: int, b: int, kind: str):
+        if a < b:
+            segments.append({'chapter': chapter, 'kind': kind, 'location': location(a, b), 'source': text[a:b]})
+
+    def emit(a: int, b: int, kind: str, owner: str | None, syntax: SyntaxProblem | None = None):
+        if a >= b:
+            return
+        try:
+            if syntax:
+                raise syntax
+            protected, placeholders, problems = scanner.protect(a, b)
+        except SyntaxProblem as exc:
+            protected, placeholders = '<UNKNOWN_0001>', {'UNKNOWN_0001': text[a:b]}
+            problems = [{'kind': 'syntax', 'start': a, 'end': b, 'severity': 'BLOCKED',
+                         'message': str(exc), 'source': text[a:b]}]
+        natural = re.sub(r'<[A-Z][A-Z0-9]*_[0-9]{4}>', '', protected)
+        if not WORD.search(natural) and not problems:
+            locked(a, b, 'structure-or-math')
+            return
+        ordinals[(owner, kind)] += 1
+        path = f'{kind}/{ordinals[(owner, kind)]:04d}'
+        identifier = f'inventory:{chapter}:{owner or "untagged"}:{path}'
+        if owner is None:
+            problems.append({'kind': 'ownership', 'start': a, 'end': b, 'severity': 'BLOCKED',
+                             'message': 'no unique locked permanent Tag owner; explicit scope mapping required',
+                             'source': text[a:b]})
+        unit = stamp_unit_hashes({'schema_version': 1, 'unit_id': identifier,
+            'parent_tag': section or 'UNASSIGNED', 'chapter': chapter, 'node_kind': kind,
+            'risk_level': 'R3' if kind in STATEMENTS | {'proof'} else 'R1',
+            'source_commit': commit, 'source_text': protected, 'source_status': 'CURRENT',
+            'placeholders': placeholders, 'render': {'prefix': '', 'suffix': ''}})
+        assert source_tex(unit) == text[a:b], 'extraction roundtrip defect'
+        matches = (existing or {}).get((chapter, byte_hash(text[a:b])), [])
+        matches = [u['unit_id'] for u in matches if u.get('_owner') == owner]
+        record = {'inventory_id': identifier, 'source_commit': commit, 'owner_tag': owner,
+                  'parent_tag': section, 'semantic_path': path, 'location': location(a, b),
+                  'state': 'BLOCKED' if problems else 'READY', 'word_count': len(WORD.findall(natural)),
+                  'existing_unit_id': matches[0] if len(matches) == 1 else None,
+                  'unit': unit, 'diagnostic_count': len(problems)}
+        units.append(record)
+        segments.append({'chapter': chapter, 'kind': 'unit', 'location': location(a, b), 'inventory_id': identifier})
+        for problem in problems:
+            start, end = problem.pop('start'), problem.pop('end')
+            diagnostics.append({**problem, 'inventory_id': identifier, 'chapter': chapter,
+                                'owner_tag': owner, 'location': location(start, end)})
+
+    def own_label(offset: int):
+        offset = scanner.skip_space(offset)
+        if text[offset:offset + 1] == '[':
+            offset = scanner.skip_space(scanner.argument_end(offset))
+        label = re.match(r'\\label\{([^{}\n]+)\}', text[offset:])
+        return tags.get(chapter + '-' + label[1]) if label else None
+
+    # Locate the real opening from the permitted preamble, not a global regex:
+    # coding.tex contains literal document examples in verbatim environments.
+    opening = scanner.skip_space(0)
+    if text.startswith(r'\input{preamble}', opening):
+        opening = scanner.skip_space(opening + len(r'\input{preamble}'))
+    document = ENVIRONMENT.match(text, opening)
+    if document is None or document.group() != r'\begin{document}':
+        emit(0, len(text), 'document', None, SyntaxProblem('no unique document boundary', 0))
+        if not raw:
+            diagnostics.append({'kind': 'syntax', 'chapter': chapter, 'severity': 'BLOCKED',
+                                'message': 'empty source document', 'source': '', 'location': location(0, 0)})
+    else:
+        cursor = document.end()
+        closed_document = False
+        locked(0, cursor, 'preamble')
+        while cursor < len(text):
+            start = scanner.skip_space(cursor)
+            locked(cursor, start, 'whitespace-or-comments')
+            if start >= len(text):
+                break
+            try:
+                env = ENVIRONMENT.match(text, start)
+                command = COMMAND.match(text, start)
+                if env and env[1] == 'end' and env[2] == 'document':
+                    closed_document = True
+                    locked(start, len(text), 'document-footer')
+                    footer = scanner.skip_space(env.end())
+                    if text.startswith(r'\input{chapters}', footer):
+                        footer = scanner.skip_space(footer + len(r'\input{chapters}'))
+                    if footer < len(text):
+                        diagnostics.append({'kind': 'document-footer', 'chapter': chapter, 'severity': 'BLOCKED',
+                            'message': 'unsupported content after the document closing',
+                            'source': text[footer:], 'location': location(footer, len(text))})
+                    break
+                if env and env[1] == 'begin':
+                    end = scanner.environment_end(start)
+                    kind = env[2]
+                    if kind in policy.literal | policy.metadata:
+                        locked(start, end, kind); previous_statement = None
+                    else:
+                        owner = own_label(env.end()) if kind in STATEMENTS else previous_statement if kind == 'proof' else section
+                        emit(start, end, kind, owner)
+                        previous_statement = owner if kind in STATEMENTS | {'proof'} else None
+                    cursor = end
+                    continue
+                if command and command.group()[1:] in {'title', 'section', 'subsection', 'subsubsection'}:
+                    name = command.group()[1:]
+                    end, _ = scanner.command_arguments(start)
+                    tail = scanner.skip_space(end)
+                    label = re.match(r'\\label\{([^{}\n]+)\}', text[tail:])
+                    owner = tags.get(chapter + '-' + label[1]) if label else None
+                    if name == 'title':
+                        owner = tags.get(chapter + '-section-phantom')
+                    if label:
+                        end = tail + len(label.group())
+                    if name == 'section':
+                        section = owner
+                    emit(start, end, name + '_title', owner)
+                    previous_statement = None; cursor = end
+                    continue
+                # Infrastructure is inventoried separately, never sent as prose.
+                if command and command.group()[1:] in {'maketitle', 'phantomsection', 'tableofcontents', 'bibliography', 'bibliographystyle', 'input', 'label'}:
+                    name = command.group()[1:]; end = command.end()
+                    if name in {'bibliography', 'bibliographystyle', 'input', 'label'}:
+                        end, _ = scanner.command_arguments(start)
+                    if name == 'input' and text[start:end] != r'\input{chapters}':
+                        emit(start, end, 'external-input', section)
+                    else:
+                        locked(start, end, 'document-infrastructure')
+                    cursor = end; previous_statement = None
+                    continue
+                i = start
+                while i < len(text):
+                    if text[i] == '%':
+                        i = scanner.comment_end(i)
+                    elif text[i] == '$' or text.startswith((r'\[', r'\('), i):
+                        i = scanner.math_end(i)
+                    elif text[i] == '{':
+                        i = scanner.argument_end(i)
+                    elif text[i] == '\\':
+                        env = ENVIRONMENT.match(text, i)
+                        cmd = COMMAND.match(text, i)
+                        if env or (cmd and cmd.group()[1:] in {'title', 'section', 'subsection', 'subsubsection'}):
+                            if i > start:
+                                break
+                            raise SyntaxProblem('unexpected structural closing', i)
+                        if not cmd:
+                            raise SyntaxProblem('incomplete command', i)
+                        i = cmd.end()
+                        # Consume complete arguments, including multiline footnotes;
+                        # paragraph separators inside them cannot split the wrapper.
+                        while text[scanner.skip_space(i):scanner.skip_space(i) + 1] in {'{', '['}:
+                            i = scanner.argument_end(scanner.skip_space(i))
+                    elif text[i] == '\n' and re.match(r'\n[ \t\r]*\n', text[i:]):
+                        break
+                    else:
+                        i += 1
+                if i <= start:
+                    raise SyntaxProblem('source scanner made no progress', start)
+                emit(start, i, 'paragraph', section)
+                cursor = i; previous_statement = None
+            except SyntaxProblem as exc:
+                # Keep every remaining byte and its cause, never silently drop a
+                # malformed tail or claim a partially scanned document is READY.
+                emit(start, len(text), 'unsupported-tail', section, exc)
+                break
+        if not closed_document and not any(d['kind'] == 'syntax' for d in diagnostics):
+            diagnostics.append({'kind': 'syntax', 'chapter': chapter, 'severity': 'BLOCKED',
+                'message': 'missing document closing', 'source': text,
+                'location': location(0, len(text))})
+            for row in units:
+                row['state'] = 'BLOCKED'
+                row['diagnostic_count'] += 1
+    by_id = {row['inventory_id']: row['unit'] for row in units}
+    restored = ''.join(source_tex(by_id[s['inventory_id']]) if s['kind'] == 'unit' else s['source'] for s in segments)
+    if restored.encode('utf-8') != raw:
+        raise RecordError(chapter + ': full Git byte roundtrip failed')
+    offset = 0
+    for segment in segments:
+        if segment['location']['byte_start'] != offset:
+            raise RecordError(chapter + ': source byte coverage has a gap or overlap')
+        offset = segment['location']['byte_end']
+    if offset != len(raw):
+        raise RecordError(chapter + ': source byte coverage is incomplete')
+    return units, segments, diagnostics
+
+
+def _current_index(root: Path, tags: dict[str, str]):
+    from .source_integrity import permanent_tag_mapping
+    result: dict[tuple[str, str], list[dict[str, Any]]] = collections.defaultdict(list)
+    snapshots = []
+    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+        raw = path.read_bytes()
+        snapshots.append([path.relative_to(root).as_posix(), byte_hash(raw)])
+        units = [json.loads(line) for line in raw.decode('utf-8').splitlines() if line.strip()]
+        mapping = permanent_tag_mapping(units, tags)
+        for unit in units:
+            mapped = mapping[unit['unit_id']]
+            tag = re.match(r'tag:([0-9A-Z]+):', mapped)
+            result[(unit['chapter'], byte_hash(source_tex(unit)))].append({**unit, '_owner': tag[1] if tag else None})
+    return result, byte_hash(json.dumps(snapshots, ensure_ascii=False, separators=(',', ':')))
+
+
+def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None):
+    english = LockedEnglish(root, harvest)
+    policy_raw = (root / 'config/macro-policy.yml').read_bytes()
+    policy = Policy(policy_raw.decode('utf-8'))
+    manifest_raw = _git_bytes(harvest, english.commit, 'chapters.tex')
+    listed = manifest_chapters(manifest_raw.decode('utf-8'))
+    if chapters:
+        unknown = set(chapters) - {name for name, _ in listed}
+        if unknown or len(chapters) != len(set(chapters)):
+            raise RecordError('unknown or duplicate chapter selector: ' + ', '.join(sorted(unknown)))
+        listed = [(name, title) for name, title in listed if name in chapters]
+    current, current_hash = _current_index(root, english.tags)
+    units, segments, diagnostics, summaries = [], [], [], []
+    # Missing a blob is different from a Git access failure. Establish the tree
+    # once, so errors cannot be falsely described as generated/missing chapters.
+    tree = subprocess.run(['git', '-C', str(harvest), 'ls-tree', '--name-only', english.commit], capture_output=True, text=True)
+    if tree.returncode:
+        raise RecordError('locked English Git tree unavailable')
+    paths = set(tree.stdout.splitlines())
+    for chapter, title in listed:
+        if chapter + '.tex' not in paths:
+            summaries.append({'chapter': chapter, 'title': title, 'state': 'SOURCE_UNAVAILABLE',
+                              'reason': 'no independent TeX blob in locked Git tree'})
+            diagnostics.append({'kind': 'source-unavailable', 'chapter': chapter, 'severity': 'BLOCKED',
+                                'message': 'no independent TeX blob in locked Git tree'})
+            continue
+        raw = _git_bytes(harvest, english.commit, chapter + '.tex')
+        rows, parts, problems = chapter_inventory(chapter, raw, english.commit, english.tags, policy, current)
+        units.extend(rows); segments.extend(parts); diagnostics.extend(problems)
+        summaries.append({'chapter': chapter, 'title': title, 'state': 'INVENTORIED',
+                          'source_hash': byte_hash(raw), 'source_bytes': len(raw),
+                          'unit_count': len(rows), 'ready': sum(u['state'] == 'READY' for u in rows),
+                          'blocked': sum(u['state'] == 'BLOCKED' for u in rows),
+                          'diagnostics': len(problems), 'roundtrip': 'BYTE_EXACT'})
+    manifest = {'schema_version': 1, 'extractor_version': VERSION, 'source_commit': english.commit,
+                'macro_policy_hash': byte_hash(policy_raw), 'chapter_manifest_hash': byte_hash(manifest_raw),
+                'chapter_count': len(summaries), 'chapters': summaries, 'unit_count': len(units),
+                'ready': sum(u['state'] == 'READY' for u in units),
+                'blocked': sum(u['state'] == 'BLOCKED' for u in units), 'diagnostic_count': len(diagnostics),
+                'source_unavailable': [s['chapter'] for s in summaries if s['state'] == 'SOURCE_UNAVAILABLE'],
+                'diagnostics_by_kind': dict(sorted(collections.Counter(p['kind'] for p in diagnostics).items())),
+                'roundtrip_files': sum(s['state'] == 'INVENTORIED' for s in summaries),
+                'translation_ready': not diagnostics, 'adopted': False}
+    manifest['current_units_hash'] = current_hash
+    return manifest, units, segments, diagnostics
+
+
+def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[str] | None = None, check: bool = False):
+    if output.is_symlink():
+        raise RecordError('extraction destination must not be a symlink')
+    root, output = root.resolve(), output.resolve()
+    allowed = any(output.is_relative_to(root / name) and output != root / name for name in ('source-ir', 'build'))
+    if not allowed or output.is_symlink():
+        raise RecordError('extraction output must be a dedicated ignored source-ir/ or build/ subdirectory')
+    if output.exists() and not check:
+        marker = output / 'manifest.json'
+        if (not output.is_dir() or not marker.is_file() or marker.is_symlink()
+                or json.loads(marker.read_text(encoding='utf-8')).get('extractor_version') != VERSION):
+            raise RecordError('refusing to replace a directory not owned by the source extractor')
+        if {p.name for p in output.iterdir()} != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md', 'manifest.json'}:
+            raise RecordError('refusing to replace an inventory containing unrelated files')
+    manifest, units, segments, diagnostics = build_inventory(root, harvest, chapters)
+
+    def jsonl(rows):
+        return ''.join(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(',', ':')) + '\n' for row in rows).encode('utf-8')
+
+    payloads = {'units.jsonl': jsonl(units), 'segments.jsonl': jsonl(segments), 'diagnostics.jsonl': jsonl(diagnostics)}
+    lines = ['# 全库来源库存', '', f"锁定英文：`{manifest['source_commit']}`；抽取器：`{VERSION}`。", '',
+             f"{manifest['chapter_count']}章；{manifest['roundtrip_files']}个Git文件逐字回放通过。",
+             f"提议单元{manifest['unit_count']}：READY {manifest['ready']}，BLOCKED {manifest['blocked']}；诊断{manifest['diagnostic_count']}。", '',
+             'READY仅表示该来源片段被已知语法抽取，不是事实采用、模型译文、人工审校或发布批准。', '',
+             '| Chapter | State | Units | Ready | Blocked |', '| --- | --- | ---: | ---: | ---: |']
+    for chapter in manifest['chapters']:
+        lines.append(f"| {chapter['chapter']} | {chapter['state']} | {chapter.get('unit_count', 0)} | {chapter.get('ready', 0)} | {chapter.get('blocked', 0)} |")
+    lines.extend(['', '诊断分类：', ''] + [f'- {kind}: {count}' for kind, count in manifest['diagnostics_by_kind'].items()])
+    payloads['report.md'] = ('\n'.join(lines) + '\n').encode('utf-8')
+    manifest['files'] = {name: byte_hash(raw) for name, raw in payloads.items()}
+    payloads['manifest.json'] = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + '\n').encode('utf-8')
+    if check:
+        if not output.is_dir() or {p.name for p in output.iterdir()} != set(payloads):
+            raise RecordError('source inventory files missing, extra or stale')
+        for name, raw in payloads.items():
+            if (output / name).is_symlink() or (output / name).read_bytes() != raw:
+                raise RecordError('source inventory out of date: ' + name)
+        return manifest
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix='.extract-', dir=output.parent))
+    backup = None
+    try:
+        for name, raw in payloads.items():
+            (temporary / name).write_bytes(raw)
+        if output.exists():
+            if not output.is_dir():
+                raise RecordError('extraction destination is not a directory')
+            backup = Path(tempfile.mkdtemp(prefix='.extract-backup-', dir=output.parent))
+            backup.rmdir(); output.rename(backup)
+        try:
+            temporary.rename(output)
+        except OSError:
+            if backup is not None:
+                backup.rename(output); backup = None
+            raise
+        if backup is not None:
+            shutil.rmtree(backup); backup = None
+    finally:
+        if temporary.exists():
+            shutil.rmtree(temporary)
+    return manifest

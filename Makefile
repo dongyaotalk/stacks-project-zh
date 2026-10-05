@@ -20,6 +20,7 @@ CHAPTER_TEMPLATE_DIR ?= translation-data/chapter-templates
 HARNESS_ID ?= codex
 HARNESS_CONFIG ?= config/harnesses.yml
 PRIORITY_CONFIG ?= config/translation-priorities.json
+EXTRACTION_DIR ?= source-ir/extraction
 
 UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
@@ -237,6 +238,15 @@ tool-test:
 
 provenance-check:
 	$(PYTHON) stacks_zh.py provenance-check --root . --harvest "$(HARVEST_DIR)"
+
+.PHONY: extract-all extract-all-check
+extract-all: harvest-check
+	$(PYTHON) stacks_zh.py extract-all --root . --harvest "$(HARVEST_DIR)" \
+		--output "$(EXTRACTION_DIR)" $(if $(CHAPTER),--chapter "$(CHAPTER)",)
+
+extract-all-check: harvest-check
+	$(PYTHON) stacks_zh.py extract-all --root . --harvest "$(HARVEST_DIR)" \
+		--output "$(EXTRACTION_DIR)" $(if $(CHAPTER),--chapter "$(CHAPTER)",) --check
 
 decision-check:
 	$(PYTHON) stacks_zh.py decision-check --root . --harvest "$(HARVEST_DIR)"
@@ -497,6 +507,8 @@ help:
 		'make plan-check                 Verify the committed translation plan is current' \
 		'make next-task [CHAPTER=115] [TAG=0BM0] [JSON=1]  Select the next workflow action' \
 		'make tool-test                  Run candidate pipeline tests' \
+		'make extract-all                Inventory all locked source chapters' \
+		'make extract-all-check          Check deterministic source inventory' \
 		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \
 		'make decision-check             Verify selections, reviews and revisions' \

@@ -127,6 +127,12 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 后续修订规范：Issue [#572](https://github.com/dongyaotalk/stacks-project-zh/issues/572)，
+  分支 `docs/revision-archive-provenance`。核对发现 001P 的 Yoneda lemma 与 0AHQ 的
+  Adjoint functor theorem 仍在命名环境包装内。已派生 0AHM 不能回写冻结输出或
+  删除旧修订证据；先定义不可变归档、历史重放及唯一当前后继合同，Schema/工具
+  与标题提取/数据修订另开任务。在配套工具合并前不生成归档或 v3 数据。
+
 - S6 编译日志门禁：Issue [#570](https://github.com/dongyaotalk/stacks-project-zh/issues/570)，
   分支 `build/final-tex-log-gate`。最后一轮日志必须完整，无缺字、未定义引用/引用键
   或重复标签；PDF 复制前强制执行，普通字体回退不误报。模拟零退出编译器回归

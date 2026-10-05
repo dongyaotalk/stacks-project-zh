@@ -127,6 +127,21 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 0AHM 后续标题修订：Issue [#585](https://github.com/dongyaotalk/stacks-project-zh/issues/585)，
+  分支 `translate/categories/0ahm-title/openai-gpt-6-1-sol`。首次真实使用 §8 归档合同，
+  保存前一派生 `audit-categories-0ahm-20261005` 的完整七个输出原字节、原记录
+  hash 和 Git 来源，原 run、全部此前模型修订与快照保留。v3 唯一后继冻结确切
+  上一完整 unit/candidate，逐单元消费实际 GPT-6.1-sol/xhigh 新修订的全部五字段；
+  动态 Harness 为 0.160.0，模型 snapshot 未暴露，不能保证供应商重放。只对
+  0AHQ statement 无损暴露 Adjoint functor theorem 标题，全部七个 source TeX、
+  数学、引用及永久 ID 不变；标题的 Adjoint、functor 与正文术语逐次双语核对。
+  所辖 110 次来源术语出现通过，两段证明均匹配锁定英文；术语仍待决，当前
+  来源绑定包含完整历史，预览披露原生成及两次实际修订，无人工审校或出版批准。
+  全库独立审计为 3091 个 term 问题/924 个不合格候选、6488 次要求出现；source
+  100 问题（36 陈述 Tag、11 raw TeX pairs、1 长脚注、0 隐藏标题）；proof
+  187 组/291 单元仍为 166 匹配、21 差异、0 未支持。其他数据与 S4/S5/S7
+  继续处理，不把本批通过或历史 QA 通过当作全库严格验收。
+
 - 001P 实际来源/标题修订：Issue [#582](https://github.com/dongyaotalk/stacks-project-zh/issues/582)，
   分支 `translate/categories/001p/openai-gpt-6-1-sol`。保留三个旧 unit/candidate
   原字节及 legacy run，暴露 Yoneda lemma 标题并双语翻译；证明通过锁定 Git

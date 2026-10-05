@@ -71,6 +71,16 @@ def _matches(text: str, phrase: str, *, ignore_case: bool = False):
     return list(re.finditer(expression, text, re.IGNORECASE if ignore_case else 0))
 
 
+def _assignment_set(text: str, match: re.Match[str]) -> bool:
+    if match.group(0).casefold() != "set" or not re.match(r"\s+<MATH_[0-9]{4}>", text[match.end():]):
+        return False
+    before = text[:match.start()].rstrip()
+    return (not before or before[-1] in ".!?"
+            or bool(re.search(r"\b(?:us|can|could|may|must|shall|will|and)\s*$", before, re.IGNORECASE))
+            or bool(re.search(r"\bwe(?:\s+(?:now|first|then|finally|similarly))*\s*$", before, re.IGNORECASE))
+            or bool(re.search(r"(?:^|[.!?]\s+)(?:for (?:every|each)\b[^.!?]*|finally|similarly),$", before, re.IGNORECASE)))
+
+
 def load_catalog(root: Path) -> dict[str, Any]:
     path = root / "config/source-terms.json"
     try:
@@ -95,6 +105,15 @@ def load_catalog(root: Path) -> dict[str, Any]:
             if PLACEHOLDER_TOKEN_RE.search(form) or re.search(r"[\\{}$%]", form):
                 raise RecordError("catalog forms must be exposed prose, not protected TeX")
             seen_forms.add(key)
+    scopes = value.get("nonmathematical_chapters", [])
+    if len({scope["chapter"] for scope in scopes}) != len(scopes):
+        raise RecordError("duplicate nonmathematical chapter scope")
+    uses = value.get("nonmathematical_occurrences", [])
+    if any(use["occurrence_index"] < 0 for use in uses):
+        raise RecordError("nonmathematical occurrence index must be nonnegative")
+    keys = {(use["chapter"], use["source_tex_hash"], use["source_term"], use["occurrence_index"]) for use in uses}
+    if len(keys) != len(uses):
+        raise RecordError("duplicate nonmathematical source occurrence")
     return value
 
 
@@ -104,17 +123,31 @@ def source_inventory(unit: dict[str, Any], catalog: dict[str, Any]) -> dict[str,
         raise RecordError(f"{unit['unit_id']}: source inventory refuses stale unit hashes")
     text, declarations = source_projection(unit)
     matches = []
-    for entry in catalog["terms"]:
+    nonmathematical = unit["chapter"] in {scope["chapter"] for scope in catalog.get("nonmathematical_chapters", [])}
+    excluded_spans = set()
+    uses = [use for use in catalog.get("nonmathematical_occurrences", []) if use["chapter"] == unit["chapter"]]
+    tex_hash = source_tex_hash(unit) if uses else None
+    for use in uses:
+        if use["source_tex_hash"] == tex_hash:
+            occurrences = _matches(text, use["source_term"])
+            if use["occurrence_index"] < 0 or use["occurrence_index"] >= len(occurrences):
+                raise RecordError("nonmathematical source occurrence no longer exists")
+            excluded_spans.add(occurrences[use["occurrence_index"]].span())
+    for entry in ([] if nonmathematical else catalog["terms"]):
         if entry["chapters"] and unit["chapter"] not in entry["chapters"]:
             continue
         for form in entry["forms"]:
             for match in _matches(text, form, ignore_case=True):
+                if match.span() in excluded_spans or _assignment_set(text, match):
+                    continue
                 matches.append((match.start(), match.end(), entry["id"], "catalog"))
     exclusions = {phrase.casefold() for phrase in catalog["nonmathematical_declarations"]}
-    for declaration in declarations:
+    for declaration in ([] if nonmathematical else declarations):
         if declaration.casefold() in exclusions:
             continue
         for match in _matches(text, declaration):
+            if match.span() in excluded_spans:
+                continue
             matches.append((match.start(), match.end(), declaration, "source-declaration"))
     # Longest phrases win; nested generic words are not double-counted.
     matches.sort(key=lambda item: (item[0], -(item[1] - item[0]), item[3], item[2]))
@@ -170,6 +203,12 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
     for index, english in sorted(valid, key=lambda item: (-len(item[1]), item[0])):
         available = [match for match in _matches(source, english)
                      if not any(match.start() < stop and start < match.end() for start, stop, _ in assigned)]
+        # An ordinary use may precede the same mathematical word. Allocate the
+        # required source occurrence first, while allowing optional displays
+        # for the remaining ordinary uses without reusing any source span.
+        core = re.sub(r"^(?:a|an|the) ", "", english, flags=re.IGNORECASE)
+        available.sort(key=lambda match: not any(match.start() <= item["projection_start"] and item["projection_end"] <= match.end()
+                                                and core == item["source_term"] for item in inventory["occurrences"]))
         if not available:
             errors.append(f"{uid}: declared term has no unused exact source occurrence: {english}")
             continue
@@ -212,6 +251,15 @@ def audit_repository_terms(root: Path) -> tuple[dict[str, Any], list[str]]:
             if (not any(_matches(source_projection(row)[0], evidence["source_term"]) for row in rows)
                     or evidence["source_term"].casefold() not in {form.casefold() for form in entry["forms"]}):
                 errors.append(f"{entry['id']}: catalog evidence is absent from current English source")
+    for scope in catalog.get("nonmathematical_chapters", []):
+        evidence = scope["title_evidence"]
+        rows = by_tex.get((scope["chapter"], evidence["source_tex_hash"]), [])
+        if not any(row["node_kind"] == "chapter_title" and source_projection(row)[0] == evidence["source_title"] for row in rows):
+            errors.append(f"{scope['chapter']}: nonmathematical chapter lacks its locked English title evidence")
+    for use in catalog.get("nonmathematical_occurrences", []):
+        rows = by_tex.get((use["chapter"], use["source_tex_hash"]), [])
+        if not any(len(_matches(source_projection(row)[0], use["source_term"])) > use["occurrence_index"] for row in rows):
+            errors.append(f"{use['chapter']}: nonmathematical occurrence lacks its locked English source evidence")
     report = {"schema_version": 1, "source_commit": source_commit,
               "catalog_hash": sha256_value(catalog), "unit_count": len(units),
               "batch_count": len(batches), "required_occurrences": 0, "units": [], "candidates": []}

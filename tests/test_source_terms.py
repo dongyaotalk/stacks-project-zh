@@ -171,6 +171,102 @@ class SourceTermsTests(unittest.TestCase):
         self.assertEqual([x["source_term"] for x in source_inventory(row, scope)["occurrences"]], ["fibre product", "product"])
         self.assertEqual(validate_source_terms(row, candidate([("product", "积"), ("fibre product", "纤维积")]), scope), [])
 
+    def test_assignment_set_is_not_a_collection_but_nouns_are_required(self):
+        forms = ["Set <MATH_0001>.", "Then we set <MATH_0001>.", "We can set <MATH_0001>.",
+                 "Let us set <MATH_0001>.", "For every element <MATH_0002>, set <MATH_0001>.",
+                 "Finally, set <MATH_0001>."]
+        for text in forms:
+            with self.subTest(text=text):
+                row = unit(text, {"MATH_0001": "$S$", "MATH_0002": "$x$"})
+                scope = catalog(row); scope["terms"] = [{"id":"set", "forms":["set"], "chapters":[], "evidence":[]}]
+                self.assertEqual(source_inventory(row, scope)["occurrences"], [])
+        row = unit("A set <MATH_0001> and the set <MATH_0002>.", {"MATH_0001":"$S$", "MATH_0002":"$T$"})
+        scope = catalog(row); scope["terms"] = [{"id":"set", "forms":["set"], "chapters":[], "evidence":[]}]
+        self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], ["set", "set"])
+        self.assertTrue(validate_source_terms(row, candidate([("set", "集合")]), scope))
+
+    def test_evidence_bound_exclusion_only_removes_the_named_occurrence(self):
+        row = unit("A category and another category.")
+        scope = catalog(row)
+        scope["nonmathematical_occurrences"] = [{"chapter":"test", "unit_id":row["unit_id"], "source_term":"category",
+            "source_tex_hash":source_tex_hash(row), "occurrence_index":0, "reason":"First usage is editorial in this fixture."}]
+        self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], ["category"])
+        self.assertTrue(validate_source_terms(row, candidate([]), scope))
+        scope["nonmathematical_occurrences"][0]["occurrence_index"] = 2
+        with self.assertRaisesRegex(RecordError, "no longer exists"):
+            source_inventory(row, scope)
+        scope["nonmathematical_occurrences"][0]["occurrence_index"] = -1
+        with self.assertRaisesRegex(RecordError, "no longer exists"):
+            source_inventory(row, scope)
+
+    def test_exclusion_does_not_disable_mathematical_coding_examples(self):
+        row = unit("Consider a category and its objects."); row["chapter"] = "coding"; row = stamp_unit_hashes(row)
+        scope = catalog(row)
+        scope["nonmathematical_occurrences"] = [{"chapter":"coding", "unit_id":"tag:OTHER:item", "source_term":"category",
+            "source_tex_hash":"sha256:"+"0"*64, "occurrence_index":0, "reason":"Different English source."}]
+        self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], ["category", "objects"])
+        self.assertTrue(validate_source_terms(row, candidate([]), scope))
+
+    def test_nonmathematical_chapter_keeps_literal_and_pending_candidate_checks(self):
+        row = unit("A category has objects and morphisms.")
+        scope = catalog(row); scope["nonmathematical_chapters"] = [{"chapter":"test", "reason":"License fixture.",
+            "title_evidence":{"unit_id":"tag:TITLE:title", "source_title":"License", "source_tex_hash":"sha256:"+"0"*64}}]
+        self.assertEqual(source_inventory(row, scope)["occurrences"], [])
+        changed = candidate(); changed["term_status"] = "CLEAR"; changed["unknown_terms"] = []
+        self.assertTrue(validate_source_terms(row, changed, scope))
+        self.assertTrue(validate_source_terms(row, candidate([("invented", "伪词")]), scope))
+
+    def test_math_splitting_remains_required_after_an_editorial_exclusion(self):
+        row = unit("The proof needs splitting; a splitting of the category is defined.")
+        scope = catalog(row); scope["terms"].append({"id":"splitting", "forms":["splitting"], "chapters":[], "evidence":[]})
+        scope["nonmathematical_occurrences"] = [{"chapter":"test", "unit_id":row["unit_id"], "source_term":"splitting",
+            "source_tex_hash":source_tex_hash(row), "occurrence_index":0, "reason":"Editorial first usage."}]
+        self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], ["splitting", "category"])
+        self.assertTrue(validate_source_terms(row, candidate([("category", "范畴")]), scope))
+        self.assertEqual(validate_source_terms(row, candidate([("splitting", "分裂"), ("category", "范畴")]), scope), [])
+
+    def test_context_classifications_reject_duplicates_negative_indices_and_missing_reasons(self):
+        scope = catalog()
+        scope["nonmathematical_chapters"] = [{"chapter":"test", "reason":"License fixture.",
+            "title_evidence":{"unit_id":"tag:TITLE:title", "source_title":"License", "source_tex_hash":"sha256:"+"0"*64}}]
+        scope["nonmathematical_occurrences"] = [{"chapter":"test", "unit_id":unit()["unit_id"], "source_term":"category",
+            "source_tex_hash":source_tex_hash(unit()), "occurrence_index":0, "reason":"Editorial fixture."}]
+        cases=[]
+        for key in ["nonmathematical_chapters", "nonmathematical_occurrences"]:
+            changed=copy.deepcopy(scope); changed[key].append(copy.deepcopy(changed[key][0])); cases.append(changed)
+        changed=copy.deepcopy(scope); changed["nonmathematical_occurrences"][0]["occurrence_index"]=-1; cases.append(changed)
+        changed=copy.deepcopy(scope); del changed["nonmathematical_occurrences"][0]["reason"]; cases.append(changed)
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory); (root/"config").mkdir()
+            for changed in cases:
+                with self.subTest(changed=changed):
+                    (root/"config/source-terms.json").write_text(json.dumps(changed))
+                    with self.assertRaises(RecordError):load_catalog(root)
+
+    def test_repository_rejects_stale_title_and_occurrence_classification_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); (root / "config").mkdir()
+            title = unit("License", kind="chapter_title"); title["unit_id"] = "tag:TITLE:title"
+            body = unit(); scope = catalog(body)
+            scope["nonmathematical_chapters"] = [{"chapter":"test", "reason":"License fixture.",
+                "title_evidence":{"unit_id":title["unit_id"], "source_title":"License", "source_tex_hash":source_tex_hash(title)}}]
+            scope["nonmathematical_occurrences"] = [{"chapter":"test", "unit_id":body["unit_id"], "source_term":"category",
+                "source_tex_hash":source_tex_hash(body), "occurrence_index":0, "reason":"Editorial fixture."}]
+            (root / "config/source-terms.json").write_text(json.dumps(scope))
+            (root / "config/glossary.yml").write_text("entries: []\n")
+            (root / "upstream.lock").write_text(f'commit = "{COMMIT}"\n')
+            write_jsonl(root / "translation-data/units/test.jsonl", [title, body])
+            heading = candidate([]); heading["unit_id"] = title["unit_id"]; heading["translation"] = "许可"
+            write_jsonl(root / "translation-data/candidates/lane/test.jsonl", [heading, candidate([])])
+            self.assertEqual(audit_repository_terms(root)[1], [])
+            for field, value in [("source_title", "Other title"), ("source_tex_hash", "sha256:"+"0"*64)]:
+                changed = copy.deepcopy(scope); changed["nonmathematical_chapters"][0]["title_evidence"][field] = value
+                (root / "config/source-terms.json").write_text(json.dumps(changed))
+                self.assertTrue(any("title evidence" in e for e in audit_repository_terms(root)[1]))
+            changed = copy.deepcopy(scope); changed["nonmathematical_occurrences"][0]["source_tex_hash"] = "sha256:"+"0"*64
+            (root / "config/source-terms.json").write_text(json.dumps(changed))
+            self.assertTrue(any("occurrence lacks" in e for e in audit_repository_terms(root)[1]))
+
     def test_changed_source_cannot_keep_inventory_hashes(self):
         row = unit()
         row["source_text"] += " More objects."

@@ -127,6 +127,12 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- S3 数学语境校准：Issue [#562](https://github.com/dongyaotalk/stacks-project-zh/issues/562)，
+  分支 `tool/source-math-contexts`。区分赋值 set 与集合名词；FDL 普通法律/文档
+  用词及两处明确普通用法以英语标题/TeX hash/逐次证据分类。splitting 的英语
+  证据改为 02XJ 的真实概念说明，保留全部 191 个概念及 coding 的数学引用。
+  分类证据过期必须失败，本任务不改译文、术语批准或把有限分类当作人工审校。
+
 - S3 声明语法边界：Issue [#557](https://github.com/dongyaotalk/stacks-project-zh/issues/557)，
   分支 `tool/source-declaration-quotes`。02X8 的真实斜体措辞句在无损包装重提取后
   被拆成 let、be the 等伪声明；区分带数学参数的祈使措辞句与概念命名，仍强制

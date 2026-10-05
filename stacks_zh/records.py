@@ -161,6 +161,8 @@ def restore_placeholders(
     unit: dict[str, Any],
     translation: str,
     overrides: Mapping[str, str] | None = None,
+    *,
+    delimit_commands: bool = False,
 ) -> str:
     rendered = translation
     for name in placeholder_names(unit.get("source_text", "")):
@@ -169,8 +171,18 @@ def restore_placeholders(
             if overrides
             else unit["placeholders"][name]
         )
+        if delimit_commands:
+            value = delimit_tex_control_word(value)
         rendered = rendered.replace(f"<{name}>", value, 1)
     return rendered
+
+
+def delimit_tex_control_word(value: str) -> str:
+    """Render-only lexical separator, consumed by TeX after a control word."""
+    match = re.search(r"(\\+)[A-Za-z]+\Z", value)
+    if match and len(match.group(1)) % 2:
+        return value + " "
+    return value
 
 
 def placeholder_names(text: str) -> list[str]:

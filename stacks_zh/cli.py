@@ -22,6 +22,7 @@ from .progress import update_progress_report
 from .records import RecordError
 from .source_integrity import audit_repository_source, require_audit_output
 from .source_terms import audit_repository_terms
+from .source_reextractions import audit_repository_proofs
 from .provenance import ProvenanceError, validate_repository_provenance
 from .schema_validation import validate_repository_schemas
 from .tool_version import VERSION
@@ -192,6 +193,11 @@ def build_parser() -> argparse.ArgumentParser:
     source_audit.add_argument("--tags", required=True, type=Path)
     source_audit.add_argument("--output", type=Path)
 
+    proof_audit = subparsers.add_parser("audit-proof-source", help="compare all current proof groups with locked English Git objects")
+    proof_audit.add_argument("--root", type=Path, default=Path("."))
+    proof_audit.add_argument("--harvest", type=Path)
+    proof_audit.add_argument("--output", type=Path)
+
     term_audit = subparsers.add_parser("audit-terms", help="independently audit English source term coverage")
     term_audit.add_argument("--root", type=Path, default=Path("."))
     term_audit.add_argument("--output", type=Path)
@@ -200,10 +206,12 @@ def build_parser() -> argparse.ArgumentParser:
         "provenance-check", help="verify candidates against immutable run manifests"
     )
     provenance.add_argument("--root", type=Path, default=Path("."))
+    provenance.add_argument("--harvest", type=Path)
     decisions = subparsers.add_parser(
         "decision-check", help="verify selections, human reviews and formal revisions"
     )
     decisions.add_argument("--root", type=Path, default=Path("."))
+    decisions.add_argument("--harvest", type=Path)
     schemas = subparsers.add_parser(
         "schema-check", help="validate every structured record against its JSON Schema"
     )
@@ -450,8 +458,19 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"ERROR: {error}", file=sys.stderr)
             print(f"Source terminology: {len(errors)} issue(s); {report['required_occurrences']} required occurrence(s) in {report['unit_count']} unit(s), {report['batch_count']} batch(es)")
             return 1 if errors else 0
+        if args.command == "audit-proof-source":
+            report, errors = audit_repository_proofs(args.root.resolve(), args.harvest)
+            if args.output:
+                require_audit_output(args.root.resolve(), args.output)
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            for error in errors:
+                print(f"ERROR: {error}", file=sys.stderr)
+            print(f"Proof source: {report['proof_group_count']} groups, {report['proof_unit_count']} units; "
+                  f"{report['matched']} matched, {report['mismatched']} mismatched, {report['unsupported']} unable to verify")
+            return 1 if errors else 0
         if args.command == "provenance-check":
-            errors = validate_repository_provenance(args.root.resolve())
+            errors = validate_repository_provenance(args.root.resolve(), args.harvest)
             if errors:
                 for error in errors:
                     print(f"ERROR: {error}", file=sys.stderr)
@@ -459,7 +478,7 @@ def main(argv: list[str] | None = None) -> int:
             print("Model provenance: PASS")
             return 0
         if args.command == "decision-check":
-            errors = validate_repository_decisions(args.root.resolve())
+            errors = validate_repository_decisions(args.root.resolve(), args.harvest)
             if errors:
                 for error in errors:
                     print(f"ERROR: {error}", file=sys.stderr)

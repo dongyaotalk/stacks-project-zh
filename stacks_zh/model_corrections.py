@@ -188,4 +188,13 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
                 'run': read(f"translation-data/runs/{evidence['run_id']}.json"),
             })
         binding['history'] = {'derivations': history, 'corrections': historical_corrections}
+    reextraction_ids = sorted({operation['source_reextraction_id']
+                              for entry in history for operation in entry['derivation']['operations']
+                              if operation.get('source_reextraction_id')})
+    if reextraction_ids:
+        for identifier in reextraction_ids:
+            if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier) or '..' in identifier:
+                raise RecordError('invalid historical source re-extraction ID')
+        binding['source_reextractions'] = [read(f'translation-data/source-reextractions/{identifier}.json')
+                                          for identifier in reextraction_ids]
     return sha256_value(binding)

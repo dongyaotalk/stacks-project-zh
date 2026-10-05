@@ -89,6 +89,7 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/derivations/*.json", "derivation.schema.json"),
         ("translation-data/derivation-archives/*.json", "derivation-archive.schema.json"),
         ("translation-data/model-corrections/*.json", "model-correction.schema.json"),
+        ("translation-data/source-reextractions/*.json", "source-reextraction.schema.json"),
         ("translation-data/selections/*.json", "selection.schema.json"),
         ("translation-data/reviewed/**/*.json", "translation-revision.schema.json"),
         ("review/language/**/*.json", "review.schema.json"),

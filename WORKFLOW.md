@@ -67,8 +67,8 @@
 
 旧提取输入本身漏掉锁定英文节点时，不能把旧 unit 的内部 hash 一致当作英文来源
 完整的证明，也不能只在中文中补回公式。先按 `docs/model-provenance.md` §9 的
-规划合同记录旧输入与锁定 Git 片段，独立落实来源恢复 Schema/工具，再实际重译。
-当前工具仍强制新旧 source TeX 相等；未实现的恢复合同不提前授权改数据。原英文
+合同记录旧输入与锁定 Git 片段，再实际重译。v2/v3 仅对通过完整证据验证的单单元
+简单证明开放来源恢复；其他操作仍强制新旧 source TeX 相等。具体数据另开任务。原英文
 和 source commit 保持不变，历史输入原字节保留，旧审校不继承。
 
 ### 4.3 构造上下文
@@ -271,6 +271,7 @@ make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make qa-all
 make provenance-check
 make decision-check
+make proof-source-audit
 make render MODEL=<model>
 make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \

@@ -146,9 +146,10 @@ prefix 以 opening bracket 结束，source_text 从英文标题开始，其后�
 这些标题已经暴露，不需要 ENVARGEND，也不应为采用新 helper 而拆分、合并或重编号。
 
 旧 source unit 已经丢掉上游节点时，内部 hash 及无损派生不能证明英文输入完整。
-后续来源恢复证据规划位于 `source-reextractions/`，同时绑定完整旧/新 unit、派生、
-锁定英文 Git 片段和受限 selector；对应 Schema/工具尚未实现，现有新旧 source
-TeX 相等的保护不提前放宽。合同见 `docs/model-provenance.md` §9。旧缺陷输入
+来源恢复证据位于 `source-reextractions/`，同时绑定完整旧/新 unit、派生、
+锁定英文 Git 片段和受限 selector。`source-reextraction.schema.json`/loader 只支持
+完整单单元的简单证明；通过证据及完整实际模型修订的 v2/v3 才获得受限例外，其他
+操作仍要求新旧 source TeX 相等。合同见 `docs/model-provenance.md` §9。旧缺陷输入
 保持原字节，新的受保护英文输入由实际新模型修订完整冻结，不冒用旧 run 身份。
 
 ## 3. 来源 hash

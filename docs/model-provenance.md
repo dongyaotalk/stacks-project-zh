@@ -153,12 +153,13 @@ source/target 配对补齐双语显示，以及固定短语的脚注显示变换
 一份记录；后续多项机械修复须合并为从原始快照重放的操作清单，不能覆盖已提交
 派生记录。操作只允许修改提取字段及显示/术语元数据，模型、来源、审批、阶段和
 时间字段不能由操作改写。当前重提取后的 TeX 必须与原 unit 逐字相同；§9 另行
-规划锁定上游恢复合同，配套工具合并前不存在该例外。剥离机械双语英文插入
+锁定上游恢复合同，仅有完整验证的 v2/v3 来源恢复证据才适用例外。剥离机械双语英文插入
 与结构控制字符后中文正文须保持相同。阶段由工具重算且最高到候选结构/术语阶段。派生输出的自然语言节点不得残留
 未保护的 TeX 控制字符；历史提取缺陷必须在同一派生操作中修复。
 脚注只允许固定短语 `See Remark` → `见注` 的显示变换，不开放自由重译接口。
 
-派生不得改动来源锁、公式内容、引用指向或原始模型身份。当前数据重跑 schema、
+派生不得改动来源锁或原始模型身份；除 §9 已验证的英文提取恢复外，公式内容与
+引用指向保持不变，来源恢复本身也不得改写英文 Git 节点。当前数据重跑 schema、
 provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒绝沿用，
 由独立审校/替换任务处理。活跃目录只保存一个当前版本，历史快照不进入当前
 进度、渲染和权威 TM。预览必须明示工具派生，不能只显示原模型名称。
@@ -260,7 +261,7 @@ commit 的上一活跃输出及归档输出；仅声称一个 ID 或重算 hash 
 新实际 revision run 冻结完整新 source unit 及确切上一 unit/candidate；每个上一
 单元都须声明新的 `model-revision` 操作、修订证据 ID 与全部五个输出字段，输出
 完全等于新模型原输出。v3 不开放链式纯工具变换，v1/v2 不因新合同获得链式权限。
-新派生逐 unit 保留源 TeX 字节和数学、标签、引用；原模型身份由
+除 §9 已验证的英文提取恢复外，新派生逐 unit 保留源 TeX 字节和数学、标签、引用；原模型身份由
 最终原始快照和原 run 验证，新文字的实际修订模型必须单独披露。
 
 每个此前版本只有一个直接后继，每个逻辑 batch 只有一个当前末端；拒绝自引用、
@@ -294,20 +295,21 @@ selection/review/revision 的来源绑定包含完整祖先记录、归档、全
 后续版本增加完整历史，因此不能复用原绑定。渲染先验证复合来源，再披露原模型
 和所有历次实际修订模型及运行数量；历史输出本身不成为渲染输入。
 
-## 9. 锁定上游的提取恢复合同（尚未实现）
+## 9. 锁定上游的提取恢复合同
 
 001P 的旧证明 source unit 漏掉英文 `$s$`，并改变相关词与公式的关系。锁定
 commit `a04446e57ec1fbc252a871afcec7752fb2807b14` 的 `categories.tex`，
 `lemma-yoneda` 紧邻 proof 有七处内联公式，当前 unit 只有六处；英文原文无须修改。
 这是旧提取输入的缺陷，不是源文 remark，也不能由中文译文猜测修复。
 
-现有派生要求新旧 unit 恢复的 TeX 相同，这项保护仍然执行。本节只定义后续独立
-Schema/验证工具的合同，尚未实现，不提前允许创建证据、改变原 unit 的 TeX 或
-在模型输出中加公式。后续先验证来源恢复，再用实际新模型 run 完整重译。
+未声明来源恢复的派生仍要求新旧 unit 恢复的 TeX 相同。`source-reextraction.schema.json`
+及 `source_reextractions.py` 对受限的完整简单证明实现独立验证；仅明确引用已验证
+证据的 v2/v3 模型修订适用例外。具体数据另开 Issue，先验证来源，再用实际新模型
+run 完整重译。工具 PR 不创建真实恢复证据或修订原输出。
 
 ### 9.1 不可变证据与英文选择
 
-规划证据位于 `translation-data/source-reextractions/<id>.json`，逐项绑定：
+证据位于 `translation-data/source-reextractions/<id>.json`，逐项绑定：
 
 - schema 版本、证据 ID、派生 ID、时间及同一锁定 source commit；
 - 完整旧 unit、新受保护 unit、旧/新 source TeX 字节 hash；
@@ -331,7 +333,7 @@ Schema/验证工具的合同，尚未实现，不提前允许创建证据、改�
 不能以两个内部 hash 自洽代替英文比对，不能新增上游没有的节点或只恢复部分
 公式。完整旧→新 unit 映射和 proof 链覆盖仍须验证，不丢掉、拆断或重复单元。
 
-规划中的逐单元操作引用 `source_reextraction_id`；唯有证据全部核验、新 source
+逐单元操作引用 `source_reextraction_id`；唯有证据全部核验、新 source
 与锁定片段相等、旧/新 unit 与该操作精确一致，且该单元明确引用实际新模型
 修订时，才允许恢复旧提取已经丢失的上游节点。所有未声明、未验证的操作仍
 执行新旧 source TeX 相等，纯工具 v1 不获得这项权限；v2/v3 的其他约束不变。
@@ -343,7 +345,7 @@ Schema/验证工具的合同，尚未实现，不提前允许创建证据、改�
 
 ### 9.3 来源绑定、覆盖审计和启用顺序
 
-规划中的 provenance、selection/review/revision 来源 hash 包含恢复证据、英文
+provenance、selection/review/revision 来源 hash 包含恢复证据、英文
 Git 选择和全部模型/派生历史；即使正文不变，也不沿用缺少新绑定的旧批准。预览
 披露来源恢复及实际修订，历史证据仍完整校验但不计入当前 QA、进度、渲染或 TM。
 
@@ -355,4 +357,32 @@ Git 选择和全部模型/派生历史；即使正文不变，也不沿用缺少
 Schema/工具回归必须包含合法完整恢复及 Git 片段篡改、错误 selector/source、
 公式遗漏/重排/增加、错误旧输入、重算 hash、路径/symlink、缺少实际模型修订和
 沿用旧批准等拒绝案例。规范、实现和具体数据使用分别声明的独立 Issue/PR；
-本节不创建源恢复事实或宣称现有机器能力已具备上游完整性验证。
+本节不创建源恢复事实；一般章节提取与复杂语法仍不在当前机器能力范围内。
+
+### 9.4 已实现范围与独立覆盖报告
+
+`LockedEnglish` 只从锁定 commit 的章文件和 `tags/tags` 读取数据，不读取英文
+工作目录正文。章文件需具有独占行的 document opening；支持固定 `preamble`/
+`chapters` include 边界，不展开任何宏。own label 必须紧随陈述 opening 和简单
+命名标题，proof 必须紧邻该陈述或其上一 proof；明确 selector 保存本地英文 label、
+陈述永久 Tag 和从 1 起算的 proof index。注释与数学中的标签不参与 ownership；
+重复标签、宏定义、literal 环境、文本参数内的陈述/证明等明确报未支持。
+
+`extract_plain_proof` 只支持一个完整、无可选标题的单单元 proof，其 body 由
+自然语言与 `$...$` 内联数学组成。保持所有空白和公式原字节，按顺序生成
+`MATH_####`，完整 source TeX 等于原始 Git 片段。文本命令、分组、注释、display、
+嵌套环境、复杂标题或拆分证明需专门工具任务；不得截断或复制整份 raw TeX 给模型。
+重放用完整冻结 batch 的 `permanent_tag_mapping` 校验 old→new 映射与 proof owner，
+证据旧 unit、确定性新 unit、新修订冻结 source 及全部五字段必须精确对应。
+
+`make proof-source-audit` 或 `audit-proof-source --root . --harvest <checkout>
+--output build/proof-source-audit.json` 独立检查所有当前 proof wrapper group。报告逐组
+保留 selector、英文/当前节点序列和 source hash，区分 match、mismatch、unsupported，
+任何差异或未覆盖返回非零。比较仅折叠自然语言空白、忽略 TeX 注释；公式/控制/引用
+字节和顺序不归一化，因此引用的章前缀、公式换行等差异也须逐项复核，不能一概称为
+数学错误。此审计暂不进入默认 QA，S4 修复和范围验收后才在 S5 启用硬门禁。
+
+provenance/decision 的可选 `--harvest` 由 Make 的 `HARVEST_DIR` 传入；render 使用
+配置的 chapter source directory。无恢复证据时不新增英文 Git 依赖，既有单层来源
+hash 格式不变；存在恢复证据时全部祖先记录加入绑定，预览披露锁定英文恢复及所有
+实际修订。历史证据校验不增加当前候选计数。

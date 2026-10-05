@@ -127,12 +127,22 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 锁定来源恢复工具：Issue [#580](https://github.com/dongyaotalk/stacks-project-zh/issues/580)，
+  分支 `tool/locked-source-restoration`。新增不可变来源证据、锁定 English Git
+  selector、简单单单元证明的确定性内联数学提取，以及 v2/v3 的受限恢复例外；
+  全部五字段实际新模型修订及完整冻结 batch 的 ownership 仍是强制门禁。
+  来源绑定与预览覆盖所有祖先恢复，配置 harvest 传至 provenance/decision/render。
+  独立全库 proof audit 覆盖 187 组/291 单元，初步为 165 匹配、22 原字节/节点差异、
+  0 未支持。001P 缺 `$s$` 独立检出；其他差异包含公式换行、引用章前缀和真实遗漏，
+  需要逐项复核，不能一概视为数学错误或自动批准。工具不改真实 unit/candidate/run/
+  archive/source-reextraction，不启用默认严格来源门禁。具体数据、S4/S5/S7 仍未完成。
+
 - 锁定来源恢复规范：Issue [#578](https://github.com/dongyaotalk/stacks-project-zh/issues/578)，
   分支 `docs/locked-source-restoration`。对照英文锁定 Git blob 确认 001P proof 应有
   七处内联公式，当前 source unit 仅六处，漏掉 `$s$`，相关关系也被重排；属于
   提取输入缺陷，原英文未改。规划独立不可变来源恢复证据、Git selector/片段
-  验证、完整新 source 及实际模型修订，并要求复核全部当前证明链。当前旧 source
-  TeX 相等的保护仍执行，Schema/工具及真实数据另开任务，F4/S4/S5 未完成。
+  验证、完整新 source 及实际模型修订，并要求复核全部当前证明链。后续工具任务
+  落实受限例外；未声明操作仍要求旧 source TeX 相等，真实数据另开任务，F4/S4/S5 未完成。
 
 - 命名环境标题工具：Issue [#576](https://github.com/dongyaotalk/stacks-project-zh/issues/576)，
   分支 `tool/named-environment-titles`。source helper 无损暴露简单英文词组标题，

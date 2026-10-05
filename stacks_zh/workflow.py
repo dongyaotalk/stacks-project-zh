@@ -551,12 +551,15 @@ def render_batch(
     correction_notice = correction_name = ''
     if correction_keys:
         root = lock_path.parent
-        provenance_errors = validate_repository_provenance(root)
+        provenance_errors = validate_repository_provenance(root, chapter_source_dir)
         if provenance_errors:
             raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
+        reextraction_ids = set()
         for derivation_id in sorted(derivation_ids):
             for entry in derivation_history(root, derivation_id):
                 record = entry['derivation']
+                reextraction_ids.update(operation['source_reextraction_id'] for operation in record['operations']
+                                       if operation.get('source_reextraction_id'))
                 correction_keys.update(
                     (operation['model_correction_id'], record['unit_id_map'][operation['unit_id']])
                     for operation in record['operations'] if operation.get('model_correction_id')
@@ -576,6 +579,9 @@ def render_batch(
         correction_notice = (f'复合来源：原模型仅表示原始生成；修订模型={models}；'
                              f'修订 Harness={harnesses}；修订运行={len({row["run_id"] for row in raw})}；'
                              '完整来源见 translation-data/model-corrections；')
+        if reextraction_ids:
+            correction_notice += (f'含 {len(reextraction_ids)} 份锁定英文 Git 来源恢复记录；'
+                                  '旧提取输入保留，完整证据见 translation-data/source-reextractions；')
     chapter_chunks: dict[str, list[str]] = {}
     chapters_with_rendered_titles: set[str] = set()
     chapter_order: list[str] = []

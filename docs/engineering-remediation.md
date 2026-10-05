@@ -127,6 +127,21 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 全库通用来源抽取：Issue [#592](https://github.com/dongyaotalk/stacks-project-zh/issues/592)，
+  分支 `tool/universal-source-extractor`。按用户要求先集中准备来源与问题库存，新增
+  `extract-all`/确定性 check；默认枚举锁定 Git 的全部 117 章，产物只写 ignored
+  source-ir/build，提议单元、完整字节覆盖片段、永久 Tag 归属和诊断分离保存。
+  标题、正文、完整陈述/列表/证明、嵌套字体和脚注自然语言显式抽取；数学/引用/
+  环境保留原字节。未知命令/环境、数学内显式文字、index 特殊记录及不确定归属
+  明确 BLOCKED；不修改现有事实或任何历史 run，不自动采用、审校或批准词条。
+  先写 `docs/source-extraction.md` 设计与验收合同，再实现工具；真实全库扫描与
+  BYTE_EXACT 回放已通过：117 章完整报告、116 个 Git 文件逐字相等；43,270 个
+  提议单元（34,985 READY、8,285 BLOCKED），24,189 条诊断以数学内显式文字
+  分类为主，另有归属/未知命令/环境及生成 index。全库生成与确定性复核均成功，
+  17 项抽取回归和完整工具门禁、457 页整书及12页模板本地验收；现有译文事实不变。
+  八项全库修订仍未完成，之后使用统一来源/诊断清单集中修复，避免每个小批次
+  重复准备；来源库存成功不等于全库译文、词条或人工审校通过。
+
 - 002Z 永久坐标/术语修订：Issue [#588](https://github.com/dongyaotalk/stacks-project-zh/issues/588)，
   分支 `translate/categories/002z/openai-gpt-6-1-sol`。完整冻结 22 个旧 unit/candidate
   的原 Git 字节及原 run；定义的末段从 `tag:002Z:p003` 重映射到

@@ -20,6 +20,7 @@ from .planning import (
 )
 from .progress import update_progress_report
 from .records import RecordError
+from .extraction import write_inventory
 from .source_integrity import audit_repository_source, require_audit_output
 from .source_terms import audit_repository_terms
 from .source_reextractions import audit_repository_proofs
@@ -47,6 +48,16 @@ def build_parser() -> argparse.ArgumentParser:
     stamp = subparsers.add_parser("stamp-units", help="calculate unit source hashes")
     stamp.add_argument("--input", required=True, type=Path)
     stamp.add_argument("--output", required=True, type=Path)
+
+    extract = subparsers.add_parser(
+        "extract-all", help="inventory all locked English chapters without adopting data"
+    )
+    extract.add_argument("--root", type=Path, default=Path("."))
+    extract.add_argument("--harvest", required=True, type=Path)
+    extract.add_argument("--output", type=Path, default=Path("source-ir/extraction"))
+    extract.add_argument("--chapter", action="append")
+    extract.add_argument("--check", action="store_true")
+    extract.add_argument("--require-ready", action="store_true")
 
     init_chapters = subparsers.add_parser(
         "init-chapters",
@@ -287,6 +298,20 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "stamp-units":
             count = stamp_units(args.input, args.output)
             print(f"Stamped {count} unit record(s): {args.output}")
+            return 0
+        if args.command == "extract-all":
+            root = args.root.resolve()
+            output = args.output if args.output.is_absolute() else root / args.output
+            inventory = write_inventory(root, args.harvest.resolve(), output,
+                                        chapters=args.chapter, check=args.check)
+            print(f"Source inventory: {inventory['chapter_count']} chapters; "
+                  f"{inventory['roundtrip_files']} byte-exact Git roundtrips; "
+                  f"{inventory['unit_count']} proposed units "
+                  f"(READY {inventory['ready']}, BLOCKED {inventory['blocked']}); "
+                  f"{inventory['diagnostic_count']} diagnostics. Adopted: false.")
+            if args.require_ready and not inventory['translation_ready']:
+                print("ERROR: source inventory still contains blockers or unavailable chapters", file=sys.stderr)
+                return 1
             return 0
         if args.command == "init-chapters":
             root = args.root.resolve()

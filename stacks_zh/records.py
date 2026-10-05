@@ -173,6 +173,16 @@ def restore_placeholders(
         )
         if delimit_commands:
             value = delimit_tex_control_word(value)
+            if re.fullmatch(r"SPACE_[0-9]{4}", name) and value == "\\":
+                # Legacy SPACE payloads leave their whitespace in source_text.
+                # Keep a control space before translated prose or a wrapper.
+                whitespace = (" ", "\t", "\r", "\n")
+                source_following = unit["source_text"].partition(f"<{name}>")[2]
+                if source_following[:1] not in whitespace:
+                    raise RecordError(f"{name}: legacy control space needs source whitespace")
+                following = rendered.partition(f"<{name}>")[2]
+                if following[:1] not in whitespace:
+                    value += " "
         rendered = rendered.replace(f"<{name}>", value, 1)
     return rendered
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from stacks_zh.records import (
+    RecordError,
     restore_placeholders,
     sha256_value,
     stamp_unit_hashes,
@@ -102,6 +103,53 @@ def make_control_space_unit() -> dict[str, object]:
 
 
 class RecordValidationTests(unittest.TestCase):
+    def test_legacy_control_space_delimits_prose_and_preserves_source(self) -> None:
+        unit = make_unit()
+        unit['source_text'] = 'resp.<SPACE_0001> inverse'
+        unit['placeholders'] = {'SPACE_0001': '\\'}
+        unit = stamp_unit_hashes(unit)
+        original = dict(unit)
+        self.assertEqual(restore_placeholders(unit, unit['source_text']), 'resp.\\ inverse')
+        for tail in ('逆系统', 'inverse', '{\\it 逆系统}', '$x$', '\u3000逆系统'):
+            with self.subTest(tail=tail):
+                self.assertEqual(
+                    restore_placeholders(unit, '分别<SPACE_0001>' + tail,
+                                         delimit_commands=True),
+                    '分别\\ ' + tail,
+                )
+        self.assertEqual(restore_placeholders(unit, unit['source_text'],
+                                             delimit_commands=True), 'resp.\\ inverse')
+        self.assertEqual(unit, original)
+        self.assertEqual(stamp_unit_hashes(unit), unit)
+
+    def test_legacy_space_without_tex_source_whitespace_is_rejected(self) -> None:
+        unit = make_unit()
+        unit['placeholders'] = {'SPACE_0001': '\\'}
+        for suffix in ('command', '\u3000command', '<REF_0001>', ''):
+            with self.subTest(suffix=suffix):
+                unit['source_text'] = 'resp.<SPACE_0001>' + suffix
+                unit['placeholders'] = {'SPACE_0001': '\\'}
+                if suffix == '<REF_0001>':
+                    unit['placeholders']['REF_0001'] = '\\ref{first}'
+                restored_suffix = '\\ref{first}' if suffix == '<REF_0001>' else suffix
+                self.assertEqual(restore_placeholders(unit, unit['source_text']),
+                                 'resp.\\' + restored_suffix)
+                with self.assertRaisesRegex(RecordError, 'needs source whitespace'):
+                    restore_placeholders(unit, '分别<SPACE_0001>正文', delimit_commands=True)
+
+    def test_control_space_render_rule_is_limited_to_legacy_space_role(self) -> None:
+        for name, payload in (('SPACE_0001', '\\ '), ('SPACE_0001', '\\,'),
+                              ('SPACE_0001', '\\\\'), ('STRUCT_0001', '\\'),
+                              ('MATH_0001', '\\')):
+            with self.subTest(name=name, payload=payload):
+                unit = make_unit()
+                unit['source_text'] = f'<{name}>'
+                unit['placeholders'] = {name: payload}
+                self.assertEqual(
+                    restore_placeholders(unit, f'<{name}>正文', delimit_commands=True),
+                    payload + '正文',
+                )
+
     def test_control_space_restores_without_hiding_abbreviation(self) -> None:
         unit = make_control_space_unit()
         candidate = make_candidate(unit)

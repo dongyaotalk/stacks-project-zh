@@ -76,6 +76,12 @@
   must disclose both its original run and any correction run; origin identity is
   not the identity of every word in the corrected text. Do not implement this
   extension in data before the matching schema/provenance tooling is available.
+- Correcting an already-derived candidate again requires the separately specified
+  archival contract in `docs/model-provenance.md` section 8. Preserve all earlier
+  records and outputs, validate their history, and freeze the exact previous
+  candidate as the new revision input. Existing v1/v2 tooling remains single-level;
+  do not create archives or v3 data until its schema/provenance implementation is
+  merged. Archiving cannot discard unresolved current units or confer approval.
 - Protect unrelated user changes in a dirty worktree.
 - Do not create or change GitHub remotes, repositories, Issues, PRs, branch
   protection, releases, or pushed history unless the task explicitly authorizes

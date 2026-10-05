@@ -149,7 +149,7 @@ source/target 配对补齐双语显示，以及固定短语的脚注显示变换
 自然语言必须另建实际身份可验证的新模型 run，不能作为工具操作夹带。未批准
 术语仍为 `DECISION_REQUIRED`；模型和工具无权新增人工 approved 条目。
 
-当前版本只支持一层派生，原快照不能是另一份派生候选。同一活跃 batch 只能归属
+当前 v1/v2 只支持一层派生，原快照不能是另一份派生候选。同一活跃 batch 只能归属
 一份记录；后续多项机械修复须合并为从原始快照重放的操作清单，不能覆盖已提交
 派生记录。操作只允许修改提取字段及显示/术语元数据，模型、来源、审批、阶段和
 时间字段不能由操作改写。来源恢复后的 TeX 必须逐字相同；剥离机械双语英文插入
@@ -166,7 +166,7 @@ provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒
 
 修订证据由 `schema/model-correction.schema.json` 和 `stacks_zh/model_corrections.py`
 校验，并通过现有 schema/provenance/decision/render 接口执行。纯工具 v1 仍不允许
-自由重译；只有 v2 中明确引用完整修订证据的 `model-revision` 操作允许改变自然语言。
+自由重译；目前只有 v2 中明确引用完整修订证据的 `model-revision` 操作允许改变自然语言。
 
 较长脚注、漏译或需要改变中文表达的术语补齐不是纯机械操作。它们使用新的
 `run_kind: revision`：实际模型身份、动态 Harness 版本、当前 source commit、
@@ -222,3 +222,59 @@ Git，其字节必须等于可达历史中的第一次加入，不能通过重�
 修订 run；通过 `candidate_provenance_hash(root, candidate)` 在溯源全部通过后计算。
 正文 hash 相同也不能沿用不含完整来源绑定的旧批准。普通历史候选不要求新增字段。
 这个绑定不授予批准：术语和人工审校门禁继续独立执行。
+
+## 8. 后续修订的归档合同（尚未实现）
+
+再次发现漏译时，不能回写上一模型修订的原输出，或删除其证据来满足单层限制。
+本节规定独立归档扩展；对应 Schema、v3 工具及回归合并前不得生成归档清单、
+使用派生输入或修改当前数据。现有 v1/v2 的限制及校验继续执行。
+
+### 8.1 不可变历史与文件角色
+
+```text
+translation-data/derivation-archives/<prior-derivation-id>.json
+translation-data/retired/derivations/<prior-derivation-id>/output-units.jsonl
+translation-data/retired/derivations/<prior-derivation-id>/output-candidates.jsonl
+```
+
+原派生记录仍位于 `derivations/<prior-id>.json`，原输入快照、原 run/输出及此前
+model-correction/run/输出均保留原路径和原字节。归档清单单独保存 schema 版本、
+此前派生 ID、唯一后继派生 ID、source commit、生成时间、可达 `origin_commit`、
+原记录路径/hash、两个历史输出路径/hash。原记录及历史输出必须逐字等于该
+commit 中原记录及原活跃 unit/candidate 的 Git blob，且与原记录的输出 hash 和
+确定性重放相等。新增归档清单和输出一旦加入 Git，其首次加入字节不可覆盖。
+
+旧记录的输出路径保留当时活跃位置。历史校验通过已验证的归档清单将其解析到
+上述冻结输出，不改写旧记录来指向新当前文件，也不把历史的 CURRENT、阶段或
+审批字段改成别的状态。它们描述生成时的事实；当前性由验证后的后继关系确定。
+
+### 8.2 后继与完整替换
+
+计划的 v3 记录声明 `previous_derivation_id`，指向经归档、重放和 Git 字节核验的
+确切直接前一派生。其 `origin_commit` 与对应归档清单一致，新输入快照等于该
+commit 的上一活跃输出及归档输出；仅声称一个 ID 或重算 hash 不足以使用派生
+输入。旧和新逻辑活跃文件路径保持一致，旧 unit 全部一对一映射到新 unit，不能
+通过归档丢掉某个有问题的单元、切断证明链或产生第二份当前候选。
+
+新实际 revision run 冻结完整新 source unit 及确切上一 unit/candidate；自由变化
+仍必须完全等于新模型原输出。纯工具操作保持已有受限范围，v1/v2 不因新合同
+获得链式权限。新派生逐 unit 保留源 TeX 字节和数学、标签、引用；原模型身份由
+最终原始快照和原 run 验证，新文字的实际修订模型必须单独披露。
+
+每个此前版本只有一个直接后继，每个逻辑 batch 只有一个当前末端；拒绝自引用、
+环、分叉、重复活跃文件、缺失前驱/后继、悬空归档、快照篡改或重复使用某份模型
+修订输出。历史派生及模型修订仍须完整溯源，不能把“不进入当前 QA”解释为
+跳过历史验证。之前冻结输出可以仅由合法历史重放消费，新当前输出另由其后继
+重放消费，不能因为前者不再活跃就删掉原模型证据。
+
+### 8.3 当前检查与批准
+
+schema/provenance 验证全部原始、历史和当前证据；当前 source/term QA、进度、
+渲染和 TM 只消费当前活跃文件。候选合并及归档均不批准 glossary，不完成语言、
+数学审校或出版。selection/review/revision 的来源 hash 必须绑定当前候选、原始
+run 和全部祖先派生/归档/模型修订证据；即使正文未变，也不能沿用缺少新完整
+来源绑定的批准。预览显示原生成、此前及本次实际模型修订的复合来源。
+
+本扩展只处理同一锁定 source commit 的候选再次修订，不授权上游同步、变更
+英文来源或继承人工批准。命名环境标题的源文重提取和具体数据修订另开任务；
+本规范不会提前创建历史输出、archive manifest、新 run 或 v3 数据。

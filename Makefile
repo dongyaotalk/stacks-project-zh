@@ -21,6 +21,7 @@ HARNESS_ID ?= codex
 HARNESS_CONFIG ?= config/harnesses.yml
 PRIORITY_CONFIG ?= config/translation-priorities.json
 EXTRACTION_DIR ?= source-ir/extraction
+SOURCE_ALIGNMENT_DIR ?= build/source-alignment
 
 UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
@@ -247,6 +248,15 @@ extract-all: harvest-check
 extract-all-check: harvest-check
 	$(PYTHON) stacks_zh.py extract-all --root . --harvest "$(HARVEST_DIR)" \
 		--output "$(EXTRACTION_DIR)" $(if $(CHAPTER),--chapter "$(CHAPTER)",) --check
+
+.PHONY: source-alignment source-alignment-check
+source-alignment: harvest-check
+	$(PYTHON) stacks_zh.py source-alignment --root . --harvest "$(HARVEST_DIR)" \
+		--inventory "$(EXTRACTION_DIR)" --output "$(SOURCE_ALIGNMENT_DIR)"
+
+source-alignment-check: harvest-check
+	$(PYTHON) stacks_zh.py source-alignment --root . --harvest "$(HARVEST_DIR)" \
+		--inventory "$(EXTRACTION_DIR)" --output "$(SOURCE_ALIGNMENT_DIR)" --check
 
 decision-check:
 	$(PYTHON) stacks_zh.py decision-check --root . --harvest "$(HARVEST_DIR)"
@@ -509,6 +519,8 @@ help:
 		'make tool-test                  Run candidate pipeline tests' \
 		'make extract-all                Inventory all locked source chapters' \
 		'make extract-all-check          Check deterministic source inventory' \
+		'make source-alignment           Prepare the current translation repair queue' \
+		'make source-alignment-check     Check the current repair queue' \
 		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \
 		'make decision-check             Verify selections, reviews and revisions' \

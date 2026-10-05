@@ -274,6 +274,8 @@ make decision-check
 make proof-source-audit
 make extract-all
 make extract-all-check
+make source-alignment
+make source-alignment-check
 make render MODEL=<model>
 make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
@@ -296,6 +298,13 @@ make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
 提议单元和统一诊断；`make extract-all-check` 验证确定性产物。库存有逐字回放与
 READY/BLOCKED 覆盖报告，不自动写入现有 unit/candidate 或授予审校状态。详见
 `docs/source-extraction.md`。事实采用和下面的章节级提取接口仍须独立范围准备。
+
+`make source-alignment` 把全库来源库存与当前全部事实单元对应，合并术语、来源结构
+和证明审计为 `build/source-alignment/repair-queue.jsonl`；
+`make source-alignment-check` 核验当前事实、政策与来源库存绑定的确定性结果。
+只接受真实 owner/proof 范围中的唯一连续定位；数学、网址与引用键保持原字节，
+已核实引用 namespace 别名只用于诊断。所有来源差异和旧审计错误仍保留，成功生成
+队列不表示采用或修订完成。详见 `docs/source-alignment.md`。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 

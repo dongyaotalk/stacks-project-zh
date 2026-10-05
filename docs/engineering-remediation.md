@@ -127,6 +127,20 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 002Z 永久坐标/术语修订：Issue [#588](https://github.com/dongyaotalk/stacks-project-zh/issues/588)，
+  分支 `translate/categories/002z/openai-gpt-6-1-sol`。完整冻结 22 个旧 unit/candidate
+  的原 Git 字节及原 run；定义的末段从 `tag:002Z:p003` 重映射到
+  `tag:0030:p003`，其余 ID 不变，完整定义/列表/证明归属重新核验。全部 22 单元
+  保存实际 GPT-6.1-sol/xhigh revision，动态 Harness 为 0.160.0；v2 重放消费
+  五字段完整原输出，原生成身份保留，新修订与精确旧输入另行披露。source TeX、
+  公式、系统/逆系统方向、量词、引用及完整证明均不变。所辖 160 次来源术语
+  出现通过，086J 证明组匹配锁定英文；其他数学用词按实际原词形双语，术语待决，
+  不伪造独立 critic、人工审校、术语或出版批准。
+  全库独立审计降为 3027 个 term 问题/907 个不合格候选，6488 次要求出现；source
+  99 问题（36 陈述 Tag、11 raw TeX pairs、1 长脚注、0 隐藏标题）；proof
+  187 组/291 单元仍为 166 匹配、21 差异、0 未支持。F1/F2/F4/F6 与
+  S4/S5/S7 的其他范围继续处理，不把本批通过当作全库严格验收。
+
 - 控制空格渲染边界：Issue [#589](https://github.com/dongyaotalk/stacks-project-zh/issues/589)，
   分支 `tool/legacy-control-space-boundaries`。002Z 完整实际修订的首次编译把
   legacy SPACE 的裸反斜线与中文连成未定义命令，数据未提交；完整新 run/原输出

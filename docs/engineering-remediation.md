@@ -127,6 +127,11 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- S3 显示边界：Issue [#548](https://github.com/dongyaotalk/stacks-project-zh/issues/548)，
+  分支 `tool/term-format-display`。003G 的垂直/水平复合跨斜体边界，需要在显示
+  核对中忽略字体包装，避免把单元专用 token 塞进词条；公式、引用、结构和
+  脚注保持不透明。数据尚未修订，占位符结构校验及真实术语批准门禁不变。
+
 - S3 术语工具：Issue [#546](https://github.com/dongyaotalk/stacks-project-zh/issues/546)，
   分支 `tool/source-term-inventory`。独立英语目录及定义声明产生逐次来源清单，
   校验候选显示、原词形、重复/漏报和真实待决证据。报告绑定来源/目录 hash，

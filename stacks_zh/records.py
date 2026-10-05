@@ -177,6 +177,23 @@ def placeholder_names(text: str) -> list[str]:
     return PLACEHOLDER_TOKEN_RE.findall(text)
 
 
+FONT_WRAPPER_RE = re.compile(r"<(?:TEXTIT|TEXTBF|TEXTSF|TEXTTT|TEXTSC|TEXTRM|EMPH|TEXT)(?:OPEN|CLOSE)_[0-9]{4}>")
+FONT_OPEN_RE = re.compile(r"(?:\{\\(?:it|bf|rm|sf|tt|sc)\s*|\\(?:textit|textbf|textsf|texttt|textsc|textrm|emph|text)\{)")
+
+
+def is_font_wrapper(token: str, placeholders: Mapping[str, str]) -> bool:
+    if not FONT_WRAPPER_RE.fullmatch(token):
+        return False
+    name = token[1:-1]
+    payload = placeholders.get(name, "")
+    return payload == "}" if "CLOSE_" in name else bool(FONT_OPEN_RE.fullmatch(payload))
+
+
+def term_display_text(text: str, placeholders: Mapping[str, str]) -> str:
+    """Visible prose for terminology QA; semantic protected nodes stay opaque."""
+    return FONT_WRAPPER_RE.sub(lambda match: "" if is_font_wrapper(match.group(0), placeholders) else match.group(0), text)
+
+
 def validate_tex_controls(unit: dict[str, Any], candidate: dict[str, Any]) -> list[str]:
     """Reject every unprotected TeX control in source and translated prose."""
     errors = []
@@ -383,13 +400,14 @@ def _validate_candidate(
         without_tokens = PLACEHOLDER_TOKEN_RE.sub("", translation)
         if re.search(r"\\[A-Za-z@]+|\$", without_tokens):
             errors.append(f"{location}: translation contains raw protected TeX")
+        display_text = term_display_text(translation, unit["placeholders"])
         term_literals = [
-            f"{occurrence['target_term']}（{occurrence['source_term']}）"
+            term_display_text(f"{occurrence['target_term']}（{occurrence['source_term']}）", unit["placeholders"])
             for occurrence in valid_term_occurrences
         ]
         cursor = 0
         for index, literal in enumerate(term_literals):
-            position = translation.find(literal, cursor)
+            position = display_text.find(literal, cursor)
             if position < 0:
                 errors.append(
                     f"{location}: term_occurrences[{index}] is missing or out of order: {literal}"
@@ -398,13 +416,13 @@ def _validate_candidate(
             cursor = position + len(literal)
         for literal in set(term_literals):
             expected_count = term_literals.count(literal)
-            actual_count = translation.count(literal)
+            actual_count = display_text.count(literal)
             if actual_count != expected_count:
                 errors.append(
                     f"{location}: bilingual term count mismatch for {literal}: "
                     f"recorded {expected_count}, found {actual_count}"
                 )
-        residue_text = translation
+        residue_text = display_text
         for literal in term_literals:
             residue_text = residue_text.replace(literal, "", 1)
         residue_text = PLACEHOLDER_TOKEN_RE.sub("", residue_text)

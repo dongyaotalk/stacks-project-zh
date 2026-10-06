@@ -62,6 +62,58 @@ def old_unit(sha, identifier, kind, text, prefix='', suffix=''):
         'render': {'prefix': prefix, 'suffix': suffix}})
 
 
+INTRODUCTION = '\\noindent\nAn introductory paragraph with $x$.'
+
+
+def paragraph_inputs(sha):
+    heading = old_unit(sha, 'tag:0000:title', 'section_title', 'Basics',
+                       '\\section{', '}\n\\label{test-section-basic}')
+    paragraph = old_unit(sha, 'tag:0000:p001', 'paragraph',
+                         'An introductory paragraph with <MATH_0001>.', '\\noindent\n', '\n\n')
+    paragraph['placeholders'] = {'MATH_0001': '$x$'}
+    return [heading, stamp_unit_hashes(paragraph)]
+
+
+def paragraph_package_fixture(base):
+    from test_derivations import fixture as candidate_fixture
+    from test_group_derivations import commit, run_for, save, write
+    from stacks_zh.records import sha256_value
+    root, harvest, sha = fixture(base, statement=INTRODUCTION + '\n\n' + NAMED)
+    units = paragraph_inputs(sha)
+    template = candidate_fixture()[2][0]
+    candidates = []
+    for unit in units:
+        context = {'unit_id': unit['unit_id'], 'source_commit': sha,
+                   'prompt_version': 'fixture', 'policy_revision': 'fixture'}
+        candidate = copy.deepcopy(template)
+        candidate.update(unit_id=unit['unit_id'], source_commit=sha,
+            source_text_hash=unit['source_text_hash'], context=context, context_hash=sha256_value(context),
+            model_id='fixture-model', model_lane='fixture', model_record_id='fixture:model:declared',
+            run_id='fixture-paragraph-run', translation='<MATH_0001>合成测试。' if unit['placeholders'] else '合成测试。',
+            allowed_english=[], term_occurrences=[], unknown_terms=[], notes=['Synthetic fixture only.'],
+            term_status='CLEAR', stage='TERM_OK', qa_status='PASS', publication_status='CANDIDATE')
+        candidate['translation_hash'] = sha256_value(candidate['translation'])
+        candidates.append(candidate)
+    unit_path = 'translation-data/units/test-0000.jsonl'
+    candidate_path = 'translation-data/candidates/fixture/test-0000.jsonl'
+    save(root, unit_path, units)
+    save(root, candidate_path, candidates)
+    write(root / 'translation-data/runs/fixture-paragraph-run.json',
+          run_for(candidates, sha, 'translation', 'fixture-paragraph-run'))
+    git(root, 'init', '-q')
+    commit(root)
+    plan = {'derivation_id': 'fixture-paragraph', 'created_at': '2026-10-07T00:00:00Z',
+        'units_file': unit_path, 'candidates_file': candidate_path, 'groups': []}
+    for name, unit, coordinate in [('heading', units[0], selector('section_title', owner='0000')),
+                                  ('introduction', units[1], selector('paragraph', owner='0000'))]:
+        plan['groups'].append({'group_id': name, 'input_unit_ids': [unit['unit_id']],
+            'identity_anchor': unit['unit_id'], 'selector': coordinate, 'layout': 'whole',
+            'reason': 'Complete synthetic Git fragment; no translation adoption.'})
+    plan_path = root / 'build/paragraph-plan.json'
+    write(plan_path, plan)
+    return root, harvest, plan_path, root / 'build/paragraph-package'
+
+
 def detached_inputs(sha, *, after=None):
     statement = old_unit(sha, 'tag:0001:statement', 'lemma', 'Legacy statement.',
                          '\\begin{lemma}\n\\label{test-lemma-one}\n', '\n\\end{lemma}')
@@ -80,6 +132,85 @@ def detached_inputs(sha, *, after=None):
 
 
 class SourceContainerTests(unittest.TestCase):
+    def test_paragraph_outer_ascii_whitespace_requires_explicit_version_permission(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp), statement=INTRODUCTION + '\n\n' + NAMED)
+            containers = Containers(root, harvest)
+            selected = containers.select(selector('paragraph', owner='0000'))
+            self.assertEqual(selected['fragment'], INTRODUCTION)
+            units = paragraph_inputs(sha)
+            with self.assertRaisesRegex(RecordError, 'different English fragment'):
+                verify_old_group(units, containers.english.tags, [units[1]['unit_id']], selected)
+            for prefix, suffix in [('', '\n\n'), (' \t\r\n', '\r\n\t '), ('', '')]:
+                changed = copy.deepcopy(units)
+                changed[1]['render'] = {'prefix': prefix + '\\noindent\n', 'suffix': suffix}
+                verify_old_group(changed, containers.english.tags, [changed[1]['unit_id']], selected,
+                                 allow_outer_whitespace=True)
+            self.assertEqual(source_tex(lower_container(selected, containers.policy)[0]), INTRODUCTION)
+
+    def test_paragraph_outer_whitespace_cannot_normalize_internal_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp), statement=INTRODUCTION + '\n\n' + NAMED)
+            containers = Containers(root, harvest)
+            selected = containers.select(selector('paragraph', owner='0000'))
+            original = paragraph_inputs(sha)
+            for fault in ['words', 'inner-space', 'math', 'command', 'reference', 'non-ascii-space']:
+                units = copy.deepcopy(original)
+                paragraph = units[1]
+                if fault == 'words': paragraph['source_text'] += ' Added.'
+                if fault == 'inner-space': paragraph['source_text'] = paragraph['source_text'].replace('with ', 'with  ')
+                if fault == 'math': paragraph['placeholders']['MATH_0001'] = '$y$'
+                if fault == 'command': paragraph['render']['prefix'] = '\\medskip\n'
+                if fault == 'reference': paragraph['render']['suffix'] += '\\ref{lemma-one}'
+                if fault == 'non-ascii-space': paragraph['render']['suffix'] += '\u00a0'
+                with self.subTest(fault=fault), self.assertRaises(RecordError):
+                    verify_old_group(units, containers.english.tags, [paragraph['unit_id']], selected,
+                                     allow_outer_whitespace=True)
+
+    def test_paragraph_outer_whitespace_requires_real_frozen_section_ownership(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp), statement=INTRODUCTION + '\n\n' + NAMED)
+            containers = Containers(root, harvest)
+            selected = containers.select(selector('paragraph', owner='0000'))
+            original = paragraph_inputs(sha)
+            for fault in ['missing-heading', 'heading-kind', 'heading-command', 'wrong-label', 'parent', 'chapter']:
+                units = copy.deepcopy(original)
+                if fault == 'missing-heading': units.pop(0)
+                if fault == 'heading-kind': units[0]['node_kind'] = 'paragraph'
+                if fault == 'heading-command': units[0]['render']['prefix'] = '\\subsection{'
+                if fault == 'wrong-label': units[0]['render']['suffix'] = '}\n\\label{test-lemma-one}'
+                if fault == 'parent': units[-1]['parent_tag'] = '0001'
+                if fault == 'chapter': units[-1]['chapter'] = 'other'
+                with self.subTest(fault=fault), self.assertRaises(RecordError):
+                    verify_old_group(units, containers.english.tags, [units[-1]['unit_id']], selected,
+                                     allow_outer_whitespace=True)
+
+    def test_paragraph_outer_whitespace_rejects_repeated_source_cores_and_later_statement(self):
+        for statement, coordinate in [(INTRODUCTION + '\n\n' + INTRODUCTION + '\n\n' + NAMED,
+                                       selector('paragraph', owner='0000')),
+                                      (NAMED + '\n\n' + INTRODUCTION + '\n\n',
+                                       selector('paragraph', owner='0000'))]:
+            with tempfile.TemporaryDirectory() as tmp:
+                root, harvest, sha = fixture(Path(tmp), statement=statement)
+                containers = Containers(root, harvest)
+                selected = containers.select(coordinate)
+                units = paragraph_inputs(sha)
+                with self.subTest(statement=statement), self.assertRaises(RecordError):
+                    verify_old_group(units, containers.english.tags, [units[1]['unit_id']], selected,
+                                     allow_outer_whitespace=True)
+
+    def test_paragraph_outer_whitespace_uses_locked_git_not_dirty_harvest_text(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp), statement=INTRODUCTION + '\n\n' + NAMED)
+            (harvest / 'test.tex').write_text('Unrelated dirty source.')
+            (harvest / 'tags/tags').write_text('Wrong dirty tags.')
+            containers = Containers(root, harvest)
+            selected = containers.select(selector('paragraph', owner='0000'))
+            units = paragraph_inputs(sha)
+            verify_old_group(units, containers.english.tags, [units[1]['unit_id']], selected,
+                             allow_outer_whitespace=True)
+            self.assertEqual(source_tex(lower_container(selected, containers.policy)[0]), INTRODUCTION)
+
     def test_complete_proof_binds_adjacent_display_before_and_after_wrapper(self):
         after = r'\[a = b + c\]'
         proof = PROOF.replace('\\end{proof}', after + '\n\\end{proof}')
@@ -406,6 +537,49 @@ class SourceContainerTests(unittest.TestCase):
 
 
 class ContainerPackageTests(unittest.TestCase):
+    def test_complete_paragraph_package_is_read_only_and_v1_evidence_stays_strict(self):
+        import json
+        from test_group_derivations import write
+        from stacks_zh.source_containers import load_source_containers
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, plan, output = paragraph_package_fixture(Path(tmp))
+            before = {p.relative_to(root): p.read_bytes() for p in (root / 'translation-data').rglob('*') if p.is_file()}
+            report = write_container_package(root, harvest, plan, output)
+            self.assertEqual((report['state'], report['input_unit_count'], report['proposed_output_unit_count']),
+                             ('PREPARED', 2, 2))
+            self.assertEqual(write_container_package(root, harvest, plan, output, check=True), report)
+            self.assertEqual(before, {p.relative_to(root): p.read_bytes() for p in (root / 'translation-data').rglob('*') if p.is_file()})
+            records = json.loads((output / 'restorations.json').read_text())
+            self.assertEqual({record['tool']['version'] for record in records}, {'source-container-v2'})
+            self.assertEqual(source_tex(records[1]['new_units'][0]), INTRODUCTION)
+            for record in records:
+                for role, package_file in [('input_units', 'input-units.jsonl'), ('input_candidates', 'input-candidates.jsonl')]:
+                    path = root / record['files'][role]['path']
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes((output / package_file).read_bytes())
+                write(root / f"translation-data/source-container-restorations/{record['restoration_id']}.json", record)
+            evidence, errors = load_source_containers(root, harvest)
+            self.assertEqual(errors, [])
+            self.assertEqual(len(evidence), 2)
+            records[1]['tool']['version'] = 'source-container-v1'
+            write(root / f"translation-data/source-container-restorations/{records[1]['restoration_id']}.json", records[1])
+            evidence, errors = load_source_containers(root, harvest)
+            self.assertEqual(len(evidence), 1)
+            self.assertTrue(any('different English fragment' in error for error in errors), errors)
+
+    def test_previous_v1_statement_and_proof_evidence_is_still_valid(self):
+        from test_group_derivations import fixture, read, write
+        from stacks_zh.source_containers import load_source_containers
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _ = fixture(Path(tmp))
+            for path in (root / 'translation-data/source-container-restorations').glob('*.json'):
+                record = read(path)
+                record['tool']['version'] = 'source-container-v1'
+                write(path, record)
+            evidence, errors = load_source_containers(root, harvest)
+            self.assertEqual(errors, [])
+            self.assertEqual(len(evidence), 2)
+
     def test_separate_unchanged_display_cannot_escape_complete_proof_group(self):
         import json
         from test_group_derivations import fixture, write

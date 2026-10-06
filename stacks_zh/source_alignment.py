@@ -264,7 +264,7 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
         by_id[row['inventory_id']] = row
     validated = []
     fields = {'inventory_id', 'source_commit', 'owner_tag', 'parent_tag', 'semantic_path',
-              'location', 'state', 'word_count', 'unit', 'diagnostic_count'}
+              'location', 'state', 'word_count', 'unit', 'diagnostic_count', 'math_text_classifications'}
     for chapter in sorted(chapters):
         raw = _git_bytes(harvest, english.commit, chapter + '.tex')
         actual, _, _ = chapter_inventory(chapter, raw, english.commit, english.tags, policy)

@@ -189,7 +189,8 @@ class AlignmentTests(unittest.TestCase):
 
     def test_inventory_commit_policy_and_content_tampering_are_rejected(self):
         for field, value in [('owner_tag', 'EEEE'), ('state', 'BLOCKED'),
-                             ('location', {'file': 'alpha.tex', 'byte_start': 0})]:
+                             ('location', {'file': 'alpha.tex', 'byte_start': 0}),
+                             ('math_text_classifications', [{'notation': 'invented', 'usage': 'symbol'}])]:
             with self.subTest(field=field), tempfile.TemporaryDirectory() as temp:
                 root, harvest, inventory, _ = self.fixture(Path(temp))
                 rows = [json.loads(line) for line in (inventory / 'units.jsonl').read_text().splitlines()]

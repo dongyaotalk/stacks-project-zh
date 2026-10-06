@@ -25,3 +25,10 @@ CLI：`python3 stacks_zh.py source-alignment --root . --harvest ../stacks-projec
 真实对应覆盖239batch/1480unit：1个BYTE_EXACT、1209个PRESENTATION_EQUIVALENT、267个SOURCE_DIFFERENCE、3个AMBIGUOUS。没有真实proof selector的单元不能借同Tag证明正文匹配。79个坐标待迁移，907个候选有3027条术语诊断，来源审计99条、proof审计21组差异。21组中14组可作排版/已核实引用别名定位，7组仍有严格来源差异；全部21组原mismatch结论与完整diff仍保存。267个定位差异包含数学空白等严格字节差异，数量不等于已确认语义错误；必须看来源证据后修订。
 
 独立synthetic回归覆盖owner限制、别名与未知引用、数学/脚注/顺序差异、重复匹配、多proof与split链、comments/UTF-8、缓存篡改、事实变化及安全原子写入。真实验收必须覆盖239batch/1480unit并保留原三审计非零残项；完整工具/QA/本地模型PDF和模板门禁按仓库流程执行。
+
+Issue [#624](https://github.com/dongyaotalk/stacks-project-zh/issues/624) 为词汇目录新增
+锁定完整 Git 容器证据，合同见 `source-term-inventory.md`。统一队列向独立术语
+审计传入同一个实际 harvest，核验真实 selector、commit、原片段 hash 和仅在
+暴露正文中的词形；不能以默认 checkout、旧分段或候选文字提供证据。目录仍
+绑定 input hash，新格式报告完整保留在 term-audit.json 中。词汇来源证据通过
+不减少当前候选、来源或证明残项，不批准译法或豁免未来严格门禁。

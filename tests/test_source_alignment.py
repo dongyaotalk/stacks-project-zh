@@ -234,6 +234,14 @@ class AlignmentTests(unittest.TestCase):
             self.assertIn('ACTUAL_MODEL_TERM_REVISION', queue[0]['actions'])
             self.assertIn('config/source-terms.json', report['input_hashes'])
 
+    def test_locked_term_audit_receives_the_actual_harvest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, inventory, tags = self.fixture(Path(tmp))
+            with self.audits(root, tags), patch('stacks_zh.source_alignment.audit_repository_terms',
+                                               return_value=({'candidates': []}, [])) as terms:
+                build_alignment(root, harvest, inventory)
+                terms.assert_called_once_with(root, harvest)
+
     def test_fact_duplicates_and_changed_fact_snapshot_are_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             root, harvest, inventory, _ = self.fixture(Path(temp))

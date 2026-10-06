@@ -396,7 +396,7 @@ def build_alignment(root: Path, harvest: Path, inventory: Path):
         raise RecordError('current unit source differs from locked English commit')
     corpus = Corpus(entries, english.tags, policy)
     matches, maps = align_batches(batches, corpus)
-    terms, term_errors = audit_repository_terms(root)
+    terms, term_errors = audit_repository_terms(root, harvest)
     # The standalone audit accepts a tags path. Supply immutable Git bytes,
     # keeping dirty harvest files out of the combined report as well.
     with tempfile.TemporaryDirectory(prefix='stacks-zh-alignment-tags-') as temporary:

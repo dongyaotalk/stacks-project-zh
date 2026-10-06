@@ -223,7 +223,7 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
     return errors
 
 
-def audit_repository_terms(root: Path) -> tuple[dict[str, Any], list[str]]:
+def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dict[str, Any], list[str]]:
     catalog = load_catalog(root)
     approved = load_approved_term_pairs(root / "config/glossary.yml")
     source_commit = load_upstream_commit(root / "upstream.lock")
@@ -245,8 +245,33 @@ def audit_repository_terms(root: Path) -> tuple[dict[str, Any], list[str]]:
     by_tex = {}
     for row in units.values():
         by_tex.setdefault((row["chapter"], source_tex_hash(row)), []).append(row)
+    containers = None
+    locked_evidence = []
     for entry in catalog["terms"]:
         for evidence in entry["evidence"]:
+            if evidence.get("kind") == "locked-source-container":
+                check = {"concept": entry["id"], **evidence, "status": "FAIL"}
+                try:
+                    if (evidence["source_commit"] != source_commit
+                            or evidence["selector"]["file"] != evidence["chapter"] + ".tex"):
+                        raise RecordError("catalog evidence commit/chapter differs from locked source")
+                    if evidence["source_term"].casefold() not in {form.casefold() for form in entry["forms"]}:
+                        raise RecordError("catalog evidence word is not a declared form")
+                    if containers is None:
+                        from .source_containers import Containers
+                        containers = Containers(root, harvest)
+                    selected = containers.select(evidence["selector"])
+                    if evidence["fragment_hash"] != selected["location"]["fragment_hash"]:
+                        raise RecordError("catalog evidence full locked-Git fragment hash differs")
+                    if not _matches(source_projection(selected["inventory_unit"])[0], evidence["source_term"]):
+                        raise RecordError("catalog evidence word is absent from exposed locked-Git prose")
+                    check.update(status="PASS", blob_oid=selected["blob_oid"],
+                                 blob_hash=selected["blob_hash"], location=selected["location"])
+                except (RecordError, OSError) as exc:
+                    check["error"] = str(exc)
+                    errors.append(f"{entry['id']}: locked catalog evidence: {exc}")
+                locked_evidence.append(check)
+                continue
             rows = by_tex.get((evidence["chapter"], evidence["source_tex_hash"]), [])
             if (not any(_matches(source_projection(row)[0], evidence["source_term"]) for row in rows)
                     or evidence["source_term"].casefold() not in {form.casefold() for form in entry["forms"]}):
@@ -262,7 +287,8 @@ def audit_repository_terms(root: Path) -> tuple[dict[str, Any], list[str]]:
             errors.append(f"{use['chapter']}: nonmathematical occurrence lacks its locked English source evidence")
     report = {"schema_version": 1, "source_commit": source_commit,
               "catalog_hash": sha256_value(catalog), "unit_count": len(units),
-              "batch_count": len(batches), "required_occurrences": 0, "units": [], "candidates": []}
+              "batch_count": len(batches), "required_occurrences": 0, "units": [], "candidates": [],
+              "locked_catalog_evidence": locked_evidence}
     for row in units.values():
         inventory = source_inventory(row, catalog)
         report["units"].append(inventory)

@@ -1,8 +1,8 @@
 # 完整来源容器恢复与分组修订开发设计
 
 规范任务：[Issue #603](https://github.com/dongyaotalk/stacks-project-zh/issues/603)。
-本设计是后续独立 Schema/工具实现的合同，尚不能用于事实数据；现行 v1/v2/v3
-及 `model-provenance.md` §9 不变。工具实现、具体数据修复和全库集成分别验收，
+本设计定义独立 Schema/工具合同，实现见 §9；对应工具 PR 验收合并后才允许另开
+事实采用任务。现行 v1/v2/v3 及 `model-provenance.md` §9 不变。工具实现、具体数据修复和全库集成分别验收，
 不以文档或来源库存生成成功代替原八项审查修复完成。
 
 ## 1. 问题与目标
@@ -24,7 +24,7 @@
 
 ## 2. 完整容器与锁定Git证据
 
-规划新增独立 `translation-data/source-container-restorations/<id>.json`，
+新增独立 `translation-data/source-container-restorations/<id>.json`，
 不回写§9已有记录。每份不可变证据绑定下列内容：
 
 | 内容 | 必须核验的事实 |
@@ -70,7 +70,7 @@ existing_unit_id；库存用于选择和准备，当前旧输入由本次完整�
 
 ## 4. v4旧新分组与完整历史
 
-规划v4使用独立Schema分支及`unit_groups`，保留旧v1/v2/v3的映射/重放合同。
+v4使用独立Schema分支及`unit_groups`，保留旧v1/v2/v3的映射/重放合同。
 每组声明完整有序`input_unit_ids`、`output_unit_ids`、来源证据或未改变来源的
 确定性依据、分段/坐标理由与历史身份锚点。旧组与新组内部可以多对多；不能用
 重复的`unit_id_map`值假装满足旧bijection。
@@ -162,3 +162,53 @@ BLOCKED、来源差异和人审状态仍公开。
 数学内文字分类或未知宏支持也以专门政策/工具任务实施，不能藏在普通数据PR。
 本规范PR仅完成第1步；八项审查目标、861个术语问题候选、76个坐标迁移、96条
 source诊断及21组proof差异继续处理，计数按后续真实快照更新。
+
+## 9. 工具实现与准备接口
+
+工具任务：[Issue #605](https://github.com/dongyaotalk/stacks-project-zh/issues/605)，
+分支 `tool/source-container-restoration`。本任务只实现工具，事实采用必须在其验收
+合并后另开数据任务。v1/v2/v3 原 Schema、简单证明及历史门禁仍适用。
+
+- 新来源证据使用 `source-container-restoration.schema.json`。selector 显式声明
+  `file`、真实 `owner_tag`/完整 `owner_label`、`parent_tag`、`kind`、`ordinal`；proof
+  的 ordinal 是真实第几份相邻证明。Tag/label 在锁定 tags 中必须唯一。
+- 完整陈述和证明通常生成一个事实单元；命名陈述可在完整标题/正文边界生成两个。
+  `OWNARGEND` 标记新恢复的外层命名标题边界，旧 `ENVARGEND` 仍保留原严格约束，
+  嵌套参数不得借外层标题 token 冒充 own label。
+- chapter title 保存实际 `title` 至下一语义节点之间的完整 header，必须有真实
+  phantom label，注释/参数/literal 中的伪标签不提供归属。书稿投影才把 `title`
+  换为 `chapter` 并去除章内 document frontmatter；实际 label/ref/eqref/pageref
+  使用统一章前缀或未译永久 Tag 链接，包含数学与脚注中的引用。URL、cite key、
+  注释、literal 和 metadata 不参与投影，来源和原始模型证据保持不变。
+- 长正文使用 `prose_block` 的完整语义区间，按真实前后 Section、陈述或 proof 边界
+  声明 `boundary_witness`，包含全部段落、列表、长脚注和原始非译文间隔。不能按字节
+  裁一段脚注；旧分组也必须覆盖这两个真实边界间的所有当前单元。错误边界、部分旧
+  单元或区间内未分类标签均阻断；标题/陈述/proof 不可借正文区间移走。
+- v4 是独立 `oneOf` 分支，使用完整有序 `unit_groups`，不复用旧 bijection。
+  每组保存 `group_id`、旧/新 ID、完整新 unit、历史身份锚点、来源恢复 ID、模型修订
+  ID 和理由。每个新输出的原 context 使用 `candidate-group-to-revise`，冻结全部旧
+  unit/candidate 与完整新 source，不能只保存锚点。
+- 旧恢复证据的 macro policy 从其可达 `origin_commit` 的真实 Git 字节重放；后续
+  政策任务不应改写旧证据或用今天的配置重新解释旧提取。当前准备同时冻结全部相关
+  事实/历史/政策的 hash，生成期间的变化应失败。
+- `make source-containers SOURCE_CONTAINER_PLAN=<plan>` 及对应 `-check` 接口只生成
+  ignored 待审包。plan 声明完整旧 batch、派生 ID/时间和所有有序分组；包保存完整旧
+  原字节、新提议单元、分组、恢复证据提议及 BLOCKED 诊断。它不创建实际模型 run、
+  事实派生或审批；PREPARED 也不是翻译修复完成。
+- 新坐标的 Issue `parent_tag`/`parent_tags` 仍声明真实来源 Section。旧错误 parent
+  单列 `historical_parent_tags`，只允许出现在本次有效 v4 关联的完整 input 快照及
+  直接前继输出归档，不能用于活跃事实、嵌套新 unit、selector 或陌生快照。
+  PR 检查遍历全部旧/新 group ID、完整新 unit 和 selector，所有历史 ID 也须声明。
+
+plan 的精确字段为 `derivation_id`、`created_at`、`units_file`、`candidates_file`、
+`groups`；每组精确声明 `group_id`、有序 `input_unit_ids`、`identity_anchor`、
+`selector`（或来源未变时 null）、`layout`（whole 或命名陈述 split-title）、`reason`。
+所有旧单元按完整原序恰有一次覆盖。默认输出 `build/source-containers/` 中的
+manifest、groups、restorations、diagnostics、units、input-units、input-candidates
+和 report 八份文件；陌生目录、额外文件、旧包篡改和 symlink 均失败。CLI 支持
+`--require-prepared`，存在 BLOCKED 时返回非零；生成包不代表授权采用。
+
+独立 Git 试验已覆盖命名标题拆分、完整 display/list/comment、长脚注、分组合并及
+旧模型来源披露。当前真实21组 proof 残项中，10组可准备完整来源，11组仍因未分类
+数学内文字或未知命令阻断；它们仍全部计为原审计 mismatch。完整拒绝回归、真实
+待审包、全门禁和整书/模板编译分别验收；不以工具成功代替 S4 数据修复。

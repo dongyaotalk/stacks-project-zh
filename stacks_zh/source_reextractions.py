@@ -231,7 +231,7 @@ def proof_groups(units: list[dict[str, Any]], tags: dict[str, str]) -> tuple[lis
             statement_kind = statement.group(1)
             wrapper = prefix + suffix
             if prefix.rstrip().endswith('['):
-                wrapper += ''.join(value for name, value in unit['placeholders'].items() if name.startswith('ENVARGEND_'))
+                wrapper += ''.join(value for name, value in unit['placeholders'].items() if name.startswith(('ENVARGEND_', 'OWNARGEND_')))
             labels = LABEL.findall(wrapper)
             if len(labels) != 1:
                 owner = None

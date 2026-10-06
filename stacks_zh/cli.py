@@ -22,6 +22,7 @@ from .progress import update_progress_report
 from .records import RecordError
 from .extraction import write_inventory
 from .source_alignment import write_alignment
+from .source_containers import write_container_package
 from .source_integrity import audit_repository_source, require_audit_output
 from .source_terms import audit_repository_terms
 from .source_reextractions import audit_repository_proofs
@@ -68,6 +69,15 @@ def build_parser() -> argparse.ArgumentParser:
     alignment.add_argument("--inventory", type=Path, default=Path("source-ir/extraction"))
     alignment.add_argument("--output", type=Path, default=Path("build/source-alignment"))
     alignment.add_argument("--check", action="store_true")
+
+    containers = subparsers.add_parser('prepare-source-containers',
+        help='prepare complete locked-Git containers and full old/new groups without adopting facts')
+    containers.add_argument('--root', type=Path, default=Path('.'))
+    containers.add_argument('--harvest', required=True, type=Path)
+    containers.add_argument('--plan', required=True, type=Path)
+    containers.add_argument('--output', type=Path, default=Path('build/source-containers'))
+    containers.add_argument('--check', action='store_true')
+    containers.add_argument('--require-prepared', action='store_true')
 
     init_chapters = subparsers.add_parser(
         "init-chapters",
@@ -333,6 +343,15 @@ def main(argv: list[str] | None = None) -> int:
                   f"{report['term_candidate_failures']} term candidate failures; "
                   f"{report['proof_mismatches']} proof mismatches. Adopted: false. Repairs complete: false.")
             return 0
+        if args.command == 'prepare-source-containers':
+            root = args.root.resolve()
+            plan = args.plan if args.plan.is_absolute() else root / args.plan
+            output = args.output if args.output.is_absolute() else root / args.output
+            report = write_container_package(root, args.harvest.resolve(), plan, output, check=args.check)
+            print(f"Source containers: {report['input_unit_count']} full-batch inputs; "
+                  f"{report['proposed_output_unit_count']} proposed outputs; {report['group_count']} groups; "
+                  f"{report['blocked_group_count']} blocked; state={report['state']}. Adopted: false.")
+            return 1 if args.require_prepared and report['state'] != 'PREPARED' else 0
         if args.command == "init-chapters":
             root = args.root.resolve()
             lock_path = args.lock if args.lock.is_absolute() else root / args.lock

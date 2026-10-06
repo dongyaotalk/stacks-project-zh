@@ -114,3 +114,17 @@ TeX 字节而非易迁移的坐标核验；unit_id 是可追溯定位提示。�
 不能冒充正文、旧式证据仍要求当前节点、Schema 互斥与显式 harvest 传递。验收
 比较全部当前候选/来源/证明残项及整书文本保持，随后 DATA #623 重新准备并冻结
 上下文；S4/S5/S7 和全库严格门禁仍分别完成。
+
+003O 三项来源锚点迁移由独立工具任务
+[Issue #633](https://github.com/dongyaotalk/stacks-project-zh/issues/633) 声明。
+整节恢复会合并旧 p001/p002，并从锁定 Git 读取完整标题；旧式 evidence 的
+完整 TeX hash 因此不能继续定位当前片段。1-morphism 与 2-commutative 改用
+真实 Section 003O 的完整 prose_block（ordinal 1），2-fibre-product 改用
+该 Section 的完整 section_title。均使用既有 locked-source-container 格式，
+核验完整 Git 原字节、真实标签、Section、完整边界和保护后的精确词形。
+迁移只改三项 evidence；forms、chapters、其他证据、非数学分类和所有译法
+批准状态保持。开发文档先于配置修改；验收要求全部审计残项和译文事实保持，
+目录 hash 与证据来源元数据按新锚点更新，整书 layout 文本保持。声明层虽
+可产生 and 候选词，既有非数学声明目录已明确排除连接词，完整来源库存没有
+该词的要求，无须修改抽取规则。具体 30 单元候选恢复另开任务，最终输入在
+本前置合并后冻结。

@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -185,10 +186,17 @@ class Containers:
         object_id = subprocess.run(['git', '-C', str(self.english.harvest), 'rev-parse',
                                     f'{self.english.commit}:{file}'], check=True,
                                    capture_output=True, text=True).stdout.strip()
+        math_counts = Counter(value for source_row in rows
+                              for name, value in source_row['unit']['placeholders'].items()
+                              if name.startswith('MATH_'))
         return {'selector': copy.deepcopy(selector), 'fragment': fragment,
                 'location': location, 'blob_oid': object_id, 'blob_hash': byte_hash(raw),
                 'source_commit': self.english.commit, 'macro_policy_hash': byte_hash(self.policy_bytes),
-                'inventory_unit': row['unit'], 'boundary_witness': boundary_witness}
+                'inventory_unit': row['unit'], 'boundary_witness': boundary_witness,
+                '_chapter_math_counts': {value: math_counts[value]
+                    for name, value in row['unit']['placeholders'].items() if name.startswith('MATH_')},
+                '_chapter_math_text_counts': {value: raw.count(value.encode('utf-8'))
+                    for name, value in row['unit']['placeholders'].items() if name.startswith('MATH_')}}
 
     def assert_unchanged(self) -> None:
         if (self.root / 'config/macro-policy.yml').read_bytes() != self.current_policy_bytes:
@@ -421,11 +429,99 @@ def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str]) -> l
     return output + prose_groups
 
 
+def _proof_with_detached_displays(units: list[dict[str, Any]], groups: list[dict[str, Any]],
+                                 ids: list[str], selected: dict[str, Any]) -> dict[str, Any] | None:
+    """A complete native proof, plus adjacent math with independent Git ownership.
+
+    The old display ID does not establish its owner. The complete wrapper chain
+    and a unique real protected Git math node establish the relationship.
+    """
+    selector = selected['selector']
+    if selector['kind'] != 'proof':
+        return None
+    cores = [g for g in groups if g['kind'] == 'proof'
+             and all(g[k] == selector[k] for k in ('file', 'owner_tag', 'ordinal'))
+             and all(i in ids for i in g['input_unit_ids'])]
+    failure = 'restoration must cover one complete old wrapper chain with verified adjacent display nodes'
+    if len(cores) != 1:
+        return None
+    core = cores[0]
+    all_ids = [u['unit_id'] for u in units]
+    if (not ids or len(set(all_ids)) != len(all_ids) or len(set(ids)) != len(ids)
+            or any(i not in all_ids for i in ids)):
+        raise RecordError(failure)
+    start, end = all_ids.index(ids[0]), all_ids.index(ids[-1])
+    if ids != all_ids[start:end + 1]:
+        raise RecordError(failure + ': inputs are not a continuous ordered full-batch interval')
+    core_ids = core['input_unit_ids']
+    position = ids.index(core_ids[0])
+    if ids[position:position + len(core_ids)] != core_ids:
+        raise RecordError(failure + ': proof input chain is partial or reordered')
+    by_id = {u['unit_id']: u for u in units}
+    proof_units = [by_id[i] for i in core_ids]
+    members = [by_id[i] for i in ids]
+    anchor = proof_units[0]
+    if any(u['chapter'] != selector['file'][:-4] or u['parent_tag'] != anchor['parent_tag']
+           or u['source_commit'] != selected['source_commit'] for u in members):
+        raise RecordError(failure + ': detached nodes cross the frozen chapter, parent or source')
+    extras = [u for u in members if u['unit_id'] not in core_ids]
+    if not extras:
+        return None
+    target_math = Counter(value for name, value in selected['inventory_unit']['placeholders'].items()
+                          if name.startswith('MATH_'))
+    prior_math = Counter(value for u in proof_units for name, value in u['placeholders'].items()
+                         if name.startswith('MATH_'))
+    used = set()
+    for unit in extras:
+        placeholders = unit['placeholders']
+        if len(placeholders) != 1:
+            raise RecordError(failure + ': detached input must contain exactly one math node')
+        name, value = next(iter(placeholders.items()))
+        if (unit['node_kind'] != 'display_math' or not re.fullmatch(r'MATH_[0-9]{4}', name)
+                or unit['source_text'].strip() != '<' + name + '>'
+                or any(part.strip() for part in unit['render'].values())
+                or not (value.startswith(('$$', r'\['))
+                        or value.startswith(r'\begin{') and not value.startswith(r'\begin{math}'))):
+            raise RecordError(failure + ': detached input has prose, wrappers or non-display math')
+        if (target_math[value] != 1 or selected.get('_chapter_math_counts', {}).get(value) != 1
+                or selected.get('_chapter_math_text_counts', {}).get(value) != 1
+                or prior_math[value] or value in used):
+            raise RecordError(failure + ': display is absent, ambiguous, repeated or already inside the old proof')
+        used.add(value)
+    return core
+
+
 def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
                      ids: list[str], selected: dict[str, Any]) -> None:
     groups = old_container_groups(units, tags)
+    selector = selected['selector']
+    if selector['kind'] == 'proof':
+        cores = [g for g in groups if g['kind'] == 'proof'
+                 and all(g[k] == selector[k] for k in ('file', 'owner_tag', 'ordinal'))]
+        if len(cores) == 1:
+            all_ids = [u['unit_id'] for u in units]
+            core_ids = cores[0]['input_unit_ids']
+            before, after = all_ids.index(core_ids[0]) - 1, all_ids.index(core_ids[-1]) + 1
+            neighbors = []
+            while before >= 0 and units[before]['node_kind'] == 'display_math':
+                neighbors.append(units[before])
+                before -= 1
+            while after < len(units) and units[after]['node_kind'] == 'display_math':
+                neighbors.append(units[after])
+                after += 1
+            target_math = {value for name, value in selected['inventory_unit']['placeholders'].items()
+                           if name.startswith('MATH_')}
+            required = [u['unit_id'] for u in neighbors
+                        if any(value in target_math for name, value in u['placeholders'].items()
+                               if name.startswith('MATH_'))]
+            if any(identifier not in ids for identifier in required):
+                raise RecordError('restoration must cover one complete old wrapper chain including its adjacent detached display nodes')
     matches = [group for group in groups if group['input_unit_ids'] == ids and
                ('title_title' if group['kind'] == 'chapter_title' else group['kind']) == selected['selector']['kind']]
+    if not matches:
+        extended = _proof_with_detached_displays(units, groups, ids, selected)
+        if extended is not None:
+            matches = [extended]
     if len(matches) != 1:
         raise RecordError('restoration must cover one complete old wrapper chain')
     group, selector = matches[0], selected['selector']

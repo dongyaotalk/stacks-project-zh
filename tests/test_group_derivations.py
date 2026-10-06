@@ -13,7 +13,7 @@ from stacks_zh.derivations import clean, jsonl_bytes, load_repository_derivation
 from stacks_zh.group_derivations import FIELDS, revision_group
 from stacks_zh.model_corrections import candidate_provenance_hash, load_repository_corrections
 from stacks_zh.provenance import validate_repository_provenance
-from stacks_zh.records import RecordError, load_jsonl, sha256_value
+from stacks_zh.records import RecordError, load_jsonl, sha256_value, stamp_unit_hashes, placeholder_names
 from stacks_zh.schema_validation import validate_repository_schemas
 from stacks_zh.source_containers import Containers, VERSION, load_source_containers, lower_container
 from stacks_zh.source_reextractions import byte_hash, source_tex
@@ -54,7 +54,7 @@ def run_for(rows, source, kind, identifier):
         'created_at': row['created_at'], 'replayable': False}
 
 
-def fixture(base, count=1, legacy=False, proof=None):
+def fixture(base, count=1, legacy=False, proof=None, detached=False):
     root, harvest, source = english_fixture(base, **({'proof':proof} if proof is not None else {}))
     _, _, candidate_template = candidate_fixture()
     template = candidate_template[0]
@@ -63,6 +63,10 @@ def fixture(base, count=1, legacy=False, proof=None):
                       '\\begin{lemma}\n\\label{test-lemma-one}\n', '\n\\end{lemma}'),
              old_unit(source, 'tag:0001:proof-p001', 'proof', 'First old segment.', '\\begin{proof}\n'),
              old_unit(source, 'tag:0001:proof-p002', 'paragraph', 'Second old segment.', '', '\n\\end{proof}')]
+    if detached:
+        display = old_unit(source, 'tag:0001:display001', 'display_math', '<MATH_0001>')
+        display['placeholders'] = {'MATH_0001': r'\[x \to y \to z\]'}
+        units.insert(2, stamp_unit_hashes(display))
     candidates = []
     for index, unit in enumerate(units):
         model = 'fixture-model-b' if index == 3 else 'fixture-model-a'
@@ -70,7 +74,8 @@ def fixture(base, count=1, legacy=False, proof=None):
         row = copy.deepcopy(template)
         row.update(unit_id=unit['unit_id'], source_commit=source, source_text_hash=unit['source_text_hash'],
                    model_id=model, model_lane='fixture', model_record_id='fixture:' + model + ':declared',
-                   run_id=model + '-run', context=context, context_hash=sha256_value(context), translation='旧译文。',
+                   run_id=model + '-run', context=context, context_hash=sha256_value(context),
+                   translation=''.join('<' + n + '>' for n in placeholder_names(unit['source_text'])) + '旧译文。',
                    allowed_english=[], term_occurrences=[], unknown_terms=[], notes=['Synthetic fixture only.'],
                    term_status='CLEAR', stage='TERM_OK', qa_status='PASS', publication_status='CANDIDATE')
         row['translation_hash'] = sha256_value(row['translation'])
@@ -172,7 +177,6 @@ def fixture(base, count=1, legacy=False, proof=None):
                 notes=['Synthetic fixture, never actual model output.'], term_status='CLEAR', stage='TERM_OK',
                 qa_status='PASS', publication_status='CANDIDATE')
             # Placeholder order comes from the source, never dictionary order.
-            from stacks_zh.records import placeholder_names
             row['translation'] = ''.join('<' + n + '>' for n in placeholder_names(unit['source_text'])) + '合成测试。'
             row['translation_hash'] = sha256_value(row['translation'])
             raw.append(row)
@@ -203,6 +207,28 @@ def fixture(base, count=1, legacy=False, proof=None):
 
 
 class GroupDerivationTests(unittest.TestCase):
+    def test_detached_display_full_history_replays_without_separate_current_math_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, records = fixture(Path(tmp), count=2, detached=True)
+            self.assertEqual(validate_repository_schemas(root), [])
+            self.assertEqual(validate_repository_provenance(root, harvest), [])
+            first = records[0]
+            group = next(g for g in first['unit_groups'] if g['group_id'] == 'proof')
+            self.assertEqual(group['input_unit_ids'], ['tag:0001:display001', 'tag:0001:proof-p001', 'tag:0001:proof-p002'])
+            self.assertEqual(group['output_unit_ids'], ['tag:0001:proof'])
+            frozen = load_jsonl(root / first['files']['input_units']['path'])
+            self.assertIn('tag:0001:display001', [u['unit_id'] for u in frozen])
+            current = load_jsonl(root / records[-1]['files']['output_units']['path'])
+            self.assertNotIn('tag:0001:display001', [u['unit_id'] for u in current])
+            proof = next(u for u in current if u['node_kind'] == 'proof')
+            self.assertEqual(source_tex(proof), PROOF)
+            self.assertEqual(source_tex(proof).count(r'\[x \to y \to z\]'), 1)
+            origins, errors = load_repository_derivations(root, harvest=harvest)
+            self.assertEqual(errors, [])
+            key = records[-1]['files']['output_candidates']['path'], 'tag:0001:proof'
+            self.assertEqual({c['unit_id'] for c in origins[key]['_all_origins']},
+                             {'tag:0001:display001', 'tag:0001:proof-p001', 'tag:0001:proof-p002'})
+
     def test_complete_split_merge_history_retains_non_anchor_origins(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, harvest, records = fixture(Path(tmp), count=3)

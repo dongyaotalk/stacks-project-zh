@@ -92,12 +92,19 @@ def replay_derivation(
     corrections: dict[tuple[str, str], dict[str, Any]] | None = None,
     previous_outputs: tuple[list[dict[str, Any]], list[dict[str, Any]]] | None = None,
     source_reextractions: dict[str, dict[str, Any]] | None = None,
+    source_containers: dict[str, dict[str, Any]] | None = None,
+    tags: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Replay explicit corrections without mutating origin rows or run facts."""
     errors = validate_named_schema(record, "derivation.schema.json", "derivation")
     if errors:
         raise DerivationError("\n".join(errors))
     version = record["tool"]["version"]
+    if version == '4':
+        from .group_derivations import replay_groups
+        if tags is None:
+            raise DerivationError('v4 replay requires independently locked permanent Tags')
+        return replay_groups(record, units, candidates, corrections, previous_outputs, source_containers, tags)
     if record["tool"]["id"] != TOOL_ID or version not in {TOOL_VERSION, "2", "3"}:
         raise DerivationError("unsupported derivation tool/version")
     units = [clean(row) for row in units]
@@ -156,6 +163,7 @@ def replay_derivation(
         old_id = old_unit["unit_id"]
         op = operations.get(old_id, {"unit_updates": {}, "candidate_updates": {}})
         unit, candidate = copy.deepcopy(old_unit), copy.deepcopy(old_candidate)
+        candidate.pop('unit_group_id', None)
         unit.update(copy.deepcopy(op["unit_updates"]))
         candidate.update(copy.deepcopy(op["candidate_updates"]))
         for field, text in (("source_text", unit["source_text"]), ("translation", candidate["translation"])):
@@ -228,6 +236,10 @@ def load_repository_derivations(
     errors.extend(archive_errors)
     reextractions, reextraction_errors = load_source_reextractions(root, harvest)
     errors.extend(reextraction_errors)
+    from .source_containers import load_source_containers
+    from .group_derivations import correction_bindings, restoration_bindings
+    restorations, restoration_errors = load_source_containers(root, harvest)
+    errors.extend(restoration_errors)
     records = {}
     for path in sorted((root / "translation-data/derivations").glob("*.json")):
         try:
@@ -244,6 +256,14 @@ def load_repository_derivations(
             errors.append(f"{path}: {exc}")
     used_corrections = set()
     used_reextractions = set()
+    used_restorations = set()
+    tags = None
+    if any(r['tool']['version'] == '4' for r in records.values()):
+        from .source_reextractions import LockedEnglish
+        try:
+            tags = LockedEnglish(root, harvest).tags
+        except (OSError, ValueError) as exc:
+            errors.append(f'v4 locked permanent Tags: {exc}')
     seen_snapshots, seen_outputs = set(), set()
     cache, visiting, failed = {}, set(), set()
 
@@ -288,7 +308,7 @@ def load_repository_derivations(
             units = load_jsonl(resolved["input_units"])
             candidates = load_jsonl(resolved["input_candidates"])
             previous_outputs = parent_origins = None
-            if record["tool"]["version"] == "3":
+            if record["tool"]["version"] == "3" or record.get('previous_derivation_id') and record['tool']['version'] == '4':
                 previous = record.get("previous_derivation_id")
                 if previous not in archives:
                     raise DerivationError("v3 predecessor has no validated archive")
@@ -307,30 +327,48 @@ def load_repository_derivations(
                 raw_origins = {row["unit_id"]: clean(row) for row in candidates}
             else:
                 raw_origins = parent_origins
-            for run_id in {candidate.get("run_id") for candidate in raw_origins.values()}:
+            all_origins = [origin for candidate in raw_origins.values()
+                           for origin in candidate.get('_all_origins', [candidate])]
+            for run_id in {candidate.get("run_id") for candidate in all_origins}:
                 if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", run_id) or ".." in run_id:
                     raise DerivationError("origin candidate has invalid run ID")
                 run_path = f"translation-data/runs/{run_id}.json"
                 if (root / run_path).read_bytes() != _git_origin_bytes(root, record["origin_commit"], run_path):
                     raise DerivationError(f"{run_path}: original run bytes have changed")
-            output_units, output_candidates = replay_derivation(record, units, candidates, corrections, previous_outputs, reextractions)
+            output_units, output_candidates = replay_derivation(record, units, candidates, corrections,
+                                                                previous_outputs, reextractions, restorations, tags)
             for role, rows in [("output_units", output_units), ("output_candidates", output_candidates)]:
                 if jsonl_bytes(rows) != resolved[role].read_bytes():
                     raise DerivationError(f"{role}: active output does not match replay")
             mapped_origins = {}
-            for operation in record['operations']:
+            for operation in record.get('operations', []):
                 identifier_used = operation.get('source_reextraction_id')
                 if identifier_used:
                     if identifier_used in used_reextractions:
                         raise DerivationError('source re-extraction is applied more than once')
                     used_reextractions.add(identifier_used)
-            for previous_candidate, output in zip(candidates, output_candidates, strict=True):
-                mapped_origins[output["unit_id"]] = raw_origins[previous_candidate["unit_id"]]
-                if output.get("model_correction_id"):
-                    key = (output["model_correction_id"], output["unit_id"])
-                    if key in used_corrections:
-                        raise DerivationError("frozen model correction is applied more than once")
-                    used_corrections.add(key)
+            if record['tool']['version'] == '4':
+                for group in record['unit_groups']:
+                    anchor = clean(raw_origins[group['identity_anchor']])
+                    combined = {}
+                    for old_id in group['input_unit_ids']:
+                        prior_origin = raw_origins[old_id]
+                        for origin in prior_origin.get('_all_origins', [prior_origin]):
+                            origin = clean(origin)
+                            combined[sha256_value(origin)] = origin
+                    for new_id in group['output_unit_ids']:
+                        mapped_origins[new_id] = {**copy.deepcopy(anchor), '_all_origins': list(combined.values())}
+            else:
+                for previous_candidate, output in zip(candidates, output_candidates, strict=True):
+                    mapped_origins[output['unit_id']] = raw_origins[previous_candidate['unit_id']]
+            for key in correction_bindings(record):
+                if key in used_corrections:
+                    raise DerivationError('frozen model correction is applied more than once')
+                used_corrections.add(key)
+            for restoration_id in restoration_bindings(record):
+                if restoration_id in used_restorations:
+                    raise DerivationError('source container is applied more than once')
+                used_restorations.add(restoration_id)
             result = output_units, output_candidates, mapped_origins
             cache[identifier] = result
             return result
@@ -346,7 +384,7 @@ def load_repository_derivations(
             if identifier not in archives:
                 for candidate in candidates:
                     key = (records[identifier]["files"]["output_candidates"]["path"], candidate["unit_id"])
-                    origins[key] = clean(raw_origins[candidate["unit_id"]])
+                    origins[key] = copy.deepcopy(raw_origins[candidate['unit_id']])
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f"translation-data/derivations/{identifier}.json: {exc}")
     for prior, entry in archives.items():
@@ -360,6 +398,30 @@ def load_repository_derivations(
         errors.append(f"model correction {key}: frozen output has no active derived candidate or validated historical replay")
     for identifier in reextractions.keys() - used_reextractions:
         errors.append(f"source re-extraction {identifier}: evidence has no validated historical replay")
+    for identifier in restorations.keys() - used_restorations:
+        errors.append(f'source-container restoration {identifier}: evidence has no validated historical replay')
+    # OWNARGEND is the complete-container lowering's role, not a new permission
+    # for raw historical units to claim an arbitrary complex title boundary.
+    owned_units = [unit for identifier in used_restorations
+                   for unit in restorations[identifier]['record']['new_units']]
+    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+        try:
+            for row in load_jsonl(path):
+                if (any(name.startswith('OWNARGEND_') for name in row.get('placeholders', {}))
+                        and clean(row) not in owned_units):
+                    errors.append(f"{path}: {row['unit_id']}: owned title requires validated complete-container evidence")
+        except (RecordError, KeyError) as exc:
+            errors.append(str(exc))
+    if any(r['tool']['version'] == '4' for r in records.values()):
+        active_ids = {}
+        for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+            try:
+                for row in load_jsonl(path):
+                    if row['unit_id'] in active_ids:
+                        errors.append(f"v4 active fact ID collision: {row['unit_id']} in {path} and {active_ids[row['unit_id']]}")
+                    active_ids[row['unit_id']] = path
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                errors.append(f'{path}: {exc}')
     for path in sorted((root / "translation-data/candidates").glob("*/*.jsonl")):
         try:
             for row in load_jsonl(path):
@@ -368,6 +430,9 @@ def load_repository_derivations(
                     errors.append(f"{path}: {row['unit_id']}: derivation has no valid replay")
                 if "model_correction_id" in row and (key not in origins or not row.get("derivation_id")):
                     errors.append(f"{path}: {row['unit_id']}: model correction has no valid derivation")
+                if row.get('unit_group_id') and (key not in origins or not row.get('derivation_id')
+                        or records.get(row['derivation_id'], {}).get('tool', {}).get('version') != '4'):
+                    errors.append(f"{path}: {row['unit_id']}: unit group has no valid v4 derivation")
         except (RecordError, KeyError) as exc:
             errors.append(str(exc))
     return origins, errors

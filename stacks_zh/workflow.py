@@ -482,6 +482,84 @@ def assemble_candidates_many(
     return len(unit_ids)
 
 
+def _project_container_tex(text, chapter, policy, tags, resolved_labels=None, *, chapter_title=False):
+    """Project a validated container into a book without changing its facts.
+
+    Walk commands without executing TeX. Literal examples, comments, URLs,
+    citation keys and editorial metadata remain opaque; real references in
+    math, nested lists, title arguments and footnotes are projected as well.
+    """
+    from .extraction import COMMAND, ENVIRONMENT, Scanner
+    scanner = Scanner(text, policy)
+    title_end = scanner.command_arguments(0)[0] if chapter_title else -1
+    changes, labels = [], set()
+    cursor = 0
+    while cursor < len(text):
+        if text[cursor] == '%':
+            cursor = scanner.comment_end(cursor)
+            continue
+        command = COMMAND.match(text, cursor)
+        if command is None:
+            cursor += 1
+            continue
+        name = command.group()[1:]
+        environment = ENVIRONMENT.match(text, cursor)
+        if environment:
+            if environment[1] == 'begin' and environment[2] in policy.literal | policy.metadata:
+                cursor = scanner.environment_end(cursor)
+            else:
+                cursor = environment.end()
+            continue
+        if name == 'verb':
+            opening = command.end() + (text[command.end():command.end() + 1] == '*')
+            if opening >= len(text) or text[opening].isspace():
+                raise RecordError('invalid literal command in book projection')
+            close = text.find(text[opening], opening + 1)
+            if close < 0:
+                raise RecordError('unclosed literal command in book projection')
+            cursor = close + 1
+            continue
+        if name in {'label', 'ref', 'eqref', 'pageref'}:
+            stop, args = scanner.command_arguments(cursor)
+            a, b = args[0]
+            value = text[a + 1:b - 1]
+            if not TAG_LABEL_RE.fullmatch(value):
+                raise RecordError('unsafe label in book projection')
+            resolved = _permanent_tag_for_label(value, chapter, tags)
+            full = resolved[0] if resolved else value if value.startswith(chapter + '-') else chapter + '-' + value
+            if name == 'label':
+                labels.add(full)
+                changes.append((a + 1, b - 1, full))
+            elif resolved_labels is not None:
+                if full in resolved_labels:
+                    changes.append((a + 1, b - 1, full))
+                elif resolved:
+                    changes.append((cursor, stop, f'\\href{{https://stacks.math.columbia.edu/tag/{resolved[1]}}}'
+                                    f'{{Tag {resolved[1]}（待译）}}'))
+                elif not tags:
+                    changes.append((a + 1, b - 1, full))
+                else:
+                    raise RecordError(f'unresolved container reference {value!r} has no permanent Tag')
+            cursor = stop
+            continue
+        if name in {'url', 'cite', 'index', 'input', 'bibliography', 'bibliographystyle'}:
+            cursor, _ = scanner.command_arguments(cursor, optional=True)
+            continue
+        if name == 'href':
+            # Skip the opaque URL argument, then scan the displayed argument.
+            _, args = scanner.command_arguments(cursor, count=2)
+            cursor = args[1][0] + 1
+            continue
+        if chapter_title and name == 'title' and cursor == 0:
+            changes.append((cursor, command.end(), r'\chapter'))
+        if chapter_title and cursor >= title_end and name in {'maketitle', 'phantomsection', 'tableofcontents'}:
+            changes.append((cursor, command.end(), ''))
+        cursor = command.end()
+    for a, b, replacement in reversed(changes):
+        text = text[:a] + replacement + text[b:]
+    return text, labels
+
+
 def render_batch(
     unit_path: Path | Iterable[Path],
     candidate_path: Path | Iterable[Path],
@@ -510,9 +588,40 @@ def render_batch(
     if {candidate["model_lane"] for candidate in candidates} != {model_lane}:
         raise RecordError("candidate model_lane does not match --model-lane")
 
+    candidate_by_id = {candidate['unit_id']: candidate for candidate in candidates}
+    root = lock_path.parent
+    composite = any(c.get('model_correction_id') or c.get('unit_group_id') for c in candidates)
+    if composite:
+        provenance_errors = validate_repository_provenance(root, chapter_source_dir)
+        if provenance_errors:
+            raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
+    histories = {identifier:derivation_history(root, identifier)
+                 for identifier in {c['derivation_id'] for c in candidates if c.get('derivation_id')}
+                 } if composite else {}
+    grouped_ids = {candidate['unit_id'] for candidate in candidates
+                   if any(e['derivation']['tool']['version'] == '4'
+                          for e in histories.get(candidate.get('derivation_id'), []))}
+    from .extraction import Policy
+    from .source_reextractions import source_tex
+    projection_policy = (Policy((root / 'config/macro-policy.yml').read_text())
+                         if grouped_ids else None)
+    projection_policies = {}
+    from .derivations import _git_origin_bytes, clean
+    from .group_derivations import restoration_bindings
+    for unit in units:
+        if unit['unit_id'] not in grouped_ids:
+            continue
+        policy = projection_policy
+        for entry in histories[candidate_by_id[unit['unit_id']]['derivation_id']]:
+            for identifier in restoration_bindings(entry['derivation']):
+                evidence = json.loads((root / f'translation-data/source-container-restorations/{identifier}.json').read_text())
+                if clean(unit) in evidence['new_units']:
+                    policy = Policy(_git_origin_bytes(root, evidence['origin_commit'], 'config/macro-policy.yml').decode('utf-8'))
+        projection_policies[unit['unit_id']] = policy
     resolved_labels = {
         label
         for unit in units
+        if unit['unit_id'] not in grouped_ids
         for render_part in (
             unit["render"]["prefix"],
             unit["render"]["suffix"],
@@ -521,6 +630,10 @@ def render_batch(
         for label in LABEL_RE.findall(render_part)
     }
     tags_by_label = _load_tags(tags_path) if tags_path is not None else {}
+    for unit in units:
+        if unit['unit_id'] in grouped_ids:
+            _, labels = _project_container_tex(source_tex(unit), unit['chapter'], projection_policies[unit['unit_id']], tags_by_label)
+            resolved_labels.update(labels)
     if tags_path is not None:
         for batch in unit_batches:
             _validate_title_permanent_tags(batch, tags_by_label, tags_path)
@@ -528,7 +641,6 @@ def render_batch(
         units = _order_unit_batches_by_chapter_source(
             unit_batches, chapter_source_dir
         )
-    candidate_by_id = {candidate["unit_id"]: candidate for candidate in candidates}
     candidate_model_ids = {candidate.get("model_id") for candidate in candidates}
     candidate_harness_ids = {candidate.get("harness_id", "legacy") for candidate in candidates}
     candidate_run_ids = {candidate.get("run_id", "legacy") for candidate in candidates}
@@ -550,20 +662,20 @@ def render_batch(
                        for candidate in candidates if 'model_correction_id' in candidate}
     correction_notice = correction_name = ''
     if correction_keys:
-        root = lock_path.parent
-        provenance_errors = validate_repository_provenance(root, chapter_source_dir)
-        if provenance_errors:
-            raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
         reextraction_ids = set()
+        container_ids = set()
+        original_models = set()
+        grouped_history = False
+        from .group_derivations import correction_bindings, restoration_bindings
         for derivation_id in sorted(derivation_ids):
-            for entry in derivation_history(root, derivation_id):
+            for entry in histories[derivation_id]:
                 record = entry['derivation']
-                reextraction_ids.update(operation['source_reextraction_id'] for operation in record['operations']
+                reextraction_ids.update(operation['source_reextraction_id'] for operation in record.get('operations', [])
                                        if operation.get('source_reextraction_id'))
-                correction_keys.update(
-                    (operation['model_correction_id'], record['unit_id_map'][operation['unit_id']])
-                    for operation in record['operations'] if operation.get('model_correction_id')
-                )
+                correction_keys.update(correction_bindings(record))
+                container_ids.update(restoration_bindings(record))
+                grouped_history |= record['tool']['version'] == '4'
+                original_models.update(row['model_id'] for row in load_jsonl(root / record['files']['input_candidates']['path']))
         corrections, correction_errors = load_repository_corrections(root)
         if correction_errors or not correction_keys <= corrections.keys():
             raise RecordError('render has no complete model-correction evidence')
@@ -582,6 +694,17 @@ def render_batch(
         if reextraction_ids:
             correction_notice += (f'含 {len(reextraction_ids)} 份锁定英文 Git 来源恢复记录；'
                                   '旧提取输入保留，完整证据见 translation-data/source-reextractions；')
+        if grouped_history:
+            for name in original_models:
+                if not re.fullmatch(r'[A-Za-z0-9._+-]+', name):
+                    raise RecordError('group origin model identity contains unsafe TeX characters')
+            origins = ', '.join(sorted(original_models)).replace('_', r'\_')
+            correction_notice += ('含旧新分组修订记录；'
+                                  f'组内全部历史生成模型={origins}；兼容身份仅为历史锚点；'
+                                  '全部历史见 translation-data/derivations；')
+        if container_ids:
+            correction_notice += (f'含 {len(container_ids)} 份完整英文容器恢复记录；'
+                                  '全部来源见 translation-data/source-container-restorations；')
     chapter_chunks: dict[str, list[str]] = {}
     chapters_with_rendered_titles: set[str] = set()
     chapter_order: list[str] = []
@@ -597,6 +720,8 @@ def render_batch(
         candidate = candidate_by_id[unit["unit_id"]]
         placeholder_overrides: dict[str, str] = {}
         for name, value in unit["placeholders"].items():
+            if unit['unit_id'] in grouped_ids:
+                continue
             reference_match = REF_VALUE_RE.fullmatch(value)
             if reference_match is None:
                 continue
@@ -628,7 +753,11 @@ def render_batch(
             delimit_commands=True,
         )
         render = unit["render"]
-        chapter_chunks[chapter].append(delimit_tex_control_word(render["prefix"]) + translated + render["suffix"])
+        chunk = delimit_tex_control_word(render['prefix']) + translated + render['suffix']
+        if unit['unit_id'] in grouped_ids:
+            chunk, _ = _project_container_tex(chunk, chapter, projection_policies[unit['unit_id']], tags_by_label, resolved_labels,
+                                              chapter_title=unit['node_kind'] == 'chapter_title')
+        chapter_chunks[chapter].append(chunk)
 
     chapter_titles: dict[str, tuple[str, str]] = {}
     if chapter_manifest_path is not None:

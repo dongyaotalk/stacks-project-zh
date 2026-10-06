@@ -103,6 +103,8 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
         manifests[run_id] = (manifest_path, manifest)
 
     correction_paths = {entry['candidate_path']: entry['candidate']['model_lane'] for entry in corrections.values()}
+    expanded = []
+    seen_origins = set()
     for candidate_path in [*sorted(candidates_root.glob("*/*.jsonl")), *sorted(correction_paths)]:
         lane = correction_paths.get(candidate_path, candidate_path.parent.name)
         try:
@@ -127,98 +129,105 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
                 if origin is None:
                     errors.append(f"{location}: missing validated original candidate")
                     continue
-                candidate = origin
-            if candidate.get("schema_version") != 2:
-                errors.append(f"{location}: candidate must use schema_version 2")
-                continue
-            run_id = candidate.get("run_id")
-            if not isinstance(run_id, str) or run_id not in manifests:
-                errors.append(f"{location}: run_id has no manifest: {run_id!r}")
-                continue
-            manifest_path, manifest = manifests[run_id]
-            if candidate.get("model_lane") != lane:
-                errors.append(f"{location}: model_lane does not match candidate directory")
-            lane_config = model_lanes.get(lane)
-            if model_lanes and lane_config is None:
-                errors.append(f"{location}: model lane is not registered: {lane!r}")
-            elif lane_config is not None:
-                for field in ("model_id", "model_record_id", "harness_id", "prompt_version"):
-                    expected = lane_config.get(field)
-                    if expected and candidate.get(field) != expected:
-                        errors.append(
-                            f"{location}: {field} does not match config/models.yml lane {lane}"
-                        )
-            if candidate.get("source_commit") != manifest.get("source_commit"):
-                errors.append(f"{location}: source_commit does not match {manifest_path}")
-            model = manifest.get("model")
-            harness = manifest.get("harness")
-            if not isinstance(model, dict) or not isinstance(harness, dict):
-                errors.append(f"{manifest_path}: model and harness objects are required")
-                continue
-            model_record = model_records.get(str(model.get("record_id", "")))
-            if model_records and model_record is None:
-                errors.append(f"{manifest_path}: model.record_id is not registered")
-            elif model_record is not None:
-                for field in (
-                    "provider",
-                    "requested_id",
-                    "resolved_id",
-                    "snapshot",
-                    "identity_confidence",
-                ):
-                    expected = model_record.get(field)
-                    if expected is not None and _registry_scalar(model.get(field)) != expected:
-                        errors.append(
-                            f"{manifest_path}: model.{field} does not match config/models.yml"
-                        )
-            harness_record = harness_records.get(str(harness.get("id", "")))
-            if harness_records and harness_record is None:
-                errors.append(f"{manifest_path}: harness.id is not registered")
-            elif harness_record is not None:
-                expected_adapter = harness_record.get("adapter_version")
-                if expected_adapter and harness.get("adapter_version") != expected_adapter:
+                for original in origin.get('_all_origins', [origin]):
+                    identity = (original.get('run_id'), original.get('unit_id'), original.get('context_hash'))
+                    if identity not in seen_origins:
+                        seen_origins.add(identity)
+                        expanded.append((location, lane, original))
+            else:
+                expanded.append((location, lane, candidate))
+    for location, lane, candidate in expanded:
+        if candidate.get("schema_version") != 2:
+            errors.append(f"{location}: candidate must use schema_version 2")
+            continue
+        run_id = candidate.get("run_id")
+        if not isinstance(run_id, str) or run_id not in manifests:
+            errors.append(f"{location}: run_id has no manifest: {run_id!r}")
+            continue
+        manifest_path, manifest = manifests[run_id]
+        if candidate.get("model_lane") != lane:
+            errors.append(f"{location}: model_lane does not match candidate directory")
+        lane_config = model_lanes.get(lane)
+        if model_lanes and lane_config is None:
+            errors.append(f"{location}: model lane is not registered: {lane!r}")
+        elif lane_config is not None:
+            for field in ("model_id", "model_record_id", "harness_id", "prompt_version"):
+                expected = lane_config.get(field)
+                if expected and candidate.get(field) != expected:
                     errors.append(
-                        f"{manifest_path}: harness.adapter_version does not match config/harnesses.yml"
+                        f"{location}: {field} does not match config/models.yml lane {lane}"
                     )
-            for key in ("model_record_id", "harness_id"):
-                expected = model.get("record_id") if key == "model_record_id" else harness.get("id")
-                if candidate.get(key) != expected:
-                    errors.append(f"{location}: {key} does not match {manifest_path}")
-            for candidate_field, expected in (
-                ("harness_version", harness.get("version")),
-                ("model_snapshot", model.get("snapshot")),
-                ("model_identity_confidence", model.get("identity_confidence")),
-                ("created_at", manifest.get("created_at")),
+        if candidate.get("source_commit") != manifest.get("source_commit"):
+            errors.append(f"{location}: source_commit does not match {manifest_path}")
+        model = manifest.get("model")
+        harness = manifest.get("harness")
+        if not isinstance(model, dict) or not isinstance(harness, dict):
+            errors.append(f"{manifest_path}: model and harness objects are required")
+            continue
+        model_record = model_records.get(str(model.get("record_id", "")))
+        if model_records and model_record is None:
+            errors.append(f"{manifest_path}: model.record_id is not registered")
+        elif model_record is not None:
+            for field in (
+                "provider",
+                "requested_id",
+                "resolved_id",
+                "snapshot",
+                "identity_confidence",
             ):
-                if candidate.get(candidate_field) != expected:
+                expected = model_record.get(field)
+                if expected is not None and _registry_scalar(model.get(field)) != expected:
                     errors.append(
-                        f"{location}: {candidate_field} does not match {manifest_path}"
+                        f"{manifest_path}: model.{field} does not match config/models.yml"
                     )
-            if candidate.get("model_id") not in {model.get("requested_id"), model.get("resolved_id")}:
-                errors.append(f"{location}: model_id does not match {manifest_path}")
-            inputs = manifest.get("inputs")
-            if isinstance(inputs, dict):
-                for field in ("prompt_version", "glossary_revision"):
-                    if candidate.get(field) != inputs.get(field):
-                        errors.append(f"{location}: {field} does not match {manifest_path}")
-            context = candidate.get("context")
-            if isinstance(context, dict) and context.get("prompt_version") != candidate.get("prompt_version"):
-                errors.append(f"{location}: context.prompt_version does not match candidate")
-            if isinstance(context, dict) and isinstance(inputs, dict):
-                for field in ("policy_revision", "source_commit"):
-                    expected = inputs.get(field) if field == "policy_revision" else manifest.get(field)
-                    if context.get(field) != expected:
-                        errors.append(f"{location}: context.{field} does not match {manifest_path}")
-            if harness_registry and f"{candidate.get('harness_id')}:" not in harness_registry:
-                errors.append(f"{location}: harness_id is not registered: {candidate.get('harness_id')!r}")
-            if model_registry and f"{candidate.get('model_record_id')}:" not in model_registry:
-                errors.append(f"{location}: model_record_id is not registered: {candidate.get('model_record_id')!r}")
-            unit_ids = manifest.get("unit_ids", [])
-            if candidate.get("unit_id") not in unit_ids:
-                errors.append(f"{location}: unit_id is absent from {manifest_path}")
-            context_hash = candidate.get("context_hash")
-            if isinstance(context_hash, str):
-                candidate_context_hashes.setdefault(run_id, []).append(context_hash)
+        harness_record = harness_records.get(str(harness.get("id", "")))
+        if harness_records and harness_record is None:
+            errors.append(f"{manifest_path}: harness.id is not registered")
+        elif harness_record is not None:
+            expected_adapter = harness_record.get("adapter_version")
+            if expected_adapter and harness.get("adapter_version") != expected_adapter:
+                errors.append(
+                    f"{manifest_path}: harness.adapter_version does not match config/harnesses.yml"
+                )
+        for key in ("model_record_id", "harness_id"):
+            expected = model.get("record_id") if key == "model_record_id" else harness.get("id")
+            if candidate.get(key) != expected:
+                errors.append(f"{location}: {key} does not match {manifest_path}")
+        for candidate_field, expected in (
+            ("harness_version", harness.get("version")),
+            ("model_snapshot", model.get("snapshot")),
+            ("model_identity_confidence", model.get("identity_confidence")),
+            ("created_at", manifest.get("created_at")),
+        ):
+            if candidate.get(candidate_field) != expected:
+                errors.append(
+                    f"{location}: {candidate_field} does not match {manifest_path}"
+                )
+        if candidate.get("model_id") not in {model.get("requested_id"), model.get("resolved_id")}:
+            errors.append(f"{location}: model_id does not match {manifest_path}")
+        inputs = manifest.get("inputs")
+        if isinstance(inputs, dict):
+            for field in ("prompt_version", "glossary_revision"):
+                if candidate.get(field) != inputs.get(field):
+                    errors.append(f"{location}: {field} does not match {manifest_path}")
+        context = candidate.get("context")
+        if isinstance(context, dict) and context.get("prompt_version") != candidate.get("prompt_version"):
+            errors.append(f"{location}: context.prompt_version does not match candidate")
+        if isinstance(context, dict) and isinstance(inputs, dict):
+            for field in ("policy_revision", "source_commit"):
+                expected = inputs.get(field) if field == "policy_revision" else manifest.get(field)
+                if context.get(field) != expected:
+                    errors.append(f"{location}: context.{field} does not match {manifest_path}")
+        if harness_registry and f"{candidate.get('harness_id')}:" not in harness_registry:
+            errors.append(f"{location}: harness_id is not registered: {candidate.get('harness_id')!r}")
+        if model_registry and f"{candidate.get('model_record_id')}:" not in model_registry:
+            errors.append(f"{location}: model_record_id is not registered: {candidate.get('model_record_id')!r}")
+        unit_ids = manifest.get("unit_ids", [])
+        if candidate.get("unit_id") not in unit_ids:
+            errors.append(f"{location}: unit_id is absent from {manifest_path}")
+        context_hash = candidate.get("context_hash")
+        if isinstance(context_hash, str):
+            candidate_context_hashes.setdefault(run_id, []).append(context_hash)
     for run_id, (manifest_path, manifest) in manifests.items():
         inputs = manifest.get("inputs")
         if not isinstance(inputs, dict) or "context_hashes" not in inputs:

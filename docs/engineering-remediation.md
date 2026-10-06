@@ -127,6 +127,27 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 
 ## 7. 执行记录
 
+- 完整来源容器与分组修订工具：Issue
+  [#605](https://github.com/dongyaotalk/stacks-project-zh/issues/605)，分支
+  `tool/source-container-restoration`，落实已合并的规范 PR #604。新增完整锁定 Git
+  来源证据、确定性事实 lowering、独立 v4 分组及完整历史重放；陈述/列表、复杂命名
+  标题、多段/多份证明和长正文/脚注保留原字节，未知宏和未分类数学文字继续阻断。
+  每个新输出需要实际模型五字段与全部旧组 revision context；来源/审批绑定及预览
+  披露全部原生成和修订身份，锚点只兼容历史字段，不授予任何审校或术语批准。
+  只读准备/check 输出完整旧批次和新来源提议；生成期间的事实、政策、plan、输出
+  或 symlink 变化拒绝，旧包篡改/无关文件拒绝，失败替换可回滚。PR 范围覆盖全部
+  旧新 ID、新 unit/selector；旧错误 parent 仅限显式关联的历史快照/直接前继归档。
+  本地337项工具回归通过，包含 v1/v2/v3/v4 祖先、拆分/合并、篡改/孤立/冲突、
+  来源类型/风险/模型/Harness及旧审批绑定；239批QA、117章模板/progress/plan与
+  全部适用门禁通过。459页当前整书、12页模板最终编译日志 PASS；真实001Y完整
+  来源的2页独立生成层 smoke 也无编译/引用/缺字错误，不是实际新译文或模型输出。
+  重新生成并check全库43,270提议单元与当前239批/1480输入修复队列；逐项核对全部
+  21组proof差异，10组SOURCE_PREPARED、11组BLOCKED，均继续计为原mismatch。
+  001Y完整14个旧单元已只读准备为陈述/证明2个提议单元，其他列表/长脚注证据保留。
+  本工具不修改真实unit/candidate、run、政策、英文或lock；861个术语问题候选、
+  76个坐标、96条source诊断与21组proof差异不减少。工具验收合并后另开数据任务，
+  S4/S5/S7及原八项最终验收继续，不以工具或库存成功代替事实修复。
+
 - 完整容器恢复与分组历史合同：Issue
   [#603](https://github.com/dongyaotalk/stacks-project-zh/issues/603)，分支
   `docs/source-container-restoration-contract`。本任务基线 main 为

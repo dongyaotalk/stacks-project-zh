@@ -107,20 +107,50 @@ def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[
             qa_errors = validate_records(units, candidates, source_commit)
             for unit, candidate in zip(units, candidates, strict=True):
                 qa_errors.extend(validate_tex_controls(unit, candidate))
-                if 'derivation_id' in candidate or 'model_correction_id' in candidate:
+                if any(key in candidate for key in ('derivation_id', 'model_correction_id', 'unit_group_id')):
                     qa_errors.append('revision output must be raw model output')
                 if candidate['run_id'] != record['run_id'] or candidate['created_at'] != record['created_at']:
                     qa_errors.append('revision output run/time differs from frozen evidence')
+                identities = {
+                    'model_record_id': manifest['model']['record_id'],
+                    'model_snapshot': manifest['model']['snapshot'],
+                    'model_identity_confidence': manifest['model']['identity_confidence'],
+                    'harness_id': manifest['harness']['id'],
+                    'harness_version': manifest['harness']['version'],
+                    'prompt_version': manifest['inputs']['prompt_version'],
+                    'glossary_revision': manifest['inputs']['glossary_revision'],
+                }
+                for field, value in identities.items():
+                    if candidate.get(field) != value:
+                        qa_errors.append(field + ' does not match revision run manifest')
+                if candidate['model_id'] not in {manifest['model']['requested_id'], manifest['model']['resolved_id']}:
+                    qa_errors.append('model_id does not match revision run manifest')
                 if candidate['qa_status'] != 'PASS' or candidate['stage'] not in {'STRUCTURE_OK', 'TERM_OK'}:
                     qa_errors.append('model correction requires passed structural QA')
                 context = candidate['context']
+                if (context.get('policy_revision') != manifest['inputs']['policy_revision']
+                        or context.get('prompt_version') != candidate['prompt_version']
+                        or context.get('source_commit') != source_commit):
+                    qa_errors.append('revision context policy/prompt/source differs from its run')
                 if context.get('source_unit') != unit:
                     qa_errors.append('revision context does not freeze the complete current source unit')
                 revision_input = context.get('revision_input')
-                if (not isinstance(revision_input, dict) or set(revision_input) != {'kind', 'candidate', 'source_unit'}
-                        or revision_input.get('kind') != 'candidate-to-revise'
-                        or not isinstance(revision_input.get('candidate'), dict)
-                        or not isinstance(revision_input.get('source_unit'), dict)):
+                single = (isinstance(revision_input, dict) and set(revision_input) == {'kind', 'candidate', 'source_unit'}
+                        and revision_input.get('kind') == 'candidate-to-revise'
+                        and isinstance(revision_input.get('candidate'), dict)
+                        and isinstance(revision_input.get('source_unit'), dict))
+                grouped = (isinstance(revision_input, dict) and set(revision_input) == {
+                        'kind', 'derivation_id', 'group_id', 'identity_anchor', 'source_units', 'candidates'}
+                        and revision_input.get('kind') == 'candidate-group-to-revise'
+                        and all(isinstance(revision_input.get(k), str) and revision_input[k]
+                                for k in ('derivation_id', 'group_id', 'identity_anchor'))
+                        and isinstance(revision_input.get('source_units'), list)
+                        and isinstance(revision_input.get('candidates'), list)
+                        and bool(revision_input['source_units'])
+                        and all(isinstance(u, dict) for u in revision_input['source_units'] + revision_input['candidates'])
+                        and [u.get('unit_id') for u in revision_input['source_units']] == [c.get('unit_id') for c in revision_input['candidates']]
+                        and revision_input['identity_anchor'] in [u.get('unit_id') for u in revision_input['source_units']])
+                if not single and not grouped:
                     qa_errors.append('revision context must explicitly freeze its previous candidate as a revision object')
                 pairs = {(item['source_term'], item['target_term']) for item in candidate['term_occurrences']}
                 pending = {(item['source_term'], item['target_term']) for item in candidate['unknown_terms']}
@@ -172,11 +202,36 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
     # archived successors gain a history field; their old approvals cannot match.
     from .derivation_archives import derivation_history
     history = derivation_history(root, derivation_id)
+    from .group_derivations import correction_bindings, restoration_bindings
+    if any(entry['derivation']['tool']['version'] == '4' for entry in history):
+        # The whole source graph is bound, including non-anchor original models
+        # and exact full-batch snapshots. A compatible origin identity alone is
+        # never the lineage of all words after a merge or split.
+        snapshots, run_ids, correction_ids, restoration_ids = [], set(), set(), set()
+        for entry in history:
+            record = entry['derivation']
+            frozen = {}
+            for role in ('input_units', 'input_candidates'):
+                path = _safe_path(root, record['files'][role]['path'],
+                                 r'translation-data/retired/derivations/[A-Za-z0-9._-]+/(?:units|candidates)\.jsonl')
+                frozen[role] = [_clean(row) for row in load_jsonl(path)]
+            snapshots.append(frozen)
+            run_ids.update(row['run_id'] for row in frozen['input_candidates'])
+            correction_ids.update(identifier for identifier, _ in correction_bindings(record))
+            restoration_ids.update(restoration_bindings(record))
+        grouped_corrections = []
+        for identifier in sorted(correction_ids):
+            evidence = read(f'translation-data/model-corrections/{identifier}.json')
+            run_ids.add(evidence['run_id'])
+            grouped_corrections.append(evidence)
+        binding['group_history'] = {'derivations': history, 'snapshots': snapshots,
+            'corrections': grouped_corrections,
+            'runs': [read(f'translation-data/runs/{identifier}.json') for identifier in sorted(run_ids)],
+            'source_containers': [read(f'translation-data/source-container-restorations/{identifier}.json')
+                                  for identifier in sorted(restoration_ids)]}
     if len(history) > 1:
         correction_ids = sorted({
-            operation['model_correction_id']
-            for entry in history for operation in entry['derivation']['operations']
-            if operation.get('model_correction_id')
+            identifier for entry in history for identifier, _ in correction_bindings(entry['derivation'])
         })
         historical_corrections = []
         for identifier in correction_ids:
@@ -189,7 +244,7 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
             })
         binding['history'] = {'derivations': history, 'corrections': historical_corrections}
     reextraction_ids = sorted({operation['source_reextraction_id']
-                              for entry in history for operation in entry['derivation']['operations']
+                              for entry in history for operation in entry['derivation'].get('operations', [])
                               if operation.get('source_reextraction_id')})
     if reextraction_ids:
         for identifier in reextraction_ids:

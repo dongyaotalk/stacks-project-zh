@@ -61,6 +61,7 @@ FIELD_ALIASES = {
         "Permanent Tags",
     ),
     "unit_ids": ("unit_ids", "Unit IDs"),
+    "historical_parent_tags": ("historical_parent_tags", "Historical parent Tags"),
 }
 
 TRANSLATION_DATA_PREFIXES = (
@@ -69,6 +70,13 @@ TRANSLATION_DATA_PREFIXES = (
     "translation-data/runs/",
     "translation-data/selections/",
     "translation-data/reviewed/",
+    "translation-data/derivations/",
+    "translation-data/derivation-archives/",
+    "translation-data/model-corrections/",
+    "translation-data/source-reextractions/",
+    "translation-data/source-container-restorations/",
+    "translation-data/retired/derivations/",
+    "translation-data/retired/model-corrections/",
     "review/language/",
     "review/mathematics/",
 )
@@ -182,6 +190,17 @@ def _record_values(records: list[dict[str, Any]], key: str) -> set[str]:
             values.add(value)
         elif isinstance(value, list):
             values.update(item for item in value if isinstance(item, str))
+        # These are newly adopted facts/group coordinates. Neighbor context and
+        # approved TM are read inputs and do not enlarge the writer's scope.
+        for nested in ('unit_groups', 'output_units', 'new_units'):
+            children = record.get(nested)
+            if isinstance(children, list):
+                values.update(_record_values([v for v in children if isinstance(v, dict)], key))
+        if isinstance(record.get('selector'), dict):
+            values.update(_record_values([record['selector']], key))
+        if key == 'unit_ids':
+            for grouped_ids in ('input_unit_ids', 'output_unit_ids'):
+                values.update(v for v in record.get(grouped_ids, []) if isinstance(v, str))
     return values
 
 
@@ -328,13 +347,16 @@ def validate_pr_contract(
         errors.append(f"translation task Issue #{issue_number} is missing unit_ids")
 
     records: list[dict[str, Any]] = []
+    records_by_path = {}
     for path in managed_paths:
         content = file_contents.get(path)
         if content is None:
             errors.append(f"cannot verify changed structured file content: {path}")
             continue
         try:
-            records.extend(_load_structured_records(path, content))
+            rows = _load_structured_records(path, content)
+            records_by_path[path] = rows
+            records.extend(rows)
         except ValueError as exc:
             errors.append(str(exc))
 
@@ -357,13 +379,43 @@ def validate_pr_contract(
             errors.append(f"changed structured record chapter {actual!r} differs from Issue")
 
     declared_parent_tags = set(parent_tags)
-    actual_parent_tags = _record_values(records, "parent_tag")
+    historical = _list_values(_field_value(issue_body, 'historical_parent_tags'))
+    historical_paths = set()
+    if historical:
+        from .schema_validation import validate_named_schema
+        grouped = [r for path, rows in records_by_path.items()
+                   if path.startswith('translation-data/derivations/') for r in rows
+                   if isinstance(r.get('tool'), dict) and r['tool'].get('version') == '4'
+                   and not validate_named_schema(r, 'derivation.schema.json', path)]
+        if not grouped:
+            errors.append('historical_parent_tags requires a changed valid v4 derivation')
+        if len(set(historical)) != len(historical) or any(not PERMANENT_TAG_RE.fullmatch(t) for t in historical):
+            errors.append('historical_parent_tags must contain unique permanent Tags')
+        for record in grouped:
+            identifier = re.escape(record['derivation_id'])
+            for role in ('input_units', 'input_candidates'):
+                path = record['files'][role]['path']
+                if re.fullmatch(rf'translation-data/retired/derivations/{identifier}/(?:units|candidates)\.jsonl', path):
+                    historical_paths.add(path)
+        for path, rows in records_by_path.items():
+            if not path.startswith('translation-data/derivation-archives/'):
+                continue
+            for record in rows:
+                if (record.get('successor_derivation_id') in {r['derivation_id'] for r in grouped}
+                        and not validate_named_schema(record, 'derivation-archive.schema.json', path)):
+                    prior = re.escape(record['prior_derivation_id'])
+                    for role in ('output_units', 'output_candidates'):
+                        target = record['files'][role]['path']
+                        if re.fullmatch(rf'translation-data/retired/derivations/{prior}/output-(?:units|candidates)\.jsonl', target):
+                            historical_paths.add(target)
     if declared_parent_tags:
-        for actual in sorted(actual_parent_tags - declared_parent_tags):
-            errors.append(
-                f"changed structured record parent_tag {actual!r} is outside Issue "
-                "parent Tag scope"
-            )
+        for path, rows in records_by_path.items():
+            permitted = declared_parent_tags | (set(historical) if path in historical_paths else set())
+            for actual in sorted(_record_values(rows, 'parent_tag') - permitted):
+                errors.append(
+                    f"changed structured record parent_tag {actual!r} is outside Issue "
+                    f"parent Tag scope ({path})"
+                )
     return errors
 
 

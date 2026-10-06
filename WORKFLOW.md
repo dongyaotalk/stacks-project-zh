@@ -73,8 +73,8 @@
 
 完整容器、旧分段合并/拆分和列表边界恢复的后续合同见
 `docs/model-provenance.md` §10 与 `docs/source-container-restoration.md`。该合同须先由
-独立 Schema/工具任务实现并验收，之后才允许另开具体数据任务使用；当前不扩展
-v1/v2/v3 或 §9 的机器权限。规划中的 v4 绑定完整上一 batch、全部旧新分组、锁定
+独立 Schema/工具任务实现、验收并合并，之后才允许另开具体数据任务使用；不扩展
+v1/v2/v3 或 §9 的机器权限。独立 v4 分支绑定完整上一 batch、全部旧新分组、锁定
 Git 原容器和每个新单元的实际模型原输出，保留全部历史且不继承审校。
 
 ### 4.3 构造上下文
@@ -282,6 +282,8 @@ make extract-all
 make extract-all-check
 make source-alignment
 make source-alignment-check
+make source-containers SOURCE_CONTAINER_PLAN=<full-batch-plan.json>
+make source-containers-check SOURCE_CONTAINER_PLAN=<full-batch-plan.json>
 make render MODEL=<model>
 make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
 make upstream-diff OLD_UNITS=<dir> NEW_UNITS=<dir> NEW_COMMIT=<sha> \
@@ -311,6 +313,12 @@ READY/BLOCKED 覆盖报告，不自动写入现有 unit/candidate 或授予审�
 只接受真实 owner/proof 范围中的唯一连续定位；数学、网址与引用键保持原字节，
 已核实引用 namespace 别名只用于诊断。所有来源差异和旧审计错误仍保留，成功生成
 队列不表示采用或修订完成。详见 `docs/source-alignment.md`。
+
+`make source-containers` 重新验证锁定 Git 的完整语义容器和完整上一 batch，生成
+ignored 来源恢复待审包；对应 `-check` 只读核验确定性产物。完整证明、陈述/列表、
+命名标题和长正文/脚注均保留原字节。未知宏及未分类数学文字继续 BLOCKED；工具
+不生成中文、模型运行或审批。具体采用使用独立 v4 分组和实际模型五字段修订，
+仍须另开数据任务。详见 `docs/source-container-restoration.md` §9。
 
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 

@@ -27,6 +27,7 @@ SUPPORTED_SCHEMA_KEYS = {
     "maxItems",
     "items",
     "uniqueItems",
+    "oneOf",
 }
 
 
@@ -57,6 +58,8 @@ def _unsupported_schema_keywords(schema: dict[str, Any], location: str) -> list[
         child = schema.get(key)
         if isinstance(child, dict):
             errors.extend(_unsupported_schema_keywords(child, f"{location}.{key}"))
+    for index, child in enumerate(schema.get('oneOf', [])):
+        errors.extend(_unsupported_schema_keywords(child, f'{location}.oneOf[{index}]'))
     return errors
 
 
@@ -90,6 +93,7 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/derivation-archives/*.json", "derivation-archive.schema.json"),
         ("translation-data/model-corrections/*.json", "model-correction.schema.json"),
         ("translation-data/source-reextractions/*.json", "source-reextraction.schema.json"),
+        ("translation-data/source-container-restorations/*.json", "source-container-restoration.schema.json"),
         ("translation-data/selections/*.json", "selection.schema.json"),
         ("translation-data/reviewed/**/*.json", "translation-revision.schema.json"),
         ("review/language/**/*.json", "review.schema.json"),
@@ -128,6 +132,12 @@ def validate_repository_schemas(root: Path) -> list[str]:
 
 def _validate(value: Any, schema: dict[str, Any], location: str) -> list[str]:
     errors: list[str] = []
+    if 'oneOf' in schema:
+        branches = [_validate(value, child, location) for child in schema['oneOf']]
+        passed = sum(not branch for branch in branches)
+        if passed != 1:
+            return [f'{location}: must match exactly one schema branch (matched {passed})'] + [
+                error for branch in branches for error in branch]
     expected_type = schema.get("type")
     if expected_type is not None:
         allowed_types = expected_type if isinstance(expected_type, list) else [expected_type]

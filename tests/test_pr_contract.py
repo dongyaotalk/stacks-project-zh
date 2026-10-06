@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import copy
+import tempfile
 import unittest
+from pathlib import Path
 
 from stacks_zh.pr_contract import fetch_pr_contract, validate_pr_contract
 
@@ -99,6 +102,51 @@ def unit_content(unit_id: str = UNIT_ID) -> str:
 
 
 class PrContractTests(unittest.TestCase):
+    def test_grouped_scope_checks_all_new_coordinates_and_only_linked_old_parents(self):
+        from test_group_derivations import fixture, read
+        with tempfile.TemporaryDirectory() as tmp:
+            root, _, records = fixture(Path(tmp))
+            record = records[0]
+            derivation_path = 'translation-data/derivations/' + record['derivation_id'] + '.json'
+            retired_path = record['files']['input_units']['path']
+            active_path = record['files']['output_units']['path']
+            old = {'unit_id':record['unit_groups'][2]['input_unit_ids'][-1],
+                   'chapter':'test', 'parent_tag':'0999', 'source_commit':record['source_commit']}
+            active = record['unit_groups'][2]['output_units'][0]
+            objects = {derivation_path:record, retired_path:old, active_path:active}
+            paths = list(objects)
+            all_ids = {identifier for group in record['unit_groups']
+                       for identifier in group['input_unit_ids'] + group['output_unit_ids']}
+            value = payload()
+            value['files']['nodes'] = [{'path':path, 'changeType':'ADDED'} for path in paths]
+            body = ('task_id: guide-04V1-scope\nowner: @contributor\nbranch: tool/scope/guide-04v1/model\n'
+                    'allowed_write_files:\n' + ''.join('- ' + path + '\n' for path in paths) +
+                    'source_commit: ' + record['source_commit'] + '\nchapter: test\nparent_tag: 0000\n'
+                    'historical_parent_tags:\n- 0999\nunit_ids:\n' + ''.join('- ' + i + '\n' for i in sorted(all_ids)))
+            value['closingIssuesReferences']['nodes'][0]['body'] = body
+            value['body'] = 'Closes #42\nguide-04V1-scope\n' + record['source_commit']
+            encode = lambda rows: {path:json.dumps(row) for path,row in rows.items()}
+            self.assertEqual(validate_pr_contract(REPOSITORY, value, encode(objects)), [])
+            for fault in ['current-parent', 'nested-parent', 'nested-chapter', 'hidden-old-id', 'unlinked-snapshot', 'legacy']:
+                broken, pr = copy.deepcopy(objects), copy.deepcopy(value)
+                if fault == 'current-parent':
+                    broken[active_path]['parent_tag'] = '0999'
+                elif fault == 'nested-parent':
+                    broken[derivation_path]['unit_groups'][1]['output_units'][0]['parent_tag'] = '0999'
+                elif fault == 'nested-chapter':
+                    broken[derivation_path]['unit_groups'][1]['output_units'][0]['chapter'] = 'other'
+                elif fault == 'hidden-old-id':
+                    broken[derivation_path]['unit_groups'][2]['input_unit_ids'][1] = 'tag:UNDECLARED:proof'
+                elif fault == 'unlinked-snapshot':
+                    unrelated = 'translation-data/retired/derivations/unrelated/units.jsonl'
+                    broken[unrelated] = old
+                    pr['files']['nodes'].append({'path':unrelated, 'changeType':'ADDED'})
+                    pr['closingIssuesReferences']['nodes'][0]['body'] = body.replace('allowed_write_files:\n', 'allowed_write_files:\n- ' + unrelated + '\n')
+                else:
+                    broken[derivation_path]['tool']['version'] = '3'
+                with self.subTest(fault=fault):
+                    self.assertTrue(validate_pr_contract(REPOSITORY, pr, encode(broken)))
+
     def test_accepts_matching_issue_branch_path_and_unit(self) -> None:
         errors = validate_pr_contract(
             REPOSITORY,

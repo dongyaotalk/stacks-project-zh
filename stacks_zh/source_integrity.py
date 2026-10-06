@@ -25,7 +25,7 @@ TITLE_END = re.compile(r'\]\s*\\label\{([A-Za-z0-9._:+-]+)\}\s*')
 def _named_title_label(unit: dict[str, Any]) -> str | None:
     """Only a leading, validated named-argument closure can own a label."""
     names = sorted({name for name in [*unit['placeholders'], *placeholder_names(unit['source_text'])]
-                    if name.startswith('ENVARGEND_')})
+                    if name.startswith(('ENVARGEND_', 'OWNARGEND_'))})
     opening = NAMED_OPEN.fullmatch(unit['render']['prefix'])
     # Earlier extraction already gave some headings their own title unit. Its
     # suffix closes the argument and owns the label; no body token is needed.
@@ -39,11 +39,14 @@ def _named_title_label(unit: dict[str, Any]) -> str | None:
     if not opening or unit['node_kind'] not in STATEMENTS or len(names) != 1:
         raise RecordError(f"{unit['unit_id']}: invalid named environment title boundary")
     name = names[0]
-    if not re.fullmatch(r'ENVARGEND_[0-9]{4}', name) or name not in unit['placeholders']:
+    if not re.fullmatch(r'(?:ENVARGEND|OWNARGEND)_[0-9]{4}', name) or name not in unit['placeholders']:
         raise RecordError(f"{unit['unit_id']}: invalid named environment title token")
-    head = re.match(rf'({PLAIN_TITLE})<{name}>', unit['source_text'])
+    title_pattern = r'[\s\S]+?' if name.startswith('OWNARGEND_') else PLAIN_TITLE
+    head = re.match(rf'({title_pattern})<{name}>', unit['source_text'])
     ending = TITLE_END.fullmatch(unit['placeholders'][name])
-    if head is None or ending is None or placeholder_names(unit['source_text']).count(name) != 1:
+    if (head is None or ending is None or placeholder_names(unit['source_text']).count(name) != 1
+            or not head[1].strip()
+            or validate_tex_controls(unit, {'translation': unit['source_text']})):
         raise RecordError(f"{unit['unit_id']}: missing, moved or malformed named environment title closure")
     return ending.group(1)
 

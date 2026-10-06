@@ -22,6 +22,8 @@ HARNESS_CONFIG ?= config/harnesses.yml
 PRIORITY_CONFIG ?= config/translation-priorities.json
 EXTRACTION_DIR ?= source-ir/extraction
 SOURCE_ALIGNMENT_DIR ?= build/source-alignment
+SOURCE_CONTAINER_DIR ?= build/source-containers
+SOURCE_CONTAINER_PLAN ?=
 
 UPSTREAM_REPOSITORY := $(shell sed -n 's/^repository = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
 UPSTREAM_COMMIT := $(shell sed -n 's/^commit = "\(.*\)"$$/\1/p' "$(UPSTREAM_LOCK)" 2>/dev/null)
@@ -248,6 +250,15 @@ extract-all: harvest-check
 extract-all-check: harvest-check
 	$(PYTHON) stacks_zh.py extract-all --root . --harvest "$(HARVEST_DIR)" \
 		--output "$(EXTRACTION_DIR)" $(if $(CHAPTER),--chapter "$(CHAPTER)",) --check
+
+.PHONY: source-containers source-containers-check
+source-containers: harvest-check
+	@test -n "$(SOURCE_CONTAINER_PLAN)" || (echo 'Set SOURCE_CONTAINER_PLAN to a complete full-batch group plan' >&2; exit 1)
+	$(PYTHON) stacks_zh.py prepare-source-containers --root . --harvest "$(HARVEST_DIR)" --plan "$(SOURCE_CONTAINER_PLAN)" --output "$(SOURCE_CONTAINER_DIR)"
+
+source-containers-check: harvest-check
+	@test -n "$(SOURCE_CONTAINER_PLAN)" || (echo 'Set SOURCE_CONTAINER_PLAN to a complete full-batch group plan' >&2; exit 1)
+	$(PYTHON) stacks_zh.py prepare-source-containers --root . --harvest "$(HARVEST_DIR)" --plan "$(SOURCE_CONTAINER_PLAN)" --output "$(SOURCE_CONTAINER_DIR)" --check
 
 .PHONY: source-alignment source-alignment-check
 source-alignment: harvest-check
@@ -521,6 +532,8 @@ help:
 		'make extract-all-check          Check deterministic source inventory' \
 		'make source-alignment           Prepare the current translation repair queue' \
 		'make source-alignment-check     Check the current repair queue' \
+		'make source-containers          Prepare complete containers (SOURCE_CONTAINER_PLAN=...)' \
+		'make source-containers-check    Verify the complete-container review package' \
 		'make schema-check                Validate all structured records against JSON Schema' \
 		'make provenance-check           Verify candidates and model runs' \
 		'make decision-check             Verify selections, reviews and revisions' \

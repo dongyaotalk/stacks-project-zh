@@ -426,3 +426,10 @@ provenance、正式来源 hash 与预览披露覆盖组内所有原 run/candidat
 proof。非相邻、夹带正文/包装、重复、跨范围、不唯一或缺少真实归属的输入均拒绝。
 合同与工具验收见 `source-container-restoration.md` §4.1；实际数据仍需后续独立任务、
 完整真实模型修订与原输出，不改变已存在的不可变证据或授予审批。
+
+完整引言的旧 render 外围 ASCII 空白差异使用来源容器设计 §9.1 的独立
+`source-container-v2` 合同。仅完整 paragraph 在真实旧/新原生 Section 归属及
+唯一原字节核心核验下可恢复原 Git 外围；内部正文、数学和引用不归一化，新
+source TeX 仍逐字等于原 Git。旧 source-container-v1 逐条保持原严格规则，
+与派生 Schema 的 v1/v2/v3/v4 版本无关。先完成独立工具验收，再由具体数据
+任务保存全 batch 原字节、重新冻结并实际修订，不继承批准或改写旧证据。

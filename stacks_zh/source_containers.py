@@ -22,7 +22,9 @@ from .schema_validation import validate_named_schema
 from .source_integrity import STATEMENTS, _own_tag, permanent_tag_mapping
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, proof_groups, source_tex
 
-VERSION = 'source-container-v1'
+VERSION = 'source-container-v2'
+SUPPORTED_VERSIONS = {'source-container-v1', VERSION}
+OUTER_WHITESPACE = ' \t\r\n'
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\Z')
 
 
@@ -189,10 +191,27 @@ class Containers:
         math_counts = Counter(value for source_row in rows
                               for name, value in source_row['unit']['placeholders'].items()
                               if name.startswith('MATH_'))
+        paragraph_core_matches, paragraph_section_owner = None, None
+        if kind == 'paragraph':
+            core = fragment.strip(OUTER_WHITESPACE)
+            paragraph_core_matches = sum(
+                candidate['unit']['node_kind'] == 'paragraph'
+                and candidate['owner_tag'] == selector['owner_tag']
+                and candidate['parent_tag'] == selector['parent_tag']
+                and raw[candidate['location']['byte_start']:candidate['location']['byte_end']]
+                    .decode('utf-8').strip(OUTER_WHITESPACE) == core
+                for candidate in rows)
+            previous = [candidate for candidate in rows[:rows.index(matches[0])]
+                        if candidate['unit']['node_kind'] in STATEMENTS | {'proof'}
+                        or candidate['unit']['node_kind'].endswith('_title')]
+            if previous and previous[-1]['unit']['node_kind'] == 'section_title':
+                paragraph_section_owner = previous[-1]['owner_tag']
         return {'selector': copy.deepcopy(selector), 'fragment': fragment,
                 'location': location, 'blob_oid': object_id, 'blob_hash': byte_hash(raw),
                 'source_commit': self.english.commit, 'macro_policy_hash': byte_hash(self.policy_bytes),
                 'inventory_unit': row['unit'], 'boundary_witness': boundary_witness,
+                '_paragraph_core_matches': paragraph_core_matches,
+                '_paragraph_section_owner': paragraph_section_owner,
                 '_chapter_math_counts': {value: math_counts[value]
                     for name, value in row['unit']['placeholders'].items() if name.startswith('MATH_')},
                 '_chapter_math_text_counts': {value: raw.count(value.encode('utf-8'))
@@ -491,8 +510,28 @@ def _proof_with_detached_displays(units: list[dict[str, Any]], groups: list[dict
     return core
 
 
+def _verify_paragraph_outer_whitespace(units, groups, group, old, selected, tags):
+    selector = selected['selector']
+    parent = selector['parent_tag']
+    if (source_tex(old).strip(OUTER_WHITESPACE) != selected['fragment'].strip(OUTER_WHITESPACE)
+            or selected.get('_paragraph_core_matches') != 1):
+        raise RecordError('paragraph outer-whitespace restoration needs one byte-exact complete source core')
+    previous = [item for item in groups[:groups.index(group)]
+                if item['kind'] in STATEMENTS | {'proof'} or item['kind'].endswith('_title')]
+    if not previous or previous[-1]['kind'] != 'section_title':
+        raise RecordError('paragraph outer-whitespace restoration lacks a frozen native Section anchor')
+    anchor = previous[-1]
+    heading = next(unit for unit in units if unit['unit_id'] == anchor['input_unit_ids'][0])
+    if (anchor['file'] != selector['file'] or anchor['owner_tag'] != parent
+            or selector['owner_tag'] != parent or old['parent_tag'] != parent
+            or selected.get('_paragraph_section_owner') != parent
+            or not re.match(r'\s*\\section\{', heading['render']['prefix'])
+            or _own_tag(heading, tags) != parent):
+        raise RecordError('paragraph outer-whitespace restoration has different real old/new Section ownership')
+
+
 def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
-                     ids: list[str], selected: dict[str, Any]) -> None:
+                     ids: list[str], selected: dict[str, Any], *, allow_outer_whitespace: bool = False) -> None:
     groups = old_container_groups(units, tags)
     selector = selected['selector']
     if selector['kind'] == 'proof':
@@ -535,7 +574,9 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
         # Standalone prose has no label to prove a defective source location.
         # Exact unique provenance is needed, otherwise adoption remains blocked.
         if old_kind == 'paragraph' and source_tex(old) != selected['fragment']:
-            raise RecordError('unlabelled paragraph cannot authorize a different English fragment')
+            if not allow_outer_whitespace:
+                raise RecordError('unlabelled paragraph cannot authorize a different English fragment')
+            _verify_paragraph_outer_whitespace(units, groups, group, old, selected, tags)
     if old_kind == 'prose_block' and group['boundary_witness'] != selected['boundary_witness']:
         raise RecordError('complete prose block has different real preceding/following semantic anchors')
 
@@ -575,7 +616,8 @@ def load_source_containers(root: Path, harvest: Path | None = None):
             for key in ('source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness'):
                 if record[key] != selected[key]:
                     raise RecordError('source-container evidence differs from locked Git: ' + key)
-            if record['tool'] != {'id': 'stacks-zh-source-container', 'version': VERSION}:
+            if (record['tool']['id'] != 'stacks-zh-source-container'
+                    or record['tool']['version'] not in SUPPORTED_VERSIONS):
                 raise RecordError('unsupported container extraction/lowering version')
             frozen = {}
             for role, name in [('input_units', 'units'), ('input_candidates', 'candidates')]:
@@ -590,7 +632,8 @@ def load_source_containers(root: Path, harvest: Path | None = None):
             if (not units or len({u['unit_id'] for u in units}) != len(units)
                     or [c['unit_id'] for c in candidates] != [u['unit_id'] for u in units]):
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
-            verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected)
+            verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
+                             allow_outer_whitespace=record['tool']['version'] == VERSION)
             expected = lower_container(selected, historical.policy, layout=record['layout'])
             if record['new_units'] != expected or record['output_unit_ids'] != [u['unit_id'] for u in expected]:
                 raise RecordError('source-container new units differ from deterministic complete lowering')
@@ -695,7 +738,7 @@ def prepare_containers(root: Path, harvest: Path, plan: dict[str, Any]):
                 restoration_id = None
             else:
                 selected = containers.select(group['selector'])
-                verify_old_group(units, containers.english.tags, ids, selected)
+                verify_old_group(units, containers.english.tags, ids, selected, allow_outer_whitespace=True)
                 file, location = selected['selector']['file'], selected['location']
                 if location['byte_start'] < last_location.get(file, 0):
                     raise RecordError('selected source containers overlap or reverse complete source order')

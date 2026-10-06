@@ -245,3 +245,26 @@ manifest、groups、restorations、diagnostics、units、input-units、input-can
 旧模型来源披露。当前真实21组 proof 残项中，10组可准备完整来源，11组仍因未分类
 数学内文字或未知命令阻断；它们仍全部计为原审计 mismatch。完整拒绝回归、真实
 待审包、全门禁和整书/模板编译分别验收；不以工具成功代替 S4 数据修复。
+
+### 9.1 完整引言段落的外围空白
+
+Issue [#629](https://github.com/dongyaotalk/stacks-project-zh/issues/629) 为历史 render
+添加外围换行的完整引言提供 `source-container-v2` 核验。旧 `source-container-v1`
+记录继续使用原严格检查；v2 不扩大 proof、陈述、prose_block 或其他版本的权限。
+只允许完整 `paragraph`，不能裁剪脚注或把数学证明当作普通段落。
+
+完整旧 source TeX 与完整锁定 Git 段落只能在外围 ASCII 空格、tab、CR、LF 上
+不同；移除这些外围空白后的 UTF-8 内容必须逐字相同。正文、数学、引用、命令、
+内部空白及非 ASCII 字符全部保持。实际新 source TeX 仍须逐字等于未归一化的
+完整 Git 原片段，原旧字节保存在完整 batch 快照中，trim 只用于历史证据比较。
+
+真实 selector、Tag/label、Section parent、ordinal、完整 Git 边界和可准备状态
+按原合同验证；同 owner/Section 的原字节核心必须唯一。真实英文中的最近语义
+锚点须为该 Section 标题，冻结旧 batch 中最近原生锚点也须为具有真实标签的
+同一 Section 标题，旧段落 parent 与 owner 同时相等。unit ID、自报 kind 或
+陌生前导标签不能替代原生 Section 包装。缺失/错误标题、重复正文、跨范围、
+未知语法、公式/引用/内部空白变化均拒绝；v1 仍拒绝外围空白不同的段落。
+
+准备包生成 v2；加载不可变证据按其 tool version 核验，直接旧 helper 调用默认
+维持严格规则。该工具只准备来源，不生成中文、run 或事实。DATA #628 须在工具
+验收合并后改用完整段落 selector，重新准备/check、冻结上下文及实际模型修订。

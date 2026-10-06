@@ -10,7 +10,7 @@ build 或仓库外，不覆盖事实数据。这一阶段是独立只读审计�
 `config/source-terms.json` 声明英语数学词汇的识别范围。它只有来源词形、章节范围
 和英文节点证据，不含中文译法或批准状态，也不是 `config/glossary.yml` 的替代品。
 证据绑定锁定来源 commit 和完整 source TeX hash；坐标迁移或无损占位符重提取
-不会使证据丢失。证据必须仍存在于当前英文节点，不能从候选的术语数组反推。
+不会使证据丢失。旧式证据必须仍存在于当前英文节点，不能从候选的术语数组反推。
 
 扫描格式包装内的自然语言，但不读取受保护公式、引用或其他完整受保护节点。
 命名陈述环境标题同样属于自然语言，必须重提取到 source_text 才进入逐次来源
@@ -79,3 +79,38 @@ TeX 字节而非易迁移的坐标核验；unit_id 是可追溯定位提示。�
 默认全库门禁尚未启用，不能把当前 `qa-all` 通过当作来源覆盖已经修复。数据任务
 必须保存原始输出，通过派生/实际模型修订补齐文字及记录，再运行本审计；最终
 集成阶段才将其接入 `make qa-all` 和 CI。本任务不修改现有 run 或术语批准。
+
+## 完整容器恢复后的稳定来源证据
+
+开发任务：[Issue #624](https://github.com/dongyaotalk/stacks-project-zh/issues/624)。
+0024 的 cartesian / equivalence 目录证据目前绑定两个旧 proof 碎片。完整 proof
+恢复后这些碎片不再是当前单元，原完整 TeX hash 不会等于新 proof；不能忽略
+证据消失、改写历史，或在普通 DATA #623 中修改目录来绕过检查。
+
+来源证据使用互斥的两种格式。旧 `chapter/unit_id/source_term/source_tex_hash`
+格式仍按当前英文节点验证，unit_id 只是定位提示，原有失败条件保持。新增
+`kind: locked-source-container` 明确保存 `chapter`、`source_term`、
+`source_commit`、`selector` 和完整原片段的 `fragment_hash`。selector 保存章文件、
+真实 owner Tag/label、Section parent、容器 kind 和从 1 开始的 ordinal；不得
+包含旧式字段或任意额外键。所有来源词形、forms、chapters 保持原要求。
+
+新证据重新使用完整容器选择器读取锁定 commit 的英文 Git blob 和 tags，核验
+唯一真实语义归属、完整边界、可准备状态及原 UTF-8 字节 hash。来源 commit
+同时等于目录与 upstream.lock；不能使用工作目录、库存自报 READY、候选文本、
+旧分段或自报 hash 代替。未知宏/数学内文字等仍阻断，不扩大抽取政策。只有完整
+保护来源的 source_projection 中实际存在的精确词形可提供词汇证据；数学、
+引用、命令参数、comment/literal 内文字保持不透明，不因英文 raw TeX 搜索命中
+而获得证据。hash、selector、章或词形不匹配全部失败，错误仍写入独立审计报告。
+
+`audit-terms --harvest <checkout>` 支持显式 harvest，未指定时沿用既有默认位置。
+统一修复队列必须传入其实际 harvest，不能用默认路径替代调用者配置。报告保存
+锁定证据的 selector、commit、Git blob 和片段 hash 及核验结果；证据有效不表示
+当前译文通过术语覆盖，更不批准中文词条、人审或出版。旧证据及非数学分类仍按
+各自原合同验证，不借新格式扩大排除范围。
+
+本工具仅将 cartesian / equivalence 的来源锚定到真实 0024 完整 proof，不改变
+其形式、章节范围、其他目录条目、当前译文或历史证据。真实 Git 回归覆盖当前
+分段替换仍能取证、dirty 工作目录、篡改/错误 selector/hash/commit、受保护词
+不能冒充正文、旧式证据仍要求当前节点、Schema 互斥与显式 harvest 传递。验收
+比较全部当前候选/来源/证明残项及整书文本保持，随后 DATA #623 重新准备并冻结
+上下文；S4/S5/S7 和全库严格门禁仍分别完成。

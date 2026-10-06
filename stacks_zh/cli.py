@@ -231,6 +231,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     term_audit = subparsers.add_parser("audit-terms", help="independently audit English source term coverage")
     term_audit.add_argument("--root", type=Path, default=Path("."))
+    term_audit.add_argument("--harvest", type=Path)
     term_audit.add_argument("--output", type=Path)
 
     provenance = subparsers.add_parser(
@@ -513,7 +514,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Source integrity: {len(errors)} issue(s); {proposal['wrong_statement_tags']} statement Tag mismatches, {proposal['unprotected_node_pairs']} raw TeX pairs, {proposal['hidden_footnotes']} hidden footnotes, {proposal['hidden_environment_titles']} hidden/invalid named titles")
             return 1 if errors else 0
         if args.command == "audit-terms":
-            report, errors = audit_repository_terms(args.root.resolve())
+            report, errors = audit_repository_terms(args.root.resolve(), args.harvest)
             if args.output:
                 require_audit_output(args.root.resolve(), args.output)
                 args.output.parent.mkdir(parents=True, exist_ok=True)

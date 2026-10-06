@@ -498,3 +498,21 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   0 unsupported。术语问题候选 849→839，诊断 2797→2782；76 个坐标迁移及
   96 条来源诊断仍保留，其他事实及 S4/S5/S7 继续处理，未授予独立 critic、
   人工语言/数学审校、词表、正式采用或出版批准。
+
+- S3 稳定词汇来源证据：Issue
+  [#624](https://github.com/dongyaotalk/stacks-project-zh/issues/624)，分支
+  `tool/locked-source-term-evidence`。先写开发合同，再为词汇目录增加互斥的
+  locked-source-container 证据；重新读取锁定英文 Git blob、真实 Tag/Section
+  归属和完整容器字节，核验原片段 hash 与暴露正文中的精确词形。旧式当前
+  unit/hash 证据保持原检查。仅将 cartesian / equivalence 两个锚点迁至 0024
+  完整 proof；forms、chapters 和所有其他目录条目保持。CLI 支持显式 harvest，
+  统一队列将实际 harvest 传入，报告保存两项正向核验及 Git 字节证据。
+  57 项定向回归、361 项完整工具测试、239 batch QA、117 章模板/进度/计划及
+  来源/Schema/溯源/决策检查通过；全库库存与队列确定性 check 通过。独立比较
+  确认 translation-data 树、全部候选错误、来源和 proof 报告逐项保持，术语
+  inventory 仅更新目录 hash；两项证据的真实 Git 原字节及 hash 均核对通过。
+  当前候选 render/pdf 零退出，459 页最终日志 PASS，整书 layout 提取文本与
+  工具前完全一致。239 batch/1450 unit、839 个术语问题候选/2782 条诊断、
+  76 个坐标迁移、96 条来源诊断和 14 组 proof 差异均保留。DATA #623 须在本
+  工具合并后重新准备并冻结完整上下文，再进行实际模型修订；S4/S5/S7、全库
+  严格门禁和必要的人审仍继续，来源取证不批准中文译法或正式采用/出版。

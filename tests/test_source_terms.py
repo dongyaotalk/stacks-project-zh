@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -313,3 +315,122 @@ class SourceTermsTests(unittest.TestCase):
             changed = unit("An unrelated English sentence.")
             write_jsonl(root / "translation-data/units/test.jsonl", [changed])
             self.assertTrue(any("catalog evidence" in error for error in audit_repository_terms(root)[1]))
+
+
+class LockedCatalogEvidenceTests(unittest.TestCase):
+    """Independent English Git fixtures; no fixture claims model authorship."""
+
+    PROOF = "\\begin{proof}\nA category.\n\\end{proof}"
+
+    def fixture(self, base, proof=None):
+        from test_source_containers import fixture, selector
+        from stacks_zh.source_reextractions import byte_hash
+        proof = self.PROOF if proof is None else proof
+        root, harvest, sha = fixture(base, proof=proof)
+        row = unit("A category.")
+        row["source_commit"] = sha
+        row = stamp_unit_hashes(row)
+        scope = {"schema_version": 1, "source_commit": sha,
+                 "nonmathematical_declarations": {}, "terms": [{
+                     "id": "category", "forms": ["category"], "chapters": [],
+                     "evidence": [{"kind": "locked-source-container", "chapter": "test",
+                                   "source_term": "category", "source_commit": sha,
+                                   "selector": selector(), "fragment_hash": byte_hash(proof)}]}]}
+        (root / "config/source-terms.json").write_text(json.dumps(scope))
+        (root / "config/glossary.yml").write_text("entries: []\n")
+        write_jsonl(root / "translation-data/units/test.jsonl", [row])
+        write_jsonl(root / "translation-data/candidates/lane/test.jsonl", [candidate([("category", "范畴")])])
+        return root, harvest, scope, row
+
+    def test_locked_source_survives_current_segmentation_and_coordinate_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, scope, row = self.fixture(Path(tmp))
+            report, errors = audit_repository_terms(root, harvest)
+            self.assertEqual(errors, [])
+            check = report["locked_catalog_evidence"][0]
+            self.assertEqual(check["status"], "PASS")
+            self.assertEqual(check["fragment_hash"], scope["terms"][0]["evidence"][0]["fragment_hash"])
+            other = copy.deepcopy(row)
+            other["unit_id"] = "tag:NEW1:p001"
+            other["source_text"] = "Unrelated narration."
+            other = stamp_unit_hashes(other)
+            output = candidate([]); output["unit_id"] = other["unit_id"]
+            write_jsonl(root / "translation-data/units/test.jsonl", [other])
+            write_jsonl(root / "translation-data/candidates/lane/test.jsonl", [output])
+            self.assertEqual(audit_repository_terms(root, harvest)[1], [])
+
+    def test_dirty_worktree_and_tags_do_not_replace_locked_git(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _, _ = self.fixture(Path(tmp))
+            (harvest / "test.tex").write_text("Untrusted working-tree replacement.")
+            (harvest / "tags/tags").write_text("This is not the locked Tag map.")
+            report, errors = audit_repository_terms(root, harvest)
+            self.assertEqual(errors, [])
+            self.assertEqual(report["locked_catalog_evidence"][0]["status"], "PASS")
+
+    def test_commit_hash_chapter_word_and_each_semantic_coordinate_must_match(self):
+        changes = [("source_commit", "0" * 40), ("fragment_hash", "sha256:" + "0" * 64),
+                   ("chapter", "other"), ("source_term", "Category"),
+                   ("owner_tag", "0002"), ("owner_label", "test-lemma-two"),
+                   ("parent_tag", "0002"), ("kind", "lemma"), ("ordinal", 0),
+                   ("ordinal", 3), ("file", "other.tex")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, scope, _ = self.fixture(Path(tmp))
+            for key, value in changes:
+                with self.subTest(key=key, value=value):
+                    changed = copy.deepcopy(scope)
+                    evidence = changed["terms"][0]["evidence"][0]
+                    target = evidence if key in {"source_commit", "fragment_hash", "chapter", "source_term"} else evidence["selector"]
+                    target[key] = value
+                    (root / "config/source-terms.json").write_text(json.dumps(changed))
+                    report, errors = audit_repository_terms(root, harvest)
+                    self.assertTrue(any("locked catalog evidence" in error for error in errors))
+                    self.assertEqual(report["locked_catalog_evidence"][0]["status"], "FAIL")
+
+    def test_math_comment_and_reference_arguments_cannot_supply_lexical_evidence(self):
+        for body in ["Only $category$.", "Only a citation \\ref{category}.", "Ordinary words.\n% category"]:
+            with self.subTest(body=body), tempfile.TemporaryDirectory() as tmp:
+                proof = "\\begin{proof}\n" + body + "\n\\end{proof}"
+                root, harvest, _, _ = self.fixture(Path(tmp), proof)
+                _, errors = audit_repository_terms(root, harvest)
+                self.assertTrue(any("absent from exposed locked-Git prose" in error for error in errors), errors)
+
+    def test_unknown_macro_blocks_evidence_instead_of_falling_back_to_raw_search(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            proof = "\\begin{proof}\nA \\unclassified{category}.\n\\end{proof}"
+            root, harvest, _, _ = self.fixture(Path(tmp), proof)
+            _, errors = audit_repository_terms(root, harvest)
+            self.assertTrue(any("blocked" in error for error in errors), errors)
+
+    def test_new_evidence_and_legacy_fields_are_mutually_exclusive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, _, scope, _ = self.fixture(Path(tmp))
+            for key, value in [("unit_id", "tag:ABCD:definition"),
+                               ("source_tex_hash", "sha256:" + "0" * 64), ("unexpected", "value")]:
+                with self.subTest(key=key):
+                    changed = copy.deepcopy(scope)
+                    changed["terms"][0]["evidence"][0][key] = value
+                    (root / "config/source-terms.json").write_text(json.dumps(changed))
+                    with self.assertRaises(RecordError):
+                        load_catalog(root)
+
+    def test_legacy_evidence_still_requires_current_exact_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, scope, row = self.fixture(Path(tmp))
+            scope["terms"][0]["evidence"] = [{"chapter": "test", "unit_id": row["unit_id"],
+                "source_term": "category", "source_tex_hash": source_tex_hash(row)}]
+            (root / "config/source-terms.json").write_text(json.dumps(scope))
+            self.assertEqual(audit_repository_terms(root, harvest)[1], [])
+            other = copy.deepcopy(row); other["source_text"] = "Unrelated narration."
+            write_jsonl(root / "translation-data/units/test.jsonl", [stamp_unit_hashes(other)])
+            write_jsonl(root / "translation-data/candidates/lane/test.jsonl", [candidate([])])
+            self.assertTrue(any("catalog evidence is absent" in error for error in audit_repository_terms(root, harvest)[1]))
+
+    def test_cli_uses_explicit_harvest_without_default_checkout(self):
+        from stacks_zh.cli import main
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _, _ = self.fixture(Path(tmp))
+            self.assertFalse((root.parent / "stacks-project").exists())
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(main(["audit-terms", "--root", str(root), "--harvest", str(harvest)]), 0)
+                self.assertEqual(main(["audit-terms", "--root", str(root)]), 1)

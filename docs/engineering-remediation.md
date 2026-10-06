@@ -516,3 +516,29 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   76 个坐标迁移、96 条来源诊断和 14 组 proof 差异均保留。DATA #623 须在本
   工具合并后重新准备并冻结完整上下文，再进行实际模型修订；S4/S5/S7、全库
   严格门禁和必要的人审仍继续，来源取证不批准中文译法或正式采用/出版。
+
+- S4 可表态射定义及对角引理完整恢复：Issue
+  [#623](https://github.com/dongyaotalk/stacks-project-zh/issues/623)，分支
+  `translate/categories/0021/openai-gpt-6-1-sol`。前置词汇来源工具 #625 合并后
+  重新准备/check并冻结上下文；真实 Section 0021 为 Fibre products and
+  representability。0023/0024 的两份完整旧 batch（14 条输入/候选）恢复为
+  三个完整 R3 单元，0023 暴露原斜体自然语言并保留 F/G 数学和字体范围，0024
+  恢复三个列表条件及完整证明、旧 U/V 数学节点和原段落控制。交换图与显示
+  公式链各只出现一次；“Assume the equivalent conditions (2) and (3)” 修正为
+  假设已等价的两个条件成立，忠实保留原论证。
+  旧 14 条 unit/candidate 和历史 run 原字节保留，两个 v4、三份完整来源证据
+  及一份共享实际 GPT-6.1-sol/xhigh revision run 保存完整五字段原输出。最终
+  新来源、确切旧分组和全部上下文在模型输出前冻结；动态 Harness 0.160.1，
+  历史版本不回写。215 来源词记录同节完整不可拆定义/引理/证明低于偏好下限
+  的例外，45 次双语出现覆盖 38 次目录要求，全部未批准译法继续待决。
+  三个新 source TeX 逐字等于锁定 Git；proof 完整 39 个保护节点（含边界）和
+  片段 hash 一致。三个单元 BYTE_EXACT，两份修复队列 actions 为空，0024
+  proof 由 mismatch 转为 match，cartesian/equivalence 锁定证据继续通过。
+  361 项工具测试、239 batch QA、117 章模板/进度/计划、来源/Schema/溯源/
+  决策及全库库存/队列重建和确定性检查通过。render/pdf 零退出，459 页最终
+  TeX 日志 PASS；正文第 37–38 页斜体、列表、交换图、公式链和 4.8.1 引用可读。
+  当前 239 batch/1439 unit；proof 187 组/264 单元，174 match、13 mismatch、
+  0 unsupported。术语问题候选 839→833，诊断 2782→2770；76 个坐标迁移及
+  96 条来源诊断保持。相邻 0022 仍有抽取阻断，03KC 无既有候选，本次不新增；
+  其他事实、S4/S5/S7 及独立 critic、人类语言/数学审校、词表、正式采用和出版
+  门禁继续处理，本批候选保存不授予这些批准。

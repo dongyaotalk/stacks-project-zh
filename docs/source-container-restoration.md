@@ -68,6 +68,14 @@ existing_unit_id；库存用于选择和准备，当前旧输入由本次完整�
 不能把所有`\text{...}`一律锁定、翻译或忽略。改变宏政策时另开明确政策/工具任务；
 本合同本身不批准新宏或词条。任何额外支持必须公开实际覆盖及残项。
 
+Issue [#618](https://github.com/dongyaotalk/stacks-project-zh/issues/618) 在独立政策/工具
+范围内实施 [source-extraction.md](source-extraction.md) 的数学记号精确分类合同。
+只有显式字面量、命令和数学用法匹配的记号保持完整数学原字节；自然语言及未知
+名称继续阻断。来源容器使用实际 Git 和该次政策重新分类，不能信任缓存的正向
+分类、READY 或临时库存 ID。工具不直接采用事实；后续采用仍冻结完整旧 batch、
+保存新的政策 hash 并要求实际模型完整五字段。已有证据按各自 origin 的政策重放，
+v1/v2/v3/v4、source-container-v1 格式和历史记录保持不变。
+
 ## 4. v4旧新分组与完整历史
 
 v4使用独立Schema分支及`unit_groups`，保留旧v1/v2/v3的映射/重放合同。

@@ -21,7 +21,7 @@ from .chapter_templates import manifest_chapters
 from .records import RecordError, stamp_unit_hashes
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
 
-VERSION = 'source-extraction-v1'
+VERSION = 'source-extraction-v2'
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
 ENVIRONMENT = re.compile(r'\\(begin|end)\{([A-Za-z][A-Za-z0-9*_-]*)\}')
 WORD = re.compile(r'[A-Za-z]{2,}')
@@ -51,6 +51,8 @@ class Policy:
         self.body: set[str] = set()
         self.accents: set[str] = set()
         self.special: set[str] = set()
+        self.math_text_notations: dict[str, dict[str, Any]] = {}
+        notation_section_seen = False
         section = group = command = ''
         for line in text.splitlines():
             if not line.strip() or line.lstrip().startswith('#'):
@@ -58,6 +60,25 @@ class Policy:
             if not line.startswith(' '):
                 section = line.partition(':')[0]
                 group = command = ''
+                if section == 'locked_math_text_notations':
+                    if notation_section_seen or line != 'locked_math_text_notations:':
+                        raise RecordError('invalid or duplicate math-text notation policy section')
+                    notation_section_seen = True
+            elif section == 'locked_math_text_notations':
+                if re.fullmatch(r'  [A-Za-z]{2,}:', line):
+                    group = line.strip()[:-1]
+                    if group in self.math_text_notations:
+                        raise RecordError('duplicate math-text notation policy entry')
+                    self.math_text_notations[group] = {}
+                else:
+                    field = re.fullmatch(r'    (commands|usages|source_label): (.+)', line)
+                    if not field or not group or field[1] in self.math_text_notations[group]:
+                        raise RecordError('invalid or duplicate math-text notation policy field')
+                    try:
+                        value = json.loads(field[2]) if field[1] != 'source_label' else field[2]
+                    except json.JSONDecodeError as exc:
+                        raise RecordError('invalid math-text notation policy list') from exc
+                    self.math_text_notations[group][field[1]] = value
             elif section == 'commands' and re.match(r'^  \S', line):
                 key = line.strip().removesuffix(':')
                 command = ast.literal_eval(key) if key[:1] in {'"', "'"} else key
@@ -83,11 +104,24 @@ class Policy:
                      'special_index_record', 'lock_structure_translate_explicit_text_nodes'}
         if not self.commands or set(self.commands.values()) - supported:
             raise RecordError('unsupported extraction command policy')
+        for rule in self.math_text_notations.values():
+            if set(rule) != {'commands', 'usages', 'source_label'}:
+                raise RecordError('incomplete math-text notation policy')
+            for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
+                                 ('usages', {'symbol', 'applied', 'subscripted'})]:
+                values = rule[key]
+                if (not isinstance(values, list) or not values or
+                        any(not isinstance(v, str) or v not in allowed for v in values) or
+                        len(values) != len(set(values))):
+                    raise RecordError('unsupported math-text notation policy ' + key)
+            if not re.fullmatch(r'[a-z][a-z0-9_-]*-[a-z][a-z0-9_-]*', rule['source_label']):
+                raise RecordError('invalid math-text notation source label')
 
 
 class Scanner:
     def __init__(self, text: str, policy: Policy):
         self.text, self.policy = text, policy
+        self.math_text_classifications: list[dict[str, Any]] = []
 
     def comment_end(self, offset: int) -> int:
         end = self.text.find('\n', offset)
@@ -206,7 +240,40 @@ class Scanner:
             args.append((opening, i))
         return i, args
 
+    def notation_usage(self, command: str, value: str, closing: int):
+        """Match an explicit notation rule and its original following tokens."""
+        rule = self.policy.math_text_notations.get(value)
+        if rule is None or command not in rule['commands']:
+            return None
+        cursor = self.skip_space(closing)
+        for usage in rule['usages']:
+            if usage == 'symbol':
+                return usage, '', rule['source_label']
+            if usage == 'applied':
+                paren = cursor
+                size = COMMAND.match(self.text, paren)
+                if size and size.group()[1:] in {'left', 'big', 'Big', 'bigl', 'Bigl', 'biggl', 'Biggl'}:
+                    paren = self.skip_space(size.end())
+                if self.text[paren:paren + 1] == '(':
+                    return usage, self.text[closing:paren + 1], rule['source_label']
+            if usage == 'subscripted' and self.text[cursor:cursor + 1] == '_':
+                token = self.skip_space(cursor + 1)
+                if self.text[token:token + 1] == '{':
+                    stop = self.argument_end(token)
+                    if self.skip_space(token + 1) >= stop - 1:
+                        continue
+                elif token < len(self.text) and self.text[token].isalnum():
+                    stop = token + 1
+                else:
+                    subscript = COMMAND.match(self.text, token)
+                    if not subscript or subscript.group()[1:] in {')', ']', 'end'}:
+                        continue
+                    stop = subscript.end()
+                return usage, self.text[closing:stop], rule['source_label']
+        return None
+
     def protect(self, start: int, end: int) -> tuple[str, dict[str, str], list[dict[str, Any]]]:
+        self.math_text_classifications = []
         placeholders: dict[str, str] = {}
         counts: collections.Counter[str] = collections.Counter()
         diagnostics: list[dict[str, Any]] = []
@@ -224,8 +291,8 @@ class Scanner:
                                 'source': self.text[a:b], 'severity': 'BLOCKED'})
 
         def math(a: int, b: int) -> str:
-            # The current policy locks math. Inventory explicit language too;
-            # adopting translated math text needs its own verified contract.
+            # Only exact policy notations with usage witnesses remain opaque;
+            # natural/unknown math text still needs its own adoption contract.
             fragment = self.text[a:b]
             child = Scanner(fragment, self.policy)
             i = 0
@@ -243,8 +310,16 @@ class Scanner:
                             close = opening + 1
                         value = fragment[opening + 1:close - 1]
                         if WORD.search(value):
-                            issue('math-text', a + opening + 1, a + close - 1,
-                                  'explicit text inside locked math requires classification before adoption')
+                            notation = child.notation_usage(match.group()[1:], value, close)
+                            if notation is None:
+                                issue('math-text', a + opening + 1, a + close - 1,
+                                      'explicit text inside locked math requires classification before adoption')
+                            else:
+                                usage, usage_source, source_label = notation
+                                self.math_text_classifications.append({
+                                    'start': a + i, 'end': a + close, 'source': fragment[i:close],
+                                    'notation': value, 'command': match.group()[1:], 'usage': usage,
+                                    'usage_source': usage_source, 'source_label': source_label})
                     i = match.end()
                 else:
                     i += 1
@@ -373,9 +448,12 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                 'line_end': bisect.bisect_left(newlines, max(a, b - 1)) + 1,
                 'fragment_hash': byte_hash(text[a:b])}
 
-    def locked(a: int, b: int, kind: str):
+    def locked(a: int, b: int, kind: str, classifications=None):
         if a < b:
-            segments.append({'chapter': chapter, 'kind': kind, 'location': location(a, b), 'source': text[a:b]})
+            segment = {'chapter': chapter, 'kind': kind, 'location': location(a, b), 'source': text[a:b]}
+            if classifications:
+                segment['math_text_classifications'] = classifications
+            segments.append(segment)
 
     def emit(a: int, b: int, kind: str, owner: str | None, syntax: SyntaxProblem | None = None):
         if a >= b:
@@ -384,13 +462,17 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
             if syntax:
                 raise syntax
             protected, placeholders, problems = scanner.protect(a, b)
+            classifications = [{**{k: v for k, v in item.items() if k not in {'start', 'end'}},
+                                'location': location(item['start'], item['end'])}
+                               for item in scanner.math_text_classifications]
         except SyntaxProblem as exc:
+            classifications = []
             protected, placeholders = '<UNKNOWN_0001>', {'UNKNOWN_0001': text[a:b]}
             problems = [{'kind': 'syntax', 'start': a, 'end': b, 'severity': 'BLOCKED',
                          'message': str(exc), 'source': text[a:b]}]
         natural = re.sub(r'<[A-Z][A-Z0-9]*_[0-9]{4}>', '', protected)
         if not WORD.search(natural) and not problems:
-            locked(a, b, 'structure-or-math')
+            locked(a, b, 'structure-or-math', classifications)
             return
         ordinals[(owner, kind)] += 1
         path = f'{kind}/{ordinals[(owner, kind)]:04d}'
@@ -411,7 +493,8 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                   'parent_tag': section, 'semantic_path': path, 'location': location(a, b),
                   'state': 'BLOCKED' if problems else 'READY', 'word_count': len(WORD.findall(natural)),
                   'existing_unit_id': matches[0] if len(matches) == 1 else None,
-                  'unit': unit, 'diagnostic_count': len(problems)}
+                  'unit': unit, 'diagnostic_count': len(problems),
+                  'math_text_classifications': classifications}
         units.append(record)
         segments.append({'chapter': chapter, 'kind': 'unit', 'location': location(a, b), 'inventory_id': identifier})
         for problem in problems:
@@ -602,7 +685,9 @@ def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None
                           'source_hash': byte_hash(raw), 'source_bytes': len(raw),
                           'unit_count': len(rows), 'ready': sum(u['state'] == 'READY' for u in rows),
                           'blocked': sum(u['state'] == 'BLOCKED' for u in rows),
-                          'diagnostics': len(problems), 'roundtrip': 'BYTE_EXACT'})
+                          'diagnostics': len(problems), 'roundtrip': 'BYTE_EXACT',
+                          'classified_math_text': sum(len(r.get('math_text_classifications', []))
+                                                      for r in [*rows, *parts])})
     manifest = {'schema_version': 1, 'extractor_version': VERSION, 'source_commit': english.commit,
                 'macro_policy_hash': byte_hash(policy_raw), 'chapter_manifest_hash': byte_hash(manifest_raw),
                 'chapter_count': len(summaries), 'chapters': summaries, 'unit_count': len(units),
@@ -610,6 +695,7 @@ def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None
                 'blocked': sum(u['state'] == 'BLOCKED' for u in units), 'diagnostic_count': len(diagnostics),
                 'source_unavailable': [s['chapter'] for s in summaries if s['state'] == 'SOURCE_UNAVAILABLE'],
                 'diagnostics_by_kind': dict(sorted(collections.Counter(p['kind'] for p in diagnostics).items())),
+                'classified_math_text': sum(s.get('classified_math_text', 0) for s in summaries),
                 'roundtrip_files': sum(s['state'] == 'INVENTORIED' for s in summaries),
                 'translation_ready': not diagnostics, 'adopted': False}
     manifest['current_units_hash'] = current_hash
@@ -625,11 +711,19 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
         raise RecordError('extraction output must be a dedicated ignored source-ir/ or build/ subdirectory')
     if output.exists() and not check:
         marker = output / 'manifest.json'
+        previous = json.loads(marker.read_text(encoding='utf-8')) if marker.is_file() and not marker.is_symlink() else {}
         if (not output.is_dir() or not marker.is_file() or marker.is_symlink()
-                or json.loads(marker.read_text(encoding='utf-8')).get('extractor_version') != VERSION):
+                or previous.get('extractor_version') not in {VERSION, 'source-extraction-v1'}):
             raise RecordError('refusing to replace a directory not owned by the source extractor')
         if {p.name for p in output.iterdir()} != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md', 'manifest.json'}:
             raise RecordError('refusing to replace an inventory containing unrelated files')
+        if any(p.is_symlink() for p in output.iterdir()):
+            raise RecordError('refusing to replace an inventory containing symlinks')
+        if previous['extractor_version'] == 'source-extraction-v1':
+            files = previous.get('files', {})
+            if (not isinstance(files, dict) or set(files) != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md'}
+                    or any(byte_hash((output / name).read_bytes()) != expected for name, expected in files.items())):
+                raise RecordError('refusing to upgrade an invalid v1 source inventory')
     manifest, units, segments, diagnostics = build_inventory(root, harvest, chapters)
 
     def jsonl(rows):
@@ -639,6 +733,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
     lines = ['# 全库来源库存', '', f"锁定英文：`{manifest['source_commit']}`；抽取器：`{VERSION}`。", '',
              f"{manifest['chapter_count']}章；{manifest['roundtrip_files']}个Git文件逐字回放通过。",
              f"提议单元{manifest['unit_count']}：READY {manifest['ready']}，BLOCKED {manifest['blocked']}；诊断{manifest['diagnostic_count']}。", '',
+             f"明确数学记号分类{manifest['classified_math_text']}次；原公式字节保持不变。", '',
              'READY仅表示该来源片段被已知语法抽取，不是事实采用、模型译文、人工审校或发布批准。', '',
              '| Chapter | State | Units | Ready | Blocked |', '| --- | --- | ---: | ---: | ---: |']
     for chapter in manifest['chapters']:

@@ -37,3 +37,50 @@ Synthetic fixtures覆盖公式转义/注释、嵌套字体和脚注、标题与�
 全库库存生成后执行 `make source-alignment`，为当前239个batch/1480个unit准备统一对应及修订队列；更新事实后执行同一命令，`make source-alignment-check`检查是否过期。工具从锁定Git重新验证用到的章容器，再按真实永久Tag/proof链定位，合并terms/source/proof三个独立审计；现有分段不能按新库存序号覆盖。
 
 报告在`build/source-alignment/report.md`，逐批任务在`repair-queue.jsonl`。队列保存当前unit/candidate和审计政策hash，来源byte span、提案和差异；排版/已核实引用别名相同仍只作定位证据，不豁免来源恢复或实际模型修订。完整设计见[source-alignment.md](source-alignment.md)。
+
+## 数学内记号分类（v2）
+
+独立政策/工具任务：[Issue #618](https://github.com/dongyaotalk/stacks-project-zh/issues/618)。
+先实现本合同，验收合并后另开具体数据采用任务。数学内自然语言仍需后续独立的
+翻译/数学保护合同；本次仅识别明确记号，不修改公式或生成译文。不得将全部
+`\text`、`\textit`、`\textbf` 参数统一锁定或翻译。
+
+宏政策的 `locked_math_text_notations` 显式列出精确字面量、允许命令、使用类别和
+锁定来源依据。字面量按原字节、大小写和完整参数比较，不 trim、词干匹配或推断
+别名。缺字段、重复字段/条目、不支持的命令/类别和非标识符条目均拒绝。未配置
+该节的历史政策保持全部数学文字阻断的原语义。
+
+| 字面量 | 命令 | 允许用法 | 锁定原文依据 |
+| --- | --- | --- | --- |
+| pr | text | subscripted | categories-lemma-representable-diagonal 的投影记号 |
+| id | text | symbol | categories-definition-category 的恒等态射记号 |
+| Arrows | text | applied | categories-lemma-limits-products-equalizers 的箭头集记号 |
+| Sets | text、textit | symbol | categories-remark-big-categories 的集合范畴记号 |
+| size | text | applied | sets-section-categories-schemes 的 size(S) 定义 |
+| Cov | text | applied | sets-section-coverings-site 的覆盖类记号 |
+| Supp | text | applied | sets-lemma-coverings-site 的支撑集合记号 |
+| cf | text | applied | sets-section-cofinality 的余终性记号 |
+
+`applied` 要求完整参数之后的真实数学 token 是 `(`，可带明确的 left/big 系列
+括号大小命令；`subscripted` 要求其后是非空下标；`symbol` 仅用于表中已明确的
+独立符号。注释/空白可以跨过但保存原字节；不匹配用法、相似词形、嵌套参数、
+未列命令及 `and`、`if`、`affine opens of` 等自然语言仍为原 math-text BLOCKED。
+识别既不会改变完整 MATH token，也不会授予词表或人类数学审校批准。
+
+每个接受项保存 `math_text_classifications`：完整命令 source、notation、command、
+usage、source_label、原 UTF-8 byte/line location 以及 usage_source（原下标或函数
+括号前缀）。记录随提议 unit 保存；只有记号且没有自然语言的完整数学片段仍为
+locked segment，分类记录随 segment 保存。manifest/report 统计两处的正向记录，
+不以删除诊断代替可审查证据。未分类文字继续保留原诊断及位置；全部源字节照常
+回放，不改变保护结构、事实 unit 或任一历史记录。
+
+库存版本为 source-extraction-v2，文件集合仍为原五件。允许具有原五文件、完整
+原 manifest/hash 且无 symlink 的 v1 ignored 库存安全再生成；其他版本、陌生目录
+或额外文件拒绝。check 只读并拒绝旧库存、分类记录/政策/内容篡改；安全失败保留
+上一目录。库存临时 ID 可能因纯数学片段回归 locked segment 而改变，不得据此
+改写事实 ID。具体模型修订仍走完整旧 batch 快照和锁定 Git 容器的独立 v4 合同。
+
+验收覆盖接受/拒绝用法、精确词形、字体命令、嵌套文本、注释/转义、完整数学
+字节和 UTF-8 位置、纯数学 segment、v1 政策/库存迁移、分类记录篡改及实际容器。
+再次扫描全部 117 章并逐字回放 116 份 Git blob，公开分类与剩余 BLOCKED 数量；
+当前事实及 source/proof/term 审计残项不得减少，数据修复留待后续独立任务。

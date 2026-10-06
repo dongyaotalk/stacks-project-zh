@@ -122,6 +122,87 @@ class ExtractionTests(unittest.TestCase):
         _, _, errors = inventory(body)
         self.assertEqual([e['source'] for e in errors if e['kind'] == 'math-text'], ['real words'])
 
+    def test_exact_notations_preserve_full_math_and_record_source_witnesses(self):
+        math = (r'$\text{pr}_1 + \text{id}_X + \text{Arrows}(C) + \textit{Sets} + '
+                r'\text{size}(S) + \text{Cov}(C) + \text{Supp}(U) + \text{cf}(a)$')
+        rows, _, errors = inventory(r'\section{First}\label{section-first}' + '\nTake ' + math + '.')
+        self.assertFalse(errors)
+        row = rows[-1]
+        self.assertEqual([item['notation'] for item in row['math_text_classifications']],
+                         ['pr', 'id', 'Arrows', 'Sets', 'size', 'Cov', 'Supp', 'cf'])
+        self.assertEqual([v for k, v in row['unit']['placeholders'].items() if k.startswith('MATH_')], [math])
+        self.assertEqual(row['math_text_classifications'][0]['usage_source'], '_1')
+        self.assertEqual(row['math_text_classifications'][4]['usage_source'], '(')
+        self.assertTrue(all(item['source_label'] for item in row['math_text_classifications']))
+        self.assertNotIn('size', row['unit']['source_text'])
+
+    def test_natural_text_nested_wrappers_and_inexact_uses_stay_blocked(self):
+        for text in [r'\text{and}', r'\text{if}', r'\text{affine opens of }',
+                     r'\text{size}', r'\text{size} + x', r'\text{pr}', r'\text{pr}_{}',
+                     r'\text{pr}_$', r'\text{Size}(S)', r'\text{ size }(S)',
+                     r'\text{sizes}(S)', r'\textbf{size}(S)', r'\text{Hom}(X,Y)',
+                     r'\text{\text{size}(S)}', r'\textit{pr}_1']:
+            with self.subTest(text=text):
+                source = r'\section{First}\label{section-first}' + '\nTake $' + text + '$.'
+                _, _, errors = inventory(source)
+                self.assertTrue(any(e['kind'] in {'math-text', 'syntax'} for e in errors))
+        rows, _, errors = inventory(r'\section{First}\label{section-first}' + '\n' +
+                                   r'Take $\text{pr}_{\text{real words}}$.')
+        self.assertEqual([e['source'] for e in errors if e['kind'] == 'math-text'], ['real words'])
+        self.assertEqual(rows[-1]['state'], 'BLOCKED')
+
+    def test_usage_comments_escapes_and_scalable_parentheses_keep_original_bytes(self):
+        math = ('$\\text{size}% original comment\n\\left (S) + '
+                '\\text{pr}% another comment\n_{i+1} + '
+                r'\text{Cov}\bigl(C) + \\text{size}(ignored)$')
+        rows, _, errors = inventory(r'\section{First}\label{section-first}' + '\nTake ' + math + '.')
+        self.assertFalse(errors)
+        items = rows[-1]['math_text_classifications']
+        self.assertEqual([x['notation'] for x in items], ['size', 'pr', 'Cov'])
+        self.assertEqual(items[0]['usage_source'], '% original comment\n\\left (')
+        self.assertEqual(items[1]['usage_source'], '% another comment\n_{i+1}')
+        self.assertIn(math, source_tex(rows[-1]['unit']))
+
+    def test_classification_spans_are_exact_utf8_command_bytes(self):
+        body = r'\section{First}\label{section-first}' + '\nCafé δ uses $\\text{size}(S)$.'
+        raw = ('\\begin{document}\n' + body + '\n\\end{document}\n').encode()
+        rows, _, errors = chapter_inventory('alpha', raw, COMMIT, TAGS, POLICY)
+        self.assertFalse(errors)
+        item = rows[-1]['math_text_classifications'][0]
+        loc = item['location']
+        self.assertEqual(raw[loc['byte_start']:loc['byte_end']], b'\\text{size}')
+        self.assertEqual(item['source'], r'\text{size}')
+
+    def test_pure_math_notation_stays_in_locked_segments_with_classification(self):
+        body = r'\section{First}\label{section-first}' + '\n' + r'$\text{size}(S)$' + '\n\nNatural words.'
+        rows, segments, errors = inventory(body)
+        self.assertFalse(errors)
+        self.assertEqual([r['unit']['node_kind'] for r in rows], ['section_title', 'paragraph'])
+        classified = [s for s in segments if s.get('math_text_classifications')]
+        self.assertEqual(len(classified), 1)
+        self.assertEqual(classified[0]['kind'], 'structure-or-math')
+        self.assertEqual(classified[0]['math_text_classifications'][0]['notation'], 'size')
+        self.assertIn(r'$\text{size}(S)$', classified[0]['source'])
+
+    def test_notation_policy_is_optional_for_history_and_fails_closed(self):
+        old = POLICY_RAW.split('locked_math_text_notations:', 1)[0]
+        scanner = Scanner(r'$\text{size}(S)$', Policy(old))
+        _, _, errors = scanner.protect(0, len(scanner.text))
+        self.assertEqual([r['source'] for r in errors], ['size'])
+        self.assertEqual(scanner.math_text_classifications, [])
+        for entry in ['  size:\n    commands: ["text"]',
+                      '  size:\n    commands: ["text"]\n    commands: ["text"]',
+                      '  size:\n    commands: ["text"]\n  size:',
+                      '  size:\n    commands: ["unknown"]\n    usages: ["applied"]\n    source_label: alpha-lemma-one',
+                      '  size:\n    commands: ["text"]\n    usages: ["guess"]\n    source_label: alpha-lemma-one',
+                      '  size:\n    commands: "text"\n    usages: ["applied"]\n    source_label: alpha-lemma-one',
+                      '  size:\n    commands: ["text"]\n    usages: []\n    source_label: alpha-lemma-one',
+                      '  size:\n    commands: ["text"]\n    usages: ["applied"]\n    source_label: ../elsewhere',
+                      '  size:\n    commands: [text]\n    usages: ["applied"]\n    source_label: alpha-lemma-one',
+                      '  size words:\n    commands: ["text"]']:
+            with self.subTest(entry=entry), self.assertRaises(RecordError):
+                Policy(old + 'locked_math_text_notations:\n' + entry + '\n')
+
     def test_invalid_syntax_preserves_tail_and_never_claims_ready(self):
         body = r'\section{First}\label{section-first}' + '\nA $unclosed.'
         rows, segments, errors = inventory(body)
@@ -177,6 +258,30 @@ class ExtractionTests(unittest.TestCase):
             with self.assertRaises(RecordError):write_inventory(root, harvest, output)
             (output / 'extra').unlink(); (output / 'units.jsonl').write_text('')
             with self.assertRaisesRegex(RecordError, 'out of date'):write_inventory(root, harvest, output, check=True)
+
+    def test_v1_inventory_upgrade_checks_owner_hashes_and_keeps_check_read_only(self):
+        for damage in ['none', 'hash', 'version', 'symlink']:
+            with self.subTest(damage=damage), tempfile.TemporaryDirectory() as temp:
+                root, harvest = self.fixture(Path(temp)); output = root / 'source-ir/extraction'
+                write_inventory(root, harvest, output)
+                marker = output / 'manifest.json'; manifest = json.loads(marker.read_text())
+                manifest['extractor_version'] = 'source-extraction-v1' if damage != 'version' else 'unrelated-v1'
+                marker.write_text(json.dumps(manifest))
+                if damage == 'hash':
+                    (output / 'units.jsonl').write_text('changed')
+                if damage == 'symlink':
+                    target = root / 'elsewhere'; target.write_bytes((output / 'units.jsonl').read_bytes())
+                    (output / 'units.jsonl').unlink(); (output / 'units.jsonl').symlink_to(target)
+                before = marker.read_bytes()
+                with self.assertRaises(RecordError):write_inventory(root, harvest, output, check=True)
+                self.assertEqual(marker.read_bytes(), before)
+                if damage != 'none':
+                    with self.assertRaises(RecordError):write_inventory(root, harvest, output)
+                    self.assertEqual(marker.read_bytes(), before)
+                else:
+                    upgraded = write_inventory(root, harvest, output)
+                    self.assertEqual(upgraded['extractor_version'], 'source-extraction-v2')
+                    self.assertEqual(upgraded, write_inventory(root, harvest, output, check=True))
 
     def test_output_safety_and_failed_write_preserve_existing_package(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -353,6 +353,22 @@ class SourceContainerTests(unittest.TestCase):
                 with self.assertRaisesRegex(RecordError, 'adoption blocked'):
                     Containers(root, harvest).select(selector())
 
+    def test_classified_notation_preserves_complete_git_math_but_prose_still_blocks(self):
+        proof = '\\begin{proof}\nTake $\\text{pr}_1$ and $\\text{size}(S)$.\n\\end{proof}'
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _ = fixture(Path(tmp), proof=proof)
+            selected = Containers(root, harvest).select(selector())
+            self.assertEqual(selected['fragment'], proof)
+            self.assertEqual(source_tex(selected['inventory_unit']), proof)
+            policy = root / 'config/macro-policy.yml'
+            policy.write_text(policy.read_text().split('locked_math_text_notations:', 1)[0])
+            with self.assertRaisesRegex(RecordError, 'adoption blocked'):
+                Containers(root, harvest).select(selector())
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _ = fixture(Path(tmp), proof=proof.replace('and $', 'and $\\text{if} '))
+            with self.assertRaisesRegex(RecordError, 'adoption blocked'):
+                Containers(root, harvest).select(selector())
+
     def test_dirty_harvest_inventory_not_authority_and_policy_change_detected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root, harvest, _ = fixture(Path(tmp))

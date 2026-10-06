@@ -62,7 +62,115 @@ def old_unit(sha, identifier, kind, text, prefix='', suffix=''):
         'render': {'prefix': prefix, 'suffix': suffix}})
 
 
+def detached_inputs(sha, *, after=None):
+    statement = old_unit(sha, 'tag:0001:statement', 'lemma', 'Legacy statement.',
+                         '\\begin{lemma}\n\\label{test-lemma-one}\n', '\n\\end{lemma}')
+    display = old_unit(sha, 'tag:0001:display001', 'display_math', '<MATH_0001>')
+    display['placeholders'] = {'MATH_0001': r'\[x \to y \to z\]'}
+    display = stamp_unit_hashes(display)
+    first = old_unit(sha, 'tag:0001:proof-p001', 'proof', 'Legacy first segment.', '\\begin{proof}\n')
+    last = old_unit(sha, 'tag:0001:proof-p002', 'proof_paragraph', 'Legacy last segment.', '', '\n\\end{proof}')
+    units = [statement, display, first, last]
+    if after:
+        trailing = copy.deepcopy(display)
+        trailing['unit_id'] = 'tag:0001:display002'
+        trailing['placeholders'] = {'MATH_0001': after}
+        units.append(stamp_unit_hashes(trailing))
+    return units
+
+
 class SourceContainerTests(unittest.TestCase):
+    def test_complete_proof_binds_adjacent_display_before_and_after_wrapper(self):
+        after = r'\[a = b + c\]'
+        proof = PROOF.replace('\\end{proof}', after + '\n\\end{proof}')
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp), proof=proof)
+            containers = Containers(root, harvest)
+            selected = containers.select(selector())
+            units = detached_inputs(sha, after=after)
+            ids = [u['unit_id'] for u in units[1:]]
+            verify_old_group(units, containers.english.tags, ids, selected)
+            result = lower_container(selected, containers.policy)
+            self.assertEqual(len(result), 1)
+            self.assertEqual(source_tex(result[0]), proof)
+            self.assertEqual(source_tex(result[0]).count(r'\[x \to y \to z\]'), 1)
+            self.assertEqual(source_tex(result[0]).count(after), 1)
+            self.assertEqual(result[0]['risk_level'], 'R3')
+
+    def test_detached_display_rejects_prose_wrappers_inline_math_and_scope_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp))
+            containers = Containers(root, harvest)
+            selected = containers.select(selector())
+            original = detached_inputs(sha)
+            faults = ['prose', 'wrapper', 'inline', 'two-tokens', 'kind', 'chapter', 'parent', 'source', 'math-bytes']
+            for fault in faults:
+                units = copy.deepcopy(original)
+                display = units[1]
+                if fault == 'prose': display['source_text'] += ' A hidden sentence.'
+                if fault == 'wrapper': display['render']['prefix'] = '\\begin{lemma}'
+                if fault == 'inline': display['placeholders']['MATH_0001'] = '$x$'
+                if fault == 'two-tokens': display['placeholders']['MATH_0002'] = '$y$'
+                if fault == 'kind': display['node_kind'] = 'paragraph'
+                if fault == 'chapter': display['chapter'] = 'other'
+                if fault == 'parent': display['parent_tag'] = '0002'
+                if fault == 'source': display['source_commit'] = '1' * 40
+                if fault == 'math-bytes': display['placeholders']['MATH_0001'] += ' '
+                with self.subTest(fault=fault), self.assertRaises(RecordError):
+                    verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], selected)
+
+    def test_detached_display_cannot_skip_input_reorder_or_drop_part_of_proof(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp))
+            containers = Containers(root, harvest)
+            selected = containers.select(selector())
+            units = detached_inputs(sha)
+            ids = [u['unit_id'] for u in units[1:]]
+            for rejected in [ids[1:], ids[:-1], [ids[0], ids[2]], ids[::-1], ids + [ids[0]], [units[0]['unit_id'], *ids]]:
+                with self.subTest(ids=rejected), self.assertRaises(RecordError):
+                    verify_old_group(units, containers.english.tags, rejected, selected)
+            units.insert(2, old_unit(sha, 'tag:0001:p009', 'paragraph', 'Intervening prose.'))
+            with self.assertRaises(RecordError):
+                verify_old_group(units, containers.english.tags, ids, selected)
+            # Including the intervening prose cannot turn it into a math node.
+            with self.assertRaises(RecordError):
+                verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], selected)
+
+    def test_detached_display_requires_unique_real_target_math_not_another_owner_or_literal(self):
+        display = r'\[x \to y \to z\]'
+        others = [display, '\\begin{lemma}\n\\label{lemma-two}\n' + display + '\n\\end{lemma}',
+                  '\\begin{verbatim}\n' + display + '\n\\end{verbatim}']
+        for other in others:
+            with tempfile.TemporaryDirectory() as tmp:
+                root, harvest, sha = fixture(Path(tmp), other=other)
+                containers = Containers(root, harvest)
+                units = detached_inputs(sha)
+                with self.subTest(other=other), self.assertRaises(RecordError):
+                    verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], containers.select(selector()))
+        comment_only = PROOF.replace(display, '% ' + display)
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp), proof=comment_only)
+            containers = Containers(root, harvest)
+            units = detached_inputs(sha)
+            with self.assertRaises(RecordError):
+                verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], containers.select(selector()))
+            with self.assertRaises(RecordError):
+                verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], containers.select(selector(ordinal=2)))
+
+    def test_detached_display_cannot_repeat_or_consume_math_already_in_old_proof(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, sha = fixture(Path(tmp))
+            containers = Containers(root, harvest)
+            selected = containers.select(selector())
+            units = detached_inputs(sha, after=r'\[x \to y \to z\]')
+            with self.assertRaises(RecordError):
+                verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], selected)
+            units = detached_inputs(sha)
+            units[2]['source_text'] += '<MATH_0001>'
+            units[2]['placeholders'] = copy.deepcopy(units[1]['placeholders'])
+            with self.assertRaises(RecordError):
+                verify_old_group(units, containers.english.tags, [u['unit_id'] for u in units[1:]], selected)
+
     def test_chapter_title_owns_complete_real_header_and_native_label(self):
         header = '\\title{Test categories}\n\n\\maketitle\n\\phantomsection\n\\label{section-phantom}\n\n\\tableofcontents\n\n'
         with tempfile.TemporaryDirectory() as tmp:
@@ -282,6 +390,35 @@ class SourceContainerTests(unittest.TestCase):
 
 
 class ContainerPackageTests(unittest.TestCase):
+    def test_separate_unchanged_display_cannot_escape_complete_proof_group(self):
+        import json
+        from test_group_derivations import fixture, write
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _ = fixture(Path(tmp), count=0, detached=True)
+            units_path = root / 'translation-data/units/test-0000.jsonl'
+            units = [json.loads(l) for l in units_path.read_text().splitlines()]
+            plan = {'derivation_id': 'fixture-detached-partial', 'created_at': '2026-10-06T08:00:00Z',
+                'units_file': 'translation-data/units/test-0000.jsonl',
+                'candidates_file': 'translation-data/candidates/fixture/test-0000.jsonl', 'groups': []}
+            for identifier, ids, coordinate in [
+                    ('heading', [units[0]['unit_id']], None),
+                    ('statement', [units[1]['unit_id']], selector('lemma')),
+                    ('stray', [units[2]['unit_id']], None),
+                    ('proof', [u['unit_id'] for u in units[3:]], selector())]:
+                plan['groups'].append({'group_id': identifier, 'input_unit_ids': ids,
+                    'identity_anchor': ids[0], 'selector': coordinate, 'layout': 'whole',
+                    'reason': 'Synthetic incomplete grouping, must not be adopted.'})
+            path = root / 'build/plan.json'
+            write(path, plan)
+            before = units_path.read_bytes()
+            output = root / 'build/rejected-group'
+            report = write_container_package(root, harvest, path, output)
+            self.assertEqual(report['blocked_group_count'], 1)
+            groups = json.loads((output / 'groups.json').read_text())
+            self.assertEqual(next(g for g in groups if g['group_id'] == 'proof')['state'], 'BLOCKED')
+            self.assertIn('adjacent detached display', (output / 'diagnostics.json').read_text())
+            self.assertEqual(units_path.read_bytes(), before)
+
     def test_parent_replaced_by_symlink_during_preparation_cannot_write_outside(self):
         import stacks_zh.source_containers as module
         with tempfile.TemporaryDirectory() as tmp:

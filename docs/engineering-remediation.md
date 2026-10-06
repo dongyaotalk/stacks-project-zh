@@ -474,3 +474,27 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   本工具未改动 translation-data 树：239 batch/1459 unit、849 个术语问题候选/
   2797 条诊断、76 个坐标迁移、96 条来源诊断和 16 组 proof 差异均保持；具体
   完整来源采用与实际模型修订、S4/S5/S7 继续处理。
+
+- S4 有限极限/余极限完整容器采用：Issue
+  [#620](https://github.com/dongyaotalk/stacks-project-zh/issues/620)，分支
+  `translate/categories/04as/openai-gpt-6-1-sol`。002O/002Q 的两份完整旧 batch
+  （13 条 unit/candidate）恢复为四个完整 R3 单元，真实 Section parent 均为 04AS。
+  锁定 Git 核对发现，002O 旧证明输入把 finite products / finite index categories
+  改成 products / nonempty index categories；本次恢复真实原文，不把旧提取错误
+  当作英文 remark 保留。002Q 第二项补回旧输入遗漏的范畴数学节点；002O 第二项
+  按真实原文保持无该节点。002O 的显示公式只在完整 proof 内出现一次，002Q
+  保留原文省略证明和对偶提示，proof 风险恢复为 R3，不补证明。
+  旧 13 条完整输入/候选与所有历史 run 原字节保留；四份来源证据、两个 v4 分组
+  记录及一份共享实际 GPT-6.1-sol/xhigh revision run 保存完整五字段原输出。
+  新来源、确切旧分组及全部上下文在模型输出前冻结；动态 Harness 为 0.160.1，
+  历史版本不回写。115 来源词记录完整不可拆的两对短引理/证明低于偏好下限的
+  例外，37 次双语术语覆盖 33 次来源目录要求，所有未批准译法继续待决。
+  四个 source TeX 逐字等于锁定 Git 容器，两个 proof 的完整 8/3 保护节点
+  （含环境边界）及片段 hash 一致；四个新单元 BYTE_EXACT，两份队列 actions
+  为空。352 项工具测试、239 batch QA、117 章模板/进度/计划、来源/Schema/溯源/
+  决策及更新后的全库库存/队列确定性检查通过。render/pdf 零退出，459 页及
+  最终 TeX log PASS；正文第 51 页列表、唯一公式和 4.14.10/4.18.6 引用可读。
+  当前为 239 batch/1450 unit，proof 187 组/272 单元、173 match/14 mismatch/
+  0 unsupported。术语问题候选 849→839，诊断 2797→2782；76 个坐标迁移及
+  96 条来源诊断仍保留，其他事实及 S4/S5/S7 继续处理，未授予独立 critic、
+  人工语言/数学审校、词表、正式采用或出版批准。

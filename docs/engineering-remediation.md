@@ -374,3 +374,21 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   Git 加入字节；本次仅 Schema/工具/测试/文档，尚未产生或迁移修订 run/事实数据。
   已通过 177 项工具测试（新增 16 项修订回归）、239 批 qa-all、全部来源/Schema/
   决策检查及整书 render/pdf 和模板烟测；数据修复仍属后续阶段。
+
+- S4 完整容器采用：Issue [#607](https://github.com/dongyaotalk/stacks-project-zh/issues/607)，
+  分支 `translate/categories/001y/openai-gpt-6-1-sol`。工具 #606 合并后，首次实际采用
+  v4：001Y 的完整陈述及 13 个旧证明片段恢复为两个 R3 单元，Section parent 改为
+  锁定来源的 001U，并更新 categories chapter-template。旧 14 条 unit/candidate
+  原字节及 legacy run 全部保留；两份完整 Git 容器证据、一份动态 Harness 0.160.0
+  的真实 GPT-6.1-sol/xhigh revision run 和两条完整五字段原输出可逐层重放。
+  两个新来源逐字等于锁定 Git 原容器；独立 proof 审计的 35 个保护节点及片段 hash
+  一致，001Y 从 mismatch 变为 match。原提取的数学扩写、引用命名和遗漏的
+  “Therefore” 按英文原字节恢复；原文论证疑点忠实保留为非正文元数据。
+  新输入为 145 来源词，记录完整引理/证明低于偏好下限的例外；28 次双语术语覆盖
+  18 次目录要求，未批准术语全部待决。337 项工具测试、239 batch QA、117 章模板/
+  进度/计划检查、来源/Schema/决策检查、全库库存及队列确定性检查成功；整书 PDF
+  459 页、最终日志通过，正文第 34–36 页及目录已核对，交换图、引用和 δ 可读。
+  当前事实为 239 batch/1468 unit；全库 proof 为 187 组/279 单元，167 match、
+  20 mismatch、0 unsupported。统一队列仍有 859 个术语问题候选、2814 条术语诊断、
+  76 个坐标迁移及 96 条来源诊断；本批两个单元为 BYTE_EXACT，未豁免其他残项，
+  不将模型修订或候选合并称为独立 critic、人工审校、术语批准或正式出版。

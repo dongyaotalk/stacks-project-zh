@@ -32,3 +32,26 @@ Issue [#624](https://github.com/dongyaotalk/stacks-project-zh/issues/624) 为词
 暴露正文中的词形；不能以默认 checkout、旧分段或候选文字提供证据。目录仍
 绑定 input hash，新格式报告完整保留在 term-audit.json 中。词汇来源证据通过
 不减少当前候选、来源或证明残项，不批准译法或豁免未来严格门禁。
+
+## 完整正文块的原字节定位
+
+[Issue #637](https://github.com/dongyaotalk/stacks-project-zh/issues/637) 先定义此
+报告合同，再实现与回归。DATA #635 的来源容器已经逐字等于锁定 Git，但单个
+相邻窗口无法容纳跨段落、列表及脚注的完整引言，token 范围还会裁去外围空白。
+不能把这个报告能力缺口当作英文缺失，也不能修改模型原输出来适应窗口。
+
+source-alignment-v2 对严格 `tag:OWNER:prose-NNNN` 的 paragraph 使用既有
+完整容器选择器，明确真实 owner label、Section parent、prose_block kind 和
+从 1 开始的 ordinal。从锁定 Git 重新扫描完整语义边界、保护策略及 READY
+状态；当前 source commit 与 Tag 索引也必须一致。只有整个 source TeX 与
+原片段逐字相同，才报告 BYTE_EXACT，保存 selector、完整位置/hash、blob
+身份和真实前后锚点。外围空白不裁剪，内部文字、数学、引用或任何字节也不
+归并。错误 kind/owner/parent/ordinal、阻断语法、重复锚点、截短或内容差异
+保持失败，不能退回宽窗口遮掩。普通历史片段、陈述与 proof 原匹配规则保持。
+
+库存格式及来源恢复合同不变；新分支只提供定位，完整 term/source/proof 审计
+照常保留，不授予采用、人审或任何批准。生成可安全替换具有既定六文件及
+安全标记的旧 v1 包，仍拒绝陌生版本、越界或 symlink，失败保留上一包；check
+要求完整新版本结果，不把旧 v1 当作已更新。回归和主分支全库验收后单独合并
+工具，再恢复 DATA #635 已冻结的实际修订，原输入/输出/context hash/生成
+origin 按真实 e4 版本保留。该报告修复不改变其词汇、宏或模型生成政策。

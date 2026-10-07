@@ -616,3 +616,23 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   823 个术语问题候选/2,749 条诊断、76 个坐标迁移、96 条来源诊断、12 组
   proof 差异保持。render/pdf 零退出，459 页最终日志 PASS，整书 layout
   提取文本与修改前完全一致。完整 DATA 在本前置合并后重新准备并冻结输入。
+
+- S3 的完整正文块对应计划：Issue
+  [#637](https://github.com/dongyaotalk/stacks-project-zh/issues/637)，分支
+  `tool/complete-prose-source-alignment`。DATA #635 已实际冻结、生成并装配
+  30 完整五字段修订，368 工具测试、239 batch QA、真实 Git/原输出/上下文
+  核对及 459 页 PDF 通过；尚未提交。当前窗口匹配把逐字相等的长引言误报
+  SOURCE_DIFFERENCE，另四个完整正文块因外围空白裁剪误报排版等价。先保存
+  40 文件指纹和完整 stash，再单独写报告 v2 合同与工具，不改任何事实。
+  仅严格 canonical prose 单元按真实锁定 Git 完整容器、Tag/Section/kind/
+  ordinal 和前后锚点定位；完整原字节一致才 BYTE_EXACT，错误和阻断仍失败，
+  不回落宽窗口或豁免独立审计。旧窗口/proof、宏与来源恢复权限保持；安全
+  重建旧 v1 包而 check 要求 v2。独立真实 Git 回归、主分支全库/原残项保持
+  及整书文本保持验收后工具 PR；合并后恢复 DATA 原字节并完成整合验收，
+  原模型政策、context hash 和 e4 生成 origin 不回写，S4/S5/S7 继续。
+- 完整正文对应工具本地验收：375 工具测试、239 batch QA、117 章模板/
+  进度/计划、Schema/溯源/决策及全库库存/队列重建和 check 全部通过。
+  独立核对四份主分支审计结果仅报告版本从 v1 升 v2，所有原残项及
+  translation-data 树保持。冻结 DATA 的 30 块全部 BYTE_EXACT，逐块重放
+  真实 Git 字节及 hash、五个正文边界，包字节保持，尚未采用 DATA。
+  render/pdf 零退出，459 页最终日志 PASS，整书 layout 文本与工具前相同。

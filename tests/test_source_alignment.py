@@ -14,7 +14,8 @@ from unittest.mock import patch
 
 from stacks_zh.cli import main
 from stacks_zh.extraction import Policy, chapter_inventory, write_inventory
-from stacks_zh.records import RecordError
+from stacks_zh.records import RecordError, write_jsonl
+from stacks_zh.source_containers import Containers, lower_container
 from stacks_zh.source_alignment import (Corpus, _labels, _proof_diagnostics, _read_facts,
     align_batches, build_alignment, canonical_tokens, verified_inventory, write_alignment)
 from stacks_zh.source_reextractions import byte_hash, source_tex
@@ -45,6 +46,142 @@ def corpus(body):
 
 
 class AlignmentTests(unittest.TestCase):
+    def complete_prose_fixture(self, base, body=None):
+        root, harvest, inventory, tags_raw = self.fixture(base)
+        body = body or ('First paragraph $X$.\n\nSecond paragraph '
+            '\\footnote{Natural words $Y$ and \\ref{lemma-one}.}.\n'
+            '\\begin{enumerate}\n\\item A condition $Z$.\n\\end{enumerate}\n'
+            '\nLast paragraph.\n')
+        text = ('\\begin{document}\n\\section{First}\\label{section-first}\n' + body
+            + '\\begin{lemma}\\label{lemma-one}Claim.\\end{lemma}\n'
+            + '\\begin{proof}Omitted.\\end{proof}\n\\end{document}\n')
+        (harvest / 'alpha.tex').write_text(text)
+        subprocess.run(['git', '-C', str(harvest), 'add', 'alpha.tex'], check=True)
+        subprocess.run(['git', '-C', str(harvest), '-c', 'user.name=Synthetic Fixture',
+            '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Complete prose fixture'], check=True)
+        commit = subprocess.check_output(['git', '-C', str(harvest), 'rev-parse', 'HEAD'], text=True).strip()
+        (root / 'upstream.lock').write_text(f'commit = "{commit}"\n')
+        write_inventory(root, harvest, inventory)
+        native = Containers(root, harvest)
+        selected = native.select({'file': 'alpha.tex', 'owner_tag': 'BBBB',
+            'owner_label': 'alpha-section-first', 'parent_tag': 'BBBB',
+            'kind': 'prose_block', 'ordinal': 1})
+        current = lower_container(selected, native.policy)[0]
+        english, policy, entries, _ = verified_inventory(root, harvest, inventory, {'alpha'})
+        return root, harvest, inventory, tags_raw, current, selected, Corpus(
+            entries, english.tags, policy, source_containers=native)
+
+    def test_complete_prose_spans_paragraphs_list_footnote_and_keeps_outer_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            *_, current, selected, source = self.complete_prose_fixture(Path(tmp))
+            self.assertIn('<FOOTNOTEOPEN_', current['source_text'])
+            self.assertIn('\\begin{enumerate}', source_tex(current))
+            match = source.match(current, current['unit_id'])
+            self.assertEqual(match['status'], 'BYTE_EXACT')
+            self.assertEqual(match['location'], selected['location'])
+            self.assertEqual(match['native_container']['boundary_witness'], selected['boundary_witness'])
+            self.assertTrue(selected['fragment'].startswith('\n'))
+            self.assertEqual(match['current_source_tex_hash'], byte_hash(selected['fragment']))
+
+    def test_complete_prose_changed_text_math_reference_and_outer_bytes_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            *_, current, selected, source = self.complete_prose_fixture(Path(tmp))
+            variants = []
+            for old, new in [('First', 'Changed'), ('$X$', '$Q$'),
+                             ('\\ref{lemma-one}', '\\ref{other-lemma-one}')]:
+                changed = copy.deepcopy(current)
+                if old in changed['source_text']:
+                    changed['source_text'] = changed['source_text'].replace(old, new)
+                else:
+                    changed['placeholders'] = {k: v.replace(old, new) for k, v in changed['placeholders'].items()}
+                variants.append(changed)
+            clipped = copy.deepcopy(current); clipped['source_text'] = clipped['source_text'].strip()
+            variants.append(clipped)
+            for changed in variants:
+                with self.subTest(tex=source_tex(changed)):
+                    self.assertNotEqual(source_tex(changed), selected['fragment'])
+                    self.assertEqual(source.match(changed, changed['unit_id'])['status'], 'SOURCE_DIFFERENCE')
+
+    def test_complete_prose_wrong_identity_parent_kind_ordinal_commit_and_no_git_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            *_, current, selected, source = self.complete_prose_fixture(Path(tmp))
+            for key, value in [('unit_id', 'tag:CCCC:prose-0001'), ('parent_tag', 'CCCC'),
+                    ('node_kind', 'proof'), ('unit_id', 'tag:BBBB:prose-0000'),
+                    ('unit_id', 'tag:BBBB:prose-0002'), ('source_commit', COMMIT)]:
+                changed = {**current, key: value}
+                with self.subTest(key=key, value=value):
+                    self.assertEqual(source.match(changed, changed['unit_id'])['status'], 'UNSUPPORTED')
+            self.assertEqual(source.match(current, 'tag:CCCC:prose-0001')['status'], 'UNSUPPORTED')
+            unbound = Corpus([], TAGS, POLICY)
+            self.assertEqual(unbound.match(current, current['unit_id'])['status'], 'UNSUPPORTED')
+
+    def test_complete_prose_dirty_worktree_cannot_change_git_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, inventory, tags, current, selected, source = self.complete_prose_fixture(Path(tmp))
+            (harvest / 'alpha.tex').write_text('dirty replacement')
+            (harvest / 'tags/tags').write_text('CCCC,alpha-section-first\n')
+            match = source.match(current, current['unit_id'])
+            self.assertEqual(match['status'], 'BYTE_EXACT')
+            self.assertEqual(match['native_container']['blob_hash'], selected['blob_hash'])
+
+    def test_complete_prose_blocked_macro_and_duplicate_real_anchor_fail(self):
+        for fault, expected in [('macro', 'blocked'), ('anchor', 'duplicate')]:
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as tmp:
+                root, harvest, inventory, _, current, _, _ = self.complete_prose_fixture(Path(tmp))
+                path = harvest / 'alpha.tex'; text = path.read_text()
+                if fault == 'macro':
+                    text = text.replace('First paragraph', r'\unreviewedmacro{First paragraph}')
+                else:
+                    text = text.replace(r'\begin{lemma}',
+                        '\\section{Duplicate}\\label{section-first}\n\\begin{lemma}', 1)
+                path.write_text(text)
+                subprocess.run(['git', '-C', str(harvest), 'add', 'alpha.tex'], check=True)
+                subprocess.run(['git', '-C', str(harvest), '-c', 'user.name=Synthetic Fixture',
+                    '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Blocked fixture'], check=True)
+                commit = subprocess.check_output(['git', '-C', str(harvest), 'rev-parse', 'HEAD'], text=True).strip()
+                (root / 'upstream.lock').write_text(f'commit = "{commit}"\n')
+                current['source_commit'] = commit
+                write_inventory(root, harvest, inventory)
+                english, policy, entries, _ = verified_inventory(root, harvest, inventory, {'alpha'})
+                source = Corpus(entries, english.tags, policy, source_containers=Containers(root, harvest))
+                match = source.match(current, current['unit_id'])
+                self.assertEqual(match['status'], 'UNSUPPORTED')
+                self.assertIn(expected, match['reason'])
+
+    def test_complete_prose_aggregation_does_not_waive_audits_and_checks_read_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, inventory, tags, current, selected, source = self.complete_prose_fixture(Path(tmp))
+            write_jsonl(root / 'translation-data/units/alpha-bbbb.jsonl', [current])
+            write_jsonl(root / 'translation-data/candidates/synthetic/alpha-bbbb.jsonl',
+                        [{'unit_id': current['unit_id'], 'translation': 'synthetic'}])
+            output = root / 'build/alignment'
+            with self.audits(root, tags):
+                report = write_alignment(root, harvest, inventory, output)
+                before = {p.name: p.read_bytes() for p in output.iterdir()}
+                write_alignment(root, harvest, inventory, output, check=True)
+            self.assertEqual(report['match_counts'], {'BYTE_EXACT': 1})
+            self.assertEqual(before, {p.name: p.read_bytes() for p in output.iterdir()})
+            queue = json.loads((output / 'repair-queue.jsonl').read_text())
+            self.assertNotIn('VERIFY_OR_RESTORE_SOURCE', queue['actions'])
+            self.assertIn('ACTUAL_MODEL_TERM_REVISION', queue['actions'])
+            self.assertIn('RESOLVE_SOURCE_STRUCTURE_OR_DISPLAY', queue['actions'])
+            self.assertFalse(queue['adoption_or_review_approval'])
+
+    def test_v1_owned_package_is_rebuilt_but_old_check_and_unknown_version_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, inventory, tags = self.fixture(Path(tmp)); output = root / 'build/alignment'
+            with self.audits(root, tags):
+                write_alignment(root, harvest, inventory, output)
+                marker = output / 'alignment.json'; value = json.loads(marker.read_text())
+                value['version'] = 'source-alignment-v1'; marker.write_text(json.dumps(value))
+                with self.assertRaisesRegex(RecordError, 'out of date'):
+                    write_alignment(root, harvest, inventory, output, check=True)
+                write_alignment(root, harvest, inventory, output)
+                self.assertEqual(json.loads(marker.read_text())['version'], 'source-alignment-v2')
+                value['version'] = 'unrelated'; marker.write_text(json.dumps(value))
+                with self.assertRaisesRegex(RecordError, 'unrelated'):
+                    write_alignment(root, harvest, inventory, output)
+
     def fixture(self, base):
         root, harvest = base / 'chinese', base / 'english'
         (root / 'config').mkdir(parents=True); (harvest / 'tags').mkdir(parents=True)

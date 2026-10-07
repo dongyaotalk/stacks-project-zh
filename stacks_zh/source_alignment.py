@@ -17,7 +17,8 @@ from .source_integrity import audit_repository_source, permanent_tag_mapping
 from .source_reextractions import LockedEnglish, _git_bytes, _comparison, byte_hash, proof_groups, source_tex, audit_repository_proofs
 from .source_terms import audit_repository_terms
 
-VERSION = 'source-alignment-v1'
+VERSION = 'source-alignment-v2'
+OWNED_VERSIONS = {'source-alignment-v1', VERSION}
 WORDS = re.compile(r'[^\W_]+|[^\s]', re.UNICODE)
 REFERENCE = re.compile(r'\\(label|ref|eqref|pageref)\{([^{}\n]+)\}')
 
@@ -156,8 +157,10 @@ def _labels(text: str, chapter: str, tags: dict[str, str], policy: Policy):
 
 
 class Corpus:
-    def __init__(self, entries: list[dict[str, Any]], tags: dict[str, str], policy: Policy):
+    def __init__(self, entries: list[dict[str, Any]], tags: dict[str, str], policy: Policy,
+                 *, source_containers=None):
         self.tags, self.policy, self.entries = tags, policy, {}
+        self.source_containers = source_containers
         self.owners: dict[tuple[str, str], list[str]] = collections.defaultdict(list)
         self.proofs: dict[tuple[str, str, int], list[str]] = collections.defaultdict(list)
         for row in entries:
@@ -198,6 +201,37 @@ class Corpus:
              'extractor_state': self.entries[identifier]['state'],
              'source_excerpt': self.entries[identifier]['tex'][:400]}
             for identifier in identifiers]
+        prose = re.fullmatch(r'tag:([0-9A-Z]+):prose-([0-9]{4})', unit['unit_id'])
+        if prose:
+            result['containers'] = identifiers
+            try:
+                if (unit['node_kind'] != 'paragraph' or proof is not None
+                        or mapped_id != unit['unit_id'] or owner != prose[1]):
+                    raise RecordError('canonical prose identity requires its real paragraph owner')
+                if self.source_containers is None:
+                    raise RecordError('complete prose correspondence requires locked-Git containers')
+                native = self.source_containers
+                if unit['source_commit'] != native.english.commit or self.tags != native.english.tags:
+                    raise RecordError('complete prose commit/Tag index differs from locked Git')
+                labels = [label for label, tag in native.english.tags.items()
+                          if tag == owner and label.startswith(unit['chapter'] + '-')]
+                if len(labels) != 1:
+                    raise RecordError('complete prose owner has no unique real chapter label')
+                selector = {'file': unit['chapter'] + '.tex', 'owner_tag': owner,
+                    'owner_label': labels[0], 'parent_tag': unit['parent_tag'],
+                    'kind': 'prose_block', 'ordinal': int(prose[2])}
+                selected = native.select(selector)
+                evidence = {key: selected[key] for key in ('source_commit', 'selector',
+                    'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness')}
+                if tex != selected['fragment']:
+                    return {**result, 'status': 'SOURCE_DIFFERENCE', 'matches': [],
+                        'native_container': evidence,
+                        'reason': 'complete prose TeX differs from the full locked-Git fragment'}
+                return {**result, 'status': 'BYTE_EXACT', 'location': selected['location'],
+                    'native_container': evidence, 'extractor_state': 'READY',
+                    'note': 'complete Git location evidence only; no adoption or audit waiver'}
+            except RecordError as exc:
+                return {**result, 'status': 'UNSUPPORTED', 'reason': str(exc), 'matches': []}
         if not identifiers:
             return {**result, 'status': 'UNSUPPORTED', 'reason': 'no verified source container for this owner/proof', 'containers': []}
         try:
@@ -394,7 +428,9 @@ def build_alignment(root: Path, harvest: Path, inventory: Path):
     english, policy, entries, inventory_hash = verified_inventory(root, harvest, inventory, chapters)
     if any(u['source_commit'] != english.commit for rows in batches.values() for u in rows):
         raise RecordError('current unit source differs from locked English commit')
-    corpus = Corpus(entries, english.tags, policy)
+    from .source_containers import Containers
+    native = Containers(root, harvest)
+    corpus = Corpus(entries, english.tags, policy, source_containers=native)
     matches, maps = align_batches(batches, corpus)
     terms, term_errors = audit_repository_terms(root, harvest)
     # The standalone audit accepts a tags path. Supply immutable Git bytes,
@@ -454,6 +490,7 @@ def build_alignment(root: Path, harvest: Path, inventory: Path):
     manifest = json.loads((inventory / 'manifest.json').read_bytes())
     if any(byte_hash((inventory / name).read_bytes()) != expected for name, expected in manifest['files'].items()):
         raise RecordError('source inventory changed while preparing the repair queue')
+    native.assert_unchanged()
     return report, queue, {'term-audit.json': {**terms, 'errors': term_errors},
                           'source-audit.json': {**source, 'errors': source_errors},
                           'proof-audit.json': {**proofs, 'errors': proof_errors}}
@@ -473,7 +510,7 @@ def write_alignment(root: Path, harvest: Path, inventory: Path, output: Path, *,
             return
         marker = output / 'alignment.json'
         if (not output.is_dir() or not marker.is_file() or marker.is_symlink()
-                or json.loads(marker.read_text()).get('version') != VERSION
+                or json.loads(marker.read_text()).get('version') not in OWNED_VERSIONS
                 or {p.name for p in output.iterdir()} != expected_names
                 or any(p.is_symlink() for p in output.iterdir())):
             raise RecordError('refusing to replace an unrelated alignment directory')

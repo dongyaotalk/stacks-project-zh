@@ -114,7 +114,7 @@ class Policy:
                         any(not isinstance(v, str) or v not in allowed for v in values) or
                         len(values) != len(set(values))):
                     raise RecordError('unsupported math-text notation policy ' + key)
-            if not re.fullmatch(r'[a-z][a-z0-9_-]*-[a-z][a-z0-9_-]*', rule['source_label']):
+            if not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label']):
                 raise RecordError('invalid math-text notation source label')
 
 

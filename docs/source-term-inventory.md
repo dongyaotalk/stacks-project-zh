@@ -128,3 +128,18 @@ TeX 字节而非易迁移的坐标核验；unit_id 是可追溯定位提示。�
 可产生 and 候选词，既有非数学声明目录已明确排除连接词，完整来源库存没有
 该词的要求，无须修改抽取规则。具体 30 单元候选恢复另开任务，最终输入在
 本前置合并后冻结。
+
+[Issue #642](https://github.com/dongyaotalk/stacks-project-zh/issues/642) 集中准备
+后续 02XG、02XJ、04Z2 的稳定证据：automorphism、base-change、covering、
+discrete、fiber-product、natural-isomorphism、pullback、splitting 和
+strongly-cartesian 九项旧式 evidence 改用既有 locked-source-container 格式。
+数学陈述及 proof 依据真实自身标签与 proof 归属选择完整容器；正文依据旧片段
+唯一 Git 对应位置定位完整 prose_block，核对真实前后边界。不能靠候选词对、
+裸字节截断或未准备片段提供证据；必须在完整保护后的 source_projection 中
+核对准确来源词形，词形须属于既有 forms。
+
+仅上述九项 evidence 可改变，所有 forms、chapters、其他目录条目和非数学
+分类保持。此任务同时按独立明确记号合同分类 Cat/Fib，以准备完整英文输入；
+不批准中文词汇、不修改事实或自然语言 math-text 规则。验收核对全部现有
+候选/来源/proof 残项保持，并逐块重放来源 Git 字节；具体候选另行认领并在
+工具合并后冻结新上下文。

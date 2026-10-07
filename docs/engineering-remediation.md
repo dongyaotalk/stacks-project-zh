@@ -594,3 +594,25 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   和完整来源审计逐项保持，76 个坐标迁移、96 条来源诊断继续处理。
   本次完整候选保存不授予 critic、人审、术语审批、正式采用或出版；S4/S5/S7
   及全库严格门禁的其余验收继续，合并后按独立任务同步进度。
+
+- S4 的 003O 术语来源前置计划：Issue
+  [#633](https://github.com/dongyaotalk/stacks-project-zh/issues/633)，分支
+  `tool/locked-2-fibre-product-term-evidence`。完整只读核验确认真实 Section 003O
+  可将旧 31 片段恢复为 30 完整单元，1,169 个来源词；长脚注可暴露自然语言，
+  align* 公式链可完整保护。实际数据尚未采用。先写来源目录合同，仅将三项
+  旧式词汇证据迁至已有 locked-source-container 格式：1-morphism 与
+  2-commutative 绑定完整 prose_block ordinal 1，2-fibre-product 绑定完整标题。
+  核验真实锁定 Git、完整边界和保护后自然词形，所有 forms/chapters/其他证据
+  与非数学分类保持，不批准词条。验收要求全库工具/QA/模板/进度/计划及
+  库存/队列检查、所有原诊断和 translation-data 树保持、当前 PDF 零退出且
+  整书文本保持。完整来源词汇库存为 227 次要求；and 虽出现在声明候选中，
+  已由既有非数学声明目录排除，无须新的工具修复。随后另开完整 DATA 修订
+  任务并冻结最终上下文；S4/S5/S7 继续。
+  验收：368 项工具测试、239 batch QA、117 章模板/进度/计划、Schema/溯源/
+  决策及全库库存、队列重建/check 通过。三项证据在真实锁定 Git 中逐字核对，
+  完整来源投影词形均通过；30 容器 prepare/check 为 PREPARED，零阻断。
+  全部候选、来源、proof 和 alignment 诊断逐项保持，仅目录 hash 与三项
+  来源证据元数据按计划改变，translation-data 树完全不变。当前 1,431 单元、
+  823 个术语问题候选/2,749 条诊断、76 个坐标迁移、96 条来源诊断、12 组
+  proof 差异保持。render/pdf 零退出，459 页最终日志 PASS，整书 layout
+  提取文本与修改前完全一致。完整 DATA 在本前置合并后重新准备并冻结输入。

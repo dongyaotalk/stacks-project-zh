@@ -84,3 +84,28 @@ locked segment，分类记录随 segment 保存。manifest/report 统计两处�
 字节和 UTF-8 位置、纯数学 segment、v1 政策/库存迁移、分类记录篡改及实际容器。
 再次扫描全部 117 章并逐字回放 116 份 Git blob，公开分类与剩余 BLOCKED 数量；
 当前事实及 source/proof/term 审计残项不得减少，数据修复留待后续独立任务。
+
+### Cat 与 Fib 的明确记号来源
+
+[Issue #642](https://github.com/dongyaotalk/stacks-project-zh/issues/642) 先定义此
+补充，再修改政策与回归。完整 02XG 与 02XJ 容器的预检发现 `\textit{Cat}`
+和 `\textit{Fib}` 是未分类数学标识符。锁定 Git 的真实 Section 003D
+（`categories-section-formal-cat-cat`）以 Ob(Cat) 表示范畴的类并讨论形式
+2-范畴结构；真实定义 02XP（`categories-definition-fibred-categories-over-C`）
+以 Mor 的 Fib/C 下标记号表示纤维范畴间 1-态射的范畴。
+
+沿用既有精确分类合同，仅增加 Cat、Fib 两个字面量，命令仅 textit，用法为
+symbol，source_label 分别指向上述真实锚点。完整原数学、命令/位置及正向
+分类证据保持；大小写、完整参数和字体命令不能推断别名。正文里的相同词仍
+作为自然语言暴露，旧政策仍阻断这两个名字。and、if、affine opens of 等
+数学内自然语言和其他未知名字继续阻断，不借常量分类开放一般文本翻译。
+
+真实 Fib 定义标签以大写 C 结束。记号证据标签的词法校验必须保留原 ASCII
+大小写，不能伪造不存在的小写别名；本任务先扩展声明范围，再允许 label
+部分的 ASCII 大写字母，仍拒绝路径、空白、非 ASCII 或空 label。该词法
+支持不替代真实锁定 Tag 与原文上下文的独立核对。
+
+全库重建/check 公开两项分类增量并回放 116 份 Git；独立实际 Git 预检完整
+02XG/02XJ 范围，04Z2 的 and 保持阻断。所有事实及术语/来源/证明残项保持，
+匹配变化逐项核对并披露；当前书稿编译及文本保持通过后工具 PR。具体 DATA
+后续重新冻结新政策输入，所有历史容器仍按原 origin 政策核验，不回写原输出。

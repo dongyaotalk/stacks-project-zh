@@ -136,6 +136,56 @@ class ExtractionTests(unittest.TestCase):
         self.assertTrue(all(item['source_label'] for item in row['math_text_classifications']))
         self.assertNotIn('size', row['unit']['source_text'])
 
+    def test_cat_fib_constants_preserve_math_bytes_and_real_case_sensitive_labels(self):
+        math = r'$\Ob(\textit{Cat}) + \Mor_{\textit{Fib}/C}(S,S\prime)$'
+        body = r'\section{First}\label{section-first}' + '\nCafé δ uses ' + math + '.'
+        raw = ('\\begin{document}\n' + body + '\n\\end{document}\n').encode()
+        rows, _, errors = chapter_inventory('alpha', raw, COMMIT, TAGS, POLICY)
+        self.assertFalse(errors)
+        row = rows[-1]; items = row['math_text_classifications']
+        self.assertEqual([item['notation'] for item in items], ['Cat', 'Fib'])
+        self.assertEqual([item['source_label'] for item in items],
+            ['categories-section-formal-cat-cat', 'categories-definition-fibred-categories-over-C'])
+        self.assertEqual([item['usage'] for item in items], ['symbol', 'symbol'])
+        self.assertEqual([v for k,v in row['unit']['placeholders'].items() if k.startswith('MATH_')], [math])
+        for item in items:
+            loc = item['location']
+            self.assertEqual(raw[loc['byte_start']:loc['byte_end']], item['source'].encode())
+
+    def test_cat_fib_aliases_natural_math_text_and_prose_remain_distinct(self):
+        for text in [r'\text{Cat}', r'\textbf{Fib}', r'\textit{cat}', r'\textit{FIB}',
+                     r'\textit{ Cat }', r'\textit{Fibs}', r'\textit{a Cat}',
+                     r'\textit{\textit{Cat}}', r'\text{and}', r'\text{if}',
+                     r'\text{affine opens of }', r'\textit{Unknown}']:
+            with self.subTest(text=text):
+                _, _, errors = inventory(r'\section{First}\label{section-first}' + '\nUse $' + text + '$.')
+                self.assertTrue(any(e['kind']=='math-text' for e in errors))
+        rows, _, errors = inventory(r'\section{First}\label{section-first}' + '\n' +
+            r'Ordinary \textit{Cat} and \textit{Fib} words.')
+        self.assertFalse(errors)
+        self.assertIn('Cat', rows[-1]['unit']['source_text'])
+        self.assertIn('Fib', rows[-1]['unit']['source_text'])
+        self.assertFalse(rows[-1]['math_text_classifications'])
+
+    def test_history_without_cat_fib_rules_still_blocks_both_constants(self):
+        old = POLICY_RAW
+        for name,label in [('Cat','categories-section-formal-cat-cat'),
+                           ('Fib','categories-definition-fibred-categories-over-C')]:
+            entry = f'  {name}:\n    commands: ["textit"]\n    usages: ["symbol"]\n    source_label: {label}\n'
+            self.assertIn(entry, old); old = old.replace(entry, '')
+        text = r'$\textit{Cat} + \textit{Fib}$'; scanner = Scanner(text, Policy(old))
+        _, _, errors = scanner.protect(0, len(text))
+        self.assertEqual([e['source'] for e in errors], ['Cat','Fib'])
+        self.assertFalse(scanner.math_text_classifications)
+
+    def test_notation_labels_preserve_ascii_case_but_reject_paths_and_nonlabels(self):
+        self.assertEqual(POLICY.math_text_notations['Fib']['source_label'],
+                         'categories-definition-fibred-categories-over-C')
+        for label in ['../alpha-label', 'alpha-../labelC', 'alpha-label C',
+                      'alpha-label/C', 'alpha-label.C', 'alpha-label中', 'alpha-', 'ALPHA-label-C']:
+            with self.subTest(label=label), self.assertRaises(RecordError):
+                Policy(POLICY_RAW.replace('categories-definition-fibred-categories-over-C',label))
+
     def test_natural_text_nested_wrappers_and_inexact_uses_stay_blocked(self):
         for text in [r'\text{and}', r'\text{if}', r'\text{affine opens of }',
                      r'\text{size}', r'\text{size} + x', r'\text{pr}', r'\text{pr}_{}',

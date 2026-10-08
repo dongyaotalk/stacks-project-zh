@@ -190,6 +190,14 @@ v4 用显式旧新分组覆盖完整上一 batch，每个旧单元与新单元�
 
 ## 4. 单元记录
 
+数学内自然语言的后续 unit-v2 设计见
+[math-text-translation.md](math-text-translation.md) §2–§3。仅其独立 Schema/工具
+实现验收合并后，才能用完整原数学 region、锁定 pieces 和 typed text slot 保存
+可译参数；其他单元及历史 v1 保持原格式/hash 算法。v2 保留完整原数学 hash，
+另绑定非文字数学 skeleton 和全部 slot/边界/政策证据，不以碎片 hash 代替公式。
+slot 属于完整原 unit，不增加重复事实；原 source TeX 仍逐字回放锁定 Git，
+候选只改变已分类纯文字参数。具体采用仍另开完整 v4 与实际模型修订任务。
+
 记录至少包含：
 
 ```json

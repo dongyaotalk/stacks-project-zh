@@ -32,6 +32,12 @@
   URLs, argument structure, and Stacks Project permanent tags.
 - An unknown macro or environment blocks the unit until macro policy and tests are
   updated.
+- Natural language inside math requires the separately versioned development
+  contract in `docs/math-text-translation.md`. Until its dedicated Schema/tool
+  implementation is accepted and merged, keep current math placeholders and
+  blocking rules. Future support may expose only verified typed text arguments;
+  every other math byte/node stays protected. Do not classify prose as notation,
+  change historical unit/evidence semantics, or adopt facts in that tool task.
 - Unknown terminology must be reported. Models cannot approve glossary entries.
 - Do not add explanations, examples, assumptions, conclusions, or translator notes
   that are absent from the source.

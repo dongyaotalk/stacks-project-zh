@@ -857,3 +857,46 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   原文省略证明及细节忠实保留；未增加证明或审批。候选进度预览为
   108/3,299 Section，Categories 24/44（54.5%），在 DATA 合并后另开进度
   任务写入。仅本批候选验收，S4/S5/S7 与八项总验收继续。
+- S4 的完整规模界引理计划：Issue
+  [#662](https://github.com/dongyaotalk/stacks-project-zh/issues/662)，分支
+  translate/sets/000q/openai-gpt-6-1-sol，从 DATA #659 及独立进度 #661 后的
+  main 7c723d0 准备完整四输入→两输出。真实 owner 000Q、Section parent
+  000H；旧 parent 000Q 只留在完整历史。恢复整份陈述及三段合并的完整
+  proof，数学 region 中两处 affine opens of 文字叶开放，其余原数学字节、
+  skeleton、环境、引用与原序保持。陈述为 unit-v1/来源容器 v2，证明为
+  unit-v2/R3/容器 v3；一个 v4、两份证据及完整实际 GPT-6.1-sol/xhigh
+  五字段修订/correction/run 及相应章节模板在十三个精确路径内采用，
+  不回写 legacy run。
+  先准备/check、冻结完整新输入、旧分组、风格/政策/词表/术语库存及
+  context hash，Harness 在冻结前及装配时动态解析；本批完整引理/证明
+  低于300来源词时显式记录范围偏好例外，不裁断或混入不相关材料。
+  424工具回归、239 QA、117章及来源/Schema/溯源/决策、全库库存/check→
+  对齐/check、独立 Git/旧新字节/实际五字段/context/数学骨架核验；两块
+  BYTE_EXACT、本批队列为空，其他审计结果逐项保持，进度/计划隔离预览。
+  当前 lane render/pdf 零退出及完整证明/公式文字视觉验收后才提交 PR；
+  远端完整文件/patch/native合同及精确 HEAD 两项 CI 后授权 bypass，保留
+  六 DATA trailers，合并后先另开进度任务。基线仍为192非空 batch、750
+  术语问题候选、17来源诊断、12 proof 差异；S4/S5/S7、F1–F8继续，词表/
+  critic/语言数学人审及发布不批准，英文原文与全部已有历史保持。
+- #662 范围补充：纠正 parent 后 chapter-template-check 实际发现 sets.json
+  过期。先在 ignored 目录生成并比较全部117章，仅 sets.json 为 Section
+  000H 的 unit_files 新增本批 sets-000Q；其他116章原字节相同。Issue 已
+  明确补充这一精确路径，随后同步当前章节模板并重新验收；不扩大英文、
+  词表、其他批次或任何已有历史的写入范围。
+- #662 本地验收：完整四旧输入/候选、两份锁定 Git 容器和本次两份实际
+  五字段/context hash 核对通过；旧三段证明合并为一个完整 unit-v2，单个
+  原数学 region 的两处 affine opens of 文字以双语翻译，其他数学原字节/
+  skeleton 与引用保持。27条双语记录覆盖19次来源要求，均待决；90来源词
+  明确记录完整引理/证明的偏好范围例外。两块均 BYTE_EXACT、本批队列为空；
+  全部其他匹配、来源/术语/proof 结果逐项保持。当前1,425单元/239批，
+  proof 为187组/260单元、176匹配/11差异/0未支持；术语问题候选750→746、
+  诊断2,353→2,346，非空修复批192→191。坐标16、来源17、未保护节点对1、
+  错陈述Tag0和两个歧义保持。
+  424工具测试通过（291.080秒）；章节模板变更的独立回归及117章核对通过，
+  239 QA 的 workflow/harvest/upstream/Schema/provenance/decision 均通过；
+  全库抽取/check→对齐/check 零退出，隔离progress/plan/check通过。既有
+  三份进度/计划文档逐字相同，候选仍108/3,299 Section、Categories24/44。
+  render/pdf 零退出，461页最终日志PASS；物理页32–34逐页核对，完整引理/
+  proof、两处公式文字与文献引用均可读，无裁切或重叠。该公式保留48.93825pt
+  overfull警告，但完整位于页面内；不改变原数学字节以消除排版警告。范围外
+  已跟踪字节保持，远端验收和合并后独立进度任务继续，S4/S5/S7与总验收未完。

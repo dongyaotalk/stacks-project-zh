@@ -915,3 +915,40 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   provenance/decision均通过。当前lane render/pdf零退出、461页最终日志
   PASS；全文layout文本及物理32–34页PNG与DATA验收相同。独立进度同步
   不授予词条/critic/人审或发布；S4/S5/S7与F1–F8总验收继续。
+
+- 四批合并修订计划：[Issue #666](https://github.com/dongyaotalk/stacks-project-zh/issues/666)，
+  分支 translate/sets/size-batch/openai-gpt-6-1-sol，基线 main
+  `18caffded38292383f705803d2f3d77fa0492a15`（进度 PR #665 已合并）。
+  复用全库来源库存和统一修复队列，同一 sets Section 000H 的 000I、000P、
+  04T6、04T7 四个完整 batch 九旧单元恢复为八个完整陈述/证明；04T6 两段证明合并。
+  每批分别冻结完整旧新包及 v4 来源证据，一次实际 GPT-6.1-sol/xhigh run 对全部
+  八新单元生成完整五字段；一个 correction 按 unit 显式映射四个 derivation。
+  Harness 冻结前及装配时动态解析。旧 parent 000I/000P/000Q 只留不可变历史，
+  chapter template 同步真实 000H 归属；现有数学、引用、标签及原输出/run 不回写。
+  04VA 的游离引言没有可核实 Section anchor，独立工具/数据处理，本批不采用。
+  统一执行 QA、来源/术语/proof 对齐及确定性 check、完整溯源/范围核验和当前 lane
+  render/pdf 与目标页视觉验收；八容器应 BYTE_EXACT、四批队列清空，其他诊断保持。
+  完整远端字节/patch/Issue 合同及精确 HEAD CI 后按已有授权 bypass squash，
+  合并后统一做一次独立进度任务。偏好词数例外及实际字数在 run 明示；
+  F1–F8、S4/S5/S7 总验收继续，不授予术语/critic/人审或发布批准。
+
+- #666 四批实际修订与集中门禁已通过：286来源词，九旧→八新完整容器，
+  一个实际修订run/correction、四份v4、八份来源恢复证据；八份新五字段和全部
+  冻结context逐项相同，66术语声明覆盖43来源要求，全部未批准词条维持待决。
+  424回归通过（311.967秒），239批QA及workflow/harvest/upstream-index/
+  117章模板/Schema/provenance/decision通过；四次全库抽取及对齐生成/check通过。
+  八容器均BYTE_EXACT，四批队列清空，其他匹配/来源/术语/proof逐项保持。
+  非空修复批191→187、术语问题候选746→738、诊断2,346→2,323、
+  坐标16→13、来源诊断17→14、proof差异11→8；187组/259proof单元为
+  179匹配、8差异、0未支持。活跃事实239批/1,424唯一单元；0错陈述Tag、
+  1未保护节点对与2歧义保持。匹配113 BYTE_EXACT/1,057 PRESENTATION/
+  252 SOURCE_DIFFERENCE/2 AMBIGUOUS。其他116章模板及范围外原字节保持，
+  唯一sets模板增加四批的真实000H归属。进度/计划三文档与隔离预览逐字相同，
+  候选仍108/3,299 Section、Categories24/44；原输入/输出/run与全部历史保留。
+  提交前实际模型完整重出八单元五字段，去除两处显示公式外的多余中文句号，
+  原公式句点及其他源字节保持；初版实际输出/装配/验收原字节留在ignored记录。
+  最终五字段、QA、库存check、对齐/check与进度/计划复核再次通过。
+  当前lane最终render/pdf零退出、461页最终日志PASS，物理29–35页逐页核对；
+  六页PNG保持，第34页两条完整显示公式及其后正文可读，无多余句号/裁切/重叠。
+  已有000Q公式48.93825pt overfull警告保持且整式位于页面内，不改变原数学。
+  34声明文件之外原字节保持，远端与精确HEAD CI验收、合并后独立进度继续。

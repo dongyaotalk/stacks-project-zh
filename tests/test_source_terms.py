@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 from stacks_zh.records import RecordError, stamp_unit_hashes, write_jsonl
-from stacks_zh.source_terms import audit_repository_terms, load_catalog, source_inventory, source_tex_hash, validate_source_terms
+from stacks_zh.source_terms import audit_repository_terms, load_catalog, source_inventory, source_projection, source_tex_hash, validate_source_terms
 
 COMMIT = "b" * 40
 
@@ -151,6 +151,49 @@ class SourceTermsTests(unittest.TestCase):
     def test_relation_phrase_keeps_its_preposition_without_math_inside(self):
         row = unit("We say it <TEXTITOPEN_0001>lies over<TEXTITCLOSE_0001> the point.", {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})
         self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["lies over"])
+
+    def test_isolated_connectors_in_math_qualified_declarations_are_not_concepts(self):
+        for connector in ["of", "over", "in", "between", "with", "to", "on", "from", "OVER"]:
+            with self.subTest(connector=connector):
+                row = unit(f"A <TEXTITOPEN_0001>frobulator <MATH_0001> {connector} <MATH_0002><TEXTITCLOSE_0001> is defined. Another frobulator.",
+                           {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}", "MATH_0001": "$X$", "MATH_0002": "$Y$"})
+                before = copy.deepcopy(row)
+                self.assertEqual(source_projection(row)[1], ["frobulator"])
+                self.assertEqual([o["source_term"] for o in source_inventory(row, catalog(row))["occurrences"]], ["frobulator"] * 2)
+                self.assertEqual(validate_source_terms(row, candidate([("frobulator", "新概念")] * 2), catalog(row)), [])
+                self.assertTrue(validate_source_terms(row, candidate([]), catalog(row)))
+                self.assertEqual(row, before)
+
+    def test_relative_inertia_math_qualifiers_keep_both_real_declarations(self):
+        row = unit("<TEXTITOPEN_0001>relative inertia of <MATH_0001> over <MATH_0002><TEXTITCLOSE_0001> and <TEXTITOPEN_0002>inertia fibred category <MATH_0003> of <MATH_0004><TEXTITCLOSE_0002>. Ordinary of and over are grammar.",
+                   {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}", "TEXTITOPEN_0002": r"{\it ", "TEXTITCLOSE_0002": "}",
+                    "MATH_0001": "$S$", "MATH_0002": "$T$", "MATH_0003": "$I$", "MATH_0004": "$S$"})
+        self.assertEqual(source_projection(row)[1], ["inertia fibred category", "relative inertia"])
+        expected = ["relative inertia", "inertia fibred category"]
+        self.assertEqual([o["source_term"] for o in source_inventory(row, catalog(row))["occurrences"]], expected)
+        self.assertTrue(validate_source_terms(row, candidate([("relative inertia", "相对惯性")]), catalog(row)))
+
+    def test_connector_suffix_does_not_strip_internal_words_or_unlisted_prepositions(self):
+        for phrase in ["leftover", "fromage", "over category", "lies under", "category of objects"]:
+            with self.subTest(phrase=phrase):
+                row = unit(f"We call <TEXTITOPEN_0001>{phrase} <MATH_0001><TEXTITCLOSE_0001> a name.",
+                           {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}", "MATH_0001": "$X$"})
+                self.assertEqual(source_projection(row)[1], [phrase])
+                self.assertTrue(validate_source_terms(row, candidate([]), catalog(row)))
+
+    def test_bare_unqualified_declaration_is_not_globally_filtered(self):
+        row = unit("We say <TEXTITOPEN_0001>over<TEXTITCLOSE_0001> here.",
+                   {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})
+        self.assertEqual(source_projection(row)[1], ["over"])
+        self.assertTrue(validate_source_terms(row, candidate([]), catalog(row)))
+
+    def test_explicit_catalog_word_still_requires_coverage_after_connector_removal(self):
+        row = unit("<TEXTITOPEN_0001>frobulator <MATH_0001> over <MATH_0002><TEXTITCLOSE_0001>.",
+                   {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}", "MATH_0001": "$X$", "MATH_0002": "$Y$"})
+        scope = catalog(row)
+        scope["terms"].append({"id": "explicit-over", "forms": ["over"], "chapters": [], "evidence": []})
+        self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], ["frobulator", "over"])
+        self.assertTrue(validate_source_terms(row, candidate([("frobulator", "新概念")]), scope))
 
     def test_term_display_can_cross_font_wrapper_but_not_footnote_boundary(self):
         row = unit("<TEXTITOPEN_0001>Vertical<TEXTITCLOSE_0001> composition.", {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})

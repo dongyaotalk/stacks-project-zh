@@ -804,3 +804,24 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   与模板零退出；461 页最终日志通过、全文 layout 文本保持；synthetic
   v4/v3 三类公式 XeLaTeX/PNG 验收通过，不代表实际模型生成或事实修复。
   具体 DATA、S4/S5/S7 与远端精确 HEAD 合并验收继续按原合同执行。
+- 04Z2 DATA #656 的术语核对发现扫描器边界缺陷：斜体定义跨公式后，独立
+  of/over 片段被当成概念声明，并误要求同单元普通介词逐次双语。先独立
+  工具 Issue [#657](https://github.com/dongyaotalk/stacks-project-zh/issues/657)，
+  分支 tool/math-qualified-term-connectors，在三个精确路径内按既有规则
+  剥离数学限定声明的独立末尾介词；普通目录扫描、完整非限定声明、内部
+  词素及原数学/占位符字节保持。先写五项独立成功/拒绝回归，再修工具，
+  核对真实八组提议与全库当前术语/来源/proof 基线；不采用事实或批准术语。
+  全量工具/239 QA/117 章与工作流、来源、Schema、溯源、决策、库存/对齐
+  顺序重建/check，以及当前 lane render/pdf 零退出和全文保持后提交 PR；
+  远端三文件完整字节/patch/native 合同和精确 HEAD 两 CI 后授权 bypass。
+  工具合并后 DATA #656 重新准备/check、冻结完整上下文并实际重译，原
+  准备与冻结证据保留。S4/S5/S7 与八项总验收继续。
+- #657 本地验收：原实现独立回归出现十处失败，边界修复后术语专项 43 项
+  及全量 424 项测试通过（334.218 秒）；239 QA、117 章及 workflow、harvest、
+  upstream-index、Schema、provenance、decision、progress/plan/check 全部通过。
+  对照不可变原实现，当前 1,427 单元的术语库存完全相同；八个 04Z2 提议
+  仅 034I 去掉六处纯语法 of/over 要求，全部真术语与来源投影保留。
+  全书抽取/check→对齐/check 顺序零退出；所有库存、审计与队列原字节及
+  范围外事实/配置/历史保持。当前 lane render/pdf 零退出，461 页最终日志
+  PASS，完整 layout 文本与基线相同；物理页 119 的列表、公式与图无裁切
+  或重叠。本工具不减少既有事实残项，实际 DATA 与八项总验收继续。

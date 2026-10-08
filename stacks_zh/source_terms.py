@@ -46,7 +46,9 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
                     for phrase in ([] if usage_clause else PLACEHOLDER_TOKEN_RE.split(body)[::2]):
                         phrase = _space(phrase).strip(" -.,:;`'\"()")
                         if PLACEHOLDER_TOKEN_RE.search(body):
-                            phrase = re.sub(r"\s+(?:of|over|in|between|with|to|on|from)$", "", phrase, flags=re.IGNORECASE)
+                            # A formula can leave a connector as a whole prose
+                            # part, with no lexical concept before it.
+                            phrase = re.sub(r"(?:^|\s+)(?:of|over|in|between|with|to|on|from)$", "", phrase, flags=re.IGNORECASE)
                         if phrase and re.search(r"[A-Za-z]", phrase):
                             declarations.append(phrase)
             if not is_font_wrapper(match.group(0), unit["placeholders"]):

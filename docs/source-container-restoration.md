@@ -78,6 +78,13 @@ v1/v2/v3/v4、source-container-v1 格式和历史记录保持不变。
 
 ## 4. v4旧新分组与完整历史
 
+数学内自然语言的独立后续合同见
+[math-text-translation.md](math-text-translation.md)。它定义 unit-v2 与新的
+source-container-v3：完整原数学 region、所有锁定片段及精确分类文字 slot
+分别验证，原 source 回放与译文 skeleton 同时通过。专门 Schema/工具验收
+合并前，现有未分类文字阻断不变；旧 source-container-v1/v2、全部历史与
+v4 分组规则不放宽。具体采用继续另开完整 batch/实际模型修订任务。
+
 v4使用独立Schema分支及`unit_groups`，保留旧v1/v2/v3的映射/重放合同。
 每组声明完整有序`input_unit_ids`、`output_unit_ids`、来源证据或未改变来源的
 确定性依据、分段/坐标理由与历史身份锚点。旧组与新组内部可以多对多；不能用

@@ -85,6 +85,14 @@ locked segment，分类记录随 segment 保存。manifest/report 统计两处�
 再次扫描全部 117 章并逐字回放 116 份 Git blob，公开分类与剩余 BLOCKED 数量；
 当前事实及 source/proof/term 审计残项不得减少，数据修复留待后续独立任务。
 
+### 后续自然语言保护合同
+
+[math-text-translation.md](math-text-translation.md) 定义数学文字的后续 unit-v2、
+完整 region/typed slot、双重数学保护和 source-extraction-v3 开发合同。
+与记号分类分开：只开放经实际语法及锁定 Git 见证核验的纯文字参数，其余
+数学字节完整锁定。现行工具、政策及 math-text BLOCKED 仍生效；须先由独立
+Schema/工具 PR 验收合并，再由完整 batch 的实际模型修订任务采用。
+
 ### Cat 与 Fib 的明确记号来源
 
 [Issue #642](https://github.com/dongyaotalk/stacks-project-zh/issues/642) 先定义此

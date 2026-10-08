@@ -759,3 +759,26 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   脚注逐页可读，无裁切或重叠。候选进度预览为 107 Section，Categories
   23/44（52.3%）；实际进度在数据合并后另开任务更新。本批验收不替代
   S4/S5/S7、全八项总验收或独立 critic、人工审校及发布记录。
+- 数学内自然语言的规范计划：Issue
+  [#652](https://github.com/dongyaotalk/stacks-project-zh/issues/652)，分支
+  `docs/math-text-translation-contract`，基线 main 677d63e（DATA #649 与
+  进度 #651 已合并）。先定义 unit-v2 完整数学 region/锁定 pieces/typed
+  text slot、原源回放与译文 skeleton 双重保护、source-container-v3 及
+  版本/历史/实际模型/审批绑定；初次实现目标为真实 04Z2 的 and、009B 的
+  matrix if 与 000Q proof 的 affine opens of。开发合同及独立拒绝回归矩阵
+  见 math-text-translation.md；本任务只写八个规范 Markdown 文件，代码、
+  Schema、政策与事实保持。现行数学保护与 BLOCKED 不变，后续工具单独
+  Issue/PR，工具合并后 DATA 再冻结完整旧新输入及真实五字段，不继承批准。
+  规范验收包括既有工具/239 QA/117 章与当前 lane render/pdf 零退出、整书
+  layout 文本保持、远端八文件完整字节/full patch/native 合同、精确 HEAD
+  两项 CI 后按用户授权 bypass。基线仍为 193 非空 batch、756/2,397 术语
+  候选/诊断、21 坐标、3 错陈述 Tag、26 来源诊断、3 未保护节点对与 12
+  proof 差异；不以规范合并减少残项，F1–F8、S4/S5/S7 继续。
+- #652 本地规范验收：独立读取锁定 Git/tags，核对五个完整容器的七次
+  自然文字及实际归属（000Q 的真实标签为 lemma-bound-size）。八个规范
+  入口/本地链接一致，范围外 1,277 个已跟踪文件与基线原字节相等，五件
+  全库库存及来源/证明/术语/队列报告 hash 全部保持。379 回归测试通过
+  （257.445 秒）；239 QA、117 模板/progress/plan、workflow/harvest/
+  upstream-index/Schema/provenance/decision 全部通过。当前 lane render/pdf
+  零退出、461 页最终日志 PASS，整书 layout 文本与 DATA #649/进度 #651
+  验收完全相等。仅规范设计完成，实际工具、自然 slot 重译与残项继续。

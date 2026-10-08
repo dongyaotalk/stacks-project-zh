@@ -900,3 +900,18 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   proof、两处公式文字与文献引用均可读，无裁切或重叠。该公式保留48.93825pt
   overfull警告，但完整位于页面内；不改变原数学字节以消除排版警告。范围外
   已跟踪字节保持，远端验收和合并后独立进度任务继续，S4/S5/S7与总验收未完。
+
+- 000Q DATA PR [#663](https://github.com/dongyaotalk/stacks-project-zh/pull/663)
+  已合并到 `4f680df40fdf3223046f7a448795ad52de8d3829`；随后独立进度任务 Issue
+  [#664](https://github.com/dongyaotalk/stacks-project-zh/issues/664)，分支
+  docs/progress-after-000q-container。在下一数据批次前从已合并事实执行
+  progress/check及plan/check，117章报告与DATA隔离预览逐字相同；候选仍为
+  108/3,299 Section、Categories24/44，人工语言/数学审校和发布仍为零。
+  三份生成报告保持原字节，本次只记录实际修复进度：191非空修复batch，
+  746术语问题候选/2,346诊断，16坐标、17来源诊断、1未保护节点对、
+  0错陈述Tag和2歧义；187组/260单元proof为176匹配、11差异、0未支持。
+  239批/1,425活跃单元及全部历史保持；库存43,257提议为36,610 READY/
+  6,647 BLOCKED。合并后workflow/harvest/upstream-index、117章模板及
+  provenance/decision均通过。当前lane render/pdf零退出、461页最终日志
+  PASS；全文layout文本及物理32–34页PNG与DATA验收相同。独立进度同步
+  不授予词条/critic/人审或发布；S4/S5/S7与F1–F8总验收继续。

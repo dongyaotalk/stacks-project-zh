@@ -16,7 +16,9 @@ from stacks_zh.records import RecordError
 from stacks_zh.schema_validation import validate_named_schema
 from stacks_zh.source_reextractions import source_tex
 
-POLICY_RAW = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text()
+# These fixtures intentionally exercise the pre-math-text contract with no
+# external English witness chapters. New math text has separate Git fixtures.
+POLICY_RAW = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text().split('\ntranslatable_math_text:')[0]
 POLICY = Policy(POLICY_RAW)
 TAGS = {'alpha-section-phantom': 'AAAA', 'alpha-section-first': 'BBBB',
         'alpha-lemma-one': 'CCCC', 'alpha-item-one': 'DDDD'}
@@ -330,7 +332,7 @@ class ExtractionTests(unittest.TestCase):
                     self.assertEqual(marker.read_bytes(), before)
                 else:
                     upgraded = write_inventory(root, harvest, output)
-                    self.assertEqual(upgraded['extractor_version'], 'source-extraction-v2')
+                    self.assertEqual(upgraded['extractor_version'], 'source-extraction-v3')
                     self.assertEqual(upgraded, write_inventory(root, harvest, output, check=True))
 
     def test_output_safety_and_failed_write_preserve_existing_package(self):

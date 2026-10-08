@@ -305,6 +305,8 @@ def load_source_reextractions(root: Path, harvest: Path | None = None) -> tuple[
             problems = validate_named_schema(record, 'source-reextraction.schema.json', str(path))
             for role in ('old_unit', 'new_unit'):
                 problems.extend(validate_named_schema(record.get(role), 'unit.schema.json', f'{path}:{role}'))
+                if not isinstance(record.get(role), dict) or record[role].get('schema_version') != 1:
+                    problems.append('simple proof evidence cannot adopt unit-v2/math text slots')
             if problems:
                 raise RecordError('\n'.join(problems))
             if '..' in path.stem or record['source_reextraction_id'] != path.stem:

@@ -15,15 +15,16 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from .extraction import ENVIRONMENT, Policy, Scanner, chapter_inventory
+from .extraction import ENVIRONMENT, Policy, Scanner, chapter_inventory, resolve_natural_math_witnesses
+from .math_text import bind_regions, complete_math_nodes
 from .model_corrections import _first_addition_is_immutable
 from .records import RecordError, load_jsonl, stamp_unit_hashes, sha256_value
 from .schema_validation import validate_named_schema
 from .source_integrity import STATEMENTS, _own_tag, permanent_tag_mapping
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, proof_groups, source_tex
 
-VERSION = 'source-container-v2'
-SUPPORTED_VERSIONS = {'source-container-v1', VERSION}
+VERSION = 'source-container-v3'
+SUPPORTED_VERSIONS = {'source-container-v1', 'source-container-v2', VERSION}
 OUTER_WHITESPACE = ' \t\r\n'
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\Z')
 
@@ -44,12 +45,14 @@ def safe_path(root: Path, relative: str, pattern: str) -> Path:
 
 class Containers:
     """Re-scan actual Git blobs; selection always includes kind and ordinal."""
-    def __init__(self, root: Path, harvest: Path | None = None, *, policy_bytes: bytes | None = None):
+    def __init__(self, root: Path, harvest: Path | None = None, *, policy_bytes: bytes | None = None,
+                 natural_text_enabled: bool = True):
         self.root = root
         self.english = LockedEnglish(root, harvest)
         self.current_policy_bytes = (root / 'config/macro-policy.yml').read_bytes()
         self.policy_bytes = self.current_policy_bytes if policy_bytes is None else policy_bytes
-        self.policy = Policy(self.policy_bytes.decode('utf-8'))
+        self.policy = Policy(self.policy_bytes.decode('utf-8'), natural_text_enabled=natural_text_enabled)
+        resolve_natural_math_witnesses(self.policy, self.english)
         self.documents: dict[str, tuple[bytes, list[dict[str, Any]], list[dict[str, Any]]]] = {}
         self.closings: dict[str, int] = {}
 
@@ -130,9 +133,11 @@ class Containers:
                 'line_start': raw[:start].count(b'\n') + 1,
                 'line_end': raw[:max(start, end - 1)].count(b'\n') + 1, 'fragment_hash': byte_hash(fragment)}
             boundary_witness = {'before': anchor(before), 'after': anchor(after)}
-            row = {'location': location, 'state': 'READY', 'unit': stamp_unit_hashes({
-                **rows[indices[0]]['unit'], 'source_text': text, 'placeholders': tokens,
-                'node_kind': 'paragraph', 'render': {'prefix': '', 'suffix': ''}})}
+            base = {k: v for k, v in rows[indices[0]]['unit'].items()
+                    if k not in {'math_text_regions', 'source_math_skeleton_hash'}}
+            row = {'location': location, 'state': 'READY', 'unit': stamp_unit_hashes(bind_regions({
+                **base, 'schema_version': 1, 'source_text': text, 'placeholders': tokens,
+                'node_kind': 'paragraph', 'render': {'prefix': '', 'suffix': ''}}, scanner.math_text_regions))}
             problems = [d for d in diagnostics if d['location']['byte_start'] < end
                         and d['location']['byte_end'] > start]
             matches = [row]
@@ -188,9 +193,7 @@ class Containers:
         object_id = subprocess.run(['git', '-C', str(self.english.harvest), 'rev-parse',
                                     f'{self.english.commit}:{file}'], check=True,
                                    capture_output=True, text=True).stdout.strip()
-        math_counts = Counter(value for source_row in rows
-                              for name, value in source_row['unit']['placeholders'].items()
-                              if name.startswith('MATH_'))
+        math_counts = Counter(value for source_row in rows for value in complete_math_nodes(source_row['unit']))
         paragraph_core_matches, paragraph_section_owner = None, None
         if kind == 'paragraph':
             core = fragment.strip(OUTER_WHITESPACE)
@@ -212,10 +215,9 @@ class Containers:
                 'inventory_unit': row['unit'], 'boundary_witness': boundary_witness,
                 '_paragraph_core_matches': paragraph_core_matches,
                 '_paragraph_section_owner': paragraph_section_owner,
-                '_chapter_math_counts': {value: math_counts[value]
-                    for name, value in row['unit']['placeholders'].items() if name.startswith('MATH_')},
+                '_chapter_math_counts': {value: math_counts[value] for value in complete_math_nodes(row['unit'])},
                 '_chapter_math_text_counts': {value: raw.count(value.encode('utf-8'))
-                    for name, value in row['unit']['placeholders'].items() if name.startswith('MATH_')}}
+                    for value in complete_math_nodes(row['unit'])}}
 
     def assert_unchanged(self) -> None:
         if (self.root / 'config/macro-policy.yml').read_bytes() != self.current_policy_bytes:
@@ -228,7 +230,7 @@ class Containers:
                 raise RecordError('locked Git blob changed during container generation')
 
 
-def _protected(scanner: Scanner, a: int, b: int, used: dict[str, str]) -> str:
+def _protected(scanner: Scanner, a: int, b: int, used: dict[str, str], regions: list | None = None) -> str:
     text, tokens, problems = scanner.protect(a, b)
     if problems:
         raise RecordError('container lowering blocked: ' + '; '.join(p['message'] for p in problems))
@@ -244,6 +246,15 @@ def _protected(scanner: Scanner, a: int, b: int, used: dict[str, str]) -> str:
         name = f'{role}_{index:04d}'
         used[name] = value
         replacements[old] = name
+    if regions is not None:
+        for original in scanner.math_text_regions:
+            region = copy.deepcopy(original)
+            for piece in region['pieces']:
+                if piece['kind'] == 'locked':
+                    piece['placeholder'] = replacements[piece['placeholder']]
+            for slot in region['slots']:
+                slot['boundary_placeholders'] = [replacements[name] for name in slot['boundary_placeholders']]
+            regions.append(region)
     return re.sub(r'<([A-Z][A-Z0-9]*_[0-9]{4})>',
                   lambda m: '<' + replacements[m[1]] + '>', text)
 
@@ -300,45 +311,47 @@ def lower_container(selected: dict[str, Any], policy: Policy, *, layout: str = '
     if layout == 'split-title' and (title is None or kind not in STATEMENTS):
         raise RecordError('split-title requires a labelled named statement')
 
-    def unit(identifier, node_kind, text, placeholders, opening, closing):
-        return stamp_unit_hashes({'schema_version': 1, 'unit_id': f'tag:{owner}:{identifier}',
+    def unit(identifier, node_kind, text, placeholders, opening, closing, regions):
+        return stamp_unit_hashes(bind_regions({'schema_version': 1, 'unit_id': f'tag:{owner}:{identifier}',
             'parent_tag': parent, 'chapter': chapter, 'node_kind': node_kind,
             'risk_level': 'R3' if kind in STATEMENTS | {'proof'} else 'R2' if kind == 'paragraph' else 'R1',
             'source_commit': selected['source_commit'], 'source_text': text,
             'source_status': 'CURRENT', 'placeholders': placeholders,
-            'render': {'prefix': opening, 'suffix': closing}})
+            'render': {'prefix': opening, 'suffix': closing}}, regions))
 
     tokens: dict[str, str] = {}
+    regions: list[dict[str, Any]] = []
     if title is not None and kind in STATEMENTS:
         ta, tb = title
-        title_text = _protected(scanner, ta, tb, tokens)
+        title_text = _protected(scanner, ta, tb, tokens, regions)
         if layout == 'split-title':
             first = unit('environment-title', 'environment_title', title_text, tokens,
-                         fragment[:ta], fragment[tb:a])
+                         fragment[:ta], fragment[tb:a], regions)
             body_tokens: dict[str, str] = {}
-            body_text = _protected(scanner, a, b, body_tokens)
-            rows = [first, unit(suffix_id, kind, body_text, body_tokens, '', suffix)]
+            body_regions: list[dict[str, Any]] = []
+            body_text = _protected(scanner, a, b, body_tokens, body_regions)
+            rows = [first, unit(suffix_id, kind, body_text, body_tokens, '', suffix, body_regions)]
         else:
-            body_text = _protected(scanner, a, b, tokens)
+            body_text = _protected(scanner, a, b, tokens, regions)
             index = 1
             while f'OWNARGEND_{index:04d}' in tokens:
                 index += 1
             boundary = f'OWNARGEND_{index:04d}'
             tokens[boundary] = fragment[tb:a]
             rows = [unit(suffix_id, kind, title_text + f'<{boundary}>' + body_text,
-                         tokens, fragment[:ta], suffix)]
+                         tokens, fragment[:ta], suffix, regions)]
     else:
         # A proof's optional title is part of the translatable body; its square
         # brackets and original whitespace remain protected.
         if title is not None:
             ta, tb = title
-            title_text = _protected(scanner, ta, tb, tokens)
-            text = title_text + '<PROOFARGEND_0001>' + _protected(scanner, a, b, tokens)
+            title_text = _protected(scanner, ta, tb, tokens, regions)
+            text = title_text + '<PROOFARGEND_0001>' + _protected(scanner, a, b, tokens, regions)
             tokens['PROOFARGEND_0001'] = fragment[tb:a]
             prefix = fragment[:ta]
         else:
-            text = _protected(scanner, a, b, tokens)
-        rows = [unit(suffix_id, kind, text, tokens, prefix, suffix)]
+            text = _protected(scanner, a, b, tokens, regions)
+        rows = [unit(suffix_id, kind, text, tokens, prefix, suffix, regions)]
     if any(not row['source_text'].strip() for row in rows):
         raise RecordError('lowering cannot create an empty natural-language unit')
     if ''.join(source_tex(row) for row in rows) != fragment:
@@ -486,10 +499,8 @@ def _proof_with_detached_displays(units: list[dict[str, Any]], groups: list[dict
     extras = [u for u in members if u['unit_id'] not in core_ids]
     if not extras:
         return None
-    target_math = Counter(value for name, value in selected['inventory_unit']['placeholders'].items()
-                          if name.startswith('MATH_'))
-    prior_math = Counter(value for u in proof_units for name, value in u['placeholders'].items()
-                         if name.startswith('MATH_'))
+    target_math = Counter(complete_math_nodes(selected['inventory_unit']))
+    prior_math = Counter(value for u in proof_units for value in complete_math_nodes(u))
     used = set()
     for unit in extras:
         placeholders = unit['placeholders']
@@ -548,11 +559,9 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
             while after < len(units) and units[after]['node_kind'] == 'display_math':
                 neighbors.append(units[after])
                 after += 1
-            target_math = {value for name, value in selected['inventory_unit']['placeholders'].items()
-                           if name.startswith('MATH_')}
+            target_math = set(complete_math_nodes(selected['inventory_unit']))
             required = [u['unit_id'] for u in neighbors
-                        if any(value in target_math for name, value in u['placeholders'].items()
-                               if name.startswith('MATH_'))]
+                        if any(value in target_math for value in complete_math_nodes(u))]
             if any(identifier not in ids for identifier in required):
                 raise RecordError('restoration must cover one complete old wrapper chain including its adjacent detached display nodes')
     matches = [group for group in groups if group['input_unit_ids'] == ids and
@@ -608,10 +617,13 @@ def load_source_containers(root: Path, harvest: Path | None = None):
             # merely by changing today's macro registry.
             from .derivations import _git_origin_bytes
             origin = record['origin_commit']
-            if origin not in historical_containers:
-                historical_containers[origin] = Containers(root, harvest,
-                    policy_bytes=_git_origin_bytes(root, origin, 'config/macro-policy.yml'))
-            historical = historical_containers[origin]
+            version = record['tool']['version']
+            key = origin, version
+            if key not in historical_containers:
+                historical_containers[key] = Containers(root, harvest,
+                    policy_bytes=_git_origin_bytes(root, origin, 'config/macro-policy.yml'),
+                    natural_text_enabled=version == 'source-container-v3')
+            historical = historical_containers[key]
             selected = historical.select(record['selector'])
             for key in ('source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness'):
                 if record[key] != selected[key]:
@@ -633,8 +645,10 @@ def load_source_containers(root: Path, harvest: Path | None = None):
                     or [c['unit_id'] for c in candidates] != [u['unit_id'] for u in units]):
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
             verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
-                             allow_outer_whitespace=record['tool']['version'] == VERSION)
+                             allow_outer_whitespace=version in {'source-container-v2', 'source-container-v3'})
             expected = lower_container(selected, historical.policy, layout=record['layout'])
+            if (any(u['schema_version'] == 2 for u in expected)) != (version == 'source-container-v3'):
+                raise RecordError('math-text unit-v2 requires exactly source-container-v3 evidence')
             if record['new_units'] != expected or record['output_unit_ids'] != [u['unit_id'] for u in expected]:
                 raise RecordError('source-container new units differ from deterministic complete lowering')
             evidence[path.stem] = {'record': record, 'selected': selected,
@@ -749,7 +763,7 @@ def prepare_containers(root: Path, harvest: Path, plan: dict[str, Any]):
                     'source_commit', 'selector', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness')}
                 evidence.update(schema_version=1, restoration_id=restoration_id, derivation_id=identifier,
                     group_id=group_id, created_at=plan['created_at'], origin_commit=origin_commit,
-                    tool={'id': 'stacks-zh-source-container', 'version': VERSION}, layout=group['layout'],
+                    tool={'id': 'stacks-zh-source-container', 'version': VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2'}, layout=group['layout'],
                     input_unit_ids=ids, output_unit_ids=[u['unit_id'] for u in new_units], new_units=new_units,
                     reason=group['reason'], files=snapshot_files)
                 problems = validate_named_schema(evidence, 'source-container-restoration.schema.json', 'proposed evidence')

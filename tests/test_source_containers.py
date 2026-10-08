@@ -35,7 +35,9 @@ def fixture(base, *, statement=NAMED, proof=PROOF, other=''):
     root, harvest = base / 'chinese', base / 'english'
     (root / 'config').mkdir(parents=True)
     harvest.mkdir()
-    policy = (ROOT / 'config/macro-policy.yml').read_bytes()
+    # Preserve the earlier contract; natural text uses independent source/Git
+    # fixtures and must never borrow real chapter witnesses absent here.
+    policy = (ROOT / 'config/macro-policy.yml').read_bytes().split(b'\ntranslatable_math_text:')[0]
     (root / 'config/macro-policy.yml').write_bytes(policy)
     (harvest / 'tags').mkdir()
     (harvest / 'tags/tags').write_text('0000,test-section-basic\n0001,test-lemma-one\n0002,test-lemma-two\n')

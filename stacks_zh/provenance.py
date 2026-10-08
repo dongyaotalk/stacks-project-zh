@@ -64,6 +64,20 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
     corrections, errors = load_repository_corrections(root)
     origins, derivation_errors = load_repository_derivations(root, corrections, harvest)
     errors.extend(derivation_errors)
+    typed_active = {}
+    typed_seen = set()
+    for unit_file in sorted((root / 'translation-data/units').glob('*.jsonl')):
+        try:
+            rows = [json.loads(line) for line in unit_file.read_text(encoding='utf-8').splitlines() if line.strip()]
+            if any(not isinstance(row, dict) for row in rows):
+                raise ProvenanceError('active unit records must be objects')
+            typed_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') == 2}
+            if typed_active[unit_file.name]:
+                from .source_containers import safe_path
+                safe_path(root, unit_file.relative_to(root).as_posix(),
+                          r'translation-data/units/[A-Za-z0-9._-]+\.jsonl')
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors.append(f'{unit_file}: cannot inspect typed math adoption: {exc}')
     harness_registry = (root / "config" / "harnesses.yml").read_text(encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
     model_registry = (root / "config" / "models.yml").read_text(encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""
     model_lanes = _parse_registry_section(model_registry, "lanes")
@@ -124,6 +138,20 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
             if not isinstance(candidate, dict):
                 errors.append(f"{location}: candidate must be an object")
                 continue
+            if (candidate_path.parent.parent == candidates_root
+                    and candidate.get('unit_id') in typed_active.get(candidate_path.name, set())):
+                typed_seen.add((candidate_path.name, candidate['unit_id']))
+                identifier = candidate.get('derivation_id')
+                try:
+                    from .source_containers import safe_path
+                    safe_path(root, candidate_path.relative_to(root).as_posix(),
+                              r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
+                    if (not isinstance(identifier, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier)
+                            or '..' in identifier or (candidate_path.relative_to(root).as_posix(), candidate['unit_id']) not in origins
+                            or _read_json(root / 'translation-data/derivations' / (identifier + '.json'))['tool']['version'] != '4'):
+                        raise ProvenanceError('active unit-v2 requires validated v4/source-container-v3 adoption')
+                except (ValueError, KeyError, TypeError) as exc:
+                    errors.append(f'{location}: {exc}')
             if candidate.get("derivation_id"):
                 origin = origins.get((candidate_path.relative_to(root).as_posix(), candidate.get("unit_id")))
                 if origin is None:
@@ -237,4 +265,8 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
             errors.append(
                 f"{manifest_path}: inputs.context_hashes does not match candidate records"
             )
+    for batch, identifiers in typed_active.items():
+        for identifier in sorted(identifiers):
+            if (batch, identifier) not in typed_seen:
+                errors.append(f'{batch}: active unit-v2 requires a validated candidate: {identifier}')
     return errors

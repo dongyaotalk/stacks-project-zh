@@ -54,8 +54,10 @@ def run_for(rows, source, kind, identifier):
         'created_at': row['created_at'], 'replayable': False}
 
 
-def fixture(base, count=1, legacy=False, proof=None, detached=False):
+def fixture(base, count=1, legacy=False, proof=None, detached=False, math_policy=None):
     root, harvest, source = english_fixture(base, **({'proof':proof} if proof is not None else {}))
+    if math_policy is not None:
+        (root / 'config/macro-policy.yml').write_text(math_policy)
     _, _, candidate_template = candidate_fixture()
     template = candidate_template[0]
     units = [old_unit(source, 'tag:0000:title', 'section_title', 'Basics', '\\section{', '}\n\\label{section-basic}'),
@@ -134,7 +136,7 @@ def fixture(base, count=1, legacy=False, proof=None, detached=False):
                 evidence = {k: copy.deepcopy(selected[k]) for k in ['selector', 'source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness']}
                 evidence.update(schema_version=1, restoration_id=restoration_id, derivation_id=identifier, group_id=group_id,
                     created_at=record['created_at'], origin_commit=record['origin_commit'],
-                    tool={'id': 'stacks-zh-source-container', 'version': VERSION}, layout=layout,
+                    tool={'id': 'stacks-zh-source-container', 'version': VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2'}, layout=layout,
                     input_unit_ids=ids, output_unit_ids=group['output_unit_ids'], new_units=new_units,
                     reason=group['reason'], files={k:record['files'][k] for k in ['input_units', 'input_candidates']})
                 write(root / f'translation-data/source-container-restorations/{restoration_id}.json', evidence)
@@ -178,6 +180,17 @@ def fixture(base, count=1, legacy=False, proof=None, detached=False):
                 qa_status='PASS', publication_status='CANDIDATE')
             # Placeholder order comes from the source, never dictionary order.
             row['translation'] = ''.join('<' + n + '>' for n in placeholder_names(unit['source_text'])) + '合成测试。'
+            if unit['schema_version'] == 2:
+                # Literal synthetic test input, never a production model output.
+                row['translation'] = (unit['source_text'].replace('and', '且')
+                    .replace('affine opens of ', '的仿射开集（affine opens）')
+                    .replace('if', '若').replace('Café δ.', '合成测试。'))
+                count_terms = unit['source_text'].count('affine opens of ')
+                if count_terms:
+                    row.update(term_occurrences=[{'source_term': 'affine opens', 'target_term': '仿射开集'}] * count_terms,
+                        unknown_terms=[{'source_term': 'affine opens', 'target_term': '仿射开集',
+                                        'context': 'Synthetic fixture term pending, never approved.'}],
+                        term_status='DECISION_REQUIRED', stage='STRUCTURE_OK')
             row['translation_hash'] = sha256_value(row['translation'])
             raw.append(row)
         if record['tool']['version'] != '4':

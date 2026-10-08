@@ -782,3 +782,25 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   upstream-index/Schema/provenance/decision 全部通过。当前 lane render/pdf
   零退出、461 页最终日志 PASS，整书 layout 文本与 DATA #649/进度 #651
   验收完全相等。仅规范设计完成，实际工具、自然 slot 重译与残项继续。
+- 数学文字工具实施计划：Issue
+  [#654](https://github.com/dongyaotalk/stacks-project-zh/issues/654)，分支
+  tool/protected-math-text，基线 main 000dbb7。按已合并合同实现独立 registry/
+  math_text 模块、unit-v2/完整 region、源与译文 skeleton 双重保护、slot
+  术语/渲染与 v4/source-container-v3 活跃采用门禁；新政策实际 Git 见证
+  再核验，历史 unit-v1/容器 v1/v2 的原语义与字节保持。库存 v3 安全升级及
+  全库/check→对齐/check、完整 04Z2/000Q 预检、独立拒绝回归、全量工具/
+  239 QA/117 章、当前 lane render/pdf/模板及 synthetic 公式渲染先本地
+  验收，再核对远端完整内容/native 合同/精确 HEAD 两 CI 后授权 bypass。
+  不写事实/历史或实际模型运行，不批准术语/人审；当前193非空 batch 及
+  全部审计残项保持，具体 DATA 与进度另开任务，八项总验收继续。
+- #654 工具本地验收完成：419 项测试/239 QA/117 章与 workflow、harvest、
+  upstream-index、Schema、provenance、decision、progress/plan 全部通过。
+  全库抽取/check 和对齐/check 顺序通过；43,257 提议为 36,610 READY /
+  6,647 BLOCKED，710 个自然文字 slot、619 条完整公式、533 个 typed 提议
+  逐项通过 Schema/region。三个登记见证七次，其他位置只按相同精确语法
+  规则分类，221 个含 slot 的提议仍保留其他 blocker。04Z2 完整公式段与
+  000Q 完整陈述/证明的旧分组及原字节预检通过。1,056 个事实/配置及三份
+  来源/术语/证明审计原字节相同，全部实际残项保持。当前 lane render/pdf
+  与模板零退出；461 页最终日志通过、全文 layout 文本保持；synthetic
+  v4/v3 三类公式 XeLaTeX/PNG 验收通过，不代表实际模型生成或事实修复。
+  具体 DATA、S4/S5/S7 与远端精确 HEAD 合并验收继续按原合同执行。

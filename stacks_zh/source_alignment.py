@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .extraction import COMMAND, ENVIRONMENT, Policy, Scanner, VERSION as EXTRACTION_VERSION, chapter_inventory
+from .extraction import COMMAND, ENVIRONMENT, Policy, Scanner, VERSION as EXTRACTION_VERSION, chapter_inventory, resolve_natural_math_witnesses
 from .records import RecordError, load_jsonl
 from .source_integrity import audit_repository_source, permanent_tag_mapping
 from .source_reextractions import LockedEnglish, _git_bytes, _comparison, byte_hash, proof_groups, source_tex, audit_repository_proofs
@@ -272,6 +272,7 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
     english = LockedEnglish(root, harvest)
     raw_policy = (root / 'config/macro-policy.yml').read_bytes()
     policy = Policy(raw_policy.decode('utf-8'))
+    resolve_natural_math_witnesses(policy, english)
     manifest_bytes = (inventory / 'manifest.json').read_bytes()
     manifest = json.loads(manifest_bytes)
     if (not isinstance(manifest, dict) or manifest.get('extractor_version') != EXTRACTION_VERSION
@@ -298,7 +299,8 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
         by_id[row['inventory_id']] = row
     validated = []
     fields = {'inventory_id', 'source_commit', 'owner_tag', 'parent_tag', 'semantic_path',
-              'location', 'state', 'word_count', 'unit', 'diagnostic_count', 'math_text_classifications'}
+              'location', 'state', 'word_count', 'unit', 'diagnostic_count', 'math_text_classifications',
+              'natural_math_text_classifications'}
     for chapter in sorted(chapters):
         raw = _git_bytes(harvest, english.commit, chapter + '.tex')
         actual, _, _ = chapter_inventory(chapter, raw, english.commit, english.tags, policy)

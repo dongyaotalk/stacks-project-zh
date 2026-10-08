@@ -20,7 +20,7 @@ from stacks_zh.source_alignment import (Corpus, _labels, _proof_diagnostics, _re
     align_batches, build_alignment, canonical_tokens, verified_inventory, write_alignment)
 from stacks_zh.source_reextractions import byte_hash, source_tex
 
-POLICY_RAW = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text()
+POLICY_RAW = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text().split('\ntranslatable_math_text:')[0]
 POLICY = Policy(POLICY_RAW)
 TAGS = {'alpha-section-phantom': 'AAAA', 'alpha-section-first': 'BBBB',
         'alpha-lemma-one': 'CCCC', 'alpha-item-one': 'DDDD', 'other-lemma-one': 'EEEE'}
@@ -401,6 +401,7 @@ class AlignmentTests(unittest.TestCase):
     def test_inventory_change_during_audits_and_current_wrong_commit_are_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             root, harvest, inventory, _ = self.fixture(Path(temp))
+            original_diagnostics = (inventory / 'diagnostics.jsonl').read_bytes()
             with self.audits(root), patch('stacks_zh.source_alignment.audit_repository_proofs') as audit:
                 def change(*_):
                     with (inventory / 'diagnostics.jsonl').open('a') as stream:
@@ -409,6 +410,9 @@ class AlignmentTests(unittest.TestCase):
                 audit.side_effect = change
                 with self.assertRaisesRegex(RecordError, 'inventory changed'):
                     build_alignment(root, harvest, inventory)
+            # v3 regeneration refuses a tampered owned package. Restore the
+            # independent fixture bytes before exercising the next failure.
+            (inventory / 'diagnostics.jsonl').write_bytes(original_diagnostics)
             write_inventory(root, harvest, inventory)
             facts = root / 'translation-data/units/alpha-bbbb.jsonl'
             row = json.loads(facts.read_text()); row['source_commit'] = COMMIT

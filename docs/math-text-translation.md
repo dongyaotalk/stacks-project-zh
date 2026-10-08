@@ -173,3 +173,52 @@ unit、239 batch、193 个非空修复 batch，756 个术语问题候选/2,397 �
 proof mismatch。全库库存 43,257 提议单元（36,298 READY/6,959 BLOCKED），
 不是同一范围的译文错误数。规范/工具成功不减少事实残项，不表示 critic、
 人审、词表批准或出版；未知宏等后续事项仍各自处理。
+
+## 7. 工具实施计划
+
+实施任务：[Issue #654](https://github.com/dongyaotalk/stacks-project-zh/issues/654)，
+分支 tool/protected-math-text；规范基线 main 000dbb7。先落实独立 math_text
+模块与严格 registry，原 Git 见证核验后才开放 Scanner 的纯文字 slot；用
+unit-v2/region Schema 与完整原数学/typed skeleton 校验贯穿所有入口。
+完整容器 lowering 绑定重命名后的片段/slot 与实际 UTF-8 位置；只有含 slot
+的来源证据使用 v3，其他新证据仍为 v2，历史 v1/v2 关闭新分类并按原语义重放。
+
+库存 v3 保存原五件及正向分类/region/slot 计数，旧包升级验证全部文件 hash
+与集合；提取/check 后顺序重建对齐/check。实际预检 04Z2/000Q 的完整容器，
+所有当前事实、历史及来源/术语/proof 审计残项保持。实际候选首次 unit-v2
+必须经过 v4 与 v3 来源证据；raw 修订仍冻结完整新 source/context，所有五字段
+与不可变模型输出相等。旧派生分支、普通装配与审批不能跳过这些要求。
+
+独立 synthetic Git 回归覆盖三个语法角色、多个 slot、原字节/数学保护、
+术语、注入、假 witness/重算 hash、历史版本与安全输出。synthetic 记录不
+表示真实模型生成。全量回归/239 QA/117 章与来源预检通过，当前 lane
+render/pdf、模板及 synthetic 数学文字渲染验收后 PR；精确 HEAD 远端完整
+内容/native 合同/两项 CI 后按已授权 bypass。具体 DATA 仍另开任务。
+
+## 8. 工具本地验收记录
+
+Issue #654 的实现新增独立 unit-v2、source-container-v3 和
+source-extraction-v3。普通装配拒绝 unit-v2，首次活跃采用要求完整 v4、v3
+来源及实际修订 context；raw 修订和无候选 unit 不能进入渲染。v1 Schema
+分支与原 Schema 相同，原 hash 算法和历史容器政策回放保留。工具不生成中文。
+
+锁定 Git 的三处政策见证合计七次；按精确参数及对应语法规则扫描全库后，
+识别 710 个 slot（and 554、if 154、affine opens of 2），619 个完整 region，
+分布在 533 个提议 unit。见证不是这 533 个 unit 的采用坐标；各自真实归属
+和完整容器仍分别验证。已知 slot 不豁免同一 unit 的其他诊断：312 个提议
+READY、221 个仍 BLOCKED。全库 117 章、116 个 Git 文件逐字回放；43,257
+个提议 unit 为 36,610 READY / 6,647 BLOCKED，保留 18,781 条诊断。
+
+本地最终验收：419 项测试（原 379 项加 40 项数学文字回归）、239 batch QA、
+117 章模板与 progress/plan check、workflow/harvest/upstream-index/Schema/
+provenance/decision 均通过。extract-all/check、source-alignment/check 顺序通过；
+全部 533 个新格式提议另行检查 Schema/region，04Z2 的完整 prose_block 和
+000Q 的陈述/完整 proof 通过旧分组及原字节预检。源/政策/事实在安装前变化、
+坏库存、symlink 和原子安装失败均拒绝并保留原包。
+
+当前 lane render/pdf 与 template 零退出，461 页最终日志通过，整书全文
+layout 文本与基线相同；独立 synthetic v4/v3 渲染的三种数学文字经 XeLaTeX
+编译及 PNG 目视检查，无裁切、重叠或缺字。synthetic 内容不是实际模型输出。
+1,056 个事实/配置文件及来源、术语、proof 三份审计报告原字节保持；756 个
+术语问题候选、12 组 proof mismatch 等事实残项未减少。远端内容、native
+合同和精确 HEAD 两项 CI 仍须在 PR 中分别验证，DATA 采用仍另开任务。

@@ -21,7 +21,7 @@ from .chapter_templates import manifest_chapters
 from .records import RecordError, stamp_unit_hashes
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
 
-VERSION = 'source-extraction-v2'
+VERSION = 'source-extraction-v3'
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
 ENVIRONMENT = re.compile(r'\\(begin|end)\{([A-Za-z][A-Za-z0-9*_-]*)\}')
 WORD = re.compile(r'[A-Za-z]{2,}')
@@ -40,7 +40,7 @@ class SyntaxProblem(RecordError):
 
 class Policy:
     """Read the current explicit YAML subset; never infer unknown macro policy."""
-    def __init__(self, text: str):
+    def __init__(self, text: str, *, natural_text_enabled: bool = True):
         if not all(re.search(r'(?m)^' + name + r': block\s*$', text)
                    for name in ('default_command_policy', 'default_environment_policy')):
             raise RecordError('extraction requires explicit blocking defaults in macro policy')
@@ -52,6 +52,8 @@ class Policy:
         self.accents: set[str] = set()
         self.special: set[str] = set()
         self.math_text_notations: dict[str, dict[str, Any]] = {}
+        self.raw = text
+        self.math_text_witnesses: dict[str, dict[str, Any]] = {}
         notation_section_seen = False
         section = group = command = ''
         for line in text.splitlines():
@@ -116,12 +118,18 @@ class Policy:
                     raise RecordError('unsupported math-text notation policy ' + key)
             if not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label']):
                 raise RecordError('invalid math-text notation source label')
+        from .math_text import policy_rules
+        try:
+            self.math_text_rules = policy_rules(text, self.math_text_notations) if natural_text_enabled else {}
+        except (ValueError, TypeError) as exc:
+            raise RecordError('invalid natural math-text policy: ' + str(exc)) from exc
 
 
 class Scanner:
     def __init__(self, text: str, policy: Policy):
         self.text, self.policy = text, policy
         self.math_text_classifications: list[dict[str, Any]] = []
+        self.math_text_regions: list[dict[str, Any]] = []
 
     def comment_end(self, offset: int) -> int:
         end = self.text.find('\n', offset)
@@ -274,6 +282,7 @@ class Scanner:
 
     def protect(self, start: int, end: int) -> tuple[str, dict[str, str], list[dict[str, Any]]]:
         self.math_text_classifications = []
+        self.math_text_regions = []
         placeholders: dict[str, str] = {}
         counts: collections.Counter[str] = collections.Counter()
         diagnostics: list[dict[str, Any]] = []
@@ -291,10 +300,16 @@ class Scanner:
                                 'source': self.text[a:b], 'severity': 'BLOCKED'})
 
         def math(a: int, b: int) -> str:
-            # Only exact policy notations with usage witnesses remain opaque;
-            # natural/unknown math text still needs its own adoption contract.
+            # Only exact notation or witnessed plain-text classifications are
+            # accepted. Every other textual parameter remains a blocker.
             fragment = self.text[a:b]
             child = Scanner(fragment, self.policy)
+            from .math_text import find_slots, delimiter_kind
+            try:
+                slots = find_slots(fragment, self.policy.math_text_rules) if self.policy.math_text_witnesses else []
+            except ValueError:
+                slots = []
+            slots_by_parameter = {s['parameter_start']: s for s in slots}
             i = 0
             while i < len(fragment):
                 if fragment[i] == '%':
@@ -311,10 +326,10 @@ class Scanner:
                         value = fragment[opening + 1:close - 1]
                         if WORD.search(value):
                             notation = child.notation_usage(match.group()[1:], value, close)
-                            if notation is None:
+                            if notation is None and opening + 1 not in slots_by_parameter:
                                 issue('math-text', a + opening + 1, a + close - 1,
                                       'explicit text inside locked math requires classification before adoption')
-                            else:
+                            elif notation is not None:
                                 usage, usage_source, source_label = notation
                                 self.math_text_classifications.append({
                                     'start': a + i, 'end': a + close, 'source': fragment[i:close],
@@ -323,7 +338,35 @@ class Scanner:
                     i = match.end()
                 else:
                     i += 1
-            return lock('MATH', a, b)
+            if not slots:
+                return lock('MATH', a, b)
+            pieces, text_slots, protected, cursor = [], [], [], 0
+            for ordinal, slot in enumerate(slots, 1):
+                before = lock('MATHSEG', a + cursor, a + slot['parameter_start'])
+                name = before[1:-1]
+                pieces.append({'kind': 'locked', 'placeholder': name})
+                identifier = f'temporary/{ordinal:04d}'
+                pieces.append({'kind': 'text', 'slot_id': identifier})
+                text_slots.append({'slot_id': identifier, 'source': slot['value'], 'command': 'text',
+                    'policy_entry': slot['policy_entry'],
+                    'slot_byte_span': {'start': len(fragment[:slot['parameter_start']].encode('utf-8')),
+                                       'end': len(fragment[:slot['parameter_end']].encode('utf-8'))},
+                    'boundary_placeholders': [name],
+                    'classification_witness': {'usage': slot['usage'], 'usage_source': slot['usage_source'],
+                        'source_label': self.policy.math_text_rules[slot['policy_entry']]['source_label'],
+                        'policy_hash': byte_hash(self.policy.raw),
+                        'anchor': self.policy.math_text_witnesses[slot['policy_entry']]}})
+                protected.extend([before, slot['value']])
+                cursor = slot['parameter_end']
+            after = lock('MATHSEG', a + cursor, b)
+            pieces.append({'kind': 'locked', 'placeholder': after[1:-1]})
+            protected.append(after)
+            for index, slot in enumerate(text_slots):
+                slot['boundary_placeholders'].append(pieces[2 * index + 2]['placeholder'])
+            self.math_text_regions.append({'region_id': 'temporary', 'delimiter_kind': delimiter_kind(fragment),
+                'source': fragment, 'source_hash': byte_hash(fragment), 'source_byte_span': {'start': 0, 'end': 0},
+                'pieces': pieces, 'slots': text_slots})
+            return ''.join(protected)
 
         def walk(a: int, b: int) -> str:
             out: list[str] = []
@@ -467,6 +510,7 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                                for item in scanner.math_text_classifications]
         except SyntaxProblem as exc:
             classifications = []
+            scanner.math_text_regions = []
             protected, placeholders = '<UNKNOWN_0001>', {'UNKNOWN_0001': text[a:b]}
             problems = [{'kind': 'syntax', 'start': a, 'end': b, 'severity': 'BLOCKED',
                          'message': str(exc), 'source': text[a:b]}]
@@ -481,12 +525,25 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
             problems.append({'kind': 'ownership', 'start': a, 'end': b, 'severity': 'BLOCKED',
                              'message': 'no unique locked permanent Tag owner; explicit scope mapping required',
                              'source': text[a:b]})
-        unit = stamp_unit_hashes({'schema_version': 1, 'unit_id': identifier,
+        from .math_text import bind_regions, nodes
+        unit = stamp_unit_hashes(bind_regions({'schema_version': 1, 'unit_id': identifier,
             'parent_tag': section or 'UNASSIGNED', 'chapter': chapter, 'node_kind': kind,
             'risk_level': 'R3' if kind in STATEMENTS | {'proof'} else 'R1',
             'source_commit': commit, 'source_text': protected, 'source_status': 'CURRENT',
-            'placeholders': placeholders, 'render': {'prefix': '', 'suffix': ''}})
+            'placeholders': placeholders, 'render': {'prefix': '', 'suffix': ''}}, scanner.math_text_regions))
         assert source_tex(unit) == text[a:b], 'extraction roundtrip defect'
+        natural_classifications = []
+        for region in unit.get('math_text_regions', []):
+            stream = nodes(region['source'])
+            for slot in region['slots']:
+                node = next(n for n in stream if n.get('command') == slot['command'] and
+                            len(region['source'][:n['parameter_start']].encode('utf-8')) == slot['slot_byte_span']['start'])
+                first = byte_offsets[a] + region['source_byte_span']['start'] + len(region['source'][:node['start']].encode('utf-8'))
+                last = byte_offsets[a] + region['source_byte_span']['start'] + len(region['source'][:node['end']].encode('utf-8'))
+                natural_classifications.append({'source': region['source'][node['start']:node['end']],
+                    'literal': slot['source'], 'command': slot['command'], 'policy_entry': slot['policy_entry'],
+                    'classification_witness': slot['classification_witness'],
+                    'location': location(bisect.bisect_left(byte_offsets, first), bisect.bisect_left(byte_offsets, last))})
         matches = (existing or {}).get((chapter, byte_hash(text[a:b])), [])
         matches = [u['unit_id'] for u in matches if u.get('_owner') == owner]
         record = {'inventory_id': identifier, 'source_commit': commit, 'owner_tag': owner,
@@ -494,7 +551,8 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                   'state': 'BLOCKED' if problems else 'READY', 'word_count': len(WORD.findall(natural)),
                   'existing_unit_id': matches[0] if len(matches) == 1 else None,
                   'unit': unit, 'diagnostic_count': len(problems),
-                  'math_text_classifications': classifications}
+                  'math_text_classifications': classifications,
+                  'natural_math_text_classifications': natural_classifications}
         units.append(record)
         segments.append({'chapter': chapter, 'kind': 'unit', 'location': location(a, b), 'inventory_id': identifier})
         for problem in problems:
@@ -652,10 +710,72 @@ def _current_index(root: Path, tags: dict[str, str]):
     return result, byte_hash(json.dumps(snapshots, ensure_ascii=False, separators=(',', ':')))
 
 
+def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> None:
+    """Validate source anchors independently of natural-text acceptance/cache."""
+    if not policy.math_text_rules:
+        return
+    from .math_text import find_slots, restore
+    legacy = Policy(policy.raw, natural_text_enabled=False)
+    tree = subprocess.run(['git', '-C', str(english.harvest), 'ls-tree', '--name-only', english.commit],
+                          capture_output=True, text=True, check=True).stdout.splitlines()
+    documents = {}
+    verified = {}
+    for key, rule in policy.math_text_rules.items():
+        label = rule['source_label']
+        owner = english.tags.get(label)
+        files = [name for name in tree if name.endswith('.tex') and label.startswith(name[:-4] + '-')]
+        if not owner or sum(t == owner for t in english.tags.values()) != 1 or not files:
+            raise RecordError('natural math-text witness has no unique real Tag/file: ' + key)
+        file = max(files, key=len)
+        chapter = file[:-4]
+        if file not in documents:
+            raw = _git_bytes(english.harvest, english.commit, file)
+            documents[file] = chapter_inventory(chapter, raw, english.commit, english.tags, legacy)[0]
+        rows = documents[file]
+        anchors = [r for r in rows if r['owner_tag'] == owner and
+                   (r['unit']['node_kind'] in STATEMENTS or r['unit']['node_kind'] == 'section_title')]
+        if len(anchors) != 1:
+            raise RecordError('natural math-text witness lacks its unique real labelled semantic anchor: ' + key)
+        kind, ordinal = rule['witness_kind'], rule['witness_ordinal']
+        if kind == 'section':
+            if anchors[0]['unit']['node_kind'] != 'section_title' or ordinal != 1:
+                raise RecordError('natural math-text Section witness has incorrect kind/ordinal')
+            selected = [r for r in rows if r['parent_tag'] == owner]
+        else:
+            selected = [r for r in rows if r['owner_tag'] == owner and
+                        r['semantic_path'] == f'{kind}/{ordinal:04d}']
+            if len(selected) != 1 or anchors[0]['unit']['node_kind'] not in STATEMENTS:
+                raise RecordError('natural math-text statement/proof witness has incorrect kind/ordinal')
+        matches = []
+        for row in selected:
+            unit = row['unit']
+            for name in re.findall(r'<(MATH_[0-9]{4})>', unit['source_text']):
+                math = unit['placeholders'][name]
+                try:
+                    slots = find_slots(math, {key: rule})
+                except ValueError:
+                    slots = []
+                prefix = unit['render']['prefix'] + restore(unit, unit['source_text'].partition('<' + name + '>')[0])
+                start = row['location']['byte_start'] + len(prefix.encode('utf-8'))
+                for slot in slots:
+                    first = start + len(math[:slot['start']].encode('utf-8'))
+                    last = start + len(math[:slot['end']].encode('utf-8'))
+                    matches.append({'container_byte_span': {'start': row['location']['byte_start'], 'end': row['location']['byte_end']},
+                        'container_hash': row['location']['fragment_hash'],
+                        'command_byte_span': {'start': first, 'end': last},
+                        'command_hash': byte_hash(math[slot['start']:slot['end']])})
+        if not matches:
+            raise RecordError('natural math-text rule has no real syntax/literal witness: ' + key)
+        verified[key] = {'source_commit': english.commit, 'file': file, 'owner_tag': owner,
+                         'owner_label': label, 'kind': kind, 'ordinal': ordinal, 'matches': matches}
+    policy.math_text_witnesses = verified
+
+
 def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None):
     english = LockedEnglish(root, harvest)
     policy_raw = (root / 'config/macro-policy.yml').read_bytes()
     policy = Policy(policy_raw.decode('utf-8'))
+    resolve_natural_math_witnesses(policy, english)
     manifest_raw = _git_bytes(harvest, english.commit, 'chapters.tex')
     listed = manifest_chapters(manifest_raw.decode('utf-8'))
     if chapters:
@@ -687,7 +807,9 @@ def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None
                           'blocked': sum(u['state'] == 'BLOCKED' for u in rows),
                           'diagnostics': len(problems), 'roundtrip': 'BYTE_EXACT',
                           'classified_math_text': sum(len(r.get('math_text_classifications', []))
-                                                      for r in [*rows, *parts])})
+                                                      for r in [*rows, *parts]),
+                          'natural_math_text_slots': sum(len(r['natural_math_text_classifications']) for r in rows),
+                          'natural_math_text_regions': sum(len(r['unit'].get('math_text_regions', [])) for r in rows)})
     manifest = {'schema_version': 1, 'extractor_version': VERSION, 'source_commit': english.commit,
                 'macro_policy_hash': byte_hash(policy_raw), 'chapter_manifest_hash': byte_hash(manifest_raw),
                 'chapter_count': len(summaries), 'chapters': summaries, 'unit_count': len(units),
@@ -696,14 +818,22 @@ def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None
                 'source_unavailable': [s['chapter'] for s in summaries if s['state'] == 'SOURCE_UNAVAILABLE'],
                 'diagnostics_by_kind': dict(sorted(collections.Counter(p['kind'] for p in diagnostics).items())),
                 'classified_math_text': sum(s.get('classified_math_text', 0) for s in summaries),
+                'natural_math_text_slots': sum(s.get('natural_math_text_slots', 0) for s in summaries),
+                'natural_math_text_regions': sum(s.get('natural_math_text_regions', 0) for s in summaries),
                 'roundtrip_files': sum(s['state'] == 'INVENTORIED' for s in summaries),
                 'translation_ready': not diagnostics, 'adopted': False}
     manifest['current_units_hash'] = current_hash
+    current_english = LockedEnglish(root, harvest)
+    if (current_english.commit != english.commit or current_english.tags != english.tags
+            or policy_raw != (root / 'config/macro-policy.yml').read_bytes()
+            or _current_index(root, english.tags)[1] != current_hash):
+        raise RecordError('macro policy/current facts changed during source extraction')
     return manifest, units, segments, diagnostics
 
 
 def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[str] | None = None, check: bool = False):
-    if output.is_symlink():
+    if any(p.is_symlink() for p in [output, *output.parents]
+           if p.absolute().is_relative_to(root.absolute())):
         raise RecordError('extraction destination must not be a symlink')
     root, output = root.resolve(), output.resolve()
     allowed = any(output.is_relative_to(root / name) and output != root / name for name in ('source-ir', 'build'))
@@ -712,18 +842,18 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
     if output.exists() and not check:
         marker = output / 'manifest.json'
         previous = json.loads(marker.read_text(encoding='utf-8')) if marker.is_file() and not marker.is_symlink() else {}
-        if (not output.is_dir() or not marker.is_file() or marker.is_symlink()
-                or previous.get('extractor_version') not in {VERSION, 'source-extraction-v1'}):
+        if (not output.is_dir() or not marker.is_file() or marker.is_symlink() or not isinstance(previous, dict)
+                or previous.get('schema_version') != 1
+                or previous.get('extractor_version') not in {VERSION, 'source-extraction-v1', 'source-extraction-v2'}):
             raise RecordError('refusing to replace a directory not owned by the source extractor')
         if {p.name for p in output.iterdir()} != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md', 'manifest.json'}:
             raise RecordError('refusing to replace an inventory containing unrelated files')
         if any(p.is_symlink() for p in output.iterdir()):
             raise RecordError('refusing to replace an inventory containing symlinks')
-        if previous['extractor_version'] == 'source-extraction-v1':
-            files = previous.get('files', {})
-            if (not isinstance(files, dict) or set(files) != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md'}
-                    or any(byte_hash((output / name).read_bytes()) != expected for name, expected in files.items())):
-                raise RecordError('refusing to upgrade an invalid v1 source inventory')
+        files = previous.get('files', {})
+        if (not isinstance(files, dict) or set(files) != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md'}
+                or any(byte_hash((output / name).read_bytes()) != expected for name, expected in files.items())):
+            raise RecordError('refusing to regenerate an invalid source inventory')
     manifest, units, segments, diagnostics = build_inventory(root, harvest, chapters)
 
     def jsonl(rows):
@@ -734,6 +864,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
              f"{manifest['chapter_count']}章；{manifest['roundtrip_files']}个Git文件逐字回放通过。",
              f"提议单元{manifest['unit_count']}：READY {manifest['ready']}，BLOCKED {manifest['blocked']}；诊断{manifest['diagnostic_count']}。", '',
              f"明确数学记号分类{manifest['classified_math_text']}次；原公式字节保持不变。", '',
+             f"已核实数学自然文字{manifest['natural_math_text_slots']}个slot、{manifest['natural_math_text_regions']}个完整region；其余数学字节锁定。", '',
              'READY仅表示该来源片段被已知语法抽取，不是事实采用、模型译文、人工审校或发布批准。', '',
              '| Chapter | State | Units | Ready | Blocked |', '| --- | --- | ---: | ---: | ---: |']
     for chapter in manifest['chapters']:
@@ -755,6 +886,11 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
     try:
         for name, raw in payloads.items():
             (temporary / name).write_bytes(raw)
+        current = LockedEnglish(root, harvest)
+        if (current.commit != manifest['source_commit']
+                or byte_hash((root / 'config/macro-policy.yml').read_bytes()) != manifest['macro_policy_hash']
+                or _current_index(root, current.tags)[1] != manifest['current_units_hash']):
+            raise RecordError('locked source, macro policy or facts changed before installing inventory')
         if output.exists():
             if not output.is_dir():
                 raise RecordError('extraction destination is not a directory')

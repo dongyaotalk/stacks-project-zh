@@ -109,6 +109,8 @@ def replay_derivation(
         raise DerivationError("unsupported derivation tool/version")
     units = [clean(row) for row in units]
     candidates = [clean(row) for row in candidates]
+    if any(u.get('schema_version') != 1 for u in units):
+        raise DerivationError('unit-v2 requires the separate v4/source-container-v3 contract')
     ids = [row["unit_id"] for row in units]
     if len(ids) != len(set(ids)) or [row["unit_id"] for row in candidates] != ids:
         raise DerivationError("origin unit/candidate IDs must be unique and ordered equally")

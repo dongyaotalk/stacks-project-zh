@@ -58,10 +58,17 @@ def expected_unit_hashes(unit: dict[str, Any]) -> dict[str, str]:
         for key, value in sorted(unit.get("placeholders", {}).items())
         if key.startswith("MATH_")
     }
+    extra = {}
+    if unit.get('schema_version') == 2:
+        from .math_text import complete_math_nodes, skeleton
+        structure['math_text_regions'] = unit['math_text_regions']
+        math_nodes = complete_math_nodes(unit)
+        extra['source_math_skeleton_hash'] = sha256_value(skeleton(unit))
     return {
         "source_text_hash": sha256_value(source_text),
         "source_structure_hash": sha256_value(structure),
         "source_math_hash": sha256_value(math_nodes),
+        **extra,
     }
 
 
@@ -164,6 +171,14 @@ def restore_placeholders(
     *,
     delimit_commands: bool = False,
 ) -> str:
+    if unit.get('schema_version') == 2:
+        from .math_text import validate_translation
+        errors = validate_translation(unit, translation)
+        if errors:
+            raise RecordError('\n'.join(errors))
+        if overrides and any(name.startswith('MATHSEG_') and value != unit['placeholders'].get(name)
+                             for name, value in overrides.items()):
+            raise RecordError('typed math locked pieces cannot be overridden during restoration')
     rendered = translation
     for name in placeholder_names(unit.get("source_text", "")):
         value = (
@@ -171,7 +186,7 @@ def restore_placeholders(
             if overrides
             else unit["placeholders"][name]
         )
-        if delimit_commands:
+        if delimit_commands and not name.startswith('MATHSEG_'):
             value = delimit_tex_control_word(value)
             if re.fullmatch(r"SPACE_[0-9]{4}", name) and value == "\\":
                 # Legacy SPACE payloads leave their whitespace in source_text.
@@ -225,6 +240,9 @@ def validate_tex_controls(unit: dict[str, Any], candidate: dict[str, Any]) -> li
             continue
         if re.search(r"\\(?:[A-Za-z@]+|.)|[%#$&_^~{}]", PLACEHOLDER_TOKEN_RE.sub("", text)):
             errors.append(f"{unit.get('unit_id')}: {field} contains unprotected TeX controls")
+    from .math_text import validate_translation
+    if isinstance(candidate.get('translation'), str):
+        errors.extend(validate_translation(unit, candidate['translation']))
     return errors
 
 
@@ -249,8 +267,8 @@ def _validate_unit(unit: dict[str, Any], source_commit: str) -> list[str]:
     for key in required_strings:
         if not isinstance(unit.get(key), str) or not unit[key]:
             errors.append(f"{location}: {key} must be a non-empty string")
-    if unit.get("schema_version") != 1:
-        errors.append(f"{location}: schema_version must be 1")
+    if type(unit.get('schema_version')) is not int or unit.get("schema_version") not in {1, 2}:
+        errors.append(f"{location}: schema_version must be 1 or 2")
     if unit.get("source_commit") != source_commit:
         errors.append(f"{location}: source_commit does not match upstream.lock")
     if unit.get("source_status") != "CURRENT":
@@ -286,7 +304,14 @@ def _validate_unit(unit: dict[str, Any], source_commit: str) -> list[str]:
         "source_structure_hash",
         "source_math_hash",
     )):
-        expected = expected_unit_hashes(unit)
+        from .math_text import validate_regions
+        math_errors = validate_regions(unit) if unit.get('schema_version') in {1, 2} else []
+        errors.extend(f'{location}: {e}' for e in math_errors)
+        try:
+            expected = expected_unit_hashes(unit)
+        except (ValueError, KeyError, TypeError, IndexError) as exc:
+            errors.append(f'{location}: cannot validate source hashes: {exc}')
+            return errors
         for key, value in expected.items():
             if unit.get(key) != value:
                 errors.append(f"{location}: {key} mismatch; run stamp-units")

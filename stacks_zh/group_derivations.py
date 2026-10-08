@@ -64,6 +64,8 @@ def replay_groups(record, units, candidates, corrections, previous_outputs, rest
                 raise RecordError('v4 source container has no unique validated locked-Git evidence')
             used_restorations.add(restoration_id)
             source = evidence['record']
+            if any(u.get('schema_version') == 2 for u in output_units) and source['tool']['version'] != 'source-container-v3':
+                raise RecordError('typed math output requires source-container-v3 evidence')
             if (source['derivation_id'] != record['derivation_id'] or source['group_id'] != group['group_id']
                     or source['source_commit'] != record['source_commit']
                     or source['origin_commit'] != record['origin_commit']
@@ -80,6 +82,8 @@ def replay_groups(record, units, candidates, corrections, previous_outputs, rest
                 raise RecordError('v4 selected containers overlap or change locked source order')
             last_location[chapter] = location['byte_end']
         else:
+            if any(u.get('schema_version') == 2 for u in output_units) and not previous:
+                raise RecordError('first unit-v2 output requires complete source-container-v3 evidence')
             # A source-preserving group is intentionally bijective. Segmentation
             # changes require complete semantic Git evidence, never concatenation
             # equality alone or a convenient existing inventory ID.

@@ -952,3 +952,18 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   六页PNG保持，第34页两条完整显示公式及其后正文可读，无多余句号/裁切/重叠。
   已有000Q公式48.93825pt overfull警告保持且整式位于页面内，不改变原数学。
   34声明文件之外原字节保持，远端与精确HEAD CI验收、合并后独立进度继续。
+
+- 四批 DATA PR [#667](https://github.com/dongyaotalk/stacks-project-zh/pull/667)
+  已合并到 `44be32bf150c9a2468cb35d830a4d9c13484178e`；独立进度 Issue
+  [#668](https://github.com/dongyaotalk/stacks-project-zh/issues/668)，分支
+  docs/progress-after-size-batch。在下一数据批次前从已合并事实执行
+  progress/check及plan/check，117章报告与DATA最终隔离预览逐字相同；
+  三份报告保持，候选仍108/3,299 Section、Categories24/44，人工语言/数学
+  审校与发布零。当前239批/1,424唯一活跃单元；187组/259 proof单元为
+  179匹配、8差异、0未支持。修复队列为187非空batch、738术语问题候选/
+  2,323诊断、13坐标、14来源诊断、1未保护节点对、0错陈述Tag和2歧义。
+  全来源库存43,257提议为36,610 READY/6,647 BLOCKED；全部run和历史保持。
+  合并后workflow/harvest/upstream-index、117章模板和provenance/decision通过；
+  当前lane render/pdf零退出，461页最终日志PASS，全文layout文本及物理
+  29–35页PNG与DATA最终验收相同。译文事实树与全部范围外已跟踪字节保持。
+  独立进度同步不授予词条/critic/人审或发布；F1–F8与S4/S5/S7总验收继续。

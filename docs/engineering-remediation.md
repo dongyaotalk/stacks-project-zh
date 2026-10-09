@@ -1119,3 +1119,24 @@ Section0013、ordinal1及锁定 Git 完整片段 hash，正文精确词形必须
 数据/历史保持。全239 QA、来源/术语/proof/库存/队列逐项及全构建/layout验收
 后独立工具 PR；精确HEAD双CI/远端合同后admin bypass，随后DATA从新main
 重新prepare/check、完整冻结和实际生成。八项总验收及S4/S5/S7继续。
+
+## Section0013 四批完整修订计划（Issue #682，前置 #684 后）
+
+以新main `dc5a40d0147870687079a52ff60faaef04f38dc5` 为基线，02C3 的两个词汇
+锚点已在独立工具PR #684稳定到锁定Git完整容器。原失败试验的全部事实、
+输入/run/raw/日志已逐字保留且未采用。重新准备 categories-02C2、001J、05SG、
+02C3 四个连续完整batch，共15旧→6新容器、347来源词；真实parent0013，
+历史错误parent原字节仅留快照，完整备注/定义/交换图/两对引理证明不能切断。
+
+先many prepare/check，再完整冻结所有新来源、旧组/candidates、政策/风格/词表/
+prompt/源词汇目录及动态Harness、本次实际模型身份，当前模型完整生成六单元
+全部五字段，用新实际revision run02/correction连接四份v4和六份来源证据。
+保留所有历史且不继承批准；每份证明保持源文末尾单换行。验收32路径、Git
+字节/五字段/context/祖先/唯一ID、239 QA与完整共享run四批qa-batch、所有来源/
+Schema/溯源/决策/117模板、全extract/check→alignment/check及隔离进度/计划。
+六新容器BYTE_EXACT、四队列清空，范围外诊断逐项保持，包括词汇取证失败数
+不得新增。当前lane render/pdf零退出和目标页视觉验收后commit/push/PR；
+完整远端字节/patch/native合同及精确HEAD双CI后按授权admin bypass。DATA
+合并后先独立progress任务。基线184修复批、714术语问题候选/2268诊断、
+13坐标/14来源诊断、5proof差异及1未保护节点对/2歧义仍保留；总F1–F8/
+S4/S5/S7及人审、词汇批准与发布继续，不能计未采用试验为已完成。

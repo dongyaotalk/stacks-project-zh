@@ -143,3 +143,14 @@ strongly-cartesian 九项旧式 evidence 改用既有 locked-source-container �
 不批准中文词汇、不修改事实或自然语言 math-text 规则。验收核对全部现有
 候选/来源/proof 残项保持，并逐块重放来源 Git 字节；具体候选另行认领并在
 工具合并后冻结新上下文。
+
+02C3 的两项稳定证据由独立工具 [Issue #683](https://github.com/dongyaotalk/stacks-project-zh/issues/683)
+声明：axiom-of-choice 改为真实02C3完整 proof 的锁定 Git 证据，
+essentially-surjective 改为真实02C3完整 lemma 的锁定 Git 证据。两者都属于
+Section0013，ordinal1，按原完整片段 hash 与保护后 source_projection 的准确
+词形核验。只改两项 evidence，forms、chapters、其他目录及非数学分类保持；
+不批准中文、不改候选或历史。DATA #682 的首轮完整修订发现旧分段证据消失，
+失败输出已完整保留且未采用；本前置合并后须重新准备/check、冻结并实际完整
+生成，不能把本工具取证当作数据修复完成。全库候选/来源/证明残项和完整译文
+事实树保持，仅目录 hash 与两项取证元数据更新；当前 lane render/pdf 零退出
+及整书 layout 保持后提交 PR。

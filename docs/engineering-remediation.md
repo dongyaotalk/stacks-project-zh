@@ -1094,3 +1094,16 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   输入/runtime，完整生成四单元五字段，保留来源尾换行；继续完整数据和视觉验收。
   活跃候选保留两个不同历史run，跨批QA使用本次共享修订run的两份原始候选，
   所有活跃文件仍通过全库QA/溯源核对，不改写历史身份。
+
+- 完整000U/000X DATA PR [#679](https://github.com/dongyaotalk/stacks-project-zh/pull/679) 已合并到 `ab38d30be178caa517ddc0929f3a391b7cb94c44`；
+  独立进度 Issue [#680](https://github.com/dongyaotalk/stacks-project-zh/issues/680)，
+  分支docs/progress-after-000u-000x。在下一DATA前从已合并事实执行progress/check及
+  plan/check，117章报告与DATA最终隔离预览逐字相同，三份报告保持；候选仍
+  108/3,299 Section、Categories24/44，人工语言/数学审校与发布零。当前239批/
+  1,389唯一活跃unit；184修复batch、714术语问题候选/2,268诊断，13坐标/
+  14来源诊断、2歧义和1未保护节点对保持。187组/246 proof单元为182匹配、
+  5差异、0未支持。全库存43,257提议/36,650 READY/6,607 BLOCKED保持。
+  workflow/harvest/index/117模板/Schema通过；render重验溯源，DATA的decision验收与事实树保持；当前lane render/pdf
+  零退出，461页全文layout及物理15/16/37–43页PNG与DATA接受版本逐字相同。
+  完整译文事实树、原始run/历史与所有范围外tracked字节保持。该进度任务不授予
+  词表/critic/人审或发布批准；F1–F8/S4/S5/S7继续。

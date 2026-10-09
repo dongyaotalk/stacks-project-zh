@@ -1107,3 +1107,15 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   零退出，461页全文layout及物理15/16/37–43页PNG与DATA接受版本逐字相同。
   完整译文事实树、原始run/历史与所有范围外tracked字节保持。该进度任务不授予
   词表/critic/人审或发布批准；F1–F8/S4/S5/S7继续。
+
+## 02C3 词汇证据前置计划（Issue #683）
+
+DATA #682 的四批完整修订在239候选 QA通过后，全库对照发现 axiom-of-choice
+与 essentially-surjective 的旧分段来源 hash 消失。全部未合并事实、实际模型
+run/raw、来源包和失败报告逐字归档，当前事实恢复基线；不豁免新增两项诊断。
+先按已有 locked-source-container 合同分别绑定02C3完整 proof/lemma，真实
+Section0013、ordinal1及锁定 Git 完整片段 hash，正文精确词形必须可见。开发
+文档先于配置修改，只改两项 evidence，所有 forms/chapters/其他目录、词表和
+数据/历史保持。全239 QA、来源/术语/proof/库存/队列逐项及全构建/layout验收
+后独立工具 PR；精确HEAD双CI/远端合同后admin bypass，随后DATA从新main
+重新prepare/check、完整冻结和实际生成。八项总验收及S4/S5/S7继续。

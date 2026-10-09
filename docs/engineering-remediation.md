@@ -1140,3 +1140,16 @@ Schema/溯源/决策/117模板、全extract/check→alignment/check及隔离进�
 合并后先独立progress任务。基线184修复批、714术语问题候选/2268诊断、
 13坐标/14来源诊断、5proof差异及1未保护节点对/2歧义仍保留；总F1–F8/
 S4/S5/S7及人审、词汇批准与发布继续，不能计未采用试验为已完成。
+
+- 完整02C2/001J/05SG/02C3 DATA PR [#685](https://github.com/dongyaotalk/stacks-project-zh/pull/685) 已合并到 `a8bd19540dfa45e39a59db76f56899e674d88db5`；
+  独立进度 Issue [#686](https://github.com/dongyaotalk/stacks-project-zh/issues/686)，
+  分支docs/progress-after-categories-equivalences。在下一DATA前从已合并事实执行progress/check及
+  plan/check，117章报告与DATA最终隔离预览逐字相同，三份报告保持；候选仍
+  108/3,299 Section、Categories24/44，人工语言/数学审校与发布零。当前239批/
+  1,380唯一活跃unit；180修复batch、705术语问题候选/2,246诊断，13坐标/
+  14来源诊断、2歧义和1未保护节点对保持。187组/242 proof单元为183匹配、
+  4差异、0未支持。全库存43,257提议/36,650 READY/6,607 BLOCKED保持。
+  workflow/harvest/index/117模板/Schema通过；render重验溯源，DATA的decision验收与事实树保持；当前lane render/pdf
+  零退出，461页全文layout及物理15/16/48–50页PNG与DATA接受版本逐字相同。
+  完整译文事实树、原始run/历史与所有范围外tracked字节保持。该进度任务不授予
+  词表/critic/人审或发布批准；F1–F8/S4/S5/S7继续。

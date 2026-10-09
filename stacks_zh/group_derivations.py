@@ -64,8 +64,9 @@ def replay_groups(record, units, candidates, corrections, previous_outputs, rest
                 raise RecordError('v4 source container has no unique validated locked-Git evidence')
             used_restorations.add(restoration_id)
             source = evidence['record']
-            if any(u.get('schema_version') == 2 for u in output_units) and source['tool']['version'] != 'source-container-v3':
-                raise RecordError('typed math output requires source-container-v3 evidence')
+            if (any(u.get('schema_version') == 2 for u in output_units)
+                    and source['tool']['version'] not in {'source-container-v3', 'source-container-v4'}):
+                raise RecordError('typed math output requires source-container-v3 or witnessed v4 evidence')
             if (source['derivation_id'] != record['derivation_id'] or source['group_id'] != group['group_id']
                     or source['source_commit'] != record['source_commit']
                     or source['origin_commit'] != record['origin_commit']

@@ -1203,3 +1203,32 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   零退出，461页全文layout及物理15/16/78–87页PNG与DATA接受版本逐字相同。
   完整译文事实树、原始run/历史与所有范围外tracked字节保持。该进度任务不授予
   词表/critic/人审或发布批准；F1–F8/S4/S5/S7继续。
+
+- 工具 Issue [#695](https://github.com/dongyaotalk/stacks-project-zh/issues/695)，
+  分支 tool/source-container-semantic-boundaries，基线
+  `f74a853168a8e02990e7329864de754b338046cc`。先写完整来源及模型溯源开发合同，
+  再实现独立 source-container-v4 边界 witness；真实 sets-000J 主/子标签和
+  0AHL/04VA 引言的紧邻陈述分别核验，旧版本原限制保持，具体 DATA 另开。
+  工具不采用事实、不消除诊断、不生成模型输出或批准。验收要求三个完整只读
+  包/check、篡改与拒绝回归、整库 QA/117 模板/进度计划和当前 lane render/pdf。
+  基线仍179修复批、695术语候选/2194诊断、13坐标/14来源、3proof差异、
+  1未保护pair/2歧义；全库存43257/36651 READY/6606 BLOCKED保持。
+  八项审查与 S4/S5/S7 总目标继续。
+  实际只读准备发现唯一额外前置依赖 transfinite-induction 的旧 proof-p001
+  来源证据。在目录写入前扩展 Issue/开发合同/allowed_write_files，只将该 evidence
+  迁移到锁定 Git 的完整000J proof；其他目录、词形/范围/批准和全部事实保持。
+  该变更后重新验收完整工具/QA、三个包/check、全库库存/对齐及 render/pdf。
+
+  本地验收：460项工具回归及239候选QA通过；117模板和三份进度/计划报告原字节
+  保持。三个真实完整只读包为28旧→8新、8组/零BLOCKED，四组需要原生边界
+  witness，其余使用原v2；确定性check保留全部文件mtime。整库117章/116 Git
+  回放及全部库存原字节保持；仅一个目录取证及其hash变化，所有当前术语/来源/
+  proof finding和179问题batch、695术语候选/2194诊断、13坐标/14来源、3proof
+  差异保持。范围外1384份既有tracked文件原字节、完整事实树与历史保持。
+  render180.130秒、pdf104.938秒均零退出，Final TeX log通过；461页中460页
+  全文layout原字节相同，第2页仅构建日期2026-10-09→2026-10-10，实际前后
+  PNG已查看；1/3/15/16/78–87页PNG逐字相同，无裁剪或重叠。首次同日比较
+  预期拒绝了这一真实日期变化，未修改生成TeX/PDF，完整差异留在ignored验收证据。
+  目录验收脚本修正仅顶层hash及文件/语义hash的错误比较口径，逐项核对全部unit
+  目录hash和完整finding保持，未降低检查。远端全字节/完整patch/native合同及
+  最新精确HEAD两项CI后才按授权bypass；本工具仍未采用实际译文或授予批准。

@@ -1,5 +1,14 @@
 # Harness、模型和运行溯源
 
+完整来源容器的独立历史边界扩展见
+[source-container-restoration.md](source-container-restoration.md) 的 2026-10-10
+开发合同。`source-container-v4` 与派生 v4 是不同版本；只有在完整旧 batch
+和锁定 Git 独立重算的 `legacy_boundary_witness` 支持下，才可核验带自身 Tag
+的列表子项或由紧邻陈述定位的完整段落。旧容器 v1/v2/v3 与派生 v1/v2/v3
+语义保持；普通容器仍生成原 v2/v3。新输出仍是逐字 Git 来源、现行保护提取及
+每个新 unit 的实际模型完整五字段。该工具须先验收合并，具体事实另开 DATA
+任务；扩展不改变来源锁、历史输入、数学保护、术语/critic/人审及出版门禁。
+
 本项目同时支持不同的执行工具（Harness）和不同的模型。二者必须分开记录：
 
 ```text

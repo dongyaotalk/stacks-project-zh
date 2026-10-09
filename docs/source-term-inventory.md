@@ -166,3 +166,14 @@ categories-lemma-directed-category-system、Section002Z、ordinal1及锁定 Git 
 全库候选/来源/证明残项及事实历史树保持，目录 hash 与三项取证元数据更新。
 完整工具回归、库存/check、整书 render/pdf/layout 和真实只读准备通过后工具PR；
 具体 DATA 在合并后另开任务、冻结全部新源/旧组并实际完整生成，不能提前采用。
+
+完整 sets 000J/0AHL/04VA 边界工具
+[Issue #695](https://github.com/dongyaotalk/stacks-project-zh/issues/695) 在写入目录前
+扩展合同：唯一 transfinite-induction evidence 仍依赖将被合并的旧
+tag:000J:proof-p001，迁移为既有 locked-source-container 格式，绑定真实
+sets-lemma-construct-category 的完整 proof、Section000H、ordinal1 和原 Git
+完整片段 hash。完整保护 source_projection 必须有准确词形 transfinite induction。
+仅这一条 evidence 改变，forms、chapters、其他目录条目、非数学分类和全部批准
+状态保持。先独立工具验收合并，实际 DATA 不临时豁免旧证据消失。目录 hash 与
+该词的原生取证元数据可变，全部当前术语/来源/证明 finding、来源库存和事实历史
+保持；重新执行完整回归/QA、真实只读包/check、全库库存/对齐及 render/pdf。

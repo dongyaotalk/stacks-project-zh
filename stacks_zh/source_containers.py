@@ -22,9 +22,11 @@ from .records import RecordError, load_jsonl, stamp_unit_hashes, sha256_value
 from .schema_validation import validate_named_schema
 from .source_integrity import STATEMENTS, _own_tag, permanent_tag_mapping
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, proof_groups, source_tex
+from .source_container_boundaries import (VERSION as BOUNDARY_VERSION,
+    secondary_statement_witness, adjacent_paragraph_witness)
 
 VERSION = 'source-container-v3'
-SUPPORTED_VERSIONS = {'source-container-v1', 'source-container-v2', VERSION}
+SUPPORTED_VERSIONS = {'source-container-v1', 'source-container-v2', VERSION, BOUNDARY_VERSION}
 OUTER_WHITESPACE = ' \t\r\n'
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\Z')
 
@@ -363,7 +365,8 @@ def lower_container(selected: dict[str, Any], policy: Policy, *, layout: str = '
     return rows
 
 
-def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str]) -> list[dict[str, Any]]:
+def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
+                         native_containers: Containers | None = None) -> list[dict[str, Any]]:
     """Recover full legacy wrapper chains before allowing replacement.
 
     Permanent coordinates are independently derived from native wrappers. A
@@ -393,11 +396,17 @@ def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str]) -> l
         if opening:
             kind = opening[1]
             owner = _own_tag(u, tags)
-            ids, end = [], cursor
+            ids, end, secondary = [], cursor, False
             while end < len(units):
                 member = units[end]
-                if member['chapter'] != u['chapter'] or member['parent_tag'] != u['parent_tag']:
+                if (member['chapter'] != u['chapter'] or native_containers is not None
+                        and member['source_commit'] != u['source_commit']):
                     raise RecordError('old statement crosses batch source scope')
+                if member['parent_tag'] != u['parent_tag']:
+                    if (native_containers is None or member['node_kind'] != 'list_item'
+                            or _own_tag(member, tags) != member['parent_tag']):
+                        raise RecordError('old statement crosses batch source scope')
+                    secondary = True
                 if end != cursor and re.search(r'\\begin\{(?:proof|' + '|'.join(sorted(STATEMENTS)) + r')\}', member['render']['prefix']):
                     raise RecordError('old statement wrapper is incomplete or overlaps another container')
                 ids.append(member['unit_id'])
@@ -410,6 +419,9 @@ def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str]) -> l
                 raise RecordError('old statement has no permanent own label')
             output.append({'input_unit_ids': ids, 'file': u['chapter'] + '.tex',
                            'owner_tag': owner, 'kind': kind, 'ordinal': 1})
+            if secondary:
+                output[-1]['legacy_boundary_witness'] = secondary_statement_witness(
+                    native_containers, units, output[-1])
             cursor = end + 1
             continue
         coordinate = re.fullmatch(r'tag:([0-9A-Z]+)(?::.*)?', mapping[u['unit_id']])
@@ -542,8 +554,15 @@ def _verify_paragraph_outer_whitespace(units, groups, group, old, selected, tags
 
 
 def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
-                     ids: list[str], selected: dict[str, Any], *, allow_outer_whitespace: bool = False) -> None:
-    groups = old_container_groups(units, tags)
+                     ids: list[str], selected: dict[str, Any], *, allow_outer_whitespace: bool = False,
+                     native_containers: Containers | None = None) -> dict[str, Any] | None:
+    if native_containers is not None:
+        if (len({u['unit_id'] for u in units}) != len(units)
+                or any(u['chapter'] + '.tex' != selected['selector']['file']
+                       or u['source_commit'] != selected['source_commit'] for u in units)):
+            raise RecordError('legacy boundary must bind one unique full batch in the locked chapter/source')
+    groups = old_container_groups(units, tags, native_containers=native_containers)
+    secondary = [g['legacy_boundary_witness'] for g in groups if 'legacy_boundary_witness' in g]
     selector = selected['selector']
     if selector['kind'] == 'proof':
         cores = [g for g in groups if g['kind'] == 'proof'
@@ -574,6 +593,9 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
         raise RecordError('restoration must cover one complete old wrapper chain')
     group, selector = matches[0], selected['selector']
     old_kind = 'title_title' if group['kind'] == 'chapter_title' else group['kind']
+    if native_containers is not None and old_kind == 'paragraph' and group['ordinal'] is None:
+        paragraph = adjacent_paragraph_witness(native_containers, units, groups, group, selected)
+        return {'secondary_statements': secondary, 'paragraph_anchor': paragraph}
     if (group['file'] != selector['file'] or group['owner_tag'] != selector['owner_tag']
             or old_kind != selector['kind'] or group['ordinal'] is not None
             and group['ordinal'] != selector['ordinal']):
@@ -588,6 +610,9 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
             _verify_paragraph_outer_whitespace(units, groups, group, old, selected, tags)
     if old_kind == 'prose_block' and group['boundary_witness'] != selected['boundary_witness']:
         raise RecordError('complete prose block has different real preceding/following semantic anchors')
+    if secondary:
+        return {'secondary_statements': secondary, 'paragraph_anchor': None}
+    return None
 
 
 def load_source_containers(root: Path, harvest: Path | None = None):
@@ -622,7 +647,7 @@ def load_source_containers(root: Path, harvest: Path | None = None):
             if key not in historical_containers:
                 historical_containers[key] = Containers(root, harvest,
                     policy_bytes=_git_origin_bytes(root, origin, 'config/macro-policy.yml'),
-                    natural_text_enabled=version == 'source-container-v3')
+                    natural_text_enabled=version in {'source-container-v3', BOUNDARY_VERSION})
             historical = historical_containers[key]
             selected = historical.select(record['selector'])
             for key in ('source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness'):
@@ -644,11 +669,15 @@ def load_source_containers(root: Path, harvest: Path | None = None):
             if (not units or len({u['unit_id'] for u in units}) != len(units)
                     or [c['unit_id'] for c in candidates] != [u['unit_id'] for u in units]):
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
-            verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
-                             allow_outer_whitespace=version in {'source-container-v2', 'source-container-v3'})
+            boundary = verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
+                             allow_outer_whitespace=version != 'source-container-v1',
+                             native_containers=historical if version == BOUNDARY_VERSION else None)
+            if version == BOUNDARY_VERSION and (not boundary or record['legacy_boundary_witness'] != boundary):
+                raise RecordError('legacy boundary witness differs from the actual Git and complete frozen batch')
             expected = lower_container(selected, historical.policy, layout=record['layout'])
-            if (any(u['schema_version'] == 2 for u in expected)) != (version == 'source-container-v3'):
-                raise RecordError('math-text unit-v2 requires exactly source-container-v3 evidence')
+            typed = any(u['schema_version'] == 2 for u in expected)
+            if version != BOUNDARY_VERSION and typed != (version == 'source-container-v3'):
+                raise RecordError('math-text unit-v2 requires source-container-v3 or witnessed v4 evidence')
             if record['new_units'] != expected or record['output_unit_ids'] != [u['unit_id'] for u in expected]:
                 raise RecordError('source-container new units differ from deterministic complete lowering')
             evidence[path.stem] = {'record': record, 'selected': selected,
@@ -794,7 +823,14 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                 restoration_id = None
             else:
                 selected = containers.select(group['selector'])
-                verify_old_group(units, containers.english.tags, ids, selected, allow_outer_whitespace=True)
+                boundary = None
+                try:
+                    verify_old_group(units, containers.english.tags, ids, selected, allow_outer_whitespace=True)
+                except RecordError:
+                    boundary = verify_old_group(units, containers.english.tags, ids, selected,
+                        allow_outer_whitespace=True, native_containers=containers)
+                    if not boundary:
+                        raise RecordError('source boundary extension requires an actual native witness')
                 file, location = selected['selector']['file'], selected['location']
                 if location['byte_start'] < last_location.get(file, 0):
                     raise RecordError('selected source containers overlap or reverse complete source order')
@@ -805,9 +841,11 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                     'source_commit', 'selector', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness')}
                 evidence.update(schema_version=1, restoration_id=restoration_id, derivation_id=identifier,
                     group_id=group_id, created_at=plan['created_at'], origin_commit=origin_commit,
-                    tool={'id': 'stacks-zh-source-container', 'version': VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2'}, layout=group['layout'],
+                    tool={'id': 'stacks-zh-source-container', 'version': BOUNDARY_VERSION if boundary else VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2'}, layout=group['layout'],
                     input_unit_ids=ids, output_unit_ids=[u['unit_id'] for u in new_units], new_units=new_units,
                     reason=group['reason'], files=snapshot_files)
+                if boundary:
+                    evidence['legacy_boundary_witness'] = boundary
                 problems = validate_named_schema(evidence, 'source-container-restoration.schema.json', 'proposed evidence')
                 if problems:
                     raise RecordError('\n'.join(problems))
@@ -856,6 +894,7 @@ def _container_payloads(manifest, groups, restorations, diagnostics, units, froz
         'input-units.jsonl': next(raw for path, raw in frozen.items() if path.parent.name == 'units'),
         'input-candidates.jsonl': next(raw for path, raw in frozen.items() if path.parent.name != 'units')}
     report = ['# 完整来源容器待审包', '', f"英文锁：`{manifest['source_commit']}`；工具：`{VERSION}`。", '',
+        '本包容器证据版本：' + ', '.join(sorted({r['tool']['version'] for r in restorations})) + '。', '',
         f"完整旧输入 {manifest['input_unit_count']} 个；提议新输入 {manifest['proposed_output_unit_count']} 个；"
         f"{manifest['group_count']} 组，其中 {manifest['blocked_group_count']} 组 BLOCKED。", '',
         'PREPARED 仅表示来源准备，不是事实采用、模型输出、术语/人审或发布批准。',

@@ -1033,3 +1033,16 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   13个声明文件、117章模板及全库唯一ID复核通过；最终进度/计划预览、完整远端
   PR字节/patch/native合同和精确HEAD CI继续。证明差异7组及其他残项保持，
   不将本批候选或自动检查计为人工批准。
+
+- 完整000R DATA PR [#673](https://github.com/dongyaotalk/stacks-project-zh/pull/673) 已合并到 `fb9d0d3366d4a2dccc9fa83bb7899bb77aa97497`；
+  独立进度 Issue [#674](https://github.com/dongyaotalk/stacks-project-zh/issues/674)，
+  分支docs/progress-after-000r。在下一DATA前从已合并事实执行progress/check及
+  plan/check，117章报告与DATA最终隔离预览逐字相同，三份报告保持；候选仍
+  108/3,299 Section、Categories24/44，人工语言/数学审校与发布零。当前239批/
+  1,407唯一活跃unit；186修复batch、727术语问题候选/2,302诊断，13坐标/
+  14来源诊断、2歧义和1未保护节点对保持。187组/258 proof单元为180匹配、
+  7差异、0未支持。全库存43,257提议/36,610 READY/6,647 BLOCKED保持。
+  workflow/harvest/index/117模板/provenance/decision通过；当前lane render/pdf
+  零退出，461页全文layout及物理15/16/35–38页PNG与DATA接受版本逐字相同。
+  完整译文事实树、原始run/历史与所有范围外tracked字节保持。该进度任务不授予
+  词表/critic/人审或发布批准；F1–F8/S4/S5/S7继续。

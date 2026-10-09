@@ -1071,3 +1071,26 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
   及15/16/35–38页PNG保持；六路径外1341个已有tracked文件及全部事实/历史
   保持。四个完整新容器源字节/旧组核验通过，many prepare/check在本地工具
   提交冻结政策后继续；仅工具验收，不采用译文或授予批准，S4/S5/S7继续。
+
+- 完整相邻批次修复计划：Issue [#678](https://github.com/dongyaotalk/stacks-project-zh/issues/678)，
+  分支translate/sets/000u-000x/openai-gpt-6-1-sol，基线main
+  `00bdfdbc658f56397f5e279fae7f859d248f550a`。记号工具PR #677已按精确HEAD
+  CI/bypass合并；从已合并政策重新many prepare/check，完整000U/000X的22旧
+  单元恢复为四个完整lemma/proof，真实相邻Section000T/000W；X proof沿用
+  既有unit-v2数学and slot，其余数学保持。冻结全部新源/完整旧组/政策/风格/
+  词表/提示词/术语及实际最新模型turn身份，动态Harness后每新unit实际完整
+  五字段修订；共享一个真实run/correction、两份v4/四份来源证据，保留全部
+  原run/输出/历史。20声明路径内同步sets模板，445回归/239 QA及117章、
+  Schema/溯源/决策、全库存/check→对齐/check与进度/计划隔离预览通过；
+  全部旧新/真实Git/五字段/ID/范围独立复核，整书render/pdf和目标页视觉
+  验收后push/PR，完整远端/native合同/精确HEAD CI后授权bypass。合并后
+  独立progress先于下一DATA。当前186问题batch/727术语候选/2302诊断、
+  13坐标/14来源、7proof差异及其他残项继续，不授予术语/critic/人审/发布批准。
+
+- #678 首轮未提交候选的视觉验收发现正文尾部来源换行被省略，AJbook将X证明
+  结束方框放在中间列表后；重复整书编译仍复现。独立最小排版对照确认单个尾部
+  换行保留正确终止位置。完整首轮事实/run/原输出和失败材料保留在ignored证据，
+  第二个实际run `run-20261009-sets-000u-000x-complete-gpt61sol-02` 重新核实冻结
+  输入/runtime，完整生成四单元五字段，保留来源尾换行；继续完整数据和视觉验收。
+  活跃候选保留两个不同历史run，跨批QA使用本次共享修订run的两份原始候选，
+  所有活跃文件仍通过全库QA/溯源核对，不改写历史身份。

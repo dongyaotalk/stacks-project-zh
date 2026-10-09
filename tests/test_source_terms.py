@@ -109,6 +109,44 @@ class SourceTermsTests(unittest.TestCase):
         self.assertEqual([x["source_term"] for x in source_inventory(row, catalog(row))["occurrences"]], ["category"])
         self.assertEqual(validate_source_terms(row, candidate([("category", "范畴")]), catalog(row)), [])
 
+    def test_scoped_emphasis_defines_terms_and_requires_every_occurrence(self):
+        for opening in [r'{\em ', '{ \n\t\\em\n']:
+            with self.subTest(opening=opening):
+                row = unit('It is called <EMPHOPEN_0001>frobulator<EMPHCLOSE_0001>. '
+                           'Another frobulator has <MATH_0001>.',
+                           {'EMPHOPEN_0001': opening, 'EMPHCLOSE_0001': '}',
+                            'MATH_0001': r'$\text{hidden objects}$'}, 'proof')
+                self.assertEqual(source_projection(row)[1], ['frobulator'])
+                self.assertEqual([x['source_term'] for x in source_inventory(row, catalog(row))['occurrences']],
+                                 ['frobulator', 'frobulator'])
+                self.assertTrue(validate_source_terms(row, candidate([('frobulator', '新概念')]), catalog(row)))
+                output = candidate([('frobulator', '新概念')] * 2)
+                output['translation'] = ('<EMPHOPEN_0001>新概念（frobulator）<EMPHCLOSE_0001>；'
+                                         '新概念（frobulator）<MATH_0001>。')
+                self.assertEqual(validate_source_terms(row, output, catalog(row)), [])
+
+    def test_scoped_emphasis_catalog_phrase_remains_visible(self):
+        row = unit('It is called <EMPHOPEN_0001>finitely generated<EMPHCLOSE_0001>. '
+                   'It is finitely generated.',
+                   {'EMPHOPEN_0001': r'{\em ', 'EMPHCLOSE_0001': '}'}, 'proof')
+        words = catalog(row)
+        words['terms'] = [{'id': 'finitely-generated', 'forms': ['finitely generated'],
+                          'chapters': [], 'evidence': [{'chapter': 'test', 'unit_id': row['unit_id'],
+                          'source_term': 'finitely generated', 'source_tex_hash': source_tex_hash(row)}]}]
+        self.assertEqual([x['source_term'] for x in source_inventory(row, words)['occurrences']],
+                         ['finitely generated'] * 2)
+        self.assertTrue(validate_source_terms(row, candidate([]), words))
+        self.assertEqual(validate_source_terms(row, candidate([('finitely generated', '有限生成')] * 2), words), [])
+
+    def test_fake_emphasis_payload_cannot_define_or_join_a_term(self):
+        for opening in [r'\em ', r'{\emfoo ', r'{\em \input{x}', r'$x$']:
+            with self.subTest(opening=opening):
+                row = unit('It is called <EMPHOPEN_0001>frobulator<EMPHCLOSE_0001>.',
+                           {'EMPHOPEN_0001': opening, 'EMPHCLOSE_0001': '}'}, 'proof')
+                self.assertEqual(source_projection(row)[1], [])
+                self.assertIn('<EMPHOPEN_0001>', source_projection(row)[0])
+                self.assertEqual(source_inventory(row, catalog(row))['occurrences'], [])
+
     def test_new_definition_declaration_requires_coverage_without_catalog_entry(self):
         row = unit("A <TEXTITOPEN_0001>frobulator<TEXTITCLOSE_0001> is defined here. The frobulator is unique.",
                    {"TEXTITOPEN_0001": r"{\it ", "TEXTITCLOSE_0001": "}"})

@@ -494,13 +494,18 @@ class Scanner:
                     stop = self.argument_end(i)
                     inner = self.skip_space(i + 1)
                     declaration = COMMAND.match(self.text, inner)
-                    if declaration and declaration.group()[1:] in {'it', 'bf'}:
+                    name = declaration.group()[1:] if declaration else ''
+                    scoped = name in {'it', 'bf'} or (
+                        name == 'em' and self.policy.commands.get(name)
+                        == 'preserve_scoped_declaration_translate_children')
+                    if declaration and scoped:
+                        role = {'it': 'TEXTIT', 'bf': 'TEXTBF', 'em': 'EMPH'}[name]
                         opening_end = declaration.end()
                         if self.text[opening_end:opening_end + 1].isspace():
                             opening_end += 1
-                        out.append(lock('TEXTITOPEN' if declaration.group() == r'\it' else 'TEXTBFOPEN', i, opening_end))
+                        out.append(lock(role + 'OPEN', i, opening_end))
                         out.append(walk(opening_end, stop - 1))
-                        out.append(lock('TEXTITCLOSE' if declaration.group() == r'\it' else 'TEXTBFCLOSE', stop - 1, stop))
+                        out.append(lock(role + 'CLOSE', stop - 1, stop))
                     else:
                         out.extend([lock('GROUPOPEN', i, i + 1), walk(i + 1, stop - 1), lock('GROUPCLOSE', stop - 1, stop)])
                     i = stop

@@ -215,7 +215,7 @@ def placeholder_names(text: str) -> list[str]:
 
 
 FONT_WRAPPER_RE = re.compile(r"<(?:TEXTIT|TEXTBF|TEXTSF|TEXTTT|TEXTSC|TEXTRM|EMPH|TEXT)(?:OPEN|CLOSE)_[0-9]{4}>")
-FONT_OPEN_RE = re.compile(r"(?:\{\\(?:it|bf|rm|sf|tt|sc)\s*|\\(?:textit|textbf|textsf|texttt|textsc|textrm|emph|text)\{)")
+FONT_OPEN_RE = re.compile(r"(?:\{\\(?:it|bf|rm|sf|tt|sc)\s*|\{\s*\\em\s*|\\(?:textit|textbf|textsf|texttt|textsc|textrm|emph|text)\{)")
 
 
 def is_font_wrapper(token: str, placeholders: Mapping[str, str]) -> bool:

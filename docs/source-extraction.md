@@ -1,6 +1,6 @@
 # 全库来源抽取器
 
-目标是一次扫描锁定英文库全部117章，集中准备来源及问题清单。现有1480个unit只代表已准备范围，不能成为全库覆盖基准。本工具不生成译文，不替换当前单元或批准术语；它提供可复查、确定性生成的来源暂存包，后续实际修订按来源匹配和问题清单执行。
+目标是一次扫描锁定英文库全部117章，集中准备来源及问题清单。工具首次开发时已有的1480个unit只代表当时已准备范围，不能成为全库覆盖基准。本工具不生成译文，不替换当前单元或批准术语；它提供可复查、确定性生成的来源暂存包，后续实际修订按来源匹配和问题清单执行。
 
 ## 命令与产物
 
@@ -34,7 +34,7 @@ Synthetic fixtures覆盖公式转义/注释、嵌套字体和脚注、标题与�
 
 ## 当前译文集中修订
 
-全库库存生成后执行 `make source-alignment`，为当前239个batch/1480个unit准备统一对应及修订队列；更新事实后执行同一命令，`make source-alignment-check`检查是否过期。工具从锁定Git重新验证用到的章容器，再按真实永久Tag/proof链定位，合并terms/source/proof三个独立审计；现有分段不能按新库存序号覆盖。
+全库库存生成后执行 `make source-alignment`，最初为239个batch/1480个unit准备统一对应及修订队列，后续按当前事实重建；更新事实后执行同一命令，`make source-alignment-check`检查是否过期。工具从锁定Git重新验证用到的章容器，再按真实永久Tag/proof链定位，合并terms/source/proof三个独立审计；现有分段不能按新库存序号覆盖。
 
 报告在`build/source-alignment/report.md`，逐批任务在`repair-queue.jsonl`。队列保存当前unit/candidate和审计政策hash，来源byte span、提案和差异；排版/已核实引用别名相同仍只作定位证据，不豁免来源恢复或实际模型修订。完整设计见[source-alignment.md](source-alignment.md)。
 
@@ -152,3 +152,26 @@ check四个完整来源提议；000X证明沿用已有and typed-slot。000J陈�
 准备接口要求政策字节等于真实已提交origin：先核验四个源容器及旧组并完成本地
 检查/编译，再用本地工具提交冻结政策，执行多批prepare/check后才push及开PR。
 不伪造origin或放宽准备门禁。
+
+### 显式分组的强调声明
+
+独立工具 [Issue #688](https://github.com/dongyaotalk/stacks-project-zh/issues/688)
+先定义本合同，再修改政策、代码和目录。categories 0032 的完整 proof 使用
+`{\em finitely generated}` 命名概念；真实归属为 Section002Z。仅当政策明确登记
+em 的 `preserve_scoped_declaration_translate_children`，且它是完整显式花括号组
+的首个非空白命令时，扫描器保存开组和声明原字节为 EMPHOPEN、闭组为 EMPHCLOSE，
+递归暴露组内自然语言。嵌套数学、字体、脚注、引用、comment 与空白继续无损保护；
+不执行宏，也不把强调文字分类为数学记号。分组内声明前的原空白保持。
+
+未分组 em、相似命令、缺少 em 声明的旧政策和未知语法继续 BLOCKED；bf/it 的
+既有语义不变。术语投影只识别完整匹配的真实 em 字体包装，支持开组后原空白；
+控制序列、公式、伪包装和语义节点不能提供词汇声明。定义/命名语境及逐次术语
+要求仍适用，不授予 glossary 或人审批准。
+
+回归覆盖完整嵌套容器/Unicode/空白回放、旧政策与未分组拒绝、相似命令和伪包装、
+新概念声明及逐次覆盖。实际全库重新生成/check，公开只由 em 引起的保护/状态/
+诊断与匹配变化，116份 Git blob 全回放；全部现有事实、术语候选/来源/proof 残项
+保持。三个旧来源词汇锚点先迁到0032完整proof，合同见 source-term-inventory。
+当前 lane render/pdf 和整书 layout 保持后创建工具提交，再以真实提交政策只读
+prepare/check 完整15旧→2新；不生成事实、run 或中文。工具合并后具体 DATA 重新
+冻结输入并实际修订，来源恢复、历史及人审规则保持。

@@ -1153,3 +1153,20 @@ S4/S5/S7及人审、词汇批准与发布继续，不能计未采用试验为已
   零退出，461页全文layout及物理15/16/48–50页PNG与DATA接受版本逐字相同。
   完整译文事实树、原始run/历史与所有范围外tracked字节保持。该进度任务不授予
   词表/critic/人审或发布批准；F1–F8/S4/S5/S7继续。
+
+## 0032 强调语法及稳定来源证据计划（Issue #688）
+
+主分支 ca696ea5337d60aebfc20b942f77d92080f7fcef 已含独立进度 #687。
+0032 的真实 Section002Z 完整lemma可准备，完整proof唯一未知命令是显式分组 em；
+旧15单元仍是当前事实。本工具先写开发合同，再按明确政策增加 EMPH 字体保护，
+保留原开闭组/声明、数学/脚注/引用/空白及既有bf/it语义；旧政策、未分组和伪包装
+仍拒绝。cofinal、finitely-generated、ordinal三项 evidence 稳定到真实完整proof，
+准确词形/selector/Git hash核验，其他目录及批准状态保持。
+
+九声明路径内执行有意义回归、全工具/239 QA/所有结构化门禁和117模板，全库存/
+check→对齐/check，逐项核对全部事实审计和库存匹配增量；progress/plan保持。
+当前lane render/pdf零退出及全书layout/目标页保持后本地工具commit，以真实提交
+冻结政策再只读prepare/check完整15旧→2新，全部原事实/历史/run/raw保持。远端
+全部字节/patch/native合同及精确HEAD双CI成功后授权bypass；具体DATA合并后另开
+Issue重新准备、完整冻结并实际生成两单元五字段。当前180修复batch、705术语
+候选/2246诊断、13坐标/14来源、4proof及1未保护pair/2歧义和F1–F8/S4/S5/S7继续。

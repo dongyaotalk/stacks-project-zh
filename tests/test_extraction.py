@@ -30,6 +30,69 @@ def inventory(body):
 
 
 class ExtractionTests(unittest.TestCase):
+    def test_scoped_emphasis_exposes_full_nested_proof_and_preserves_tex(self):
+        proof = (r'\begin{proof}Café $x$ is {\em finitely generated ' + '\n'
+                 r'with {\it objects} and {\em arrows}\footnote{A {\bf category} '
+                 r'with $y$ and \ref{lemma-one}.}}.\end{proof}')
+        body = (r'\section{First}\label{section-first}' + '\n'
+                r'\begin{lemma}\label{lemma-one}A claim.\end{lemma}' + '\n' + proof)
+        rows, _, errors = inventory(body)
+        self.assertFalse(errors)
+        row = next(r for r in rows if r['unit']['node_kind'] == 'proof')
+        self.assertEqual((row['owner_tag'], row['parent_tag'], row['state']),
+                         ('CCCC', 'BBBB', 'READY'))
+        self.assertEqual(source_tex(row['unit']), proof)
+        text, tokens = row['unit']['source_text'], row['unit']['placeholders']
+        self.assertIn('finitely generated', text)
+        self.assertIn('objects', text)
+        self.assertIn('arrows', text)
+        self.assertIn('category', text)
+        self.assertEqual(sum(k.startswith('EMPHOPEN_') for k in tokens), 2)
+        self.assertEqual(sum(k.startswith('EMPHCLOSE_') for k in tokens), 2)
+        self.assertEqual([v for k, v in tokens.items() if k.startswith('MATH_')],
+                         ['$x$', '$y$'])
+        self.assertIn(r'\ref{lemma-one}', tokens.values())
+        raw = ('\\begin{document}\n' + body + '\n\\end{document}\n').encode()
+        span = row['location']
+        self.assertEqual(raw[span['byte_start']:span['byte_end']], proof.encode())
+
+    def test_scoped_emphasis_keeps_leading_space_comments_and_unicode(self):
+        for opening in ['{\\em ', '{ \n\t\\em\n', '{\\em% scoped\n']:
+            with self.subTest(opening=opening):
+                paragraph = 'Café δ ' + opening + 'finitely generated $x$ 对象}.'
+                rows, _, errors = inventory(r'\section{First}\label{section-first}'
+                                            + '\n' + paragraph)
+                self.assertFalse(errors)
+                self.assertEqual(source_tex(rows[-1]['unit']), paragraph + '\n')
+                self.assertEqual(rows[-1]['state'], 'READY')
+                self.assertIn('finitely generated', rows[-1]['unit']['source_text'])
+
+    def test_emphasis_requires_explicit_scope_and_exact_command(self):
+        for fragment in [r'\em finitely generated', r'{\emphasis hidden}',
+                         r'\{\em hidden\}', r'{\EM hidden}', r'{\em unclosed']:
+            with self.subTest(fragment=fragment):
+                rows, _, errors = inventory(r'\section{First}\label{section-first}'
+                                            + '\nA ' + fragment + '.')
+                self.assertTrue(errors)
+                self.assertEqual(rows[-1]['state'], 'BLOCKED')
+
+    def test_historical_policy_still_blocks_scoped_emphasis(self):
+        entry = ('  em:\n    policy: preserve_scoped_declaration_translate_children\n'
+                 '    required_scope: explicit_braced_group\n'
+                 '    locked_parts: [opening_group_and_declaration, closing_group]\n'
+                 '    ungrouped_action: block\n')
+        self.assertIn(entry, POLICY_RAW)
+        old = Policy(POLICY_RAW.replace(entry, ''))
+        raw = ('\\begin{document}\n' + r'\section{First}\label{section-first}' + '\n'
+               r'A {\it category} and {\bf object} is {\em finitely generated}.'
+               + '\n\\end{document}\n').encode()
+        rows, _, errors = chapter_inventory('alpha', raw, COMMIT, TAGS, old)
+        self.assertEqual(rows[-1]['state'], 'BLOCKED')
+        self.assertEqual([(e['kind'], e['source']) for e in errors],
+                         [('unknown-command', r'\em')])
+        self.assertIn('TEXTITOPEN_0001', rows[-1]['unit']['placeholders'])
+        self.assertIn('TEXTBFOPEN_0001', rows[-1]['unit']['placeholders'])
+
     def test_nested_footnotes_fonts_and_protected_math_roundtrip(self):
         body = (r'\section{First}\label{section-first}' + '\n'
                 r'A {\it category} $x$ has a footnote\footnote{First $y$. ' + '\n\n'

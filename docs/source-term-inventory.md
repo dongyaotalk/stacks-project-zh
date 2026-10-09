@@ -154,3 +154,15 @@ Section0013，ordinal1，按原完整片段 hash 与保护后 source_projection 
 生成，不能把本工具取证当作数据修复完成。全库候选/来源/证明残项和完整译文
 事实树保持，仅目录 hash 与两项取证元数据更新；当前 lane render/pdf 零退出
 及整书 layout 保持后提交 PR。
+
+0032 的三项稳定来源证据由独立工具
+[Issue #688](https://github.com/dongyaotalk/stacks-project-zh/issues/688) 声明。
+cofinal、finitely-generated、ordinal 分别保持准确词形 cofinal、finitely generated、
+ordinals，均绑定真实0032完整 proof：categories.tex、真实标签
+categories-lemma-directed-category-system、Section002Z、ordinal1及锁定 Git 片段 hash。
+完整来源的可准备状态先由独立 em 强调声明政策/工具支持；不能跳过未知语法阻断。
+保护后 source_projection 必须暴露每个准确词形，finitely generated 不能锁在格式中。
+只改这三条 evidence，全部 forms、chapters、其他目录及非数学分类保持；不批准中文。
+全库候选/来源/证明残项及事实历史树保持，目录 hash 与三项取证元数据更新。
+完整工具回归、库存/check、整书 render/pdf/layout 和真实只读准备通过后工具PR；
+具体 DATA 在合并后另开任务、冻结全部新源/旧组并实际完整生成，不能提前采用。

@@ -1170,3 +1170,23 @@ check→对齐/check，逐项核对全部事实审计和库存匹配增量；pro
 全部字节/patch/native合同及精确HEAD双CI成功后授权bypass；具体DATA合并后另开
 Issue重新准备、完整冻结并实际生成两单元五字段。当前180修复batch、705术语
 候选/2246诊断、13坐标/14来源、4proof及1未保护pair/2歧义和F1–F8/S4/S5/S7继续。
+
+## 0032 完整有向系统陈述与证明修订计划（Issue #690）
+
+前置工具 PR [#689](https://github.com/dongyaotalk/stacks-project-zh/pull/689) 已合并到
+`b58b1839b0edb5eb0c5cb92ba8969f52ef5e0e0a`，完整 proof 的 em 已有明确保护政策，
+三条术语证据稳定到锁定 Git。按真实 Section002Z 恢复完整0032 lemma/proof，
+旧7条陈述与8条证明变为2个完整容器；新ID为tag:0032:statement与tag:0032:proof。
+完整15条旧输入/候选及历史、长脚注、强调、交换图、所有数学/引用与尾换行均保留。
+
+先从新main重新prepare/check，再冻结全部新源、旧分组/candidates、政策/风格/
+词表/prompt/来源目录、动态Harness及本次真实runtime，实际模型完整生成2单元
+全部五字段。一个新revision run/correction连接一份v4与两份来源恢复证据，
+程序只保护、序列化、验证及装配。验收13路径、完整Git/五字段/context/来源图、
+239 QA与真实当前run qa-batch、全extract/check→alignment/check及117模板/
+Schema/溯源/决策/进度计划预览。两个来源BYTE_EXACT、proof match、目标队列
+清空，范围外诊断逐项保持；当前lane render/pdf零退出及完整日志/目标页视觉
+验收后commit/push/PR，远端字节/完整patch/native合同与精确HEAD双CI后授权
+bypass。DATA合并后独立progress。基线180问题batch、705术语候选/2246诊断、
+13坐标/14来源、4proof、1未保护pair/2歧义继续；不授予术语、人审或发布批准，
+不修英文疑点或补证明，F1–F8/S4/S5/S7总目标保持未完成。

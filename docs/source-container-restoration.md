@@ -275,3 +275,50 @@ Issue [#629](https://github.com/dongyaotalk/stacks-project-zh/issues/629) 为历
 准备包生成 v2；加载不可变证据按其 tool version 核验，直接旧 helper 调用默认
 维持严格规则。该工具只准备来源，不生成中文、run 或事实。DATA #628 须在工具
 验收合并后改用完整段落 selector，重新准备/check、冻结上下文及实际模型修订。
+
+### 9.2 多批次共用一次来源准备校验
+
+集中准备多个完整 batch 时，单批接口重复重放全仓库历史，四批准备/check 共
+执行八次全仓库溯源校验。新增 `prepare-source-containers-many` CLI，重复
+`--plan <file>` 声明至少两个同章、互不重叠的完整 batch，输出一个 ignored
+aggregate 包。原单批接口、八文件包格式、source-container-v1/v2/v3、v4 证据
+及全部历史语义保持；工具不生成中文、run、事实或批准。
+
+一次调用先冻结中文 HEAD、锁、政策、全部事实/历史/审校及所有已跟踪输入原字节，
+执行真实完整 provenance 校验；仅本次内部会话复用该已验证快照和锁定 Git 扫描器。
+不存在 caller 提供“已验证”、跳过验证的参数或跨调用磁盘缓存。每份 plan 仍独立
+验证完整旧 Git batch、全部旧新有序组、每份真实 selector 与无损 lowering，且每包
+的八文件字节与相同输入的原单批接口相等。重复单位/候选写入目标、派生 ID、新输出
+ID、跨章、跨批容器重叠均拒绝；输入顺序不授权重复消费原文。
+
+aggregate manifest 使用独立 generator/version，记录每个 plan 原字节 hash、原序
+子包 ID、完整子包文件 hash、总旧新/组/BLOCKED 数；子目录为安全 derivation ID。
+BLOCKED 包和完整输入照常保存，不以其余包 PREPARED 隐藏问题。
+`--require-prepared` 在任意组阻断时非零；`--check` 重做实际完整验证并只读比较
+全部目录/文件/字节，不修改 mtime。未知、额外、篡改、越界或 symlink 文件拒绝。
+
+每个 plan 前后及落盘前重查全快照、HEAD、锁、policy、源 blob、plan、输出目录和
+旧包原字节；任一变化失败。全部子包先在同一临时 aggregate 目录生成，最后一次
+原子替换，失败回滚整包；不分别安装部分成功的子包。全输入快照、输出完整性、
+子包逐字等价和跨包所有权拒绝均由独立 fixture 回归验证。
+
+工具任务只改工具/回归及本文和工程计划。真实四份完整现有批次分别运行原接口
+与新接口，逐字比较所有子包并报告实际耗时；全部事实/历史/英文原字节、全书库存/
+对齐及残项保持。全量工具/QA、来源库存/check→对齐/check、进度/计划及当前 lane
+render/pdf 验收后提交；具体修订仍另开 DATA 任务，S4/S5/S7 与八项总验收继续。
+
+工具任务：[Issue #670](https://github.com/dongyaotalk/stacks-project-zh/issues/670)。
+同章集中准备示例（每份 plan 仍必须声明完整 batch 和全部有序分组）：
+
+```bash
+python3 stacks_zh.py prepare-source-containers-many \
+  --harvest ../stacks-project \
+  --plan build/plan-a.json --plan build/plan-b.json \
+  --output build/source-container-packages --require-prepared
+```
+
+在同一命令末尾加 `--check` 可独立完整复核，包及目录时间戳保持。
+四个实际完整当前规模界 batch 的只读验收中，原已合并实现准备耗时311.096秒，
+新接口99.201秒（3.136倍），独立check98.412秒；32个子包文件与原接口逐字相等，
+全部输入/事实/历史保持。该计时是同一冻结输入上的一次实测，不承诺固定耗时；
+check重做完整溯源而不是信任上次PREPARED。具体DATA仍在工具合并后另开任务。

@@ -664,29 +664,75 @@ def load_source_containers(root: Path, harvest: Path | None = None):
     return evidence, errors
 
 
+def _repository_state(root: Path):
+    paths = [root / 'upstream.lock', *sorted((root / 'config').glob('*')),
+             *sorted((root / 'translation-data').rglob('*.json')),
+             *sorted((root / 'translation-data').rglob('*.jsonl')),
+             *sorted((root / 'review').rglob('*.json'))]
+    state = {}
+    for path in paths:
+        if not path.is_file() or path.name == 'local.mk':
+            continue
+        safe_path(root, path.relative_to(root).as_posix(), r'[A-Za-z0-9._/-]+')
+        state[path.relative_to(root).as_posix()] = byte_hash(path.read_bytes())
+    return state
+
+
+class _VerifiedPreparation:
+    """One call's actual validation, bound to unchanged inputs; never caller-supplied."""
+    def __init__(self, root: Path, harvest: Path):
+        from .provenance import validate_repository_provenance
+        self.root, self.harvest = root, harvest
+        self.state = _repository_state(root)
+        self.origin = self._head()
+        self.inputs = self._input_state()
+        errors = validate_repository_provenance(root, harvest)
+        if errors:
+            raise RecordError('container preparation blocked by provenance:\n' + '\n'.join(errors))
+        self.containers = Containers(root, harvest)
+        self.assert_unchanged()
+
+    def _head(self):
+        return subprocess.run(['git', '-C', str(self.root), 'rev-parse', 'HEAD'], check=True,
+                              capture_output=True, text=True).stdout.strip()
+
+    def _input_state(self):
+        raw = subprocess.run(['git', '-C', str(self.root), 'ls-files', '-z'], check=True,
+                             capture_output=True).stdout
+        paths = {self.root / name.decode('utf-8') for name in raw.split(b'\0') if name}
+        for directory in ('translation-data', 'review'):
+            paths.update(p for p in (self.root / directory).rglob('*') if p.is_file() or p.is_symlink())
+        state = {}
+        for path in sorted(paths):
+            relative = path.relative_to(self.root).as_posix()
+            if (not path.resolve().is_relative_to(self.root.resolve()) or any(
+                    p.is_symlink() for p in [path, *path.parents] if p.is_relative_to(self.root))):
+                raise RecordError('tracked preparation input escapes repository or is a symlink')
+            state[relative] = byte_hash(path.read_bytes())
+        return state
+
+    def assert_unchanged(self):
+        self.containers.assert_unchanged()
+        if _repository_state(self.root) != self.state or self._input_state() != self.inputs:
+            raise RecordError('repository facts, history, policy or tracked input changed during source-container preparation')
+        if self._head() != self.origin:
+            raise RecordError('Chinese origin Git revision changed during source-container preparation')
+
+
 def prepare_containers(root: Path, harvest: Path, plan: dict[str, Any]):
     """Prepare every declared group against the exact current Git batch.
 
     A blocked group remains in the full input and diagnostic package. No
     correction ID, run, approval or adopted derivation is manufactured here.
     """
-    from .provenance import validate_repository_provenance
+    return _prepare_verified_containers(_VerifiedPreparation(root, harvest), plan)
+
+
+def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[str, Any]):
     from .derivations import _git_origin_bytes
-
-    def repository_state():
-        paths = [root / 'upstream.lock', *sorted((root / 'config').glob('*')),
-                 *sorted((root / 'translation-data').rglob('*.json')),
-                 *sorted((root / 'translation-data').rglob('*.jsonl')),
-                 *sorted((root / 'review').rglob('*.json'))]
-        state = {}
-        for path in paths:
-            if not path.is_file() or path.name == 'local.mk':
-                continue
-            safe_path(root, path.relative_to(root).as_posix(), r'[A-Za-z0-9._/-]+')
-            state[path.relative_to(root).as_posix()] = byte_hash(path.read_bytes())
-        return state
-
-    frozen_state = repository_state()
+    root = preparation.root
+    frozen_state = preparation.state
+    preparation.assert_unchanged()
     expected = {'derivation_id', 'created_at', 'units_file', 'candidates_file', 'groups'}
     if not isinstance(plan, dict) or set(plan) != expected:
         raise RecordError('container plan needs exact identity, full-batch files and groups')
@@ -697,16 +743,12 @@ def prepare_containers(root: Path, harvest: Path, plan: dict[str, Any]):
     candidate_path = safe_path(root, plan['candidates_file'], r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
     if unit_path.name != candidate_path.name:
         raise RecordError('container plan must name one paired complete logical batch')
-    origin_commit = subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'], check=True,
-                                   capture_output=True, text=True).stdout.strip()
+    origin_commit = preparation.origin
     frozen = {p: p.read_bytes() for p in (unit_path, candidate_path)}
     for path, raw in frozen.items():
         original = _git_origin_bytes(root, origin_commit, path.relative_to(root).as_posix())
         if raw != original:
             raise RecordError('container preparation requires the exact committed current complete batch')
-    provenance_errors = validate_repository_provenance(root, harvest)
-    if provenance_errors:
-        raise RecordError('container preparation blocked by provenance:\n' + '\n'.join(provenance_errors))
     units = [clean(u) for u in load_jsonl(unit_path)]
     candidates = [clean(c) for c in load_jsonl(candidate_path)]
     old_ids = [u['unit_id'] for u in units]
@@ -720,7 +762,7 @@ def prepare_containers(root: Path, harvest: Path, plan: dict[str, Any]):
             or [i for g in groups for i in g['input_unit_ids']] != old_ids
             or len({g['group_id'] for g in groups}) != len(groups)):
         raise RecordError('container plan must partition every old ID once in complete source order')
-    containers = Containers(root, harvest)
+    containers = preparation.containers
     if any(row['source_commit'] != containers.english.commit for row in units + candidates):
         raise RecordError('complete container batch source revision differs from the English lock')
     if containers.policy_bytes != _git_origin_bytes(root, origin_commit, 'config/macro-policy.yml'):
@@ -797,18 +839,34 @@ def prepare_containers(root: Path, harvest: Path, plan: dict[str, Any]):
         'state': 'BLOCKED' if diagnostics else 'PREPARED', 'files': {}}
 
     def current_inputs():
-        containers.assert_unchanged()
-        if repository_state() != frozen_state:
-            raise RecordError('repository facts, history or policy changed during source-container preparation')
+        preparation.assert_unchanged()
         for path, raw in frozen.items():
             if path.read_bytes() != raw:
                 raise RecordError('current full batch changed during source-container preparation')
-        if subprocess.run(['git', '-C', str(root), 'rev-parse', 'HEAD'], check=True,
-                          capture_output=True, text=True).stdout.strip() != origin_commit:
-            raise RecordError('Chinese origin Git revision changed during source-container preparation')
 
     current_inputs()
     return manifest, proposals, restored, diagnostics, lowered, frozen, current_inputs
+
+
+def _container_payloads(manifest, groups, restorations, diagnostics, units, frozen):
+    json_bytes = lambda value: (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + '\n').encode()
+    payloads = {'groups.json': json_bytes(groups), 'restorations.json': json_bytes(restorations),
+        'diagnostics.json': json_bytes(diagnostics),
+        'units.jsonl': ''.join(json.dumps(u, ensure_ascii=False, sort_keys=True) + '\n' for u in units).encode(),
+        'input-units.jsonl': next(raw for path, raw in frozen.items() if path.parent.name == 'units'),
+        'input-candidates.jsonl': next(raw for path, raw in frozen.items() if path.parent.name != 'units')}
+    report = ['# 完整来源容器待审包', '', f"英文锁：`{manifest['source_commit']}`；工具：`{VERSION}`。", '',
+        f"完整旧输入 {manifest['input_unit_count']} 个；提议新输入 {manifest['proposed_output_unit_count']} 个；"
+        f"{manifest['group_count']} 组，其中 {manifest['blocked_group_count']} 组 BLOCKED。", '',
+        'PREPARED 仅表示来源准备，不是事实采用、模型输出、术语/人审或发布批准。',
+        '每个新单元仍需实际模型五字段完整修订；完整旧批次和全部历史必须保存。', '',
+        '| Group | State | Old | New |', '| --- | --- | ---: | ---: |']
+    report.extend(f"| {g['group_id']} | {g['state']} | {len(g['input_unit_ids'])} | {len(g['output_unit_ids'])} |" for g in groups)
+    report.extend(['', '诊断：', ''] + [f"- {d['group_id']}: {d['message']}" for d in diagnostics])
+    payloads['report.md'] = ('\n'.join(report) + '\n').encode()
+    manifest['files'] = {name: byte_hash(raw) for name, raw in payloads.items()}
+    payloads['manifest.json'] = json_bytes(manifest)
+    return payloads
 
 
 def write_container_package(root: Path, harvest: Path, plan_path: Path, output: Path, *, check: bool = False):
@@ -842,23 +900,7 @@ def write_container_package(root: Path, harvest: Path, plan_path: Path, output: 
     raw_plan = plan_path.read_bytes()
     plan = json.loads(raw_plan)
     manifest, groups, restorations, diagnostics, units, frozen, assert_inputs = prepare_containers(root, harvest, plan)
-    json_bytes = lambda value: (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + '\n').encode()
-    payloads = {'groups.json': json_bytes(groups), 'restorations.json': json_bytes(restorations),
-        'diagnostics.json': json_bytes(diagnostics),
-        'units.jsonl': ''.join(json.dumps(u, ensure_ascii=False, sort_keys=True) + '\n' for u in units).encode(),
-        'input-units.jsonl': next(raw for path, raw in frozen.items() if path.parent.name == 'units'),
-        'input-candidates.jsonl': next(raw for path, raw in frozen.items() if path.parent.name != 'units')}
-    report = ['# 完整来源容器待审包', '', f"英文锁：`{manifest['source_commit']}`；工具：`{VERSION}`。", '',
-        f"完整旧输入 {manifest['input_unit_count']} 个；提议新输入 {manifest['proposed_output_unit_count']} 个；"
-        f"{manifest['group_count']} 组，其中 {manifest['blocked_group_count']} 组 BLOCKED。", '',
-        'PREPARED 仅表示来源准备，不是事实采用、模型输出、术语/人审或发布批准。',
-        '每个新单元仍需实际模型五字段完整修订；完整旧批次和全部历史必须保存。', '',
-        '| Group | State | Old | New |', '| --- | --- | ---: | ---: |']
-    report.extend(f"| {g['group_id']} | {g['state']} | {len(g['input_unit_ids'])} | {len(g['output_unit_ids'])} |" for g in groups)
-    report.extend(['', '诊断：', ''] + [f"- {d['group_id']}: {d['message']}" for d in diagnostics])
-    payloads['report.md'] = ('\n'.join(report) + '\n').encode()
-    manifest['files'] = {name: byte_hash(raw) for name, raw in payloads.items()}
-    payloads['manifest.json'] = json_bytes(manifest)
+    payloads = _container_payloads(manifest, groups, restorations, diagnostics, units, frozen)
 
     def unchanged():
         assert_inputs()
@@ -902,3 +944,187 @@ def write_container_package(root: Path, harvest: Path, plan_path: Path, output: 
         if temporary.exists():
             shutil.rmtree(temporary)
     return manifest
+
+
+MANY_VERSION = 'source-container-packages-v1'
+PACKAGE_NAMES = {'manifest.json', 'groups.json', 'restorations.json', 'diagnostics.json',
+                 'units.jsonl', 'input-units.jsonl', 'input-candidates.jsonl', 'report.md'}
+
+
+def _many_destination(root: Path, output: Path):
+    resolved_root, resolved_output = root.resolve(), output.resolve()
+    if (not resolved_output.is_relative_to(resolved_root) or any(p.is_symlink() for p in [output, *output.parents]
+            if p.resolve().is_relative_to(resolved_root) and p.resolve() != resolved_root)):
+        raise RecordError('container collection output escapes repository or is a symlink')
+    if not any(resolved_output.is_relative_to(resolved_root / d) and resolved_output != resolved_root / d
+               for d in ('build', 'source-ir')):
+        raise RecordError('container collection needs a dedicated ignored build/ or source-ir/ directory')
+    tracked = subprocess.run(['git', '-C', str(resolved_root), 'ls-files', '-z', '--',
+                              resolved_output.relative_to(resolved_root).as_posix()], check=True, capture_output=True).stdout
+    if tracked:
+        raise RecordError('container collection cannot replace tracked repository inputs')
+
+
+def _read_collection(output: Path):
+    if not output.exists():
+        return None
+    if not output.is_dir():
+        raise RecordError('container collection destination is not a directory')
+    paths = list(output.rglob('*'))
+    if any(p.is_symlink() or (not p.is_file() and not p.is_dir()) for p in paths):
+        raise RecordError('container collection contains unsafe files')
+    contents = {p.relative_to(output).as_posix(): p.read_bytes() for p in paths if p.is_file()}
+    try:
+        manifest = json.loads(contents['manifest.json'])
+        if (not isinstance(manifest, dict) or not isinstance(manifest.get('packages'), list)
+                or not isinstance(manifest.get('files'), dict)
+                or any(not isinstance(entry, dict) for entry in manifest['packages'])):
+            raise RecordError('container collection has invalid manifest fields')
+        if manifest['generator'] != MANY_VERSION:
+            raise RecordError('container collection destination has a different generator')
+        identifiers = [entry['derivation_id'] for entry in manifest['packages']]
+        if (not identifiers or len(set(identifiers)) != len(identifiers) or any(
+                not isinstance(i, str) or not ID.fullmatch(i) or '..' in i for i in identifiers)):
+            raise RecordError('container collection has invalid child identities')
+        expected = {'manifest.json', 'report.md'} | {i + '/' + n for i in identifiers for n in PACKAGE_NAMES}
+        if (set(contents) != expected or {p.relative_to(output).as_posix() for p in paths if p.is_dir()}
+                != set(identifiers)):
+            raise RecordError('container collection contains unrelated or incomplete files/directories')
+        if (set(manifest['files']) != expected - {'manifest.json'} or any(
+                byte_hash(contents[name]) != digest for name, digest in manifest['files'].items())):
+            raise RecordError('container collection has stale or tampered file hashes')
+        for identifier in identifiers:
+            child = json.loads(contents[identifier + '/manifest.json'])
+            if (not isinstance(child, dict) or not isinstance(child.get('files'), dict)
+                    or child['generator'] != VERSION or set(child['files']) != PACKAGE_NAMES - {'manifest.json'}
+                    or any(byte_hash(contents[identifier + '/' + name]) != digest
+                           for name, digest in child['files'].items())):
+                raise RecordError('container collection child is stale, tampered or foreign')
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RecordError('container collection is invalid: ' + str(exc)) from exc
+    return contents
+
+
+def write_container_packages(root: Path, harvest: Path, plan_paths: list[Path], output: Path,
+                             *, check: bool = False):
+    """Prepare disjoint complete batches with one actual validation; atomically install all."""
+    root = root.absolute()
+    output = output.absolute() if output.is_absolute() else root / output
+    _many_destination(root, output)
+    root, output = root.resolve(), output.resolve()
+    if not isinstance(plan_paths, (list, tuple)) or len(plan_paths) < 2:
+        raise RecordError('container collection needs at least two complete batch plans')
+    plans, raw_plans, identities, unit_targets, candidate_targets = [], {}, set(), set(), set()
+    for supplied in plan_paths:
+        path = supplied if supplied.is_absolute() else root / supplied
+        if (not path.resolve().is_relative_to(root) or any(p.is_symlink() for p in [path, *path.parents]
+                if p.resolve().is_relative_to(root) and p.resolve() != root)):
+            raise RecordError('container collection plan escapes repository or is a symlink')
+        path = path.resolve()
+        if path in raw_plans:
+            raise RecordError('container collection repeats a plan')
+        raw = path.read_bytes()
+        plan = json.loads(raw)
+        if not isinstance(plan, dict) or set(plan) != {'derivation_id', 'created_at', 'units_file', 'candidates_file', 'groups'}:
+            raise RecordError('container plan needs exact identity, full-batch files and groups')
+        identifier = plan['derivation_id']
+        if (not isinstance(identifier, str) or not ID.fullmatch(identifier) or '..' in identifier
+                or identifier in {'manifest.json', 'report.md'}):
+            raise RecordError('unsafe proposed derivation ID')
+        up = safe_path(root, plan['units_file'], r'translation-data/units/[A-Za-z0-9._-]+\.jsonl')
+        cp = safe_path(root, plan['candidates_file'], r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
+        if identifier in identities or up in unit_targets or cp in candidate_targets:
+            raise RecordError('container collection repeats a derivation or complete batch writer target')
+        identities.add(identifier); unit_targets.add(up); candidate_targets.add(cp)
+        raw_plans[path] = raw
+        plans.append(plan)
+    previous = _read_collection(output)
+    preparation = _VerifiedPreparation(root, harvest)
+
+    def unchanged():
+        preparation.assert_unchanged()
+        _many_destination(root, output)
+        for path, raw in raw_plans.items():
+            if (any(p.is_symlink() for p in [path, *path.parents] if p.is_relative_to(root))
+                    or path.read_bytes() != raw):
+                raise RecordError('container collection plan changed during generation')
+        if _read_collection(output) != previous:
+            raise RecordError('container collection output changed concurrently')
+
+    payloads, children, chapters, input_ids, output_ids, intervals = {}, [], set(), set(), set(), {}
+    unchanged()
+    for plan, (path, raw) in zip(plans, raw_plans.items(), strict=True):
+        unchanged()
+        result = _prepare_verified_containers(preparation, plan)
+        manifest, groups, restorations, diagnostics, units, frozen, assert_inputs = result
+        old_raw = next(raw for p, raw in frozen.items() if p.parent.name == 'units')
+        old_units = [json.loads(line) for line in old_raw.splitlines() if line.strip()]
+        chapters.update(u['chapter'] for u in old_units)
+        if len(chapters) != 1:
+            raise RecordError('container collection needs disjoint complete batches in one chapter')
+        old_ids, new_ids = {u['unit_id'] for u in old_units}, {u['unit_id'] for u in units}
+        if input_ids & old_ids or output_ids & new_ids:
+            raise RecordError('container collection has overlapping old/new unit ownership')
+        input_ids.update(old_ids); output_ids.update(new_ids)
+        for record in restorations:
+            loc = record['location']; spans = intervals.setdefault(record['selector']['file'], [])
+            a, b = loc['byte_start'], loc['byte_end']
+            if any(a < end and start < b for start, end in spans):
+                raise RecordError('container collection repeats or overlaps locked source containers')
+            spans.append((a, b))
+        identifier = plan['derivation_id']
+        child = _container_payloads(*result[:6])
+        payloads.update({identifier + '/' + name: value for name, value in child.items()})
+        children.append({'derivation_id': identifier, 'plan_hash': byte_hash(raw),
+                         'manifest_hash': byte_hash(child['manifest.json']),
+                         **{k: manifest[k] for k in ('input_unit_count', 'proposed_output_unit_count',
+                             'group_count', 'blocked_group_count', 'state')}})
+        assert_inputs()
+        unchanged()
+    report = {'schema_version': 1, 'generator': MANY_VERSION, 'source_commit': preparation.containers.english.commit,
+              'origin_commit': preparation.origin, 'chapter': next(iter(chapters)),
+              'input_repository_hash': sha256_value(preparation.state),
+              'input_snapshot_hash': sha256_value(preparation.inputs), 'package_count': len(children),
+              'packages': children, 'state': 'BLOCKED' if any(c['blocked_group_count'] for c in children) else 'PREPARED'}
+    for name in ('input_unit_count', 'proposed_output_unit_count', 'group_count', 'blocked_group_count'):
+        report[name] = sum(c[name] for c in children)
+    lines = ['# 多批次完整来源待审包', '', f"英文锁：`{report['source_commit']}`；工具：`{MANY_VERSION}`。", '',
+             '一次完整溯源校验；每份完整批次独立核验。未采用事实、未生成译文或运行、未授予审批。', '',
+             '| Batch | State | Old | New | Blocked |', '| --- | --- | ---: | ---: | ---: |']
+    lines.extend(f"| {c['derivation_id']} | {c['state']} | {c['input_unit_count']} | "
+                 f"{c['proposed_output_unit_count']} | {c['blocked_group_count']} |" for c in children)
+    payloads['report.md'] = ('\n'.join(lines) + '\n').encode()
+    report['files'] = {name: byte_hash(raw) for name, raw in payloads.items()}
+    payloads['manifest.json'] = (json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + '\n').encode()
+    unchanged()
+    if check:
+        if previous != payloads:
+            raise RecordError('source-container collection missing or stale')
+        return report
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix='.containers-many-stage-', dir=output.parent))
+    backup = None
+    try:
+        for name, raw in payloads.items():
+            path = temporary / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(raw)
+        unchanged()
+        if previous is not None:
+            backup = Path(tempfile.mkdtemp(prefix='.containers-many-backup-', dir=output.parent))
+            backup.rmdir()
+            output.rename(backup)
+        try:
+            temporary.rename(output)
+        except OSError:
+            if backup is not None:
+                backup.rename(output)
+                backup = None
+            raise
+        if backup is not None:
+            shutil.rmtree(backup)
+            backup = None
+    finally:
+        if temporary.exists():
+            shutil.rmtree(temporary)
+    return report

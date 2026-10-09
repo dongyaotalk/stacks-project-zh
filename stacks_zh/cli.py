@@ -22,7 +22,7 @@ from .progress import update_progress_report
 from .records import RecordError
 from .extraction import write_inventory
 from .source_alignment import write_alignment
-from .source_containers import write_container_package
+from .source_containers import write_container_package, write_container_packages
 from .source_integrity import audit_repository_source, require_audit_output
 from .source_terms import audit_repository_terms
 from .source_reextractions import audit_repository_proofs
@@ -78,6 +78,15 @@ def build_parser() -> argparse.ArgumentParser:
     containers.add_argument('--output', type=Path, default=Path('build/source-containers'))
     containers.add_argument('--check', action='store_true')
     containers.add_argument('--require-prepared', action='store_true')
+
+    many = subparsers.add_parser('prepare-source-containers-many',
+        help='prepare disjoint complete batches with one verified snapshot and atomic collection output')
+    many.add_argument('--root', type=Path, default=Path('.'))
+    many.add_argument('--harvest', required=True, type=Path)
+    many.add_argument('--plan', required=True, action='append', type=Path)
+    many.add_argument('--output', type=Path, default=Path('build/source-container-packages'))
+    many.add_argument('--check', action='store_true')
+    many.add_argument('--require-prepared', action='store_true')
 
     init_chapters = subparsers.add_parser(
         "init-chapters",
@@ -351,6 +360,15 @@ def main(argv: list[str] | None = None) -> int:
             report = write_container_package(root, args.harvest.resolve(), plan, output, check=args.check)
             print(f"Source containers: {report['input_unit_count']} full-batch inputs; "
                   f"{report['proposed_output_unit_count']} proposed outputs; {report['group_count']} groups; "
+                  f"{report['blocked_group_count']} blocked; state={report['state']}. Adopted: false.")
+            return 1 if args.require_prepared and report['state'] != 'PREPARED' else 0
+        if args.command == 'prepare-source-containers-many':
+            root = args.root.resolve()
+            plans = [p if p.is_absolute() else root / p for p in args.plan]
+            output = args.output if args.output.is_absolute() else root / args.output
+            report = write_container_packages(root, args.harvest.resolve(), plans, output, check=args.check)
+            print(f"Source container packages: {report['package_count']} complete batches; "
+                  f"{report['input_unit_count']} full-batch inputs; {report['proposed_output_unit_count']} proposed outputs; "
                   f"{report['blocked_group_count']} blocked; state={report['state']}. Adopted: false.")
             return 1 if args.require_prepared and report['state'] != 'PREPARED' else 0
         if args.command == "init-chapters":

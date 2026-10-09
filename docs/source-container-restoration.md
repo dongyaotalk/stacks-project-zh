@@ -5,6 +5,47 @@
 事实采用任务。现行 v1/v2/v3 及 `model-provenance.md` §9 不变。工具实现、具体数据修复和全库集成分别验收，
 不以文档或来源库存生成成功代替原八项审查修复完成。
 
+## 独立历史边界核验合同（2026-10-10）
+
+剩余 sets-000J 完整陈述含独立永久 Tag 的列表子项；0AHL/04VA 的完整引言
+使用历史错误 parent/owner，且英文普通换行已折叠。不得为准备这些范围关闭
+同章、完整链或来源归属检查。本工具先实现以下独立 `source-container-v4`
+证据；事实采用在工具验收合并后另开 DATA Issue/PR，全部旧输入及历史保持。
+
+普通来源准备仍输出原 v2/v3。只有实际使用本合同核验的组输出 v4，并必须含
+`legacy_boundary_witness`。验证器从证据 origin 的宏政策、锁定 English Git
+及完整旧 batch 独立重算 witness，逐项相等；不得信任缓存、历史 ID/parent
+或调用者提供的白名单。旧 source-container-v1/v2/v3 继续原检查。
+
+- 完整陈述中的跨历史 parent 仅允许 `list_item` 自有标签等于其 parent，且
+  prefix 是真实 item 与紧邻标签。完整旧主包装连续、有序、闭合，同章同来源；
+  原生完整陈述的主标签和全部列表子标签与旧链逐项同 Tag、同顺序。标签必须
+  位于真实列表结构中；数学、注释、literal、嵌套参数中的伪标签无效。核验相邻
+  proof 时也验证整份 frozen batch 中这一完整所属陈述。witness 保存完整旧
+  陈述 ID、历史 parent、原生 selector/fragment hash 和子标签序列。
+- 完整 paragraph 可以由紧邻的完整 labelled statement 建立归属：旧段落和
+  旧陈述链同章、同历史 parent、同锁定来源；Git 完整段落之后也紧邻同一真实
+  陈述，间隔只能是 ASCII 排版空白。段落自然文字的普通 ASCII 空格、tab、CR、LF
+  可折叠作历史对应证据；其数学、命令、引用、保护片段和非 ASCII 字符精确不变。
+  内部空段、typed 数学文字及解析诊断不在此扩展中，继续阻断。整个章内该
+  对应必须唯一，不能截取段落、删除脚注或借另一陈述的引言。witness 保存完整
+  旧段落及相邻旧陈述 ID、历史 parent、真实陈述 selector/hash 和段落签名。
+
+v4 可消费现行 unit-v1/v2 lowering；数学内文字仍仅按原 v3 的明确 typed slot
+合同处理，边界扩展本身不暴露新数学文字或批准宏。每个新输出的 source TeX
+仍逐字等于未经归一化的完整 Git 片段。完整旧 batch 快照、不可变 ancestry、
+完整分组、全部新实际模型五字段、审校及出版门禁保持。
+
+验收覆盖两类真实边界、旧版本拒绝、新 witness 篡改、未知/重复/伪标签、错误
+owner/Section、跨章/来源/任意 parent、部分/乱序链、重复/切片/更改段落以及
+分组重放。只读生成三个真实完整 batch 包及确定性 check；库存、审计和事实
+保持当前残项，完整回归/239 QA/117 模板/Schema/溯源/决策/进度计划与当前
+lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工具完成而结束。
+
+同一独立工具 Issue #695 在修改目录前声明唯一 transfinite-induction 来源证据
+迁移到真实000J完整 proof；细节见 [source-term-inventory.md](source-term-inventory.md)。
+这仅消除后续 DATA 的证据依赖，所有词形/范围/诊断和翻译事实保持，不批准术语。
+
 ## 1. 问题与目标
 
 全库抽取器已保存完整来源容器，统一队列覆盖239个batch/1480个当前单元。

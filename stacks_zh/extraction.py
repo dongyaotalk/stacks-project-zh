@@ -67,19 +67,19 @@ class Policy:
                         raise RecordError('invalid or duplicate math-text notation policy section')
                     notation_section_seen = True
             elif section == 'locked_math_text_notations':
-                if re.fullmatch(r'  [A-Za-z]{2,}:', line):
+                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets):', line):
                     group = line.strip()[:-1]
                     if group in self.math_text_notations:
                         raise RecordError('duplicate math-text notation policy entry')
                     self.math_text_notations[group] = {}
                 else:
-                    field = re.fullmatch(r'    (commands|usages|source_label): (.+)', line)
+                    field = re.fullmatch(r'    (commands|usages|source_label|prefix): (.+)', line)
                     if not field or not group or field[1] in self.math_text_notations[group]:
                         raise RecordError('invalid or duplicate math-text notation policy field')
                     try:
                         value = json.loads(field[2]) if field[1] != 'source_label' else field[2]
                     except json.JSONDecodeError as exc:
-                        raise RecordError('invalid math-text notation policy list') from exc
+                        raise RecordError('invalid math-text notation policy value') from exc
                     self.math_text_notations[group][field[1]] = value
             elif section == 'commands' and re.match(r'^  \S', line):
                 key = line.strip().removesuffix(':')
@@ -106,16 +106,25 @@ class Policy:
                      'special_index_record', 'lock_structure_translate_explicit_text_nodes'}
         if not self.commands or set(self.commands.values()) - supported:
             raise RecordError('unsupported extraction command policy')
-        for rule in self.math_text_notations.values():
-            if set(rule) != {'commands', 'usages', 'source_label'}:
+        for notation, rule in self.math_text_notations.items():
+            prefixed = rule.get('usages') == ['prefixed-symbol']
+            fields = {'commands', 'usages', 'source_label'} | ({'prefix'} if prefixed else set())
+            if set(rule) != fields:
                 raise RecordError('incomplete math-text notation policy')
             for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
-                                 ('usages', {'symbol', 'applied', 'subscripted'})]:
+                                 ('usages', {'symbol', 'applied', 'subscripted', 'prefixed-symbol'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
                         len(values) != len(set(values))):
                     raise RecordError('unsupported math-text notation policy ' + key)
+            if 'prefixed-symbol' in rule['usages'] and not prefixed:
+                raise RecordError('prefixed math-text notation cannot mix usages')
+            if prefixed and (not isinstance(rule['prefix'], str) or
+                             not re.fullmatch(r'[A-Z]', rule['prefix'])):
+                raise RecordError('invalid math-text notation prefix')
+            if notation == '-Sets' and (not prefixed or rule['commands'] != ['textit']):
+                raise RecordError('unsupported -Sets notation policy')
             if not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label']):
                 raise RecordError('invalid math-text notation source label')
         from .math_text import policy_rules
@@ -248,13 +257,113 @@ class Scanner:
             args.append((opening, i))
         return i, args
 
-    def notation_usage(self, command: str, value: str, closing: int):
+    def preceding_math_prefix(self, command_start: int, prefix: str) -> str | None:
+        """Recognize a bare letter outside command arguments, without TeX expansion.
+
+        Unknown commands keep their following arguments ineligible. Only explicit
+        zero-argument math operators/spacing may introduce an unbraced prefix.
+        Ordinary math groups are eligible; text, literal and scripted arguments
+        are not. Comments are lexically skipped but retained in the witness.
+        """
+        zero_argument = {'Ob', 'alpha', 'to', 'rightarrow', 'leftarrow', 'longrightarrow',
+                         'in', 'notin', 'subset', 'subseteq', 'supset', 'supseteq',
+                         'times', 'cap', 'cup', 'cong', 'simeq', 'leq', 'geq',
+                         'neq', 'colon', 'quad', 'qquad', 'left', 'right',
+                         'big', 'Big', 'bigl', 'Bigl', 'biggl', 'Biggl',
+                         ' ', ',', ';', ':', '!', '{', '}'}
+        single_argument = {'mathcal', 'mathbb', 'mathbf', 'mathrm', 'mathsf',
+                           'mathtt', 'operatorname', 'text', 'textit', 'textbf'}
+        # Each frame stores its closing token, inherited block, and whether it
+        # is a command/script argument. Closing an argument keeps later arguments
+        # of the same unknown command blocked (including optional arguments).
+        frames: list[tuple[str, bool, str]] = []
+        blocked, pending_argument, candidate, i = False, '', None, 0
+        while i < command_start:
+            c = self.text[i]
+            if c.isspace():
+                i += 1
+                continue
+            if c == '%':
+                stop = self.comment_end(i)
+                if stop > command_start:
+                    return None
+                i = stop
+                continue
+            candidate = None
+            if c == '\\':
+                match = COMMAND.match(self.text, i)
+                if not match or match.end() > command_start:
+                    return None
+                name = match.group()[1:]
+                i = match.end()
+                if name not in zero_argument and self.text[i:i + 1] == '*':
+                    i += 1
+                if name == 'verb':
+                    if i >= command_start or self.text[i].isspace():
+                        return None
+                    stop = self.text.find(self.text[i], i + 1)
+                    if stop < 0 or stop >= command_start:
+                        return None
+                    i = stop + 1
+                if name == 'begin':
+                    opening = self.skip_space(i)
+                    if self.text[opening:opening + 1] == '{':
+                        stop = self.argument_end(opening)
+                        environment = self.text[opening + 1:stop - 1]
+                        if environment in self.policy.literal:
+                            stop = self.environment_end(match.start())
+                            if stop > command_start:
+                                return None
+                            i = stop
+                if pending_argument != 'unknown':
+                    pending_argument = ('single' if name in single_argument else
+                                        '' if name in zero_argument else 'unknown')
+            elif c == '{' or (c == '[' and pending_argument):
+                frames.append(('}' if c == '{' else ']', blocked, pending_argument))
+                blocked = blocked or bool(pending_argument)
+                pending_argument = ''
+                i += 1
+            elif c in '}]' and frames and c == frames[-1][0]:
+                _, blocked, pending_argument = frames.pop()
+                if pending_argument == 'single':
+                    pending_argument = ''
+                i += 1
+            elif c == '}':
+                return None
+            elif c in '_^':
+                if pending_argument != 'unknown':
+                    pending_argument = 'single'
+                i += 1
+            elif c.isascii() and c.isalpha():
+                stop = i + 1
+                while stop < command_start and self.text[stop].isascii() and self.text[stop].isalpha():
+                    stop += 1
+                if not blocked and not pending_argument and self.text[i:stop] == prefix:
+                    candidate = i
+                if pending_argument == 'single':
+                    pending_argument = ''
+                i = stop
+            else:
+                # Explicit math punctuation ends an unknown command's argument
+                # sequence. Whitespace alone never supplies that boundary.
+                if c in ',=+*/<>|&;:$':
+                    pending_argument = ''
+                elif c not in "()[]'":
+                    pending_argument = '' if c.isdigit() and pending_argument == 'single' else 'unknown'
+                i += 1
+        return self.text[candidate:command_start] if candidate is not None else None
+
+    def notation_usage(self, command: str, value: str, closing: int, *, command_start: int | None = None):
         """Match an explicit notation rule and its original following tokens."""
         rule = self.policy.math_text_notations.get(value)
         if rule is None or command not in rule['commands']:
             return None
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
+            if usage == 'prefixed-symbol' and command_start is not None:
+                preceding = self.preceding_math_prefix(command_start, rule['prefix'])
+                if preceding is not None:
+                    return usage, preceding, rule['source_label']
             if usage == 'symbol':
                 return usage, '', rule['source_label']
             if usage == 'applied':
@@ -325,7 +434,7 @@ class Scanner:
                             close = opening + 1
                         value = fragment[opening + 1:close - 1]
                         if WORD.search(value):
-                            notation = child.notation_usage(match.group()[1:], value, close)
+                            notation = child.notation_usage(match.group()[1:], value, close, command_start=i)
                             if notation is None and opening + 1 not in slots_by_parameter:
                                 issue('math-text', a + opening + 1, a + close - 1,
                                       'explicit text inside locked math requires classification before adoption')

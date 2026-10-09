@@ -190,7 +190,7 @@ class ExtractionTests(unittest.TestCase):
 
     def test_natural_text_nested_wrappers_and_inexact_uses_stay_blocked(self):
         for text in [r'\text{and}', r'\text{if}', r'\text{affine opens of }',
-                     r'\text{size}', r'\text{size} + x', r'\text{pr}', r'\text{pr}_{}',
+                     r'\text{pr}', r'\text{pr}_{}',
                      r'\text{pr}_$', r'\text{Size}(S)', r'\text{ size }(S)',
                      r'\text{sizes}(S)', r'\textbf{size}(S)', r'\text{Hom}(X,Y)',
                      r'\text{\text{size}(S)}', r'\textit{pr}_1']:

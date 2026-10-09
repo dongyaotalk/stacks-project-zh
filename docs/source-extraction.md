@@ -117,3 +117,38 @@ symbol，source_label 分别指向上述真实锚点。完整原数学、命令/
 02XG/02XJ 范围，04Z2 的 and 保持阻断。所有事实及术语/来源/证明残项保持，
 匹配变化逐项核对并披露；当前书稿编译及文本保持通过后工具 PR。具体 DATA
 后续重新冻结新政策输入，所有历史容器仍按原 origin 政策核验，不回写原输出。
+
+### 独立 size、Cov 下标及群作用范畴后缀
+
+[Issue #676](https://github.com/dongyaotalk/stacks-project-zh/issues/676) 先补充此合同，
+再实现政策与独立回归。真实 Section 000H 定义 size(S)，引理000J又把独立的
+`\text{size}` 明确列作记号；Section 000W定义Cov(C)，引理000X及其证明使用
+`\text{Cov}_0`。size保留applied优先并新增symbol，Cov保留applied优先并新增
+subscripted，原已接受用法的分类、source_label和原数学字节保持。
+
+Section000T以 `G\textit{-Sets}` 和带下标的形式命名群作用集合范畴，000U沿用。
+新增通用prefixed-symbol用法，只增加非identifier字面量 `-Sets`，命令仅textit、
+prefix为G。该用法独有prefix字段，必须是一个ASCII大写数学字母；字段集合精确，
+用法只能是prefixed-symbol，不能夹带symbol来跳过前缀。其他非identifier、错误
+大小写、词形、字体命令或未声明前缀保持阻断；普通规则禁止prefix字段。
+
+前缀须为实际紧邻命令的裸数学token；中间仅允许原空白/comment。拒绝连写标识符、
+转义、comment/literal/文字参数中的假前缀、未知命令的参数及嵌套文字。按源语法
+解析真实token及分组，不以任意末尾字符匹配来提供依据；不推断其他群名。接受项
+仍保存完整命令与原UTF-8位置，usage_source保存前缀及中间原字节，整条数学不变。
+扫描器不执行TeX宏；仅显式列出的零参数数学算子、箭头及间距命令可引入裸前缀。
+普通数学分组可用，命令参数、脚标参数及literal内容不可用；未知命令后即使空格或
+连续参数也不授权，未支持的语法继续阻断。
+已明确的单参数数学字体命令在完整参数结束后恢复数学范围；未知宏不按相同
+规则猜测参数个数，其后的箭头命令也不能越过未知参数边界。
+旧政策没有该条目时仍阻断；不扩展自然文字slot或授予glossary/数学审校批准。
+
+工具范围保持全部事实与历史原字节。完整000U/000X旧批次共22单元，只读准备和
+check四个完整来源提议；000X证明沿用已有and typed-slot。000J陈述可lower后，
+其旧混合parent仍需另一个来源边界合同，不能宣称全batch已准备或隐藏proof差异。
+全库/check与116 Git文件逐字回放、分类/READY/BLOCKED增量、全部匹配变化公开；
+来源/术语/proof审计及186修复batch等事实残项保持。全量回归、239 QA、进度/计划
+和当前lane render/pdf通过后工具PR；具体DATA另开任务并重新冻结全部来源/上下文。
+准备接口要求政策字节等于真实已提交origin：先核验四个源容器及旧组并完成本地
+检查/编译，再用本地工具提交冻结政策，执行多批prepare/check后才push及开PR。
+不伪造origin或放宽准备门禁。

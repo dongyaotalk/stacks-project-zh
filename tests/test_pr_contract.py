@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 import copy
+import base64
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
 
-from stacks_zh.pr_contract import fetch_pr_contract, validate_pr_contract
+from stacks_zh.pr_contract import ContractApiError, fetch_pr_contract, validate_pr_contract
 
 
 REPOSITORY = "example/stacks-project-zh"
@@ -102,6 +104,80 @@ def unit_content(unit_id: str = UNIT_ID) -> str:
 
 
 class PrContractTests(unittest.TestCase):
+    def _large_fetch(self, *, deleted=False, mutate_metadata=None, mutate_blob=None,
+                     raw=None, unavailable=False):
+        value = payload()
+        value['headRepository']['nameWithOwner'] = 'fork/contributor'
+        if deleted:
+            value['files']['nodes'][0]['changeType'] = 'DELETED'
+        if raw is None:
+            raw = (unit_content() + '\n' + json.dumps(
+                {'text': '中文' * 180_000}, ensure_ascii=False) + '\n').encode('utf-8')
+        sha = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
+        metadata = {'type': 'file', 'encoding': 'none', 'content': '', 'size': len(raw),
+                    'sha': sha, 'git_url': 'https://unrelated.invalid/never-follow-this'}
+        blob = {'encoding': 'base64', 'content': base64.encodebytes(raw).decode('ascii'),
+                'size': len(raw), 'sha': sha}
+        if mutate_metadata:
+            mutate_metadata(metadata)
+        if mutate_blob:
+            mutate_blob(blob)
+        calls = []
+        def request(url, token, *, data=None):
+            calls.append((url, token, data))
+            if data is not None:
+                return {'data': {'repository': {'pullRequest': value}}}
+            if '/contents/' in url:
+                return metadata
+            if unavailable:
+                raise ContractApiError('blob unavailable')
+            return blob
+        _, contents = fetch_pr_contract(
+            REPOSITORY, 99, 'test-token', api_url='https://api.example.test',
+            graphql_url='https://api.example.test/graphql', request_json=request)
+        return raw, sha, contents, calls
+
+    def test_fetches_large_utf8_jsonl_from_pinned_head_blob(self):
+        raw, sha, contents, calls = self._large_fetch()
+        self.assertGreater(len(raw), 1024 * 1024)
+        self.assertEqual(contents[UNIT_PATH].encode('utf-8'), raw)
+        self.assertIn('/repos/fork/contributor/contents/', calls[1][0])
+        self.assertIn('ref=' + 'b' * 40, calls[1][0])
+        self.assertEqual(calls[2][:2], (
+            'https://api.example.test/repos/fork/contributor/git/blobs/' + sha, 'test-token'))
+        self.assertEqual(len(calls), 3)
+
+    def test_fetches_deleted_large_file_from_base_repository_blob(self):
+        raw, sha, contents, calls = self._large_fetch(deleted=True)
+        self.assertEqual(contents[UNIT_PATH].encode(), raw)
+        self.assertIn('/repos/' + REPOSITORY + '/contents/', calls[1][0])
+        self.assertIn('ref=' + 'c' * 40, calls[1][0])
+        self.assertEqual(calls[2][0], 'https://api.example.test/repos/' + REPOSITORY + '/git/blobs/' + sha)
+
+    def test_rejects_invalid_large_file_metadata(self):
+        for field, value in [('type', 'symlink'), ('content', 'unexpected'), ('size', 1_000_000),
+                             ('size', 100 * 1024 * 1024 + 1), ('size', True), ('size', '1061688'),
+                             ('sha', '../moving-ref'), ('sha', 'g' * 40)]:
+            with self.subTest(field=field, value=value), self.assertRaises(ContractApiError):
+                self._large_fetch(mutate_metadata=lambda m: m.update({field: value}))
+
+    def test_rejects_blob_identity_size_encoding_and_corrupt_bytes(self):
+        for field, value in [('sha', 'd' * 40), ('size', 1), ('encoding', 'utf-8'),
+                             ('content', 'not base64!'), ('content', None), ('content', '')]:
+            with self.subTest(field=field), self.assertRaises(ContractApiError):
+                self._large_fetch(mutate_blob=lambda b: b.update({field: value}))
+        with self.assertRaisesRegex(ContractApiError, 'bytes do not match'):
+            self._large_fetch(mutate_blob=lambda b: b.update(
+                content=base64.b64encode(b'x' * b['size']).decode()))
+
+    def test_rejects_valid_git_blob_with_non_utf8_text(self):
+        with self.assertRaisesRegex(ContractApiError, 'cannot decode changed file'):
+            self._large_fetch(raw=b'\xff' * 1_080_000)
+
+    def test_propagates_unavailable_large_blob(self):
+        with self.assertRaisesRegex(ContractApiError, 'blob unavailable'):
+            self._large_fetch(unavailable=True)
+
     def test_grouped_scope_checks_all_new_coordinates_and_only_linked_old_parents(self):
         from test_group_derivations import fixture, read
         with tempfile.TemporaryDirectory() as tmp:

@@ -1233,6 +1233,24 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   目录hash和完整finding保持，未降低检查。远端全字节/完整patch/native合同及
   最新精确HEAD两项CI后才按授权bypass；本工具仍未采用实际译文或授予批准。
 
+- TOOL Issue [#702](https://github.com/dongyaotalk/stacks-project-zh/issues/702)，分支tool/pr-contract-large-blobs，基线`fb0ae9ba6e1f3ffb48fcae0d7adcebc5ce5c8ebe`。
+  PR701的完整冻结原始输出1061688 bytes触发Contents API大文件空content，CI按现有
+  合同拒绝。先规划独立四路径工具任务；Contents仍绑定精确PR head/base及path，
+  大文件只按同repo/metadata sha请求blob，严格校验编码、size、Git blob原字节哈希。
+  不改历史raw/事实或跳过门禁；真实大文件及负例、全部工具/QA/共享检查、完整
+  PR701只读native合同和29字节、当前lane render/pdf零退出后提交工具PR。
+  远端完整patch/native单Issue/最新精确HEAD双CI通过后授权bypass；随后普通合并
+  main到DATA分支，保留数据原字节，不force；下一DATA前独立progress，700另处理。
+
+  本地验收：466项工具回归、239候选QA及全部共享/117模板/progress/plan检查通过；
+  真实PR701全部29远端文件原字节/完整patch及GitHub-native单closing697合同通过，
+  其中1061688 bytes原输出通过Contents精确ref→Git blob SHA回放，27结构文件均验证。
+  大文件Unicode、fork/head与删除/base及损坏metadata/encoding/size/原字节哈希/UTF-8/
+  blob不可用均有意义回归；不追踪metadata任意URL，不删减不可变输出或跳过检查。
+  render114.810秒/pdf65.548秒均零退出，
+  Final TeX log通过，461页全文layout与fb0已接受基线逐字相同，译文事实树和所有
+  范围外tracked字节保持。完整四路径diff根审查通过，不改变任何批准或当前DATA。
+
 
 - DATA Issue [#697](https://github.com/dongyaotalk/stacks-project-zh/issues/697)，分支 translate/sets/section-000h-proofs-complete/openai-gpt-6-1-sol，基线 `fb0ae9ba6e1f3ffb48fcae0d7adcebc5ce5c8ebe`。
   前置边界工具PR696已合并；先认领及写开发/验收计划，再重新准备三个完整包。
@@ -1270,3 +1288,9 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   0AHL下标次序分别留remark Issues698/699，数学/源码忠实保留，无额外翻译阻断。
   远端完整字节/patch/native单Issue合同及最新精确HEAD双CI后按授权bypass。
   术语/critic、人审和发布仍待决，完整全库存不变，F1–F8/S4/S5/S7继续。
+
+  完整raw超过Contents限制的实际CI失败留档；独立TOOL702已合并到`7529c68ac9b1bf22897ee1ddf2c5d8b2ae927c40`，
+  DATA正常forward merge该main并保留双方工程记录，27事实路径、source-origin、
+  完整冻结/作者原输出/run/历史全部逐字不变。新状态重新render/pdf和完整全文/
+  24PNG比对通过后才提交integration commit，不force、不重写已推送历史；随后
+  远端29字节/完整patch/native合同与最新精确HEAD两CI、fresh main门禁重新执行。

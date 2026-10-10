@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import re
 import urllib.error
@@ -445,6 +446,47 @@ def _request_json(
         raise ContractApiError(f"GitHub API request failed for {url}: {exc}") from exc
 
 
+def _large_file_bytes(
+    metadata: dict[str, Any],
+    path: str,
+    repository: str,
+    token: str,
+    api_url: str,
+    request_json: Callable[..., dict[str, Any]],
+) -> bytes:
+    # Contents already resolved this path against the exact PR head/base commit.
+    # Fetch its immutable blob, never a supplied URL or a moving branch.
+    size, sha = metadata.get("size"), metadata.get("sha")
+    if (
+        metadata.get("type") != "file"
+        or metadata.get("content") != ""
+        or type(size) is not int
+        or not 1_000_000 < size <= 100 * 1024 * 1024
+        or not isinstance(sha, str)
+        or re.fullmatch(r"[0-9a-f]{40}", sha) is None
+    ):
+        raise ContractApiError(f"invalid large-file metadata for {path}")
+    blob = request_json(f"{api_url}/repos/{repository}/git/blobs/{sha}", token)
+    if (
+        not isinstance(blob, dict)
+        or blob.get("encoding") != "base64"
+        or blob.get("sha") != sha
+        or blob.get("size") != size
+        or not isinstance(blob.get("content"), str)
+    ):
+        raise ContractApiError(f"invalid Git blob response for {path}")
+    try:
+        raw = base64.b64decode(
+            b"".join(blob["content"].encode("ascii").split()), validate=True
+        )
+    except (ValueError, UnicodeError) as exc:
+        raise ContractApiError(f"cannot decode Git blob for {path}: {exc}") from exc
+    blob_sha = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+    if len(raw) != size or blob_sha != sha:
+        raise ContractApiError(f"Git blob bytes do not match metadata for {path}")
+    return raw
+
+
 def fetch_pr_contract(
     repository: str,
     number: int,
@@ -499,12 +541,19 @@ def fetch_pr_contract(
             f"{api_url}/repos/{content_repository}/contents/{encoded_path}?{encoded_ref}",
             token,
         )
-        if content_response.get("encoding") != "base64":
+        if content_response.get("encoding") == "none":
+            raw = _large_file_bytes(
+                content_response, path, content_repository, token, api_url, request_json
+            )
+        elif content_response.get("encoding") == "base64":
+            try:
+                raw = base64.b64decode(content_response.get("content", ""))
+            except ValueError as exc:
+                raise ContractApiError(f"cannot decode changed file {path}: {exc}") from exc
+        else:
             raise ContractApiError(f"GitHub did not return base64 content for {path}")
         try:
-            file_contents[path] = base64.b64decode(
-                content_response.get("content", "")
-            ).decode("utf-8")
-        except (ValueError, UnicodeDecodeError) as exc:
+            file_contents[path] = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
             raise ContractApiError(f"cannot decode changed file {path}: {exc}") from exc
     return pull_request, file_contents

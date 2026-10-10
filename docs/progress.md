@@ -35,6 +35,25 @@ README 的“全书翻译进度”和 `docs/translation-progress.md` 用于回�
 - unit 准备必须覆盖其认领 Tag 的完整翻译范围。若发现 unit 提取不完整，应修复范围
   数据，不能靠修改进度算法把不完整范围标记为候选完成。
 
+### 完整来源容器内的永久 Tag
+
+普通 unit 继续按稳定身份 Tag 确认准备范围。完整来源恢复可能把原来独立的列表
+单元合入一个完整陈述，因此当前 unit 的身份 Tag 不代表容器内只有一个永久 Tag。
+附加覆盖仅来自当前未归档 v4 派生中已验证的完整陈述容器：派生 Schema、不可变
+记录、完整当前 unit 文件原字节 hash、全部分组和输出顺序必须一致，再按精确 ID
+调用既有来源恢复验证，确认锁定英文 Git、完整旧 batch、ownership、历史 policy
+及确定性 lowering。whole 与 split-title 布局都必须保留完整组，不能只准备一部分。
+
+语义扫描只识别完整陈述内真实列表项的独立原生 Tag。数学、注释、引用、literal、
+footnote 或任意参数内的标签字符串不能增加覆盖；附加 Tag 必须属于同章同 Section。
+未绑定普通 unit、retired ID、本地缓存和 candidate 文字也不能提供附加覆盖。
+来源准备与 candidate、人工 revision、发布记录分别统计，完整容器不会授予批准。
+这里的范围核验不替代全量模型溯源、QA、术语和审校检查。
+
+进度查询只重新验证需要确认附加 Tag 的完整容器，不重复扫描全部历史容器。
+来源恢复验证器的默认模式仍验证所有记录；精确 ID 查询中的非法或缺失 ID 必须
+报错，不能跳过失败记录或把未验证证据计入范围。
+
 逐章状态按 Section 阶段的以下优先级确定：
 
 1. 没有可翻译正文 Section：`不适用`；
@@ -62,6 +81,7 @@ make progress
 - `upstream.lock` 和锁定 harvest 的 `tags/tags`；
 - `translation-data/chapter-templates/` 和 `config/chapter-titles.json`；
 - `translation-data/units/`、`translation-data/candidates/`；
+- 当前完整容器所绑定的不可变派生及来源恢复证据；
 - `translation-data/reviewed/` 中的 current revision。
 
 命令只更新 README 标记区间和 `docs/translation-progress.md`。逐章表属于生成内容，

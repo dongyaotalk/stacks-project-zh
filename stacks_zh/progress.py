@@ -415,9 +415,11 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
     unit_by_id: dict[str, tuple[str, int | None, str]] = {}
     units_by_section: dict[tuple[str, int], set[str]] = defaultdict(set)
     prepared_tags_by_section: dict[tuple[str, int], set[str]] = defaultdict(set)
+    units_by_file: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for path, line_number, unit in _read_jsonl(
         (root / "translation-data/units").glob("*.jsonl")
     ):
+        units_by_file[path.relative_to(root).as_posix()].append(unit)
         if unit.get("source_commit") != source_commit or unit.get("source_status") != "CURRENT":
             continue
         unit_id = unit.get("unit_id")
@@ -447,6 +449,16 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
             key = (chapter, section_ordinal)
             units_by_section[key].add(unit_id)
             prepared_tags_by_section[key].add(identity_tag)
+
+    from .progress_coverage import container_tag_coverage
+    for unit_id, tags in container_tag_coverage(root, harvest_root, units_by_file).items():
+        chapter, ordinal, _ = unit_by_id[unit_id]
+        for tag in tags:
+            if (tag_index.chapter_by_tag.get(tag) != chapter or ordinal is None
+                    or chapter_sources[chapter].section_by_tag.get(tag) != ordinal):
+                raise RecordError(f"{unit_id}: verified container Tag {tag} crosses the current Section")
+        if ordinal is not None:
+            prepared_tags_by_section[(chapter, ordinal)].update(tags)
 
     candidate_units: set[str] = set()
     for path, line_number, candidate in _read_jsonl(

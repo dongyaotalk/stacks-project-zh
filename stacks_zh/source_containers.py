@@ -615,10 +615,22 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
     return None
 
 
-def load_source_containers(root: Path, harvest: Path | None = None):
-    """Validate immutable evidence; replay verifies full-batch/group use next."""
+def load_source_containers(root: Path, harvest: Path | None = None, *,
+                           identifiers: set[str] | None = None):
+    """Validate evidence, optionally for exact IDs; never trust cached selections.
+
+    The default still validates every historical record. A scoped read performs
+    all the same checks and reports missing IDs. Replay validates group use.
+    """
     evidence, errors = {}, []
-    paths = sorted((root / 'translation-data/source-container-restorations').glob('*.json'))
+    directory = root / 'translation-data/source-container-restorations'
+    if identifiers is None:
+        paths = sorted(directory.glob('*.json'))
+    else:
+        if (not isinstance(identifiers, set) or any(
+                not isinstance(i, str) or not ID.fullmatch(i) or '..' in i for i in identifiers)):
+            return {}, ['source-container query requires a set of safe exact IDs']
+        paths = [directory / (i + '.json') for i in sorted(identifiers)]
     if not paths:
         return evidence, errors
     try:
@@ -681,7 +693,8 @@ def load_source_containers(root: Path, harvest: Path | None = None):
             if record['new_units'] != expected or record['output_unit_ids'] != [u['unit_id'] for u in expected]:
                 raise RecordError('source-container new units differ from deterministic complete lowering')
             evidence[path.stem] = {'record': record, 'selected': selected,
-                                   'units': units, 'candidates': candidates, 'tags': containers.english.tags}
+                                   'units': units, 'candidates': candidates, 'tags': containers.english.tags,
+                                   'policy': historical.policy}
         except (OSError, ValueError, KeyError, TypeError, subprocess.CalledProcessError) as exc:
             errors.append(f'{path}: {exc}')
     try:

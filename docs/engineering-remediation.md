@@ -1310,3 +1310,35 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   461页全文layout及24已看图PNG与接受DATA逐字相同。完整译文事实树、immutable
   run/raw/历史和全部范围外tracked字节保持；三路径完整根审查后提交，远端
   字节/完整patch/native单Issue及最新精确HEAD双CI后授权bypass。八项及S4/S5/S7继续。
+
+## TOOL Issue700：完整来源容器的进度范围覆盖（2026-10-11）
+
+  先规划并认领Issue700，从已合并独立进度PR705的
+  b66740a2eb70a0388558123334239999669cc208开始。开发合同见docs/progress.md：
+  只从当前未归档v4完整组、锁定Git和既有来源恢复验证确认嵌套原生列表Tag；
+  普通身份口径、全部候选/人工审校/发布条件及全量provenance门禁保持。
+  精确来源证据查询复用完整验证，默认全量不变；不以字符串、缓存或旧ID凑覆盖。
+  whole/split-title完整组、假标签、改来源/证据/顺序、缺候选及未批准均需回归。
+  预期仅sets/000H的准备13→17，候选107→108/3299、Sets11→12/12；
+  其余117章快照和计划、239事实批及全部历史原字节保持。验收包含全回归/QA、
+  真实全库存与alignment、当前lane实际render/pdf。Oct11重建与Oct10接受基线
+  对照，461页只允许物理第2页日期变化，正文和24已验收页PNG保持，实际查看日期页。
+  八文件scope声明在Issue，事实、政策、英文、lock和全部范围外tracked禁止修改。
+  本工具不生成模型译文，不授予任何批准；整体F1–F8/S4/S5/S7修复继续。
+
+  本地验收：新增10项意义回归、全476工具测试、239候选QA、全部来源/Schema/
+  provenance/decision/117模板及progress/check/plan-check通过。全117章Section快照
+  唯一变化为000H prepared13→17，候选108/3299、翻译中9，Sets12/12；
+  人审/发布仍零。准备范围与缺候选、审批、未绑定/归档输出严格分别处理，
+  named split-title完整组及伪标签、改来源/内容/顺序/hash/ownership均已验证。
+  真实全库存5文件、alignment/audits/repair queue
+  6文件全部原字节相同；43257提议、36651 READY、
+  6606 BLOCKED、18618诊断保持。176待修batch、672术语候选/2119诊断、
+  3坐标/4来源、1未保护pair/2歧义保持；187组/223proof全匹配、0差异/不支持。
+  一次真实进度核验3.251秒，只验证相关容器，不重扫完整历史。
+  render126.332秒/pdf68.262秒实际零退出，
+  最终TeX PASS；461页正文全文layout和24已看图PNG逐字相同，物理第2页仅
+  构建日期Oct10→Oct11，已实际查看前后日期页，无重排/截断，未改生成产物。
+  八路径完整diff根审查通过，事实树、历史raw/run及全部范围外tracked bytes保持。
+  远端全文件bytes/whole patch/native单closing700及最新exact-head双CI后授权bypass。
+  仅调整完整来源的覆盖统计；全部候选仍须术语、critic与人工审校，未授予批准。

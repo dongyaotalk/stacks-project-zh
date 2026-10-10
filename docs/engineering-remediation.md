@@ -1342,3 +1342,43 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   八路径完整diff根审查通过，事实树、历史raw/run及全部范围外tracked bytes保持。
   远端全文件bytes/whole patch/native单closing700及最新exact-head双CI后授权bypass。
   仅调整完整来源的覆盖统计；全部候选仍须术语、critic与人工审校，未授予批准。
+
+
+- DATA Issue [#707](https://github.com/dongyaotalk/stacks-project-zh/issues/707)，分支 translate/sets/0ahk-complete/openai-gpt-6-1-sol，基线 `ddba31befe8e64e6fdfe73f88c2f7d9ca7112f60`。
+  先认领和规划，再重新prepare/check完整0AHK引言/引理/证明；4旧→3新、真实000H，
+  6旧新唯一ID及14文件提前声明。170词预计低于偏好下限，显式完整不可拆范围例外。
+  冻结所有新来源/完整旧组/候选/政策/词表/风格/prompt/来源词目录、动态Harness
+  和实际模型/effort/turn后，模型逐单元完整生成五字段；一份v4/correction/新run
+  与三来源证据保留全部历史，程序不生成中文或批准。独立Git片段/边界witness、
+  token原序/尾空白、逐次术语、全库ID及范围外字节、239QA/真实run QA/全部共享
+  门禁/117模板、全extract/check→alignment/check、隔离progress/plan和整书
+  render/pdf及实际变化页/邻页看图全部验收后提交；远端字节/完整patch/native
+  合同和最新精确HEAD双CI通过后授权bypass，DATA后先独立progress。
+  基线176批/672术语候选2119诊断/3坐标4来源/零proof差异，八项总修复继续。
+  用户2026-10-11确认仍须完成全部F1–F8/S4/S5/S7，完成后交付详细开发文档
+  及可复制Codex提示词；必须记录最终架构、命令、真实验收与剩余状态，不以
+  单批修复或候选合并冒称全目标/人审/发布完成。
+
+  用户补充：由用户稍后自行重开goal；本轮收尾当前0AHK批次及独立进度，
+  交付详细开发文档、真实残项和可复制续接提示词。剩余八项由新goal继续，
+  不创建新的goal，不把仍有残项的旧总goal虚报完成。
+
+  本地验收：prepare/check实际111.095/106.845秒，三完整Git容器及独立历史边界
+  witness通过；冻结后gpt-6.1-sol/xhigh实际完整生成三单元五字段，Harness冻结前及
+  装配动态解析0.162.0-alpha.17.2。170来源词显式不可拆范围例外，43双语声明
+  覆盖26必需出现；完整4旧→3新、原字节历史/全部旧组/context/raw/token原序及
+  尾空白、1346全库唯一当前ID、117模板、14路径及全部范围外字节通过。
+  239QA、实际新run分组QA及全部适用来源/Schema/溯源/决策、全extract/check→
+  alignment/check、隔离progress/plan与checks通过。三个target BYTE_EXACT且队列
+  空，全部范围外finding逐项保持；坐标3→0、来源4→1、术语候选672→668，
+  诊断2119→2106、非空批176→175；187组/222proof全部match、零差异/不支持。
+  最后未保护来源为categories-05SH，2处歧义属于05PU，另有167术语动作/67来源
+  核验动作，计数可重叠。库存43257提议/36651 READY/6606 BLOCKED保持。
+  仅000H的当前unit/candidate31→30，prepared17和全部Section候选/人审/发布状态
+  保持；三份进度/计划隔离预览逐字不变，DATA后独立进度仍实际生成/check。
+  render156.272秒/pdf73.59秒零退出、Final TeX PASS；
+  整书461页，457页全文layout不变，
+  4变化页及全部邻页共8页实际看图，无公式/列表/脚注裁切或重叠。
+  远端全部14文件原字节/完整patch/native单closing707及最新精确HEAD双CI后授权
+  bypass squash；不授予术语/critic/人审/发布批准。接下来独立进度与开发文档/
+  提示词交付供用户自行新goal继续全部八项，本轮不启动另一DATA或创建goal。

@@ -1250,3 +1250,47 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   render114.810秒/pdf65.548秒均零退出，
   Final TeX log通过，461页全文layout与fb0已接受基线逐字相同，译文事实树和所有
   范围外tracked字节保持。完整四路径diff根审查通过，不改变任何批准或当前DATA。
+
+
+- DATA Issue [#697](https://github.com/dongyaotalk/stacks-project-zh/issues/697)，分支 translate/sets/section-000h-proofs-complete/openai-gpt-6-1-sol，基线 `fb0ae9ba6e1f3ffb48fcae0d7adcebc5ce5c8ebe`。
+  前置边界工具PR696已合并；先认领及写开发/验收计划，再重新准备三个完整包。
+  sets 000J/04VA/0AHL的28旧单元恢复为8个完整Git容器、Section000H，33个旧新ID
+  和29文件提前声明。实际冻结完整新源/每个旧组/candidates、政策/风格/词表/prompt/
+  来源术语目录、动态Harness和当前真实模型/effort/turn后完整生成每单元五字段。
+  三份v4、八来源恢复和一个真实correction/revision run保留全部历史，旧探测不采用。
+  239QA、实际run qa-batch、所有Schema/溯源/决策/来源/模板、完整库存与统一队列check、
+  隔离进度/计划、本地整书render/pdf与完整受影响页及邻页看图验收后才提交。
+  三proof须match、八片段BYTE_EXACT、三个目标队列空，全部范围外事实/诊断保持。
+  英文省略忠实保留，疑点只记remark；精确HEAD双CI/远端全字节/native合同后授权bypass。
+  DATA后先独立progress；基线179修复批/695术语候选2194诊断/13坐标14来源/3proof，
+  全库存43257/36651READY/6606BLOCKED，八项总修复和S4/S5/S7继续，无批准继承。
+
+  本地验收：从已合并main重新prepare/check耗时125.853/123.690秒，冻结后实际模型
+  gpt-6.1-sol/xhigh逐单元完整生成五字段；Harness两次动态解析0.162.0-alpha.17.2。
+  八份Git容器、28旧→8新、完整冻结/旧组/原字节历史、严格保护token原序及段落尾
+  空白通过。178双语声明覆盖137必需术语；1347全局唯一当前ID、117模板、29路径、
+  所有范围外字节保持。239QA、真实revision-run qa-batch、全部共享/决策门禁和
+  全extract/check→alignment/check通过，8容器BYTE_EXACT、三个目标队列空。
+  187证明组/223单元全部匹配，差异3→0；坐标13→3、来源14→4，术语问题候选
+  695→672、诊断2194→2119、修复batch179→176；全部范围外finding逐项保持。
+  render136.445秒/pdf81.102秒均零退出，Final TeX log通过；461页中445页全文
+  layout相同，16变化页及邻页共24页实际看图通过，公式/脚注/列表无裁切或重叠。
+  隔离progress/check与plan/check通过；首次预期报告原字节相同的断言发现000H
+  真正变化并保留失败日志。独立117章新旧快照确认仅该节变化：31当前unit全部
+  有candidate，四个独立列表Tag000K–000N完整保存在验证的000J陈述中，但现行
+  进度只认unit身份，prepared_tags17→13，候选Section108→107、翻译中9→10。
+  README/进度暂不在DATA改动，合并后独立progress如实同步；工具Issue700单独
+  处理经验证完整容器的嵌套Tag覆盖，不能凑重复旧unit或手改数字，plan保持。
+  初次本机系统Python3.9缺tomllib，在输出前失败，改用已配置Python3.12；初稿
+  两引言尾换行及辅助预检未赋待决状态的问题保留证据后，由模型完整重出八记录；
+  第二稿通过，第三稿完整重出澄清000J末句并补三处词汇声明后才采用唯一真实run。
+  三份模型草稿/作者字面量保留，程序不修中文。04VA原文未完成条目及Details omitted、
+  0AHL下标次序分别留remark Issues698/699，数学/源码忠实保留，无额外翻译阻断。
+  远端完整字节/patch/native单Issue合同及最新精确HEAD双CI后按授权bypass。
+  术语/critic、人审和发布仍待决，完整全库存不变，F1–F8/S4/S5/S7继续。
+
+  完整raw超过Contents限制的实际CI失败留档；独立TOOL702已合并到`7529c68ac9b1bf22897ee1ddf2c5d8b2ae927c40`，
+  DATA正常forward merge该main并保留双方工程记录，27事实路径、source-origin、
+  完整冻结/作者原输出/run/历史全部逐字不变。新状态重新render/pdf和完整全文/
+  24PNG比对通过后才提交integration commit，不force、不重写已推送历史；随后
+  远端29字节/完整patch/native合同与最新精确HEAD两CI、fresh main门禁重新执行。

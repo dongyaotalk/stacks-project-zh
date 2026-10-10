@@ -178,3 +178,12 @@ git status --short
 
 确认仓库 URL 后再添加或修改 `origin`。添加 remote 和 push 属于明确的 Git 操作；
 不要因为主仓库已公开，就覆盖贡献者已有的 Fork remote。
+
+PR 合同检查读取每个变更文件的精确 head commit；删除文件读取精确 base commit。
+GitHub Contents API 对超过 1 MB 的文件可能返回空 content 和 `encoding=none`。
+此时仍需核验全文：只对合法大文件 metadata，以同一 repository 中的不可变 blob
+SHA 请求 Git blob，核验编码、文件大小及原字节 Git blob 哈希后读取 UTF-8。
+不能跳过大文件、删减冻结上下文或原始输出，也不能以当前分支、任意下载 URL 或
+PR 文本代替该 commit 中的文件。普通小文件读取及 Issue/坐标/ownership 门禁保持。
+API 依据见 [Contents 文档](https://docs.github.com/en/rest/repos/contents)及
+[Git blobs 文档](https://docs.github.com/en/rest/git/blobs)。

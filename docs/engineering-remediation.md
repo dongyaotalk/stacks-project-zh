@@ -1622,3 +1622,33 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
   完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
   剩161问题batch、639术语候选2016诊断，继续S4；无批准或总goal完成声明。
+
+- 独立工具Issue [#729](https://github.com/dongyaotalk/stacks-project-zh/issues/729)，分支 `tool/preceding-statement-paragraph-witness`，fresh main `1f6ed87e09a88cc51f61ec3b901d8a08acb9aae7`。
+  已核验完整001T旧定义与其后段落，真实Section001R paragraph/0002；先声明七文件
+  范围、owner/source/历史parent，旧新unit/run/model写范围为空，仅新增严格
+  source-container-v5前陈述见证。旧v4重放语义保持，所有事实与历史原字节不动。
+  Schema/独立Git拒绝回归、真实只读prepare/check、完整工具/239QA/117模板与
+  全库库存对齐checks、隔离进度计划及当前lane实际render/pdf全文/PNG验收后PR，
+  精确head/base远端原字节/native唯一Issue/双CI/fresh main后授权squash。工具后
+  另开七批完整DATA；S4仍161batch/639候选2016诊断，S5/S7及最终文档提示词未完成。
+
+  本地验收：六项专门回归覆盖完整链/范围/保护字节/未知语法、v4默认拒绝、v5
+  witness/版本篡改及完整五字段/旧组上下文/人审门禁。独立旧代码前缀比较初次仅因末尾LF处理不对称失败，保留失败日志与脚本，统一末尾LF后独立续验PASS；生产代码与已通过测试输入未变。最终完整490工具测试
+  482.554秒通过，夹具与Schema子集初版失败日志保留。239批QA
+  264.147秒、全部适用Schema/溯源/决策/来源/117模板通过。
+  fresh extract-all/check 65.991/66.792秒、
+  alignment/check 34.614/34.05秒通过，
+  完整库存/对齐产物原字节保持。实际旧Git工具对完整001T包为BLOCKED；
+  新prepare/check 99.267/96.186秒为PREPARED，check原字节与mtime
+  不动，定义证据v2、后段落证据v5；两个完整片段独立Git回放原字节相等。
+  旧Schema两个分支原字节前缀和语义、旧v4边界函数原代码保持；全事实/历史与
+  范围外字节保持。隔离progress/plan及check真实通过，三报告字节不变。
+  当前lane pyenv3.12实际render 109.883秒/pdf 68.434秒，
+  FinalTeX PASS，461页整书layout文字及13已实际查看页PNG重渲染逐字节相等，
+  无模板/渲染路径变化。完整staged与七远端文件原字节/fullpatch/native唯一closing
+  Issue729、最新精确HEAD双CI run/job成功与fresh main后授权squash。下一DATA
+  前另有三条来源词目录证据必须独立迁移到完整Git容器：final-object对应001R
+  paragraph/0002、product对应001R完整标题、universal-property对应001S完整定义；
+  已验证全部范围外活跃单元均不能继续提供旧hash证据，不能生成时临时改目录。
+  本工具不修译文或批准术语，161问题batch/639候选2016诊断及SOURCE_DIFFERENCE240
+  保持，全部F1–F8/S4/S5/S7及最终完整开发文档与提示词仍继续。

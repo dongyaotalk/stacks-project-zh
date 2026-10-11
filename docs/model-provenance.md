@@ -443,6 +443,13 @@ source TeX 仍逐字等于原 Git。旧 source-container-v1 逐条保持原严�
 与派生 Schema 的 v1/v2/v3/v4 版本无关。先完成独立工具验收，再由具体数据
 任务保存全 batch 原字节、重新冻结并实际修订，不继承批准或改写旧证据。
 
+完整容器来源证据另有严格的 `source-container-v5` 陈述后段落见证，详见
+[source-container-restoration.md](source-container-restoration.md)。它只绑定完整旧
+陈述链及紧邻的完整 unit-v1 段落，保持旧 v4 陈述前见证的历史语义；派生工具
+版本仍为 v4。新增证据不扩大模型修订、人审或数学内文字权限，不替换完整
+旧快照、不可变 ancestry、每个新单元五字段/raw/context 校验或唯一当前后继。
+工具只读准备通过后，具体事实仍必须独立认领 DATA 并实际完整重译。
+
 ## 11. 数学内自然语言的后续来源保护合同
 
 完整设计见 [math-text-translation.md](math-text-translation.md)。独立工具实施并

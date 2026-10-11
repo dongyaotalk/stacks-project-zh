@@ -9,6 +9,7 @@ from .source_integrity import STATEMENTS, _own_tag
 from .source_reextractions import source_tex
 
 VERSION = 'source-container-v4'
+PRECEDING_VERSION = 'source-container-v5'
 SPACE = ' \t\r\n'
 TOKEN = re.compile(r'<([A-Z]+_[0-9]{4})>')
 
@@ -195,4 +196,65 @@ def adjacent_paragraph_witness(containers, units, groups, group, selected):
         'following_statement_input_unit_ids': following['input_unit_ids'],
         'following_statement_selector': native['selector'],
         'following_statement_fragment_hash': native['location']['fragment_hash'],
+        'paragraph_signature_hash': sha256_value(signature)}
+
+
+def preceding_statement_paragraph_witness(containers, units, groups, group, selected):
+    """Versioned after-statement evidence; v4 keeps its original direction."""
+    ids = group['input_unit_ids']
+    if len(ids) != 1 or group['kind'] != 'paragraph' or group['ordinal'] is not None:
+        raise RecordError('preceding statement boundary requires one complete old paragraph')
+    by_id = {unit['unit_id']: unit for unit in units}
+    old = by_id[ids[0]]
+    index = groups.index(group)
+    if index == 0 or groups[index - 1]['kind'] not in STATEMENTS:
+        raise RecordError('paragraph has no complete preceding old statement')
+    preceding = groups[index - 1]
+    members = [by_id[identifier] for identifier in preceding['input_unit_ids']]
+    order = [unit['unit_id'] for unit in units]
+    start = order.index(old['unit_id'])
+    if (order[start - len(members):start] != preceding['input_unit_ids']
+            or any(u['parent_tag'] != old['parent_tag'] for u in members)
+            or group['file'] != selected['selector']['file']):
+        raise RecordError('preceding paragraph crosses its full frozen statement scope')
+    first, last = members[0], members[-1]
+    kind = re.escape(preceding['kind'])
+    if (re.fullmatch(r'\s*\\begin\{' + kind + r'\}\s*\\label\{[^{}\n]+\}\s*',
+                     first['render']['prefix']) is None
+            or re.fullmatch(r'\s*\\end\{' + kind + r'\}\s*', last['render']['suffix']) is None):
+        raise RecordError('preceding paragraph lacks a complete plain labelled statement wrapper')
+    native = native_statement(containers, preceding)
+    _item_tags(''.join(source_tex(u) for u in members), containers.policy,
+               containers.english.tags, old['chapter'])
+    selector = selected['selector']
+    if (selector['owner_tag'] != selector['parent_tag']
+            or native['selector']['parent_tag'] != selector['parent_tag']):
+        raise RecordError('preceding paragraph and native statement have different real Section ownership')
+    raw, rows, _ = containers.documents[selector['file'][:-4]]
+    matches = [i for i, row in enumerate(rows) if row['location'] == selected['location']]
+    if len(matches) != 1 or matches[0] == 0:
+        raise RecordError('preceding paragraph has no unique complete native position')
+    previous = rows[matches[0] - 1]
+    if (previous['location'] != native['location']
+            or raw[native['location']['byte_end']:selected['location']['byte_start']].strip(b' \t\r\n')):
+        raise RecordError('paragraph is not immediately after the same native statement')
+    signature = paragraph_signature(source_tex(old), containers.policy)
+    if signature != paragraph_signature(selected['fragment'], containers.policy):
+        raise RecordError('preceding paragraph changes prose or protected bytes')
+    count = 0
+    for row in rows:
+        if row['unit']['node_kind'] != 'paragraph':
+            continue
+        location = row['location']
+        fragment = raw[location['byte_start']:location['byte_end']].decode('utf-8')
+        try:
+            count += paragraph_signature(fragment, containers.policy) == signature
+        except RecordError:
+            continue
+    if count != 1:
+        raise RecordError('preceding paragraph source signature is ambiguous in the locked chapter')
+    return {'paragraph_input_unit_id': old['unit_id'], 'historical_parent_tag': old['parent_tag'],
+        'preceding_statement_input_unit_ids': preceding['input_unit_ids'],
+        'preceding_statement_selector': native['selector'],
+        'preceding_statement_fragment_hash': native['location']['fragment_hash'],
         'paragraph_signature_hash': sha256_value(signature)}

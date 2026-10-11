@@ -48,6 +48,34 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+### 陈述后完整段落的独立见证（source-container-v5）
+
+`source-container-v5` 是来源恢复证据版本，派生仍使用 v4 完整分组合同。
+它只增加紧邻完整 labelled statement **之后**的完整 paragraph 归属见证；
+旧 v4 的陈述前段落核验及历史重放不变。普通准备仍产生 v2/v3，已有边界
+仍产生 v4；只有实际使用下述前陈述见证的段落产生 v5。
+
+- 冻结完整旧 batch。旧段落之前必须紧邻完整、有序、连续的陈述链，全部同章、
+  同锁定来源及同历史 parent。陈述 opening 是普通环境及自有 label，closing
+  是完整真实 closing，不能借数学、注释、literal、嵌套参数或附加正文伪造。
+- 从锁定 Git 独立定位同一真实陈述及完整段落。两者必须属于同一真实 Section，
+  段落 owner 等于 Section；原生库存中也必须紧邻，间隔仅 ASCII 排版空白。
+  不能跨证明、另一段落、标题、注释或任意未分类节点。
+- 完整段落对应采用既有 `paragraph_signature`：只折叠普通 ASCII 排版空白，
+  所有数学、命令、引用、保护字节及非 ASCII 字符不变；整章签名必须唯一。
+  切片、重复、内部空段、未知语法及 typed 数学文字继续阻断。v5 只产生一个
+  unit-v1 的完整 paragraph，不扩展数学内文字权限。
+- `legacy_boundary_witness.paragraph_anchor` 保存旧段落 ID、历史 parent、完整
+  `preceding_statement_input_unit_ids`、真实 `preceding_statement_selector`、
+  `preceding_statement_fragment_hash` 和 `paragraph_signature_hash`。
+  验证器从实际 origin Git 宏政策、锁定英文与完整旧快照逐项重算；Schema 拒绝
+  v4/v5 witness 混用，旧版本无法借今天的新开关获得重放权限。
+
+真实开发见证是 Categories 完整 001T 定义及其后段落：真实 Section001R、
+`paragraph/0002`。本工具任务仅只读准备及检查，事实采用必须另开 DATA；
+完整 ancestry、所有旧原字节、新模型五字段与不可变 raw/context 绑定、人审
+和发布门禁不变。工具准备成功不代表术语修复或 S4 完成。
+
 全库抽取器已保存完整来源容器，统一队列覆盖239个batch/1480个当前单元。
 现有恢复 helper 只支持单单元、无标题、仅含普通文字/内联数学的proof；现有
 派生映射要求旧新ID一对一。它无法恢复拆分证明漏掉的整幅公式，也无法采用完整

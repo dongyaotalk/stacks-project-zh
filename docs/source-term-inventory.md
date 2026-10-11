@@ -177,3 +177,29 @@ sets-lemma-construct-category 的完整 proof、Section000H、ordinal1 和原 Gi
 状态保持。先独立工具验收合并，实际 DATA 不临时豁免旧证据消失。目录 hash 与
 该词的原生取证元数据可变，全部当前术语/来源/证明 finding、来源库存和事实历史
 保持；重新执行完整回归/QA、真实只读包/check、全库库存/对齐及 render/pdf。
+
+五项稳定来源证据由独立工具 [Issue #716](https://github.com/dongyaotalk/stacks-project-zh/issues/716) 声明。
+DATA715首轮恢复使large旧证据失效，原输出完整保存、未采用；模拟还核实main
+原诊断已有四条旧式目录证据失效，额外写入前先更新Issue及本合同。
+
+| 概念 | 精确词形 | 真实owner/Section | 完整容器 |
+| --- | --- | --- | --- |
+| large | large | 05PY/05PT | proof，lemma-characterize-essentially-constant-ind |
+| commutative-diagram | commutative diagrams | 001Y/001U | proof，lemma-composition-representable |
+| finite | Finite | 002O/04AS | lemma，lemma-finite-limits-exist |
+| nonempty | nonempty | 002T/04AQ | proof，lemma-connected-limit-over-X |
+| representable | representable | 001Y/001U | lemma，lemma-composition-representable |
+
+全部selector含categories.tex、完整categories-标签、kind、ordinal1及锁定Git
+完整片段hash；保护后source_projection须精确暴露词形。nonempty的旧002O
+片段不是当前完整proof见证，改从真实002T完整proof的非空性论证取证，不冒称
+002O原文含该词。仅五条evidence改变，forms、chapters、其余目录/非数学分类
+与全部规则保持，不批准中文。当前事实/历史tree/范围外字节保持，消除四条
+既有目录错误，其他候选/来源/proof finding逐项保持，实际重新测量报告。
+相关既有回归/239QA、全库库存/对齐checks、当前lane实际render/pdf及整书比较
+通过后独立合并。DATA715前置后重新prepare/check、冻结新目录/context并实际
+重新生成17完整五字段，不复用首轮输出冒称新生成。
+
+后续完整容器修订在首次实际输出前核对：拟议来源替换旧组后，旧式目录evidence
+的完整source TeX hash仍有当前英文节点见证。若失效，先独立迁移到可准备的
+完整锁定Git来源、验收合并，再冻结生成；不得在DATA里改目录或忽略错误。

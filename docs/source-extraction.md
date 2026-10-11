@@ -2,6 +2,32 @@
 
 目标是一次扫描锁定英文库全部117章，集中准备来源及问题清单。工具首次开发时已有的1480个unit只代表当时已准备范围，不能成为全库覆盖基准。本工具不生成译文，不替换当前单元或批准术语；它提供可复查、确定性生成的来源暂存包，后续实际修订按来源匹配和问题清单执行。
 
+## 类别构造记号的独立工具合同
+
+工具任务 [Issue #721](https://github.com/dongyaotalk/stacks-project-zh/issues/721)
+增加显式 `category-constructor` 用法。本工具任务不增加实际宏政策条目、不采用
+事实；后续政策任务必须独立验证锁定原文定义及完整使用见证，接受后另开 DATA。
+
+只有精确字面量 `Ind-`、`Pro-` 可以声明该用法，命令必须仅为 `text`，usage
+必须仅为 `category-constructor`。条目还必须声明 JSON 字符串 `suffix`，值仅允许
+一个完整的 `\mathcal{C}` 形原子，其中字母是单个 ASCII 大写字母。运行时比较
+该条目声明的完整后继原字节；声明 C 不会放行 D、无花括号的 mathcal C、
+QCoh、D 的导出范畴记号、参数空白/嵌套或相似词形。缺失、多余、重复字段、
+混用 usage、其他命令及其他带连字符字面量均失败。
+
+前置词法上下文必须是普通数学位置或包含完整构造的数学下标/上标花括号组。
+文本、字体和未知命令参数、未闭合组以及借用组外后继的单 token 脚本仍阻断。
+已有 `prefixed-symbol` 用法继续拒绝脚本参数，解释历史政策时不会启用新构造。
+这里只识别已显式声明的数学记号；`and`、`if` 等自然语言仍遵守独立 typed-text
+合同，未知语法和未分类数学文字保留 BLOCKED。
+
+正向记录保留完整 text 命令、notation、command、usage、source_label 和原 UTF-8
+位置；`usage_source` 保存完整 suffix 及其前的原空白、注释。完整 MATH 节点
+与所有数学字节保持，既不生成译文，也不批准术语或人审。工具的来源回归见证为
+锁定 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的 Categories Section 05PT，
+完整 remark 05PW/05PX/0G2X 共7处，以及 Duality Section 0G4Z 的完整 remark
+0G53 中相同 Pro-mathcal C 用法3处。不同后继的 Pro-D、Pro-QCoh 仍需独立合同。
+
 ## 命令与产物
 
 `make extract-all` 默认输出 `source-ir/extraction/`；`make extract-all CHAPTER=categories` 可做选章验收。`make extract-all-check` 对同一锁定Git、宏政策和当前unit索引重新生成并比较所有产物。CLI `extract-all --root . --harvest ../stacks-project --output source-ir/extraction [--chapter ...] [--check] [--require-ready]`。

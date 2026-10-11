@@ -1724,3 +1724,20 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
   完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
   剩154问题batch、631术语候选2005诊断，继续S4；无批准或总goal完成声明。
+
+- 来源词目录前置 Issue [#737](https://github.com/dongyaotalk/stacks-project-zh/issues/737)，分支`tool/source-terms-initial-mono-evidence`，fresh main `25bc3438a091a016f1002631f9d1a50e9613deda`。
+  仅三个完整locked-source-container证据及两文档，exact允许文件三条。
+  epimorphism/monomorphism绑定真实003A完整标题，initial-object绑定真实002B
+  paragraph/1（历史002C:p001）；所有词形、范围、其他目录及事实历史保持。
+  46来源词回归/239QA/全部共享门禁、全库抽取对齐checks及隔离进度计划，
+  实际当前lane render/pdf、461页全文和13已查看PNG字节对比，完整staged及
+  remote三文件/fullpatch/native单Issue/双CI/fresh main后授权合并；再独立DATA。
+  仍154问题batch/631候选2005诊断、零坐标/来源/歧义、187组218proof全match；
+  全部S4后独立S5/S7与最终开发文档/复制提示词，不授予术语、人审或发布批准。
+
+  本地验收：三条完整锁定Git来源证据逐项通过，003A完整标题hash `8195050fb8d426838ba5f1b5b57674f829dedad0b93f6e7c95fd4a463e9c7506`，002B完整段落hash `e8787eb7dd3798247e6055f5a29b11228d5d1c6a351170b69204c86623287380`；只三evidence改变，所有forms/chapters/其他目录及非数学分类保持，无术语批准。
+  准备脚本缩进失败、初始格式及三路径原字节已留存；最先认领的737扩大并改为可解析完整三证据合同后才采用最终目录，重复738以not planned关闭，未创建重复PR或写入译文事实。最终目录基于真实Git接受main重建，全部范围外字节核验一致。
+  46来源词回归 2.872秒、239批QA 244.883秒通过；全部适用Schema/溯源/决策/来源/117模板通过。全库extract/check 59.268/57.876秒、alignment/check 31.31/30.335秒通过。
+  全库存原字节、全部alignment matches/source/proof finding保持；全部candidate/term finding及完整repair-queue仅规范化真实目录hash后逐项一致，新锁定目录见证恰三项PASS，其余既有见证保持。隔离progress/plan及check真实通过，三报告原字节相同；全部事实/history tree及范围外字节一致。
+  当前lane实际render 111.274秒/pdf 65.817秒零退出，FinalTeX PASS，461页整书layout文字及13已实际查看PNG重渲染字节相同。无工具/模板/渲染路径变化，不无理由重跑已接受490完整工具回归；远端CI仍执行全套。
+  完整staged/远端三文件原字节与fullpatch/native唯一closing737、最新精确HEAD双CI run/job与fresh main后授权squash；postmerge树/原字节/MERGED/CLOSED/clean核验后独立DATA完整prepare/check与冻结生成。仍239批1312unit、154问题batch、631候选2005诊断、零坐标/来源/歧义，187组218proof全match及SOURCE_DIFFERENCE238。全部S4后独立S5/S7及最终开发文档/完整复制提示词，无critic、人审或发布批准。

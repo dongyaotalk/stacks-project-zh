@@ -220,3 +220,9 @@ source_projection词形。仅三条evidence改变，forms、chapters、其他目
   替换旧source_tex_hash见证；真实owner/Section/selector、词形及原字节hash从Git重验。
   所有forms/chapters及其他目录字段不变，无术语批准或译文采用；后续DATA须重新
   prepare/check、完整冻结所有旧新组/context/ancestry并实际生成全部五字段。
+
+- 独立完整来源证据任务 [Issue#746](https://github.com/dongyaotalk/stacks-project-zh/issues/746)，接受基线`38ee235fcfc0dea2ea7035fd9beb83858f991523`，英文锁定`a04446e57ec1fbc252a871afcec7752fb2807b14`。
+  仅image的真实002D完整paragraph/1、coproduct的真实002D完整paragraph/3
+  （历史002F:p001）替换旧source_tex_hash见证；真实owner/Section/selector、
+  词形及完整原字节hash从锁定Git重验。所有forms/chapters/其余目录字段保持，
+  无术语批准或事实采用；后续DATA独立重新冻结并完整实际生成五字段。

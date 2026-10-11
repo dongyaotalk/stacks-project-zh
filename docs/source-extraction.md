@@ -201,3 +201,19 @@ em 的 `preserve_scoped_declaration_translate_children`，且它是完整显式�
 当前 lane render/pdf 和整书 layout 保持后创建工具提交，再以真实提交政策只读
 prepare/check 完整15旧→2新；不生成事实、run 或中文。工具合并后具体 DATA 重新
 冻结输入并实际修订，来源恢复、历史及人审规则保持。
+
+## 精确 Ind-/Pro- 构造的独立政策采用
+
+前置工具 [PR #722](https://github.com/dongyaotalk/stacks-project-zh/pull/722) 接受后，
+独立政策只声明两条 `Ind-`/`Pro-`，命令仅text、usage仅category-constructor，
+suffix均为完整 `\mathcal{C}`，source_label分别绑定Categories的
+remark-ind-category和remark-pro-category。原文在真实Section05PT下定义这两个
+范畴；完整remark 05PW/05PX/0G2X使用3/3/1处，同一记号在Duality真实Section
+0G4Z下完整remark 0G53使用3处，并显式引用Categories相应讨论。所有源容器
+与十处命令、完整后继、owner/Section/selector、原Git字节独立核验。
+
+这里只改变来源准备分类。全部提案source TeX与116个源blob保持原字节相等；
+现有译文、全部历史输入/run/raw/恢复证据及词表不变。其余Pro-D、Pro-QCoh等
+未声明后继与未知语法/数学自然语言继续BLOCKED，不归一或借宽泛symbol用法
+放行，不授予术语或人工数学批准。后续实际DATA必须重新冻结新上下文和完整
+旧新分组/候选/历史，由当前模型实际生成完整五字段；不能复制暂存包当译文。

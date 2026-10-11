@@ -183,6 +183,8 @@ MODEL_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(MODE
 BATCH_UNIT_FILES = $(addprefix translation-data/units/,$(addsuffix .jsonl,$(BATCHES)))
 BATCH_CANDIDATE_FILES = $(addprefix translation-data/candidates/$(MODEL)/,$(addsuffix .jsonl,$(BATCHES)))
 BATCH_RENDER_DIR ?= build/batch-render/$(MODEL)
+CHAPTER_PREVIEW_MODEL := $(MODEL)-chapter-$(CHAPTER)
+CHAPTER_PREVIEW_DIR := $(TEMPLATE_DIR)/translations/$(CHAPTER_PREVIEW_MODEL)
 BATCH_PACKAGE ?= tmp/translation-batch-package.json
 BATCH_PROMPT ?= prompts/translator-v2.md
 BATCH_STYLE_GUIDE ?= config/style-guide.md
@@ -400,16 +402,7 @@ assemble-batch: validate-model
 		$(if $(strip $(MODEL_SNAPSHOT)),--model-snapshot "$(MODEL_SNAPSHOT)",)
 
 qa-all: workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
-	@set -eu; count=0; \
-		for candidate in translation-data/candidates/*/*.jsonl; do \
-			model=$$(basename "$$(dirname "$$candidate")"); \
-			batch=$$(basename "$$candidate" .jsonl); \
-			unit="translation-data/units/$$batch.jsonl"; \
-			test -f "$$unit" || { printf 'Missing unit file: %s\n' "$$unit" >&2; exit 1; }; \
-			$(PYTHON) stacks_zh.py validate --units "$$unit" --candidates "$$candidate" --lock "$(UPSTREAM_LOCK)" >/dev/null; \
-			count=$$((count + 1)); \
-		done; \
-		printf 'All candidate batches: PASS (%s batch(es))\n' "$$count"
+	$(PYTHON) stacks_zh.py validate-all --root . --lock "$(UPSTREAM_LOCK)"
 
 validate-render:
 	@test -n "$(strip $(MODEL_CANDIDATE_FILES))" || { printf 'No candidate batches for MODEL=%s\n' "$(MODEL)" >&2; exit 1; }
@@ -442,6 +435,28 @@ render-batch: qa-batch
 		--chapter-source-dir "$(CHAPTER_SOURCE_DIR)" \
 		--tags-file "$(TAGS_FILE)" \
 		--output-dir "$(BATCH_RENDER_DIR)"
+
+.PHONY: validate-preview-chapter render-chapter pdf-chapter
+validate-preview-chapter:
+	@case '$(CHAPTER)' in \
+		''|*[!A-Za-z0-9._-]*|*..*) \
+			printf 'CHAPTER must be a chapter slug (for example categories)\n' >&2; exit 1 ;; \
+	esac
+
+render-chapter: validate-model validate-preview-chapter validate-render workflow-check harvest-check
+	$(PYTHON) stacks_zh.py render \
+		--units $(foreach file,$(MODEL_UNIT_FILES),"$(file)") \
+		--candidates $(foreach file,$(MODEL_CANDIDATE_FILES),"$(file)") \
+		--lock "$(UPSTREAM_LOCK)" --model-lane "$(MODEL)" \
+		--display-name "$(MODEL_DISPLAY_NAME)（$(CHAPTER) 章开发预览）" \
+		--chapter-manifest "$(CHAPTER_MANIFEST)" --chapter-title-map "$(CHAPTER_TITLE_MAP)" \
+		--chapter-source-dir "$(CHAPTER_SOURCE_DIR)" --tags-file "$(TAGS_FILE)" \
+		--chapter "$(CHAPTER)" --output-dir "$(CHAPTER_PREVIEW_DIR)"
+
+# A separate manuscript, aux tree and PDF; never reuses full-book auxiliaries.
+pdf-chapter: render-chapter
+	@$(MAKE) --no-print-directory pdf MODEL="$(CHAPTER_PREVIEW_MODEL)" \
+		BUILD_ROOT="$(BUILD_ROOT)/chapter-preview" OUTPUT_DIR="$(OUTPUT_DIR)/chapter-preview"
 
 check: validate-model workflow-check harvest-check
 	@command -v "$(ENGINE)" >/dev/null || { printf 'Missing TeX engine: %s\n' "$(ENGINE)" >&2; exit 1; }
@@ -546,6 +561,8 @@ help:
 		'make qa-all                     Validate every tracked candidate batch' \
 		'make render MODEL=<model>                 Render all batches in a model lane' \
 		'make render-batch BATCHES="batch-a batch-b" MODEL=<model>  Render selected batches' \
+		'make render-chapter CHAPTER=categories MODEL=<model>  Render one complete chapter preview' \
+		'make pdf-chapter CHAPTER=categories MODEL=<model>  Build an isolated chapter PDF' \
 		'make template                   Build the AJbook template smoke test' \
 		'make pdf MODEL=<model>          Build ajbook-template/translations/<model>' \
 		'make list-models                List configured translation model lanes' \

@@ -51,6 +51,26 @@ def validate_batch(unit_path: Path, candidate_path: Path, lock_path: Path) -> tu
     return len(candidates), errors
 
 
+def validate_all_candidates(root: Path, lock_path: Path) -> tuple[int, list[str]]:
+    """Run the existing per-pair QA for every lane, without restarting Python.
+
+    Unlike validate_batches, this is not a single-model/run request. Shared
+    repository checks remain separate Make prerequisites.
+    """
+    paths = sorted((root / "translation-data/candidates").glob("*/*.jsonl"))
+    if not paths:
+        raise RecordError("no candidate batches found for full repository QA")
+    errors: list[str] = []
+    for candidate in paths:
+        unit = root / "translation-data/units" / candidate.name
+        try:
+            _, pair_errors = validate_batch(unit, candidate, lock_path)
+        except RecordError as exc:
+            pair_errors = [str(exc)]
+        errors.extend(f"{candidate}: {error}" for error in pair_errors)
+    return len(paths), errors
+
+
 def validate_batches(
     unit_paths: Iterable[Path],
     candidate_paths: Iterable[Path],
@@ -575,6 +595,8 @@ def render_batch(
     tags_path: Path | None = None,
     chapter_source_dir: Path | None = None,
     chapter_title_path: Path | None = None,
+    *,
+    chapter: str | None = None,
 ) -> list[Path]:
     if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
         raise RecordError(f"invalid model lane {model_lane!r}")
@@ -584,6 +606,32 @@ def render_batch(
     if not unit_paths or not candidate_paths:
         raise RecordError("render requires at least one unit and candidate file")
     unit_batches = [load_jsonl(path) for path in unit_paths]
+    selected_chapter = chapter
+    if selected_chapter is not None:
+        if not SAFE_NAME_RE.fullmatch(selected_chapter) or ".." in selected_chapter:
+            raise RecordError(f"invalid preview chapter {selected_chapter!r}")
+        if output_dir.name != f"{model_lane}-chapter-{selected_chapter}":
+            raise RecordError("chapter preview requires its own model-chapter-<chapter> directory")
+        if chapter_manifest_path is None:
+            raise RecordError("chapter preview requires the canonical chapter manifest")
+        if len(unit_paths) != len(candidate_paths):
+            raise RecordError("chapter preview requires paired unit/candidate paths")
+        selected = []
+        for index, (path, candidate, batch) in enumerate(
+            zip(unit_paths, candidate_paths, unit_batches, strict=True)
+        ):
+            if path.name != candidate.name:
+                raise RecordError("chapter preview unit/candidate batch names must match")
+            chapters = {record.get("chapter") for record in batch}
+            if selected_chapter in chapters:
+                if chapters != {selected_chapter}:
+                    raise RecordError("chapter preview cannot split a mixed-chapter batch")
+                selected.append(index)
+        if not selected:
+            raise RecordError(f"no candidate batches for preview chapter {selected_chapter!r}")
+        unit_paths = [unit_paths[i] for i in selected]
+        candidate_paths = [candidate_paths[i] for i in selected]
+        unit_batches = [unit_batches[i] for i in selected]
     units = [record for batch in unit_batches for record in batch]
     candidates = [record for path in candidate_paths for record in load_jsonl(path)]
     errors = validate_records(units, candidates, source_commit)
@@ -784,6 +832,7 @@ def render_batch(
         chapter_chunks[chapter].append(chunk)
 
     chapter_titles: dict[str, tuple[str, str]] = {}
+    preview_chapter_index = None
     if chapter_manifest_path is not None:
         try:
             manifest_text = chapter_manifest_path.read_text(encoding="utf-8")
@@ -809,6 +858,9 @@ def render_batch(
                 + ", ".join(unknown_chapters)
             )
         chapter_order = canonical_order
+        if selected_chapter is not None:
+            preview_chapter_index = order_index[selected_chapter]
+            chapter_order = [selected_chapter]
 
     output_dir.mkdir(parents=True, exist_ok=True)
     chapters_dir = output_dir / "chapters"
@@ -838,13 +890,17 @@ def render_batch(
         f"Harness={harness_id}；模型={model_id}；运行={run_summary}；"
         f"{derivation_notice}"
         f"{correction_notice}"
-        "尚未完成人工语言或数学审校，不得作为正式译本发布。}\n",
+        + (f"仅含 {selected_chapter} 章的开发预览；跨章引用显示永久 Tag；"
+           if selected_chapter is not None else "")
+        + "尚未完成人工语言或数学审校，不得作为正式译本发布。}\n",
         encoding="utf-8",
     )
     written.append(metadata)
     contents = output_dir / "contents.tex"
     contents.write_text(
         "% Generated from translation-data; do not edit.\n"
+        + (f"\\setcounter{{chapter}}{{{preview_chapter_index}}}\n"
+           if preview_chapter_index is not None else "")
         + "".join(
             f"\\input{{\\TranslationModelDirectory/chapters/{chapter}}}\n"
             for chapter in chapter_order

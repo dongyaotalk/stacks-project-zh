@@ -1889,3 +1889,18 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   239全量QA、实际新run分组QA、所有适用Schema/溯源/决策/来源/117模板通过；无代码/政策变更不无理由反复已接受工具测试。全库extract/check及alignment/check真实通过，22目标单元全部BYTE_EXACT、12目标queue清空，所有范围外match/term/source/proof finding逐项保持；239批1304→1278unit、146→134问题batch、617→592术语候选、1967→1894诊断，零坐标/来源/歧义/未保护保持。proof {'proof_group_count': 187, 'proof_unit_count': 218, 'matched': 187, 'mismatched': 0, 'unsupported': 0}，match分类 {'BYTE_EXACT': 203, 'PRESENTATION_EQUIVALENT': 846, 'SOURCE_DIFFERENCE': 229}。
   隔离progress/plan/check真实通过，完整117章模板只采用categories真实变化；实际当前lane render 149.961秒/pdf 70.245秒零退出，FinalTeX PASS，整书461页全文layout比较，8变化页与邻页/目标共14PNG全部实际查看，目录与真实4.14节编号对应，复合来源元数据及未审校说明可读；枚举、Hom公式、迭代公式、交换图和平行态射正常，无裁切、重叠或缺字；五份原文省略证明仍为略；第14页为空白对开页，邻页正常。仅排版核验，不授予语言、数学、术语或发布批准。。只有章节索引元数据变更，无TeX模板/样式/Make/render路径变更，不适用make template，生成物/本机路径不提交。
   全部88允许文件完整staged审查与精确head/base远端原字节/fullpatch/native唯一closing748、最新精确HEAD双CI run/job与fresh main后按授权admin bypass squash，保留六DATA trailers；合并后main/featuretree/原字节/MERGED/CLOSED/clean核验，下一DATA前独立progress/plan。继续全部S4，后独立S5/S7与最终详细开发文档/完整可复制提示词，不以本批完成声明总goal完成。
+
+- 独立progress/plan Issue [#756](https://github.com/dongyaotalk/stacks-project-zh/issues/756)，分支 `docs/progress-categories-limits`；DATA
+  [PR755](https://github.com/dongyaotalk/stacks-project-zh/pull/755)接受main `7b86c559ff7ecc43060797bc4ff4bcddcce8b416`。
+  先claimed及声明唯一工程记录路径，再真实progress/check、plan/check和独立构建验收。
+  DATA隔离三报告无变化仍真实核验，不手改数字；当前239批1278unit，
+  134问题batch、592候选1894诊断，零坐标/来源/歧义，187组218proof全match。
+  当前事实/历史及范围外字节保持；实际当前lanerender/pdf和全文/PNG通过后才提交。
+  之后独立实施书末勘误表，再继续全部S4，后独立S5/S7及最终详细文档/复制提示词。
+
+  独立验收：DATA PR755实收main `7b86c559ff7ecc43060797bc4ff4bcddcce8b416`，feature `9f8dae4c7a70ed6e95f253a301b6538541376d7f`；88精确允许路径的远端head全部原字节、26既有base原字节/62新增路径远端base不存在、完整7101238字节patch/native86管理文件及唯一748合同通过。首次合同失败来自Issue外围引号格式；保留原Issue原字节，仅按既有解析器的文档格式去除引号，全部owner/branch/source/unit/历史Tag/路径语义不变，没有修改工具规则或数据。
+  最新精确HEAD双CI run/job SUCCESS：[{"name": "pr-contract", "run": 38184491768, "job": 114604281917, "head": "9f8dae4c7a70ed6e95f253a301b6538541376d7f", "conclusion": "SUCCESS", "url": "https://github.com/dongyaotalk/stacks-project-zh/actions/runs/38184491768/job/114604281917"}, {"name": "policy-and-data", "run": 38184491671, "job": 114603809588, "head": "9f8dae4c7a70ed6e95f253a301b6538541376d7f", "conclusion": "SUCCESS", "url": "https://github.com/dongyaotalk/stacks-project-zh/actions/runs/38184491671/job/114603809588"}]。授权squash后main/feature tree相等、88原字节及六DATA trailers保持，PR MERGED、Issue CLOSED、干净状态核实。
+  独立进度本地验收：真实make progress/progress-check及plan/plan-check通过，README/progress/plan与接受DATA隔离预览逐字相同；workflow/harvest/index/117模板/Schema通过。全部事实与历史tree及范围外字节保持，未手改报告数字。
+  当前lane实际render 154.893秒、pdf 69.242秒，均零退出，FinalTeX PASS；461页全文layout与接受DATA完全一致，14个DATA已逐页实际查看的PNG重渲染原字节一致，没有新变化页；无模板/工具/政策变化，不重复未变全库工具测试或来源库存。生成物和本机路径不提交。
+  当前239批/1278唯一活跃unit，134问题batch、592术语问题候选/1894诊断，零坐标/来源/未保护/歧义，187组218proof全match。只有工程记录路径变化；完整staged/精确远端head与base字节/fullpatch/native单closing Issue及最新双CI和fresh main后按授权bypass，合并后核实tree/raw/MERGED/CLOSED/clean。
+  下一步独立模板／文档任务接入书末勘误与原文疑点表，标注英文a04446e57ec1fbc252a871afcec7752fb2807b14和三个remark留档；核验合并后再以已收录留档关闭691/698/699。继续全部S4，之后独立S5/S7及F1–F8最终开发文档和完整可复制提示词；未授予任何术语、critic、人审或发布批准。

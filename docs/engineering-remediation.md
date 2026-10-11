@@ -1579,3 +1579,30 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全部事实和历史tree/范围外字节保持；完整staged/远端raw/fullpatch/native
   单closing723、精确HEAD双CI/fresh main后授权bypass。S4仍164batch/643候选2039诊断；
   政策后独立DATA重冻完整组并实际生成五字段，S4后才S5/S7及最终文档提示词。
+
+- DATA Issue [#725](https://github.com/dongyaotalk/stacks-project-zh/issues/725)，分支 `translate/categories/05pt-constructors/openai-gpt-6-1-sol`，fresh main `d0f046e99ff71ffd5e7329f22082d3d6b57c569a`。
+  同一真实Section05PT的05PW/05PX/0G2X完整5旧→3新，24路径先声明；政策724
+  只准备来源，本任务重新冻结完整容器、全部有序旧组/候选/原run及ancestry和政策
+  风格词表prompt来源词目录/context，再由当前实际模型完整生成3单元五字段。
+  v4 grouped replay保留所有原字节，数学公式和省略构造/证明保持，仅source-only remark；
+  未知术语待决，无人审或发布批准。239QA/实际runQA/共享门禁/117模板、库存对齐
+  checks、范围外字节与隔离进度计划、当前lane实际render/pdf和全变化页邻页看图后
+  审查提交，远端native/精确HEAD双CI/fresh main后授权bypass；DATA后先独立progress。
+  基线239批1322unit、164问题batch、643候选2039术语诊断，零来源/坐标诊断；
+  187组220proof全match。全部F1–F8持续，全部S4后独立S5/S7和最终开发文档提示词。
+
+  生成前实测三个完整剩余remark共236来源词；首次冻结偏好值断言失败，未生成译文。
+  原冻结文件/context/hash完整保留，Issue725先声明允许偏好范围例外，再重新冻结；
+  以保持完整语义容器为由，不为凑词数扩展scope，不豁免任何硬门禁。
+
+  本地验收：5旧→3完整新单元，三批完整有序旧组及全部候选/两个原run和ancestry原字节保留，3锁定Git容器逐字相等。
+  prepare/check实测141.518/129.479秒，零BLOCKED，check文件及mtime保持；拟议完整来源替换后的全部词目录及非数学证据通过。
+  首次冻结因236来源词低于300词偏好值失败，未生成译文；原冻结context/hash保留，Issue725先声明完整容器范围例外，再重新冻结所有新unit/旧组及候选/祖先/政策风格词表prompt目录/context hashes。
+  当前实际gpt-6.1-sol/xhigh完整生成3单元五字段，真实turn 01a129d0-b64a-7083-999f-824ca8a39d07，动态Harness 0.162.0-alpha.17.2；snapshot未暴露、不保证重放。
+  真实模型工具调用在完整冻结之后，54双语声明覆盖31必需出现，所有五字段逐项等于不可变raw，程序未生成中文/机械补词/复制旧输出。
+  完整Git owner/Section/selector/边界、context/历史、token原序次数/尾空白、全库1320唯一ID、117模板和24精确路径及范围外字节通过。
+  239全量QA、实际新runQA、适用Schema/溯源/决策/来源、全库extract/check→alignment/check、隔离progress/plan/check全部通过；工具政策代码保持，不无理由重复已接受484回归，远端CI仍执行全套。
+  三批3来源均BYTE_EXACT，三批队列空，全部范围外finding逐项保持；239批1322→1320unit、643→639术语问题候选、2039→2016诊断、164→161问题batch；零坐标/来源/未保护/歧义保持，187组220proof全部match。
+  当前lane实际render 132.752秒/pdf 83.278秒零退出，FinalTeX PASS；整书461页，全书layout文字比较、8变化页及所有邻页共13PNG实际查看通过。
+  只有chapter-template索引元数据变化，无TeX模板/样式/Makefile/render路径变化，不适用make template。省略构造和未来证明承诺仅source-only非正文remark；全部术语、critic、人审和发布批准待决。
+  远端24原字节/完整patch/native单closing725、精确HEAD双CI和fresh main后授权bypass，六DATA trailers保留；DATA后先独立progress/plan。仍继续全部S4，之后独立S5/S7及最终开发文档提示词。

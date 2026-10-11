@@ -1783,3 +1783,24 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   当前lane实际render 119.049秒/pdf 66.821秒零退出，FinalTeX PASS；整书461页全文layout比较，13变化页及邻页/目标共19PNG由root实际查看。只chapter-template索引变化，无模板/样式/Makefile/render路径修改，不适用make template。源码疑点只source-only非正文remark，忠实数学不补修，无术语/critic/人审/发布批准。
   完整staged/远端57原字节/fullpatch/native唯一closing740、最新精确HEAD双CI run/job与fresh main核验后按授权squash保存六DATA trailers；postmerge main/feature树、字节、MERGED/CLOSED/clean核验，下一DATA前独立progress/plan。全部S4后独立S5/S7与最终详细开发文档/完整可复制提示词；本批完成不表示总goal完成。
   初次11条输出的三项保护token重排失败稿、失败报告及原冻结完整保留；重新独立核验全部冻结输入及历史后，本turn完整生成11条五字段，0026保护token顺序失败且0028措辞需修订，保留完整第二稿，再由当前模型完整重出两单元五字段。程序只按ID选择九条第二稿与两条第三稿，最终hash sha256:133c4432a813a723b07475022c5069519a6d642fb4a5623fb2ec02320af7363f；真实会话两次模型字面输出独立核验，每个当前五字段与immutable raw逐项相等。失败尝试不采用、不覆盖；实际run元数据绑定生成turn，不改写为收尾turn。
+
+- 独立progress/plan Issue [#744](https://github.com/dongyaotalk/stacks-project-zh/issues/744)，分支 `docs/progress-categories-pushouts-mono`，DATA
+  [PR #743](https://github.com/dongyaotalk/stacks-project-zh/pull/743) 接受main `f973d56c985cdf78d2ba30f904fbeb1634cb42c7`。
+  先claimed及声明唯一工程记录路径，再实际生成/check进度与计划，即使隔离预览
+  三报告无变化仍核验记录。239批1304unit，146问题batch、617候选1967术语诊断，
+  坐标/来源未保护/歧义零，187组218proof全match。全部事实/历史tree及范围外
+  字节保持；当前lane实际render/pdf及461页全文、19已看图PNG对比通过才提交。
+  后续继续同章完整来源术语范围，真实BLOCKED保持；S4后才S5与S7，总goal未完成。
+
+  DATA [PR743](https://github.com/dongyaotalk/stacks-project-zh/pull/743)实收main `f973d56c985cdf78d2ba30f904fbeb1634cb42c7`，
+  feature `91a10f83db95b2457cf0999eafc5d37a76dad1bb`；全部57远端原字节/完整patch/native55管理文件及唯一740合同通过。
+  五个真实parent_tags、完整19旧→11新及57精确允许范围保持，所有失败模型草稿原字节保留。
+  最新双CI run/job SUCCESS：[{"name": "pr-contract", "run": 38148008003, "job": 114495328665, "head": "91a10f83db95b2457cf0999eafc5d37a76dad1bb", "conclusion": "SUCCESS", "url": "https://github.com/dongyaotalk/stacks-project-zh/actions/runs/38148008003/job/114495328665"}, {"name": "policy-and-data", "run": 38148007931, "job": 114495328032, "head": "91a10f83db95b2457cf0999eafc5d37a76dad1bb", "conclusion": "SUCCESS", "url": "https://github.com/dongyaotalk/stacks-project-zh/actions/runs/38148007931/job/114495328032"}]。
+  授权squash后main/feature树相等、57原字节/六DATA trailers保持，PR MERGED、Issue CLOSED、干净状态核实。
+  独立进度本地验收：progress/check、plan/check真实执行通过，README/progress/plan
+  与接受DATA隔离预览逐字相同；workflow/harvest/index/117模板/Schema通过。
+  当前lane实际render 126.316秒/pdf 66.266秒零退出，FinalTeX PASS；
+  461页全文layout及DATA已实际查看的19页PNG重渲染逐字相同。全部当前事实/历史
+  tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
+  完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
+  剩146问题batch、617术语候选1967诊断，继续S4；无批准或总goal完成声明。

@@ -214,3 +214,9 @@ source_projection词形。仅三条evidence改变，forms、chapters、其他目
 非数学分类保持；不批准中文、不改候选或历史。实际DATA必须在此前置合并后
 重新prepare/check、冻结全部新源/完整旧组/ancestry及新目录context并实际完整
 生成五字段；工具取证不表示术语覆盖、S4或全库门禁完成。
+
+- 独立完整来源证据任务 [Issue#737](https://github.com/dongyaotalk/stacks-project-zh/issues/737)，接受基线`25bc3438a091a016f1002631f9d1a50e9613deda`、英文锁定`a04446e57ec1fbc252a871afcec7752fb2807b14`。
+  仅epimorphism/monomorphism的003A完整标题、initial-object的002B完整段落证据
+  替换旧source_tex_hash见证；真实owner/Section/selector、词形及原字节hash从Git重验。
+  所有forms/chapters及其他目录字段不变，无术语批准或译文采用；后续DATA须重新
+  prepare/check、完整冻结所有旧新组/context/ancestry并实际生成全部五字段。

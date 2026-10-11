@@ -203,3 +203,14 @@ DATA715首轮恢复使large旧证据失效，原输出完整保存、未采用�
 后续完整容器修订在首次实际输出前核对：拟议来源替换旧组后，旧式目录evidence
 的完整source TeX hash仍有当前英文节点见证。若失效，先独立迁移到可准备的
 完整锁定Git来源、验收合并，再冻结生成；不得在DATA里改目录或忽略错误。
+
+001R 积（product）相关三项稳定来源证据由独立工具 [Issue #731](https://github.com/dongyaotalk/stacks-project-zh/issues/731) 声明。
+完整七批修订前，final-object改为真实001R完整paragraph ordinal2，
+product改为真实001R完整section_title ordinal1，universal-property改为
+真实001S完整definition ordinal1、Section001R；准确词形分别为final object、
+Products、universal property。三项使用既有locked-source-container格式，
+从锁定Git完整容器核验真实label/owner/Section、完整原字节hash及保护后
+source_projection词形。仅三条evidence改变，forms、chapters、其他目录字段与
+非数学分类保持；不批准中文、不改候选或历史。实际DATA必须在此前置合并后
+重新prepare/check、冻结全部新源/完整旧组/ancestry及新目录context并实际完整
+生成五字段；工具取证不表示术语覆盖、S4或全库门禁完成。

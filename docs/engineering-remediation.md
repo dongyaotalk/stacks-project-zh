@@ -1485,3 +1485,30 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   三路径完整staged diff根审查后提交；远端全文件原字节/完整patch/native单closing
   716、精确HEAD双CI与fresh main后授权bypass。DATA715须重新准备/check/
   冻结新上下文并实际重新生成完整17五字段，首轮原输出不可冒充新输出；S4未完成。
+
+- DATA Issue [#715](https://github.com/dongyaotalk/stacks-project-zh/issues/715)，分支 `translate/categories/05pt-ready/openai-gpt-6-1-sol`，fresh main `663db84ad4b9456e58b950256ad04168ada6519e`。
+  真实05PT九完整可准备batch集中范围，35旧→17新及68路径先声明；完整旧组/原run/
+  ancestry原字节保留，05PV完整引言按真实Section/历史边界核验，0G2W typed and
+  仅按既有合同暴露。05SH/05PU保持，05PW/05PX/0G2X三真实BLOCKED保持。
+  many prepare/check后冻结完整新unit/全部旧组及候选/政策风格词表prompt目录/context；
+  当前实际模型完整生成17单元五字段，动态Harness及真实元数据，程序只保护/序列化/
+  验证/装配。239QA/新runQA/共享门禁/117模板、全库存/对齐checks及独立字节核验、
+  隔离进度计划、当前lane实际render/pdf和全变化页邻页看图后提交，完整远端/native/
+  精确HEAD双CI/fresh main后授权bypass；DATA后先独立progress/plan。S4基线173批、
+  665候选2093术语诊断，不改政策或授予批准；全部S4后独立S5/S7及最终文档提示词。
+
+  本地验收：35旧→17完整新单元、九批17个完整有序旧组及全部候选/三原run/ancestry原字节保留；17锁定Git容器逐字相等。
+  本Issue首轮失败尝试已保留全部68工作文件、17实际五字段及冻结context/raw/log；前置PR717独立迁移五来源目录证据。
+  第二轮从fresh main `663db84ad4b9456e58b950256ad04168ada6519e`重新prepare/check实际168.666/158.306秒，零BLOCKED，check包及时间戳保持。
+  首次本轮生成前检查拟议完整新来源替换后所有目录及非数学分类证据，再重新冻结17完整新unit、35完整旧组及候选、完整ancestry、政策/风格/词表/prompt/新目录/context hashes。
+  本轮实际gpt-6.1-sol/xhigh重新完整生成17单元五字段；未采用首轮输出，动态Harness 0.162.0-alpha.17.2，747来源词处于300–1500偏好范围。
+  第二轮首稿保护token检查失败，程序修改过的稿件已明确拒绝且仅保留失败证据，不作为模型输出采用。
+  实际模型再次完整生成全部17五字段，随后完整重生成4个英文残留失败单元；所有首稿/拒绝稿/完整重生成记录原字节保留。
+  续接核验真实会话工具调用：17完整稿和4完整重生成均在完整冻结后实际写出，最终五字段逐项相同，未复用程序修改稿或猜测model/effort/turn。
+  144双语声明覆盖94必需来源出现，全部五字段逐项等于不可变raw，完整context/历史绑定、token原序次数/尾空白、1322全库唯一ID、117模板和68路径及范围外字节通过。
+  239QA、实际新runQA及适用Schema/溯源/决策/来源门禁、全库extract/check→alignment/check、隔离progress/plan/check全部通过。
+  九批17来源均BYTE_EXACT、九批队列空、全部范围外finding逐项保持；239批1340→1322unit、665→643术语问题候选、2093→2039诊断、173→164问题batch，零坐标/来源错误/未保护/歧义保持，187组220proof全部match（05PY三证明段合一，222→220）。
+  当前lane实际render 115.318秒/pdf 80.269秒零退出、FinalTeX PASS；整书461页，全文layout比较、22变化页及全部变化页邻页共26PNG实际查看通过。
+  05SH/05PU接受成果与全部已有历史保持；05PW/05PX/0G2X的Ind-/Pro-数学记号仍真实BLOCKED，不在DATA改工具/政策。
+  源码记号疑点及省略证明仅source-only非正文metadata，原数学保持、不补证明；未知词与术语、critic、语言/数学人审及发布批准均待决。
+  远端68原字节/完整patch/native单closing715、精确HEAD双CI和fresh main后授权bypass；DATA后先独立progress/plan。S4仍剩164问题batch/643候选2039诊断，全部S4后才独立S5/S7及最终开发文档提示词。

@@ -67,13 +67,13 @@ class Policy:
                         raise RecordError('invalid or duplicate math-text notation policy section')
                     notation_section_seen = True
             elif section == 'locked_math_text_notations':
-                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets):', line):
+                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|Ind-|Pro-):', line):
                     group = line.strip()[:-1]
                     if group in self.math_text_notations:
                         raise RecordError('duplicate math-text notation policy entry')
                     self.math_text_notations[group] = {}
                 else:
-                    field = re.fullmatch(r'    (commands|usages|source_label|prefix): (.+)', line)
+                    field = re.fullmatch(r'    (commands|usages|source_label|prefix|suffix): (.+)', line)
                     if not field or not group or field[1] in self.math_text_notations[group]:
                         raise RecordError('invalid or duplicate math-text notation policy field')
                     try:
@@ -108,11 +108,15 @@ class Policy:
             raise RecordError('unsupported extraction command policy')
         for notation, rule in self.math_text_notations.items():
             prefixed = rule.get('usages') == ['prefixed-symbol']
-            fields = {'commands', 'usages', 'source_label'} | ({'prefix'} if prefixed else set())
+            constructor = rule.get('usages') == ['category-constructor']
+            fields = ({'commands', 'usages', 'source_label'} |
+                      ({'prefix'} if prefixed else set()) |
+                      ({'suffix'} if constructor else set()))
             if set(rule) != fields:
                 raise RecordError('incomplete math-text notation policy')
             for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
-                                 ('usages', {'symbol', 'applied', 'subscripted', 'prefixed-symbol'})]:
+                                 ('usages', {'symbol', 'applied', 'subscripted', 'prefixed-symbol',
+                                             'category-constructor'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -120,11 +124,19 @@ class Policy:
                     raise RecordError('unsupported math-text notation policy ' + key)
             if 'prefixed-symbol' in rule['usages'] and not prefixed:
                 raise RecordError('prefixed math-text notation cannot mix usages')
+            if 'category-constructor' in rule['usages'] and not constructor:
+                raise RecordError('category constructor notation cannot mix usages')
             if prefixed and (not isinstance(rule['prefix'], str) or
                              not re.fullmatch(r'[A-Z]', rule['prefix'])):
                 raise RecordError('invalid math-text notation prefix')
             if notation == '-Sets' and (not prefixed or rule['commands'] != ['textit']):
                 raise RecordError('unsupported -Sets notation policy')
+            if constructor and (notation not in {'Ind-', 'Pro-'} or rule['commands'] != ['text'] or
+                                not isinstance(rule['suffix'], str) or
+                                not re.fullmatch(r'\\mathcal\{[A-Z]\}', rule['suffix'])):
+                raise RecordError('unsupported category constructor notation policy')
+            if notation in {'Ind-', 'Pro-'} and not constructor:
+                raise RecordError('category constructor requires its explicit usage')
             if not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label']):
                 raise RecordError('invalid math-text notation source label')
         from .math_text import policy_rules
@@ -257,13 +269,18 @@ class Scanner:
             args.append((opening, i))
         return i, args
 
-    def preceding_math_prefix(self, command_start: int, prefix: str) -> str | None:
+    def preceding_math_prefix(self, command_start: int, prefix: str | None) -> str | None:
         """Recognize a bare letter outside command arguments, without TeX expansion.
 
         Unknown commands keep their following arguments ineligible. Only explicit
         zero-argument math operators/spacing may introduce an unbraced prefix.
         Ordinary math groups are eligible; text, literal and scripted arguments
         are not. Comments are lexically skipped but retained in the witness.
+
+        With prefix=None, check the start of a complete category constructor.
+        A braced math script can contain the entire constructor; an unbraced
+        script cannot borrow its following atom. Command arguments remain
+        ineligible. Return an empty witness for an eligible constructor start.
         """
         zero_argument = {'Ob', 'alpha', 'to', 'rightarrow', 'leftarrow', 'longrightarrow',
                          'in', 'notin', 'subset', 'subseteq', 'supset', 'supseteq',
@@ -273,6 +290,8 @@ class Scanner:
                          ' ', ',', ';', ':', '!', '{', '}'}
         single_argument = {'mathcal', 'mathbb', 'mathbf', 'mathrm', 'mathsf',
                            'mathtt', 'operatorname', 'text', 'textit', 'textbf'}
+        if prefix is None:
+            zero_argument |= {'Mor', 'lim', 'colim'}
         # Each frame stores its closing token, inherited block, and whether it
         # is a command/script argument. Closing an argument keeps later arguments
         # of the same unknown command blocked (including optional arguments).
@@ -319,20 +338,26 @@ class Scanner:
                     pending_argument = ('single' if name in single_argument else
                                         '' if name in zero_argument else 'unknown')
             elif c == '{' or (c == '[' and pending_argument):
+                if prefix is None:
+                    try:
+                        self.argument_end(i)
+                    except SyntaxProblem:
+                        return None
                 frames.append(('}' if c == '{' else ']', blocked, pending_argument))
-                blocked = blocked or bool(pending_argument)
+                blocked = blocked or (bool(pending_argument) and
+                                      not (pending_argument == 'script' and c == '{'))
                 pending_argument = ''
                 i += 1
             elif c in '}]' and frames and c == frames[-1][0]:
                 _, blocked, pending_argument = frames.pop()
-                if pending_argument == 'single':
+                if pending_argument in {'single', 'script'}:
                     pending_argument = ''
                 i += 1
             elif c == '}':
                 return None
             elif c in '_^':
                 if pending_argument != 'unknown':
-                    pending_argument = 'single'
+                    pending_argument = 'script' if prefix is None else 'single'
                 i += 1
             elif c.isascii() and c.isalpha():
                 stop = i + 1
@@ -340,7 +365,7 @@ class Scanner:
                     stop += 1
                 if not blocked and not pending_argument and self.text[i:stop] == prefix:
                     candidate = i
-                if pending_argument == 'single':
+                if pending_argument in {'single', 'script'}:
                     pending_argument = ''
                 i = stop
             else:
@@ -349,8 +374,10 @@ class Scanner:
                 if c in ',=+*/<>|&;:$':
                     pending_argument = ''
                 elif c not in "()[]'":
-                    pending_argument = '' if c.isdigit() and pending_argument == 'single' else 'unknown'
+                    pending_argument = '' if c.isdigit() and pending_argument in {'single', 'script'} else 'unknown'
                 i += 1
+        if prefix is None:
+            return '' if not blocked and not pending_argument else None
         return self.text[candidate:command_start] if candidate is not None else None
 
     def notation_usage(self, command: str, value: str, closing: int, *, command_start: int | None = None):
@@ -360,6 +387,14 @@ class Scanner:
             return None
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
+            if usage == 'category-constructor' and command_start is not None:
+                suffix = rule['suffix']
+                stop = cursor + len(suffix)
+                if (self.preceding_math_prefix(command_start, None) is not None and
+                        self.text[cursor:stop] == suffix and
+                        not (self.text[stop:stop + 1].isascii() and
+                             self.text[stop:stop + 1].isalpha())):
+                    return usage, self.text[closing:stop], rule['source_label']
             if usage == 'prefixed-symbol' and command_start is not None:
                 preceding = self.preceding_math_prefix(command_start, rule['prefix'])
                 if preceding is not None:

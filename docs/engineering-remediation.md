@@ -1528,3 +1528,26 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
   完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
   剩164问题batch、643术语候选2039诊断，继续S4；无批准或总goal完成声明。
+
+- 独立工具Issue [#721](https://github.com/dongyaotalk/stacks-project-zh/issues/721)，分支 `tool/category-constructor-notation`，基线main `6cf811feed0fb89277732febcc02a184b2031558`。
+  仅实现显式category-constructor词法用法及严格字段/回归，不在工具任务增加实际
+  宏政策或采用事实。锁定Git的05PW/05PX/0G2X完整remark真实parent05PT，
+  Ind-/Pro-后继mathcal C原子共7处；旧政策仍BLOCKED，未知语法/自然语言保留。
+  owner dongyaotalk、source a04446e57ec1fbc252a871afcec7752fb2807b14，旧新unit/run/model范围为空；
+  allowed_write_files仅extraction.py、新category constructor回归、来源抽取说明及本记录。
+  先claimed与计划，完整工具/239QA/来源库存对齐及当前lane构建、全文与PNG验收后PR；
+  工具接受后另开政策及DATA。S4剩164batch/643候选2039诊断，S5/S7与最终文档提示词待完成。
+
+  工具本地验收：新记号/既有前缀回归通过；审查补齐方括号脚本反例后，
+  最终完整484项工具测试 458.475秒通过，初版输入与日志保留。239批QA
+  266.651秒通过，Schema/溯源/决策/来源/117模板均通过；
+  extract-all/check 71.182/70.033秒、
+  source-alignment/check 36.081/36.09秒通过。
+  旧新工具116章逐项相等；当前政策下完整库存和对应报告全部原字节相等。
+  fixture实际验证4个Git完整容器的10处精确记号、原字节/owner/Section/selector，
+  仅暂存、不采用。progress/plan隔离生成与check通过，三报告原字节保持。
+  当前lane实际render 118.657秒/pdf 80.302秒零退出、
+  FinalTeX PASS，461页全文及26已查看PNG重渲染字节相等；未改模板/渲染路径。
+  全部事实/历史tree及范围外原字节保持；完整staged/远端原字节/fullpatch/native
+  单closing721、最新精确HEAD双CI/fresh main后授权bypass。实际政策仍未启用
+  新条目，残项164batch/643候选2039诊断不变；无术语或人审批准，S4/S5/S7仍待完成。

@@ -1606,3 +1606,19 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   当前lane实际render 132.752秒/pdf 83.278秒零退出，FinalTeX PASS；整书461页，全书layout文字比较、8变化页及所有邻页共13PNG实际查看通过。
   只有chapter-template索引元数据变化，无TeX模板/样式/Makefile/render路径变化，不适用make template。省略构造和未来证明承诺仅source-only非正文remark；全部术语、critic、人审和发布批准待决。
   远端24原字节/完整patch/native单closing725、精确HEAD双CI和fresh main后授权bypass，六DATA trailers保留；DATA后先独立progress/plan。仍继续全部S4，之后独立S5/S7及最终开发文档提示词。
+
+- 独立progress/plan Issue [#727](https://github.com/dongyaotalk/stacks-project-zh/issues/727)，分支 `docs/progress-categories-05pt-constructors`，DATA
+  [PR #726](https://github.com/dongyaotalk/stacks-project-zh/pull/726) 接受main `3d9b0eeefb9ff0fd0130f55e6bc3cc5654e5f0bd`。
+  先claimed及声明唯一工程记录路径，再实际生成/check进度与计划，即使隔离预览
+  三报告无变化仍核验记录。239批1320unit，161问题batch、639候选2016术语诊断，
+  坐标/来源未保护/歧义零，187组220proof全match。全部事实/历史tree及范围外
+  字节保持；当前lane实际render/pdf及461页全文、13已看图PNG对比通过才提交。
+  后续继续同章完整来源术语范围，真实BLOCKED保持；S4后才S5与S7，总goal未完成。
+
+  独立进度本地验收：progress/check、plan/check真实执行通过，README/progress/plan
+  与接受DATA隔离预览逐字相同；workflow/harvest/index/117模板/Schema通过。
+  当前lane实际render 112.478秒/pdf 68.917秒零退出，FinalTeX PASS；
+  461页全文layout及DATA已实际查看的13页PNG重渲染逐字相同。全部当前事实/历史
+  tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
+  完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
+  剩161问题batch、639术语候选2016诊断，继续S4；无批准或总goal完成声明。

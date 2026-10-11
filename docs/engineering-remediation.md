@@ -1551,3 +1551,31 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全部事实/历史tree及范围外原字节保持；完整staged/远端原字节/fullpatch/native
   单closing721、最新精确HEAD双CI/fresh main后授权bypass。实际政策仍未启用
   新条目，残项164batch/643候选2039诊断不变；无术语或人审批准，S4/S5/S7仍待完成。
+
+- 独立政策Issue [#723](https://github.com/dongyaotalk/stacks-project-zh/issues/723)，分支 `tool/policy-category-constructors`，基线main `7a3ae871ae451a319adaf72bc6b3a5a00749b7dd`，
+  前置工具 [PR #722](https://github.com/dongyaotalk/stacks-project-zh/pull/722) 已接受。
+  source a04446e57ec1fbc252a871afcec7752fb2807b14，owner dongyaotalk，真实源
+  Categories05PT下05PW/05PX/0G2X及Duality0G4Z下0G53四完整remark，旧新unit/run/model为空。
+  仅宏政策、来源抽取说明和工程记录三个允许文件；先claimed和计划，再声明两条
+  精确Ind-/Pro-构造，suffix仅mathcal C、text/唯一用法，无别名或批准。
+  全库十处正向见证/其他BLOCKED/全部源字节/当前事实与历史、239QA与所需
+  检查及当前lane render/pdf、全文PNG通过才PR。政策后另开实际DATA冻结/生成，
+  READY不自动修事实；S4仍164batch/643候选2039诊断，全部S4后才S5/S7及最终文档提示词。
+
+  最终政策验收：90项相关构造/既有前缀/抽取/数学文字回归通过；
+  工具代码原字节保持，复用前置接受的完整484项测试，精确HEAD远端CI仍跑全套。
+  239批QA 233.613秒及Schema/溯源/决策/来源/117模板通过；
+  最终政策字节extract-all/check 64.466/61.585秒、
+  source-alignment/check 31.249/31.483秒通过。
+  全部43257提案的source TeX与数学原节点、116源回放相同，仅增加10条
+  正向分类、移除对应10条math-text诊断，其他分类/诊断逐项相同；政策hash与
+  已知四容器准备状态的变化单独核对，不改事实。READY 36651→36655、
+  BLOCKED 6606→6602、来源诊断18618→18608。
+  初版布局/日志及隔离比对脚本处理unit引用段、native政策hash的诊断保留；
+  正式验收使用最终政策字节，未以更改事实或诊断规则绕过失败。
+  progress/plan隔离生成/check、三报告字节保持；当前lane实际render
+  102.779秒/pdf 69.26秒零退出、FinalTeX PASS，
+  461页全文及26已查看PNG重渲染字节相同，模板/渲染路径无变化。
+  全部事实和历史tree/范围外字节保持；完整staged/远端raw/fullpatch/native
+  单closing723、精确HEAD双CI/fresh main后授权bypass。S4仍164batch/643候选2039诊断；
+  政策后独立DATA重冻完整组并实际生成五字段，S4后才S5/S7及最终文档提示词。

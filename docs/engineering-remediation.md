@@ -1440,3 +1440,19 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   和fresh main后授权bypass squash；DATA后先独立progress/plan再下一DATA。
   剩173问题batch/665术语候选2097诊断，S4仍未完成；继续同章完整范围，随后S5
   与S7，最终文档/复制提示词，不授予术语、critic、人审或发布批准。
+
+- 独立progress/plan Issue [#713](https://github.com/dongyaotalk/stacks-project-zh/issues/713)，分支 `docs/progress-categories-05sh-05pu`，DATA
+  [PR #712](https://github.com/dongyaotalk/stacks-project-zh/pull/712) 接受main `0a144388dddc1cea55f0888915736874c9b47cc8`。
+  先claimed及声明唯一工程记录路径，再实际生成/check进度与计划，即使隔离预览
+  三报告无变化仍核验记录。239批1340unit，173问题batch、665候选2097术语诊断，
+  坐标/来源未保护/歧义零，187组222proof全match。全部事实/历史tree及范围外
+  字节保持；当前lane实际render/pdf及461页全文、12已看图PNG对比通过才提交。
+  后续继续同章完整来源术语范围，真实BLOCKED保持；S4后才S5与S7，总goal未完成。
+
+  独立进度本地验收：progress/check、plan/check真实执行通过，README/progress/plan
+  与接受DATA隔离预览逐字相同；workflow/harvest/index/117模板/Schema通过。
+  当前lane实际render 92.587秒/pdf 69.879秒零退出，FinalTeX PASS；
+  461页全文layout及DATA已实际查看的12页PNG重渲染逐字相同。全部当前事实/历史
+  tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
+  完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
+  剩173问题batch、665术语候选2097诊断，继续S4；无批准或总goal完成声明。

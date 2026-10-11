@@ -11,6 +11,7 @@ from .source_reextractions import source_tex
 VERSION = 'source-container-v4'
 PRECEDING_VERSION = 'source-container-v5'
 NESTED_PRECEDING_VERSION = 'source-container-v6'
+SECTION_TITLE_VERSION = 'source-container-v7'
 SPACE = ' \t\r\n'
 TOKEN = re.compile(r'<([A-Z]+_[0-9]{4})>')
 
@@ -365,4 +366,78 @@ def nested_preceding_statement_paragraph_witness(containers, units, groups, grou
         'preceding_statement_fragment_hash': native['location']['fragment_hash'],
         'preceding_statement_list_closings': list_closings,
         'preceding_statement_signature_hash': sha256_value(statement_signature),
+        'paragraph_signature_hash': sha256_value(signature)}
+
+
+def section_title_paragraph_witness(containers, units, groups, group, selected):
+    """v7 binds a complete first paragraph to its complete native Section title."""
+    ids, selector = group['input_unit_ids'], selected['selector']
+    if (len(ids) != 1 or group['kind'] != 'paragraph' or group['ordinal'] is not None
+            or selector['kind'] != 'paragraph' or selector['ordinal'] != 1
+            or selector['owner_tag'] != selector['parent_tag']):
+        raise RecordError('Section title boundary requires one complete first paragraph')
+    by_id = {unit['unit_id']: unit for unit in units}
+    old = by_id[ids[0]]
+    index = groups.index(group)
+    if index == 0 or groups[index - 1]['kind'] != 'section_title':
+        raise RecordError('first paragraph has no immediately preceding complete old Section title')
+    preceding = groups[index - 1]
+    if len(preceding['input_unit_ids']) != 1:
+        raise RecordError('first paragraph requires one complete old Section title')
+    heading = by_id[preceding['input_unit_ids'][0]]
+    order = [unit['unit_id'] for unit in units]
+    start = order.index(old['unit_id'])
+    parent = selector['parent_tag']
+    if (start == 0 or order[start - 1] != heading['unit_id']
+            or preceding['file'] != selector['file'] or group['file'] != selector['file']
+            or heading['chapter'] != old['chapter']
+            or heading['source_commit'] != old['source_commit']
+            or heading['parent_tag'] != old['parent_tag'] or old['parent_tag'] != parent
+            or preceding['owner_tag'] != parent or _own_tag(heading, containers.english.tags) != parent):
+        raise RecordError('first paragraph crosses its complete frozen Section title scope')
+    old_label = selector['owner_label']
+    spacing = r'[ \t\r\n]*'
+    if (re.fullmatch(spacing + r'\\section\{', heading['render']['prefix']) is None
+            or re.fullmatch(r'\}' + spacing + r'\\label\{' + re.escape(old_label)
+                            + r'\}' + spacing, heading['render']['suffix']) is None):
+        raise RecordError('first paragraph lacks a plain complete labelled Section title')
+    title_selector = {**selector, 'kind': 'section_title', 'ordinal': 1}
+    native = containers.select(title_selector)
+    local_label = old_label.removeprefix(old['chapter'] + '-')
+    suffix = re.search(r'\\label\{([^{}\n]+)\}' + spacing + r'\Z', native['fragment'])
+    if (suffix is None or suffix[1] not in {old_label, local_label}
+            or containers.english.tags.get(old['chapter'] + '-' + suffix[1],
+                                            containers.english.tags.get(suffix[1])) != parent):
+        raise RecordError('native Section title has no exact locked permanent-label mapping')
+    old_fragment = source_tex(heading).strip(SPACE)
+    old_label_tex, native_label_tex = '\\label{' + old_label + '}', '\\label{' + suffix[1] + '}'
+    if (old_fragment.count(old_label_tex) != 1
+            or old_fragment.replace(old_label_tex, native_label_tex) != native['fragment'].strip(SPACE)):
+        raise RecordError('complete old Section title differs from locked Git title bytes')
+    raw, rows, _ = containers.documents[old['chapter']]
+    matches = [i for i, row in enumerate(rows) if row['location'] == selected['location']]
+    if len(matches) != 1 or matches[0] == 0:
+        raise RecordError('first paragraph has no unique complete native position')
+    if (rows[matches[0] - 1]['location'] != native['location']
+            or raw[native['location']['byte_end']:selected['location']['byte_start']].strip(b' \t\r\n')):
+        raise RecordError('first paragraph is not immediately after the same native Section title')
+    signature = paragraph_signature(source_tex(old), containers.policy)
+    if signature != paragraph_signature(selected['fragment'], containers.policy):
+        raise RecordError('first paragraph changes prose or protected bytes')
+    count = 0
+    for row in rows:
+        if row['unit']['node_kind'] != 'paragraph':
+            continue
+        location = row['location']
+        fragment = raw[location['byte_start']:location['byte_end']].decode('utf-8')
+        try:
+            count += paragraph_signature(fragment, containers.policy) == signature
+        except RecordError:
+            continue
+    if count != 1:
+        raise RecordError('first paragraph source signature is ambiguous in the locked chapter')
+    return {'paragraph_input_unit_id': old['unit_id'], 'historical_parent_tag': old['parent_tag'],
+        'preceding_section_title_input_unit_id': heading['unit_id'],
+        'preceding_section_title_selector': native['selector'],
+        'preceding_section_title_fragment_hash': native['location']['fragment_hash'],
         'paragraph_signature_hash': sha256_value(signature)}

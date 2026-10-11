@@ -458,6 +458,13 @@ source TeX 仍逐字等于原 Git。旧 source-container-v1 逐条保持原严�
 旧快照、不可变 ancestry、每个新单元五字段/raw/context 校验或唯一当前后继。
 工具只读准备通过后，具体事实仍必须独立认领 DATA 并实际完整重译。
 
+完整 Section 标题后的首段另使用独立 `source-container-v7` 见证，合同和验收见
+[source-container-restoration.md](source-container-restoration.md)。它仅接受完整旧
+batch 中紧邻完整真实 Section 标题的一个完整首段，锁定 Git 标题与 paragraph/1
+也须立即相邻；完整标题原字节仅允许实际永久 Tag 的精确章前缀 label 映射。
+旧 v1–v6 不获得首段权限，派生仍 v4。具体事实采用另开 DATA，完整旧组与
+ancestry、全部新实际五字段、immutable raw/context、人审和出版门禁保持。
+
 ## 11. 数学内自然语言的后续来源保护合同
 
 完整设计见 [math-text-translation.md](math-text-translation.md)。独立工具实施并

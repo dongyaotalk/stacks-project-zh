@@ -48,6 +48,37 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+### Section 标题后的完整首段见证（source-container-v7）
+
+独立工具 Issue [#749](https://github.com/dongyaotalk/stacks-project-zh/issues/749)
+处理 DATA748 的真实 002D 引言边界。旧完整 batch 只有标题和首段；不能借另一
+batch 的陈述充当后锚点，也不能放宽完整 prose_block 的双锚点规则。新增 v7
+来源证据分支，派生仍 v4；旧 v1–v6 Schema 分支、边界权限及不可变历史保持。
+
+仅一个完整旧 paragraph 可以使用本见证。它在完整旧 batch 中必须紧邻一个
+完整 section_title，两者同章、同来源、同历史 parent；标题 own Tag 必须等于
+真实 Section。旧标题只能有普通 section opening 和单一 own label closing，
+包装间隔仅 ASCII 空白。从锁定 Git 独立选择同 Section 的 section_title/1 与
+paragraph/1，原生库存也须立即相邻，间隔仅 ASCII 空白。
+
+完整标题正文和保护字节逐字相等，外围 ASCII 空白不参与比较。own label 的
+唯一例外是锁定 tags/tags 已登记的章前缀映射：旧名字必须精确等于 selector
+的 owner_label，原生名字只能是同名或精确去除当前 chapter 前缀的局部名字，
+两者实际映射同一永久 Tag。真实002D旧 categories-section-limits 与原生
+section-limits 已核验；不猜其他别名，不归一化标题文字、公式或其他命令。
+
+完整段落沿用 paragraph_signature：仅折叠普通 ASCII prose 排版空白，其数学、
+命令、引用、字体、评论和非 ASCII 原字节保持；整章签名唯一。内部空段、未知
+语法、typed 数学文字、切片、重复、跨来源或非相邻范围继续 BLOCKED。
+paragraph_anchor 保存旧段落 ID、历史 parent、完整旧标题 ID、真实标题 selector
+及 fragment hash、完整段落 signature hash。加载器只对 v7 开启首段权限，并从
+origin 宏政策、锁定 Git 和完整旧快照独立重算全部见证，不能信任缓存或自报 hash。
+
+真实只读验收采用完整 categories-002D 两旧→两新，不生成中文或新 run，不采用
+事实，不减少修复队列。工具验收合并后更新 DATA748 基线和 paragraph/1 合同，
+保留十二批48旧→22新完整范围，再重新 prepare/check、冻结并实际生成五字段。
+全部历史、实际模型/raw/context、人审及出版门禁不变；S4/S5/S7 仍分别完成。
+
 ### 列表陈述后的完整段落见证（source-container-v6）
 
 独立工具 Issue [#741](https://github.com/dongyaotalk/stacks-project-zh/issues/741)

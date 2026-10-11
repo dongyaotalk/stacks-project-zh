@@ -1821,3 +1821,22 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全库存原字节、完整alignment matches/source/proof findings保持；全部candidate/term findings及repair-queue仅规范化真实catalog hash后逐项相等，两项新locked evidence PASS，其余见证保持。隔离progress/plan/check真实通过，三报告原字节一致；全部事实/history tree及范围外字节保持。
   当前lane实际render 120.967秒/pdf 65.53秒零退出，FinalTeX PASS；461页全文layout及接受DATA已实际查看的19页PNG重渲染字节相同，无模板/渲染路径变更，未编辑生成物绕过失败。
   完整staged三允许文件/远端原字节/fullpatch/native唯一closing746、最新精确HEAD双CI run/job和fresh main后按授权squash；postmerge tree/bytes/MERGED/CLOSED/clean核验，再另开真实Section002D完整DATA，重新prepare/check、冻结及实际模型生成。仍239批1304unit、146问题batch、617术语候选1967诊断，零坐标/来源/歧义、187组218proof全match；S4/S5/S7及全部F1–F8未完成，无术语/critic/人审/发布批准。
+
+- 独立工具 Issue [#749](https://github.com/dongyaotalk/stacks-project-zh/issues/749)，fresh main `e64dee0893609b153f944fa713d4efc5375464b0`，分支`tool/section-title-paragraph-witness`。
+  DATA748完整Section002D十二批48旧→22新准备发现首段缺少旧batch内后锚点，
+  两次失败包和完整范围原字节保留，未冻结/生成/采用事实，释放claimed。
+  先声明owner、锁定source、真实及历史002D、完整两旧→两新只读见证、七允许
+  文件及空run/model范围，再独立source-container-v7首段见证；旧v1–v6原权限保持。
+  标题完整正文原字节保持，own label只允许锁定tags实际chapter前缀映射；
+  同Section首paragraph/1紧邻标题，仅普通ASCII prose空白折叠，其他字节保持。
+  Schema及正反Git回归、真实只读prepare/check、全部工具/239QA/117模板、
+  全库抽取对齐checks及残项原字节、隔离进度计划、当前lane实际render/pdf、
+  全书文字及19接受PNG字节、完整staged/远端/native单Issue/精确双CI/fresh main
+  验收后授权squash，postmerge核验，再更新748合同并恢复完整DATA。
+  仍146问题batch、617候选1967诊断；全部S4后独立S5/S7，F1–F8及最终文档提示词继续。
+
+  本地验收：先前bundled Python完成和未完成日志原字节保留；完整工具测试没有最终结果且无存活进程，不记为通过。为落实本地pyenv3.12.6明确要求，全部最终验收由指定解释器实际执行，当前所有测试输入hash逐项保持。六项专用synthetic Git回归通过，覆盖完整首标题/paragraph/1、精确章前缀label映射、旧v4–v6拒绝，部分/错序/重复/跨范围/伪包装/标题正文及保护字节变化、非首段/非相邻/评论/重复/未知typed段落、version/witness/hash篡改；完整新五字段及完整旧组context、人审拒绝保持。完整502工具测试 528.655秒通过，239批QA 327.292秒及全部适用Schema/溯源/决策/来源/117模板通过。
+  全库extract/check 73.984/70.894秒、alignment/check 36.081/37.062秒实际通过；完整库存、所有审计finding/match及repair-queue原字节相等，239批1304unit、146问题batch、617术语候选1967诊断，坐标/来源未保护/歧义零，187组218proof全match保持。隔离progress/plan/check真实通过，三报告原字节不变；事实/history tree和范围外字节保持。
+  真实完整002D两旧→两新只读prepare/check 160.889/148.502秒PREPARED、零BLOCKED，check原字节及mtime保持。标题来源证据v2、首段v7，完整Git片段和新unit回放逐字相等，完整旧标题和首段绑定、真实Section/首段邻接/唯一签名重算通过；两个DATA748失败包完整原字节保留。旧全部Schema分支原字节前缀/语义和所有旧边界函数原代码相同，旧权限未扩展。工具不生成中文/新run，不采用事实或授予任何批准。
+  当前lane实际render 125.77秒/pdf 65.847秒零退出，FinalTeX PASS；461页整书layout文字与接受PR747完整比较，唯一变化为第2页封面构建日期2026-10-11→2026-10-12；模板cover使用已有\today，其他460页文字原字节相等，19此前实际查看PNG重渲染原字节相等。完整日期比对失败日志保留，实际查看全部变化页及邻页1/2/3，封面/日期/版权和目录无裁切、重叠或缺字；未改任何生成物绕过失败。无模板/样式/Make/render路径修改，不适用make template，不修改生成物绕过失败。
+  完整staged仅七允许路径、精确远端head/base原字节/fullpatch/native唯一closing749，最新精确HEAD双CI run/job及fresh main后按授权squash；postmerge main/feature tree、原字节、MERGED/CLOSED/clean核验。后更新DATA748基线及paragraph/1合同、恢复claimed并对原十二批48旧→22新完整范围重新prepare/check/freeze和实际模型生成，全部S4后独立S5/S7及F1–F8最终文档/复制提示词继续。

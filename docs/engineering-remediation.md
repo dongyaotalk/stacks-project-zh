@@ -1759,3 +1759,27 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   实际DATA740失败包及四完整旧input原字节保存，v5直接核验仍拒绝002C列表末端closing。最终v6真实只读prepare/check 121.919/119.527秒PREPARED、零BLOCKED，check原字节/mtime保持；完整定义证据v2、后段落v6，两个完整片段及全部新unit独立回放逐字Git相等。当前最终ASCII版本再次独立重算完整陈述签名和列表closing、冻结四旧输入及所有候选，见证逐项一致。旧三Schema分支原字节前缀/语义与全部原边界函数原代码相同；全事实/history tree、范围外字节保持。
   隔离progress/plan及checks真实通过，三报告原字节不变。pyenv3.12当前lane实际render 111.978秒/pdf 65.33秒，FinalTeX PASS；461页整书layout文字及13此前实际查看页PNG重渲染字节相同。无模板/样式/Makefile/render路径修改，不适用make template。
   完整staged仅七允许文件，远端精确head/base七原字节/fullpatch/native唯一closing741、最新精确HEAD双CI run/job和fresh main通过后按授权squash；postmerge树/字节/MERGED/CLOSED/clean后更新740完整19旧→11新八批基线及v6合同，恢复claimed、完整prepare/check/独立freeze与实际模型五字段，再继续S4。不生成中文/新run、不采用事实或批准术语；仍239批1312unit、154问题batch、631候选2005诊断、零坐标/来源/歧义、187组218proof全match及SOURCE_DIFFERENCE238。全部S4后独立S5/S7与最终详细开发文档/完整复制提示词，工具不表示F1–F8 goal完成。
+
+- DATA Issue [#740](https://github.com/dongyaotalk/stacks-project-zh/issues/740)，分支`translate/categories/pushouts-mono/openai-gpt-6-1-sol`，fresh main `6b8a4f24b8a41d197588db528f6aebff82f5d233`。
+  五个真实相邻Sections0025/0027/0029/002B/003A的全部八问题batch完整19旧→11新，
+  11完整有序组/全部旧新ID/selector先声明，allowed_write_files精确57条，源词361。
+  PR739三来源证据前置已接受；八完整批次prepare/check、全部new/old/candidates/
+  原run/raw/context及ancestry、政策风格词表prompt目录/context冻结后当前模型
+  实际生成全部11五字段。忠实原数学，source-only remark，未知待决，无批准。
+  Git/raw/context/历史/术语/唯一ID/范围外原字节、239QA/实际新runQA/共享门禁
+  及117模板、全库抽取对齐checks、隔离进度计划、当前lane真实render/pdf和全部
+  变化页邻页PNG验收后PR；精确head/base原字节/native单Issue/双CI/fresh main
+  后授权squash，DATA后先独立progress/plan。S4仍154batch/631候选2005诊断，
+  全部F1–F8、S5/S7及最终开发文档/完整提示词继续。
+
+  因002C完整列表陈述后边界暂停的DATA740已在独立前置PR742合并后恢复：旧失败包/完整计划与自有stash原字节保留，八批19旧→11新及57路径不变；接受main `6b8a4f24b8a41d197588db528f6aebff82f5d233`，先更新Issue及claimed，再从最新main全八批重新prepare/check与独立完整freeze，0028/002A沿用v5见证，002C使用v6完整签名/列表closing，不改旧语义或遗漏当前问题。
+
+  本地验收：19旧→11完整新单元，八批11完整有序组及所有旧候选、八原run/raw/context原字节保留，全部11锁定Git完整来源逐字相等。真实相邻Sections0025/0027/0029/002B/003A的全部八当前问题批次覆盖，已接受清零批次保持。
+  prepare/check实测180.002/180.393秒、零BLOCKED，check文件原字节和mtime保持；拟议1304完整来源的全部词目录/非数学见证通过。认领前本地来源词数断言发现计划数字错误，未创建Issue/写事实；实际361词在偏好范围，纠正后的完整范围才认领740，不授予硬门禁豁免。
+  生成前独立冻结全部11new/19old及所有candidate、完整原run/ancestry、政策风格词表prompt来源词目录和context hashes。当前实际gpt-6.1-sol/xhigh完整生成全部11五字段，真实turn 01a12b46-7e5d-78a1-8874-a606d159de33、动态Harness 0.162.0-alpha.17.2，snapshot未暴露、不保证模型重放。真实会话字面输出、raw与全部当前五字段逐项相等，程序不生成中文/机械补词；91双语声明覆盖74来源要求，未知待决。
+  原生owner/Section/selector/边界原字节、v4完整分组、0028/002A定义后段落v5及002C完整列表链后段落v6见证、context/历史绑定、token原序次数尾空白、1304全库唯一ID、117模板、57精确路径及范围外字节通过。
+  239全量QA、实际新runQA、全部适用Schema/溯源/决策/来源、全库extract/check和alignment/check、隔离progress/plan/check通过。前置代码政策未变，不无理由重跑已接受496完整工具回归，远端CI仍执行全套。
+  八批11单元全部BYTE_EXACT、八队列空，范围外全部finding逐项保持。239批1312→1304unit、154→146问题batch、631→617术语候选、2005→1967诊断；零坐标/来源/歧义/未保护保持，187组218proof全match。全部match分类{"BYTE_EXACT": 181, "PRESENTATION_EQUIVALENT": 890, "SOURCE_DIFFERENCE": 233}。
+  当前lane实际render 119.049秒/pdf 66.821秒零退出，FinalTeX PASS；整书461页全文layout比较，13变化页及邻页/目标共19PNG由root实际查看。只chapter-template索引变化，无模板/样式/Makefile/render路径修改，不适用make template。源码疑点只source-only非正文remark，忠实数学不补修，无术语/critic/人审/发布批准。
+  完整staged/远端57原字节/fullpatch/native唯一closing740、最新精确HEAD双CI run/job与fresh main核验后按授权squash保存六DATA trailers；postmerge main/feature树、字节、MERGED/CLOSED/clean核验，下一DATA前独立progress/plan。全部S4后独立S5/S7与最终详细开发文档/完整可复制提示词；本批完成不表示总goal完成。
+  初次11条输出的三项保护token重排失败稿、失败报告及原冻结完整保留；重新独立核验全部冻结输入及历史后，本turn完整生成11条五字段，0026保护token顺序失败且0028措辞需修订，保留完整第二稿，再由当前模型完整重出两单元五字段。程序只按ID选择九条第二稿与两条第三稿，最终hash sha256:133c4432a813a723b07475022c5069519a6d642fb4a5623fb2ec02320af7363f；真实会话两次模型字面输出独立核验，每个当前五字段与immutable raw逐项相等。失败尝试不采用、不覆盖；实际run元数据绑定生成turn，不改写为收尾turn。

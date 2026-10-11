@@ -48,6 +48,35 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+### 列表陈述后的完整段落见证（source-container-v6）
+
+独立工具 Issue [#741](https://github.com/dongyaotalk/stacks-project-zh/issues/741)
+处理 DATA740 准备时实际发现的 002C 边界：旧完整定义跨三个 unit，最后 suffix
+同时闭合 enumerate 与 definition，旧 v5 的 plain closing 合同仍拒绝它。
+v6 是独立来源证据分支，派生仍 v4；旧 v1–v5 Schema、默认权限、边界函数及历史
+不改。只有真实需要列表末端闭合的见证使用 v6，普通陈述后的段落仍使用 v5。
+
+必须冻结完整旧 batch；前陈述链完整、有序、连续、同章同来源及同历史 parent。
+首 prefix 只能是真实 statement opening 与 own label；最后 suffix 只能由一个或
+多个 enumerate/itemize closing 和同一 statement closing 组成，间隔仅 ASCII
+排版空白。Scanner 独立核验完整旧及原生陈述的平衡结构，锁定 Git 的末端列表
+closing 链必须逐项同序。完整陈述签名只折叠普通 ASCII prose 空白，并仅将实际
+永久 Tag 映射一致的 label 记为该 Tag；其余数学、结构、命令、引用、注释及非
+ASCII 字节保持。旧链少一个列表项、正文或保护节点即拒绝，不只比较首尾包装。
+
+v6 paragraph_anchor 必含 `preceding_statement_list_closings` 与
+`preceding_statement_signature_hash`。闭合列表非空由实际完整 closing 正则与
+独立重算强制，Schema 使用仓库现有子集；不能信任调用者提供的数组或 hash。
+同一原生陈述后必须立即是完整段落、真实 Section 相同、间隔仅 ASCII 空白；
+完整段落签名及章内唯一性沿用严格合同。伪/未知 label、错误闭合、切片、重复、
+非相邻、内部空段、未知语法或 typed 数学段落继续 BLOCKED。加载器只有 v6
+允许新分支，并从 origin 宏政策、锁定 Git 与完整旧快照重算全部见证。
+
+真实只读验收使用完整 categories-002C 的四旧 input：三项完整定义链及其后段落，
+新来源为完整定义与真实 002B paragraph/0001。工具不采用事实、不生成中文或
+新 run，不减少 repair-queue 残项。工具合并后 DATA740 更新基线与合同、恢复
+claimed，再对原八批完整范围重新 prepare/check、冻结并实际生成全部五字段。
+
 ### 陈述后完整段落的独立见证（source-container-v5）
 
 `source-container-v5` 是来源恢复证据版本，派生仍使用 v4 完整分组合同。

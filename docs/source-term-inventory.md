@@ -226,3 +226,5 @@ source_projection词形。仅三条evidence改变，forms、chapters、其他目
   （历史002F:p001）替换旧source_tex_hash见证；真实owner/Section/selector、
   词形及完整原字节hash从锁定Git重验。所有forms/chapters/其余目录字段保持，
   无术语批准或事实采用；后续DATA独立重新冻结并完整实际生成五字段。
+
+- 独立来源证据 [Issue#751](https://github.com/dongyaotalk/stacks-project-zh/issues/751)，接受main `7e36bac385974eb9cfaa4088b8e6500ac17851f8`，英文锁定`a04446e57ec1fbc252a871afcec7752fb2807b14`。仅limit/colimit核验真实002D完整section_title/1，index-category核验真实002G完整remark/1及Section002D，替换旧提取hash见证；全部词形/范围/其他目录字段和非数学分类保持。锁定Git owner/Section/selector/完整边界/blob及fragment字节和暴露词形独立重验；无术语批准、模型生成或事实采用，后续DATA748仍需完整prepare/check/freeze及实际五字段输出。

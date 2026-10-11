@@ -1456,3 +1456,32 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
   完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
   剩173问题batch、665术语候选2097诊断，继续S4；无批准或总goal完成声明。
+
+- 独立来源证据 Issue [#716](https://github.com/dongyaotalk/stacks-project-zh/issues/716)，分支 `tool/source-terms-large-proof`，fresh main `147cf12ac7c9eb2f99f9543a88ebcb07fc7c594a`。
+  DATA715首轮35旧→17新完整恢复、239QA及render/pdf已通过，但large旧proof-p001
+  目录证据失效；17原输出/run/context、完整旧组、失败日志及68工作文件原字节
+  保存后，只撤回本任务尚未接受的写入，全部接受事实/历史逐字恢复。
+  前置初始large迁移的模拟又核实main已有四条旧式目录证据错误；先更新Issue716
+  再文档和配置，范围扩展为large、commutative-diagram、finite、nonempty、representable。
+  五完整锁定Git来源分别05PY/001Y/002O/002T，真实Section05PT/001U/04AS/04AQ；
+  nonempty从真实002T完整proof取证，不能冒称002O完整proof含该词。仅五evidence
+  可改，forms/chapters/其余目录/非数学分类、规则及全部事实/历史保持。
+  回归/239QA/库存对齐checks、独立字节核验、隔离进度计划及当前lane实际render/pdf
+  与全书文字/接受PNG比较后，完整远端/native/精确HEAD双CI/fresh main授权合并。
+  1340unit/239批、173问题batch、665候选、187组222proof全match及零坐标/未保护/
+  歧义保持；2097诊断中的四条已知目录错误按实测消除。DATA715前置后重新准备
+  冻结并实际完整生成17五字段，首轮原输出不能冒称新输出；全部S4后独立S5/S7。
+
+  来源证据本地验收：五项evidence迁移，完整锁定Git容器hash/真实selector/
+  保护后来源词形通过；全部forms/chapters/其余目录/非数学分类及事实历史tree/
+  范围外字节逐字保持。来源词46项既有回归、239QA/适用共享门禁/117模板、
+  extract-all/check→source-alignment/check及隔离progress/plan/check通过。
+  全部matches/候选术语finding/来源/proof逐项不变，四条既有目录错误消除，239批1340unit、
+  173问题batch、665术语候选2093诊断、零坐标/来源未保护/歧义，187组222proof全match。
+  仅目录hash及五项原生锁定取证元数据改变；ignored完整九批分段模拟1322unit，
+  目录证据错误5→0、2044→2039诊断，真实large完整proof仍PASS，不采用模拟事实。
+  当前lane实际render 109.03秒/pdf 86.758秒零退出，FinalTeX PASS；
+  461页整书全文layout及接受DATA已实际查看的12页PNG重新生成逐字相同，零变化页。
+  三路径完整staged diff根审查后提交；远端全文件原字节/完整patch/native单closing
+  716、精确HEAD双CI与fresh main后授权bypass。DATA715须重新准备/check/
+  冻结新上下文并实际重新生成完整17五字段，首轮原输出不可冒充新输出；S4未完成。

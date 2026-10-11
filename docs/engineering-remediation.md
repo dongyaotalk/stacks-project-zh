@@ -1741,3 +1741,21 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全库存原字节、全部alignment matches/source/proof finding保持；全部candidate/term finding及完整repair-queue仅规范化真实目录hash后逐项一致，新锁定目录见证恰三项PASS，其余既有见证保持。隔离progress/plan及check真实通过，三报告原字节相同；全部事实/history tree及范围外字节一致。
   当前lane实际render 111.274秒/pdf 65.817秒零退出，FinalTeX PASS，461页整书layout文字及13已实际查看PNG重渲染字节相同。无工具/模板/渲染路径变化，不无理由重跑已接受490完整工具回归；远端CI仍执行全套。
   完整staged/远端三文件原字节与fullpatch/native唯一closing737、最新精确HEAD双CI run/job与fresh main后授权squash；postmerge树/原字节/MERGED/CLOSED/clean核验后独立DATA完整prepare/check与冻结生成。仍239批1312unit、154问题batch、631候选2005诊断、零坐标/来源/歧义，187组218proof全match及SOURCE_DIFFERENCE238。全部S4后独立S5/S7及最终开发文档/完整复制提示词，无critic、人审或发布批准。
+
+- 独立工具Issue [#741](https://github.com/dongyaotalk/stacks-project-zh/issues/741)，fresh main `7f140c2596dbc9dfaf37909448cf1965e6ce363a`，分支`tool/nested-preceding-statement-witness`。
+  DATA740完整八批prepare发现002C旧三unit定义的enumerate/definition双closing
+  无法通过v5plain wrapper；八批范围及失败证据保留，尚未生成模型输出或写事实，
+  DATA740暂时blocked且释放claimed写入权，不以跳过此组减少残项。
+  工具先声明七路径、owner/source/真实002B及历史002C、完整四旧只读见证；
+  新source-container-v6独立核验完整列表closing链，旧v1–v5语义与历史不变。
+  Schema/Scanner正反拒绝、真实完整只读prepare/check、全部工具/239QA/117模板
+  及库存对齐checks、隔离进度计划、当前lane render/pdf全文/实际查看PNG字节
+  验收、完整staged与远端原字节/native单Issue/双CI/fresh main后授权squash。
+  再更新740基线与合同、恢复claimed、完整prepare/check/freeze后继续DATA。
+  仍154batch/631候选2005诊断，全部S4/S5/S7及F1–F8/最终文档提示词继续。
+
+  本地验收：六项专用回归覆盖单层/嵌套完整列表链、部分/乱序/重复/跨范围、数学或评论伪closing、非ASCII闭合间隙、错误栈/未知语法、非相邻/重复/切片/typed段落、版本/见证/hash篡改，以及完整五字段/全部旧组上下文/人审拒绝。首轮专用测试发现缺项链需完整签名和Schema未实现minItems，原代码/日志保留；Issue741先加强完整签名合同，使用现有Schema子集加实际非空闭合与独立重算，未改旧函数/分支。六项专用回归通过后审查收紧为显式ASCII间隙；未完成的首全量回归终止，不冒称通过。来源准备正确拒绝中途代码输入变化，失败日志及计划保留，最终稳定输入重新prepare/check。
+  最终完整496工具测试实际476.289秒、命令477.613秒通过；测试输入均早于最终测试启动且当前hash逐项记录。239批QA 293.509秒、全部适用Schema/溯源/决策/来源/117模板通过。已通过且输入未变的全库extract/check 69.551/69.337秒及alignment/check 36.423/37.767秒沿用实际证据，不无理由重跑；库存/所有审计及完整repair-queue原字节一致。
+  实际DATA740失败包及四完整旧input原字节保存，v5直接核验仍拒绝002C列表末端closing。最终v6真实只读prepare/check 121.919/119.527秒PREPARED、零BLOCKED，check原字节/mtime保持；完整定义证据v2、后段落v6，两个完整片段及全部新unit独立回放逐字Git相等。当前最终ASCII版本再次独立重算完整陈述签名和列表closing、冻结四旧输入及所有候选，见证逐项一致。旧三Schema分支原字节前缀/语义与全部原边界函数原代码相同；全事实/history tree、范围外字节保持。
+  隔离progress/plan及checks真实通过，三报告原字节不变。pyenv3.12当前lane实际render 111.978秒/pdf 65.33秒，FinalTeX PASS；461页整书layout文字及13此前实际查看页PNG重渲染字节相同。无模板/样式/Makefile/render路径修改，不适用make template。
+  完整staged仅七允许文件，远端精确head/base七原字节/fullpatch/native唯一closing741、最新精确HEAD双CI run/job和fresh main通过后按授权squash；postmerge树/字节/MERGED/CLOSED/clean后更新740完整19旧→11新八批基线及v6合同，恢复claimed、完整prepare/check/独立freeze与实际模型五字段，再继续S4。不生成中文/新run、不采用事实或批准术语；仍239批1312unit、154问题batch、631候选2005诊断、零坐标/来源/歧义、187组218proof全match及SOURCE_DIFFERENCE238。全部S4后独立S5/S7与最终详细开发文档/完整复制提示词，工具不表示F1–F8 goal完成。

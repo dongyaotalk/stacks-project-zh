@@ -10,6 +10,7 @@ from .source_reextractions import source_tex
 
 VERSION = 'source-container-v4'
 PRECEDING_VERSION = 'source-container-v5'
+NESTED_PRECEDING_VERSION = 'source-container-v6'
 SPACE = ' \t\r\n'
 TOKEN = re.compile(r'<([A-Z]+_[0-9]{4})>')
 
@@ -257,4 +258,111 @@ def preceding_statement_paragraph_witness(containers, units, groups, group, sele
         'preceding_statement_input_unit_ids': preceding['input_unit_ids'],
         'preceding_statement_selector': native['selector'],
         'preceding_statement_fragment_hash': native['location']['fragment_hash'],
+        'paragraph_signature_hash': sha256_value(signature)}
+
+
+def _complete_statement_signature(fragment, policy, tags, chapter):
+    """Canonicalize only ASCII prose spacing and verified permanent labels."""
+    scanner = Scanner(fragment, policy)
+    text, tokens, errors = scanner.protect(0, len(fragment))
+    if errors:
+        raise RecordError('complete preceding statement has unsupported source syntax')
+    signature, cursor = [], 0
+
+    def prose(value):
+        normalized = re.sub(r'[ \t\r\n]+', ' ', value).strip(' ')
+        if normalized:
+            signature.append(['text', normalized])
+
+    for match in TOKEN.finditer(text):
+        prose(text[cursor:match.start()])
+        value = tokens[match[1]]
+        label = re.fullmatch(r'\\label\{([^{}\n]+)\}', value)
+        if label:
+            tag = tags.get(label[1], tags.get(chapter + '-' + label[1]))
+            if tag is None:
+                raise RecordError('complete preceding statement has an unknown permanent label')
+            signature.append(['permanent-label', tag])
+        else:
+            signature.append(['protected', value])
+        cursor = match.end()
+    prose(text[cursor:])
+    return signature
+
+
+def nested_preceding_statement_paragraph_witness(containers, units, groups, group, selected):
+    """v6 binds an actual terminal list-closing chain; v5 stays plain-only."""
+    ids = group['input_unit_ids']
+    if len(ids) != 1 or group['kind'] != 'paragraph' or group['ordinal'] is not None:
+        raise RecordError('nested preceding boundary requires one complete old paragraph')
+    by_id = {unit['unit_id']: unit for unit in units}
+    old = by_id[ids[0]]
+    index = groups.index(group)
+    if index == 0 or groups[index - 1]['kind'] not in STATEMENTS:
+        raise RecordError('paragraph has no complete preceding list-bearing statement')
+    preceding = groups[index - 1]
+    members = [by_id[identifier] for identifier in preceding['input_unit_ids']]
+    order = [unit['unit_id'] for unit in units]
+    start = order.index(old['unit_id'])
+    if (order[start - len(members):start] != preceding['input_unit_ids']
+            or any(u['parent_tag'] != old['parent_tag'] for u in members)
+            or group['file'] != selected['selector']['file']):
+        raise RecordError('nested preceding paragraph crosses its full frozen statement scope')
+    first, last = members[0], members[-1]
+    kind = re.escape(preceding['kind'])
+    if re.fullmatch(r'[ \t\r\n]*\\begin\{' + kind + r'\}[ \t\r\n]*\\label\{[^{}\n]+\}[ \t\r\n]*',
+                    first['render']['prefix']) is None:
+        raise RecordError('nested preceding statement lacks its plain labelled opening')
+    closing = r'(?:\\end\{(?:enumerate|itemize)\}[ \t\r\n]*)+\\end\{' + kind + r'\}[ \t\r\n]*'
+    suffix = last['render']['suffix']
+    if re.fullmatch(r'[ \t\r\n]*' + closing, suffix) is None:
+        raise RecordError('nested preceding statement lacks a pure terminal list-closing chain')
+    list_closings = re.findall(r'\\end\{(enumerate|itemize)\}', suffix)
+    native = native_statement(containers, preceding)
+    native_tail = re.search(closing + r'\Z', native['fragment'])
+    if (native_tail is None or list_closings !=
+            re.findall(r'\\end\{(enumerate|itemize)\}', native_tail[0])):
+        raise RecordError('old terminal list-closing chain differs from the locked native statement')
+    _item_tags(''.join(source_tex(u) for u in members), containers.policy,
+               containers.english.tags, old['chapter'])
+    _item_tags(native['fragment'], containers.policy, containers.english.tags, old['chapter'])
+    statement_signature = _complete_statement_signature(
+        ''.join(source_tex(u) for u in members), containers.policy,
+        containers.english.tags, old['chapter'])
+    if statement_signature != _complete_statement_signature(
+            native['fragment'], containers.policy, containers.english.tags, old['chapter']):
+        raise RecordError('complete preceding statement differs from the locked native signature')
+    selector = selected['selector']
+    if (selector['owner_tag'] != selector['parent_tag']
+            or native['selector']['parent_tag'] != selector['parent_tag']):
+        raise RecordError('nested paragraph and native statement have different real Section ownership')
+    raw, rows, _ = containers.documents[selector['file'][:-4]]
+    matches = [i for i, row in enumerate(rows) if row['location'] == selected['location']]
+    if len(matches) != 1 or matches[0] == 0:
+        raise RecordError('nested preceding paragraph has no unique complete native position')
+    previous = rows[matches[0] - 1]
+    if (previous['location'] != native['location']
+            or raw[native['location']['byte_end']:selected['location']['byte_start']].strip(b' \t\r\n')):
+        raise RecordError('paragraph is not immediately after the same list-bearing native statement')
+    signature = paragraph_signature(source_tex(old), containers.policy)
+    if signature != paragraph_signature(selected['fragment'], containers.policy):
+        raise RecordError('nested preceding paragraph changes prose or protected bytes')
+    count = 0
+    for row in rows:
+        if row['unit']['node_kind'] != 'paragraph':
+            continue
+        location = row['location']
+        fragment = raw[location['byte_start']:location['byte_end']].decode('utf-8')
+        try:
+            count += paragraph_signature(fragment, containers.policy) == signature
+        except RecordError:
+            continue
+    if count != 1:
+        raise RecordError('nested preceding paragraph source signature is ambiguous in the locked chapter')
+    return {'paragraph_input_unit_id': old['unit_id'], 'historical_parent_tag': old['parent_tag'],
+        'preceding_statement_input_unit_ids': preceding['input_unit_ids'],
+        'preceding_statement_selector': native['selector'],
+        'preceding_statement_fragment_hash': native['location']['fragment_hash'],
+        'preceding_statement_list_closings': list_closings,
+        'preceding_statement_signature_hash': sha256_value(statement_signature),
         'paragraph_signature_hash': sha256_value(signature)}

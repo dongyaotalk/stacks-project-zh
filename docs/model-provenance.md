@@ -1,5 +1,13 @@
 # Harness、模型和运行溯源
 
+来源边界的独立 v6 合同见 [source-container-restoration.md](source-container-restoration.md)
+及 [Issue #741](https://github.com/dongyaotalk/stacks-project-zh/issues/741)。它仅为完整
+列表陈述后的完整段落增加来源见证：旧链与原生完整陈述签名、末端列表 closing
+序列逐项绑定，完整旧 batch 与全部原 run/raw/context 保留。旧 v1–v5 权限和历史
+不变，派生仍 v4。工具只读准备不能采用事实；实际 DATA 必须先更新 Issue 基线
+和来源合同，再完整 prepare/check、独立冻结、当前模型完整生成每个新单元五字段。
+五字段与不可变 raw/context/历史逐项相等，未知待决，无术语、critic、人审或发布批准。
+
 完整来源容器的独立历史边界扩展见
 [source-container-restoration.md](source-container-restoration.md) 的 2026-10-10
 开发合同。`source-container-v4` 与派生 v4 是不同版本；只有在完整旧 batch

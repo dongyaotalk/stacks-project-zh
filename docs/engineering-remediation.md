@@ -1402,3 +1402,41 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   路径/凭据检查通过。完整事实/历史树、所有范围外字节及三路径diff根审查通过；
   远端完整字节/patch/native单Issue和最新精确HEAD双CI后授权bypass，本轮交接
   完成后由用户自行新goal继续；八项总任务仍未完成，不授予人审或其他批准。
+
+
+- DATA Issue [#711](https://github.com/dongyaotalk/stacks-project-zh/issues/711)，分支 `translate/categories/05sh-05pu/openai-gpt-6-1-sol`，fresh main `606e94a5f9c38e3ddae41aaae32078ed2180da55`。
+  当前goal续接全部F1–F8/S4/S5/S7：先处理同属真实Section05PT的05SH/05PU完整batch，
+  9旧→3新、10旧新ID和19精确路径已声明。05SH两处控制空格完整保护；05PU完整
+  有序嵌套列表及旧输入遗漏的末尾引理提醒由锁定Git恢复，数学和identity token保持。
+  先many prepare/check，冻结完整新源/全部旧组candidate/ancestry/政策风格词表prompt
+  目录/context，动态Harness及真实model/effort/turn，当前模型完整生成三单元五字段。
+  两份v4、三来源恢复和共享实际run/correction保留所有历史，不继承任何批准。
+  使用现有pyenv Python3.12.6；来源词数实测，偏好下限外登记完整不可拆例外。
+  239QA、真实run QA/全部共享门禁/117模板、全库存及对齐checks、隔离进度计划，
+  Git原片段/全五字段/context/token原序尾空白/全库ID/范围外字节独立核验；目标
+  BYTE_EXACT且队列空，其余finding保持。当前lane实际render/pdf、全文比较及全部
+  变化页邻页看图后提交，远端全字节/patch/native合同及精确HEAD双CI后授权bypass。
+  DATA后独立progress/plan先于下一DATA；基线175修复batch、668术语候选2106诊断、
+  零坐标/1来源/2歧义，187组222proof全match。总goal保持，S4后才S5及S7，最终
+  开发文档和复制提示词更新，不以本批候选通过代替全库完成。
+
+  本地验收：两个完整batch的many prepare/check实际96.485/95.609秒，零BLOCKED；三完整
+  Git容器及完整9旧→3新有序分组、两原run文件全部原字节/历史绑定独立通过。
+  冻结后gpt-6.1-sol/xhigh实际生成全部三unit五字段，Harness冻结前与装配动态解析
+  0.162.0-alpha.17.2；153来源词显式不可拆范围例外，38双语声明覆盖26必需出现。
+  每字段与raw逐项相等，context/保护token原序次数/尾空白、1340全库唯一ID、
+  117模板、19路径及全部范围外字节通过。首次过早启动的独立核验因派生尚未写完
+  失败，保留日志；确认装配零退出后按依赖顺序重新核验全部通过，不隐藏失败。
+  239QA、实际run QA及全部共享Schema/溯源/决策/来源门禁、全extract/check→
+  alignment/check、隔离progress/plan及checks通过，三份报告预览逐字不变。
+  三target BYTE_EXACT且两批队列空，全部范围外finding逐项保持；来源错误/未保护
+  pair1→0、05PU歧义2→0、坐标0保持、术语候选668→665、诊断2106→2097、
+  非空批175→173；187组222proof全match、零差异/不支持。库存43257提议/
+  36651 READY/6606 BLOCKED与18618库存诊断保持，准备状态不代表事实接受。
+  pyenv3.12.6当前lane实际render 108.788秒/pdf 80.624秒零退出，
+  Final TeX PASS；全书461页，454页全文layout不变，7变化页及邻页共12页实际看图。
+  物理页14–17、80–87无公式/列表裁切或重叠；05PU末句完整显示，05SH控制空格
+  及原数学保持。远端19文件原字节/完整patch/native单closing711、精确HEAD双CI
+  和fresh main后授权bypass squash；DATA后先独立progress/plan再下一DATA。
+  剩173问题batch/665术语候选2097诊断，S4仍未完成；继续同章完整范围，随后S5
+  与S7，最终文档/复制提示词，不授予术语、critic、人审或发布批准。

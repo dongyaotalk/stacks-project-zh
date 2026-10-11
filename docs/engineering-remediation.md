@@ -1796,7 +1796,7 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   feature `91a10f83db95b2457cf0999eafc5d37a76dad1bb`；全部57远端原字节/完整patch/native55管理文件及唯一740合同通过。
   五个真实parent_tags、完整19旧→11新及57精确允许范围保持，所有失败模型草稿原字节保留。
   最新双CI run/job SUCCESS：[{"name": "pr-contract", "run": 38148008003, "job": 114495328665, "head": "91a10f83db95b2457cf0999eafc5d37a76dad1bb", "conclusion": "SUCCESS", "url": "https://github.com/dongyaotalk/stacks-project-zh/actions/runs/38148008003/job/114495328665"}, {"name": "policy-and-data", "run": 38148007931, "job": 114495328032, "head": "91a10f83db95b2457cf0999eafc5d37a76dad1bb", "conclusion": "SUCCESS", "url": "https://github.com/dongyaotalk/stacks-project-zh/actions/runs/38148007931/job/114495328032"}]。
-  授权squash后main/feature树相等、50原字节/六DATA trailers保持，PR MERGED、Issue CLOSED、干净状态核实。
+  授权squash后main/feature树相等、57原字节/六DATA trailers保持，PR MERGED、Issue CLOSED、干净状态核实。
   独立进度本地验收：progress/check、plan/check真实执行通过，README/progress/plan
   与接受DATA隔离预览逐字相同；workflow/harvest/index/117模板/Schema通过。
   当前lane实际render 126.316秒/pdf 66.266秒零退出，FinalTeX PASS；

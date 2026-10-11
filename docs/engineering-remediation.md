@@ -1678,3 +1678,28 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   后授权squash，再独立DATA完整冻结17旧→9新单元及全部context/ancestry。
   239批1320unit、161问题batch、639候选2016诊断、零坐标/来源诊断/歧义、
   187组220proof全部match及SOURCE_DIFFERENCE240保持；S4/S5/S7和最终文档提示词继续。
+
+- DATA Issue [#733](https://github.com/dongyaotalk/stacks-project-zh/issues/733)，分支`translate/categories/products-fibre/openai-gpt-6-1-sol`，fresh main `01f3b885238c1cd43dc291526abe0dc51b4da78d`。
+  真实相邻Sections001R/04AN/001U剩余七问题批次完整17旧→9新，九完整有序组
+  与全部旧新ID/selector先声明，allowed_write_files精确50条。源词实测182，
+  提前显式允许低于批量偏好，因为覆盖全部剩余完整容器，不凑词重复接受事实。
+  PR730/732前置齐备；全批prepare/check、完整new/old/candidates/ancestry及政策
+  风格词表prompt词目录/context冻结后，由当前实际模型完整生成九个五字段。
+  公式原字节及来源省略保持，只source-only remark，未知待决、无人审/发布批准。
+  独立Git/raw/context/历史/术语/唯一ID/范围外字节、239QA/新runQA/共享门禁
+  与117模板/全库库存对齐checks、隔离进度计划、当前lane实际render/pdf和全部
+  变化页邻页PNG验收后PR，精确head/base原字节/native单Issue/双CI/fresh main
+  后授权squash；DATA之后先独立progress/plan。S4仍161batch/639候选2016诊断，
+  全部F1–F8、S5/S7及最终完整开发文档/提示词继续。
+
+  本地验收：17旧→9完整新单元，七批九个完整有序组及所有旧候选、七份原run和ancestry原字节保留；九个锁定Git容器逐字相等。相邻真实Sections001R/04AN/001U覆盖所有当前问题批次，已接受清零批次保持。
+  prepare/check实测166.249/159.054秒，零BLOCKED，check原文件和mtime保持；拟议1312完整来源的全部词目录及非数学证据通过。
+  182来源词的完整范围偏好例外在Issue733及首次生成前显式声明，未借此豁免硬门禁。完整九new/十七old及所有candidate、七原run/ancestry、政策风格词表prompt词目录和context hashes冻结。
+  当前实际gpt-6.1-sol/xhigh完整生成九单元五字段，真实turn 01a12a9b-f4b3-7601-a514-13e4295921ff，动态Harness 0.162.0-alpha.17.2；snapshot未暴露、不保证模型重放。
+  首九原稿中001S/001V保护token顺序失败，未采用；原九稿、失败报告及第二次完整重生成均保留。第二次冻结复核与输出同call的时序证据不采用；另一次独立完整冻结复核后当前模型完整生成两单元全部五字段。最终七首稿加两第三稿逐项绑定真实会话字面输出，42双语声明覆盖39来源要求，所有五字段与不可变raw完全相等，程序不生成中文/机械补术语。
+  原生owner/Section/selector/边界原字节、v4完整分组及001T后段落v5来源见证、context/历史、token原序次数/尾空白、1312全库唯一ID、117模板和50精确路径/范围外字节通过。
+  239全量QA、真实新runQA、全部适用Schema/溯源/决策/来源、全库extract/check→alignment/check、隔离progress/plan/check均通过。前置PR730/732代码政策保持，不无理由重复已接受490工具回归；远端CI仍执行全套。
+  七批九来源全部BYTE_EXACT、七修复队列空，全部范围外finding逐项保持；239批1320→1312unit、639→631术语问题候选、2016→2005诊断、161→154问题batch；零坐标/来源诊断/未保护/歧义保持，187组220→218proof全部match。剩余分类{"BYTE_EXACT": 170, "PRESENTATION_EQUIVALENT": 904, "SOURCE_DIFFERENCE": 238}。
+  当前lane实际render 109.919秒/pdf 66.861秒零退出，FinalTeX PASS；整书461页，全文layout比较、6变化页及邻页/目标共13PNG实际查看通过。
+  仅chapter-template索引元数据变化，无模板/样式/Makefile/render路径变化，不适用make template。源码差异只source-only非正文remark，数学不补修；未知术语、critic、人审及发布批准保持待决。
+  完整staged/远端50文件原字节及patch/native唯一closing733、最新精确HEAD双CI run/job与fresh main后授权squash，六DATA trailers保留。合并后核实main/feature树/字节/MERGED/CLOSED/clean，下一DATA前先独立progress/plan。仍继续全部S4，之后独立S5/S7与最终开发文档/完整复制提示词。

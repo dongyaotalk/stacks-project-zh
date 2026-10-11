@@ -1652,3 +1652,29 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   已验证全部范围外活跃单元均不能继续提供旧hash证据，不能生成时临时改目录。
   本工具不修译文或批准术语，161问题batch/639候选2016诊断及SOURCE_DIFFERENCE240
   保持，全部F1–F8/S4/S5/S7及最终完整开发文档与提示词仍继续。
+
+- 独立来源词目录Issue [#731](https://github.com/dongyaotalk/stacks-project-zh/issues/731)，分支`tool/source-terms-products-evidence`，fresh main `aab4b45255453b3a043e2237ef46c650e840eb8b`。
+  先声明三文件与空DATA/run/model范围；final-object/product/universal-property仅迁移
+  evidence到真实001R段落/完整标题及001S完整定义，锁定Git边界、字节hash和准确
+  词形先只读核验。所有其他目录字段及事实/history/审批保持；先词目录回归、239QA、
+  全库extract/check/alignment/check、隔离报告及当前lane实际render/pdf全文/PNG验收，
+  完整staged/remote/native合同/精确HEAD双CI及fresh main后授权squash，再独立DATA。
+  161问题batch/639候选2016诊断保持，S4/S5/S7及最终F1–F8文档提示词继续。
+
+  三完整锁定Git容器证据逐项核验通过；仅三条evidence变化，所有forms/chapters、
+  其他目录字段和非数学分类保持，不授予术语批准。46项来源词回归
+  3.134秒、239批QA 230.407秒通过，
+  适用Schema/溯源/决策/来源/117模板均通过。全库extract/check
+  59.811/58.671秒、alignment/check
+  30.566/29.875秒通过，
+  全来源库存原字节、完整alignment matches/source/proof findings保持；术语candidate
+  findings及全repair-queue仅规范化已实测的目录hash后逐项相同，新locked evidence
+  恰三项PASS，其余旧目录见证保持。隔离progress/plan及check真实通过，三报告
+  原字节不变；全部事实/history tree、范围外原字节保持。当前lane实际render
+  104.667秒/pdf 66.892秒，FinalTeX PASS，461页整书
+  layout文字及13已实际查看PNG重渲染字节相同。无工具/模板/渲染路径变更，未
+  重跑已接受490完整工具回归；远端仍运行全套。三文件完整staged/remote原字节
+  与fullpatch、native唯一closing731、最新精确HEAD双CI run/job和fresh main
+  后授权squash，再独立DATA完整冻结17旧→9新单元及全部context/ancestry。
+  239批1320unit、161问题batch、639候选2016诊断、零坐标/来源诊断/歧义、
+  187组220proof全部match及SOURCE_DIFFERENCE240保持；S4/S5/S7和最终文档提示词继续。

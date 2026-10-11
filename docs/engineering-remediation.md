@@ -1859,3 +1859,33 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   实际categories完整按章render+pdf 151.112秒，独立PDF 87页、全部页面PNG实际查看，原书第4章编号保持、只引入完整categories章，跨章引用用Tag投影；独立lane/build/output且整书TeX/PDF字节保持。按章仍真实执行复合来源全库溯源，因此不能把按章构建耗时当成纯TeX耗时或最终全库验收替代；未修改生成物绕过失败。
   完整staged仅八允许文件；远端精确head/base八文件原字节/fullpatch/native唯一closing753、最新精确HEAD双CI run/job成功和fresh main后按授权squash，postmerge tree/raw/MERGED/CLOSED/clean，再恢复DATA748完整48旧→22新/十二批/88路径。所有冻结和原计划历史保留，重新绑定fresh main、更新Issue并冻结当前真实turn后再逐单元模型五字段生成，无旧元数据冒用。
   239批1304unit、146问题批、617候选1967诊断、零坐标/来源/歧义，187组218proof全match保持；全部S4后独立S5默认强门禁、S7和F1–F8最终详细文档/完整复制提示词继续，没有事实采用或术语/critic/语言数学人审/发布批准。
+
+- DATA Issue [#748](https://github.com/dongyaotalk/stacks-project-zh/issues/748)，分支`translate/categories/002d/openai-gpt-6-1-sol`，fresh main `7e36bac385974eb9cfaa4088b8e6500ac17851f8`。
+  真实Section002D全部12当前问题batch，完整48旧→22新、22完整有序组/88允许
+  文件/全部旧新ID及selectors先声明，来源740词。两来源目录证据前置已接受。
+  列表定义后的002E/002F段落用v6见证，002I/002J后段落用v5；派生仍v4。
+  claimed/开发验收计划→分支→12完整batch prepare/check→全部旧新组/候选/
+  原run/raw/context/完整ancestry和政策风格词表prompt目录/context冻结→
+  当前真实模型完整生成22五字段，无脚本中文/机械补词或旧输出冒名。
+  Git/五字段/不可变raw/context/历史/token/术语/唯一ID/范围外字节、239QA/
+  实际新runQA/共享门禁/117模板、全库抽取对齐checks、隔离progress/plan、
+  当前lane真实render/pdf及全部变化页邻页PNG、完整staged/远端精确合同/
+  最新双CI/fresh main后授权squash，DATA后独立progress/plan。
+  仍146问题batch/617候选1967诊断，全部S4后S5/S7与最终文档完整提示词；
+  忠实原数学，source-only remark及未知待决，全部F1–F8继续，无审批。
+
+  首轮完整来源准备只有002D引言单paragraph缺少合法历史边界而BLOCKED，其他11批PREPARED；失败完整包保留，尚无冻结/模型生成。先更新Issue748的新unit/selector/允许路径，再改为真实Section标题002D与后续完整定义002E之间的完整prose_block/1，锁定Git全部原字节及双锚点重验；48旧→22新/22组/88文件/740词保持。既有工具规则不改，重新全部prepare/check，不能借替代容器重复旧输入或隐藏残项。
+
+  DATA748在前置工具https://github.com/dongyaotalk/stacks-project-zh/pull/750接受后恢复；旧两次失败包与完整计划scope原字节保留。完整48旧→22新/十二批不缩小，先更新Issue及88精确允许文件（首段evidence路径改为paragraph1）、完整新ID/selector，再恢复claimed与ff分支。首段真实paragraph/1使用v7完整标题见证，accept main `7e36bac385974eb9cfaa4088b8e6500ac17851f8`；全部旧权限保持。重新全范围prepare/check、独立完整freeze及实际模型五字段生成后才采用事实，S4/S5/S7总目标继续。
+
+  DATA748在来源目录前置https://github.com/dongyaotalk/stacks-project-zh/pull/752接受后再恢复完整原范围；旧成功准备包、两个失败包、完整旧计划/scope/Issue/原未提交计划字节保持，三失效目录见证已独立核验为完整锁定Git来源。先更新Issue最新main `8d43e043b2d2e775ca9943415c9f11b0b8df7478`及全部48旧/22新/88文件/run/model范围，再恢复claimed与ff原分支；新独立v7-catalog目录全范围prepare/check及来源目录preflight、独立完整freeze和实际模型五字段生成后才采用事实。全部S4/S5/S7与F1–F8总目标继续。
+
+  历史计划段落按原字节保留其接受SHA（PR750接受main仍为7e36bac385974eb9cfaa4088b8e6500ac17851f8），不把历史接受基线改成新main。本次最新DATA基线以Issue748当前合同、scope及最后恢复记录的8d43e043b2d2e775ca9943415c9f11b0b8df7478为准；新run/context将在该最新基线上独立冻结。
+
+  DATA748在性能工具PR754接受后从fresh main `3f22ac110e24c8beeb65d83225e792c39e469e8c`恢复完整十二批48旧→22新/22组/88路径；先更新Issue再恢复claimed和ff原分支。所有历史owned计划、成功失败准备包、旧完整冻结输入及真实旧runtime原字节保持。新独立v7-chapter-preview准备/check、来源目录preflight及当前真实turn完整freeze后再实际模型五字段生成；开发可按章预览，提交前全库/整书完整验收保持。全部S4/S5/S7及F1–F8总目标继续。
+
+  本地验收：12批完整prepare/check，22完整锁定Git容器逐字相等；完整48旧→22新、22有序旧组及所有候选/context/raw/历史绑定独立核验。真实Section002D及每个owner/selector/边界由锁定Git重算，首段v7、002E/002F后段落v6、002I/002J后段落v5，派生仍v4；完整旧input/run/raw与全部历史原字节保留，全库1278唯一活跃ID和范围外字节通过。
+  生成前冻结22完整新unit、48完整旧unit/候选/完整ancestry和政策/风格/词表/prompt/来源目录/context hashes；实际模型gpt-6.1-sol/xhigh、turn `01a12bb3-fe11-7151-8d10-e1ad8a56a1a8`，Harness实际动态 `0.162.0-alpha.17.2`，snapshot未暴露、replayable false。当前模型真实工具字面量输出全部22五字段，选稿`model-drafts-third.jsonl` hash `sha256:cc991857cb5809e7c61333aa520ad2f0d0932ec6249b004b0df55836581e5910`；逐项等于immutable raw和活跃五字段，程序只保护/序列化/验证/装配。保护token原序/次数/尾空白严格通过，177双语声明覆盖144来源要求，未知译法全部待决，无术语/critic/人审/发布批准。五份原文Omitted证明忠实为略，非正文source-only remark，无补证明/改公式/正文译者说明。
+  239全量QA、实际新run分组QA、所有适用Schema/溯源/决策/来源/117模板通过；无代码/政策变更不无理由反复已接受工具测试。全库extract/check及alignment/check真实通过，22目标单元全部BYTE_EXACT、12目标queue清空，所有范围外match/term/source/proof finding逐项保持；239批1304→1278unit、146→134问题batch、617→592术语候选、1967→1894诊断，零坐标/来源/歧义/未保护保持。proof {'proof_group_count': 187, 'proof_unit_count': 218, 'matched': 187, 'mismatched': 0, 'unsupported': 0}，match分类 {'BYTE_EXACT': 203, 'PRESENTATION_EQUIVALENT': 846, 'SOURCE_DIFFERENCE': 229}。
+  隔离progress/plan/check真实通过，完整117章模板只采用categories真实变化；实际当前lane render 149.961秒/pdf 70.245秒零退出，FinalTeX PASS，整书461页全文layout比较，8变化页与邻页/目标共14PNG全部实际查看，目录与真实4.14节编号对应，复合来源元数据及未审校说明可读；枚举、Hom公式、迭代公式、交换图和平行态射正常，无裁切、重叠或缺字；五份原文省略证明仍为略；第14页为空白对开页，邻页正常。仅排版核验，不授予语言、数学、术语或发布批准。。只有章节索引元数据变更，无TeX模板/样式/Make/render路径变更，不适用make template，生成物/本机路径不提交。
+  全部88允许文件完整staged审查与精确head/base远端原字节/fullpatch/native唯一closing748、最新精确HEAD双CI run/job与fresh main后按授权admin bypass squash，保留六DATA trailers；合并后main/featuretree/原字节/MERGED/CLOSED/clean核验，下一DATA前独立progress/plan。继续全部S4，后独立S5/S7与最终详细开发文档/完整可复制提示词，不以本批完成声明总goal完成。

@@ -1849,3 +1849,13 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   当前lane实际render 152.399秒/pdf 69.985秒零退出，FinalTeX PASS；461页全文layout与接受PR750相等，全部21个已实际查看页PNG重渲染字节相同，没有变化页；不适用make template，未改生成物绕过失败。
   完整staged仅三允许文件，远端精确head/base三文件原字节/fullpatch/native唯一closing751，最新精确HEAD双CI run/job成功和fresh main后按授权squash；postmerge tree/raw/MERGED/CLOSED/clean核实，再恢复原DATA748完整48旧→22新/十二批/88文件。全部重新prepare/check、独立完整freeze及实际模型每个new五字段生成后才采用事实，保留原成功包及全部失败历史。
   审计239批1304unit、146问题batch、617候选1967诊断，零坐标/来源/歧义、187组218proof全match保持。全部S4后独立S5默认强门禁、S7及F1–F8最终详细文档/完整复制提示词；无术语/critic/语言数学人审/发布批准，不宣告总goal完成。
+
+- 性能开发/验收计划 [https://github.com/dongyaotalk/stacks-project-zh/issues/753](https://github.com/dongyaotalk/stacks-project-zh/issues/753)：接受main `8d43e043b2d2e775ca9943415c9f11b0b8df7478`，分支`tool/chapter-preview`，owner dongyaotalk，英文锁定`a04446e57ec1fbc252a871afcec7752fb2807b14`。现有117章input仍每次全编译，另239QA重复Python启动；本独立工具任务增加独立整章TeX/PDF预览与单进程全批原QA，精确8允许文件、空unit/model/run/历史parent范围。整章真实坐标和引用投影、全库复合溯源及最终完整render/pdf/QA/CI门禁保持；pyenv3.12.6测试、全库抽取/对齐check原字节、隔离进度计划、事实历史/范围外字节、实际计时和逐批诊断等价、当前lane完整构建与适用template及实际预览/整书页面验收；完整staged与精确远端/最新双CI/fresh main后授权squash及postmerge。DATA748完整48旧→22新/22组/88路径及已冻结输入/原计划/所有成功失败包原字节保留，尚无五字段输出；释放claimed防共享文档重叠，工具接受后fresh main重新认领/核验/冻结当前真实turn再生成。仍146问题批617候选1967诊断、零坐标来源歧义、187组218proof全match；全部S4后独立S5/S7和F1–F8最终详细文档提示词继续，无任何批准。
+
+  性能工具本地验收：本地使用pyenv Python3.12.6；7项新增回归与完整tool-test通过（完整日志保留），覆盖整章全部批次/跨章Tag投影/章号/隔离整书、混合批/错误配对/末批损坏、不同模型run/缺文件/坏JSON/空库。239批逐一与原validate_batch诊断相等。
+  同一不变事实顺序实测原239个Python候选循环 39.185秒，新单进程完整候选循环 1.243秒；不包含共享前置门禁。完整qa-all 256.912秒；先前接受运行280.341秒是在不同并发负载下，不能把二者差值视为稳定加速保证。来源溯源/决策/117模板等共享完整前置和CI全库检查保持，无成功缓存。
+  全库extract/check 63.582/67.977秒，alignment/check 34.154/33.788秒通过；全部库存、完整matches/source/term/proof findings及repair-queue原字节相同。隔离progress/plan/check真实通过且三报告相同；事实/history tree和范围外字节保持。
+  实际完整render 144.848秒/pdf 68.1秒通过；默认生成TeX原字节保持、461页全文layout与接受PR752逐字相同、21个已实际查看页PNG重渲染字节相同；适用make template 17.453秒通过，FinalTeX门禁全部PASS。
+  实际categories完整按章render+pdf 151.112秒，独立PDF 87页、全部页面PNG实际查看，原书第4章编号保持、只引入完整categories章，跨章引用用Tag投影；独立lane/build/output且整书TeX/PDF字节保持。按章仍真实执行复合来源全库溯源，因此不能把按章构建耗时当成纯TeX耗时或最终全库验收替代；未修改生成物绕过失败。
+  完整staged仅八允许文件；远端精确head/base八文件原字节/fullpatch/native唯一closing753、最新精确HEAD双CI run/job成功和fresh main后按授权squash，postmerge tree/raw/MERGED/CLOSED/clean，再恢复DATA748完整48旧→22新/十二批/88路径。所有冻结和原计划历史保留，重新绑定fresh main、更新Issue并冻结当前真实turn后再逐单元模型五字段生成，无旧元数据冒用。
+  239批1304unit、146问题批、617候选1967诊断、零坐标/来源/歧义，187组218proof全match保持；全部S4后独立S5默认强门禁、S7和F1–F8最终详细文档/完整复制提示词继续，没有事实采用或术语/critic/语言数学人审/发布批准。

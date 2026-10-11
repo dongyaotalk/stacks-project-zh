@@ -37,6 +37,7 @@ from .workflow import (
     stamp_units,
     validate_batch,
     validate_batches,
+    validate_all_candidates,
 )
 
 
@@ -117,6 +118,12 @@ def build_parser() -> argparse.ArgumentParser:
     validate_many.add_argument("--units", required=True, type=Path, nargs="+")
     validate_many.add_argument("--candidates", required=True, type=Path, nargs="+")
     validate_many.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+
+    validate_all = subparsers.add_parser(
+        "validate-all", help="run every candidate batch QA in one process, across all lanes/runs"
+    )
+    validate_all.add_argument("--root", type=Path, default=Path("."))
+    validate_all.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
 
     assemble = subparsers.add_parser(
         "assemble", help="attach provenance and deterministic status to translator output"
@@ -224,6 +231,7 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--chapter-source-dir", type=Path)
     render.add_argument("--tags-file", type=Path)
     render.add_argument("--output-dir", type=Path)
+    render.add_argument("--chapter", help="preview one complete chapter in an isolated output lane")
 
     build_log = subparsers.add_parser("check-build-log", help="reject defects in a completed final TeX log")
     build_log.add_argument("--log", required=True, type=Path)
@@ -405,6 +413,16 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             print(f"Candidate QA: PASS ({count} unit(s))")
             return 0
+        if args.command == "validate-all":
+            root = args.root.resolve()
+            lock = args.lock if args.lock.is_absolute() else root / args.lock
+            count, errors = validate_all_candidates(root, lock)
+            if errors:
+                for error in errors:
+                    print(f"ERROR: {error}", file=sys.stderr)
+                return 1
+            print(f"All candidate batches: PASS ({count} batch(es))")
+            return 0
         if args.command == "validate-many":
             count, errors = validate_batches(args.units, args.candidates, args.lock)
             if errors:
@@ -510,6 +528,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.tags_file,
                 args.chapter_source_dir,
                 args.chapter_title_map,
+                chapter=args.chapter,
             )
             print(f"Rendered {len(written)} file(s): {output_dir}")
             return 0

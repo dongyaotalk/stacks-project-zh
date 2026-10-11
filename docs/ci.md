@@ -53,6 +53,26 @@ make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 混用未经审校候选或自动提升状态。开发阶段可以只重复 `qa-batch`/`render-batch`；提交
 前仍统一运行完整的 `qa-all`、`render`、`pdf` 和 CI。
 
+开发时还可生成某一完整章节的独立 PDF：
+
+~~~bash
+make pdf-chapter CHAPTER=categories MODEL=openai-gpt-5.6-sol PYTHON="$(pyenv which python)"
+~~~
+
+`render-chapter` 从该模型通道中选择该章的全部批次，拒绝跨章混合批、缺失/错误
+配对和非法章名，仍校验复合来源的全库溯源。TeX 只引入该章，章节编号保持锁定
+来源清单的位置；跨章引用按原渲染规则显示永久 Tag 链接。该预览明确标注候选
+与章节范围，生成 lane 为 `<model>-chapter-<chapter>`，辅助文件在
+`build/chapter-preview/`、PDF 在 `output/pdf/chapter-preview/`，不覆盖整书产物，
+不使用整书旧 aux。最终 TeX 日志门禁保持，不忽略缺字/引用错误。这是开发预览，
+PR 前仍执行完整 `render`、`pdf`、`qa-all` 和其他适用检查。
+
+`qa-all` 的共享前置检查保持，候选循环改为 `validate-all` 单进程调用原有
+`validate_batch`，遍历所有模型通道的全部候选文件。每个 pair 的事实边界、来源锁、
+五字段和确定性 QA 保持；不同模型/run 不因进程复用而混合，不使用 `validate-many`
+的单次 run 限制，也不按 changed paths 跳过批次。没有成功结果缓存。来源抽取与
+对齐、术语覆盖、Schema、溯源、决策和人工审校要求均不因此降低。
+
 当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
 changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用的本地 LaTeX 编译：
 翻译候选编译对应模型通道，其他文档、进度、政策和工具修改也编译当前候选通道

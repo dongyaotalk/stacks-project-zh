@@ -16,6 +16,19 @@ make render MODEL=<model-lane>
 make pdf MODEL=<model-lane>
 ```
 
+修改过程只看某一完整章节时，在仓库根目录运行：
+
+```sh
+make pdf-chapter CHAPTER=categories MODEL=openai-gpt-5.6-sol PYTHON="$(pyenv which python)"
+```
+
+这会读取该章全部候选，生成独立的 `<model>-chapter-<chapter>` TeX lane，入口只
+`input` 该章，保留原书章节编号，跨章引用显示永久 Tag 链接。PDF 位于
+`output/pdf/chapter-preview/`，辅助文件位于 `build/chapter-preview/`；整书 TeX/PDF
+保持。预览不代表全库通过或正式发布，提交前仍运行完整 `make render`、`make pdf`
+及所有门禁。`make render-chapter` 可只生成该章 TeX。复合来源的全库溯源检查和
+最终 TeX 日志检查仍会执行，因此按章编译的节省不等于省掉全部检查。
+
 默认构建使用 XeLaTeX、Biber 和 makeindex。字体配置使用 TeX Live 自带的 Fandol
 字体以及系统字体 `Noto Sans CJK SC`；缺少 Noto 字体时应先安装字体，不能把生成的
 TeX 或日志改成绕过编译门禁。

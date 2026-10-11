@@ -1804,3 +1804,20 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   tree及范围外字节保持，唯一工程记录路径diff/check通过；远端单文件原字节/
   完整patch/native单closing Issue及最新精确HEAD双CI、fresh main后授权bypass。
   剩146问题batch、617术语候选1967诊断，继续S4；无批准或总goal完成声明。
+
+- 来源词目录前置 Issue [#746](https://github.com/dongyaotalk/stacks-project-zh/issues/746)，分支`tool/source-terms-limits-evidence`，fresh main `38ee235fcfc0dea2ea7035fd9beb83858f991523`。
+  只两条完整locked-source-container见证及两文档，精确允许文件三条；image
+  绑定真实002D paragraph/1，coproduct绑定真实002D paragraph/3（历史002F:p001）。
+  先claimed/计划后分支实现，所有词形/范围/目录其余字段及事实历史保持。
+  适用来源词回归/239QA/共享门禁/117模板、全库extract/alignment及check、
+  完整finding仅catalog hash规范化后保持，隔离progress/plan/check、当前lane
+  实际render/pdf及461页全文/19接受PNG字节比对、完整staged和精确远端合同/
+  最新双CI/fresh main后授权合并，再独立DATA完整prepare/check与冻结生成。
+  仍146问题batch、617术语候选1967诊断、零坐标/来源/歧义及187组218proof全match；
+  全S4后才S5/S7，最终文档提示词和全部F1–F8继续，无批准或完成总goal声明。
+
+  本地验收：两条完整锁定Git来源evidence逐项核验通过：image绑定002D paragraph/1，coproduct绑定002D paragraph/3；完整selector/hash/真实Section/owner、原Git字节与暴露词形相等。所有forms/chapters、其余目录字段及非数学分类保持，无词表批准或事实采用。
+  来源词回归 2.994秒、239QA 248.726秒通过，全部适用Schema/溯源/决策/来源及117模板门禁通过。全库extract/check 49.958/49.938秒、alignment/check 26.711/26.879秒通过。
+  全库存原字节、完整alignment matches/source/proof findings保持；全部candidate/term findings及repair-queue仅规范化真实catalog hash后逐项相等，两项新locked evidence PASS，其余见证保持。隔离progress/plan/check真实通过，三报告原字节一致；全部事实/history tree及范围外字节保持。
+  当前lane实际render 120.967秒/pdf 65.53秒零退出，FinalTeX PASS；461页全文layout及接受DATA已实际查看的19页PNG重渲染字节相同，无模板/渲染路径变更，未编辑生成物绕过失败。
+  完整staged三允许文件/远端原字节/fullpatch/native唯一closing746、最新精确HEAD双CI run/job和fresh main后按授权squash；postmerge tree/bytes/MERGED/CLOSED/clean核验，再另开真实Section002D完整DATA，重新prepare/check、冻结及实际模型生成。仍239批1304unit、146问题batch、617术语候选1967诊断，零坐标/来源/歧义、187组218proof全match；S4/S5/S7及全部F1–F8未完成，无术语/critic/人审/发布批准。

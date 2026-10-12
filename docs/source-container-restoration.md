@@ -280,6 +280,14 @@ run路径及chapter-template影响。具体写入仍遵守同章明确范围和�
 降低结构/语言/数学审校要求。chapter-template和PR范围检查也必须识别新的分组
 证据与完整旧/新坐标，不能只校验活跃候选而遗漏隐藏在组中的其他范围。
 
+首次 Git 入库前发生第二次实际完整模型修订时，按
+[model-provenance.md §8.5](model-provenance.md#85-首次-git-采用前的完整临时-v4-重放)
+保存完整上一临时 batch 原字节，并严格重放 `pre-adoption-replay-v1` sidecar。
+该历史只允许相同完整 v4 分组/source/unit/原输入、全部组实际 correction 指针与
+候选 hash 的变化；不是已入库派生的普通 Git archive，不能丢弃原 run/raw，不能
+跳过当前 replay 或重复消费来源恢复。DATA770 的 001O/001Q 需要此验收能力；
+独立工具接受后才能采用具体历史文件和数据。
+
 ### 4.1 游离显示公式与完整证明链
 
 002T 的旧 batch 把证明内部的显示公式保存到了 statement 与 proof 之间。完整来源

@@ -223,6 +223,42 @@ class PrContractTests(unittest.TestCase):
                 with self.subTest(fault=fault):
                     self.assertTrue(validate_pr_contract(REPOSITORY, pr, encode(broken)))
 
+    def test_pre_adoption_managed_history_requires_declared_scope_and_linked_parent(self):
+        from test_pre_adoption_replays import two_runs
+        with tempfile.TemporaryDirectory() as tmp:
+            root, _, current, manifest = two_runs(Path(tmp))
+            manifest_path = 'translation-data/pre-adoption-replays/' + manifest['replay_id'] + '.json'
+            derivation_path = 'translation-data/derivations/' + current['derivation_id'] + '.json'
+            candidate_path = manifest['files']['candidates']['path']
+            old = {'unit_id':manifest['output_unit_ids'][0], 'source_commit':current['source_commit'],
+                   'chapter':'test', 'parent_tag':'0999'}
+            objects = {manifest_path:manifest, derivation_path:current, candidate_path:old}
+            value = payload()
+            value['files']['nodes'] = [{'path':p,'changeType':'ADDED'} for p in objects]
+            ids = {uid for group in current['unit_groups'] for uid in group['input_unit_ids'] + group['output_unit_ids']}
+            body = ('task_id: guide-04V1-scope\nowner: @contributor\nbranch: tool/scope/guide-04v1/model\n'
+                    'allowed_write_files:\n' + ''.join('- ' + p + '\n' for p in objects) +
+                    'source_commit: ' + current['source_commit'] + '\nchapter: test\nparent_tag: 0000\n'
+                    'historical_parent_tags:\n- 0999\nunit_ids:\n' + ''.join('- ' + uid + '\n' for uid in sorted(ids)))
+            value['closingIssuesReferences']['nodes'][0]['body'] = body
+            value['body'] = 'Closes #42\nguide-04V1-scope\n' + current['source_commit']
+            encode = lambda rows: {p:json.dumps(r) for p,r in rows.items()}
+            self.assertEqual(validate_pr_contract(REPOSITORY,value,encode(objects)), [])
+            for fault in ['unlinked','bad-schema','extra-unit','wrong-source','undeclared-path']:
+                broken, pr = copy.deepcopy(objects), copy.deepcopy(value)
+                if fault == 'unlinked':
+                    broken[manifest_path]['current_derivation_id'] = 'unrelated'
+                elif fault == 'bad-schema':
+                    broken[manifest_path]['tool_version'] = 'unsupported'
+                elif fault == 'extra-unit':
+                    broken[candidate_path]['unit_id'] = 'tag:UNDECLARED:p001'
+                elif fault == 'wrong-source':
+                    broken[candidate_path]['source_commit'] = 'd' * 40
+                else:
+                    pr['closingIssuesReferences']['nodes'][0]['body'] = body.replace('- ' + manifest_path + '\n','')
+                with self.subTest(fault=fault):
+                    self.assertTrue(validate_pr_contract(REPOSITORY,pr,encode(broken)))
+
     def test_accepts_matching_issue_branch_path_and_unit(self) -> None:
         errors = validate_pr_contract(
             REPOSITORY,

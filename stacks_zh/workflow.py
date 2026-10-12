@@ -745,6 +745,9 @@ def render_batch(
                 reextraction_ids.update(operation['source_reextraction_id'] for operation in record.get('operations', [])
                                        if operation.get('source_reextraction_id'))
                 correction_keys.update(correction_bindings(record))
+                from .pre_adoption_replays import pre_adoption_history
+                for provisional in pre_adoption_history(root, record['derivation_id']):
+                    correction_keys.update(correction_bindings(provisional['snapshots']['derivation']))
                 container_ids.update(restoration_bindings(record))
                 grouped_history |= record['tool']['version'] == '4'
                 original_models.update(row['model_id'] for row in load_jsonl(root / record['files']['input_candidates']['path']))

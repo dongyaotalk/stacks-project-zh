@@ -325,6 +325,45 @@ selection/review/revision 的来源绑定包含完整祖先记录、归档、全
 后续版本增加完整历史，因此不能复用原绑定。渲染先验证复合来源，再披露原模型
 和所有历次实际修订模型及运行数量；历史输出本身不成为渲染输入。
 
+### 8.5 首次 Git 采用前的完整临时 v4 重放
+
+`pre-adoption-replay-v1` 处理首次数据 PR 本地验收时又发生实际模型重译的情况。
+此前完整实际 run/raw 仍须原字节保留，不能删除未消费输出、改写旧 context，或把
+尚未入库的临时派生冒称为可达 Git 前继。它是独立完整历史重放，不改变 §8 的
+已接受派生归档合同，也不扩展 v1/v2/v3。
+
+```text
+translation-data/pre-adoption-replays/<replay-id>.json
+translation-data/retired/pre-adoption-replays/<replay-id>/derivation.json
+translation-data/retired/pre-adoption-replays/<replay-id>/units.jsonl
+translation-data/retired/pre-adoption-replays/<replay-id>/candidates.jsonl
+```
+
+一个初次 v4 batch 至多有一个 sidecar；它声明完整有序输出、前后 correction ID、
+相同锁定 source/origin、真实时间和上述三个文件的 bytes hash。可达 origin 中该
+派生必须不存在；派生首次加入 Git 时 sidecar 须同时存在，事后不得补造，所有
+历史文件按首次加入字节不可变。旧记录与当前记录只允许全部组的 correction
+指针及输出候选 hash 不同；来源、分段、旧输入、边界和身份完全相等。新旧源
+unit 原字节相等，完整旧 batch 必须独立通过现有 v4 replay，五字段等于原 raw。
+当前完整 replay 先通过，才验证历史；已接受的普通后续 archive 可保留该历史，
+不会使临时旧输出成为第二个活跃末端或再次采用来源恢复。
+
+每个新实际 raw context 的 `prior_actual_revision` 须逐项冻结前次 run ID、
+correction ID、完整 manifest/record/raw candidate、确切临时 derived candidate、
+前次四个不可变文件的完整 hash 映射，`revision_input` 保留同一完整原组。
+`pre_adoption_snapshot_bindings` 须绑定旧记录与完整旧 unit/candidate bytes；已实际
+冻结的 `complete_prior_six_batch_snapshot_bindings` 可使用同一严格合同，两个键
+同时出现或缺少任何 batch 字节绑定均拒绝，不回写旧 run/context。真实前次时间
+严格早于后次，sidecar 时间不得早于后次。只有完整重放成功且原 correction 未被
+其他当前或历史重放消费，才能计入已验证历史；缺失、错序、重算 hash 后的
+原输出篡改、重复、孤立、symlink、假 origin、无效当前 replay 均失败。
+
+`make schema-check` 检查四个文件；`make provenance-check` 执行完整验证。
+`candidate_provenance_hash` 仅在存在此历史时追加完整 sidecar、三个快照、前次
+correction/run，既有无 sidecar 候选绑定不变。预览在溯源通过后计入前次实际模型
+和 run；历史输出不进入活跃 QA/进度/TM，也不授予术语、critic、人审或发布批准。
+具体 DATA 需先扩展 Issue 的精确路径/旧新 IDs/run 范围，在工具 PR 接受后才采用。
+
 ## 9. 锁定上游的提取恢复合同
 
 001P 的旧证明 source unit 漏掉英文 `$s$`，并改变相关词与公式的关系。锁定

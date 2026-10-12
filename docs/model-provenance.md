@@ -212,6 +212,19 @@ provenance 和 QA；已有 selection/review/revision 绑定旧 hash 时必须拒
 模型字段明确为 `gpt-6.1-sol`；供应商 snapshot 未暴露，登记 `snapshot: null` 和
 `replayable: false`，不虚构 owner-confirmed、后端 snapshot 或可保证重放。
 
+2026-10-12 的独立政策任务 [Issue #768](https://github.com/dongyaotalk/stacks-project-zh/issues/768)
+新增 `openai:gpt-6-astra:declared` 与非发布候选通道 `openai-gpt-6-astra`。
+实际 Codex turn 元数据记录 `gpt-6-astra`、`xhigh`；这只支持当前任务声明的身份，
+不能当作供应商不可变 snapshot，仍使用 `snapshot: null`、`replayable: false`。
+[官方模型文档](https://learn.chatgpt.com/docs/models)仅提供产品与选择设置背景，
+不能证明某次运行的后端版本。登记不修改用户模型设置，也不生成修订候选。
+
+后续每次实际生成前，必须从当时的运行元数据重新核实 model、effort 和 turn，
+在完整冻结输入/context 后记录到新 run；Harness 版本继续动态解析。如果当时模型
+没有登记，先独立完成登记政策任务，再生成 DATA，不能套用本段或旧 run 的值。
+旧模型记录和全部历史 run/raw/candidate 原字节保留，新修订单独披露实际作者，
+不继承术语、critic、语言、数学审校或发布批准。
+
 ### 7.1 可核验文件与输入
 
 ```text

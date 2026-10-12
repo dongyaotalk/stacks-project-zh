@@ -1982,3 +1982,27 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全库extract/check为60.704/56.513秒，alignment/check为29.897/29.399秒。逐项比较确认source/proof报告及repair-queue原字节相等；alignment仅config/source-terms.json输入hash变化；term报告仅顶层与1278个unit的catalog hash以及新增一条真实bijection取证元数据变化，其他字段、逐次要求、候选与错误数组全部严格相等。239批1278unit、6519来源术语出现、134问题batch、592术语候选1894诊断、零坐标/来源错误/未保护/歧义、187组218proof全match保持。
   facts/history tree和所有范围外字节保持；隔离progress/plan与各check通过，三个报告原字节相等。当前lane实际render 140.87秒、pdf 64.487秒，FinalTeX PASS，463页整书layout文字与六张已查看接受PNG逐字相等，无变化页；生成物未编辑或提交。
   后续真实生成前另有独立模型登记：当前turn元数据实际为gpt-6-astra / xhigh（2026-10-12T02:21:21.133Z），尚未在config/models.yml登记。已在Issue补充，来源证据合并后另开政策任务，重验当时元数据、登记declared与snapshot:null/replayable:false及非发布lane，不复制旧模型身份。政策接受后才能完整冻结六批/全部新旧unit/context/001P ancestry并实际生成全部十unit五字段；DATA后独立progress/plan，继续全部S4、独立S5/S7与F1–F8最终文档/完整提示词。
+
+- 独立模型登记政策 [Issue #768](https://github.com/dongyaotalk/stacks-project-zh/issues/768)，
+  owner `dongyaotalk`，branch `docs/register-gpt6-astra`，接受 main
+  `556c4b40964239f1f317c393e53218eeaffb8027`，英文锁保持。
+  PR #767 已合并，Issue #766 CLOSED，精确 HEAD 两 CI run/job SUCCESS，
+  合并后 tree、范围外字节、全部事实历史与干净工作区均通过核验。
+  重新读取的实际元数据为 `gpt-6-astra / xhigh`，时间
+  `2026-10-12T03:17:44.024Z`，turn `01a12dda-e2f7-7ec3-89c2-494a25dbb211`。
+  先 claimed Issue 再分支；只写 config/models.yml、docs/model-provenance.md、
+  docs/engineering-remediation.md，新增 declared 记录和非发布候选通道，
+  snapshot null、replayable false。unit/input/output/run 范围为空，无 DATA 或批准。
+  验收计划：相关模型/Harness/溯源/装配回归、239 全量 QA 与共享门禁，
+  全库 extract-all/check、source-alignment/check 和四审计/repair-queue 原字节比较，
+  隔离 progress/plan/check、范围外字节及历史 tree；当前 lane 实际 render/pdf、
+  整书文字与变化邻页 PNG 核验后才完整 staged/远端合同/双 CI 与授权合并。
+  当前 134 问题 batch、592 术语候选/1894 诊断保持；政策后独立完整 Section001L
+  六批 16 旧→10 新、273 来源词 DATA，重新 prepare/check/freeze 及全部实际模型
+  五字段，保存 001P 完整 ancestry。DATA 后独立 progress/plan，继续全部 S4，
+  再独立 S5/S7 和 F1–F8 最终详细文档与完整可复制提示词。
+
+  本地验收：54项模型/Harness/溯源/完整修订相关现有回归通过（14.528秒）；239全量QA及全部共享workflow/harvest/来源/Schema/溯源/决策/117章模板通过（261.505秒）。生产工具和Schema未变，先前523全量工具回归与已接受精确HEAD CI证据保留，不重复未受影响测试。新增两配置块之外的原模型注册文本逐字相等，各原记录解析结果逐项不变。首次本地脚本误将现有注册表解析器返回的字符串与Python布尔值比较，修正辅助断言后通过；没有更改生产规则或事实。
+  全库extract/check为58.772/56.306秒，alignment/check为30.157/30.03秒；四审计及repair-queue原字节相等。239批1278unit、6519来源术语要求、134问题batch、592术语候选1894诊断、零坐标/来源未保护/歧义、187组218proof全match保持。隔离progress/plan与各check通过，三个报告原字节相同，全部事实/历史tree和范围外字节保持。
+  当前lane实际render 144.528秒、pdf 66.823秒，FinalTeX PASS；463页整书layout文字与六张已查看接受PNG原字节相等，无变化页。生成物未编辑或提交。三路径完整staged/精确远端head与base原字节/fullpatch/native唯一closing768、最新精确HEAD双CI run/job成功及fresh main后按已有授权squash；合并后核验tree/raw/MERGED/CLOSED/clean。
+  本政策仅登记当前实际模型声明，尚无翻译run或DATA采用。后续从接受main重新准备完整Section001L六批16旧→10新273词，保存001P完整历史，冻结后由当时真实模型逐单元完整输出五字段；DATA后独立progress/plan。S4/S5/S7和F1–F8最终详细文档、完整复制提示词仍未完成，不授予任何术语/critic/人审/发布批准。

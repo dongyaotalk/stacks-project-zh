@@ -54,6 +54,29 @@ OPEN/CLOSE 字体包装，允许一个词组横跨纯排版边界。`target_term
 
 ## 能力边界与后续维护
 
+### 完整 functor of points 的普通标题与正文
+
+独立目录任务 [Issue #771](https://github.com/dongyaotalk/stacks-project-zh/issues/771)
+新增英语concept `functor-of-points`，canonical form为`functor of points`，章节
+范围为空数组，沿用既有全库扫描。完整来源见证为锁定英文
+`a04446e57ec1fbc252a871afcec7752fb2807b14`中的categories、001O、
+`categories-example-hom-functor`、真实Section001L、example/1；完整Git片段
+SHA-256为`d4ad7cd4198fc4efca8a37de87ca4f537f9e45615f8a3772cd39b28a605ef9ce`。
+保护后的自然语言投影包含标题`Functor of points`和命名`functor of points`，
+source位置保留该次实际大小写，不按行号、页码或候选内容提供证据。
+
+通用`functor`目录无法证明完整复合词显示，普通标题和正文没有声明包装时，
+此前可能只要求`Functor`或`functor`。新增完整词形后，最长短语优先生成完整
+要求，嵌套generic word不重复计数；该处不能只写`中文（Functor）`或
+`中文（functor）`，完整短语需分别显示原大小写。独立出现的functor仍检查，
+重复、缺次、大小写改变、整句代替词条、缺失待决上下文均失败。公式等保护
+节点仍不透明，本目录不开放数学内自然语言。
+
+这只登记英文来源要求，未批准任何中文译法。DATA770已保存原十单元模型run/
+raw及完整暂存内容；目录独立验收接受后，两个实际模型修订单元各须完整五字段
+和新freeze/context/run，不能由程序补长英语或重写旧输出。新增要求的诊断变化
+按实际全库审计记录，不能把目录完成当作DATA、S4或S5/S7完成。
+
 确定性词汇匹配不是完整的数学概念识别：未登记且没有声明包装的术语、代词所指、
 跨公式表达式和语义歧义仍须逐句审查。目录可能需要按章节区分普通用词与数学
 用词；缩减范围、排除声明或新增复合词必须在独立工具任务中说明英文依据，不能

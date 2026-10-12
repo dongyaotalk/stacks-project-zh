@@ -70,6 +70,10 @@ item歧义及identity自报词形。先独立准备完整来源，遇到未支�
 `build/task-remediation-handoff/`保存冻结、完整checks/差异/PDF/PNG/remote/CI/
 postmerge；新克隆不含这些产物，必须从已跟踪事实重新生成并核验，不依赖旧缓存。
 source-only remark Issues691/698/699保留历史，非翻译修复或审批，不需补源码证明。
+用户要求在书末独立收录这些记录并注明锁定英文版本；模板任务 Issue758 接入
+“勘误与原文疑点”表，来源坐标、完整原字节 hash、复现与维护边界见
+[source-errata.md](source-errata.md)。三个 remark 只在表格合并并核验后以
+“已收录留档”关闭；关闭不表示数学疑点已裁定或原文已修复。
 
 
 ## 1. 总目标和完成定义

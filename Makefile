@@ -155,6 +155,7 @@ AJBOOK_TEMPLATE_FILES := \
 	ajbook-template/font-setup-open.tex \
 	ajbook-template/frontmatter/preface.tex \
 	ajbook-template/frontmatter/project-info.tex \
+	ajbook-template/backmatter/source-errata.tex \
 	ajbook-template/project-metadata.tex \
 	ajbook-template/stacks-project-zh.tex \
 	ajbook-template/styles/reference-template-compat.sty \

@@ -491,3 +491,40 @@ python3 stacks_zh.py prepare-source-containers-many \
 新接口99.201秒（3.136倍），独立check98.412秒；32个子包文件与原接口逐字相等，
 全部输入/事实/历史保持。该计时是同一冻结输入上的一次实测，不承诺固定耗时；
 check重做完整溯源而不是信任上次PREPARED。具体DATA仍在工具合并后另开任务。
+
+### 9.3 完整陈述后段落的历史数学排版见证
+
+独立工具任务：[Issue #764](https://github.com/dongyaotalk/stacks-project-zh/issues/764)。
+001N 的完整旧 paragraph 把一条原行内数学包成展示数学，并把另一条数学内 LF
+折成空格；旧规则正确拒绝。这是旧提取缺陷，不能只改中文或将其称为原文 remark。
+新增独立 `source-container-v9`，派生仍 v4，v1–v8 与全局数学/slot 政策保持。
+
+只支持一个完整 unit-v1 paragraph，原 `\noindent` prefix、仅 ASCII 空白 suffix，
+完整旧有序 batch 中紧邻完整 plain labelled statement。旧/新前陈述完整签名须匹配，
+label 只按真实永久 Tag 映射；真实 Git 前陈述与段落同属一个 Section、立即相邻且
+间隔仅 ASCII 空白。完整旧段落、完整前陈述、完整新段落均不得取切片；匹配必须在
+锁定章内唯一。普通 prose 空白沿用既有签名合同，其余节点逐项比较。
+
+独立保守数学词法仅接受单个 ASCII 字母/数字、圆括号、冒号/等号、零参数记号
+`\Ob`、`\to`、`\phi`、`\psi`、`\circ` 及完整 `\mathcal{A}` 型单大写字母
+原子。段落中所有数学节点（包括未变节点）均须满足该有限语言；它只限定历史见证，
+不新增宏政策。其他命令、一般花括号/脚标、数学文字、注释、literal、非 ASCII
+或未知语法保持 BLOCKED。旧/新节点都须由 Scanner 确认为单一 dollar math。
+
+只允许可确定性重放的两种原生→历史变换：原单美元变旧双美元并可增加外围 ASCII
+空格；原 LF/CRLF 变旧单 ASCII 空格。后者只允许完整原子之间、圆括号深度为零且
+两侧没有空白的位置；命令/参数内、连续空白、裸 CR 均拒绝。原内联 body 不能有
+外围空白；未替换的换行及所有其他字节原样保留。不得一般去空白或数学等价化，
+不得反向转换、改公式 token、普通空格或节点数。至少存在一项真实受支持差异。
+
+见证记录旧/新完整段落签名 hash、完整前陈述 ID/selector/片段与签名 hash，逐个
+不同数学节点的序号、原旧/原 Git 节点、字节 hash、操作种类、添加的外围空格与
+每个换行的原节点内字节位置及 LF/CRLF。加载器只在 v9 启用，从 origin 政策、
+完整旧输入及锁定 Git 重算全部字段；篡改、删项或降级均拒绝。新 source 始终来自
+完整未归一化 Git 片段，五字段/raw/context、全部旧组/ancestry、人审门禁保持。
+
+验收先运行独立 synthetic Git 正反例、Schema/准备/check/加载及完整五字段分组
+重放，再核验真实完整 001N 两旧→两新和 Section001L 六批十组完整范围；保留
+当前审计残项、事实/历史与范围外原字节，执行全库库存/对齐及 checks、239QA、
+共享门禁/117模板、隔离进度/计划、当前 lane render/pdf 和整书文字/PNG 核验。
+工具验收合并后才另开完整小节 DATA，不将来源准备成功当成术语修复。

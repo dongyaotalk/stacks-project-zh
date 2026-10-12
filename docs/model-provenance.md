@@ -474,6 +474,14 @@ ancestry、全部新实际五字段、immutable raw/context、人审和出版门
 selector/片段和签名hash，派生仍v4。工具只读准备与具体DATA分开，全部旧
 候选/run/raw及ancestry、每个新unit实际五字段/context、未知术语和审批门禁保持。
 
+完整单段落的旧数学排版提取差异另用独立 `source-container-v9`，见
+[source-container-restoration.md](source-container-restoration.md) §9.3。只支持完整
+plain labelled statement 后的一个完整 unit-v1 paragraph；从锁定 Git、完整旧
+batch 与 origin 政策重新核验实际 Section、相邻和章内唯一性，以及每个有限
+数学排版变化的原字节/位置/hash。它不授权一般数学归一化、未知语法或数学文字，
+旧 v1–v8 保持。具体 DATA 另行认领，每个新 unit 仍实际完整生成五字段，并保留
+完整旧组、原 run/raw、全部 ancestry 与 context；派生仍 v4，无任何自动批准。
+
 ## 11. 数学内自然语言的后续来源保护合同
 
 完整设计见 [math-text-translation.md](math-text-translation.md)。独立工具实施并

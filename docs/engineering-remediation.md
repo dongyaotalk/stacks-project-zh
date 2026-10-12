@@ -1943,3 +1943,24 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全部517工具测试实际通过（638.002秒），239候选QA与共享Schema/溯源/决策/来源/117模板通过（349.777秒）。全库extract 70.985秒、check 66.231秒，alignment 34.819秒、check 36.06秒，均零退出；四审计及repair-queue全部原字节保持，239批1278unit、134问题batch、592术语候选1894诊断、零坐标/来源未保护/歧义、187组218proof全match保持。隔离progress/plan及各check通过，三报告原字节相等；全部事实与历史tree、英文lock、宏政策/词表及范围外字节保持。
   当前lane实际render 173.595秒、pdf 72.953秒，FinalTeX PASS；整书463页全文与接受基线相同，12/13/14/461/462/463六张此前实际查看PNG重渲染原字节相同。模板/样式/Make/render路径不变，未无理由重复template；未修改生成物绕过失败。
   七路径完整staged/精确远端head和base原字节/完整patch/native唯一closing762、最新精确HEAD双CI run/job成功与fresh main后按已有授权admin bypass squash，postmerge tree/raw/MERGED/CLOSED/clean。只读完整001L剩六batch十组预检为九组可准备、一组001N paragraph/2仍BLOCKED：旧提取将内联单美元math改成双美元display边界，另有math内换行折叠，现有保护字节规则拒绝；v8不放行，全部两侧原片段/保护节点和此发现已存证并更新Issue。集中DATA须先独立解决该来源恢复合同，不能跳过或归档残项。全部S4后独立S5/S7和F1–F8最终详细开发文档、完整复制提示词继续，无审校或发布批准。
+
+- 独立工具 [Issue #764](https://github.com/dongyaotalk/stacks-project-zh/issues/764)：
+  接受 main `79e77b78697f48167701a3ddf99d134ea1c8e50f`，英文锁保持。
+  PR #763 已合并、Issue #762 已关闭且树/范围外字节一致。001N 完整旧段落的
+  单美元→双美元与 LF→空格历史提取差异，先以独立 source-container-v9 完整
+  来源见证处理；设计/验收合同见 source-container-restoration.md §9.3。
+  owner dongyaotalk，branch tool/source-paragraph-math-layout，七路径独立 TOOL；
+  事实/run/model scope 为空，无翻译或批准。当前实测239批/1278unit、134问题
+  batch、592术语候选/1894诊断、零坐标/未保护/歧义，187组/218proof全match。
+  工具后仍需完整 Section001L 六批 DATA、独立 progress/plan，再继续全部 S4；
+  S5/S7 与 F1–F8 最终详细文档和可复制提示词尚未完成。
+
+  本地验收：新增六项回归通过，覆盖两种独立及组合历史排版操作、LF/CRLF精确位置回放、未知命令/数学文字/不安全换行与所有旧权限拒绝、完整旧组及真实相邻Section、章内含历史形式重复歧义、完整包check/加载和每个见证字段篡改、全部五字段/context/完整旧组及伪审批拒绝。首次失败来自新Schema使用了仓库未支持的minItems/minimum，改用既有Schema子集并由独立完整重算维持数量/序位约束；没有修改公共Schema解释器或放松验证。原六个Schema分支原字节保持。
+  全部523工具回归通过（561.098秒），239候选QA与全部共享来源/Schema/溯源/决策/117模板通过（295.786秒）。真实完整Section001L六批16旧→10新、十组来源全部PREPARED；完整准备232.99秒、独立check214.041秒，六子包及aggregate全部字节/mtime保持。001N完整两旧→两新只有paragraph采用v9见证；原Git fragment hash为sha256:116bdc03cf9f873ddf9ff6f2cf50d86b35f69a2f6afec9db7b71c68c36f0f315，第2数学节点仅包装变化，第7数学节点仅原偏移19的LF变空格。完整前陈述/段落/旧组/全部保护字节独立重算，无事实采用、模型run或批准。
+  全库extract/check分别64.327/62.616秒，alignment/check分别27.264/27.291秒；四审计和repair-queue原字节相等。239批/1278活跃unit、134问题batch、592术语候选/1894诊断、零坐标/来源结构/未保护/歧义、187组/218proof全match保持。全部facts/history tree及范围外bytes保持；隔离progress/plan与check通过，三报告原字节相等。
+  当前lane实际render 139.394秒、pdf 62.553秒，FinalTeX PASS；整书463页layout文字相等，12/13/14/461/462/463六张重渲染PNG与已查看接受图逐字相等，无变化页。模板/样式/Make/render路径不变；生成物未编辑或提交。
+  完整来源词目录采用前预检发现一条后续前置：bijection evidence仍绑定001P旧陈述片段。当前事实/catalog有效；将完整六批新source在内存替换后该锚点消失。已更新Issue，另开独立来源证据工具任务，将其绑定真实001P完整lemma并保留词形/范围/批准状态；本七路径TOOL不夹带目录修改。随后才重新freeze完整六批/273来源词、001P全部ancestry并实际生成十个新unit五字段；全部S4后才S5/S7与F1–F8最终详细文档/可复制提示词。
+
+  PDF技能包在验收期间更新，首次辅助脚本路径失效且PDF尚未启动；保留失败证据，定位当前安装后仅续跑辅助记录/PDF/文字与PNG核验。未重跑已通过的未变回归；当前目录页13与书末表页463已实际查看，未发现裁切、重叠或缺字。
+
+  完整暂存审查另发现原行内body外围空白仅在重包时被拒绝，和既定合同不一致；补全所有行内body的拒绝条件，并新增换行单独恢复时首/尾空白两种输入。最新六项相关回归再次通过（24.152秒），十个真实完整组/原Git片段/全部见证逐项不变；先前523项全量回归、239QA及全库审计证据保留，未重复无关测试。当前收紧代码再次实际render 138.329秒、pdf 63.277秒，FinalTeX PASS，463页全文及六PNG仍逐字相等，绑定最终代码hash。

@@ -1930,3 +1930,16 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   实际全库extract 69.088秒、check 70.556秒，alignment 37.81秒、check 38.937秒，均零退出。库存43257→43250提议，READY36655→36724、BLOCKED6602→6526、诊断18608→18394，117章/116份来源逐字回放通过。这些数字仅描述准备状态；当前翻译事实、历史、四审计具体findings、repair-queue actions/映射逐项保持，239批1278unit、134问题batch、592术语问题候选/1894诊断、187组218proof全部match。
   隔离progress/plan及各check实际通过，三个报告原字节保持。当前lane实际render 185.746秒、pdf 79.575秒，FinalTeX PASS；整书463页全部文字与接受基线相同，12/13/14/461/462/463六页重渲染PNG与此前实际逐页查看原图字节相同。模板、样式、Make与render路径保持，未无理由重跑template；未修改生成物绕过失败。全部范围外字节、英文lock、词表/来源目录批准和候选/run/raw保持；无新增unit/run/model或审校/发布批准。
   四路径完整staged与精确远端head/base原字节、完整patch、GitHub-native唯一closing760及最新精确HEAD双CI run/job、fresh main后按已有授权admin bypass squash；postmerge核验tree/raw/MERGED/CLOSED/clean。只读预检确认真实Section001L为“Opposite Categories and the Yoneda Lemma”，完整001P lemma/proof可准备；该节001M的两个旧paragraph实际构成一个完整来源paragraph，现有合同拒绝多旧段落合并，保留BLOCKED，先独立工具合同再集中DATA。仍须全部旧组/候选/ancestry/context冻结和真实模型完整五字段；全部S4后独立S5/S7与F1–F8最终详细文档、完整可复制提示词。
+
+- 独立完整多旧段落来源见证 Issue [#762](https://github.com/dongyaotalk/stacks-project-zh/issues/762)，branch `tool/source-split-paragraph`，fresh main `022a6a095f27db25d8c2a1ff28cd6d3ce90f5927`。
+  完整001M两旧paragraph→真实Section001L完整paragraph1，现有合同拒绝，先独立v8工具/Schema/回归及开发验收计划。
+  声明七精确允许路径，真实及历史parent与全部参考旧新ID；unit/run/model事实写入范围为空。
+  连续有序最大旧组、紧邻完整plain labelled statement、同范围/真实Section、完整源签名/保护字节及章内唯一性独立重算；旧v1–v7及所有历史不改。
+  先claimed→branch/实现→严格拒绝/包check/历史重放/五字段分组回归→真实001M只读prepare/check→全量适用门禁/抽取对齐/进度计划及当前lane render/pdf/整书PNG→完整staged/远端合同/双CI后授权合并。
+  当前134问题batch/592候选1894诊断保持；随后独立001L完整剩六批16旧→10新273词DATA，全部S4后S5/S7及最终详细文档与完整提示词。无来源政策弱化、中文生成、事实采用或审批。
+
+  本地验收：六项新增回归覆盖完整两/三旧分段、旧版本拒绝、二十五类旧输入/来源/包装/完整性错误、五类原生范围/语法阻断、完整包check/重放、十五类见证错误，以及全部实际修订五字段/完整旧units/candidates/context和审批拒绝。初次两项失败来自synthetic fixture预期：完整源paragraph末尾换行和fixture只保留statement/paragraph两个容器；只修正预期，未改工具规则，失败与第二次六项通过证据保留。旧五个Schema分支全部原字节保持，仅追加v8分支和数组分隔逗号。
+  真实001M完整三旧→二新只读prepare 185.991秒、独立check 187.331秒，全部八包文件字节与mtime保持；完整原片段/真实owner/Section/selector/边界及完整前陈述/全部旧段落签名hash逐项相等。工具只生成ignored包，没有中文生成、run、事实采用、归档当前问题或审批。
+  全部517工具测试实际通过（638.002秒），239候选QA与共享Schema/溯源/决策/来源/117模板通过（349.777秒）。全库extract 70.985秒、check 66.231秒，alignment 34.819秒、check 36.06秒，均零退出；四审计及repair-queue全部原字节保持，239批1278unit、134问题batch、592术语候选1894诊断、零坐标/来源未保护/歧义、187组218proof全match保持。隔离progress/plan及各check通过，三报告原字节相等；全部事实与历史tree、英文lock、宏政策/词表及范围外字节保持。
+  当前lane实际render 173.595秒、pdf 72.953秒，FinalTeX PASS；整书463页全文与接受基线相同，12/13/14/461/462/463六张此前实际查看PNG重渲染原字节相同。模板/样式/Make/render路径不变，未无理由重复template；未修改生成物绕过失败。
+  七路径完整staged/精确远端head和base原字节/完整patch/native唯一closing762、最新精确HEAD双CI run/job成功与fresh main后按已有授权admin bypass squash，postmerge tree/raw/MERGED/CLOSED/clean。只读完整001L剩六batch十组预检为九组可准备、一组001N paragraph/2仍BLOCKED：旧提取将内联单美元math改成双美元display边界，另有math内换行折叠，现有保护字节规则拒绝；v8不放行，全部两侧原片段/保护节点和此发现已存证并更新Issue。集中DATA须先独立解决该来源恢复合同，不能跳过或归档残项。全部S4后独立S5/S7和F1–F8最终详细开发文档、完整复制提示词继续，无审校或发布批准。

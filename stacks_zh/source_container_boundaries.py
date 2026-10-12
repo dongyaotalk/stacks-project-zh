@@ -12,6 +12,7 @@ VERSION = 'source-container-v4'
 PRECEDING_VERSION = 'source-container-v5'
 NESTED_PRECEDING_VERSION = 'source-container-v6'
 SECTION_TITLE_VERSION = 'source-container-v7'
+SPLIT_PRECEDING_VERSION = 'source-container-v8'
 SPACE = ' \t\r\n'
 TOKEN = re.compile(r'<([A-Z]+_[0-9]{4})>')
 
@@ -289,6 +290,100 @@ def _complete_statement_signature(fragment, policy, tags, chapter):
         cursor = match.end()
     prose(text[cursor:])
     return signature
+
+
+def split_preceding_statement_paragraph_witness(containers, units, groups, ids, selected):
+    """Recompute a maximal old paragraph chain against one whole Git paragraph."""
+    selector = selected['selector']
+    if (selector['kind'] != 'paragraph' or selector['owner_tag'] != selector['parent_tag']
+            or len(ids) < 2 or len(set(ids)) != len(ids)):
+        raise RecordError('split paragraph needs at least two distinct complete old paragraphs')
+    by_id = {unit['unit_id']: unit for unit in units}
+    order = [unit['unit_id'] for unit in units]
+    if len(by_id) != len(units) or any(identifier not in by_id for identifier in ids):
+        raise RecordError('split paragraph input IDs are absent or duplicated')
+    start = order.index(ids[0])
+    if order[start:start + len(ids)] != ids:
+        raise RecordError('split paragraph inputs are not a continuous ordered interval')
+    matches = [i for i, group in enumerate(groups)
+               if group['kind'] == 'paragraph' and group['ordinal'] is None
+               and group['input_unit_ids'] == [ids[0]]]
+    if len(matches) != 1 or matches[0] == 0:
+        raise RecordError('split paragraph lacks a unique complete old paragraph boundary')
+    index = matches[0]
+    preceding = groups[index - 1]
+    if preceding['kind'] not in STATEMENTS:
+        raise RecordError('split paragraph has no complete immediately preceding old statement')
+    chain = []
+    for group in groups[index:]:
+        if group['kind'] != 'paragraph' or group['ordinal'] is not None:
+            break
+        if len(group['input_unit_ids']) != 1 or group['file'] != selector['file']:
+            raise RecordError('split paragraph includes a foreign or non-singleton old container')
+        chain.extend(group['input_unit_ids'])
+    if chain != ids:
+        raise RecordError('split paragraph must consume the maximal complete old paragraph chain')
+    paragraphs = [by_id[identifier] for identifier in ids]
+    old = paragraphs[0]
+    if any(unit['node_kind'] != 'paragraph' or unit['chapter'] != selector['file'][:-4]
+           or unit['source_commit'] != selected['source_commit']
+           or unit['parent_tag'] != old['parent_tag'] for unit in paragraphs):
+        raise RecordError('split paragraph crosses chapter, source, kind or historical parent')
+    if re.fullmatch(r'[ \t\r\n]*\\noindent[ \t\r\n]*', old['render']['prefix']) is None:
+        raise RecordError('split paragraph must begin with the complete old noindent wrapper')
+    if (any(unit['render']['prefix'].strip(SPACE) for unit in paragraphs[1:])
+            or any(unit['render']['suffix'].strip(SPACE) for unit in paragraphs)):
+        raise RecordError('split paragraph has extra wrappers or nodes at an old segmentation boundary')
+    members = [by_id[identifier] for identifier in preceding['input_unit_ids']]
+    if (order[start - len(members):start] != preceding['input_unit_ids']
+            or any(unit['parent_tag'] != old['parent_tag'] for unit in members)):
+        raise RecordError('split paragraph crosses its complete frozen preceding statement')
+    first, last = members[0], members[-1]
+    kind = re.escape(preceding['kind'])
+    if (re.fullmatch(r'\s*\\begin\{' + kind + r'\}\s*\\label\{[^{}\n]+\}\s*',
+                     first['render']['prefix']) is None
+            or re.fullmatch(r'\s*\\end\{' + kind + r'\}\s*', last['render']['suffix']) is None):
+        raise RecordError('split paragraph lacks a complete plain labelled preceding statement')
+    native = native_statement(containers, preceding)
+    old_statement = ''.join(source_tex(unit) for unit in members)
+    _item_tags(old_statement, containers.policy, containers.english.tags, old['chapter'])
+    statement_signature = _complete_statement_signature(
+        old_statement, containers.policy, containers.english.tags, old['chapter'])
+    if statement_signature != _complete_statement_signature(
+            native['fragment'], containers.policy, containers.english.tags, old['chapter']):
+        raise RecordError('split paragraph preceding complete statement changes source or protected bytes')
+    if native['selector']['parent_tag'] != selector['parent_tag']:
+        raise RecordError('split paragraph and preceding statement have different real Sections')
+    raw, rows, _ = containers.documents[selector['file'][:-4]]
+    positions = [i for i, row in enumerate(rows) if row['location'] == selected['location']]
+    if len(positions) != 1 or positions[0] == 0:
+        raise RecordError('split paragraph lacks a unique complete native location')
+    if (rows[positions[0] - 1]['location'] != native['location']
+            or raw[native['location']['byte_end']:selected['location']['byte_start']].strip(b' \t\r\n')):
+        raise RecordError('split paragraph is not immediately after the same complete native statement')
+    # Concatenate the original bytes. No synthetic unit, separator or trimming
+    # may turn a partial old group into a complete source witness.
+    signature = paragraph_signature(''.join(source_tex(unit) for unit in paragraphs), containers.policy)
+    if signature != paragraph_signature(selected['fragment'], containers.policy):
+        raise RecordError('split paragraph changes complete prose or protected bytes')
+    count = 0
+    for row in rows:
+        if row['unit']['node_kind'] != 'paragraph':
+            continue
+        location = row['location']
+        fragment = raw[location['byte_start']:location['byte_end']].decode('utf-8')
+        try:
+            count += paragraph_signature(fragment, containers.policy) == signature
+        except RecordError:
+            continue
+    if count != 1:
+        raise RecordError('split paragraph source signature is ambiguous in the locked chapter')
+    return {'paragraph_input_unit_ids': ids, 'historical_parent_tag': old['parent_tag'],
+        'preceding_statement_input_unit_ids': preceding['input_unit_ids'],
+        'preceding_statement_selector': native['selector'],
+        'preceding_statement_fragment_hash': native['location']['fragment_hash'],
+        'preceding_statement_signature_hash': sha256_value(statement_signature),
+        'paragraph_signature_hash': sha256_value(signature)}
 
 
 def nested_preceding_statement_paragraph_witness(containers, units, groups, group, selected):

@@ -23,13 +23,15 @@ from .schema_validation import validate_named_schema
 from .source_integrity import STATEMENTS, _own_tag, permanent_tag_mapping
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, proof_groups, source_tex
 from .source_container_boundaries import (VERSION as BOUNDARY_VERSION,
-    PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, secondary_statement_witness,
+    PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION,
+    secondary_statement_witness, split_preceding_statement_paragraph_witness,
     adjacent_paragraph_witness, preceding_statement_paragraph_witness,
     nested_preceding_statement_paragraph_witness, section_title_paragraph_witness)
 
 VERSION = 'source-container-v3'
 SUPPORTED_VERSIONS = {'source-container-v1', 'source-container-v2', VERSION,
-                      BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION}
+                      BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION,
+                      SPLIT_PRECEDING_VERSION}
 OUTER_WHITESPACE = ' \t\r\n'
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\Z')
 
@@ -561,7 +563,8 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
                      native_containers: Containers | None = None,
                      allow_preceding_paragraph: bool = False,
                      allow_nested_preceding_paragraph: bool = False,
-                     allow_section_title_paragraph: bool = False) -> dict[str, Any] | None:
+                     allow_section_title_paragraph: bool = False,
+                     allow_split_preceding_paragraph: bool = False) -> dict[str, Any] | None:
     if native_containers is not None:
         if (len({u['unit_id'] for u in units}) != len(units)
                 or any(u['chapter'] + '.tex' != selected['selector']['file']
@@ -595,6 +598,11 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
         extended = _proof_with_detached_displays(units, groups, ids, selected)
         if extended is not None:
             matches = [extended]
+    if (not matches and native_containers is not None and allow_split_preceding_paragraph
+            and selector['kind'] == 'paragraph'):
+        paragraph = split_preceding_statement_paragraph_witness(
+            native_containers, units, groups, ids, selected)
+        return {'secondary_statements': secondary, 'paragraph_anchor': paragraph}
     if len(matches) != 1:
         raise RecordError('restoration must cover one complete old wrapper chain')
     group, selector = matches[0], selected['selector']
@@ -682,7 +690,8 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 historical_containers[key] = Containers(root, harvest,
                     policy_bytes=_git_origin_bytes(root, origin, 'config/macro-policy.yml'),
                     natural_text_enabled=version in {'source-container-v3', BOUNDARY_VERSION,
-                                                    PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION})
+                                                    PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION,
+                                                    SPLIT_PRECEDING_VERSION})
             historical = historical_containers[key]
             selected = historical.select(record['selector'])
             for key in ('source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness'):
@@ -706,15 +715,16 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
             boundary = verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
                              allow_outer_whitespace=version != 'source-container-v1',
-                             native_containers=historical if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION} else None,
+                             native_containers=historical if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION} else None,
                              allow_preceding_paragraph=version in {PRECEDING_VERSION, NESTED_PRECEDING_VERSION},
                              allow_nested_preceding_paragraph=version == NESTED_PRECEDING_VERSION,
-                             allow_section_title_paragraph=version == SECTION_TITLE_VERSION)
-            if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION} and (not boundary or record['legacy_boundary_witness'] != boundary):
+                             allow_section_title_paragraph=version == SECTION_TITLE_VERSION,
+                             allow_split_preceding_paragraph=version == SPLIT_PRECEDING_VERSION)
+            if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION} and (not boundary or record['legacy_boundary_witness'] != boundary):
                 raise RecordError('legacy boundary witness differs from the actual Git and complete frozen batch')
             expected = lower_container(selected, historical.policy, layout=record['layout'])
             typed = any(u['schema_version'] == 2 for u in expected)
-            if version not in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION} and typed != (version == 'source-container-v3'):
+            if version not in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION} and typed != (version == 'source-container-v3'):
                 raise RecordError('math-text unit-v2 requires source-container-v3 or witnessed boundary evidence')
             if record['new_units'] != expected or record['output_unit_ids'] != [u['unit_id'] for u in expected]:
                 raise RecordError('source-container new units differ from deterministic complete lowering')
@@ -869,7 +879,7 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                     boundary = verify_old_group(units, containers.english.tags, ids, selected,
                         allow_outer_whitespace=True, native_containers=containers,
                         allow_preceding_paragraph=True, allow_nested_preceding_paragraph=True,
-                        allow_section_title_paragraph=True)
+                        allow_section_title_paragraph=True, allow_split_preceding_paragraph=True)
                     if not boundary:
                         raise RecordError('source boundary extension requires an actual native witness')
                 file, location = selected['selector']['file'], selected['location']
@@ -880,7 +890,8 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                 witnessed_version = None
                 if boundary:
                     anchor = boundary['paragraph_anchor']
-                    witnessed_version = (SECTION_TITLE_VERSION
+                    witnessed_version = (SPLIT_PRECEDING_VERSION
+                        if anchor and 'paragraph_input_unit_ids' in anchor else SECTION_TITLE_VERSION
                         if anchor and 'preceding_section_title_selector' in anchor else NESTED_PRECEDING_VERSION
                         if anchor and 'preceding_statement_list_closings' in anchor
                         else PRECEDING_VERSION if anchor and 'preceding_statement_selector' in anchor

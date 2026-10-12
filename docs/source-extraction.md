@@ -81,6 +81,7 @@ Synthetic fixtures覆盖公式转义/注释、嵌套字体和脚注、标题与�
 | pr | text | subscripted | categories-lemma-representable-diagonal 的投影记号 |
 | id | text | symbol | categories-definition-category 的恒等态射记号 |
 | Arrows | text | applied | categories-lemma-limits-products-equalizers 的箭头集记号 |
+| PSh | textit | applied | categories-definition-presheaf（02X6／Section001L）明确登记的预层范畴记号 |
 | Sets | text、textit | symbol | categories-remark-big-categories 的集合范畴记号 |
 | size | text | applied | sets-section-categories-schemes 的 size(S) 定义 |
 | Cov | text | applied | sets-section-coverings-site 的覆盖类记号 |
@@ -92,6 +93,17 @@ Synthetic fixtures覆盖公式转义/注释、嵌套字体和脚注、标题与�
 独立符号。注释/空白可以跨过但保存原字节；不匹配用法、相似词形、嵌套参数、
 未列命令及 `and`、`if`、`affine opens of` 等自然语言仍为原 math-text BLOCKED。
 识别既不会改变完整 MATH token，也不会授予词表或人类数学审校批准。
+
+`PSh` 的完整锁定来源见证为英文提交
+`a04446e57ec1fbc252a871afcec7752fb2807b14` 中 categories 的 definition 02X6，
+真实 Section001L、label `categories-definition-presheaf`、definition/1。完整原片段
+SHA-256 为 `889d705564c0b0d46f3a1313e8bbb2276d53c39dba22d3f7d0591683c9a18ac4`，
+原文明确写出预层范畴记号 `\textit{PSh}(\mathcal{C})`。只登记精确 `PSh`、
+`textit` 和已有 `applied` 形状；无括号、下标、其他字体命令、大小写或参数
+空白变体均不由本条放行。历史政策原字节解释不变，普通正文中的 PSh 仍作为
+自然语言暴露。独立政策只改善来源准备状态，不修改任何候选/run/raw，具体
+DATA 仍须完整来源与旧组冻结和实际模型五字段。数学内自然连接词 `" and "`
+不属于 PSh 记号条目，未支持的语法角色仍 BLOCKED。
 
 每个接受项保存 `math_text_classifications`：完整命令 source、notation、command、
 usage、source_label、原 UTF-8 byte/line location 以及 usage_source（原下标或函数

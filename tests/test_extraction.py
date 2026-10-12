@@ -232,6 +232,52 @@ class ExtractionTests(unittest.TestCase):
         self.assertIn('Fib', rows[-1]['unit']['source_text'])
         self.assertFalse(rows[-1]['math_text_classifications'])
 
+    def test_psh_applied_notation_keeps_all_math_bytes_and_exact_witness(self):
+        math = (r'$\Mor_{\textit{PSh}(\mathcal{C})}(h_U,F)'
+                r' + \textit{PSh}\left(X\right)$')
+        rows, _, errors = inventory(
+            r'\section{First}\label{section-first}' + '\nUse ' + math + '.')
+        self.assertFalse(errors)
+        row = rows[-1]
+        self.assertEqual(row['state'], 'READY')
+        self.assertEqual(row['unit']['placeholders']['MATH_0001'], math)
+        self.assertEqual(source_tex(row['unit']), 'Use ' + math + '.\n')
+        self.assertEqual(
+            [(item['source'], item['notation'], item['command'], item['usage'],
+              item['source_label'], item['usage_source'])
+             for item in row['math_text_classifications']],
+            [(r'\textit{PSh}', 'PSh', 'textit', 'applied',
+              'categories-definition-presheaf', '('),
+             (r'\textit{PSh}', 'PSh', 'textit', 'applied',
+              'categories-definition-presheaf', r'\left(')])
+
+    def test_psh_wrong_shapes_and_old_policy_still_block_and_prose_stays_visible(self):
+        for text in [r'\text{PSh}(C)', r'\textbf{PSh}(C)', r'\textit{psh}(C)',
+                     r'\textit{PSH}(C)', r'\textit{ PSh}(C)', r'\textit{PSh }(C)',
+                     r'\textit{PShaves}(C)', r'\textit{\textit{PSh}}(C)',
+                     r'\textit{PSh}', r'\textit{PSh}_C', r'\textit{PSh}\mathcal{C}',
+                     r'\text{ and }']:
+            with self.subTest(text=text):
+                rows, _, errors = inventory(
+                    r'\section{First}\label{section-first}' + '\nA $' + text + '$.')
+                self.assertEqual(rows[-1]['state'], 'BLOCKED')
+                self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
+                self.assertFalse(rows[-1]['math_text_classifications'])
+        entry = ('  PSh:\n    commands: ["textit"]\n    usages: ["applied"]\n'
+                 '    source_label: categories-definition-presheaf\n')
+        self.assertIn(entry, POLICY_RAW)
+        source = r'$\textit{PSh}(C)$'
+        scanner = Scanner(source, Policy(POLICY_RAW.replace(entry, '')))
+        _, tokens, errors = scanner.protect(0, len(source))
+        self.assertEqual(tokens['MATH_0001'], source)
+        self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
+        self.assertFalse(scanner.math_text_classifications)
+        rows, _, errors = inventory(
+            r'\section{First}\label{section-first}' + '\nOrdinary \\textit{PSh} words.')
+        self.assertFalse(errors)
+        self.assertIn('PSh', rows[-1]['unit']['source_text'])
+        self.assertFalse(rows[-1]['math_text_classifications'])
+
     def test_history_without_cat_fib_rules_still_blocks_both_constants(self):
         old = POLICY_RAW
         for name,label in [('Cat','categories-section-formal-cat-cat'),

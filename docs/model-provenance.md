@@ -465,6 +465,15 @@ batch 中紧邻完整真实 Section 标题的一个完整首段，锁定 Git 标
 旧 v1–v6 不获得首段权限，派生仍 v4。具体事实采用另开 DATA，完整旧组与
 ancestry、全部新实际五字段、immutable raw/context、人审和出版门禁保持。
 
+同一完整来源paragraph若被旧提取拆成多个paragraph，使用独立
+`source-container-v8`见证，详见[source-container-restoration.md](source-container-restoration.md)。
+只核验紧邻完整plain labelled statement的连续有序最大旧paragraph组，完整
+前陈述与全部段落原字节签名须独立匹配锁定Git，同章同来源及真实Section、
+完整段落章内唯一。至少两个旧分段、原noindent包装、原序与所有保护字节严格
+保持；旧v1–v7不获得多段落权限。加载从origin政策与完整旧快照重算全部ID/
+selector/片段和签名hash，派生仍v4。工具只读准备与具体DATA分开，全部旧
+候选/run/raw及ancestry、每个新unit实际五字段/context、未知术语和审批门禁保持。
+
 ## 11. 数学内自然语言的后续来源保护合同
 
 完整设计见 [math-text-translation.md](math-text-translation.md)。独立工具实施并

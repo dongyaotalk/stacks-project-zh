@@ -48,6 +48,46 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+### 一个完整来源段落的多个旧分段见证（source-container-v8）
+
+独立工具 Issue [#762](https://github.com/dongyaotalk/stacks-project-zh/issues/762)
+处理真实001M的两个旧paragraph：它们共同组成Section001L、
+`categories-section-opposite`的完整paragraph/1。既有单段落合同拒绝该组，
+不能只采用其中一段或修改旧证据。新增v8来源证据分支，派生仍v4；旧v1–v7的
+Schema分支、默认权限及历史重放保持，普通单段落继续使用原版本。
+
+必须冻结完整旧batch。至少两个不同旧paragraph组成连续、有序、完整的最大
+paragraph组，紧邻完整plain labelled statement之后；不跨旧章、来源或历史
+parent。第一段prefix只能是ASCII空白及真实`\noindent`，其余prefix及全部
+suffix仅ASCII空白；内部空段、额外包装、切片、重复、缺段及乱序均拒绝。
+直接拼接每个完整旧source TeX原字节，不插入分隔符、trim或临时合成unit。
+
+锁定Git的完整前陈述和完整paragraph也须立即相邻，间隔仅ASCII空白；它们
+必须在同一真实Section，paragraph owner等于Section。完整旧前陈述与原生
+陈述签名逐项相等：普通ASCII prose排版空白可折叠，label只按已锁定的永久
+Tag映射比较，其数学、命令、引用、结构及非ASCII原字节均保持。前陈述缺项、
+内容变化、伪标签、非plain closing或另一陈述不得提供归属。
+
+全部旧段落拼接后的`paragraph_signature`必须逐项等于完整Git paragraph，
+并在锁定整章唯一。该签名只折叠普通ASCII prose排版空白，数学及其他保护
+节点原字节保持；未知语法、内部空段和typed数学文字继续BLOCKED。新unit的
+source TeX逐字等于未经归一化的完整Git片段，本合同不暴露新数学文字或登记
+记号，不替代原数学保护门禁。
+
+`paragraph_anchor`保存完整有序`paragraph_input_unit_ids`、历史parent、完整
+前陈述旧ID、真实selector、原片段hash、完整前陈述signature hash及完整段落
+signature hash。Schema使用仓库现有子集，数组唯一性由Schema检查，至少
+两个和最大完整组由独立重算检查；不加入未实现的Schema关键字。只有v8加载
+器开启多旧段落权限，并从origin真实Git宏政策、锁定英文及完整旧batch重算
+全部字段；v5/v7降级、单值旧段落字段、调用者自报hash和篡改均拒绝。
+
+真实只读验收为完整001M三旧→二新prepare/check。当前及历史候选/run/raw、
+英文锁、词表批准和审计队列保持；工具不生成中文、实际模型run或事实。具体
+DATA在工具验收合并后独立认领真实001L剩六个完整当前batch，273词的完整
+小节剩余范围明确说明偏好范围例外，不为凑词数新增当前没有的paragraph。
+完整旧新组/context/ancestry冻结、每个新unit实际模型完整五字段、immutable
+raw、人审及出版门禁保持；不以工具准备完成宣告S4/S5/S7或F1–F8完成。
+
 ### Section 标题后的完整首段见证（source-container-v7）
 
 独立工具 Issue [#749](https://github.com/dongyaotalk/stacks-project-zh/issues/749)

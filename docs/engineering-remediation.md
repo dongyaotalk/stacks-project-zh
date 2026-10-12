@@ -1917,3 +1917,16 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   当前lane实际render 150.214秒、pdf 69.811秒，适用template 16.616秒，均零退出，两个FinalTeX日志PASS。整书461→463页，物理变化页13/462/463；全部变化与邻页12/13/14/461/462/463逐页实际查看。首版commit行超正文宽度，已在源TeX独立成行并重建三命令；最终只第463页变化，其余已看PNG重渲染原字节相同，最终463页再次实际查看，目录末项对应书末表；第14/462页为空白对开页，邻页正常。第463页完整显示英文日期和40位commit、三个永久Tag、三个Issue链接、两条待核验和一条原文待补/省略。commit行已在源TeX中独立成行，全部文字处于正文宽度内；表格无裁切、重叠或缺字，最后一页即本表及其维护说明。仅排版/来源观察核验，不作数学判断或授予审校批准。。文字比较排除文件尾换页分隔符，修复页码报告并补验新增空白页邻页，未修改PDF或生成TeX绕过失败。
   七允许文件完整staged与精确远端head/base原字节、完整patch、GitHub-native唯一closing758及最新精确HEAD双CI run/job、fresh main后按已有授权admin bypass squash；postmerge核验tree/raw/MERGED/CLOSED/clean。核验表合并后分别以已收录留档关闭691/698/699并链接表及PR，表示记录任务完成而非数学疑点已裁定或原文已修复。
   当前239批1278活跃unit、134问题batch、592术语候选1894诊断、零坐标/来源未保护/歧义、187组218proof全match保持。全部S4后独立S5默认强门禁、S7及F1–F8最终详细文档/完整复制提示词继续，不声明总goal完成。
+
+- 独立PSh记号政策 Issue [#760](https://github.com/dongyaotalk/stacks-project-zh/issues/760)，分支 `tool/psh-notation-policy`，接受main `bc41e1ef21fabaec8ae67cfdbedd7f0482d6e6c9`。
+  完整02X6 definition/1、真实Section001L和原Git片段hash已重验，PSh明确为预层范畴记号；
+  只登记textit/applied及严格回归，四精确允许路径，unit/run/model范围为空，不改工具逻辑。
+  001P准备前仍BLOCKED，接受后只读核验完整来源；自然连接词and不冒充记号、0CN1继续BLOCKED。
+  全量工具/候选/抽取对齐及check、实际当前lane render/pdf和整书视觉、完整远端合同/双CI后授权合并；
+  全部事实/历史/lock/词表批准及范围外字节保持，134问题批/592候选1894诊断不以政策完成减少。
+  继续完整S4后独立S5/S7和F1–F8最终文档/复制提示词，不授予审批。
+
+  本地验收：完整02X6 definition/1原片段、真实Section001L和完整001P lemma/1已从锁定Git重验；原数学字节保持，PSh只按textit/applied登记，含自然连接词的0CN1仍BLOCKED。新增正向数学字节/完整分类见证及十二类错误形状、旧政策、正文暴露回归；34项抽取测试通过。全部511工具测试实际通过（594.215秒），239候选QA及共享Schema/溯源/决策/来源/117模板通过（341.134秒）。
+  实际全库extract 69.088秒、check 70.556秒，alignment 37.81秒、check 38.937秒，均零退出。库存43257→43250提议，READY36655→36724、BLOCKED6602→6526、诊断18608→18394，117章/116份来源逐字回放通过。这些数字仅描述准备状态；当前翻译事实、历史、四审计具体findings、repair-queue actions/映射逐项保持，239批1278unit、134问题batch、592术语问题候选/1894诊断、187组218proof全部match。
+  隔离progress/plan及各check实际通过，三个报告原字节保持。当前lane实际render 185.746秒、pdf 79.575秒，FinalTeX PASS；整书463页全部文字与接受基线相同，12/13/14/461/462/463六页重渲染PNG与此前实际逐页查看原图字节相同。模板、样式、Make与render路径保持，未无理由重跑template；未修改生成物绕过失败。全部范围外字节、英文lock、词表/来源目录批准和候选/run/raw保持；无新增unit/run/model或审校/发布批准。
+  四路径完整staged与精确远端head/base原字节、完整patch、GitHub-native唯一closing760及最新精确HEAD双CI run/job、fresh main后按已有授权admin bypass squash；postmerge核验tree/raw/MERGED/CLOSED/clean。只读预检确认真实Section001L为“Opposite Categories and the Yoneda Lemma”，完整001P lemma/proof可准备；该节001M的两个旧paragraph实际构成一个完整来源paragraph，现有合同拒绝多旧段落合并，保留BLOCKED，先独立工具合同再集中DATA。仍须全部旧组/候选/ancestry/context冻结和真实模型完整五字段；全部S4后独立S5/S7与F1–F8最终详细文档、完整可复制提示词。

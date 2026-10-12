@@ -1904,3 +1904,16 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   当前lane实际render 154.893秒、pdf 69.242秒，均零退出，FinalTeX PASS；461页全文layout与接受DATA完全一致，14个DATA已逐页实际查看的PNG重渲染原字节一致，没有新变化页；无模板/工具/政策变化，不重复未变全库工具测试或来源库存。生成物和本机路径不提交。
   当前239批/1278唯一活跃unit，134问题batch、592术语问题候选/1894诊断，零坐标/来源/未保护/歧义，187组218proof全match。只有工程记录路径变化；完整staged/精确远端head与base字节/fullpatch/native单closing Issue及最新双CI和fresh main后按授权bypass，合并后核实tree/raw/MERGED/CLOSED/clean。
   下一步独立模板／文档任务接入书末勘误与原文疑点表，标注英文a04446e57ec1fbc252a871afcec7752fb2807b14和三个remark留档；核验合并后再以已收录留档关闭691/698/699。继续全部S4，之后独立S5/S7及F1–F8最终开发文档和完整可复制提示词；未授予任何术语、critic、人审或发布批准。
+
+- 独立模板／文档 Issue [#758](https://github.com/dongyaotalk/stacks-project-zh/issues/758)，分支 `template/source-errata-table`，接受main `43c36dbb0d0d192acea2daaf3c271c883d398415`。
+  用户要求把691/698/699来源remark收录到书末，锁定英文a04446e57ec1fbc252a871afcec7752fb2807b14。
+  先claimed和精确七路径合同，再接共享末尾表、完整原Git五容器证据与维护文档；
+  全部翻译事实/历史/lock/政策/批准保持，单位/run/model范围为空。真实render/pdf/template、
+  FinalTeX、全文及全部变化页邻页、完整staged/精确远端合同/双CI后按授权合并，
+  postmerge后再以已收录留档关闭三remark，不冒称原文数学已修复。继续全部S4后S5/S7及F1–F8最终文档。
+
+  本地验收：五个完整锁定Git容器的原片段、owner/Section/selector/边界和blob OID与原恢复记录逐项相等，维护文档复现代码实际执行通过，原片段hash全部绑定；来源英文commit a04446e57ec1fbc252a871afcec7752fb2807b14／2026-07-28。0032与0AHL为待核验，04VA为原文待补/省略；无源码改正或新增证明，不授予数学判断或任何翻译批准。
+  全部239候选QA、共享Schema/溯源/决策/来源/117模板通过，实际extract/check及alignment/check通过；四审计与repair-queue原字节相同，隔离progress/plan/check及三报告原字节相同。全部translation-data当前与历史tree、英文lock、政策/词表、范围外文件原字节保持；无新增unit/run/model或审批。
+  当前lane实际render 150.214秒、pdf 69.811秒，适用template 16.616秒，均零退出，两个FinalTeX日志PASS。整书461→463页，物理变化页13/462/463；全部变化与邻页12/13/14/461/462/463逐页实际查看。首版commit行超正文宽度，已在源TeX独立成行并重建三命令；最终只第463页变化，其余已看PNG重渲染原字节相同，最终463页再次实际查看，目录末项对应书末表；第14/462页为空白对开页，邻页正常。第463页完整显示英文日期和40位commit、三个永久Tag、三个Issue链接、两条待核验和一条原文待补/省略。commit行已在源TeX中独立成行，全部文字处于正文宽度内；表格无裁切、重叠或缺字，最后一页即本表及其维护说明。仅排版/来源观察核验，不作数学判断或授予审校批准。。文字比较排除文件尾换页分隔符，修复页码报告并补验新增空白页邻页，未修改PDF或生成TeX绕过失败。
+  七允许文件完整staged与精确远端head/base原字节、完整patch、GitHub-native唯一closing758及最新精确HEAD双CI run/job、fresh main后按已有授权admin bypass squash；postmerge核验tree/raw/MERGED/CLOSED/clean。核验表合并后分别以已收录留档关闭691/698/699并链接表及PR，表示记录任务完成而非数学疑点已裁定或原文已修复。
+  当前239批1278活跃unit、134问题batch、592术语候选1894诊断、零坐标/来源未保护/歧义、187组218proof全match保持。全部S4后独立S5默认强门禁、S7及F1–F8最终详细文档/完整复制提示词继续，不声明总goal完成。

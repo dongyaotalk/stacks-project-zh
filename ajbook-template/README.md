@@ -39,7 +39,14 @@ TeX 或日志改成绕过编译门禁。
 - `stacks-project-zh.tex`、`cover.tex`、`project-metadata.tex`：本项目入口与元数据；
 - `styles/`：Stacks 数学宏、渲染兼容层和索引样式；
 - `frontmatter/`：来源、许可和翻译状态说明；
+- `backmatter/source-errata.tex`：在索引之后收录注明英文版本的原文疑点表；
 - `translations/template/`：唯一手工维护的模板冒烟测试；
 - `translations/<model-lane>/`：由结构化数据生成的预览，不是翻译事实来源。
 
 旧的 `springer-template/` 目前仅保留作兼容参考，不再是默认编译模板。
+
+书末“勘误与原文疑点”由共享入口引入，整书、按章预览和模板冒烟构建均显示。
+它保留原 Issue 链接并区分待核验疑点与原文待补／省略；收录不表示原文数学已
+纠正，也不改变候选译文或审校状态。表中英文 commit 限定证据版本，永久 Tag
+链接只是定位入口。新增条目、换英文版本和核验方法见
+[`docs/source-errata.md`](../docs/source-errata.md)。

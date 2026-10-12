@@ -1964,3 +1964,21 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   PDF技能包在验收期间更新，首次辅助脚本路径失效且PDF尚未启动；保留失败证据，定位当前安装后仅续跑辅助记录/PDF/文字与PNG核验。未重跑已通过的未变回归；当前目录页13与书末表页463已实际查看，未发现裁切、重叠或缺字。
 
   完整暂存审查另发现原行内body外围空白仅在重包时被拒绝，和既定合同不一致；补全所有行内body的拒绝条件，并新增换行单独恢复时首/尾空白两种输入。最新六项相关回归再次通过（24.152秒），十个真实完整组/原Git片段/全部见证逐项不变；先前523项全量回归、239QA及全库审计证据保留，未重复无关测试。当前收紧代码再次实际render 138.329秒、pdf 63.277秒，FinalTeX PASS，463页全文及六PNG仍逐字相等，绑定最终代码hash。
+
+- 独立完整来源证据 [Issue #766](https://github.com/dongyaotalk/stacks-project-zh/issues/766)，
+  接受 main `46081556123ab052e0485147fab85d91c9147da2`，英文锁保持。
+  PR765的v9来源工具已经合并，完整Section001L六批16旧→10新可准备；采用前
+  目录预检发现bijection的001P旧片段证据会消失。本三路径TOOL先将唯一evidence
+  改为真实001P完整lemma、Section001L、categories-lemma-yoneda、ordinal1。
+  完整锁定Git原字节/selector/边界/hash和保护后准确词形重验，所有forms/chapters/
+  其他目录字段及事实历史原字节保持，无模型run、DATA采用或任何术语/人审批准。
+  先claimed Issue→branch→文档合同/证据→相关回归/239QA/共享门禁/全库抽取对齐
+  check/内存完整拟议来源目录预检/隔离进度计划→当前lane实际render/pdf及整书
+  文字/变化邻页PNG→完整staged/远端字节/合同/精确HEAD双CI后授权合并。
+  工具后才重新冻结并实际生成完整六批十unit五字段与001P全部ancestry；DATA后
+  独立progress/plan，全部S4后才S5/S7与最终详细文档/可复制提示词。
+
+  本地验收：139项相关来源/目录/完整容器/抽取/对齐回归通过（56.439秒）；生产工具代码/Schema未变，先前523项全量工具回归及最新前置精确HEAD双CI证据保留，不重复未受影响测试。239候选QA及共享来源/Schema/溯源/决策/117模板通过（262.399秒）。完整六批16旧→10新来源仅在内存替换，全部旧式及锁定Git目录证据均有效，无证据缺失、无事实采用。
+  全库extract/check为60.704/56.513秒，alignment/check为29.897/29.399秒。逐项比较确认source/proof报告及repair-queue原字节相等；alignment仅config/source-terms.json输入hash变化；term报告仅顶层与1278个unit的catalog hash以及新增一条真实bijection取证元数据变化，其他字段、逐次要求、候选与错误数组全部严格相等。239批1278unit、6519来源术语出现、134问题batch、592术语候选1894诊断、零坐标/来源错误/未保护/歧义、187组218proof全match保持。
+  facts/history tree和所有范围外字节保持；隔离progress/plan与各check通过，三个报告原字节相等。当前lane实际render 140.87秒、pdf 64.487秒，FinalTeX PASS，463页整书layout文字与六张已查看接受PNG逐字相等，无变化页；生成物未编辑或提交。
+  后续真实生成前另有独立模型登记：当前turn元数据实际为gpt-6-astra / xhigh（2026-10-12T02:21:21.133Z），尚未在config/models.yml登记。已在Issue补充，来源证据合并后另开政策任务，重验当时元数据、登记declared与snapshot:null/replayable:false及非发布lane，不复制旧模型身份。政策接受后才能完整冻结六批/全部新旧unit/context/001P ancestry并实际生成全部十unit五字段；DATA后独立progress/plan，继续全部S4、独立S5/S7与F1–F8最终文档/完整提示词。

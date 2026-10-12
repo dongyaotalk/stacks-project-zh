@@ -39,6 +39,54 @@ def candidate(terms=None):
 
 
 class SourceTermsTests(unittest.TestCase):
+    def test_functor_of_points_title_and_plain_prose_require_the_complete_compound(self):
+        row = unit('Functor of points. A functor of points is a functor.', kind='paragraph')
+        entry = copy.deepcopy(next(item for item in json.loads(
+            (Path(__file__).resolve().parents[1] / 'config/source-terms.json').read_text())['terms']
+            if item['id'] == 'functor-of-points'))
+        self.assertEqual(entry['forms'], ['functor of points'])
+        self.assertEqual(entry['chapters'], [])
+        words = catalog(row)
+        words['terms'] = [{'id': 'functor', 'forms': ['functor'], 'chapters': [],
+            'evidence': [{'chapter': 'test', 'unit_id': row['unit_id'],
+                          'source_term': 'functor', 'source_tex_hash': source_tex_hash(row)}]}]
+        partial = candidate([('Functor', '函子'), ('functor', '函子'), ('functor', '函子')])
+        self.assertEqual(validate_source_terms(row, partial, words), [])
+        words['terms'].append(entry)
+        self.assertEqual([item['source_term'] for item in source_inventory(row, words)['occurrences']],
+                         ['Functor of points', 'functor of points', 'functor'])
+        errors = validate_source_terms(row, partial, words)
+        self.assertTrue(any('coverage' in error and 'Functor of points' in error for error in errors))
+        self.assertTrue(any('coverage' in error and 'functor of points' in error for error in errors))
+        complete = candidate([('Functor of points', '点的函子'),
+                              ('functor of points', '点的函子'), ('functor', '函子')])
+        values = copy.deepcopy((row, complete, words))
+        self.assertEqual(validate_source_terms(row, complete, words), [])
+        self.assertEqual((row, complete, words), values)
+
+    def test_complete_functor_of_points_keeps_case_counts_pending_and_math_opacity(self):
+        row = unit('Functor of points. A functor of points is a functor.', kind='paragraph')
+        entry = copy.deepcopy(next(item for item in json.loads(
+            (Path(__file__).resolve().parents[1] / 'config/source-terms.json').read_text())['terms']
+            if item['id'] == 'functor-of-points'))
+        words = catalog(row)
+        words['terms'] = [entry, {'id': 'functor', 'forms': ['functor'], 'chapters': [],
+            'evidence': [{'chapter': 'test', 'unit_id': row['unit_id'],
+                          'source_term': 'functor', 'source_tex_hash': source_tex_hash(row)}]}]
+        good = [('Functor of points', '点的函子'), ('functor of points', '点的函子'), ('functor', '函子')]
+        for terms in [[('functor of points', '点的函子'), *good[1:]], good[1:],
+                      [good[0], good[0], good[2]],
+                      [('A functor of points is a functor', '一整句')]]:
+            with self.subTest(terms=terms):
+                self.assertTrue(validate_source_terms(row, candidate(terms), words))
+        missing_pending = candidate(good)
+        missing_pending['unknown_terms'].pop(0)
+        self.assertTrue(any('pending' in error for error in validate_source_terms(row, missing_pending, words)))
+        hidden = unit('A functor of points and <MATH_0001>.',
+                      {'MATH_0001': r'$\text{functor of points}$'}, kind='paragraph')
+        self.assertEqual([item['source_term'] for item in source_inventory(hidden, words)['occurrences']],
+                         ['functor of points'])
+
     def test_inventory_ignores_candidate_metadata_and_binds_source(self):
         row = unit()
         inventory = source_inventory(row, catalog())

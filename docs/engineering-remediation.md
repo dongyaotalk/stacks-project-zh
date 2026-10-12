@@ -2006,3 +2006,17 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   全库extract/check为58.772/56.306秒，alignment/check为30.157/30.03秒；四审计及repair-queue原字节相等。239批1278unit、6519来源术语要求、134问题batch、592术语候选1894诊断、零坐标/来源未保护/歧义、187组218proof全match保持。隔离progress/plan与各check通过，三个报告原字节相同，全部事实/历史tree和范围外字节保持。
   当前lane实际render 144.528秒、pdf 66.823秒，FinalTeX PASS；463页整书layout文字与六张已查看接受PNG原字节相等，无变化页。生成物未编辑或提交。三路径完整staged/精确远端head与base原字节/fullpatch/native唯一closing768、最新精确HEAD双CI run/job成功及fresh main后按已有授权squash；合并后核验tree/raw/MERGED/CLOSED/clean。
   本政策仅登记当前实际模型声明，尚无翻译run或DATA采用。后续从接受main重新准备完整Section001L六批16旧→10新273词，保存001P完整历史，冻结后由当时真实模型逐单元完整输出五字段；DATA后独立progress/plan。S4/S5/S7和F1–F8最终详细文档、完整复制提示词仍未完成，不授予任何术语/critic/人审/发布批准。
+
+- 独立完整复合术语来源目录 [Issue #771](https://github.com/dongyaotalk/stacks-project-zh/issues/771)，branch `tool/functor-of-points-catalog`，fresh main `bb21758a34a3149a9df2d1bd0f200bbee4eff3a1`。
+  DATA770逐项显示审查发现001O标题/001Q正文仅标通用Functor/functor，QA未证明完整functor of points覆盖。
+  原49暂存文件/run/raw/冻结/history已逐字备份并保存可恢复Git stash；DATA770已先扩展53路径与二unit新实际修订范围，当前不提交该DATA。
+  来源目录按已有独立合同只追加英语functor-of-points条目，真实001O完整example/1、Section001L、原Git边界/hash及两个原大小写词形已核验。
+  四路径先claimed→branch/目录/严格复合词回归→适用测试/239QA/共享门禁/全库抽取对齐check/真实要求诊断与范围外字节→隔离进度计划/实际render/pdf及整书PNG→完整staged/远端合同/双CI后授权合并。
+  不改宏/Schema/工具逻辑，不授予译法批准；此后恢复完整DATA，两个新单元实际完整五字段，原十unit run/raw原字节保持。
+  S4未完成，随后独立S5/S7和F1–F8最终详细文档及完整提示词继续。
+
+  本地验收：来源目录只追加一个英语functor-of-points concept，forms仅functor of points，沿用既有全库范围/最长短语/原大小写规则；原有目录分支与全部词形/证据/非数学分类原字节保持。完整001O example/1原Git片段hash d4ad7cd4198fc4efca8a37de87ca4f537f9e45615f8a3772cd39b28a605ef9ce、owner/真实Section001L/selector/边界及两个可见原词形逐项核验；完整未来六batch来源仅内存替换，所有既有及锁定目录证据有效，无事实采用。
+  48项术语回归、141项相关来源/容器/抽取/对齐回归通过（后者61.835秒）；239全量QA及Schema/溯源/决策/来源/117模板通过（276.392秒）。生产工具、Schema及宏政策未变，保留最新前置523全量回归和精确HEAD CI证据，不重复未受影响测试。全库extract/check 64.644/58.977秒，alignment/check 30.541/30.751秒实际通过。
+  辅助比较初次遗漏inventory_manifest_hash的变化而停下，原失败脚本已与真实作者tool literal逐字绑定并保留，全部已通过gates/log未重跑；重新验证当前库存manifest、全部包文件hash和current_units_hash绑定当前main单元原字节，所有来源matches、source/proof报告及非术语queue字段逐字相等。新复合要求影响001O statement/p001和001Q statement，只有001O/001Q的term_findings变化；239批1278unit、6519来源要求、134问题batch、592术语候选保持，诊断1894→1893来自目录要求变化，候选原字节未修改，不算DATA修复。
+  全部事实/history tree、原模型run/raw、英文lock和范围外字节保持；隔离progress/plan及各check通过，三个报告原字节相等。当前lane实际render 161.858秒/pdf 69.453秒零退出，FinalTeX PASS；463页整书layout文字与六张已查看接受PNG原字节相同，无变化页。模板/样式/Make/render路径保持，未无理由重复template，生成物未修改或提交。
+  四路径完整staged/精确远端head与base原字节/fullpatch/native唯一closing771、最新精确HEAD双CI run/job成功及fresh main后按已有授权squash；postmerge核验tree/raw/MERGED/CLOSED/clean。DATA770仍以stash 49c854773f3a11a8e7fea48cc0c884547694379a和ignored逐字备份保存完整原49文件/两稿/freeze/ancestry/十unit run/raw；先更新fresh origin及完整context/历史，再由实际模型对001O/001Q完整生成五字段，新四路径已先声明，原十unit run/raw不改。复核53路径、真实新run/239QA/来源对齐、实际render/pdf/整书PNG后才DATA PR及其后的独立progress/plan。全部S4、独立S5/S7及F1–F8最终详细文档/完整复制提示词继续，无术语/critic/人审/发布批准。

@@ -3,6 +3,61 @@
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
 
+## 最新接受检查点：2026-10-12，DATA770
+
+[PR #775](https://github.com/dongyaotalk/stacks-project-zh/pull/775) 已合并，
+[Issue #770](https://github.com/dongyaotalk/stacks-project-zh/issues/770) 已关闭；
+DATA 接受 main 为 `06ed9b2d8f7afdd7b790a59ae8e33b0c71152ed2`，精确 feature
+`169ccbfbad7c14838ee9f8736e5d4285adb1627f`，前置接受 base
+`40f7f988f7627781da451362ad0158c9f2bc92e4`。本独立进度文档还会产生后续
+main，续接须读取实时 HEAD，保留全部已合并数据、工具及进度成果。
+
+| 当前实际审计 | 接受值 |
+| --- | ---: |
+| candidate batches / 活跃唯一 unit | 239 / 1272 |
+| 问题 batches | 128 |
+| 术语问题 candidates / 诊断 | 583 / 1871 |
+| 坐标 / 来源错误 / proof mismatch | 0 / 0 / 0 |
+| proof groups / proof units / match / unsupported | 187 / 218 / 187 / 0 |
+| 锁定来源库存 / READY / BLOCKED | 43250 / 36724 / 6526 |
+| 库存诊断 / Git roundtrip 文件 / 章节 | 18394 / 116 / 117 |
+
+六个完整当前 batch 为 001M、001N、02X6、001O、001P、001Q，真实 Section001L。
+16 旧 unit 恢复为 10 个完整新 unit；十目标全部 BYTE_EXACT，六队列清空，其他
+来源、术语和 proof findings 保持。全库问题 `134→128`、术语候选 `592→583`、
+诊断 `1893→1871`。05SH/05PU 已在后续已合并任务修复，下面 0AHK 表格是历史
+交接记录。当前 S4 未完成，全部 S4 后独立实施 S5 默认强门禁及 S7；F1–F8 总
+goal 持续执行，不因当前批次或新聊天完成而提前结束。
+
+完整五字段来自两个实际 gpt-6.1-sol/xhigh run：
+`run-20261012-categories-yoneda-complete-gpt61sol`（完整十 unit）和
+`run-20261012-categories-yoneda-bilingual-followup-gpt61sol`（完整 001O/001Q）。
+当前八份采用原十-unit raw，另两份采用后续 raw，全部字段/context/保护 token/
+尾空白相等。动态 Harness 0.162.0-alpha.17.2 是本次证据，新 run 仍须实际解析；
+snapshot 未暴露、不可宣称权重级重现，所有术语与 critic/人审/发布均未批准。
+
+完整复合词目录 [PR #772](https://github.com/dongyaotalk/stacks-project-zh/pull/772)
+只登记锁定来源的英语概念；发现短标注后实际模型完整重译。首次 Git 采用前的
+完整历史重放 [PR #774](https://github.com/dongyaotalk/stacks-project-zh/pull/774)
+实现 `pre-adoption-replay-v1`，合同见 [model-provenance §8.5](model-provenance.md#85-首次-git-采用前的完整临时-v4-重放)。
+保存两组旧完整记录和 unit/candidate 原字节；新 run 生成前的完整 context 和
+文件 hash 已绑定这些状态。旧、当前 v4 分别重放，原 run/raw 不改写，既有
+001P v2 及全部归档/恢复历史保留；不假造 Git 前驱，也不删除未消费原输出。
+此历史一旦接受须随普通后续 archive 保留，sidecar 与三快照须随派生首次 Git
+加入，之后不得补造或重算 hash 覆盖。
+
+548 工具回归及 239 候选 QA、两实际 run QA、全部 Schema/溯源/决策/117 模板、
+全库抽取/对齐 check 均有实际通过证据。DATA 当前 lane render 159.134 秒、pdf
+65.550 秒，Final TeX PASS；463 页全文比较，四变化页 15/16/50/51 及邻页/相关
+页共 14 张 PNG 实际查看。独立 progress/plan 必须在下一 DATA 前真实生成/check，
+即使报告原字节没有变化；此次独立任务为 [Issue #776](https://github.com/dongyaotalk/stacks-project-zh/issues/776)。
+
+精确 HEAD 的 GitHub 原生唯一 closing 合同、61 文件两端原字节及 8,507,239-byte
+完整 patch 已核验；CI `pr-contract` run/job `38221724533/114719328450`、
+`policy-and-data` `38221724310/114719326900` 都 SUCCESS。fresh main 等于验收
+base 后授权 squash；合并后 main/feature tree、全部 61 文件、两个 run trailers、
+MERGED/CLOSED/干净状态核验。这里只记录候选修复，没有语言或数学人审结论。
+
 
 ## 0. 2026-10-11 交接检查点
 
@@ -79,8 +134,8 @@ source-only remark Issues691/698/699保留历史，非翻译修复或审批，�
 ## 1. 总目标和完成定义
 
 完成 `docs/engineering-remediation.md` 的 F1–F8；保留已合并结果，继续 S4 数据修复，
-随后完成 S5 强制门禁及 S7 集成验收。用户确认仍需全部八项，本轮收尾当前批次后交付详细开发
-文档和可复制 Codex 续接提示词，由用户自行新建 goal 继续八项任务。PR 的 bypass 仅是合并授权，不构成术语、critic、人工
+随后完成 S5 强制门禁及 S7 集成验收。当前 goal 接续全部八项，持续修复直至最终
+证据齐备并交付详细开发文档和完整可复制提示词。PR 的 bypass 仅是合并授权，不构成术语、critic、人工
 语言/数学审校或发布批准。候选修复的完成与正式译本的完成分开记录。
 
 | 问题 | 最终验收 |
@@ -122,17 +177,21 @@ READY 表示当前提取支持，BLOCKED 仍有未知语法/数学文字/归属�
 
 ## 3. 一次抽取与集中修复
 
-在中文仓库根目录选用 Python 3.11+，确认 TeX/XeLaTeX、Biber、makeindex 及 Poppler
+在中文仓库根目录使用用户要求的 pyenv Python 3.12，确认 TeX/XeLaTeX、Biber、makeindex 及 Poppler
 可用。不提交本机路径或 config/local.mk。
 
 ```bash
-python3 --version
-make workflow-check harvest-check PYTHON=python3
-make extract-all PYTHON=python3
-make extract-all-check PYTHON=python3
-make source-alignment PYTHON=python3
-make source-alignment-check PYTHON=python3
+TASK_PYTHON="$(PYENV_VERSION=3.12.6 pyenv which python)"
+"$TASK_PYTHON" -c 'import sys; print(sys.version); assert sys.version_info[:2] == (3, 12)'
+make workflow-check harvest-check PYTHON="$TASK_PYTHON"
+make extract-all PYTHON="$TASK_PYTHON"
+make extract-all-check PYTHON="$TASK_PYTHON"
+make source-alignment PYTHON="$TASK_PYTHON"
+make source-alignment-check PYTHON="$TASK_PYTHON"
 ```
+
+3.12.6 是本次实际环境；维护时可替换为本机已安装的 3.12.x，每条 Make 显式
+传同一解释器，不把本机绝对路径写进跟踪文件。
 
 输出统一库存和 `build/source-alignment/repair-queue.jsonl`。抽取一次即可集中查看
 来源；模型生成按同章、完整语义容器及上下文容量分组。全库不等于一次把原 TeX
@@ -140,7 +199,7 @@ make source-alignment-check PYTHON=python3
 旧报告不能继续作为本次验收证据。
 
 ```bash
-python3 - <<'PY'
+"$TASK_PYTHON" - <<'PY'
 import json
 from pathlib import Path
 root = Path('build/source-alignment')
@@ -178,10 +237,10 @@ owner label/Tag/Section、kind 和 ordinal。不得按 PDF 页码、源行号定
 ```bash
 make source-containers \
   SOURCE_CONTAINER_PLAN=build/task/plan.json \
-  SOURCE_CONTAINER_DIR=build/task/source-package PYTHON=python3
+  SOURCE_CONTAINER_DIR=build/task/source-package PYTHON="$TASK_PYTHON"
 make source-containers-check \
   SOURCE_CONTAINER_PLAN=build/task/plan.json \
-  SOURCE_CONTAINER_DIR=build/task/source-package PYTHON=python3
+  SOURCE_CONTAINER_DIR=build/task/source-package PYTHON="$TASK_PYTHON"
 ```
 
 包有八份文件：manifest/groups/restorations/diagnostics/units/input-units/
@@ -202,7 +261,7 @@ translator prompt/来源术语目录。上下文保留每组所有旧成员，�
 代表全部历史。记录冻文件/hash/context_hash、Git origin、来源词数及时间。
 
 ```bash
-make harness-check HARNESS_ID=codex PYTHON=python3
+make harness-check HARNESS_ID=codex PYTHON="$TASK_PYTHON"
 ```
 
 Harness 每次动态解析，在装配时再次解析；具体模型/effort/turn 来自真实运行
@@ -233,24 +292,44 @@ pair。已有派生的 batch 还需完整前一输出归档和所有 ancestry �
 
 ## 6. 验收与 GitHub 合并
 
+频繁查看排版时，可以使用已实现的完整章节预览，节省整书 TeX 构建等待：
+
+```bash
+make pdf-chapter CHAPTER=categories MODEL=openai-gpt-5.6-sol PYTHON="$TASK_PYTHON"
+```
+
+输出独立 `-chapter-categories` 通道；来源语义范围仍按真实 Tag/Section/完整
+batch 选择。章节预览先执行对应 render，无须再单独重复 render-chapter。
+它不能替代提交前要求的全库 QA/来源检查、整书 render/pdf 和全部变化邻页验收。
+代码、政策或事实未变且已有检查充分时不重复跑；真实数据改变仍须重新测量。
+
 数据任务先独立验证全部新 Git 片段、selector/witness、每个完整旧组、五字段/
 context/raw、所有 hashes、全库唯一 ID 及范围外字节。生成全部章节模板到 ignored
 目录，核对并只采用任务章的真实变化。工具变化运行有意义的回归；纯数据修复
 不为未变工具反复增加与实现镜像的测试。
 
 ```bash
-make qa-all PYTHON=python3
-make workflow-check harvest-check upstream-index-check schema-check \
-  chapter-template-check PYTHON=python3
-make decision-check PYTHON=python3
-make extract-all PYTHON=python3
-make extract-all-check PYTHON=python3
-make source-alignment PYTHON=python3
-make source-alignment-check PYTHON=python3
+make qa-all PYTHON="$TASK_PYTHON"
+make extract-all PYTHON="$TASK_PYTHON"
+make extract-all-check PYTHON="$TASK_PYTHON"
+make source-alignment PYTHON="$TASK_PYTHON"
+make source-alignment-check PYTHON="$TASK_PYTHON"
 ```
 
-`qa-all` 包含共享 provenance/decision，按依赖避免无理由重复。另对实际新 run
-的 frozen unit/raw 做 qa-batch，以免只核对兼容旧 lane。每个 target 容器必须
+`qa-all` 已包含 workflow/harvest/index/117 模板/Schema/provenance/decision，
+这组命令不再另跑同一批共享检查。另对每个实际新 run 的完整 frozen unit/raw
+做直接 QA，以免只核对兼容旧 lane；路径以对应 correction record 为准。例如：
+
+```bash
+TASK_CORRECTION=categories-yoneda-bilingual-followup-gpt61sol-20261012
+"$TASK_PYTHON" stacks_zh.py validate-many \
+  --units "translation-data/retired/model-corrections/$TASK_CORRECTION/units.jsonl" \
+  --candidates "translation-data/retired/model-corrections/$TASK_CORRECTION/candidates.jsonl" \
+  --lock upstream.lock
+```
+
+历史 raw 的 QA 不授予当前采用或术语批准；当前 source-term 审计另验证活跃候选。
+每个 target 容器必须
 BYTE_EXACT；对应 actions/findings 清空；所有未声明范围的来源、术语、proof
 及事实变化逐项解释或保持。错误不能靠归档当前问题、改状态或跳检查消失。
 
@@ -259,8 +338,8 @@ BYTE_EXACT；对应 actions/findings 清空；所有未声明范围的来源、�
 差异，完整容器的嵌套 Tag 覆盖要依赖可重放来源证据，不能从候选字符串授予。
 
 ```bash
-make render MODEL=openai-gpt-5.6-sol PYTHON=python3
-make pdf MODEL=openai-gpt-5.6-sol PYTHON=python3
+make render MODEL=openai-gpt-5.6-sol PYTHON="$TASK_PYTHON"
+make pdf MODEL=openai-gpt-5.6-sol PYTHON="$TASK_PYTHON"
 git diff --check
 ```
 
@@ -294,7 +373,9 @@ Issue CLOSED、native remote/main SHA、reviewed feature tree、允许文件原�
 
 | 现象 | 下一步 |
 | --- | --- |
-| tomllib 导入失败 | 使用 Python 3.11+，每条 Make 显式 PYTHON；失败前没有输出也要保留日志，不改政策 |
+| tomllib 导入失败 | 使用 pyenv 3.12，每条 Make 显式 PYTHON；失败前没有输出也要保留日志，不改政策 |
+| 首次入库前重译导致原 raw 未消费 | 保存旧完整 v4 三文件，实际新 run 在生成前冻结全部原 run/raw/候选/字节绑定，按 §8.5 完整历史重放；已入库历史仍用原 Git archive，不删原输出 |
+| 辅助后处理因日志名或续接变量失败 | 保留原失败脚本与已通过日志/产物，补齐确切依赖并从通过阶段继续；不伪造结果、不重跑未变已通过检查、不改生成物 |
 | 来源包 BLOCKED | 查看完整 diagnostics/selector/源窗口，未知语法另开前置工具或政策任务，不降级或裁源 |
 | 旧术语证据在合并分段后消失 | 独立任务将明确来源锚点迁移到完整锁定容器，验收合并后重新prepare/freeze/实际生成 |
 | 原保护 token、尾空白或完整五字段失败 | 保留原草稿，由实际模型完整重出并复核，不由脚本修中文或冒用旧run |
@@ -317,5 +398,5 @@ Codex 提示词中的当前接受基线、未完成项、下一动作、禁止�
 文档与提示词使用独立 claimed Issue→本地验收→PR→精确 HEAD CI 顺序。
 
 如仍有残项，写真实未完成状态；不要为新建 goal、换聊天、预算或长历史把现有
-总 goal 标为完成。由用户自行新建聊天/goal，再粘贴提示词，
-先重新核实仓库状态并继续已合并成果。
+总 goal 标为完成。当前 goal 继续直至目标实现；若用户自行选择新建聊天/goal，
+粘贴完整提示词后仍须先重新核实状态并保留已合并成果。

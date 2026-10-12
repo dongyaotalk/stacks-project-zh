@@ -78,6 +78,8 @@ TRANSLATION_DATA_PREFIXES = (
     "translation-data/source-container-restorations/",
     "translation-data/retired/derivations/",
     "translation-data/retired/model-corrections/",
+    "translation-data/pre-adoption-replays/",
+    "translation-data/retired/pre-adoption-replays/",
     "review/language/",
     "review/mathematics/",
 )
@@ -408,6 +410,17 @@ def validate_pr_contract(
                     for role in ('output_units', 'output_candidates'):
                         target = record['files'][role]['path']
                         if re.fullmatch(rf'translation-data/retired/derivations/{prior}/output-(?:units|candidates)\.jsonl', target):
+                            historical_paths.add(target)
+        for path, rows in records_by_path.items():
+            if not path.startswith('translation-data/pre-adoption-replays/'):
+                continue
+            for record in rows:
+                if (record.get('current_derivation_id') in {r['derivation_id'] for r in grouped}
+                        and not validate_named_schema(record, 'pre-adoption-replay.schema.json', path)):
+                    identifier = re.escape(record['replay_id'])
+                    for role, name in [('derivation', 'derivation.json'), ('units', 'units.jsonl'), ('candidates', 'candidates.jsonl')]:
+                        target = record['files'][role]['path']
+                        if re.fullmatch(rf'translation-data/retired/pre-adoption-replays/{identifier}/{re.escape(name)}', target):
                             historical_paths.add(target)
     if declared_parent_tags:
         for path, rows in records_by_path.items():

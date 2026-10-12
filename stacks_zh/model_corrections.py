@@ -252,4 +252,9 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
                 raise RecordError('invalid historical source re-extraction ID')
         binding['source_reextractions'] = [read(f'translation-data/source-reextractions/{identifier}.json')
                                           for identifier in reextraction_ids]
+    from .pre_adoption_replays import pre_adoption_history
+    provisional = [entry for historical in history
+                   for entry in pre_adoption_history(root, historical['derivation']['derivation_id'])]
+    if provisional:
+        binding['pre_adoption_history'] = provisional
     return sha256_value(binding)

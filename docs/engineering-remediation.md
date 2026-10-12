@@ -1,5 +1,18 @@
 # 2026-10 项目审查修复开发计划
 
+优先收尾 DATA770 的独立前置 [Issue #773](https://github.com/dongyaotalk/stacks-project-zh/issues/773)：
+`tool/pre-adoption-replay`，fresh main `76a9a20a8029f546c5b0763897b2aa98326f2d87`，
+锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`，完整开发合同见
+model-provenance §8.5。原实际十 unit run/raw 和两 unit 后续实际 run/raw 全部保存；
+53 工作区/索引文件逐字封存，DATA770 已先声明61路径及两组八文件历史。
+仅12工具/Schema/测试/文档路径，先 claimed→branch→完整旧临时 batch 严格重放，
+冻结/raw/Git首次采用/时序/重复/孤立等正反回归、既有历史合同和239全量QA，
+全库抽取/对齐 check及所有事实/范围外字节、隔离进度计划、实际template/render/pdf
+和整书PNG验收；精确远端原字节/fullpatch/native单一closing/双CI后授权合并。
+随后立即恢复DATA770，实际完整候选验收及独立progress/plan；全部S4后独立S5/S7。
+当前1278活跃units/134问题batch/592术语候选/1893诊断，187组218proof全match；
+此工具不采用事实或削减残项，不授予术语、critic、人审或出版批准。
+
 计划任务：[Issue #530](https://github.com/dongyaotalk/stacks-project-zh/issues/530)。
 
 ## 1. 目标与基线
@@ -2020,3 +2033,8 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   辅助比较初次遗漏inventory_manifest_hash的变化而停下，原失败脚本已与真实作者tool literal逐字绑定并保留，全部已通过gates/log未重跑；重新验证当前库存manifest、全部包文件hash和current_units_hash绑定当前main单元原字节，所有来源matches、source/proof报告及非术语queue字段逐字相等。新复合要求影响001O statement/p001和001Q statement，只有001O/001Q的term_findings变化；239批1278unit、6519来源要求、134问题batch、592术语候选保持，诊断1894→1893来自目录要求变化，候选原字节未修改，不算DATA修复。
   全部事实/history tree、原模型run/raw、英文lock和范围外字节保持；隔离progress/plan及各check通过，三个报告原字节相等。当前lane实际render 161.858秒/pdf 69.453秒零退出，FinalTeX PASS；463页整书layout文字与六张已查看接受PNG原字节相同，无变化页。模板/样式/Make/render路径保持，未无理由重复template，生成物未修改或提交。
   四路径完整staged/精确远端head与base原字节/fullpatch/native唯一closing771、最新精确HEAD双CI run/job成功及fresh main后按已有授权squash；postmerge核验tree/raw/MERGED/CLOSED/clean。DATA770仍以stash 49c854773f3a11a8e7fea48cc0c884547694379a和ignored逐字备份保存完整原49文件/两稿/freeze/ancestry/十unit run/raw；先更新fresh origin及完整context/历史，再由实际模型对001O/001Q完整生成五字段，新四路径已先声明，原十unit run/raw不改。复核53路径、真实新run/239QA/来源对齐、实际render/pdf/整书PNG后才DATA PR及其后的独立progress/plan。全部S4、独立S5/S7及F1–F8最终详细文档/完整复制提示词继续，无术语/critic/人审/发布批准。
+
+- Issue773 本地验收：独立pre-adoption-replay-v1只在完整当前v4 replay有效后，重放相同源/分组/旧输入的完整上一临时batch；每个新raw冻结前次manifest/record/raw/derived candidate及完整四文件hash、完整旧batch三文件hash，校验真实时间先后。可达origin中原派生不存在，sidecar及全部三个快照必须随派生首次Git加入，首次字节不可修改；全部组指针之外的source/分段/身份改动、遗漏/错序/重算hash伪造字段、当前失败、重复消费、孤立/symlink和迟补历史均拒绝。后续正常Git archive保留并验证此历史；v1–v3及原来源保护不变。无历史候选的source-binding格式相同；有历史时绑定完整证据并在已验证预览计入此前实际run，不新增活跃候选或批准。
+  pyenv3.12实际548项全库工具回归通过（668.579秒），补充最后路径安全/Git首次加入两项回归9.860秒通过；239全量QA及Schema/溯源/决策/来源/117模板通过（341.561秒）。DATA770保存的全部53文件逐字复制到隔离目录，旧001O/001Q记录与完整输出取自新模型实际生成前freeze，两个完整历史和全部原/新模型run、当前v4 replay通过（197.298秒），不在主库采用数据。
+  全库extract/check 76.659/76.786秒、alignment/check 39.582/36.457秒通过，source/term/proof报告与完整repair-queue原字节相同；库存43250条、READY36724/BLOCKED6526、18394诊断、116Git文件roundtrip/117章。239批1278活跃units、134问题batch、592术语候选/1893诊断保持，187组218proof全match；全部事实/history tree、原run/raw及范围外字节不变。隔离progress/plan及check通过，三报告原字节相同。
+  因preview披露路径变化实际执行template 17.083秒、当前lane render 149.051秒/pdf 66.241秒，零退出且FinalTeX PASS。463页整书layout文字完全相同；实际逐张查看12/13/14/461/462/463 PNG，目录/末尾参考文献/空白对页/锁定英文版本勘误表保持。生成TeX/PDF/PNG不修改或提交。完整12路径staged及精确远端head/base原字节/fullpatch/native唯一closing773、最新精确HEAD双CI run/job、fresh main后授权squash并核验postmerge。随即恢复DATA770全部原53 bytes与两个实际run/raw，采用提前声明的两组八路径历史、完成61路径DATA验收/PR/独立progress-plan。S4尚未完成，独立S5/S7与F1–F8最终文档/提示词继续。

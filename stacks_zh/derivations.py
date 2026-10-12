@@ -396,6 +396,11 @@ def load_repository_derivations(
     for path in sorted((root / "translation-data/retired/derivations").glob("*/*.jsonl")):
         if path.relative_to(root).as_posix() not in seen_snapshots:
             errors.append(f"{path}: orphaned raw derivation snapshot")
+    from .pre_adoption_replays import validate_pre_adoption_replays
+    provisional, provisional_errors = validate_pre_adoption_replays(
+        root, records, cache, corrections, used_corrections, restorations, tags)
+    errors.extend(provisional_errors)
+    used_corrections.update(provisional)
     for key in corrections.keys() - used_corrections:
         errors.append(f"model correction {key}: frozen output has no active derived candidate or validated historical replay")
     for identifier in reextractions.keys() - used_reextractions:

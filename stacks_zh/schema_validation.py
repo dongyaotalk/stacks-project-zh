@@ -83,6 +83,8 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/retired/derivations/*/output-candidates.jsonl", "candidate.schema.json"),
         ("translation-data/retired/model-corrections/*/units.jsonl", "unit.schema.json"),
         ("translation-data/retired/model-corrections/*/candidates.jsonl", "candidate.schema.json"),
+        ("translation-data/retired/pre-adoption-replays/*/units.jsonl", "unit.schema.json"),
+        ("translation-data/retired/pre-adoption-replays/*/candidates.jsonl", "candidate.schema.json"),
     )
     json_families = (
         ("config/source-terms.json", "source-terms.schema.json"),
@@ -92,6 +94,8 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/derivations/*.json", "derivation.schema.json"),
         ("translation-data/derivation-archives/*.json", "derivation-archive.schema.json"),
         ("translation-data/model-corrections/*.json", "model-correction.schema.json"),
+        ("translation-data/pre-adoption-replays/*.json", "pre-adoption-replay.schema.json"),
+        ("translation-data/retired/pre-adoption-replays/*/derivation.json", "derivation.schema.json"),
         ("translation-data/source-reextractions/*.json", "source-reextraction.schema.json"),
         ("translation-data/source-container-restorations/*.json", "source-container-restoration.schema.json"),
         ("translation-data/selections/*.json", "selection.schema.json"),

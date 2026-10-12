@@ -80,7 +80,14 @@ Synthetic fixtures覆盖公式转义/注释、嵌套字体和脚注、标题与�
 | --- | --- | --- | --- |
 | pr | text | subscripted | categories-lemma-representable-diagonal 的投影记号 |
 | id | text | symbol | categories-definition-category 的恒等态射记号 |
-| Arrows | text | applied | categories-lemma-limits-products-equalizers 的箭头集记号 |
+| Arrows | text | applied、symbol | categories-lemma-limits-products-equalizers 的箭头集记号；Section0013 五元组中的独立符号 |
+| Ob | text | symbol | categories-section-definition-categories（0013）五元组的对象集记号 |
+| Ab | textit | applied、symbol | categories-remark-big-categories（0015）阿贝尔群范畴及其层范畴记号 |
+| Groups | textit | symbol | 同一完整 remark0015 的群范畴记号 |
+| Mod | text | subscripted | 同一完整 remark0015 的 R-模范畴记号 |
+| Top | textit | symbol | 同一完整 remark0015 的拓扑空间范畴记号 |
+| PAb | textit | applied | 同一完整 remark0015 的阿贝尔群预层范畴记号 |
+| Aut | text | subscripted | Section0013 中 definition0017 之后完整段落的自同构群记号 |
 | PSh | textit | applied | categories-definition-presheaf（02X6／Section001L）明确登记的预层范畴记号 |
 | Sets | text、textit | symbol | categories-remark-big-categories 的集合范畴记号 |
 | size | text | applied | sets-section-categories-schemes 的 size(S) 定义 |
@@ -104,6 +111,25 @@ SHA-256 为 `889d705564c0b0d46f3a1313e8bbb2276d53c39dba22d3f7d0591683c9a18ac4`�
 自然语言暴露。独立政策只改善来源准备状态，不修改任何候选/run/raw，具体
 DATA 仍须完整来源与旧组冻结和实际模型五字段。数学内自然连接词 `" and "`
 不属于 PSh 记号条目，未支持的语法角色仍 BLOCKED。
+
+Definitions 记号的独立政策任务为 [Issue #778](https://github.com/dongyaotalk/stacks-project-zh/issues/778)。
+在同一锁定英文提交中，完整来源均属真实 Section0013
+（`categories-section-definition-categories`），其 Git 容器见证为：
+
+| 完整语义 selector | 完整原片段 SHA-256 | 记号原字样 |
+| --- | --- | --- |
+| owner0013、paragraph/2 | `4bc52ac2b785e320fc653001d06bf6f2462cc468fb5b6eb020252c11066c02c4` | `$(\text{Ob}, \text{Arrows}, s, t, \circ)$` |
+| owner0015、`categories-remark-big-categories`、remark/1 | `67f8624c8987b067e029d9e39dbd82ed79a8ad52a2cde1960a9e566b5c45b7fe` | `\textit{Ab}`、`\textit{Groups}`、`\text{Mod}_R`、`\textit{Top}`、`\textit{PAb}(X)`、`\textit{Ab}(X)` |
+| owner0013、paragraph/3 | `d580537d8c54ae721e787754f200795d7df265e4af11d45c22570ba950850ee1` | `$\text{Aut}_\mathcal{A}(x)$` |
+
+`Ob`、`Aut` 使用真实 Section 标签作为政策见证；`Arrows` 保留已有 applied
+来源标签并追加上述独立符号见证。`Ab` 先核对 applied，再核对明确常量 symbol；
+`Mod`、`Aut` 必须跟非空下标，`PAb` 必须跟真实括号。大小写、命令、完整参数
+原字节严格比较；不允许的词形、参数空白、嵌套文本、普通连接词及未知记号继续
+BLOCKED，普通正文的这些字样仍可翻译。政策既不扩展解析算法，也不批准中文术语。
+完整数学字节保持，库存重新生成时 typed 数学文字见证的政策 hash 随真实政策
+更新，但事实和历史使用其原有冻结政策，不改写原 unit/run/raw。READY 变化仅表示
+来源准备；具体 DATA 必须另开任务，冻结全部旧组、新容器和上下文，再实际生成五字段。
 
 每个接受项保存 `math_text_classifications`：完整命令 source、notation、command、
 usage、source_label、原 UTF-8 byte/line location 以及 usage_source（原下标或函数

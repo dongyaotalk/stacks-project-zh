@@ -2096,3 +2096,17 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
 - 后续完整Definitions只读预检：本次政策分支只读试算下一完整六批0014–0019：32旧→8完整新、563来源词，真实Section0013，八个提议ID与范围外活跃ID无冲突。尚未认领/冻结/生成/采用DATA。0015中tag:0014:p002沿用历史parent0014，而同批完整后继remark沿用0015；现行adjacent见证先因历史parent不同拒绝，after-statement回退因上一完整陈述在其他批文件报paragraph has no complete preceding old statement。保持BLOCKED，需独立核验完整旧组与真实前后锚点的边界合同，不能省略该段、删除parent检查或借政策绕过。完整替换后的26项来源词目录证据仍指向被替换旧片段hash，须另开英文来源见证任务，核验锁定完整容器再更新，不授予中文词表批准。两个前置均需fresh main独立认领、开发/验收与接受，之后完整DATA全部context/ancestry及实际五字段，再独立进度；不是外部goal阻断。
 
 - Issue778 视觉验收基准更正：初次脚本误引用DATA775首轮page图（修订运行计数34），其失败脚本与图片保留；最终接受followup图及独立进度777图的计数为35，当前第15页与两者原字节相等并已实际查看。全部十四张图也与最终实际看图hash逐项相等，463页全文与最新接受PDF相等。只续跑尚未完成的视觉/收尾，未重复已通过的测试、QA或render/pdf，不编辑生成物或掩盖失败。
+
+- 独立历史parent双锚点来源见证 [Issue #780](https://github.com/dongyaotalk/stacks-project-zh/issues/780)，branch `tool/historical-parent-paragraphs`，
+  fresh main `d7472242998d4bd70a9d2880bad0503071b92dce`，锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`，真实Section0013。
+  完整0015二十旧→二新仅只读准备；旧段落parent0014与同批完整后继remark parent0015不同，
+  完整段落32节点和完整后陈述109节点签名已精确核实，不删除现行parent guard。
+  source-container-v10独立分支绑定真实前/段落/后双锚点、完整有序同批后陈述及全部旧snapshot，
+  只沿用prose ASCII空白/锁定label映射，全部数学与其他保护字节严格相等；旧v1–v9不获新权限。
+  七精确允许路径、unit/run/model写入为空。先claimed/计划，再Schema/工具/严格拒绝和历史加载回放，
+  全量工具/239QA/117模板/抽取对齐checks、隔离进度计划、当前lane实际render/pdf及正确最终PNG，
+  完整staged/远端原字节patch/native唯一合同/精确HEAD双CI/fresh main后授权合并。
+  26项未来英文来源证据另开任务，之后完整DATA六批32旧→8完整新/563词实际五字段及独立进度；
+  当前128问题批/583候选1871诊断保持，全部S4后独立S5/S7与F1–F8最终文档/复制提示词。
+
+- Issue780 本地验收：pyenv3.12全量558工具回归（691.772秒）、239候选QA（368.208秒）及共享workflow/harvest/index/117模板/Schema/溯源/决策通过；在全量已启动后加强hash篡改回归为Schema-valid错误hash，并独立重跑该当前测试（21.855秒）通过，确认拒绝来自origin/完整快照独立重算，不只来自格式Schema。未重复不变的全量。真实完整0015二十旧→二完整新prepare 147.427秒/check 147.185秒，check原字节与mtime保持；段落使用v10、后继remark使用原v2，全部旧unit/candidate与Git基线原字节相等，真实前/段落/后selector/片段/边界/blob及witness独立相等。原七个Schema分支原字节前缀保持，旧v1–v9不获新权限，同parent仍由旧v4处理。全库extract-all 60.482秒/check 102.232秒、alignment 35.668秒/check 34.347秒通过，完整库存manifest相等：43242提议/37198 READY/6044 BLOCKED/16888诊断/116Git文件回放。活跃1272unit/128问题batch/583术语候选1871诊断、零坐标/来源错误/证明不符、187组218proof全match，source/term/proof诊断和repair-queue行动完整相等，事实/history tree及所有范围外字节保持。隔离progress/plan生成及check报告原字节相等。当前lane实际render 173.55秒/pdf 70.11秒零退出FinalTeX PASS，463页仅第2页自动构建日期从2026-10-12转为2026-10-13，其余462页及日期行外全文原字节相等；实际已看全部变化/邻页1/2/3，封面和目录布局保持。十四既有PNG与正确最终进度777接受图原字节相等，复用已看图证据，初次全文比较失败记录保留；只续跑视觉收尾，未重复构建或不变测试。模板/Make/render路径不变，template不适用。完整七路径staged/远端head/base全部原字节/fullpatch/native唯一closing本Issue/最新精确HEAD双CI run/job及fresh main后授权合并，再核实tree/raw/MERGED/CLOSED/clean。工具不采用事实、生成生产中文/run或授予词表/critic/人审/发布批准。26项未来英文来源证据另行任务，完整DATA后独立进度，再继续全部S4后S5/S7与F1–F8最终文档/复制提示词。

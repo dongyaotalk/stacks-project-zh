@@ -534,6 +534,15 @@ batch 与 origin 政策重新核验实际 Section、相邻和章内唯一性，�
 旧 v1–v8 保持。具体 DATA 另行认领，每个新 unit 仍实际完整生成五字段，并保留
 完整旧组、原 run/raw、全部 ancestry 与 context；派生仍 v4，无任何自动批准。
 
+不同历史 parent 的完整段落另用独立 `source-container-v10`，见
+[source-container-restoration.md](source-container-restoration.md)。一个完整旧
+unit-v1/noindent段落及同批完整有序后继陈述分别绑定原Git真实前后 own Tags，
+前/段落/后同真实Section并立即相邻；完整段落章内唯一，后陈述全内容及保护
+字节匹配，不能删除旧parent guard或借另一batch输入。加载器仅v10按origin
+政策、锁定Git和完整旧快照重算两历史parents、全部ID/selector/片段及签名hash；
+旧v1–v9保持。派生仍v4，具体DATA另开任务，每个新单元实际完整五字段、
+immutable raw/context、全部旧原字节/ancestry以及人审/出版门禁不变。
+
 ## 11. 数学内自然语言的后续来源保护合同
 
 完整设计见 [math-text-translation.md](math-text-translation.md)。独立工具实施并

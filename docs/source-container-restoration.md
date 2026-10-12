@@ -48,6 +48,44 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+### 不同历史 parent 的完整段落双锚点（source-container-v10）
+
+独立工具 [Issue #780](https://github.com/dongyaotalk/stacks-project-zh/issues/780)
+处理真实完整 `categories-0015`：段落 `tag:0014:p002` 沿用前定义0014的历史
+parent，同批完整后继 remark0015 的十九个旧单元沿用0015。现行 v4 同历史
+parent 检查和 v5 同批前陈述检查继续拒绝这个范围。新增 v10 来源证据分支，
+派生仍 v4；旧 v1–v9 的 Schema、默认权限、政策和历史重放保持。
+
+完整 frozen batch 必须保留全部旧 unit/candidate 原字节。只接受一个完整
+unit-v1 paragraph，ID 为 `tag:<历史parent>:pNNN`，原 prefix 为纯 ASCII 空白
+和 `\noindent`、suffix 仅 ASCII 空白；不接受切片、多个旧段落、额外包装或
+typed 数学文字。它必须紧邻同批完整、有序、连续、真实闭合的后继陈述链；
+后继全部成员的历史 parent 恰等于该陈述 own Tag，并与段落的历史 parent 不同。
+后继完整文本、列表及保护节点须逐项匹配完整锁定原文，不能仅比较首尾包装。
+
+锁定 Git 中，完整前陈述 own Tag 恰等于段落历史 parent，完整后陈述 own Tag
+恰等于后继历史 parent。前陈述、完整段落、后陈述都在同一真实 Section；段落
+owner 等于 Section，库存位置立即相邻，两个原字节间隔仅 ASCII 排版空白。
+前锚点直接重扫锁定 Git，不借另一 batch 的输入。错误历史 parent、错误真实
+Section、注释/数学/其他内容间隔、未知或不唯一锚点继续 BLOCKED。
+
+完整段落签名沿用 `paragraph_signature`，并须在整章唯一；完整后陈述沿用
+`_complete_statement_signature`，另核验所有真实列表标签顺序。只比较普通
+prose 的 ASCII 排版空白及已锁定永久 Tag label 映射；数学、引用、命令、结构、
+非 ASCII 字节、内部空段和 typed 数学文字不获新的归一化权限。新来源逐字等于
+未经归一化的完整原 Git 片段。
+
+`paragraph_anchor` 保存旧段落 ID、两个历史 parents、完整有序后继旧 ID、真实
+前后 selectors 和完整片段 hashes、完整后陈述 signature hash、完整段落
+signature hash。Schema 使用独立 v10 分支；加载器仅对 v10 开启该见证，并从
+实际 origin Git 宏政策、锁定英文、完整旧快照逐项重算，不信任缓存或自报 hash。
+篡改、降级为旧版本或同 parent 冒充本见证均拒绝。
+
+真实只读验收为完整0015二十旧→二完整新 prepare/check；事实、不可变 run/raw、
+完整历史和修复队列保持。另开26项英文词目录来源见证任务后，才独立认领真实
+Section0013六批完整 DATA，冻结全部旧组、候选、ancestry、政策/context 并实际
+生成每个新单元完整五字段。工具接受不减少当前128问题批，也不完成S4/S5/S7。
+
 ### 一个完整来源段落的多个旧分段见证（source-container-v8）
 
 独立工具 Issue [#762](https://github.com/dongyaotalk/stacks-project-zh/issues/762)

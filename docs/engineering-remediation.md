@@ -2080,3 +2080,19 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   保持全事实/历史/范围外字节，当前lane真实render/pdf、463页全文/十四已看PNG精确比较、完整staged/远端合同/双CI后授权合并。下一DATA须等此独立进度完成；S4后独立S5/S7，总goal继续。
 
 - Issue776 本地验收：实际progress 4.13秒/progress-check 3.489秒、plan 0.531秒/plan-check 0.607秒通过，README及progress/plan与DATA775隔离预览逐字一致，无手改数字。workflow/harvest/index/117模板/Schema通过；extract-all-check 52.93秒、source-alignment-check 27.318秒实际核对最新main事实，1272unit/128问题batch/583术语候选1871诊断，当前输入hash一致。完整translation-data/history tree和所有范围外原字节不变。pyenv3.12当前lane render 160.609秒、pdf 65.658秒零退出，FinalTeX PASS；463页全文layout与DATA接受PDF相等，14张此前实际查看PNG重渲染原字节相等，无变化页，复用已看图依据。未变工具沿用548回归/239QA及最新接受精确HEAD CI，不重复跑；模板/Make/render路径未变，无新增template。完整三个工程文件staged及远端head/base原字节/fullpatch/native唯一closing776/精确HEAD双CI/fresh main后授权合并，再继续全部S4；当前goal未完成，S5/S7和最终F1–F8证据仍待全部数据修复。
+
+- 独立Definitions精确记号政策 Issue [#778](https://github.com/dongyaotalk/stacks-project-zh/issues/778)，分支 `tool/definitions-notation-policy`，接受基线 `80dd4b8c2a80f5912026bef714b45b5adcb1b4f3`。
+  锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`；真实Section0013 paragraph/2、完整remark0015/1、paragraph/3
+  的原Git owner/label/selector/边界及原字节见证已核验。只登记Ob、Ab、Groups、Mod、Top、PAb、Aut
+  和Arrows独立符号用法，保留Arrows既有applied及其来源标签；不改解析算法、事实、历史或批准。
+  四精确允许路径，unit/run/model写入为空。开发与验收计划：完整数学/严格拒绝/历史政策回归、
+  全量工具和239QA、117模板、抽取/对齐及check、隔离progress/plan、当前lane实际render/pdf和整书视觉；
+  记录真实来源准备计数，当前128问题批/583候选1871诊断不以政策接受减少。
+  完整staged和远端head/base原字节/fullpatch/native唯一合同/双CI后授权合并；再独立DATA完整五字段，
+  继续全部S4后S5/S7与F1–F8最终开发文档/复制提示词。
+
+- Issue778 本地验收：pyenv3.12实际全量552工具回归（750.988秒）与239候选QA（393.599秒）通过，包含workflow/harvest/index/117模板/Schema/溯源/决策。全库extract-all 73.678秒/check 73.753秒、source-alignment 40.175秒/check 38.696秒通过；1272活跃unit、128问题batch、583术语候选1871诊断、零坐标/来源错误/证明不符，187组218proof全match，活跃source/term/proof诊断与repair-queue行动完整相等。锁定原Git三个完整容器/owner/selector/边界/blob及数学原字节精确，九次数学记号诊断得到明确分类，0CN1未知数学内自然连接词仍BLOCKED。库存提议43250→43242、READY 36724→37198、BLOCKED 6526→6044、诊断18394→16888、明确记号分类5084→6590；八个纯数学提议回归locked segment，116Git文件仍全部原字节回放，619数学文字regions/710slots保持。库存未采用，不减翻译残项。全部事实/history tree和范围外原字节、隔离progress/plan生成及check后的报告保持。当前lane实际render 200.171秒/pdf 80.119秒零退出FinalTeX PASS，463页全文layout原字节及14张此前实际查看的变化/邻页PNG重渲染原字节一致，无新变化页；复用实际看图依据，无未变模板重建。完整四路径staged、远端精确head/base原字节/fullpatch/native唯一closing合同、最新精确HEAD双CI run/job与fresh main后按已授权合并。无DATA、词表/critic/语言/数学审校或发布批准；继续独立完整DATA及S4后S5/S7与全部F1–F8。
+
+- 后续完整Definitions只读预检：本次政策分支只读试算下一完整六批0014–0019：32旧→8完整新、563来源词，真实Section0013，八个提议ID与范围外活跃ID无冲突。尚未认领/冻结/生成/采用DATA。0015中tag:0014:p002沿用历史parent0014，而同批完整后继remark沿用0015；现行adjacent见证先因历史parent不同拒绝，after-statement回退因上一完整陈述在其他批文件报paragraph has no complete preceding old statement。保持BLOCKED，需独立核验完整旧组与真实前后锚点的边界合同，不能省略该段、删除parent检查或借政策绕过。完整替换后的26项来源词目录证据仍指向被替换旧片段hash，须另开英文来源见证任务，核验锁定完整容器再更新，不授予中文词表批准。两个前置均需fresh main独立认领、开发/验收与接受，之后完整DATA全部context/ancestry及实际五字段，再独立进度；不是外部goal阻断。
+
+- Issue778 视觉验收基准更正：初次脚本误引用DATA775首轮page图（修订运行计数34），其失败脚本与图片保留；最终接受followup图及独立进度777图的计数为35，当前第15页与两者原字节相等并已实际查看。全部十四张图也与最终实际看图hash逐项相等，463页全文与最新接受PDF相等。只续跑尚未完成的视觉/收尾，未重复已通过的测试、QA或render/pdf，不编辑生成物或掩盖失败。

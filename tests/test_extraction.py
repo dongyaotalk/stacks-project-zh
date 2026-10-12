@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import re
 import subprocess
 import tempfile
 import unittest
@@ -276,6 +277,99 @@ class ExtractionTests(unittest.TestCase):
             r'\section{First}\label{section-first}' + '\nOrdinary \\textit{PSh} words.')
         self.assertFalse(errors)
         self.assertIn('PSh', rows[-1]['unit']['source_text'])
+        self.assertFalse(rows[-1]['math_text_classifications'])
+
+    def test_definition_notations_keep_tuple_categories_and_automorphism_math_exact(self):
+        maths = [r'$(\text{Ob}, \text{Arrows}, s, t, \circ)$',
+                 r'$\textit{Ab} + \textit{Groups} + \text{Mod}_R + \textit{Top}'
+                 r' + \textit{PAb}(X) + \textit{Ab}(X)$',
+                 r'$\text{Aut}_\mathcal{A}(x)$', r'$\text{Arrows}(C)$']
+        prose = 'Café δ uses ' + ' and '.join(maths) + '.'
+        raw = ('\\begin{document}\n\\section{First}\\label{section-first}\n'
+               + prose + '\n\\end{document}\n').encode()
+        rows, _, errors = chapter_inventory('alpha', raw, COMMIT, TAGS, POLICY)
+        self.assertFalse(errors)
+        row = rows[-1]
+        self.assertEqual(row['state'], 'READY')
+        self.assertEqual(source_tex(row['unit']), prose + '\n')
+        self.assertEqual([v for k, v in row['unit']['placeholders'].items()
+                          if k.startswith('MATH_')], maths)
+        section = 'categories-section-definition-categories'
+        remark = 'categories-remark-big-categories'
+        arrows = 'categories-lemma-limits-products-equalizers'
+        self.assertEqual([(v['notation'], v['command'], v['usage'],
+                           v['source_label'], v['usage_source'])
+                          for v in row['math_text_classifications']],
+            [('Ob', 'text', 'symbol', section, ''),
+             ('Arrows', 'text', 'symbol', arrows, ''),
+             ('Ab', 'textit', 'symbol', remark, ''),
+             ('Groups', 'textit', 'symbol', remark, ''),
+             ('Mod', 'text', 'subscripted', remark, '_R'),
+             ('Top', 'textit', 'symbol', remark, ''),
+             ('PAb', 'textit', 'applied', remark, '('),
+             ('Ab', 'textit', 'applied', remark, '('),
+             ('Aut', 'text', 'subscripted', section, r'_\mathcal'),
+             ('Arrows', 'text', 'applied', arrows, '(')])
+        for item in row['math_text_classifications']:
+            loc = item['location']
+            self.assertEqual(raw[loc['byte_start']:loc['byte_end']], item['source'].encode())
+
+    def test_definition_notations_reject_aliases_preserve_old_policy_and_visible_prose(self):
+        cases = [('Ob', 'text', ''), ('Arrows', 'text', ''),
+                 ('Ab', 'textit', ''), ('Groups', 'textit', ''),
+                 ('Mod', 'text', '_R'), ('Top', 'textit', ''),
+                 ('PAb', 'textit', '(X)'), ('Aut', 'text', '_A')]
+        for name, command, suffix in cases:
+            wrong = 'textit' if command == 'text' else 'text'
+            for value in [f'\\{wrong}{{{name}}}{suffix}',
+                          f'\\textbf{{{name}}}{suffix}',
+                          f'\\{command}{{{name.lower()}}}{suffix}',
+                          f'\\{command}{{ {name}}}{suffix}',
+                          f'\\{command}{{{name} }}{suffix}',
+                          f'\\{command}{{{name}Extra}}{suffix}',
+                          f'\\{command}{{\\{command}{{{name}}}}}{suffix}']:
+                with self.subTest(value=value):
+                    rows, _, errors = inventory(r'\section{First}\label{section-first}'
+                                                + '\nUse $' + value + '$.')
+                    self.assertEqual(rows[-1]['state'], 'BLOCKED')
+                    self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
+                    if value.count('\\') > 1:
+                        # A recognized inner constant cannot make the complete
+                        # unclassified nested argument READY.
+                        self.assertNotIn(value, [v['source'] for v in rows[-1]['math_text_classifications']])
+                    else:
+                        self.assertFalse(rows[-1]['math_text_classifications'])
+        for value in [r'\text{Mod}', r'\text{Mod}(R)', r'\text{Mod}_{}',
+                      r'\text{Aut}', r'\text{Aut}(X)', r'\text{Aut}_{}',
+                      r'\textit{PAb}', r'\textit{PAb}_X', r'\text{ and }',
+                      r'\text{if}', r'\textit{Unknown}']:
+            with self.subTest(value=value):
+                rows, _, errors = inventory(r'\section{First}\label{section-first}'
+                                            + '\nUse $' + value + '$.')
+                self.assertEqual(rows[-1]['state'], 'BLOCKED')
+                self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
+        original = POLICY_RAW
+        original, removed = re.subn(
+            r'(?m)^  (?:Ob|Ab|Groups|Mod|Top|PAb|Aut):\n(?:    [^\n]*\n){3}', '', original)
+        self.assertEqual(removed, 7)
+        original = original.replace('  Arrows:\n    commands: ["text"]\n'
+                                    '    usages: ["applied", "symbol"]\n',
+                                    '  Arrows:\n    commands: ["text"]\n'
+                                    '    usages: ["applied"]\n')
+        source = (r'$(\text{Ob}, \text{Arrows}, s, t, \circ) + \textit{Ab}'
+                  r' + \textit{Groups} + \text{Mod}_R + \textit{Top}'
+                  r' + \textit{PAb}(X) + \textit{Ab}(X) + \text{Aut}_\mathcal{A}(x)$')
+        scanner = Scanner(source, Policy(original))
+        _, tokens, errors = scanner.protect(0, len(source))
+        self.assertEqual(tokens['MATH_0001'], source)
+        self.assertEqual([e['source'] for e in errors],
+                         ['Ob', 'Arrows', 'Ab', 'Groups', 'Mod', 'Top', 'PAb', 'Ab', 'Aut'])
+        self.assertFalse(scanner.math_text_classifications)
+        rows, _, errors = inventory(r'\section{First}\label{section-first}'
+                                    + '\nOrdinary ' + ', '.join(name for name, _, _ in cases) + ' words.')
+        self.assertFalse(errors)
+        for name, _, _ in cases:
+            self.assertIn(name, rows[-1]['unit']['source_text'])
         self.assertFalse(rows[-1]['math_text_classifications'])
 
     def test_history_without_cat_fib_rules_still_blocks_both_constants(self):

@@ -379,3 +379,7 @@ VERIFY_OR_RESTORE_SOURCE行动。
 真实运行model/effort/turn，实际模型完整输出每个新unit的五字段。程序只保护、
 序列化、验证和装配；raw逐项相等、token原序/次数/尾空白及全部历史绑定保持。
 DATA合并后独立progress/plan；全部S4完成后才独立S5默认强门禁和S7全库验收。
+
+### 完整Section0020正文的modules来源见证
+
+独立[Issue #798](https://github.com/dongyaotalk/stacks-project-zh/issues/798)只迁移concept `module`的evidence[0]：原`tag:0020:item004`、词形`modules`、source TeX hash `sha256:6fba1d48c35eae3fc7d743633b9dbe0efafef06ec78e8655b1ca6c5f461663ec`，改为锁定英文`a04446e57ec1fbc252a871afcec7752fb2807b14`的`categories.tex`/owner及Section0020/`categories-section-example-fibre-products`/`prose_block/1`完整Git片段，hash `sha256:2c88e87c7f74c49274cf791e0bb8957e983b1d6b2acd229120efcbd5e83360d4`。完整正文位于两个真实Section标题0020/0021之间，保护投影中精确词形独立核验。原碎片证据可从Git及完整旧输入原字节回查。所有forms/chapters/分类/其他evidence/根字段及中文批准保持；当前1233及未来1225来源库存除catalog_hash外相等。此证据迁移不采用13旧→5完整新DATA或消除114问题batch，未来模型仍须完整来源/旧组/ancestry/context冻结与真实五字段run。

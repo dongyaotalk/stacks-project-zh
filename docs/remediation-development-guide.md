@@ -3,7 +3,72 @@
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
 
-## 最新接受检查点：2026-10-13，DATA784
+## 最新接受检查点：2026-10-14，DATA792
+
+[PR #793](https://github.com/dongyaotalk/stacks-project-zh/pull/793) 已合并，
+[Issue #792](https://github.com/dongyaotalk/stacks-project-zh/issues/792) 已关闭。
+DATA 接受 main 为 `9ae8d621b35e33e3c299fbfbc9460e17f4262c6e`，精确 feature 为
+`a4b0760949c74a73ff188f4e95ca1b2bd26dc1cc`，接受 base 为
+`e2b88edfea594ad6a8505d57a5f31183b0cf3264`。之后独立进度
+[Issue #794](https://github.com/dongyaotalk/stacks-project-zh/issues/794) 会形成新的
+main；每次续接必须重读实时 GitHub、本地分支和实际审计，不用本段 SHA 覆盖工作区。
+
+| 当前实际审计 | 接受值 |
+| --- | ---: |
+| candidate batches / 活跃唯一 unit | 239 / 1233 |
+| 问题 batches | 114 |
+| 术语问题 candidates / 诊断 | 543 / 1774 |
+| 坐标 / 来源错误 / proof mismatch | 0 / 0 / 0 |
+| proof groups / proof units / match / unsupported | 187 / 218 / 187 / 0 |
+| 锁定来源库存 / READY / BLOCKED | 43242 / 37198 / 6044 |
+| 库存诊断 / Git roundtrip 文件 / 章节 | 16888 / 116 / 117 |
+
+真实 Section0013 的八个完整连续 batch001B–001I，从27旧单元恢复为12完整新单元，
+575来源词、八份v4完整有序分组、十二份锁定Git容器证据。001B、001D各包含完整定义
+和其后完整段落；001I完整六旧输入对应 definition001I、paragraph6及由p002/p003组成的
+完整paragraph7。新单元为001B–001I各自的statement，及0013的paragraph-0004–0007。
+已接受的0014–0019、001L米田范围及其他批次不重复；全部旧输入/候选、八个原run/raw、
+24份完整ancestry和政策/context原字节保留。全部12目标BYTE_EXACT、八批队列清空，
+范围外matches/术语/source/proof findings逐项相同；问题batch122→114、候选560→543、
+诊断1813→1774，unit1248→1233来自完整语义分组。
+
+来源前置[PR #789](https://github.com/dongyaotalk/stacks-project-zh/pull/789)已接受严格
+`source-container-v11`，绑定完整前陈述、前段和其后最大完整有序旧分段链，两处原生
+相邻关系、章内唯一性和v5/v6嵌套见证独立重算；旧v1–v10权限保持。
+[PR #791](https://github.com/dongyaotalk/stacks-project-zh/pull/791)将12项英语来源词证据
+迁移至六完整锁定Git容器。两者只准备来源，未批准词形译法或采用事实。
+
+实际模型 `gpt-6.1-sol / xhigh` 在全部源/旧组/候选/历史/context
+冻结后生成12份完整五字段，run为`run-20261014-categories-functors-complete-gpt61sol`，
+turn为`01a1365a-5f28-7563-b184-8e9a34a63b92`。动态Codex为`0.162.0-alpha.17.2`，snapshot未暴露、
+replayable false；下一次生成必须重新读取当时真实元数据和运行时版本。
+首稿六unit token错序被拒，完整重出六份五字段后001D仍错序，再完整重出该unit；
+全部失败草稿在首次装配前保留，程序仅选择完整记录。12最终五字段与rollout字面输出
+及immutable raw逐项相等，133来源要求/145双语声明、token原序/次数/尾空白通过。
+已创建run或已采用的前驱不能套用本次未采用草稿选择，仍须完整历史重放和独立修订run。
+
+来源prepare233.778秒/check231.584秒，包八文件bytes/mtime保持。239QA362.357秒、
+实际run QA0.2秒及Schema/溯源/决策/workflow/harvest/index/117模板通过；全库
+extract60.315秒/check61.106秒、alignment34.71秒/check33.505秒通过。实际render216.034秒、
+pdf73.499秒，FinalTeX PASS；463页整书全文比较，447页layout相同，16变化物理页及
+全部邻页/相关页共25 PNG实际查看。完整58文件6,923,227-byte patch及远端head/base原字节
+核验，18旧路径字节一致、40新路径在base不存在，native唯一closing792通过。
+精确HEAD的pr-contract run/job `38445285631/115461939479`、
+policy-and-data `38445285685/115463172925`均SUCCESS。
+首轮CI仅在TemporaryDirectory清理Git objects目录时报Errno39，完整失败日志保留；相同HEAD
+单次重跑后实际全门禁成功，未放宽规则。此清理故障已重复出现，需要独立维护调查及证据，
+不能在DATA中隐藏错误或用重试代替实际成功。fresh main==base后授权squash，合并后tree、
+58文件字节、全部实际run trailers、MERGED/CLOSED及干净状态核验。
+
+剩余问题批次为Categories16、Sets17、Conventions5、Coding2、Desirables18、FDL2、Guide21、
+Introduction2、Obsolete31。必须继续repair-queue的完整语义范围；仅VERIFY来源的batch也
+不能遗漏。独立progress/plan完成后再认领下一DATA；全部S4后独立S5默认强门禁和S7。
+未知语法/数学文字继续BLOCKED，未知术语及所有critic/语言/数学审校/发布仍未批准。
+F1–F8总目标及最终详细文档提示词尚未完成，不能凭QA通过或单批修复宣告完成。
+
+下一完整同章范围0020/0021/0022的只读预检：完整13旧输入包括0020标题、三段与四项列表，0021标题和0022完整lemma/proof。四个来源容器（两标题/lemma/proof）可核验，但0020完整prose_block因真实前后语义锚点与原冻结batch边界不同而拒绝；分段替代也严格拒绝第二/三段历史wrapper及未经独立指定lowering的standalone enumerate。来源库存READY不提供事实采用权限；不裁去七旧输入，不将40已核验来源词/四新单元当作完整范围。完整失败原因已保留，后续先独立来源合同/工具及回归，再核验未来全目录并完整DATA。此预检没有认领/生成生产中文/run/改事实。
+
+## 历史接受检查点：2026-10-13，DATA784
 
 [PR #785](https://github.com/dongyaotalk/stacks-project-zh/pull/785) 已合并，
 [Issue #784](https://github.com/dongyaotalk/stacks-project-zh/issues/784) 已关闭。

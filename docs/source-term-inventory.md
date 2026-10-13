@@ -263,3 +263,68 @@ source_projection词形。仅三条evidence改变，forms、chapters、其他目
   完整Section001L六批采用前，必须重新核验所有来源目录evidence仍有效，再冻结
   全部新源/旧组/候选/ancestry和新目录context，实际完整生成五字段。工具取证
   不表示术语覆盖完成或批准中文，全部S4与独立S5/S7仍须完成。
+
+### Section0013 六批完整修订的26项来源见证
+
+独立英文来源目录任务 [Issue #782](https://github.com/dongyaotalk/stacks-project-zh/issues/782)
+在接受 main `406fbee71af7da43f165b3aff8d1e95c24d0f075` 上核验真实 Definitions Section0013。
+完整六批0014–0019有32旧→8新、563来源词；v10已能核验历史parent的真实双锚点。
+完整替换后，26项旧碎片hash不再对应未来活跃单元，因此在DATA前独立更新其
+evidence绑定。词形、forms、chapters、非数学分类、中文词表批准和全部事实保持。
+
+锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`；以下六个完整容器均从该提交的Git blob
+重新选择，真实parent为0013，位置依据完整语义selector。完整原字节hash为：
+
+| owner Tag | kind/ordinal | 实际owner label | 完整原片段SHA-256 |
+| --- | --- | --- | --- |
+| 0014 | definition/1 | `categories-definition-category` | `c35031670d5359a2a292434585b10d23418dfd0943422d0fdb83627c50d70a6f` |
+| 0013 | paragraph/2 | `categories-section-definition-categories` | `4bc52ac2b785e320fc653001d06bf6f2462cc468fb5b6eb020252c11066c02c4` |
+| 0015 | remark/1 | `categories-remark-big-categories` | `67f8624c8987b067e029d9e39dbd82ed79a8ad52a2cde1960a9e566b5c45b7fe` |
+| 0016 | remark/1 | `categories-remark-unique-identity` | `43e395eea3041bf63fa88899e3c87ce6b8baa1bcfabef536b136ab4ceeaed1dd` |
+| 0013 | paragraph/3 | `categories-section-definition-categories` | `d580537d8c54ae721e787754f200795d7df265e4af11d45c22570ba950850ee1` |
+| 0019 | example/1 | `categories-example-group-groupoid` | `50d7f6d49667f153c2560dbdb569f431ad8895ec83f586c4fc67649cd6401b9d` |
+
+每项精确旧词形须在完整保护后的source_projection中实际存在且属于原forms；
+数学、引用、comment/literal等保护节点仍不透明。原旧绑定留在Git历史，完整
+旧unit/candidate及run/raw、恢复/归档历史保持；不修改候选来提供目录证据。
+
+| concept | 原精确词形 | 原旧unit定位 | 原完整TeX hash | 新完整owner/kind/ordinal |
+| --- | --- | --- | --- | --- |
+| `abelian` | `abelian` | `tag:0015:item002` | `e65532c7850b3215f9093fe1498bdfad50fd696d8a3268ec3ba0d3970ffc7215` | 0015/remark/1 |
+| `abelian-group` | `abelian groups` | `tag:0015:item002` | `e65532c7850b3215f9093fe1498bdfad50fd696d8a3268ec3ba0d3970ffc7215` | 0015/remark/1 |
+| `algebra` | `Algebra` | `tag:0015:item008` | `ddfcf0f1df3b2132dd8d98c44e587aaaea9b12c3b3f01165a60a8e470d8920f2` | 0015/remark/1 |
+| `associative` | `associative` | `tag:0014:item005` | `a8a2f3a24cff658882a6435f563b0ef9614924a9a24b9178da92a5a04513cd04` | 0014/definition/1 |
+| `composition` | `composition` | `tag:0014:item003` | `28ce086dd782a056fbe025b998fee93d25e02a38fa88548b09a426b3874fcd32` | 0014/definition/1 |
+| `element` | `element` | `tag:0014:item004` | `52beb10bf31be3f68d45f72804a366b45a5cb8f3cabca1cdaadf06b79ddbe890` | 0014/definition/1 |
+| `equivalent` | `equivalent` | `tag:0014:p002` | `c52bc33deafddc56f852fbc50595b2999663cca1c02e0070d84de802f519d341` | 0013/paragraph/2 |
+| `field` | `field` | `tag:0015:item006` | `7a74a82eb0cc0588596282dae291225fc22ac561cbfd9b2644b7dbc122dfe5ec` | 0015/remark/1 |
+| `functor` | `functors` | `tag:0015:item015` | `54368b4e41403784f12d373607272267e0dd8c03c64f378dc06c1dbb9a26abfb` | 0015/remark/1 |
+| `group` | `groups` | `tag:0015:item002` | `e65532c7850b3215f9093fe1498bdfad50fd696d8a3268ec3ba0d3970ffc7215` | 0015/remark/1 |
+| `groupoid` | `groupoid` | `tag:0019:statement` | `10d9a73c4c1a015b8aa544d674e0732b80141b18b3daa30c6351505863aba359` | 0019/example/1 |
+| `identity-morphism` | `identity morphism` | `tag:0016:statement` | `40f6d112a7cc3b5449a32c6b1da04a5132f48d3e42d379f67c7cda7b500acdfd` | 0016/remark/1 |
+| `invertible` | `invertible` | `tag:0017:p001` | `af146d9fab8f1c790b05486ca5cf22c58f4185620a008d1bc3918b75ba038ab9` | 0013/paragraph/3 |
+| `isomorphism` | `isomorphism` | `tag:0017:p001` | `af146d9fab8f1c790b05486ca5cf22c58f4185620a008d1bc3918b75ba038ab9` | 0013/paragraph/3 |
+| `map` | `map` | `tag:0014:item003` | `28ce086dd782a056fbe025b998fee93d25e02a38fa88548b09a426b3874fcd32` | 0014/definition/1 |
+| `morphism` | `morphisms` | `tag:0014:item002` | `0a10d96c2604935aaad29e92d96429a3701b02d3f9c1978881f9f027776bdf81` | 0014/definition/1 |
+| `object` | `objects` | `tag:0014:item001` | `392b612edbe2863631407e7bc0089f01a72f797e68d2e3942ea734b1dbd61aa9` | 0014/definition/1 |
+| `presheaf` | `presheaves` | `tag:0015:item011` | `457a3515907c3d1bd111b1a16f99e19edf8ca9c821133c05007607247f415200` | 0015/remark/1 |
+| `ring` | `ring` | `tag:0015:item005` | `b1578bf82e1c8e3747abd4f5a44fbbca8006db2e330a4f42098780afb1010215` | 0015/remark/1 |
+| `scheme` | `schemes` | `tag:0015:item009` | `3021c53888a5c08d2e928fc24cdf04598bcbe50115768a56ff6a4355f89e87bb` | 0015/remark/1 |
+| `set` | `set` | `tag:0014:item001` | `392b612edbe2863631407e7bc0089f01a72f797e68d2e3942ea734b1dbd61aa9` | 0014/definition/1 |
+| `sheaf` | `sheaves` | `tag:0015:item012` | `2c41888064ea5f477052c4c67f11f51ce663ac8ddf30d0151c6783afc2d549db` | 0015/remark/1 |
+| `site` | `site` | `tag:0015:item017` | `0aa91f5497c4c3f7d3be24815791faa553dd5fb9a1a8192ec5c228c17227c85c` | 0015/remark/1 |
+| `small` | `small` | `tag:0015:item015` | `54368b4e41403784f12d373607272267e0dd8c03c64f378dc06c1dbb9a26abfb` | 0015/remark/1 |
+| `topological-space` | `topological spaces` | `tag:0015:item010` | `5eb4d8ccbd3b734027f5a54effbfbfc4de3463db36e51a27f39e3efa7054d9a4` | 0015/remark/1 |
+| `vector-space` | `vector spaces` | `tag:0015:item006` | `7a74a82eb0cc0588596282dae291225fc22ac561cbfd9b2644b7dbc122dfe5ec` | 0015/remark/1 |
+
+只替换这26处原evidence索引，其余条目及根字段原语义保持。只读已核验全部
+当前1272英文单元与未来8完整输入的source_inventory逐项相等，变化仅catalog_hash；
+未来完整来源集合的全部目录证据也有效。当前术语覆盖诊断和修复队列仍需真实
+DATA处理，目录接受不批准任何中文译法、critic、人审或出版，也不启用S5。
+
+后续维护：完整容器重提取前先按未来全来源集合验证每项目录证据；失效旧碎片
+须独立认领来源见证任务，从锁定Git重验真实归属/边界/原字节/保护后的精确词形，
+保持forms/chapters及分类，不在DATA里顺手放行。目录接受后，DATA重新冻结该次
+真实目录、所有政策/旧组/全部候选/ancestry/context及新输入，再由当时实际模型
+完整生成每个新单元五字段。未知词保持待决，DATA后独立progress/plan；全部
+S4完成后才独立S5强门禁与S7集成。来源见证有效不能代替当前候选逐次覆盖验收。

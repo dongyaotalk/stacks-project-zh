@@ -2110,3 +2110,16 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   当前128问题批/583候选1871诊断保持，全部S4后独立S5/S7与F1–F8最终文档/复制提示词。
 
 - Issue780 本地验收：pyenv3.12全量558工具回归（691.772秒）、239候选QA（368.208秒）及共享workflow/harvest/index/117模板/Schema/溯源/决策通过；在全量已启动后加强hash篡改回归为Schema-valid错误hash，并独立重跑该当前测试（21.855秒）通过，确认拒绝来自origin/完整快照独立重算，不只来自格式Schema。未重复不变的全量。真实完整0015二十旧→二完整新prepare 147.427秒/check 147.185秒，check原字节与mtime保持；段落使用v10、后继remark使用原v2，全部旧unit/candidate与Git基线原字节相等，真实前/段落/后selector/片段/边界/blob及witness独立相等。原七个Schema分支原字节前缀保持，旧v1–v9不获新权限，同parent仍由旧v4处理。全库extract-all 60.482秒/check 102.232秒、alignment 35.668秒/check 34.347秒通过，完整库存manifest相等：43242提议/37198 READY/6044 BLOCKED/16888诊断/116Git文件回放。活跃1272unit/128问题batch/583术语候选1871诊断、零坐标/来源错误/证明不符、187组218proof全match，source/term/proof诊断和repair-queue行动完整相等，事实/history tree及所有范围外字节保持。隔离progress/plan生成及check报告原字节相等。当前lane实际render 173.55秒/pdf 70.11秒零退出FinalTeX PASS，463页仅第2页自动构建日期从2026-10-12转为2026-10-13，其余462页及日期行外全文原字节相等；实际已看全部变化/邻页1/2/3，封面和目录布局保持。十四既有PNG与正确最终进度777接受图原字节相等，复用已看图证据，初次全文比较失败记录保留；只续跑视觉收尾，未重复构建或不变测试。模板/Make/render路径不变，template不适用。完整七路径staged/远端head/base全部原字节/fullpatch/native唯一closing本Issue/最新精确HEAD双CI run/job及fresh main后授权合并，再核实tree/raw/MERGED/CLOSED/clean。工具不采用事实、生成生产中文/run或授予词表/critic/人审/发布批准。26项未来英文来源证据另行任务，完整DATA后独立进度，再继续全部S4后S5/S7与F1–F8最终文档/复制提示词。
+
+- 独立Definitions英文来源见证 [Issue #782](https://github.com/dongyaotalk/stacks-project-zh/issues/782)，branch `tool/definitions-source-witnesses`，
+  fresh main `406fbee71af7da43f165b3aff8d1e95c24d0f075`，锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`，真实Section0013。
+  完整六批32旧→8新/563词来源在v10后全部可准备；26旧碎片evidence须先独立绑定六个完整Git容器。
+  三精确允许路径、unit/run/model写入为空，只更新evidence；全部forms/chapters/非数学分类/工具/Schema/
+  中文词表批准和事实历史保持。当前1272及未来8英文库存除catalog_hash外相等，未来全目录证据有效。
+  先claimed/开发验收计划，再26原词形/完整owner/Section/selector/blob/原字节/来源投影核验，
+  适用source-term全组回归/239QA/共享门禁/117模板/抽取对齐checks/隔离进度计划，
+  当前lane实际render/pdf与最新最终PNG基线，完整staged/精确远端合同/双CI后授权合并。
+  当前128问题批/583候选1871诊断不因目录接受减少；随后独立完整DATA实际五字段和全部冻结，
+  DATA后独立progress/plan，继续全部S4后S5/S7与F1–F8最终开发文档/复制提示词。
+
+- Issue782 本地验收：pyenv3.12适用来源术语回归48项（3.450秒）通过。原make qa-all实际已通过workflow/harvest/index/117模板/Schema/溯源；原exec句柄消失且系统进程确认停止后，保留完整已通过日志及hash，仅恢复decision-check 161.628秒和validate-all 239全量候选QA 1.26秒，全部通过。已完成extract-all 59.148秒/check 58.029秒、alignment 31.064秒沿用；仅恢复未完成alignment-check 41.763秒。未重复不变的完成门禁。26新locked-source-container证据逐项PASS，六个完整Git容器真实owner/Section/selector/边界/blob/原字节及精确保护投影见证有效；当前1272和未来8完整输入的逐次要求除catalog_hash外相等，未来全目录有效。所有forms/chapters/非数学分类/其他根字段和evidence保持，原旧证据可从Git历史和完整工程表回查。当前239批1272unit、128问题batch、583术语候选1871诊断、零坐标/来源错误/证明不符，187组218proof全match；所有当前候选/来源/证明诊断和repair-queue行动逐项相等。完整库存manifest保持43242提议/37198 READY/6044 BLOCKED/16888诊断/116Git原字节回放。事实/history tree和所有范围外文件原字节、隔离progress/plan生成与check报告相等。当前lane实际render 165.316秒/pdf 80.512秒零退出FinalTeX PASS，463页整书全文及14张此前实际看图的最终PNG原字节相等，无变化页，复用实际看图证据；基线使用最新2026-10-13接受PDF。代码/Schema/词形/作用范围未变，沿用最新接受558全量工具回归与精确HEAD CI，不无理由重跑；模板/Make/render路径不变，template不适用。完整三个允许文件staged、远端精确head/base全部原字节/fullpatch/native唯一closing合同、最新精确HEAD双CI run/job/fresh main后授权合并，再核实tree/raw/MERGED/CLOSED/clean。未生成生产中文/run，未批准术语/critic/语言/数学审校或出版；完整DATA实际五字段及独立进度仍待后续，继续全部S4后独立S5/S7与F1–F8最终开发文档/复制提示词。

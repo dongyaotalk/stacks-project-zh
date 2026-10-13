@@ -328,3 +328,54 @@ DATA处理，目录接受不批准任何中文译法、critic、人审或出版�
 真实目录、所有政策/旧组/全部候选/ancestry/context及新输入，再由当时实际模型
 完整生成每个新单元五字段。未知词保持待决，DATA后独立progress/plan；全部
 S4完成后才独立S5强门禁与S7集成。来源见证有效不能代替当前候选逐次覆盖验收。
+
+### 完整函子范围001B–001I的12项来源见证
+
+独立来源目录任务 [Issue #790](https://github.com/dongyaotalk/stacks-project-zh/issues/790)
+以接受main `a8bba4eb775afc531920f6747d29970850f30efc` 为基线。PR789的v11已接受，完整八批
+27旧→12新/575词从锁定Git和所有有序旧组重新核验，零BLOCKED；完整001I的
+前段使用原v6，p002/p003完整链使用独立v11。目录任务只替换以下12处原evidence
+索引，不变更forms/chapters/词形/非数学分类/中文批准或任何事实、run与历史。
+
+英文锁定`a04446e57ec1fbc252a871afcec7752fb2807b14`。六个完整Git容器真实parent均为0013；
+原片段从真实owner label、kind/ordinal选取，字节位置只用于边界核验：
+
+| owner Tag | kind/ordinal | 实际owner label | 完整原片段SHA-256 |
+| --- | --- | --- | --- |
+| 001C | definition/1 | `categories-definition-faithful` | `ed7b96856d6a9233e4ed126c39fed76a1571c3043e467aafe9a1c605cf43b477` |
+| 001D | definition/1 | `categories-definition-subcategory` | `283fffbc18571586503ce936b0990ebc1f5f0a316d36a39c2a7d993cbef48f57` |
+| 0013 | paragraph/5 | `categories-section-definition-categories` | `aa6994bf614df1a05213ede743d8218931836c89904064756385a031bdf411c2` |
+| 001F | example/1 | `categories-example-group-homomorphism-functor` | `f98ac2339eb11545b4ca80fdc8fdab070705b99681d5741845f57f005d95834a` |
+| 001G | example/1 | `categories-example-category-over-X` | `9a33bf70b81ec79911a7ad97a20802b8740e8c3982b1314e1b68833a49c86626` |
+| 001I | definition/1 | `categories-definition-transformation-functors` | `3e368f55ede1495d627857287d14cba74a860edbaa8145509352af96a24b0065` |
+
+每项原精确词形必须实际出现在完整保护后的source_projection且属于原forms；
+保护的数学、引用、注释和literal不提供暴露词形。原旧证据和完整unit/candidate/
+run/raw/恢复/归档历史原字节保留，不能通过修改候选获得目录证据。
+
+| concept | 原精确词形 | 原旧unit | 原source TeX SHA-256 | 新完整owner/kind/ordinal |
+| --- | --- | --- | --- | --- |
+| `bijective` | `bijective` | `tag:001C:item002` | `381f102f3b4b7d527715979727240fc3cb4b273df20c99194d5db606e195050e` | 001C/definition/1 |
+| `commutative` | `commutative` | `tag:001I:item002` | `37610236bd507ecef1b28fcdd69a1443fb59a9957589a54a8f0fb48f84bc1c59` | 001I/definition/1 |
+| `commutes` | `commute` | `tag:001G:p001` | `fd7aef8c35b12f0fc76069625f575bfeaa4fb2369199691b824636e81c31fb5f` | 001G/example/1 |
+| `diagram` | `diagram` | `tag:001G:p001` | `fd7aef8c35b12f0fc76069625f575bfeaa4fb2369199691b824636e81c31fb5f` | 001G/example/1 |
+| `faithful` | `faithful` | `tag:001D:p003` | `febf69399c91abaa1b5f78c5a02b68e6a7cf43b2c3560c62f04baefa5dba8114` | 0013/paragraph/5 |
+| `full-subcategory` | `full subcategory` | `tag:001D:p002` | `efdb6df76edc4d6a2fedd00eb45fce359a33a007b738a8788a5acae393d212ff` | 001D/definition/1 |
+| `fully-faithful` | `fully faithful` | `tag:001D:p003` | `febf69399c91abaa1b5f78c5a02b68e6a7cf43b2c3560c62f04baefa5dba8114` | 0013/paragraph/5 |
+| `homomorphism` | `homomorphism` | `tag:001F:statement` | `f6d870f0079539ca004899336ef2edd0d998ac9dff9e838ad1ec7cb870146748` | 001F/example/1 |
+| `injective` | `injective` | `tag:001C:item001` | `5f2e2dd713fdcd031535a9a6c88bc4531ee3f5058318e65e1bce326739d962f5` | 001C/definition/1 |
+| `isomorphic` | `isomorphic` | `tag:001C:item003` | `ce428892a92235d79138dae2be8f795765c6f4c8fae4613235b8ce5a524d81a6` | 001C/definition/1 |
+| `subcategories` | `subcategory` | `tag:001D:p002` | `efdb6df76edc4d6a2fedd00eb45fce359a33a007b738a8788a5acae393d212ff` | 001D/definition/1 |
+| `subset` | `subsets` | `tag:001D:statement` | `99a6271f48fdf5ccc87721d21fe0d362ea29bca5dc0878e23290cce4a5300133` | 001D/definition/1 |
+
+已只读核验当前1248及未来1233的完整来源库存，变化仅catalog_hash；未来全来源
+集合的全部目录证据均有效。全部旧新分组与当前候选术语覆盖仍由后续独立DATA
+负责，目录接受不减少当前122问题batch/560术语候选1813诊断，也不启用S5或
+授予任何术语、critic、人审、发布批准。零来源审计错误不免除队列中保留的
+VERIFY_OR_RESTORE_SOURCE行动。
+
+后续完整八批DATA须重新prepare/check、生成前冻结全部新unit、每个完整旧组和
+所有候选/ancestry、政策/风格/词表/prompt/本次目录/context；动态解析Harness和
+真实运行model/effort/turn，实际模型完整输出每个新unit的五字段。程序只保护、
+序列化、验证和装配；raw逐项相等、token原序/次数/尾空白及全部历史绑定保持。
+DATA合并后独立progress/plan；全部S4完成后才独立S5默认强门禁和S7全库验收。

@@ -2188,3 +2188,26 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   VERIFY_OR_RESTORE_SOURCE行动仍保留；目录后独立完整DATA真实五字段/完整冻结，再独立进度，全部S4/S5/S7/F1–F8继续。
 
 - Issue790 本地验收：12处原evidence索引独立迁移至六完整锁定Git容器；原owner/Section0013/selector/边界/blob/原片段及保护后精确词形全部通过，当前1248与未来1233来源库存除catalog_hash外逐项相等，全部未来目录证据有效。48项source-term回归 2.744秒、239QA 328.587秒及共享Schema/溯源/决策/workflow/harvest/index/117模板通过；未改工具沿用PR789接受的563全量回归，不重复。全库extract 60.924秒/check 59.95秒，alignment 33.906秒/check 33.258秒；库存manifest原字节相等，全部source/proof/术语诊断、当前匹配状态与队列actions/findings保持，12新locked证据全部PASS。仍239批1248unit/122问题batch/560术语候选1813诊断，187组218proof全match，坐标及来源审计错误零；VERIFY_OR_RESTORE_SOURCE行动保留。隔离progress/plan及checks三报告原字节不变，全facts/history/范围外bytes和forms/chapters/分类/批准保持。当前lane实际render 195.904秒/pdf 71.429秒，FinalTeX PASS；463页全文与21张已实际查看PNG重渲染逐字一致。完整staged/精确远端head-base原字节/fullpatch/native单closing/精确HEAD双CI及fresh main后授权squash；无模型中文/run或批准，目录后独立完整八批DATA及独立progress，再全部S4/S5/S7/F1–F8。
+
+- 完整函子范围 DATA [Issue #792](https://github.com/dongyaotalk/stacks-project-zh/issues/792) 已 claimed，branch `translate/categories/0013/openai-gpt-6.1-sol`，接受base `e2b88edfea594ad6a8505d57a5f31183b0cf3264`，锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`。真实Section0013八批001B–001I：27旧→12完整新、575来源词、58精确允许路径。按Issue完整计划先many prepare/check、v11边界及锁定Git原字节重验，再完整新旧输入/候选/组/ancestry/政策/context冻结及实际模型五字段生成。全部原历史保留、术语逐次双语且未知待决，不授予审批。239QA/新run/共享门禁/117模板/抽取对齐checks/隔离进度计划/实际当前lane render/pdf及整书变化邻页PNG/完整staged及远端合同/精确HEAD双CI后授权合并；DATA后独立progress/plan，再继续全部S4/S5/S7/F1–F8及开发文档提示词。基线1248unit/122问题批/560候选1813诊断，数字待实际测量。
+
+- Issue792 本地验收：八个完整连续batch001B–001I共27旧→12完整新/575来源词，来源prepare 233.778秒、只读check 231.584秒，全部包八文件bytes/mtime保持，零BLOCKED。v11完整001I definition/前段/最大有序旧分段链及全部锁定Git owner/Section/selector/边界/blob/原片段重新核验；12目标source TeX逐字相等。12新unit、27旧unit/candidate、全部完整组和24份ancestry、政策/风格/词表/prompt/来源词目录/context在实际生成前冻结。实际 gpt-6.1-sol / xhigh，turn `01a1365a-5f28-7563-b184-8e9a34a63b92`，动态Codex `0.162.0-alpha.17.2`，snapshot未暴露/replayable false；run `run-20261014-categories-functors-complete-gpt61sol`。首稿六unit保护token错序被拒，完整首稿保留；模型完整重出六份五字段后，001D仍错序，再完整重出该unit五字段，全部未采用草稿及检查记录保留。程序只选择完整记录、保护、序列化、验证和装配；12最终五字段逐项等于真实rollout字面输出及immutable raw。133来源要求/145双语声明、token原序次数尾空白全部通过，未知术语待决，无审批。八份v4完整有序分组、十二份restoration、原八run/raw及全部旧输入/候选/历史原字节保留，全库1233唯一unit；范围外bytes及政策/术语/来源锁保持。
+239全量QA 362.357秒、实际新run QA 0.2秒及workflow/harvest/index/117模板/Schema/溯源/决策通过。全库extract 60.315秒/check61.106秒、alignment34.71秒/check33.505秒通过；12目标BYTE_EXACT、八批queue清空，全部其他matches/术语/source/proof findings逐项相同。239批，unit1248→1233、问题batch122→114、术语候选560→543、诊断1813→1774，坐标/来源/proof错误均零，187组218proof全部match。完整锁定库存43242提议/37198 READY/6044 BLOCKED/16888诊断保持；READY不是采用/审批。隔离progress/plan及各check实际通过，三报告是否变化见下列原字节证据；DATA后仍须独立progress/plan再下一DATA。当前lane实际render 216.034秒/pdf 73.499秒、零退出FinalTeX PASS，463页整书layout全文比较、447页相同；16变化物理页2/4/15/16/45–56，全部邻页/相关页共25 PNG（1/2/3/4/5/14/15/16/17/42–57）逐张实际查看，无裁切/重叠/缺字。目录引用变化及正文重排不改范围外事实。纯DATA，工具/政策/测试保持最新PR789接受563回归，不重复未变工具测试；模板/Make/render路径未变，template不适用。完整58文件staged/远端精确head-base全部原字节/fullpatch/native唯一closing合同、精确HEAD双CI run/job及fresh main后授权合并，随后tree/bytes/trailers/MERGED/CLOSED/clean及独立进度。全部S4余114批后才独立S5默认强门禁/S7；F1–F8总goal和最终详细文档提示词继续。
+
+  隔离报告原字节比较：`{"README.md": true, "docs/translation-progress.md": true, "docs/translation-plan.md": true}`。
+
+  可复现核心命令（运行前按claimed Issue重新冻结真实metadata，不复制旧run）：
+
+```sh
+PYTHON="$(pyenv prefix 3.12.6)/bin/python"
+make harness-check HARNESS_ID=codex PYTHON="$PYTHON"
+# 来源准备：prepare-source-containers-many，重复八份完整 --plan，--require-prepared；同输入再 --check
+make qa-all PYTHON="$PYTHON"
+make extract-all PYTHON="$PYTHON"
+make extract-all-check PYTHON="$PYTHON"
+make source-alignment PYTHON="$PYTHON"
+make source-alignment-check PYTHON="$PYTHON"
+# progress/plan写隔离预览并各 --check；合并后另开独立任务写正式报告
+make render MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
+make pdf MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
+```

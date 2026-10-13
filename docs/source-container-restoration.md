@@ -48,6 +48,39 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+### 完整前段之后的旧分段链（source-container-v11）
+
+独立工具 [Issue #788](https://github.com/dongyaotalk/stacks-project-zh/issues/788)
+处理一个完整旧段落后紧邻的完整分段链。真实001I的完整六旧输入分别对应完整
+definition001I、Section0013 paragraph/6，以及由p002/p003组成的paragraph/7。
+v8要求直接紧邻完整陈述及noindent首包装，继续拒绝此范围；不通过裁掉前段或
+单独采用p002/p003来绕过完整batch边界。派生仍v4，旧source-container-v1–v10保持。
+
+v11只接受canonical unit-v1段落及完整有序同章、同source、同历史parent的旧
+batch。完整前段的prefix为noindent、suffix仅ASCII空白；目标至少两个旧分段，
+第一prefix为medskip/noindent，余prefix和全部suffix仅ASCII空白。目标须消费
+前段之后的最大完整旧paragraph链；缺段、重复、乱序、切片、额外包装均拒绝。
+历史parent同时绑定完整前陈述的真实owner；前陈述的完整链不得借其他batch输入。
+
+从锁定Git重新选择同一真实Section内立即相邻的完整前陈述、完整前段、完整
+目标段，两处间隔只能是ASCII空白。前段独立调用原v5/plain或v6/terminal-list
+见证，证明完整旧/新段落对应和章内唯一；另核验全部旧前陈述与完整Git陈述的
+item Tags及完整签名。目标只将每个旧source TeX原字节直接拼接，不能插分隔符、
+trim或制造合并unit；其paragraph_signature须逐项等于完整Git目标且章内唯一。
+只沿用已有普通prose ASCII空白合同；数学、引用、命令和非ASCII原字节保持，
+未知语法、内部空段、typed或未分类数学文字继续BLOCKED。
+
+独立Schema分支保存完整目标IDs、历史parent、完整前段ID/selector/fragment hash、
+原v5/v6完整嵌套anchor、完整前陈述signature hash和目标signature hash。加载器
+只在v11开启本权限，从origin宏政策、锁定Git和全部旧快照重新计算每个字段；
+缓存、自报hash、Schema形状合法的篡改和降级都不能提供采用权限。新unit完整
+source TeX仍逐字等于原Git片段；来源包check只读比较全部八文件及mtime。
+
+准备仍使用§9原接口与完整batch计划；本工具不写生产unit/run或中文。工具接受后，
+先另行迁移未来完整来源所需的12项英文词目录证据，再独立认领完整001B–001I
+八批27旧→12新DATA，重新冻结全部源/旧组/候选/ancestry/context，由当时实际模型
+对每个新unit完整生成五字段。来源准备成功不减少术语残项，也不授予任何批准。
+
 ### 不同历史 parent 的完整段落双锚点（source-container-v10）
 
 独立工具 [Issue #780](https://github.com/dongyaotalk/stacks-project-zh/issues/780)

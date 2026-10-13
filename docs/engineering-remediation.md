@@ -1,7 +1,8 @@
 # 2026-10 项目审查修复开发计划
 
 当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-13data784)
-及本文末尾执行记录为准：DATA784/PR785已接受，独立进度Issue786先于下一DATA。
+及本文末尾执行记录为准：DATA784/PR785及独立进度Issue786/PR787已接受；
+下一完整001B–001I范围先完成独立工具Issue788与来源词目录证据任务。
 以下DATA770前置段落是保留的历史计划；PR774/775及后续已合并成果不重复开发。
 总目标仍为全部F1–F8，当前S4剩余122问题batch，之后独立S5/S7与最终文档验收。
 
@@ -2158,3 +2159,19 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   保持全事实/历史/范围外字节，当前lane真实render/pdf、463页全文/二十一已看PNG精确比较、完整staged/远端合同/双CI后授权合并。下一DATA须等此独立进度完成；S4后独立S5/S7，总goal继续。
 
 - Issue786 本地验收：实际progress 4.057秒/progress-check 3.635秒、plan 0.594秒/plan-check 0.607秒通过，README及progress/plan与DATA785隔离预览逐字一致，无手改数字。workflow/harvest/index/117模板/Schema通过；extract-all-check 53.502秒、source-alignment-check 29.098秒实际核对最新main事实，1248unit/122问题batch/560术语候选1813诊断，当前输入hash一致。完整translation-data/history tree和所有范围外原字节不变。pyenv3.12当前lane render 176.539秒、pdf 68.522秒零退出，FinalTeX PASS；463页全文layout与DATA接受PDF相等，21张此前实际查看PNG重渲染原字节相等，无变化页，复用已看图依据。未变工具沿用558回归/239QA及最新接受精确HEAD CI，不重复跑；模板/Make/render路径未变，无新增template。完整三个工程文件staged及远端head/base原字节/fullpatch/native唯一closing786/精确HEAD双CI/fresh main后授权合并，再继续全部S4；当前goal未完成，S5/S7和最终F1–F8证据仍待全部数据修复。
+
+- 独立TOOL [Issue #788](https://github.com/dongyaotalk/stacks-project-zh/issues/788)，owner dongyaotalk，branch `tool/split-after-paragraph-boundary`，
+  fresh main `bbcf8a39d2bfe726174435cf96faf18efc8a7357`；英文锁定`a04446e57ec1fbc252a871afcec7752fb2807b14`。先claimed再分支，七路径范围。
+  开发计划：001I完整六旧→三完整新源只读取证，真实Section0013/definition001I及paragraph6/7。
+  新source-container-v11用既有v5/v6独立验证完整前段和完整前陈述，再按最大有序旧分段链与紧邻
+  完整Git目标逐项比较；原medskip/noindent和数学/引用原字节保持，不扩展旧v1–v10权限。
+  验收计划：synthetic正反/Schema-valid篡改/旧版本拒绝/完整v4五字段与历史重放，真实完整包
+  prepare/check字节与mtime；全量工具/239QA/117模板、全库extract/check与alignment/check、
+  全facts/history/范围外字节、隔离progress/plan、当前lane实际render/pdf及463页全文/已看21PNG。
+  完整staged与远端head/base原字节/fullpatch/native唯一Issue/精确HEAD双CI及fresh main后授权squash，
+  合并后tree/bytes/MERGED/CLOSED/clean。当前122问题batch/560候选1813诊断保持；工具后独立12项
+  来源目录证据，再完整001B–001I DATA，全部S4后S5/S7，最终F1–F8及详细文档提示词继续。
+
+- Issue788实际验收：新增5项synthetic测试（包含完整两/三分段、plain/v6前陈述、逐项旧输入拒绝、两处相邻/唯一性、每个嵌套见证字段的Schema-valid篡改、v1–v10降级拒绝、完整v4旧组及每个新unit五字段重放）通过；首轮Schema使用不支持的minItems被拒，失败日志保留，改用现有Schema子集并保持运行时至少两完整分段和空/单/乱序拒绝。全量563测试 774.303秒、239QA 373.933秒及共享Schema/溯源/决策/workflow/harvest/index/117模板通过。真实001I完整六旧→三新来源prepare 196.958秒/check 197.276秒，包八文件bytes/mtime不变，完整三Git片段、所有独立预检签名及原v6嵌套见证逐项相等，目标36节点/19保护节点。旧v1–v10 Schema分支原字节保持。全库extract 61.172秒/check 59.861秒、alignment 33.649秒/check 33.074秒通过；全部库存/来源/术语/proof/队列原字节保持，239批1248unit/122问题batch/560术语候选1813诊断，187组218proof全match、来源及坐标错误零。隔离progress/plan及checks通过，三个报告原字节不变。全部facts/history/范围外bytes保持，无生产模型run或事实采用；后续12项来源词目录证据及完整001B–001I DATA须分别认领，全部S4/S5/S7/F1–F8继续。
+
+- Issue788构建验收：当前lane render 205.567秒/pdf 68.547秒，FinalTeX PASS；463页全文及21张此前实际查看PNG原字节相等。完整staged/远端head-base原字节/fullpatch/native唯一closing788/精确HEAD双CI及fresh main后按授权合并，无人审或发布批准。

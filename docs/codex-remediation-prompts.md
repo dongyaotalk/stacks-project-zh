@@ -11,20 +11,30 @@
 包括 S4 数据修订、S5 默认强制门禁和 S7 全库集成验收。完成后写详细开发文档
 和可复制的 Codex 提示词，记录架构、复现命令、验收证据和后续维护方法。
 
-最新DATA为Issue770/PR775，已合并接受main
-06ed9b2d8f7afdd7b790a59ae8e33b0c71152ed2；其后独立progress/plan及所有已合并
+用中文回复。最新DATA为Issue784/PR785，已合并接受main
+8cd73b2b1edc31ec4fe3af6711cc5d221d2f515e；其后独立progress/plan及所有已合并
 成果也要保留。英文锁定a04446e57ec1fbc252a871afcec7752fb2807b14。
-检查点239批/1272活跃unit，剩128问题batch、583术语候选/1871诊断；坐标、来源
-错误、proof不匹配零，187组/218proof全部match。完整来源库存43250条、READY
-36724/BLOCKED6526、18394诊断、116Git文件roundtrip/117章。数字须从fresh main
-重测，READY/BLOCKED不自动采用事实。05SH/05PU已修复，不重复认领；770真实
-Section001L六完整batch16旧→10新、两个真实gpt-6.1-sol run/raw及001P完整历史已保存。
+检查点239批/1248活跃unit，剩122问题batch、560术语候选/1813诊断；坐标、来源
+错误、proof不匹配零，187组/218proof全部match。完整来源库存43242条、READY
+37198/BLOCKED6044、16888诊断、116Git文件roundtrip/117章。数字须从fresh main
+重测，READY/BLOCKED不自动采用事实。05SH/05PU已修复，不重复认领；784真实
+Section0013六完整batch0014–0019，32旧→8新、六v4/八restoration、125来源要求/141
+双语声明及全部旧历史已保存。实际run为run-20261013-categories-definitions-complete-gpt6astra，
+真实gpt-6-astra/xhigh，snapshot未暴露；新任务必须重读实际元数据、动态解析Harness，
+不得沿用旧模型、turn或版本。首稿一unit token错序被拒且未采用，模型完整重出五字段
+后才组装。PR779严格记号、PR781历史parent双锚点v10、PR783完整来源词证据均已合并。
+770真实Section001L六完整batch16旧→10新、两个真实gpt-6.1-sol run/raw及001P完整历史仍保留。
 前置PR772登记完整英语functor-of-points来源概念，PR774实现首次Git入库前完整
 pre-adoption-replay-v1；不重做工具或删原输出。691/698/699已在PR759书末独立
 “勘误与原文疑点”表注明英文版本并关闭为留档，非数学裁定或英文修复。
 0AHK/d58a764及其后所有数据/工具/独立文档仍是接受历史。开发指南记录完整证据。
-下一DATA前先核实770之后独立progress/plan任务是否已合并；Issue776为本检查点
-的独立任务，不能依本文猜其当前状态。继续同章真实完整语义范围的S4，全部S4
+下一DATA前先核实784之后独立progress/plan任务是否已合并；Issue786为本检查点
+的独立任务，不能依本文猜其当前状态。剩余Categories24、Sets17、Conventions5、
+Coding2、Desirables18、FDL2、Guide21、Introduction2、Obsolete31问题batch。
+001B–001I只读预检未认领；27旧拟恢复为12完整新/575来源词，001I:p002/p003共同对应
+原生paragraph/7，现行单段和split-preceding合同拒绝该边界。完整未来库存另有12项
+旧来源词证据需独立迁移至锁定完整容器。须继续核验完整来源及所需前置，不裁去两段
+或把可通过11个提议当完整范围，不改变词形/术语批准。继续同章真实完整语义范围的S4，全部S4
 后才独立S5默认强门禁和S7；当前goal持续，不因单批或交接文档而结束。
 
 本地使用pyenv已安装的Python3.12，每条Make显式传同一PYTHON；本检查点实际

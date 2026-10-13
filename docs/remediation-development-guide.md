@@ -3,7 +3,76 @@
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
 
-## 最新接受检查点：2026-10-12，DATA770
+## 最新接受检查点：2026-10-13，DATA784
+
+[PR #785](https://github.com/dongyaotalk/stacks-project-zh/pull/785) 已合并，
+[Issue #784](https://github.com/dongyaotalk/stacks-project-zh/issues/784) 已关闭。
+DATA 接受 main 为 `8cd73b2b1edc31ec4fe3af6711cc5d221d2f515e`，精确 feature
+`d7e10de63b955b2047eed55caa8d92db79b3782c`，接受 base
+`b45ff995026d00ad6a5ef4285d2b660d89b1665a`。当前独立进度任务为
+[Issue #786](https://github.com/dongyaotalk/stacks-project-zh/issues/786)；其文档合并
+会产生后续 main，续接须读实时状态，不固定使用本段 SHA 覆盖工作区。
+
+| 当前实际审计 | 接受值 |
+| --- | ---: |
+| candidate batches / 活跃唯一 unit | 239 / 1248 |
+| 问题 batches | 122 |
+| 术语问题 candidates / 诊断 | 560 / 1813 |
+| 坐标 / 来源错误 / proof mismatch | 0 / 0 / 0 |
+| proof groups / proof units / match / unsupported | 187 / 218 / 187 / 0 |
+| 锁定来源库存 / READY / BLOCKED | 43242 / 37198 / 6044 |
+| 库存诊断 / Git roundtrip 文件 / 章节 | 16888 / 116 / 117 |
+
+本次真实 Section0013 的六个连续完整问题 batch 0014–0019，从32旧单元恢复为
+8个完整新单元，包含完整定义、17项列表注记、两段无标签正文及后续注记/定义/例。
+全部旧输入与候选原字节、18份历史文件、原run/raw保留；八份source restoration
+和六份v4完整有序分组证明无遗漏、无重复。八目标全部BYTE_EXACT、六批队列清空；
+其他来源、术语和proof findings逐项相同。问题批次`128→122`、术语候选`583→560`、
+诊断`1871→1813`；活跃unit减少来自完整语义分组，不是归档未解决问题。
+
+前置[PR #779](https://github.com/dongyaotalk/stacks-project-zh/pull/779)登记严格
+数学记号，[PR #781](https://github.com/dongyaotalk/stacks-project-zh/pull/781)
+新增`source-container-v10`历史parent双锚点见证，[PR #783](https://github.com/dongyaotalk/stacks-project-zh/pull/783)
+将26项英文来源证据绑定完整锁定容器；三者均未采用译文或批准中文词表。
+v10保留不同历史parent与真实Section的区别，绑定完整前陈述、段落和同批完整
+后陈述，不能把其特定权限推给旧v1–v9或任意段落。
+
+实际`gpt-6-astra / xhigh`生成8份完整五字段，run为
+`run-20261013-categories-definitions-complete-gpt6astra`；对应turn为
+`01a13305-e58d-7b52-88a2-18a6aff75f1f`。原计划模型尚未生成生产结果；先更新
+同一claimed Issue的branch/model/run及四个路径，保留原计划，再冻结和生成。
+本次动态Harness为`0.162.0-alpha.17.2`，snapshot未暴露、replayable false。
+每个新run必须重新读取实际元数据和动态版本，不能复制本次值。
+
+首稿paragraph-0003的保护token错序被拒，完整失败草稿保留；实际模型重新输出
+该unit全部五字段，程序仅选择七份原完整记录与这份完整修订再序列化。失败草稿
+此前未装配、未采用，不冒充已接受前驱；若已有实际run或采用记录，必须按
+完整历史重放合同保存，不能套用本次“未采用草稿”处理。最终五字段与真实rollout
+字面输出及immutable raw逐项相等，125来源要求、141双语声明、token次序/次数/
+尾空白均通过。全部术语、critic、语言/数学审校和发布仍未批准。
+
+239全量QA、新run QA、Schema/溯源/决策/117模板、全库抽取和对齐各check通过。
+当前lane实际render209.034秒、pdf78.543秒，Final TeX PASS；整书463页，450页
+layout文字相同。13变化页2/15/16/17/43–51与全部邻页/相关页共21张PNG实际查看。
+44文件完整4,782,828-byte patch及远端head/base原字节核验，原生唯一closing784
+通过；精确HEAD的`pr-contract` run/job `38338190848/115102982155`和
+`policy-and-data` `38338190780/115102981052`均SUCCESS。fresh main等于接受base
+后授权squash；合并后tree、44文件原字节、DATA trailers、MERGED/CLOSED/clean核验。
+
+独立进度Issue786已实际执行progress/progress-check（4.057/3.635秒）及plan/plan-check
+（0.594/0.607秒），三个报告与DATA隔离预览逐字相同。来源库存和对齐check也通过，
+实际render176.539秒/pdf68.522秒、Final TeX PASS；463页全文及21张接受PNG原字节
+相等，复用此前实际看图证据。其PR仍须核对远端合同、精确HEAD双CI和合并状态。
+剩余问题批次按最新队列为Categories24、Sets17、Conventions5、Coding2、Desirables18、
+FDL2、Guide21、Introduction2、Obsolete31。下一组001B–001I只读预检尚未认领：
+27旧单元拟恢复为12个完整新单元、575来源词；001I的p002/p003实际共同属于原生
+paragraph/7，现行单段及split-preceding合同拒绝其边界。完整范围继续待核验，
+不能只采用可通过的11个提议单元或裁掉残段。完整未来库存另有12项旧来源词证据
+需独立迁移到锁定完整容器；词形和中文批准不随迁移改变。先处理完整语义范围
+所需前置，再冻结实际模型修订。全部S4之后才独立S5/S7，
+本指南和提示词是持续更新的开发材料，不表示F1–F8总目标已完成。
+
+## 历史接受检查点：2026-10-12，DATA770
 
 [PR #775](https://github.com/dongyaotalk/stacks-project-zh/pull/775) 已合并，
 [Issue #770](https://github.com/dongyaotalk/stacks-project-zh/issues/770) 已关闭；

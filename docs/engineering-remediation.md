@@ -1,10 +1,11 @@
 # 2026-10 项目审查修复开发计划
 
-当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-13data784)
-及本文末尾执行记录为准：DATA784/PR785及独立进度Issue786/PR787已接受；
-独立工具Issue788/PR789已接受；下一完整001B–001I范围先完成来源词目录证据Issue790。
-以下DATA770前置段落是保留的历史计划；PR774/775及后续已合并成果不重复开发。
-总目标仍为全部F1–F8，当前S4剩余122问题batch，之后独立S5/S7与最终文档验收。
+当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data792)
+及本文末尾执行记录为准：DATA792/PR793完整八批001B–001I已接受，来源工具PR789和
+目录证据PR791已接受。先完成本次独立progress/plan，再按真实repair-queue继续同章S4。
+以下DATA770及先前计划均为保留的历史；全部已合并成果不重复开发。
+总目标仍为全部F1–F8，当前S4剩114问题batch/543术语候选1774诊断，之后独立S5/S7
+与最终详细开发文档/完整可复制提示词，未知术语及全部人审/发布权限保持待决。
 
 优先收尾 DATA770 的独立前置 [Issue #773](https://github.com/dongyaotalk/stacks-project-zh/issues/773)：
 `tool/pre-adoption-replay`，fresh main `76a9a20a8029f546c5b0763897b2aa98326f2d87`，
@@ -2211,3 +2212,11 @@ make source-alignment-check PYTHON="$PYTHON"
 make render MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
 make pdf MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
 ```
+
+- 独立progress/plan [Issue #794](https://github.com/dongyaotalk/stacks-project-zh/issues/794)，branch `docs/progress-categories-functors`，DATA793接受main `9ae8d621b35e33e3c299fbfbc9460e17f4262c6e`。
+  792 CLOSED、793 MERGED，58文件/完整tree/raw/实际run trailers及干净状态核验；最新239批1233unit、114问题batch、543术语候选1774诊断，187组218proof全match，源/坐标/证明错误零。
+  先claimed再branch，三个文档精确范围；实际progress/plan各check，即使报告不变也记录；更新开发方法及可复制完整提示词。
+  保持全事实/历史/范围外字节，当前lane真实render/pdf、463页全文/二十五已看PNG精确比较、完整staged/远端合同/双CI后授权合并。下一DATA须等此独立进度完成；S4后独立S5/S7，总goal继续。
+
+- Issue794独立progress/plan本地验收：实际progress3.657秒/check3.521秒、plan0.56秒/check0.55秒，README及progress/plan与DATA793隔离预览逐字相同，无手改数字。workflow/harvest/index/117模板/Schema通过；extract-all-check52.245秒、alignment-check28.892秒从接受main核验1233unit/114问题batch/543术语候选1774诊断及输入hash，187组218proof全match、坐标来源错误零。全部facts/history tree、政策/词表/锁/模板及范围外原字节保持。pyenv3.12当前lane真实render185.93秒/pdf65.163秒，FinalTeX PASS；463页整书全文layout及25张此前实际看图PNG重渲染原字节一致，无变化页，复用实际看图证据。三份工程文档更新接受main/已合并PR/精确CI/完整来源与实际五字段修订历史架构、命令、维护边界和完整复制提示词，保留DATA784/770/0AHK全部历史；首轮CI清理故障及完整下一来源范围拒绝留档。未改工具，沿用PR789接受563回归和DATA793精确HEAD CI/239QA，不重复不变门禁；模板/Make/render路径未改，template不适用。完整三个文档staged/远端所有原字节patch/native唯一closing794/精确HEAD双CI及fresh main后授权合并，随后继续全部S4，再独立S5/S7/F1–F8最终验收。
+- 下一完整同章范围0020/0021/0022的只读预检：完整13旧输入包括0020标题、三段与四项列表，0021标题和0022完整lemma/proof。四个来源容器（两标题/lemma/proof）可核验，但0020完整prose_block因真实前后语义锚点与原冻结batch边界不同而拒绝；分段替代也严格拒绝第二/三段历史wrapper及未经独立指定lowering的standalone enumerate。来源库存READY不提供事实采用权限；不裁去七旧输入，不将40已核验来源词/四新单元当作完整范围。完整失败原因已保留，后续先独立来源合同/工具及回归，再核验未来全目录并完整DATA。此预检没有认领/生成生产中文/run/改事实。

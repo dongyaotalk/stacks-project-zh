@@ -33,11 +33,14 @@ from .source_historical_parent_boundaries import (VERSION as HISTORICAL_PARENT_V
     historical_parent_paragraph_witness)
 from .source_split_after_paragraph_boundaries import (VERSION as SPLIT_AFTER_PARAGRAPH_VERSION,
     split_after_paragraph_witness)
+from .source_section_body_boundaries import (VERSION as SECTION_BODY_END_VERSION,
+    section_body_end_witness)
 
 VERSION = 'source-container-v3'
 SUPPORTED_VERSIONS = {'source-container-v1', 'source-container-v2', VERSION,
                       BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION,
-                      SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION}
+                      SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION,
+                      SECTION_BODY_END_VERSION}
 OUTER_WHITESPACE = ' \t\r\n'
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\Z')
 
@@ -573,7 +576,8 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
                      allow_split_preceding_paragraph: bool = False,
                      allow_paragraph_math_layout: bool = False,
                      allow_historical_parent_paragraph: bool = False,
-                     allow_split_after_paragraph: bool = False) -> dict[str, Any] | None:
+                     allow_split_after_paragraph: bool = False,
+                     allow_section_body_end: bool = False) -> dict[str, Any] | None:
     if native_containers is not None:
         if (len({u['unit_id'] for u in units}) != len(units)
                 or any(u['chapter'] + '.tex' != selected['selector']['file']
@@ -666,6 +670,9 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
                 raise RecordError('unlabelled paragraph cannot authorize a different English fragment')
             _verify_paragraph_outer_whitespace(units, groups, group, old, selected, tags)
     if old_kind == 'prose_block' and group['boundary_witness'] != selected['boundary_witness']:
+        if allow_section_body_end and native_containers is not None:
+            anchor = section_body_end_witness(native_containers, units, groups, group, selected)
+            return {'secondary_statements': secondary, 'section_body_anchor': anchor}
         raise RecordError('complete prose block has different real preceding/following semantic anchors')
     if secondary:
         return {'secondary_statements': secondary, 'paragraph_anchor': None}
@@ -718,7 +725,8 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                     policy_bytes=_git_origin_bytes(root, origin, 'config/macro-policy.yml'),
                     natural_text_enabled=version in {'source-container-v3', BOUNDARY_VERSION,
                                                     PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION,
-                                                    SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION})
+                                                    SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION,
+                                                    SECTION_BODY_END_VERSION})
             historical = historical_containers[key]
             selected = historical.select(record['selector'])
             for key in ('source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness'):
@@ -742,15 +750,16 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
             boundary = verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
                              allow_outer_whitespace=version != 'source-container-v1',
-                             native_containers=historical if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION} else None,
+                             native_containers=historical if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, SECTION_BODY_END_VERSION} else None,
                              allow_preceding_paragraph=version in {PRECEDING_VERSION, NESTED_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION},
                              allow_nested_preceding_paragraph=version == NESTED_PRECEDING_VERSION,
                              allow_section_title_paragraph=version == SECTION_TITLE_VERSION,
                              allow_split_preceding_paragraph=version == SPLIT_PRECEDING_VERSION,
                              allow_paragraph_math_layout=version == PARAGRAPH_LAYOUT_VERSION,
                              allow_historical_parent_paragraph=version == HISTORICAL_PARENT_VERSION,
-                             allow_split_after_paragraph=version == SPLIT_AFTER_PARAGRAPH_VERSION)
-            if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION} and (not boundary or record['legacy_boundary_witness'] != boundary):
+                             allow_split_after_paragraph=version == SPLIT_AFTER_PARAGRAPH_VERSION,
+                             allow_section_body_end=version == SECTION_BODY_END_VERSION)
+            if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, SECTION_BODY_END_VERSION} and (not boundary or record['legacy_boundary_witness'] != boundary):
                 raise RecordError('legacy boundary witness differs from the actual Git and complete frozen batch')
             expected = lower_container(selected, historical.policy, layout=record['layout'])
             typed = any(u['schema_version'] == 2 for u in expected)
@@ -911,7 +920,7 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                         allow_preceding_paragraph=True, allow_nested_preceding_paragraph=True,
                         allow_section_title_paragraph=True, allow_split_preceding_paragraph=True,
                         allow_paragraph_math_layout=True, allow_historical_parent_paragraph=True,
-                        allow_split_after_paragraph=True)
+                        allow_split_after_paragraph=True, allow_section_body_end=True)
                     if not boundary:
                         raise RecordError('source boundary extension requires an actual native witness')
                 file, location = selected['selector']['file'], selected['location']
@@ -921,8 +930,9 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                 new_units = lower_container(selected, containers.policy, layout=group['layout'])
                 witnessed_version = None
                 if boundary:
-                    anchor = boundary['paragraph_anchor']
-                    witnessed_version = (SPLIT_AFTER_PARAGRAPH_VERSION
+                    anchor = boundary.get('paragraph_anchor')
+                    witnessed_version = (SECTION_BODY_END_VERSION
+                        if 'section_body_anchor' in boundary else SPLIT_AFTER_PARAGRAPH_VERSION
                         if anchor and 'preceding_paragraph_selector' in anchor else HISTORICAL_PARENT_VERSION
                         if anchor and 'following_statement_historical_parent_tag' in anchor else PARAGRAPH_LAYOUT_VERSION
                         if anchor and 'math_layout_differences' in anchor else SPLIT_PRECEDING_VERSION

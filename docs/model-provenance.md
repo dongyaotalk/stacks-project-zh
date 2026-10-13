@@ -566,3 +566,18 @@ unit-v2 或 source-container-v3。新格式只允许已验证命令参数的自�
 及全部祖先，采用完整 v4 分组并要求每个新输出实际模型完整五字段及不可变
 原输出/context。完整来源 hash、正式审批绑定与预览披露包含全部 region/slot
 和新修订，不继承任何旧批准。政策/工具只准备来源，不生成中文或批准术语。
+
+
+### 完整 Section batch 末端来源证据
+
+[Issue #796](https://github.com/dongyaotalk/stacks-project-zh/issues/796)的
+source-container-v12只扩展§10的完整来源证据。完整旧batch仍原字节保留，完整
+前Section标题及末端最大正文全部输入恰覆盖；两个原生Section标题和完整正文
+从锁定Git独立核验，全文签名只容许普通ASCII prose换行空白及前标题沿用v7的
+精确永久标签命名空间比较。正文所有数学/保护节点/comment/非ASCII字节保持，
+未知/typed数学文字拒绝；原v1–v11权限和所有历史不变。完整witness及每个字段
+重新从origin政策/Git/旧快照计算，不以Schema形状、缓存或自报hash替代证据。
+具体DATA仍需独立claimed合同、完整新源和旧组/candidate/ancestry/context冻结、
+实际模型每个新unit全部五字段与immutable raw逐项相同，再完整v4重放。准备
+READY不采用事实、不削减问题或授予术语/critic/语言/数学审校/发布批准；详情见
+[source-container-restoration.md](source-container-restoration.md)。

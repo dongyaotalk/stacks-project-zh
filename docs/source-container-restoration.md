@@ -48,6 +48,37 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 
 ## 1. 问题与目标
 
+
+### 完整 Section 正文位于旧 batch 末尾（source-container-v12）
+
+独立工具 [Issue #796](https://github.com/dongyaotalk/stacks-project-zh/issues/796)
+处理真实0020的完整标题、三段正文和四项列表。锁定Git正文恰位于Section0020与
+下一Section0021的完整标题之间；旧完整batch在正文末结束，旧after=None，原v1–v11
+继续拒绝该边界。不能裁去正文，不能用四个已核验容器冒充完整0020–0022范围，
+也不开放standalone enumerate的任意lowering。v4分组及旧版本权限保持。
+
+v12仅接受完整canonical unit-v1 batch：第一单元为同一真实Section的完整标题，
+其余全部有序paragraph/list_item是单一最大完整prose_block，恰覆盖整个batch余部。
+同章/source/历史parent、唯一ID、完整前锚点、旧after=None及原生两个不同Section
+标题都必须独立核验；切片、遗漏、重复、乱序、跨owner或额外语义边界拒绝。
+从锁定Git重选两个完整标题/原始片段/owner/Section/selector及前后正文边界，全文
+对应须章内唯一。前标题只沿用v7的已验证永久标签本地/命名空间映射和ASCII外围
+空白比较，标题其他原字节相同；不改原旧输入。正文直接拼接每个完整旧source TeX，
+不插分隔符，普通prose的ASCII换行空白可比较归一；数学、格式、结构、引用、comment
+和非ASCII字节逐项原序保持，未知语法、typed或未分类数学文字继续BLOCKED。
+新source TeX仍逐字等于未归一的完整原Git正文，模型翻译不得改变这些保护内容。
+
+互斥Schema分支保存完整正文旧IDs/历史parent、完整前标题旧ID/selector/fragment hash/
+永久标签签名hash、完整后标题selector/fragment hash及完整旧/新正文signature hashes。
+loader从origin宏政策、锁定Git及完整旧快照重新计算所有字段，Schema-valid重算hash的
+篡改、自报证据和旧版本降级不能授权采用；原九个Schema分支原字节前缀保持。
+prepare/check仍使用§9接口及完整batch计划，八文件bytes/mtime只读核验。
+
+真实0020–0022完整13旧→5新只读准备的来源词数为222，完整正文182词；后续DATA必须
+独立认领、明确偏好范围例外、核验未来全词目录，重新冻结全部新旧输入/候选/完整组/
+ancestry/policy/context及当时真实model/effort/turn，由实际模型每个新unit完整生成五字段。
+本工具没有生产中文/run/事实/词形批准，当前114问题batch及全部历史仍保留。
+
 ### 完整前段之后的旧分段链（source-container-v11）
 
 独立工具 [Issue #788](https://github.com/dongyaotalk/stacks-project-zh/issues/788)

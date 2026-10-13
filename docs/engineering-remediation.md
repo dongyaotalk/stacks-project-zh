@@ -1,5 +1,10 @@
 # 2026-10 项目审查修复开发计划
 
+当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-13data784)
+及本文末尾执行记录为准：DATA784/PR785已接受，独立进度Issue786先于下一DATA。
+以下DATA770前置段落是保留的历史计划；PR774/775及后续已合并成果不重复开发。
+总目标仍为全部F1–F8，当前S4剩余122问题batch，之后独立S5/S7与最终文档验收。
+
 优先收尾 DATA770 的独立前置 [Issue #773](https://github.com/dongyaotalk/stacks-project-zh/issues/773)：
 `tool/pre-adoption-replay`，fresh main `76a9a20a8029f546c5b0763897b2aa98326f2d87`，
 锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`，完整开发合同见
@@ -2146,3 +2151,10 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
   实际239全量候选QA（349.784秒，包含workflow/harvest/index/117模板/Schema/溯源/决策）、新run validate-many（0.179秒）通过。extract-all/check 63.946/62.516秒，source-alignment/check 34.852/36.265秒通过；八目标全部BYTE_EXACT、六batch完整队列清空，所有范围外source/term/proof findings逐项保持。239批活跃unit1272→1248，问题batch128→122，术语候选583→560、诊断1871→1813；坐标、来源错误及proof mismatch保持零，187组218proof全部match。库存43242提议/37198 READY/6044 BLOCKED/16888诊断、116原Git文件回放保持；READY不代表事实采用或术语批准。
   隔离progress/plan分别生成并check通过，README及两报告逐字不变，下一DATA前仍须独立进度Issue/PR。纯DATA未改工具/政策/测试，沿用已接受558项工具回归，精确HEAD CI再执行全量工具门禁，不无理由重复本地未变测试。当前lane实际make render 209.034秒、make pdf 78.543秒零退出，Final TeX PASS；整书463→463页，450页layout全文相同，13变化页为2/15/16/17/43–51。全部变化与邻页及相关页1–5、14–18、42–52共21张PNG已实际逐张查看，无裁切、重叠或缺字；14/18为正常空白页。未修改生成物，generated/build/PDF及本机路径不提交。
   完整staged/精确远端head和base全部44路径原字节/fullpatch、GitHub-native唯一closing784、最新精确HEAD双CI run/job及fresh main等于接受基线后，按已授权admin squash并保留DATA trailers；合并后核验tree/raw/MERGED/CLOSED/clean。随后独立progress/plan，再继续剩122问题batch的完整S4；S5默认强门禁、S7全库集成及F1–F8最终开发文档/完整复制提示词仍未完成。
+
+- 独立progress/plan [Issue #786](https://github.com/dongyaotalk/stacks-project-zh/issues/786)，branch `docs/progress-categories-definitions`，DATA785接受main `8cd73b2b1edc31ec4fe3af6711cc5d221d2f515e`。
+  784 CLOSED、785 MERGED，44文件/完整tree/raw/实际run trailers及干净状态核验；最新239批1248unit、122问题batch、560术语候选1813诊断，187组218proof全match，源/坐标/证明错误零。
+  先claimed再branch，三个文档精确范围；实际progress/plan各check，即使报告不变也记录；更新开发方法及可复制完整提示词。
+  保持全事实/历史/范围外字节，当前lane真实render/pdf、463页全文/二十一已看PNG精确比较、完整staged/远端合同/双CI后授权合并。下一DATA须等此独立进度完成；S4后独立S5/S7，总goal继续。
+
+- Issue786 本地验收：实际progress 4.057秒/progress-check 3.635秒、plan 0.594秒/plan-check 0.607秒通过，README及progress/plan与DATA785隔离预览逐字一致，无手改数字。workflow/harvest/index/117模板/Schema通过；extract-all-check 53.502秒、source-alignment-check 29.098秒实际核对最新main事实，1248unit/122问题batch/560术语候选1813诊断，当前输入hash一致。完整translation-data/history tree和所有范围外原字节不变。pyenv3.12当前lane render 176.539秒、pdf 68.522秒零退出，FinalTeX PASS；463页全文layout与DATA接受PDF相等，21张此前实际查看PNG重渲染原字节相等，无变化页，复用已看图依据。未变工具沿用558回归/239QA及最新接受精确HEAD CI，不重复跑；模板/Make/render路径未变，无新增template。完整三个工程文件staged及远端head/base原字节/fullpatch/native唯一closing786/精确HEAD双CI/fresh main后授权合并，再继续全部S4；当前goal未完成，S5/S7和最终F1–F8证据仍待全部数据修复。

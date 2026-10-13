@@ -543,6 +543,16 @@ unit-v1/noindent段落及同批完整有序后继陈述分别绑定原Git真实�
 旧v1–v9保持。派生仍v4，具体DATA另开任务，每个新单元实际完整五字段、
 immutable raw/context、全部旧原字节/ancestry以及人审/出版门禁不变。
 
+完整前段之后的旧分段链使用独立 `source-container-v11`，见
+[source-container-restoration.md](source-container-restoration.md)。完整前段先通过
+既有v5/v6独立见证绑定完整前陈述，再核验紧邻完整目标的全部有序最大旧分段链。
+原medskip/noindent包装、真实Section、完整旧陈述/段落和章内唯一性均须重验；
+完整前陈述及目标原字节签名匹配，数学/引用不归一化，未知与typed文字继续阻断。
+加载器从origin政策、锁定Git及全旧快照重算包括嵌套v5/v6的每个字段；旧v1–v10
+不扩权，派生仍v4。工具、英文词目录见证迁移、完整DATA分别认领和验收；任何新
+unit仍需实际模型完整五字段、immutable raw/context及全部旧组/历史原字节，
+不继承术语、critic、人审或发布批准。
+
 ## 11. 数学内自然语言的后续来源保护合同
 
 完整设计见 [math-text-translation.md](math-text-translation.md)。独立工具实施并

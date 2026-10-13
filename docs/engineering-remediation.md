@@ -2,7 +2,7 @@
 
 当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-13data784)
 及本文末尾执行记录为准：DATA784/PR785及独立进度Issue786/PR787已接受；
-下一完整001B–001I范围先完成独立工具Issue788与来源词目录证据任务。
+独立工具Issue788/PR789已接受；下一完整001B–001I范围先完成来源词目录证据Issue790。
 以下DATA770前置段落是保留的历史计划；PR774/775及后续已合并成果不重复开发。
 总目标仍为全部F1–F8，当前S4剩余122问题batch，之后独立S5/S7与最终文档验收。
 
@@ -2175,3 +2175,16 @@ bypass。DATA合并后独立progress。基线180问题batch、705术语候选/22
 - Issue788实际验收：新增5项synthetic测试（包含完整两/三分段、plain/v6前陈述、逐项旧输入拒绝、两处相邻/唯一性、每个嵌套见证字段的Schema-valid篡改、v1–v10降级拒绝、完整v4旧组及每个新unit五字段重放）通过；首轮Schema使用不支持的minItems被拒，失败日志保留，改用现有Schema子集并保持运行时至少两完整分段和空/单/乱序拒绝。全量563测试 774.303秒、239QA 373.933秒及共享Schema/溯源/决策/workflow/harvest/index/117模板通过。真实001I完整六旧→三新来源prepare 196.958秒/check 197.276秒，包八文件bytes/mtime不变，完整三Git片段、所有独立预检签名及原v6嵌套见证逐项相等，目标36节点/19保护节点。旧v1–v10 Schema分支原字节保持。全库extract 61.172秒/check 59.861秒、alignment 33.649秒/check 33.074秒通过；全部库存/来源/术语/proof/队列原字节保持，239批1248unit/122问题batch/560术语候选1813诊断，187组218proof全match、来源及坐标错误零。隔离progress/plan及checks通过，三个报告原字节不变。全部facts/history/范围外bytes保持，无生产模型run或事实采用；后续12项来源词目录证据及完整001B–001I DATA须分别认领，全部S4/S5/S7/F1–F8继续。
 
 - Issue788构建验收：当前lane render 205.567秒/pdf 68.547秒，FinalTeX PASS；463页全文及21张此前实际查看PNG原字节相等。完整staged/远端head-base原字节/fullpatch/native唯一closing788/精确HEAD双CI及fresh main后按授权合并，无人审或发布批准。
+
+- 独立英文来源词见证 [Issue #790](https://github.com/dongyaotalk/stacks-project-zh/issues/790)，owner dongyaotalk，branch `tool/functor-source-evidence`，
+  fresh main `a8bba4eb775afc531920f6747d29970850f30efc`；PR789 MERGED/788 CLOSED、七文件tree/bytes/Source-Commit trailer/干净状态已核实。
+  接受v11完整001I见证后，重新核验同章完整001B–001I八批27旧→12新/575词，零BLOCKED；
+  先claimed、三允许路径及完整参考IDs/owner/真实0013与历史八Tag，再仅迁移12原evidence索引至六完整Git容器。
+  开发/验收：原owner/Section/selector/边界/blob/原片段及暴露精确词形，当前1248及未来1233来源库存
+  除catalog_hash外逐项相等；forms/chapters/分类/批准/全部facts/history保持。适用source-term回归、
+  239QA/共享门禁/117模板、全库抽取对齐checks、隔离进度计划及当前lane真实render/pdf/463页全文/21PNG，
+  完整staged/精确远端原字节/fullpatch/native单Issue/双CI/fresh main后授权合并，postmerge原字节/clean。
+  沿用PR789的563已通过工具回归，不重复未变检查。当前122问题batch/560候选1813诊断不减少，
+  VERIFY_OR_RESTORE_SOURCE行动仍保留；目录后独立完整DATA真实五字段/完整冻结，再独立进度，全部S4/S5/S7/F1–F8继续。
+
+- Issue790 本地验收：12处原evidence索引独立迁移至六完整锁定Git容器；原owner/Section0013/selector/边界/blob/原片段及保护后精确词形全部通过，当前1248与未来1233来源库存除catalog_hash外逐项相等，全部未来目录证据有效。48项source-term回归 2.744秒、239QA 328.587秒及共享Schema/溯源/决策/workflow/harvest/index/117模板通过；未改工具沿用PR789接受的563全量回归，不重复。全库extract 60.924秒/check 59.95秒，alignment 33.906秒/check 33.258秒；库存manifest原字节相等，全部source/proof/术语诊断、当前匹配状态与队列actions/findings保持，12新locked证据全部PASS。仍239批1248unit/122问题batch/560术语候选1813诊断，187组218proof全match，坐标及来源审计错误零；VERIFY_OR_RESTORE_SOURCE行动保留。隔离progress/plan及checks三报告原字节不变，全facts/history/范围外bytes和forms/chapters/分类/批准保持。当前lane实际render 195.904秒/pdf 71.429秒，FinalTeX PASS；463页全文与21张已实际查看PNG重渲染逐字一致。完整staged/精确远端head-base原字节/fullpatch/native单closing/精确HEAD双CI及fresh main后授权squash；无模型中文/run或批准，目录后独立完整八批DATA及独立progress，再全部S4/S5/S7/F1–F8。

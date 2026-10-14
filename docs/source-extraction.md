@@ -255,3 +255,75 @@ remark-ind-category和remark-pro-category。原文在真实Section05PT下定义�
 未声明后继与未知语法/数学自然语言继续BLOCKED，不归一或借宽泛symbol用法
 放行，不授予术语或人工数学批准。后续实际DATA必须重新冻结新上下文和完整
 旧新分组/候选/历史，由当前模型实际生成完整五字段；不能复制暂存包当译文。
+
+### 集中修复中的精确数学记号见证（Issue #808）
+
+全量预检在当前问题来源中发现以下明确函数/对象记号；新增分类只保留数学
+原字节，不生成中文、不批准术语。阶段2的23项完整锁定Git容器原片段/hash、实际命令
+和用法曾独立核验，合计113个不同真实出现；该记录是阶段2检查点。来源准备变化
+不代表活跃译文修复。旧版本来源按origin政策重放，不改旧证据或run。
+
+| 精确参数 | 命令 | 使用形状 | 锁定 Git 真实 label |
+| --- | --- | --- | --- |
+| Equalizer | text | applied | categories-lemma-almost-directed-commutes-equalizers |
+| Fun | text | applied | categories-section-formal-cat-cat |
+| GL | text | subscripted | guide-section-papers |
+| Br | text | applied | guide-section-papers |
+| Quot | text | applied | guide-section-papers |
+| Bun | textit | subscripted | desirables-section-examples-stacks |
+| length | text | subscripted | obsolete-lemma-not-domain |
+| ord | text | subscripted | obsolete-lemma-not-domain |
+| div | text | applied | obsolete-lemma-bound-primes |
+| depth | text | subscripted | obsolete-lemma-kill-local |
+| cd | text | applied | obsolete-lemma-algebraize-local-cohomology-bis-bis |
+| Coh | textit | applied | obsolete-lemma-fully-faithful-simple-one |
+| Gr | text | subscripted | obsolete-lemma-get-morphism-general |
+| cosk | text | subscripted | obsolete-lemma-cosk-hom-deltak |
+| sk | text | subscripted | obsolete-lemma-cosk-hom-deltak |
+| Vect | text/subscripted、textit/applied精确配对 | contexts | obsolete-lemma-bondal-van-den-bergh |
+| Lift | text/applied、textit/applied、textit/subscripted精确配对 | contexts | obsolete-section-modules |
+| Bad | text | applied | obsolete-lemma-blowing-up-intersections |
+| Good | text | applied | obsolete-lemma-blowing-up-intersections |
+| Gal | text | subscripted | obsolete-theorem-equivalence-sheaves-point |
+| Inf | text | subscripted | obsolete-lemma-tangent-and-inf |
+| End | text | subscripted | obsolete-lemma-tangent-and-inf |
+| Der | text | subscripted | obsolete-lemma-tangent-and-inf |
+
+只匹配完整精确参数和表中语法；错误命令、大小写和角色仍拒绝。普通正文
+Equalizer/functor等仍暴露为自然语言。unit/counit、in/and、composes to、lying over、
+restriction of、monomorphism和irred. comp. with不作为记号登记；Ext/Tor上标、
+Hilb/Hom分段拼字在阶段2时仍BLOCKED；阶段6的明确扩展见下文。其他未支持用法继续在
+同一集中Issue/PR中进行，不用宽泛symbol规则掩盖未知文字。
+
+### 集中阶段5/6：真实层级与额外记号用法
+
+source-extraction-v4仅在显式hierarchical_prose模式跟踪实际Section/subsection/
+subsubsection层级：正文owner为最近有真实永久Tag的祖先，parent保持实际Section。
+同级新标题清理同级及更深旧owner，未标同级不借用前同级Tag。无真实根Section仍
+阻断。原v1–v12来源恢复按旧模式独立重放；新v13使用真实层级，不改历史含义。
+全部片段仍逐字回放完整源blob。尾部input{chapters}/bibliography/bibliographystyle
+只按真实连续基础设施段处理，后续自然文字仍阻断。版权literal是完整锁定元数据，
+内部伪label/标题不提供来源锚点，不执行任何源命令。
+
+阶段6再登记Groupoids(textit symbol)、Map(text applied)、Ext(text superscripted)、
+Tor(text superscripted/subscripted)，及精确mathcal{H}+text{ilb|om}的sheaf-symbol-suffix。
+后者必须在真实根数学位置并后接实际应用或非空脚本，未知宏/脚本参数不可借前缀。
+Br支持primed-applied，Coh支持下标及独立对象，Lift/div支持下标，Aut支持应用，
+Quot/sk/cosk/ord支持独立符号。-Sets的新用法只允许真实根层箭头目标G的显式后缀，
+左操作数必须已闭合，不以一般symbol豁免。原数学全部保持。
+
+新增notation配对已从锁定Git实际命令节点独立核验：43项有效配对全部有来源。
+Vect/Lift的可选contexts是精确command/usage字符串集合，成员须唯一、合法并覆盖
+所列commands/usages；未列组合拒绝。没有contexts的原政策语义保持。当前registry
+50项，新增29项；不是50个已批准术语，也不是实际译文修复数。
+
+FDL前言中的center明确作为可译body，copyright/large声明locked_arguments:[]；
+扫描器只锁零参数命令原字节，后续文字继续暴露。未知环境/宏仍拒绝，不执行TeX。
+该支持与完整phantom章头/body边界的v13证据一同核验，不能仅因单个命令可保护就
+绕过真实owner、完整旧组、原生两边界或历史绑定。
+
+当前集中工具完整重建/check结果：117章、116 Git原字节回放、43223提议，
+READY38422/BLOCKED4801、12491诊断；声明notation10822处，自然数学region756、
+slot874。v4分段始终完整回放；已分类且无可译正文的整条数学可进入锁定段，
+提议unit数相对旧缓存减少不能解释成删除源字节或采用译文。全活跃事实数学
+探针未分类0、待真实typed迁移11节点；完整Git来源支持不代表中文已经修复。

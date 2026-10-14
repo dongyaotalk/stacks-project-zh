@@ -82,7 +82,8 @@ def canonical_tokens(text: str, chapter: str, tags: dict[str, str], policy: Poli
                     kind = 'locked'
                 elif (policy.commands.get(name) == 'locked' and name != ' '
                       or name in {'index', 'xymatrix'}):
-                    end, _ = scanner.command_arguments(i, optional=True)
+                    if name not in policy.locked_noargs:
+                        end, _ = scanner.command_arguments(i, optional=True)
                     kind = 'locked'
                 elif name == 'href':
                     _, args = scanner.command_arguments(i, count=2)
@@ -145,7 +146,10 @@ def _labels(text: str, chapter: str, tags: dict[str, str], policy: Policy):
             if command:
                 name = command.group()[1:]
                 if (policy.commands.get(name) == 'locked' and name != ' ') or name == 'index':
-                    i, _ = scanner.command_arguments(i, optional=True)
+                    if name in policy.locked_noargs:
+                        i = command.end()
+                    else:
+                        i, _ = scanner.command_arguments(i, optional=True)
                     continue
                 if name == 'href':
                     _, args = scanner.command_arguments(i, count=2)
@@ -303,7 +307,8 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
               'natural_math_text_classifications'}
     for chapter in sorted(chapters):
         raw = _git_bytes(harvest, english.commit, chapter + '.tex')
-        actual, _, _ = chapter_inventory(chapter, raw, english.commit, english.tags, policy)
+        actual, _, _ = chapter_inventory(chapter, raw, english.commit, english.tags, policy,
+                                         hierarchical_prose=True)
         for index, row in enumerate(actual):
             cached = by_id.pop(row['inventory_id'], None)
             if cached is None or any(k not in cached or cached[k] != row[k] for k in fields):

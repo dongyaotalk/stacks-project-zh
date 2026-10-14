@@ -59,7 +59,7 @@ def expected_unit_hashes(unit: dict[str, Any]) -> dict[str, str]:
         if key.startswith("MATH_")
     }
     extra = {}
-    if unit.get('schema_version') == 2:
+    if unit.get('schema_version') in {2,3}:
         from .math_text import complete_math_nodes, skeleton
         structure['math_text_regions'] = unit['math_text_regions']
         math_nodes = complete_math_nodes(unit)
@@ -171,7 +171,7 @@ def restore_placeholders(
     *,
     delimit_commands: bool = False,
 ) -> str:
-    if unit.get('schema_version') == 2:
+    if unit.get('schema_version') in {2,3}:
         from .math_text import validate_translation
         errors = validate_translation(unit, translation)
         if errors:
@@ -267,8 +267,8 @@ def _validate_unit(unit: dict[str, Any], source_commit: str) -> list[str]:
     for key in required_strings:
         if not isinstance(unit.get(key), str) or not unit[key]:
             errors.append(f"{location}: {key} must be a non-empty string")
-    if type(unit.get('schema_version')) is not int or unit.get("schema_version") not in {1, 2}:
-        errors.append(f"{location}: schema_version must be 1 or 2")
+    if type(unit.get('schema_version')) is not int or unit.get("schema_version") not in {1, 2, 3}:
+        errors.append(f"{location}: unit schema_version must be 1, 2 or 3")
     if unit.get("source_commit") != source_commit:
         errors.append(f"{location}: source_commit does not match upstream.lock")
     if unit.get("source_status") != "CURRENT":
@@ -305,7 +305,7 @@ def _validate_unit(unit: dict[str, Any], source_commit: str) -> list[str]:
         "source_math_hash",
     )):
         from .math_text import validate_regions
-        math_errors = validate_regions(unit) if unit.get('schema_version') in {1, 2} else []
+        math_errors = validate_regions(unit) if unit.get('schema_version') in {1, 2, 3} else []
         errors.extend(f'{location}: {e}' for e in math_errors)
         try:
             expected = expected_unit_hashes(unit)

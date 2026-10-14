@@ -14,7 +14,11 @@ from typing import Any
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
-USAGES = {'quad-connector', 'matrix-condition', 'set-description'}
+USAGES = {'quad-connector', 'matrix-condition', 'set-description',
+          'root-phrase', 'matrix-prefix-condition', 'arrow-label-prefix'}
+COMPONENT_USAGE = 'indexed-component-description'
+COMPONENT_LITERAL = r' irred.\ comp. with '
+COMPONENT_SEPARATOR = '\\ '
 MATH_ENVIRONMENTS = {'equation', 'equation*', 'align', 'align*', 'aligned',
                      'eqnarray', 'eqnarray*', 'matrix'}
 
@@ -33,16 +37,18 @@ def plain_text(text: str) -> bool:
 
 def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Strict, JSON-valued subset of the macro policy's explicit registry."""
-    rules, active, seen, entry = {}, False, False, None
+    rules, active, seen, entry, components = {}, False, set(), None, False
     for line in text.splitlines():
         if not line.strip() or line.lstrip().startswith('#'):
             continue
         if not line.startswith(' '):
-            active = line == 'translatable_math_text:'
-            if line.partition(':')[0] == 'translatable_math_text':
-                if not active or seen:
+            section = line.partition(':')[0]
+            components = section == 'translatable_math_text_components'
+            active = line in {'translatable_math_text:', 'translatable_math_text_components:'}
+            if section in {'translatable_math_text', 'translatable_math_text_components'}:
+                if not active or section in seen:
                     raise ValueError('invalid or duplicate natural math-text policy section')
-                seen = True
+                seen.add(section)
             entry = None
         elif active:
             match = re.fullmatch(r'  ([a-z][a-z0-9-]*):', line)
@@ -50,7 +56,7 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 entry = match[1]
                 if entry in rules:
                     raise ValueError('duplicate natural math-text policy entry')
-                rules[entry] = {}
+                rules[entry] = {'slot_schema_version':3} if components else {}
             else:
                 field = re.fullmatch(r'    ([a-z_]+): (.+)', line)
                 if field is None or entry is None or field[1] in rules[entry]:
@@ -58,18 +64,24 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 rules[entry][field[1]] = json.loads(field[2])
     seen_literals = set()
     for rule in rules.values():
-        if set(rule) != {'literal', 'command', 'usage', 'source_label', 'witness_kind', 'witness_ordinal'}:
+        component = rule.get('slot_schema_version') == 3
+        if set(rule) != ({'literal', 'command', 'usage', 'source_label', 'witness_kind', 'witness_ordinal'}
+                         | ({'slot_schema_version','components','separator'} if component else set())):
             raise ValueError('incomplete natural math-text policy')
         literal = rule['literal']
-        if (not isinstance(literal, str) or not re.fullmatch(r'[A-Za-z][A-Za-z -]*', literal)
+        if (not isinstance(literal, str) or not (literal == COMPONENT_LITERAL if component else
+                re.fullmatch(r' *[A-Za-z][A-Za-z -]*', literal))
                 or not re.search(r'[A-Za-z]{2,}', literal) or literal in seen_literals):
             raise ValueError('invalid or duplicate natural math-text literal')
         if literal in notations:
             raise ValueError('math text cannot be both notation and natural language')
         seen_literals.add(literal)
         if (rule['command'] != 'text' or not isinstance(rule['usage'], str)
-                or rule['usage'] not in USAGES):
+                or rule['usage'] not in ({COMPONENT_USAGE} if component else USAGES)):
             raise ValueError('unsupported natural math-text command or usage')
+        if component and (rule['separator'] != COMPONENT_SEPARATOR
+                          or rule['components'] != [' irred.','comp. with ']):
+            raise ValueError('unsupported composite natural math-text leaves or separator')
         if (not isinstance(rule['source_label'], str)
                 or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label'])
                 or not isinstance(rule['witness_kind'], str)
@@ -183,7 +195,8 @@ def delimiter_kind(source: str) -> str:
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     node = stream[index]
-    if (node['depth'] != 0 or index == 0 or index + 1 >= len(stream)
+    depth = 1 if kind in {'arrow-label-prefix',COMPONENT_USAGE} else 0
+    if (node['depth'] != depth or index == 0 or index + 1 >= len(stream)
             or set(node['environments']) - MATH_ENVIRONMENTS):
         return None
     before, after = stream[index - 1], stream[index + 1]
@@ -195,6 +208,32 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     elif kind == 'set-description':
         valid = (before['token'] == r'\{' and re.fullmatch(r'[A-Z]', after['token'])
                  and any(n['token'] == r'\}' and n['depth'] == 0 for n in stream[index + 2:]))
+    elif kind == 'root-phrase':
+        valid = (not node['environments']
+                 and before['token'] not in {'$', r'\[', r'\(', r'\begin{matrix}', r'\end{matrix}', '&'}
+                 and after['token'] not in {'$', r'\]', r'\)', r'\begin{matrix}', r'\end{matrix}', '&'})
+    elif kind == 'matrix-prefix-condition':
+        valid = (before['token'] == '&' and node['environments']
+                 and node['environments'][-1] == 'matrix'
+                 and after['token'] not in {'&', r'\\', r'\end{matrix}'})
+    elif kind == 'arrow-label-prefix':
+        valid = (index >= 2 and before['token'] == '{' and before['depth'] == 0
+                 and stream[index - 2]['token'] == r'\xrightarrow'
+                 and stream[index - 2]['depth'] == 0
+                 and after['token'] != '}')
+    elif kind == COMPONENT_USAGE:
+        openings = [i for i,n in enumerate(stream[:index]) if n['token']=='{' and n['depth']==0]
+        opening = openings[-1] if openings else -1
+        valid = (not node['environments'] and opening >= 3
+                 and [n['token'] for n in stream[opening-3:opening]] == [r'\bigcup',r'\nolimits','_']
+                 and index > opening+1 and after['token'] == r'\dim' and after['depth'] == 1
+                 and not any(n['token'] in {'}',']'} and n['depth']==1
+                             for n in stream[opening+1:index])
+                 and any(n['token']==r'\subset' for n in stream[opening+1:index])
+                 and all(not n['token'].startswith('\\') or
+                         COMMAND.match(n['token'])[0] in {r'\subset',r'\cap'}
+                         for n in stream[opening+1:index])
+                 and any(n['token']=='}' and n['depth']==1 for n in stream[index+1:]))
     else:
         return None
     if not valid:
@@ -209,13 +248,24 @@ def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, 
         return []
     accepted = []
     for index, node in enumerate(stream):
-        if node.get('command') != 'text' or not plain_text(node.get('value', '')):
+        if node.get('command') != 'text':
             continue
         for key, rule in rules.items():
             if node['value'] != rule['literal'] or node['command'] != rule['command']:
                 continue
             witness = usage(source, stream, index, rule['usage'])
-            if witness is not None:
+            if witness is not None and rule.get('slot_schema_version') == 3:
+                start = node['parameter_start']
+                for ordinal,leaf in enumerate(rule['components'],1):
+                    end = start+len(leaf)
+                    accepted.append({**node,'parameter_start':start,'parameter_end':end,'value':leaf,
+                        'policy_entry':key,'usage':rule['usage'],'usage_source':witness,
+                        'parameter_components':dict(parameter_source=node['value'],
+                            parameter_byte_span=dict(start=len(source[:node['parameter_start']].encode()),
+                                                     end=len(source[:node['parameter_end']].encode())),
+                            component_index=ordinal,component_count=2,separator=rule['separator'])})
+                    start = end+len(rule['separator'])
+            elif witness is not None and plain_text(node['value']):
                 accepted.append({**node, 'policy_entry': key, 'usage': rule['usage'], 'usage_source': witness})
     return accepted
 
@@ -283,13 +333,14 @@ def bind_regions(unit: dict[str, Any], proposed: list[dict[str, Any]]) -> dict[s
             if piece['kind'] == 'text':
                 piece['slot_id'] = renaming[piece['slot_id']]
         regions.append(region)
-    unit.update(schema_version=2, risk_level='R3', math_text_regions=regions)
+    version = 3 if any('parameter_components' in s for r in regions for s in r['slots']) else 2
+    unit.update(schema_version=version, risk_level='R3', math_text_regions=regions)
     unit['source_math_skeleton_hash'] = digest(skeleton(unit))
     return unit
 
 
 def validate_regions(unit: dict[str, Any]) -> list[str]:
-    if type(unit.get('schema_version')) is not int or unit['schema_version'] not in {1, 2}:
+    if type(unit.get('schema_version')) is not int or unit['schema_version'] not in {1, 2, 3}:
         return ['unsupported mathematical unit schema version']
     if unit['schema_version'] == 1:
         return ['unit-v1 cannot contain split math tokens'] if any(
@@ -297,11 +348,15 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
     try:
         from .schema_validation import validate_named_schema
         regions = unit['math_text_regions']
-        errors = validate_named_schema(regions, 'math-text-regions.schema.json', 'math_text_regions')
+        version = unit['schema_version']
+        schema = 'math-text-components.schema.json' if version == 3 else 'math-text-regions.schema.json'
+        errors = validate_named_schema(regions, schema, 'math_text_regions')
         if errors:
             return errors
         if not regions or unit['risk_level'] != 'R3':
             raise ValueError('unit-v2 requires nonempty math regions and R3 risk')
+        if version == 3 and not any('parameter_components' in s for r in regions for s in r['slots']):
+            raise ValueError('unit-v3 requires at least one complete composite text parameter')
         full = (unit['render']['prefix'] + restore(unit, unit['source_text']) + unit['render']['suffix']).encode('utf-8')
         used, last_end = [], -1
         for index, region in enumerate(regions, 1):
@@ -320,7 +375,7 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
             pieces, slots = region['pieces'], region['slots']
             if not slots or len(pieces) != 2 * len(slots) + 1:
                 raise ValueError('math pieces must alternate locked/text/locked without gaps')
-            rebuilt, protected = '', ''
+            rebuilt, protected, coverage = '', '', {}
             stream = nodes(source)
             if not _known_environments(stream):
                 raise ValueError('typed math region contains an unsupported environment')
@@ -346,11 +401,13 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
                     a = len(rebuilt.encode('utf-8')); b = a + len(slot['source'].encode('utf-8'))
                     if slot['slot_byte_span'] != {'start': a, 'end': b}:
                         raise ValueError('math slot UTF-8 byte span differs')
-                    matches = [(i, n) for i, n in enumerate(stream) if n.get('command') == slot['command']
-                               and len(source[:n['parameter_start']].encode('utf-8')) == a
-                               and len(source[:n['parameter_end']].encode('utf-8')) == b]
-                    if len(matches) != 1 or matches[0][1]['value'] != slot['source']:
-                        raise ValueError('math slot is not a complete real text command parameter')
+                    node_index,node = _slot_node(source,stream,slot,version)
+                    if 'parameter_components' in slot:
+                        component = slot['parameter_components'];key = node['parameter_start']
+                        ordinal = component['component_index'];seen = coverage.setdefault(key,[])
+                        if ordinal in seen:
+                            raise ValueError('composite parameter repeats a text component')
+                        seen.append(ordinal)
                     witness = slot['classification_witness']
                     anchor = witness['anchor']
                     if (anchor['source_commit'] != unit['source_commit']
@@ -361,10 +418,12 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
                         container, command = match['container_byte_span'], match['command_byte_span']
                         if not (0 <= container['start'] <= command['start'] < command['end'] <= container['end']):
                             raise ValueError('math text witness command span is outside its real container')
-                    actual = usage(source, stream, matches[0][0], witness['usage'])
+                    actual = usage(source, stream, node_index, witness['usage'])
                     if actual is None or actual != witness['usage_source']:
                         raise ValueError('math text syntax witness differs from original structure')
                     rebuilt += slot['source']; protected += slot['source']
+            if any(ordinals != [1,2] for ordinals in coverage.values()):
+                raise ValueError('composite parameter lacks its complete ordered pure leaves')
             if rebuilt != source or protected not in unit['source_text']:
                 raise ValueError('math region pieces do not exactly cover contiguous protected source')
         if len(used) != len(set(used)) or set(used) != {n for n in unit['placeholders'] if n.startswith('MATHSEG_')}:
@@ -380,7 +439,7 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
 
 def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
     errors = validate_regions(unit)
-    if errors or unit.get('schema_version') != 2:
+    if errors or unit.get('schema_version') not in {2,3}:
         return errors
     if not isinstance(translation, str):
         return ['typed math translation must be a string']
@@ -395,9 +454,8 @@ def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
                 text = translation.split(before, 1)[1].split(after, 1)[0]
                 if not plain_text(text) or TOKEN.search(text):
                     raise ValueError('math text translation must be nonempty plain text in its original slot')
-                index = next(i for i, n in enumerate(original_nodes) if n.get('command') == slot['command']
-                             and len(region['source'][:n['parameter_start']].encode('utf-8')) == slot['slot_byte_span']['start'])
-                identities[index] = slot
+                index,_ = _slot_node(region['source'],original_nodes,slot,unit['schema_version'])
+                identities.setdefault(index,[]).append(slot)
             before = '<' + region['pieces'][0]['placeholder'] + '>'
             after = '<' + region['pieces'][-1]['placeholder'] + '>'
             start = translation.index(before)
@@ -408,14 +466,21 @@ def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
                 stream, pieces, cursor = nodes(source), [], 0
                 if len(stream) != len(original_nodes):
                     raise ValueError('translated mathematical node sequence differs')
-                for index, slot in identities.items():
+                for index, slots in identities.items():
                     node = stream[index]
-                    if (node.get('command') != slot['command'] or not plain_text(node.get('value', ''))
-                            or usage(source, stream, index, slot['classification_witness']['usage']) is None):
+                    first = slots[0]
+                    component = 'parameter_components' in first
+                    leaves = node.get('value','').split(COMPONENT_SEPARATOR) if component else [node.get('value','')]
+                    if (node.get('command') != first['command'] or len(leaves) != len(slots)
+                            or any(not plain_text(leaf) for leaf in leaves)
+                            or usage(source, stream, index, first['classification_witness']['usage']) is None):
                         raise ValueError('translated slot lost its original command/role')
-                    pieces.extend([{'locked': source[cursor:node['parameter_start']]},
-                                   {'slot': slot['slot_id'], 'command': slot['command'],
-                                    'usage': slot['classification_witness']['usage']}])
+                    pieces.append({'locked':source[cursor:node['parameter_start']]})
+                    for ordinal,slot in enumerate(slots):
+                        if ordinal:
+                            pieces.append({'locked':COMPONENT_SEPARATOR})
+                        pieces.append({'slot':slot['slot_id'],'command':slot['command'],
+                                       'usage':slot['classification_witness']['usage']})
                     cursor = node['parameter_end']
                 pieces.append({'locked': source[cursor:]})
                 return pieces
@@ -425,3 +490,31 @@ def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
         return []
     except (ValueError, KeyError, IndexError, StopIteration) as exc:
         return ['invalid typed math translation: ' + str(exc)]
+
+
+def _slot_node(source, stream, slot, version):
+    component = slot.get('parameter_components')
+    span = component['parameter_byte_span'] if component else slot['slot_byte_span']
+    matches = [(i,n) for i,n in enumerate(stream) if n.get('command') == slot['command']
+        and len(source[:n['parameter_start']].encode()) == span['start']
+        and len(source[:n['parameter_end']].encode()) == span['end']]
+    if len(matches) != 1:
+        raise ValueError('math slot lacks its complete real parent parameter')
+    index,node = matches[0]
+    if not component:
+        if node['value'] != slot['source']:
+            raise ValueError('math slot is not a complete real text command parameter')
+    else:
+        if (version != 3 or node['value'] != component['parameter_source']
+                or component['parameter_source'] != COMPONENT_LITERAL
+                or component['component_count'] != 2 or component['separator'] != COMPONENT_SEPARATOR
+                or slot['classification_witness']['usage'] != COMPONENT_USAGE):
+            raise ValueError('unsupported composite parent parameter or version')
+        leaves = node['value'].split(COMPONENT_SEPARATOR)
+        ordinal = component['component_index']-1
+        if len(leaves) != 2 or ordinal not in {0,1} or any(not plain_text(v) for v in leaves):
+            raise ValueError('invalid complete composite text leaves')
+        start = span['start'] + (len((leaves[0]+COMPONENT_SEPARATOR).encode()) if ordinal else 0)
+        if slot['source'] != leaves[ordinal] or slot['slot_byte_span'] != dict(start=start,end=start+len(leaves[ordinal].encode())):
+            raise ValueError('composite pure leaf differs from its real parent source span')
+    return index,node

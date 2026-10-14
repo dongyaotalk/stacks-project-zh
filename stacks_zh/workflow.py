@@ -257,7 +257,7 @@ def _assemble_candidates_with_harness_version(
     model_record_id = model_record_id or f"legacy:{model_id}:unknown"
     run_id = run_id or f"run-{model_lane}-{source_commit[:12]}"
     units = load_jsonl(unit_path)
-    if any(unit.get('schema_version') == 2 for unit in units):
+    if any(unit.get('schema_version') in {2,3} for unit in units):
         raise RecordError('unit-v2 requires a full v4 revision context and source-container-v3; ordinary assembly is unavailable')
     draft_by_id = _load_translator_drafts(draft_path)
     unit_ids = [unit["unit_id"] for unit in units]
@@ -416,7 +416,7 @@ def assemble_candidates_many(
     chapter: str | None = None
     for index, path in enumerate(unit_paths):
         units = load_jsonl(path)
-        if any(unit.get('schema_version') == 2 for unit in units):
+        if any(unit.get('schema_version') in {2,3} for unit in units):
             raise RecordError('unit-v2 requires a full v4 revision context and source-container-v3; ordinary assembly is unavailable')
         units_by_path.append(units)
         for unit in units:
@@ -642,7 +642,7 @@ def render_batch(
 
     candidate_by_id = {candidate['unit_id']: candidate for candidate in candidates}
     root = lock_path.parent
-    typed_math = any(u.get('schema_version') == 2 for u in units)
+    typed_math = any(u.get('schema_version') in {2,3} for u in units)
     if typed_math:
         from .source_containers import safe_path
         for path in unit_paths + candidate_paths:
@@ -655,7 +655,7 @@ def render_batch(
                 or any(not p.resolve().is_relative_to((root / 'translation-data/candidates').resolve()) for p in candidate_paths)
                 or any(not candidate_by_id[u['unit_id']].get('unit_group_id')
                        or not candidate_by_id[u['unit_id']].get('derivation_id')
-                       for u in units if u.get('schema_version') == 2)):
+                       for u in units if u.get('schema_version') in {2,3})):
             raise RecordError('typed math rendering requires active validated v4/source-container-v3 facts')
     composite = any(c.get('model_correction_id') or c.get('unit_group_id') for c in candidates)
     if composite or typed_math:

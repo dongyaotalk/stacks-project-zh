@@ -21,7 +21,7 @@ from .chapter_templates import manifest_chapters
 from .records import RecordError, stamp_unit_hashes
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
 
-VERSION = 'source-extraction-v3'
+VERSION = 'source-extraction-v4'
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
 ENVIRONMENT = re.compile(r'\\(begin|end)\{([A-Za-z][A-Za-z0-9*_-]*)\}')
 WORD = re.compile(r'[A-Za-z]{2,}')
@@ -45,6 +45,7 @@ class Policy:
                    for name in ('default_command_policy', 'default_environment_policy')):
             raise RecordError('extraction requires explicit blocking defaults in macro policy')
         self.commands: dict[str, str] = {}
+        self.locked_noargs: set[str] = set()
         self.math: set[str] = set()
         self.literal: set[str] = set()
         self.metadata: set[str] = set()
@@ -73,7 +74,7 @@ class Policy:
                         raise RecordError('duplicate math-text notation policy entry')
                     self.math_text_notations[group] = {}
                 else:
-                    field = re.fullmatch(r'    (commands|usages|source_label|prefix|suffix): (.+)', line)
+                    field = re.fullmatch(r'    (commands|usages|contexts|source_label|prefix|suffix): (.+)', line)
                     if not field or not group or field[1] in self.math_text_notations[group]:
                         raise RecordError('invalid or duplicate math-text notation policy field')
                     try:
@@ -86,6 +87,10 @@ class Policy:
                 command = ast.literal_eval(key) if key[:1] in {'"', "'"} else key
             elif section == 'commands' and line.startswith('    policy:'):
                 self.commands[command] = line.partition(':')[2].strip()
+            elif section == 'commands' and line.startswith('    locked_arguments:'):
+                arguments = json.loads(line.partition(':')[2].strip())
+                if arguments == []:
+                    self.locked_noargs.add(command)
             elif section == 'locked_environment_groups' and re.match(r'^  \S', line):
                 group = line.strip().removesuffix(':')
             elif section == 'locked_environment_groups' and line.strip().startswith('- '):
@@ -107,21 +112,33 @@ class Policy:
         if not self.commands or set(self.commands.values()) - supported:
             raise RecordError('unsupported extraction command policy')
         for notation, rule in self.math_text_notations.items():
-            prefixed = rule.get('usages') == ['prefixed-symbol']
+            prefixed = rule.get('usages') in [['prefixed-symbol'], ['prefixed-symbol', 'arrow-target-prefixed-symbol']]
+            sheaf_suffix = rule.get('usages') == ['sheaf-symbol-suffix']
             constructor = rule.get('usages') == ['category-constructor']
             fields = ({'commands', 'usages', 'source_label'} |
-                      ({'prefix'} if prefixed else set()) |
-                      ({'suffix'} if constructor else set()))
+                      ({'prefix'} if prefixed or sheaf_suffix else set()) |
+                      ({'suffix'} if constructor else set()) |
+                      ({'contexts'} if 'contexts' in rule else set()))
             if set(rule) != fields:
                 raise RecordError('incomplete math-text notation policy')
             for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
-                                 ('usages', {'symbol', 'applied', 'subscripted', 'prefixed-symbol',
-                                             'category-constructor'})]:
+                                 ('usages', {'symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
+                                             'prefixed-symbol', 'arrow-target-prefixed-symbol',
+                                             'sheaf-symbol-suffix', 'category-constructor'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
                         len(values) != len(set(values))):
                     raise RecordError('unsupported math-text notation policy ' + key)
+            if 'contexts' in rule:
+                contexts = rule['contexts']
+                product = {command + '/' + usage for command in rule['commands'] for usage in rule['usages']}
+                if (not isinstance(contexts, list) or not contexts
+                        or any(not isinstance(v, str) or v not in product for v in contexts)
+                        or len(contexts) != len(set(contexts))
+                        or {v.split('/')[0] for v in contexts} != set(rule['commands'])
+                        or {v.split('/')[1] for v in contexts} != set(rule['usages'])):
+                    raise RecordError('invalid exact math-text notation contexts')
             if 'prefixed-symbol' in rule['usages'] and not prefixed:
                 raise RecordError('prefixed math-text notation cannot mix usages')
             if 'category-constructor' in rule['usages'] and not constructor:
@@ -131,6 +148,16 @@ class Policy:
                 raise RecordError('invalid math-text notation prefix')
             if notation == '-Sets' and (not prefixed or rule['commands'] != ['textit']):
                 raise RecordError('unsupported -Sets notation policy')
+            if ('arrow-target-prefixed-symbol' in rule['usages']
+                    and (notation != '-Sets' or not prefixed or rule['prefix'] != 'G')):
+                raise RecordError('unsupported arrow-target category notation policy')
+            if sheaf_suffix and (notation not in {'ilb', 'om'} or rule['commands'] != ['text']
+                                  or rule['prefix'] != r'\mathcal{H}'):
+                raise RecordError('unsupported split sheaf-symbol notation policy')
+            if 'sheaf-symbol-suffix' in rule['usages'] and not sheaf_suffix:
+                raise RecordError('split sheaf-symbol notation cannot mix usages')
+            if notation in {'ilb', 'om'} and not sheaf_suffix:
+                raise RecordError('split sheaf-symbol notation needs its exact mathematical prefix')
             if constructor and (notation not in {'Ind-', 'Pro-'} or rule['commands'] != ['text'] or
                                 not isinstance(rule['suffix'], str) or
                                 not re.fullmatch(r'\\mathcal\{[A-Z]\}', rule['suffix'])):
@@ -269,7 +296,8 @@ class Scanner:
             args.append((opening, i))
         return i, args
 
-    def preceding_math_prefix(self, command_start: int, prefix: str | None) -> str | None:
+    def preceding_math_prefix(self, command_start: int, prefix: str | None, *,
+                              extra_zero_arguments: frozenset[str] = frozenset()) -> str | None:
         """Recognize a bare letter outside command arguments, without TeX expansion.
 
         Unknown commands keep their following arguments ineligible. Only explicit
@@ -288,6 +316,7 @@ class Scanner:
                          'neq', 'colon', 'quad', 'qquad', 'left', 'right',
                          'big', 'Big', 'bigl', 'Bigl', 'biggl', 'Biggl',
                          ' ', ',', ';', ':', '!', '{', '}'}
+        zero_argument.update(extra_zero_arguments)
         single_argument = {'mathcal', 'mathbb', 'mathbf', 'mathrm', 'mathsf',
                            'mathtt', 'operatorname', 'text', 'textit', 'textbf'}
         if prefix is None:
@@ -387,6 +416,8 @@ class Scanner:
             return None
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
+            if 'contexts' in rule and command + '/' + usage not in rule['contexts']:
+                continue
             if usage == 'category-constructor' and command_start is not None:
                 suffix = rule['suffix']
                 stop = cursor + len(suffix)
@@ -399,16 +430,58 @@ class Scanner:
                 preceding = self.preceding_math_prefix(command_start, rule['prefix'])
                 if preceding is not None:
                     return usage, preceding, rule['source_label']
+            if usage == 'arrow-target-prefixed-symbol' and command_start is not None:
+                from .math_text import nodes
+                try:
+                    stream = nodes(self.text)
+                    index = next(i for i,n in enumerate(stream) if n['start'] == command_start)
+                    if (index >= 3 and stream[index]['depth'] == 0
+                            and stream[index-1]['token'] == rule['prefix'] and stream[index-1]['depth'] == 0
+                            and stream[index-2]['token'] in {r'\to', r'\rightarrow', r'\longrightarrow', r'\mapsto'}
+                            and stream[index-2]['depth'] == 0 and stream[index-3]['token'] in {')','}',']'}
+                            and self.preceding_math_prefix(command_start,None,
+                                extra_zero_arguments=frozenset({'Sh','etale'})) is not None):
+                        return usage, self.text[stream[index-2]['start']:command_start], rule['source_label']
+                except (ValueError, StopIteration):
+                    pass
+            if usage == 'sheaf-symbol-suffix' and command_start is not None:
+                from .math_text import nodes
+                try:
+                    current = next(n for n in nodes(self.text) if n['start'] == command_start)
+                except (ValueError, StopIteration):
+                    continue
+                if current['depth'] != 0:
+                    continue
+                before = self.text[:command_start].rstrip(' \t\r\n')
+                prefix = rule['prefix']
+                start = len(before)-len(prefix)
+                if (start >= 0 and before.endswith(prefix)
+                        and self.preceding_math_prefix(start, None) is not None
+                        and self.text[cursor:cursor+1] in {'(', '_'}):
+                    if self.text[cursor:cursor+1] == '_':
+                        argument = self.skip_space(cursor+1)
+                        if (argument >= len(self.text)
+                                or self.text[argument:argument+1] == '{'
+                                and self.skip_space(argument+1) >= self.argument_end(argument)-1):
+                            continue
+                    return usage, self.text[start:command_start], rule['source_label']
             if usage == 'symbol':
                 return usage, '', rule['source_label']
-            if usage == 'applied':
+            if usage in {'applied', 'primed-applied'}:
                 paren = cursor
+                if usage == 'primed-applied':
+                    if self.text[paren:paren+1] != "'":
+                        continue
+                    while self.text[paren:paren+1] == "'":
+                        paren += 1
+                    paren = self.skip_space(paren)
                 size = COMMAND.match(self.text, paren)
                 if size and size.group()[1:] in {'left', 'big', 'Big', 'bigl', 'Bigl', 'biggl', 'Biggl'}:
                     paren = self.skip_space(size.end())
                 if self.text[paren:paren + 1] == '(':
                     return usage, self.text[closing:paren + 1], rule['source_label']
-            if usage == 'subscripted' and self.text[cursor:cursor + 1] == '_':
+            if (usage in {'subscripted', 'superscripted'}
+                    and self.text[cursor:cursor + 1] == ('_' if usage == 'subscripted' else '^')):
                 token = self.skip_space(cursor + 1)
                 if self.text[token:token + 1] == '{':
                     stop = self.argument_end(token)
@@ -500,6 +573,8 @@ class Scanner:
                         'source_label': self.policy.math_text_rules[slot['policy_entry']]['source_label'],
                         'policy_hash': byte_hash(self.policy.raw),
                         'anchor': self.policy.math_text_witnesses[slot['policy_entry']]}})
+                if 'parameter_components' in slot:
+                    text_slots[-1]['parameter_components'] = slot['parameter_components']
                 protected.extend([before, slot['value']])
                 cursor = slot['parameter_end']
             after = lock('MATHSEG', a + cursor, b)
@@ -583,7 +658,8 @@ class Scanner:
                             i = stop; continue
                         out.append(lock('STRUCT', i, stop))
                     elif self.policy.commands.get(name) == 'locked':
-                        stop, _ = self.command_arguments(i, optional=True)
+                        if name not in self.policy.locked_noargs:
+                            stop, _ = self.command_arguments(i, optional=True)
                         out.append(lock('REF' if name in {'ref', 'eqref', 'pageref', 'cite'} else 'LOCKED', i, stop))
                     elif self.policy.commands.get(name) in {'translate_arguments', 'preserve_wrapper_translate_children', 'mixed'}:
                         stop, args = self.command_arguments(i, 2 if name == 'href' else 1)
@@ -622,7 +698,8 @@ class Scanner:
 
 
 def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str],
-                      policy: Policy, existing: dict[tuple[str, str], list[dict[str, Any]]] | None = None):
+                      policy: Policy, existing: dict[tuple[str, str], list[dict[str, Any]]] | None = None,
+                      *, hierarchical_prose: bool = False):
     text = raw.decode('utf-8')
     scanner = Scanner(text, policy)
     byte_offsets = array('Q', [0])
@@ -631,8 +708,15 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
     newlines = [i for i, c in enumerate(text) if c == '\n']
     units, segments, diagnostics = [], [], []
     section = tags.get(chapter + '-section-phantom')
+    heading_owners = {0: section}
     previous_statement = None
+    footer_started = False
     ordinals: collections.Counter[tuple[str | None, str]] = collections.Counter()
+
+    def prose_owner():
+        if not hierarchical_prose:
+            return section
+        return next((tag for _, tag in sorted(heading_owners.items(), reverse=True) if tag), None) if section else None
 
     def location(a: int, b: int):
         return {'file': chapter + '.tex', 'byte_start': byte_offsets[a], 'byte_end': byte_offsets[b],
@@ -674,6 +758,10 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
             problems.append({'kind': 'ownership', 'start': a, 'end': b, 'severity': 'BLOCKED',
                              'message': 'no unique locked permanent Tag owner; explicit scope mapping required',
                              'source': text[a:b]})
+        if hierarchical_prose and footer_started:
+            problems.append({'kind': 'document-footer', 'start': a, 'end': b, 'severity': 'BLOCKED',
+                             'message': 'natural or semantic content follows document footer metadata',
+                             'source': text[a:b]})
         from .math_text import bind_regions, nodes
         unit = stamp_unit_hashes(bind_regions({'schema_version': 1, 'unit_id': identifier,
             'parent_tag': section or 'UNASSIGNED', 'chapter': chapter, 'node_kind': kind,
@@ -685,8 +773,10 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
         for region in unit.get('math_text_regions', []):
             stream = nodes(region['source'])
             for slot in region['slots']:
+                parameter_start = slot.get('parameter_components', {}).get(
+                    'parameter_byte_span', slot['slot_byte_span'])['start']
                 node = next(n for n in stream if n.get('command') == slot['command'] and
-                            len(region['source'][:n['parameter_start']].encode('utf-8')) == slot['slot_byte_span']['start'])
+                            len(region['source'][:n['parameter_start']].encode('utf-8')) == parameter_start)
                 first = byte_offsets[a] + region['source_byte_span']['start'] + len(region['source'][:node['start']].encode('utf-8'))
                 last = byte_offsets[a] + region['source_byte_span']['start'] + len(region['source'][:node['end']].encode('utf-8'))
                 natural_classifications.append({'source': region['source'][node['start']:node['end']],
@@ -756,7 +846,7 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                     if kind in policy.literal | policy.metadata:
                         locked(start, end, kind); previous_statement = None
                     else:
-                        owner = own_label(env.end()) if kind in STATEMENTS else previous_statement if kind == 'proof' else section
+                        owner = own_label(env.end()) if kind in STATEMENTS else previous_statement if kind == 'proof' else prose_owner()
                         emit(start, end, kind, owner)
                         previous_statement = owner if kind in STATEMENTS | {'proof'} else None
                     cursor = end
@@ -773,6 +863,10 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                         end = tail + len(label.group())
                     if name == 'section':
                         section = owner
+                    if name != 'title':
+                        level = {'section': 1, 'subsection': 2, 'subsubsection': 3}[name]
+                        heading_owners = {k: v for k, v in heading_owners.items() if k < level}
+                        heading_owners[level] = owner
                     emit(start, end, name + '_title', owner)
                     previous_statement = None; cursor = end
                     continue
@@ -782,9 +876,11 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                     if name in {'bibliography', 'bibliographystyle', 'input', 'label'}:
                         end, _ = scanner.command_arguments(start)
                     if name == 'input' and text[start:end] != r'\input{chapters}':
-                        emit(start, end, 'external-input', section)
+                        emit(start, end, 'external-input', prose_owner())
                     else:
                         locked(start, end, 'document-infrastructure')
+                        if name in {'input', 'bibliography', 'bibliographystyle'}:
+                            footer_started = True
                     cursor = end; previous_statement = None
                     continue
                 i = start
@@ -815,12 +911,12 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                         i += 1
                 if i <= start:
                     raise SyntaxProblem('source scanner made no progress', start)
-                emit(start, i, 'paragraph', section)
+                emit(start, i, 'paragraph', prose_owner())
                 cursor = i; previous_statement = None
             except SyntaxProblem as exc:
                 # Keep every remaining byte and its cause, never silently drop a
                 # malformed tail or claim a partially scanned document is READY.
-                emit(start, len(text), 'unsupported-tail', section, exc)
+                emit(start, len(text), 'unsupported-tail', prose_owner(), exc)
                 break
         if not closed_document and not any(d['kind'] == 'syntax' for d in diagnostics):
             diagnostics.append({'kind': 'syntax', 'chapter': chapter, 'severity': 'BLOCKED',
@@ -909,10 +1005,12 @@ def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> No
                 for slot in slots:
                     first = start + len(math[:slot['start']].encode('utf-8'))
                     last = start + len(math[:slot['end']].encode('utf-8'))
-                    matches.append({'container_byte_span': {'start': row['location']['byte_start'], 'end': row['location']['byte_end']},
+                    match = {'container_byte_span': {'start': row['location']['byte_start'], 'end': row['location']['byte_end']},
                         'container_hash': row['location']['fragment_hash'],
                         'command_byte_span': {'start': first, 'end': last},
-                        'command_hash': byte_hash(math[slot['start']:slot['end']])})
+                        'command_hash': byte_hash(math[slot['start']:slot['end']])}
+                    if match not in matches:
+                        matches.append(match)
         if not matches:
             raise RecordError('natural math-text rule has no real syntax/literal witness: ' + key)
         verified[key] = {'source_commit': english.commit, 'file': file, 'owner_tag': owner,
@@ -948,7 +1046,8 @@ def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None
                                 'message': 'no independent TeX blob in locked Git tree'})
             continue
         raw = _git_bytes(harvest, english.commit, chapter + '.tex')
-        rows, parts, problems = chapter_inventory(chapter, raw, english.commit, english.tags, policy, current)
+        rows, parts, problems = chapter_inventory(chapter, raw, english.commit, english.tags, policy, current,
+                                                 hierarchical_prose=True)
         units.extend(rows); segments.extend(parts); diagnostics.extend(problems)
         summaries.append({'chapter': chapter, 'title': title, 'state': 'INVENTORIED',
                           'source_hash': byte_hash(raw), 'source_bytes': len(raw),
@@ -993,7 +1092,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
         previous = json.loads(marker.read_text(encoding='utf-8')) if marker.is_file() and not marker.is_symlink() else {}
         if (not output.is_dir() or not marker.is_file() or marker.is_symlink() or not isinstance(previous, dict)
                 or previous.get('schema_version') != 1
-                or previous.get('extractor_version') not in {VERSION, 'source-extraction-v1', 'source-extraction-v2'}):
+                or previous.get('extractor_version') not in {VERSION, 'source-extraction-v1', 'source-extraction-v2', 'source-extraction-v3'}):
             raise RecordError('refusing to replace a directory not owned by the source extractor')
         if {p.name for p in output.iterdir()} != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md', 'manifest.json'}:
             raise RecordError('refusing to replace an inventory containing unrelated files')

@@ -46,6 +46,60 @@ lane render/pdf 本地成功后才提交。八项总修复和 S4/S5/S7 不因工
 迁移到真实000J完整 proof；细节见 [source-term-inventory.md](source-term-inventory.md)。
 这仅消除后续 DATA 的证据依赖，所有词形/范围/诊断和翻译事实保持，不批准术语。
 
+### 集中修复的完整原生 prose 对应（source-container-v13）
+
+Issue #808 / 草稿 PR #809 按用户最新指示集中处理全部剩余 F1–F8；不再逐批开
+Issue/PR。当前 v13 工具阶段只建立完整来源对应，不写译文，不减少事实残项。
+原 v1–v12 的权限和历史重放保持；Schema 追加互斥分支，原十分支不变。
+
+v13 仅处理现有 `old_container_groups` 识别的完整 paragraph 或最大 prose_block，
+要求完整冻结 batch 的 unit-v1/v2、同章/锁定来源、唯一 ID 和连续完整有序旧组。
+直接拼接全部旧 source TeX，与完整原生容器比较：只沿用 v12 普通 ASCII prose
+排版空白比较；完整 reference/label token 另可在锁定 tags 验证同一永久目标后
+比较本地/命名空间投影。数学内部引用不变；数学、其他命令、列表、注释、非 ASCII
+及其余保护节点逐项相同。未知标签不会映射。不会删除不匹配节点或以 ID/历史 parent/库存位置证明来源。未知语法、
+未分类数学文字或内部节点差异继续 BLOCKED。已验证 unit-v2 的数学文字必须先通过
+原 regions 验证；比较来源时按 pieces/slots 重组完整原英文数学节点，并作为单一
+不透明节点逐字比较。不会只比较碎片、忽略原英文 slot 或比较译文。
+
+除真实 Section/owner/selector、完整 Git 原片段外，还从原生语义树选择目标
+前后的完整真实锚点；prose_block 必须恰填完整两锚点间隔，尾段只可到真实
+document footer。paragraph 必须是单一完整原生节点。整章同类完整对应须唯一。
+完整旧 batch 内还必须有目标之前的完整 Section 标题、陈述或证明锚点，其
+全部旧链与锁定 Git 的真实原生锚点逐项相同（只沿用已验证的永久 label 命名
+空间映射）；该原生锚点须位于相同真实 Section 的目标之前。旧成员 parent
+只能为真实 Section 或这个已验证旧锚点的 owner。
+
+独立 `native_prose_anchor` 保存完整旧 IDs/历史 parent、完整旧锚点 IDs及
+selector/原片段 hash/完整签名 hash、两个原生锚点 selector/hash（最后可为
+footer）、原生完整区间、旧新完整签名 hash。loader 从 origin 政策、锁定 Git
+及完整不可变旧快照重算所有字段；自报 hash、Schema-valid 篡改或降级旧版本
+不能授权采用。普通 prepare 优先原合同，只在确需并通过新见证时输出 v13。
+
+独立 synthetic Git 测试包括：末段后的原生陈述未在旧 batch 内但完整旧 Section
+锚点可核验；同章重复原文、完整旧锚点缺失或改字、公式/注释/结构/parent/
+来源/章或 ID 变化拒绝；完整 package/check 的文件 bytes 和 mtime 不变；origin
+重放与 Schema-valid 见证篡改拒绝。synthetic 字段不表示真实模型生成。
+
+v13 同时显式记录三种已经逐字确认的旧排版对应：普通 prose 中平衡成对的
+Unicode 弯双引号与原 Git 的 TeX 双引号；原生起始 noindent；最多一个紧邻首
+item 的 itemize/enumerate opening。数学、literal、注释内不做引号投影，不接受
+其他 Unicode 替换或删除节点。列表须有完整原生 matching closing、完整有序
+冻结 list_item 链，投影后全部节点逐项相同；未知、多缺失或无闭合仍拒绝。
+
+旧标题 suffix 有时存放了正文初始 noindent/列表 opening。只有原生标题与目标
+正文之间没有任何非 ASCII 排版空白内容，且这些尾节点逐项等于本次正文在初始
+位置恢复的同一有序节点，才允许记录其归属迁移；不能借用跨陈述/段落的旧标题
+尾部。完整旧锚点原字节不改，额外保存其完整签名、原生锚点签名和 detached_layout。
+其他额外文字、数学或命令不允许从旧锚点移除。全部旧输入仍由完整 v4 分组覆盖。
+
+witness 保存原旧签名 hash、projected_signature_hash、原生签名 hash 及每个
+presentation_repairs 的种类/签名节点位置/文字内偏移/原值/替换值；这些位置只
+描述完整签名内的投影，不授权来源范围。原始旧/新字节仍分别由冻结快照和 Git
+片段 hash 绑定。唯一性扫描同时考虑所有允许投影，不能把可映射到不同引号/布局
+的重复原文误称唯一。独立测试覆盖这些精确成功、跨容器借用拒绝、投影造成歧义、
+不平衡引号、数学内引号、少 item/乱序/少 closing/错误 opening 及伪投影记录拒绝。
+
 ## 1. 问题与目标
 
 
@@ -638,3 +692,44 @@ label 只按真实永久 Tag 映射；真实 Git 前陈述与段落同属一个 
 当前审计残项、事实/历史与范围外原字节，执行全库库存/对齐及 checks、239QA、
 共享门禁/117模板、隔离进度/计划、当前 lane render/pdf 和整书文字/PNG 核验。
 工具验收合并后才另开完整小节 DATA，不将来源准备成功当成术语修复。
+
+### v13真实标题、完整章头和明确历史提取差异
+
+旧node_kind自报Section但实际包装/锁定Git为subsection/subsubsection时，
+native_heading_anchor保存真实新selector/根Section、旧kind/parent及全部原字节
+签名。完整title_header的唯一phantom label、实际title参数及已声明literal单独
+核验；literal内部伪命令不算锚点。正文从完整header末开始，不含maketitle/label。
+phantom前言只允许完整章头之后至真实首Section之前的最大prose_block，notice/
+heading只是这个完整旧组内的历史成员名；独立段落不能借该豁免。完整旧chapter
+标题用既有章头core和唯一label验证，frozen_anchor.document_header保存该见证，
+其signature_hash绑定旧完整header字节，native_signature_hash绑定实际源签名。
+这种新首部语义强制v13，不能写成旧v3证据后依赖旧loader误读。
+
+明确的历史提取修复另外包括：完整平衡emph包装对应原显式it分组；普通文字
+em dash对应原三连短线，恰好两个终止句点对应源单句点（三点省略号不推广）。
+数学只允许已声明词法语言内根层两个既有非空ASCII空白run作逐位置替换，保留
+每个原值/新值和偏移、完整旧/原生数学签名。数学token、命令参数、脚本内部、
+注释/literal/控制空格及任何空白增删均不因此放行。最终新unit仍使用Git完整
+原字节，原旧输入和所有旧run/raw不改；不是将归一公式写入事实。
+
+对应记录仍由presentation_repairs逐项重算，并参与整章唯一性扫描；完整旧组、
+完整冻结锚点、真实owner/Section/双边界不因这些对应而省略。新增五字段仍必须
+由当前真实模型完整生成，不能直接搬用旧中文或程序修改术语/标点。
+
+### 方程标签提供完整旧段落锚点
+
+v13的native_labelled_math_prose_anchor仅用于完整冻结batch恰为一个paragraph，
+内有一个完整equation和一个真实根层label、其永久Tag等于历史parent的情况。
+锁定tags验证完整旧命名空间label与实际本地label同目标，仅这个方程label可
+投影，其他数学原字节不变。实际方程必须唯一位于完整原生prose_block，整个
+旧段落而非仅方程须对应，两侧须是真实同Section完整语义边界。保存完整旧/
+原生方程、各自hash、实际Git范围、真实label/Tag、两边界及整段签名；literal/
+注释内伪方程、重复或不同数学、缺字/乱序/跨章/历史parent伪造均拒绝。
+
+### 复合数学文字来源（source-container-v14）
+
+unit-v3的两纯文字叶及原控制空格合同见math-text-translation §10。v14仅供至少
+一个unit-v3的新完整Git容器；保留完整旧组、来源/政策/历史绑定，逐字重算全部
+新单元和完整数学。若需旧边界见证仍逐项重放；无需时不伪造见证。v14不得降级
+为v13，也不改变v1–v13历史。全组v4验证要求v3输出有v14证据，首代普通/无来源
+typed装配拒绝，后代仍保留完整历史与raw。当前开发未采用任何新数据。

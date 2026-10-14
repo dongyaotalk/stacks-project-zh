@@ -65,8 +65,10 @@ def replay_groups(record, units, candidates, corrections, previous_outputs, rest
             used_restorations.add(restoration_id)
             source = evidence['record']
             if (any(u.get('schema_version') == 2 for u in output_units)
-                    and source['tool']['version'] not in {'source-container-v3', 'source-container-v4'}):
+                    and source['tool']['version'] not in {'source-container-v3', 'source-container-v4', 'source-container-v13', 'source-container-v14'}):
                 raise RecordError('typed math output requires source-container-v3 or witnessed v4 evidence')
+            if any(u.get('schema_version') == 3 for u in output_units) and source['tool']['version'] != 'source-container-v14':
+                raise RecordError('unit-v3 requires complete source-container-v14 evidence')
             if (source['derivation_id'] != record['derivation_id'] or source['group_id'] != group['group_id']
                     or source['source_commit'] != record['source_commit']
                     or source['origin_commit'] != record['origin_commit']
@@ -83,7 +85,7 @@ def replay_groups(record, units, candidates, corrections, previous_outputs, rest
                 raise RecordError('v4 selected containers overlap or change locked source order')
             last_location[chapter] = location['byte_end']
         else:
-            if any(u.get('schema_version') == 2 for u in output_units) and not previous:
+            if any(u.get('schema_version') in {2,3} for u in output_units) and not previous:
                 raise RecordError('first unit-v2 output requires complete source-container-v3 evidence')
             # A source-preserving group is intentionally bijective. Segmentation
             # changes require complete semantic Git evidence, never concatenation

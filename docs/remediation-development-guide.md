@@ -1,9 +1,152 @@
 # 八项审查修复开发与交接指南
 
+> 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
+
+> 必要可信门禁前置：当前main的pr-contract由pull_request_target固定从main加载，并硬限100文件/单章2–8 parents。集中最小885路径表已75184字符，尚不含来源历史/完整IDs。已先claimed工具Issue #810，仅在独立分支tool/bulk-task-scope-validator改校验器、测试、范围Schema和协作文档，先通过旧可信合同再合入main；不改保护/remote/CI信任来源。全部107数据仍集中PR809统一验收，不重新逐批拆任务。来源基础commit e6e1f05064fdba98a36a1e9ad9e4e7bcdc2e054d和文档466e24d都保留；当前没有DATA生成或采用。
+
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
 
-## 最新接受检查点：2026-10-14，DATA800
+## 当前集中任务在制状态（未合并）
+
+用户最新指示要求集中修复，已复用 [Issue #808](https://github.com/dongyaotalk/stacks-project-zh/issues/808)
+及 [草稿 PR #809](https://github.com/dongyaotalk/stacks-project-zh/pull/809)。分支仍为
+`docs/progress-categories-cofinal-initial`，已有文档 commit `466e24da0112d3bb40126c1c26183df8f6ac7e10`；
+main 接受值仍为下文 DATA804。不要合并本草稿或重建分支覆盖在制改动。
+
+全部107问题batch已按当前工具/政策重新一次只读预检：107/107具有完整来源计划，
+849旧单元提议483完整新单元，27490英文词；其中unit-v1 473、v2 9、v3 1。
+全体提议与范围外活跃ID无冲突。准备数历程36→51→57→66→80→92→104→105→106→107。
+这是来源准备，不是中文生成/采用；接受事实仍107问题batch、529候选、1740诊断，
+全部translation-data及原历史原字节保持。Issue808已提前声明29个精确文件。
+
+v13支持完整原生prose/heading/章头见证、真实层级、文档首尾、明确逐处记录的
+历史提取排版差异；Sets046U另从完整原生方程label证明真实Section000H及000I
+proof至000J lemma的整个语义区间，不以历史parent误值授权来源。FDL完整章头/
+center/前言包的10项回归，以及包含完整方程历史重放的14项来源边界回归通过。
+29项新增精确数学记号的43种有效配对均有锁定Git见证，Vect/Lift三种未见证
+笛卡尔组合由contexts拒绝，8项独立记号测试通过。
+
+最后两处含TeX控制空格的自然文字使用独立unit-v3/schema及source-container-v14，
+不放宽v2纯参数合同。完整父参数内两纯叶仍分属同一region/unit，中间控制空格
+原字节锁定；3个新纯文字角色沿用v2。5项复合文字测试、另1项真实prepare/check
+和ordinary assembly拒绝入口测试通过，含双代完整v4历史、来源/Schema/溯源、
+实际结构化render及逐次待决术语；原v2的40项回归通过。测试修复和失败日志保留。
+相关全组重放入口现在识别v13 typed证据及v3/v14，普通装配不能绕过typed来源。
+
+基础工具兼容性集合171项中169先通过；另两项为旧Aut(X)拒绝预期及完整proof
+拒绝信息被新入口覆盖，已分别修正并定点2项通过，未重跑169个未受影响项。新v3
+6项及原v2 40项通过；全库对齐另发现零参数copyright入口遗漏，已同步两个解析
+入口并增加针对性1项通过。全部失败/修复日志保留，没有弱化数学或完整组门禁。
+
+当前全库实际extract-all/check通过：117章、116 Git原字节回放，43223来源提议，
+READY38422/BLOCKED4801，12491诊断；仍非全库翻译就绪。实际alignment/check通过：
+239/1208，BYTE_EXACT243、PRESENTATION_EQUIVALENT911、SOURCE_DIFFERENCE54，
+529候选/1740诊断、零坐标/来源错误/proof mismatch，107问题batch保持。当前活跃
+数学探针未分类0、11个旧typed迁移节点，4条历史分片异常仍须完整容器恢复。
+
+workflow/Schema/decision/index/117模板通过。当前lane真实render240.793秒、
+pdf66.590秒，FinalTeX PASS；119生成TeX原字节不变，463页整书文字、绘图流与
+页面几何均相同，9张此前实际查看页面PNG重生成后逐字相同，因此没有变化页。
+模板未变，不重复template。全体translation-data及范围外字节保持；没有新run/
+raw/中文生成或采用。217个不同测试方法的现有通过证据由上述集合与定点修复
+组成，不冒称一次完整全绿运行。239 QA及最终全库验收仍留待全部S4完成后集中做。
+
+在制证据目录 `build/task-integrated-remediation/`（ignored）保存完整107预检、
+各阶段差异、真实Git见证、测试日志及continuation-state。真正DATA前仍先在同一
+Issue声明完整新旧ID/精确写路径/真实run-model，机器核验、冻结全部输入和历史。
+只做一个最终PR；没有逐批进度PR、工具PR或人审/术语/发布批准。
+
+## 最新接受检查点：2026-10-14，DATA804
+
+[PR #807](https://github.com/dongyaotalk/stacks-project-zh/pull/807) 已合并，
+[Issue #804](https://github.com/dongyaotalk/stacks-project-zh/issues/804) 已关闭。
+DATA接受main `80463ead15a4e52bf9dea6cc01255da70a9d24c3`，精确feature
+`762b57aa997629d10bff3c317680345d0265cca5`，base
+`bca6b855e4fcc0e37876787ca0802c214c16a3bd`。随后独立进度
+[Issue #808](https://github.com/dongyaotalk/stacks-project-zh/issues/808)必须先于下一DATA完成；
+其文档提交会形成更晚的main。续接先查实时GitHub main、分支、开放PR/claimed Issue和
+实际审计，保留已合并成果与本地改动，本段不是覆盖工作区的依据。
+
+| 实测审计 | 接受值 |
+| --- | ---: |
+| batches / 活跃唯一 unit | 239 / 1208 |
+| 问题 batches | 107 |
+| 术语问题 candidates / 诊断 | 529 / 1740 |
+| 坐标 / 来源错误 / proof mismatch | 0 / 0 / 0 |
+| proof groups / units / match / unsupported | 187 / 218 / 187 / 0 |
+| 来源库存 / READY / BLOCKED | 43242 / 37198 / 6044 |
+| 库存诊断 / Git roundtrip / 章节 | 16888 / 116 / 117 |
+| BYTE_EXACT / PRESENTATION_EQUIVALENT / SOURCE_DIFFERENCE | 243 / 757 / 208 |
+
+真实Section09WN的完整四batch04E6、04E7、09WP、002R，从23旧单元恢复为6完整Git容器：
+04E6定义、04E7引理及证明、09WP定义、002R引理及证明。完整185来源词偏好例外提前
+写入Issue和生成范围，没有加入已接受批次凑词数。四份v4完整有序分组覆盖全部旧输入和
+候选，六份source-container-v2恢复绑定真实owner/Section/selector及原字节，完整12份
+ancestry与原run/raw保留。六目标全部BYTE_EXACT、四批queue清空；范围外matches、
+terms、source和proof findings逐项相同。DATA的单位数1225→1208、问题批111→107、
+术语候选535→529、诊断1753→1740，不能把单位合并当作丢弃旧问题。
+
+前置[PR #806](https://github.com/dongyaotalk/stacks-project-zh/pull/806)属于独立来源词目录
+工具任务：equivalence class/classes各有完整锁定Git容器见证，目录诊断1756→1753，
+535问题候选不变；它没有采用DATA或批准译法。DATA804原gpt-6.1-sol未生成计划、原34
+文件来源包及stash `644dd0588ca8861a28e2e507115715167b46e353`保持原字节，恢复检查
+同时核验mtime与stash；不要pop/drop或把未生成计划冒称实际run。DATA800后的独立
+进度[PR #803](https://github.com/dongyaotalk/stacks-project-zh/pull/803)已完成，历史记录保留。
+
+来源prepare220.743秒/check224.606秒，包原字节和mtime相同。实际生成前冻结全部六新
+unit、23旧输入及全部候选、完整有序组、12份ancestry、政策/style/glossary/prompt/来源
+词目录/model/Harness/context hashes，并预检未来完整来源集合的全部目录见证。
+冻结时间`2026-10-14T03:40:48.261790+00:00`。实际模型
+`gpt-6-astra / xhigh`，turn `01a13861-c45a-74b3-ba4c-1f9874803a61`，run
+`run-20261014-categories-cofinal-initial-gpt6astra`；生成前和装配时动态Codex
+`0.162.0-alpha.17.2`，snapshot未暴露。下一次重新读真实元数据与动态版本，不复制本值。
+
+模型实际生成六份完整五字段；首次装配前逐句核对发现04E6的generated也需双语，实际
+完整重生该unit五字段并保留首稿，程序只选择完整记录。最终44双语声明覆盖37目录要求，
+额外逐句覆盖sequence两处、pairs、canonical两处、002R的initial及generated；04E6的
+is cofinal和09WP的is initial各两处保留完整源词形。五字段逐项等于真实会话工具字面输出、
+不可变raw及活跃候选，保护token原序/次数/尾空白、冻结先后与全部上下文绑定通过。
+这是一次实际采用run；未装配草稿选择不能用于隐藏已经装配或采用的前驱，后者仍须按
+§8.5完整临时重放或Git archive合同处理。两个proof原文均Omitted，忠实译“略。”，
+source-only remark只在notes/版本勘误表留档，不补证、改公式或在正文加译者说明。
+
+独立Git片段/五字段/context/旧组/完整历史/范围外bytes校验通过，全库1208唯一unit、
+239batch与117模板一致。239QA390.678秒、实际run QA0.305秒，Schema/溯源/决策/
+workflow/harvest/index通过；全库extract59.581秒/check61.181秒、alignment34.009秒/
+check34.185秒。隔离progress/plan及各check通过，三报告原字节未变仍在独立任务真实复核。
+纯DATA未重复运行未变工具测试或make template，远端CI实际执行完整检查。
+
+实际render233.862秒/pdf72.184秒，FinalTeX PASS。463页整书layout文字比较，458页相等；
+变化页15/16/64/65/66，全部变化及邻页14/15/16/17/63/64/65/66/67共9 PNG已逐张实际查看，
+未见裁切、重叠、缺字或数学内容缺失。65/66公式外句号各占一行，一处双语词跨页；这是
+保留的版式观察，不为孤行/分页改写模型输出、来源或生成TeX。后续文档构建只有在全文
+及重新渲染的PNG逐字相等时才能复用这些实际视觉证据。
+
+完整32文件staged内容已审查；远端head全部原字节相等，base中10旧路径原字节相等、
+22新路径不存在。未经归一化的完整patch两端均2,968,359 bytes、逐字相等，SHA256
+`24f769b348c7ee61c61722a9091e07d6f2847cfa441c4bdd75be68f864c75e98`。
+native唯一closing804、owner/claimed/branch/路径及30机器管理文件合同通过；精确HEAD
+pr-contract run/job `38508881647/115672565629`与policy-and-data
+`38508881660/115672564537`均SUCCESS，实际API核验run/job/head一致。
+fresh main等于base后授权admin squash；合并后main/feature tree、32路径和范围外字节、
+实际run trailers、PR MERGED、Issue CLOSED及clean通过，无Reviewed-By伪人审。
+
+本次开发证据目录为ignored `build/task-categories-cofinal-initial/`；其中scope、冻结/
+authorship/independent/integration/validation/visual/staged/remote/CI/postmerge清单保存
+完整证据，新克隆需按跟踪的事实历史和下文命令重新核验，不依赖这些本机生成物存在。
+独立进度任务使用`build/task-progress-cofinal-initial/`。当前余下问题章分布为Categories9、
+Sets17、Conventions5、Coding2、Desirables18、FDL2、Guide21、Introduction2、Obsolete31。
+Categories剩0012、002S、002U、002Z、0036、003D、04AQ、04AX、04AY；仅VERIFY来源
+也不能遗漏。重新核实真实完整分组，旧粗略预检的“整组歧义”不是修改来源规则的依据。
+002U/003D正文中未分类数学自然文字仍BLOCKED，先独立必要前置，不裁去正文或归成记号。
+本次进一步只读重扫确认：0012章标题真实parent0011可唯一定位；002Z的0CN1完整remark、
+04AX的002Y完整proof亦含未分类数学自然文字，保持BLOCKED。04AQ首段、002S完整定义
+和0036完整标题可准备，其他所列段落仍须完整分组/边界核验；预检没有改变事实。
+全部S4后才独立S5默认强门禁、S7和F1–F8最终文档/复制提示词。术语、critic、语言/数学
+人审和发布均未批准；当前总goal继续，不能凭单批或qa-all通过声称全部来源术语完整。
+
+## 历史接受检查点：2026-10-14，DATA800
 
 [PR #801](https://github.com/dongyaotalk/stacks-project-zh/pull/801) 已合并，
 [Issue #800](https://github.com/dongyaotalk/stacks-project-zh/issues/800) 已关闭。
@@ -621,3 +764,5 @@ Codex 提示词中的当前接受基线、未完成项、下一动作、禁止�
 如仍有残项，写真实未完成状态；不要为新建 goal、换聊天、预算或长历史把现有
 总 goal 标为完成。当前 goal 继续直至目标实现；若用户自行选择新建聊天/goal，
 粘贴完整提示词后仍须先重新核实状态并保留已合并成果。
+
+- 集中工具CI补充：e6e1f05远端全tool-test 613项中609通过、4失败（两未知宏前缀拒绝被新增arrow-target分支绕过，两旧policy夹具假设失效）。保留全部原拒绝样例，限定新分支独立前缀语法，只增锁定preamble中确认为零参数的Sh/etale；默认旧prefixed-symbol语义不变。18项定点回归通过，真实obsolete09AQ完整28旧分组预检通过，全库extract/check输出不变。实际再次render/pdf、FinalTeX PASS，119生成TeX及463页文字原字节相同；远端新HEAD CI仍须重查，不据局部证据冒称613全绿。

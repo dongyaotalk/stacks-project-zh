@@ -296,7 +296,8 @@ class Scanner:
             args.append((opening, i))
         return i, args
 
-    def preceding_math_prefix(self, command_start: int, prefix: str | None) -> str | None:
+    def preceding_math_prefix(self, command_start: int, prefix: str | None, *,
+                              extra_zero_arguments: frozenset[str] = frozenset()) -> str | None:
         """Recognize a bare letter outside command arguments, without TeX expansion.
 
         Unknown commands keep their following arguments ineligible. Only explicit
@@ -315,6 +316,7 @@ class Scanner:
                          'neq', 'colon', 'quad', 'qquad', 'left', 'right',
                          'big', 'Big', 'bigl', 'Bigl', 'biggl', 'Biggl',
                          ' ', ',', ';', ':', '!', '{', '}'}
+        zero_argument.update(extra_zero_arguments)
         single_argument = {'mathcal', 'mathbb', 'mathbf', 'mathrm', 'mathsf',
                            'mathtt', 'operatorname', 'text', 'textit', 'textbf'}
         if prefix is None:
@@ -436,7 +438,9 @@ class Scanner:
                     if (index >= 3 and stream[index]['depth'] == 0
                             and stream[index-1]['token'] == rule['prefix'] and stream[index-1]['depth'] == 0
                             and stream[index-2]['token'] in {r'\to', r'\rightarrow', r'\longrightarrow', r'\mapsto'}
-                            and stream[index-2]['depth'] == 0 and stream[index-3]['token'] in {')','}',']'}):
+                            and stream[index-2]['depth'] == 0 and stream[index-3]['token'] in {')','}',']'}
+                            and self.preceding_math_prefix(command_start,None,
+                                extra_zero_arguments=frozenset({'Sh','etale'})) is not None):
                         return usage, self.text[stream[index-2]['start']:command_start], rule['source_label']
                 except (ValueError, StopIteration):
                     pass

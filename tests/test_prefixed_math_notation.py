@@ -12,6 +12,8 @@ RAW = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_tex
 POLICY = Policy(RAW)
 ENTRY = ('  -Sets:\n    commands: ["textit"]\n    usages: ["prefixed-symbol"]\n'
          '    prefix: "G"\n    source_label: sets-section-sets-with-group-action\n')
+CURRENT_ENTRY = ENTRY.replace('["prefixed-symbol"]',
+                             '["prefixed-symbol", "arrow-target-prefixed-symbol"]')
 
 
 def scan(math, policy=POLICY):
@@ -115,14 +117,14 @@ class PrefixedNotationTests(unittest.TestCase):
         self.assertEqual(scan(math, policy), scan(math))
 
     def test_prefixed_usage_can_be_declared_for_an_identifier_without_aliases(self):
-        policy = Policy(RAW.replace(ENTRY, ENTRY.replace('-Sets:', 'Things:').replace('"G"', '"H"')))
+        policy = Policy(RAW.replace(CURRENT_ENTRY, ENTRY.replace('-Sets:', 'Things:').replace('"G"', '"H"')))
         items, _, _, errors = scan(r'$H\textit{Things}$', policy)
         self.assertFalse(errors)
         self.assertEqual(items[0]['usage_source'], 'H')
         self.assertTrue(scan(r'$G\textit{Things}$', policy)[-1])
 
     def test_policy_fields_prefix_and_usage_are_strict(self):
-        self.assertIn(ENTRY, RAW)
+        self.assertIn(CURRENT_ENTRY, RAW)
         invalid = [ENTRY.replace('    prefix: "G"\n', ''),
                    ENTRY + '    prefix: "G"\n',
                    ENTRY.replace('    prefix:', '    unknown:'),
@@ -136,7 +138,7 @@ class PrefixedNotationTests(unittest.TestCase):
             invalid.append(ENTRY.replace('"G"', value))
         for entry in invalid:
             with self.subTest(entry=entry), self.assertRaises(RecordError):
-                Policy(RAW.replace(ENTRY, entry))
+                Policy(RAW.replace(CURRENT_ENTRY, entry))
         with self.assertRaises(RecordError):
             Policy(RAW.replace('  size:\n', '  size:\n    prefix: "G"\n'))
 

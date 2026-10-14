@@ -1,5 +1,7 @@
 # 2026-10 项目审查修复开发计划
 
+> 必要可信门禁前置：当前main的pr-contract由pull_request_target固定从main加载，并硬限100文件/单章2–8 parents。集中最小885路径表已75184字符，尚不含来源历史/完整IDs。已先claimed工具Issue #810，仅在独立分支tool/bulk-task-scope-validator改校验器、测试、范围Schema和协作文档，先通过旧可信合同再合入main；不改保护/remote/CI信任来源。全部107数据仍集中PR809统一验收，不重新逐批拆任务。来源基础commit e6e1f05064fdba98a36a1e9ad9e4e7bcdc2e054d和文档466e24d都保留；当前没有DATA生成或采用。
+
 > 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
 
 当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data804)
@@ -2329,3 +2331,5 @@ make pdf MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
   117模板通过；实际render240.793秒/pdf66.590秒、FinalTeX PASS，119生成TeX不变，
   463页整书文字/绘图流/页面几何相等，9个已实际查看PNG重渲染原字节相等，无变化页。
   下一步为真实完整冻结和模型生成；全239 QA及S5/S7尚未执行最终验收。
+
+- 集中工具CI补充：e6e1f05远端全tool-test 613项中609通过、4失败（两未知宏前缀拒绝被新增arrow-target分支绕过，两旧policy夹具假设失效）。保留全部原拒绝样例，限定新分支独立前缀语法，只增锁定preamble中确认为零参数的Sh/etale；默认旧prefixed-symbol语义不变。18项定点回归通过，真实obsolete09AQ完整28旧分组预检通过，全库extract/check输出不变。实际再次render/pdf、FinalTeX PASS，119生成TeX及463页文字原字节相同；远端新HEAD CI仍须重查，不据局部证据冒称613全绿。

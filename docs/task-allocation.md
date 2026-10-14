@@ -230,3 +230,27 @@ blocked_reason: null
 
 GitHub Issue 是协作认领记录，`translation-data/` 是译文事实来源。不要把同一条
 译文复制到任务记录中形成第二套事实来源。
+
+## 显式哈希范围清单的集中任务
+
+对于明确授权的集中修复，Issue可以改为声明`scope_manifest`与
+`scope_manifest_sha256`，指向`task-scopes/<task-id>.json`及该文件完整UTF-8原字节
+的SHA256。清单必须在实际写入/生成前完整冻结，变更先更新同一Issue的hash；
+PR正文引用同一路径/hash。它不能与内联allowed_write_files混用。
+
+清单以task-scope Schema保存task/owner/branch/source与完整精确allowed_write_files，
+以及每个data_scope的chapter、实际/历史parent Tags、完整旧新/历史unit IDs、对应
+精确文件和run/model范围。所有受管数据文件恰属一个明确scope；跨scope借ID、
+parent或文件失败。清单自身也须列入允许文件。禁止目录/通配、相对逃逸和重复，
+不使用页码/行号或宽泛全库声明代替坐标。
+
+可信main校验器验证Issue声明的原字节hash、Schema和身份绑定后，才允许一个PR
+包含超过100文件及多个明确范围。GitHub分页必须完整，不能遗漏、重复、循环或
+在head/base漂移后拼接数据；每个文件内容仍从锁定head/base获取并逐范围验证。
+旧内联合同维持原100文件、单章及2–8 Tags规则。来源/历史/真实五字段、未知术语
+待决和人工审校/发布门禁均不因此改变，清单不授予批准。
+
+同一scope内变更的active units与candidates分别形成完整ID集合，各自必须等于
+`output_unit_ids`；`unit_ids`还应保留全部旧输入及所需历史ID。共享不可变run或历史
+文件只能归入一个精确scope；不同scope不能重复声明同一路径，不能借根清单的
+全局ID并集绕过本scope。完整模型冻结输入及原字节历史仍由专门的溯源门禁核验。

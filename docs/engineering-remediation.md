@@ -1,11 +1,11 @@
 # 2026-10 项目审查修复开发计划
 
-当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data792)
-及本文末尾执行记录为准：DATA792/PR793完整八批001B–001I已接受，来源工具PR789和
-目录证据PR791已接受。先完成本次独立progress/plan，再按真实repair-queue继续同章S4。
-以下DATA770及先前计划均为保留的历史；全部已合并成果不重复开发。
-总目标仍为全部F1–F8，当前S4剩114问题batch/543术语候选1774诊断，之后独立S5/S7
-与最终详细开发文档/完整可复制提示词，未知术语及全部人审/发布权限保持待决。
+当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data800)
+及本文末尾执行记录为准：DATA800/PR801完整三批0020–0022及两次实际run/三完整历史
+已接受；严格v12前置PR797和modules来源证据PR799已接受。先完成独立progress/plan
+Issue802，再按真实repair-queue继续同章S4。以下DATA770及先前计划均为保留历史；
+全部已合并成果不重复开发。总目标仍为F1–F8，当前S4剩111问题batch/535术语候选
+1756诊断，之后独立S5/S7及最终详细开发文档/完整复制提示词，全部审批仍待决。
 
 优先收尾 DATA770 的独立前置 [Issue #773](https://github.com/dongyaotalk/stacks-project-zh/issues/773)：
 `tool/pre-adoption-replay`，fresh main `76a9a20a8029f546c5b0763897b2aa98326f2d87`，
@@ -2238,3 +2238,8 @@ make pdf MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
   全库extract/check和alignment/check实测 {"extract-all": {"seconds": 61.52, "exit_code": 0}, "extract-all-check": {"seconds": 61.155, "exit_code": 0}, "source-alignment": {"seconds": 34.382, "exit_code": 0}, "source-alignment-check": {"seconds": 35.174, "exit_code": 0}}；五目标BYTE_EXACT、三repair queue空，其余finding逐项保持。239批1233→1225unit，114→111问题batch，543→535术语问题候选，1774→1756诊断；零坐标/来源错误/未保护/proof mismatch，187组218proof全match。隔离progress/plan各生成及check通过，报告留待合并后独立任务更新，不手改数字。
   当前lane实际render 227.406秒/pdf 71.957秒零退出、FinalTeX PASS；整书463页全文layout比较，变化页[4, 15, 16, 54, 55]及所有邻页/目标共11张PNG逐张实际查看无裁切/重叠/缺字。源码Omitted忠实译为略，不补证明/改数学/正文译注；术语、critic、语言/数学审校及发布批准均未授予。
   完整42文件staged审查→feature推送/PR附加→精确head/base全部远端原字节/fullpatch/native唯一closing800→精确最新HEAD双CI run/job SUCCESS及fresh main后已授权admin squash，两个实际run及真实parent Tag trailers保留；合并后tree/raw/MERGED/CLOSED/clean。下一DATA前先独立progress/plan，即使报告不变也实际check；其后继续全部S4、独立S5/S7和F1–F8最终详细文档/完整复制提示词。
+
+- 独立progress/plan [Issue #802](https://github.com/dongyaotalk/stacks-project-zh/issues/802)，branch `docs/progress-categories-fibre-examples`，DATA801接受main `6c648a861a15f015c35cdf6e177161b9c41b1bb7`。先claimed再branch；三个文档精确范围、空DATA/run写入，实际progress/plan各check及当前lanerender/pdf/全文与11已看PNG相等，记录111残项、完整两次run/raw/三历史/v12前置、失败合同修正与维护边界，保留全部接受历史。精确staged/远端/双CI后授权合并，下一DATA前先收尾此进度，继续全部S4/S5/S7/F1–F8。
+
+  Issue802独立progress/plan本地验收：实际progress/progress-check/plan/plan-check全部通过，即使三报告无变化仍与DATA800隔离预览逐字相等；workflow/harvest/index/117模板/Schema、当前extract-all-check及source-alignment-check通过，输入hash和全translation-data tree及范围外bytes保持。命令实测{"progress": {"seconds": 3.975, "exit_code": 0}, "progress-check": {"seconds": 4.268, "exit_code": 0}, "plan": {"seconds": 0.764, "exit_code": 0}, "plan-check": {"seconds": 0.906, "exit_code": 0}, "workflow-check": {"seconds": 0.145, "exit_code": 0}, "harvest-check": {"seconds": 0.142, "exit_code": 0}, "upstream-index-check": {"seconds": 0.173, "exit_code": 0}, "chapter-template-check": {"seconds": 1.061, "exit_code": 0}, "schema-check": {"seconds": 2.281, "exit_code": 0}, "extract-all-check": {"seconds": 53.036, "exit_code": 0}, "source-alignment-check": {"seconds": 29.178, "exit_code": 0}, "render": {"seconds": 196.51, "exit_code": 0}, "pdf-marker": {"seconds": 0.362, "exit_code": 0}, "pdf": {"seconds": 65.239, "exit_code": 0}, "pdf-text": {"seconds": 1.092, "exit_code": 0}, "png-3": {"seconds": 0.243, "exit_code": 0}, "png-4": {"seconds": 0.422, "exit_code": 0}, "png-5": {"seconds": 0.348, "exit_code": 0}, "png-14": {"seconds": 0.138, "exit_code": 0}, "png-15": {"seconds": 0.339, "exit_code": 0}, "png-16": {"seconds": 0.235, "exit_code": 0}, "png-17": {"seconds": 0.287, "exit_code": 0}, "png-53": {"seconds": 0.335, "exit_code": 0}, "png-54": {"seconds": 0.441, "exit_code": 0}, "png-55": {"seconds": 0.434, "exit_code": 0}, "png-56": {"seconds": 0.378, "exit_code": 0}, "diff-check": {"seconds": 0.042, "exit_code": 0}}。当前lane真实render/pdf零退出、FinalTeX PASS，463页全文及11张已实际看图PNG重渲染原字节相同，没有变化页，复用DATA800逐张视觉证据。不无理由重跑未变239QA/568工具回归，remoteCI仍全测；template不适用。
+  当前239批1225unit/111问题batch/535术语候选1756诊断、187组218proof全match、零坐标/来源错误保持。三个文档记录最新接受DATA main/PR/CI、v12完整来源/两次实际五字段和不可变raw/三完整历史重放、复现及维护/机器Issue解析和完整复制提示词；保留全部既有已合并历史及0AHK。仅三文件精确staged/远端head-base原字节/fullpatch/native唯一closing802/精确HEAD双CI SUCCESS后授权squash，合并后tree/raw/MERGED/CLOSED/clean；其后再继续同章S4，不将002U未分类数学自然文字变成记号或裁掉正文，全部S4后独立S5/S7/F1–F8最终交付，当前goal未完成，无术语/critic/人审/发布批准。

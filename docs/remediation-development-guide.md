@@ -3,7 +3,94 @@
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
 
-## 最新接受检查点：2026-10-14，DATA792
+## 最新接受检查点：2026-10-14，DATA800
+
+[PR #801](https://github.com/dongyaotalk/stacks-project-zh/pull/801) 已合并，
+[Issue #800](https://github.com/dongyaotalk/stacks-project-zh/issues/800) 已关闭。
+DATA 接受 main `6c648a861a15f015c35cdf6e177161b9c41b1bb7`；精确 feature `df6e7fd91a2976e67cc3fdacbe514a330936b7e3`；
+base `60b14fe7d608a0142b825f7a37f79b13824ce006`。其后独立进度
+[Issue #802](https://github.com/dongyaotalk/stacks-project-zh/issues/802)须完成后再认领下一DATA。
+续接时重新读取实时main、分支、开放任务和实际审计；本段不是覆盖工作区的依据。
+
+| 实测审计 | 接受值 |
+| --- | ---: |
+| batches / 活跃唯一 unit | 239 / 1225 |
+| 问题 batches | 111 |
+| 术语问题 candidates / 诊断 | 535 / 1756 |
+| 坐标 / 来源错误 / proof mismatch | 0 / 0 / 0 |
+| proof groups / units / match / unsupported | 187 / 218 / 187 / 0 |
+| 来源库存 / READY / BLOCKED | 43242 / 37198 / 6044 |
+| 库存诊断 / Git roundtrip / 章节 | 16888 / 116 / 117 |
+
+真实Sections0020/0021的完整三batch0020/0021/0022，13旧→5完整新单元：两个标题、
+Section0020完整正文、0022完整引理及完整证明。正文完整包括三段和四项列表，五组
+有序覆盖全部13旧unit及candidate，没有裁掉未处理输入。222来源词的完整范围偏好
+例外在Issue及生成前声明，未补入已接受批次凑300词。最终五目标BYTE_EXACT、三批
+repair queue为空；范围外source/terms/proof/matches逐项不变。问题batch114→111、
+术语候选543→535、诊断1774→1756、unit1233→1225来自完整语义分组。
+
+前置[PR #797](https://github.com/dongyaotalk/stacks-project-zh/pull/797)接受严格v12双Section
+完整末端见证：前标题和真实后标题独立绑定，整个旧正文有序链与最大原Git正文的全部
+76节点、数学/引用/结构/注释保持，普通ASCII prose外空白有唯一完整依据；旧v1–v11
+权限不变。前标题的历史命名空间仅用既有v7规则核验，正文不获得标签改写权限。
+[PR #799](https://github.com/dongyaotalk/stacks-project-zh/pull/799)只把module的modules
+来源见证从旧item004迁到完整锁定Git正文；192目录证据有效，词形/中文批准不变。
+READY表示来源准备状态，两个前置没有采用DATA。
+
+第一次完整冻结5新/13旧、完整有序组与候选、9份原历史、policy/style/glossary/prompt/
+catalog/context hashes，实际模型生成全部五字段。正文一次token错序被拒后完整重生，
+初稿保留。第一次实际run装配后逐句核对发现pairs两处和structure一处仍需双语；
+第二次生成前扩展Issue为42精确文件、两个实际run与三完整pre-adoption-replay-v1历史，
+重冻原run/raw/correction和三个完整临时batch共13文件原字节，所有新context保存
+`prior_actual_revision`和`pre_adoption_snapshot_bindings`。第二次模型完整重生全部5新unit
+五字段；程序只选择完整记录、保护、序列化、验证和装配，不生成中文或机械补术语。
+新旧v4只改变完整组correction指针和候选输出hash，来源、原输入、分组、边界、身份
+完全相同；完整当前重放先通过，再严格重放三个历史，原run/raw均不可变。
+
+两个实际run为`run-20261014-categories-fibre-examples-gpt61sol`和同名`-complete`；
+实际`gpt-6.1-sol / xhigh`、turn `01a137ad-1a69-7613-8bc4-b53d291c919f`，动态Harness
+`0.162.0-alpha.17.2`，snapshot未暴露、replayable false。下一次必须重读实际运行元数据，
+不能复制本值。最终54次双语声明覆盖46来源目录要求；五字段与实际会话字面输出及
+immutable raw逐项相等，保护token原序/次数/尾空白相等。额外逐句检查不能仅靠QA代替。
+原证明Omitted忠实译为“略。”；source-only疑点留书末版本勘误表，不补证明或改数学。
+
+来源prepare205.809秒/check202.654秒且原字节/mtime不变；239QA379.236秒、第二run
+QA0.177秒、第一runQA0.146秒，Schema/溯源/决策/workflow/harvest/index/117模板通过。
+全库extract61.52秒/check61.155秒、alignment34.382秒/check35.174秒；隔离progress/plan
+生成及各check通过，三报告原字节无变化仍须独立真实check。实际render227.406秒、
+pdf71.957秒、FinalTeX PASS；463页整书layout比较，458页文字布局完全相同；变化页
+4/15/16/54/55及全部邻页/相关页共11 PNG逐张查看。页14是正常空白背页。
+完整42文件8,236,606-byte patch与远端head原字节相等；base中8旧路径原字节相等，
+34新路径不存在。native唯一closing800通过。精确HEAD的pr-contract run/job
+`38489660042/115612232365`、policy-and-data
+`38489659878/115611595029`均SUCCESS；fresh main==base后
+授权squash，合并后tree、42文件字节、两个run trailers、MERGED/CLOSED和clean核验。
+
+首轮pr-contract因新增16路径的YAML列表位置错误而失败：同样路径已在第二次生成前
+写入Issue，但机器allowed_write_files只读到26项。纠正列表位置，不改变DATA HEAD或
+路径内容；本地机器合同与远端原生合同重新通过，同HEAD只重跑失败合同job后成功。
+失败日志保留，未放宽规则或伪造审校。今后生成前同时检查Issue文本与机器解析结果：
+
+```bash
+gh issue view "$ISSUE" --json body > build/claimed-issue-body.json
+"$PYTHON" - <<'PY'
+import json
+from stacks_zh.pr_contract import _field_value, _list_values
+issue = json.load(open("build/claimed-issue-body.json"))
+scope = json.load(open("build/task-scope.json"))
+assert _list_values(_field_value(issue["body"], "allowed_write_files")) == scope["allowed_write_files"]
+PY
+```
+
+将当前任务完整scope副本放在上述生成目录；不要改公共解析器来迁就错误清单。
+下一只读预检002R/002S真实parent为09WN/04AQ。002U完整正文含数学里的
+`\text{ in }`，未在当前自然文字规则内，整正文仍BLOCKED；不能只采用标题或把文字
+归为记号。先独立精确政策/工具来源前置，再重新核验完整批次、目录证据及模型输入。
+当前剩余Categories13、Sets17、Conventions5、Coding2、Desirables18、FDL2、Guide21、
+Introduction2、Obsolete31问题batch。全部S4之后才独立S5默认强门禁和S7；仅VERIFY
+来源的批次也必须处理。术语、critic、语言/数学人审和发布均未批准。F1–F8总目标继续。
+
+## 历史接受检查点：2026-10-14，DATA792
 
 [PR #793](https://github.com/dongyaotalk/stacks-project-zh/pull/793) 已合并，
 [Issue #792](https://github.com/dongyaotalk/stacks-project-zh/issues/792) 已关闭。

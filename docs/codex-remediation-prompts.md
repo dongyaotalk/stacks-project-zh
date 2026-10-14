@@ -11,34 +11,38 @@
 包括 S4 数据修订、S5 默认强制门禁和 S7 全库集成验收。完成后写详细开发文档
 和可复制的 Codex 提示词，记录架构、复现命令、验收证据和后续维护方法。
 
-用中文回复。最新DATA为Issue792/PR793，已合并接受main
-9ae8d621b35e33e3c299fbfbc9460e17f4262c6e；其后独立progress/plan及所有已合并成果也要保留。
+用中文回复。最新DATA为Issue800/PR801，已合并接受main
+6c648a861a15f015c35cdf6e177161b9c41b1bb7；其后独立progress/plan及全部已合并成果保留。
 英文锁定a04446e57ec1fbc252a871afcec7752fb2807b14。
-检查点239批/1233活跃unit，剩114问题batch、543术语候选/1774诊断；坐标/来源错误/
-proof不匹配零，187组/218proof全部match。库存43242条、READY37198/BLOCKED6044、
-16888诊断、116Git roundtrip/117章。数字必须从fresh main核实，READY不自动采用。
-792覆盖真实Section0013八个完整batch001B–001I：27旧→12新、575来源词、八v4/十二
-restoration及全部旧历史保留；133来源要求/145双语声明通过，程序仅装配完整记录。
-实际run为run-20261014-categories-functors-complete-gpt61sol，真实gpt-6.1-sol/xhigh，
-snapshot未暴露；下一任务须重读实际model/effort/turn并动态解析Harness，不能复制本值。
-首稿六unit及001D后续草稿token错序在装配前被拒，模型完整重出五字段，全部失败草稿
-保留。PR789已接受v11完整前段后的最大旧分段链见证，PR791已接受12项完整来源词证据；
-不可重复做已完成前置，也不能将v11权限推给旧版本或任意数学文字。
-784/PR785的0014–0019完整Definitions及独立progress PR787已接受；770/PR775的
-Section001L米田六batch/16旧→10新、两个真实run/raw及001P历史和独立progress PR777
-仍保留。PR772英语functor-of-points及PR774首次采用前pre-adoption-replay-v1不重做。
-691/698/699已由PR759书末独立“勘误与原文疑点”表注明英文版本并留档关闭；不代表
-英文修复或数学裁定。05SH/05PU及0AHK/d58a764与之后全部已合并成果保留。
-下一DATA前先核实792之后独立progress/plan Issue794是否已合并，不能由本文猜状态。
-剩余Categories16、Sets17、Conventions5、Coding2、Desirables18、FDL2、Guide21、
-Introduction2、Obsolete31问题batch。完整八批001B–001I已完成，不再次认领；从真实
-repair-queue继续同章完整语义范围，包括仅VERIFY来源的batch。首轮CI清理临时Git
-objects目录的Errno39再次出现，失败日志保留；后续须独立维护调查，不在DATA隐藏错误。
-全部S4之后才独立S5默认强门禁和S7，当前goal持续；文档和单批完成不结束F1–F8。
-
-0020–0022完整13旧输入范围仅只读预检，0020完整prose_block旧/新边界锚点合同拒绝；
-不能裁掉七旧输入或采用四个已核验容器冒充完整范围。先独立来源合同/工具及来源词目录
-所需前置，再重新冻结完整数据；READY不授权事实采用。
+检查点239批/1225活跃unit，剩111问题batch、535术语候选/1756诊断；零坐标/来源错误/
+proof不匹配，187组/218proof全部match。来源库存43242/READY37198/BLOCKED6044，
+16888诊断/116Git roundtrip/117章。数字从fresh main重核，READY不自动采用。
+800覆盖真实Sections0020/0021的完整三batch0020/0021/0022：13旧→5完整新、五组、222词，
+完整正文三段/四项列表及整个lemma/proof保留。偏好例外已提前声明，五BYTE_EXACT、
+三queue清空，范围外findings逐项相同。PR797接受v12严格双Section全正文末端见证，
+PR799只迁移module的modules英语来源证据，192目录证据有效；全部前置均不重复。
+第一实际run已装配后发现pairs两处及structure一处仍需双语，第二次生成前扩展Issue为
+42精确文件/两个run/三个完整pre-adoption-replay-v1历史，冻结原run/raw/correction和
+三个完整临时batch共13文件原字节。新context须保留prior_actual_revision和完整batch
+hash绑定，严格当前+历史完整v4重放，不能伪造Git前继、删旧输出或直接程序补词。
+两个实际run为run-20261014-categories-fibre-examples-gpt61sol及其-complete；当时真实
+gpt-6.1-sol/xhigh，snapshot未暴露，Harness动态解析；下一次必须重读实际model/effort/
+turn，不能复制旧值。模型每次完整生成全部五新unit五字段，最终54双语覆盖46目录
+要求，token原序/次数/尾空白、五字段/raw/实际会话输出相等；原稿及首run全部保留。
+PR801首合同因新增16路径YAML放在allowed_write_files键外被拒，同样路径已提前文本
+声明；纠正位置、机器合同重核、相同HEAD重跑合同job后实际双CI run/job成功。失败
+日志保留；今后生成前按开发指南实际解析Issue允许列表并与scope精确相等，不弱化规则。
+下一DATA前先核实独立progress/plan Issue802是否完成。只读下一范围002R/002S的真实
+parent分别09WN/04AQ，不能复制旧parent002R/002S。002U整正文包含未分类数学内
+\text{ in }仍BLOCKED；先独立精确自然文字政策/工具前置，不把词当记号，不裁掉正文。
+792/PR793八完整batch001B–001I及progress PR795、784/PR785/PR787、770/PR775的完整
+米田六batch/16旧→10新及两个实际run/raw和PR777、PR772/774、0AHK/d58a764和之后
+独立文档/进度全部保留。05SH/05PU已修复不重复；691/698/699由PR759书末独立英文
+版本勘误表留档关闭，不代表英文数学修复。源码疑点只source-only remark。
+剩余Categories13、Sets17、Conventions5、Coding2、Desirables18、FDL2、Guide21、
+Introduction2、Obsolete31，从真实repair-queue继续完整同章范围，包括仅VERIFY来源。
+全部S4后独立S5默认强门禁和S7/F1–F8最终证据；当前goal持续，单批/文档完成不能
+结束总goal。未知术语、critic、语言/数学审校和发布批准仍待决，不提供伪人审。
 
 本地使用pyenv已安装的Python3.12，每条Make显式传同一PYTHON；本检查点实际
 3.12.6。频繁排版可用make pdf-chapter CHAPTER=categories MODEL=openai-gpt-5.6-sol，

@@ -1,7 +1,59 @@
 # 八项审查修复开发与交接指南
 
+> 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
+
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
+
+## 当前集中任务在制状态（未合并）
+
+用户最新指示要求集中修复，已复用 [Issue #808](https://github.com/dongyaotalk/stacks-project-zh/issues/808)
+及 [草稿 PR #809](https://github.com/dongyaotalk/stacks-project-zh/pull/809)。分支仍为
+`docs/progress-categories-cofinal-initial`，已有文档 commit `466e24da0112d3bb40126c1c26183df8f6ac7e10`；
+main 接受值仍为下文 DATA804。不要合并本草稿或重建分支覆盖在制改动。
+
+全部107问题batch已按当前工具/政策重新一次只读预检：107/107具有完整来源计划，
+849旧单元提议483完整新单元，27490英文词；其中unit-v1 473、v2 9、v3 1。
+全体提议与范围外活跃ID无冲突。准备数历程36→51→57→66→80→92→104→105→106→107。
+这是来源准备，不是中文生成/采用；接受事实仍107问题batch、529候选、1740诊断，
+全部translation-data及原历史原字节保持。Issue808已提前声明29个精确文件。
+
+v13支持完整原生prose/heading/章头见证、真实层级、文档首尾、明确逐处记录的
+历史提取排版差异；Sets046U另从完整原生方程label证明真实Section000H及000I
+proof至000J lemma的整个语义区间，不以历史parent误值授权来源。FDL完整章头/
+center/前言包的10项回归，以及包含完整方程历史重放的14项来源边界回归通过。
+29项新增精确数学记号的43种有效配对均有锁定Git见证，Vect/Lift三种未见证
+笛卡尔组合由contexts拒绝，8项独立记号测试通过。
+
+最后两处含TeX控制空格的自然文字使用独立unit-v3/schema及source-container-v14，
+不放宽v2纯参数合同。完整父参数内两纯叶仍分属同一region/unit，中间控制空格
+原字节锁定；3个新纯文字角色沿用v2。5项复合文字测试、另1项真实prepare/check
+和ordinary assembly拒绝入口测试通过，含双代完整v4历史、来源/Schema/溯源、
+实际结构化render及逐次待决术语；原v2的40项回归通过。测试修复和失败日志保留。
+相关全组重放入口现在识别v13 typed证据及v3/v14，普通装配不能绕过typed来源。
+
+基础工具兼容性集合171项中169先通过；另两项为旧Aut(X)拒绝预期及完整proof
+拒绝信息被新入口覆盖，已分别修正并定点2项通过，未重跑169个未受影响项。新v3
+6项及原v2 40项通过；全库对齐另发现零参数copyright入口遗漏，已同步两个解析
+入口并增加针对性1项通过。全部失败/修复日志保留，没有弱化数学或完整组门禁。
+
+当前全库实际extract-all/check通过：117章、116 Git原字节回放，43223来源提议，
+READY38422/BLOCKED4801，12491诊断；仍非全库翻译就绪。实际alignment/check通过：
+239/1208，BYTE_EXACT243、PRESENTATION_EQUIVALENT911、SOURCE_DIFFERENCE54，
+529候选/1740诊断、零坐标/来源错误/proof mismatch，107问题batch保持。当前活跃
+数学探针未分类0、11个旧typed迁移节点，4条历史分片异常仍须完整容器恢复。
+
+workflow/Schema/decision/index/117模板通过。当前lane真实render240.793秒、
+pdf66.590秒，FinalTeX PASS；119生成TeX原字节不变，463页整书文字、绘图流与
+页面几何均相同，9张此前实际查看页面PNG重生成后逐字相同，因此没有变化页。
+模板未变，不重复template。全体translation-data及范围外字节保持；没有新run/
+raw/中文生成或采用。217个不同测试方法的现有通过证据由上述集合与定点修复
+组成，不冒称一次完整全绿运行。239 QA及最终全库验收仍留待全部S4完成后集中做。
+
+在制证据目录 `build/task-integrated-remediation/`（ignored）保存完整107预检、
+各阶段差异、真实Git见证、测试日志及continuation-state。真正DATA前仍先在同一
+Issue声明完整新旧ID/精确写路径/真实run-model，机器核验、冻结全部输入和历史。
+只做一个最终PR；没有逐批进度PR、工具PR或人审/术语/发布批准。
 
 ## 最新接受检查点：2026-10-14，DATA804
 

@@ -390,7 +390,7 @@ class InventoryTests(unittest.TestCase):
             root, harvest, _, _, _ = fixture(Path(tmp))
             output = root / 'source-ir/all'
             manifest = write_inventory(root, harvest, output)
-            self.assertEqual(manifest['extractor_version'], 'source-extraction-v3')
+            self.assertEqual(manifest['extractor_version'], 'source-extraction-v4')
             self.assertEqual((manifest['natural_math_text_slots'], manifest['natural_math_text_regions']), (5, 3))
             self.assertEqual(manifest['roundtrip_files'], 1)
             self.assertFalse(manifest['adopted'])

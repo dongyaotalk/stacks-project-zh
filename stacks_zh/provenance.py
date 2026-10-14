@@ -71,7 +71,7 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
             rows = [json.loads(line) for line in unit_file.read_text(encoding='utf-8').splitlines() if line.strip()]
             if any(not isinstance(row, dict) for row in rows):
                 raise ProvenanceError('active unit records must be objects')
-            typed_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') == 2}
+            typed_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') in {2,3}}
             if typed_active[unit_file.name]:
                 from .source_containers import safe_path
                 safe_path(root, unit_file.relative_to(root).as_posix(),

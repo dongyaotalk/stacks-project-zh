@@ -1,11 +1,12 @@
 # 2026-10 项目审查修复开发计划
 
-当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data800)
-及本文末尾执行记录为准：DATA800/PR801完整三批0020–0022及两次实际run/三完整历史
-已接受；严格v12前置PR797和modules来源证据PR799已接受。先完成独立progress/plan
-Issue802，再按真实repair-queue继续同章S4。以下DATA770及先前计划均为保留历史；
-全部已合并成果不重复开发。总目标仍为F1–F8，当前S4剩111问题batch/535术语候选
-1756诊断，之后独立S5/S7及最终详细开发文档/完整复制提示词，全部审批仍待决。
+当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data804)
+及本文末尾执行记录为准：DATA804/PR807完整四批04E6/04E7/09WP/002R、23旧→6完整新及
+实际gpt-6-astra五字段run已接受，main `80463ead15a4e52bf9dea6cc01255da70a9d24c3`。
+前置PR806完整equivalence class/classes来源见证及DATA800后独立进度PR803均已接受。
+先完成独立progress/plan Issue808，再继续真实完整同章S4；全部原历史和悬存stash保留。
+以下DATA770等计划是保留历史，不重复已合并开发。总目标仍为F1–F8，当前S4剩107问题
+batch/529术语候选/1740诊断；全部S4后独立S5/S7及最终详细文档/复制提示词，所有审批待决。
 
 优先收尾 DATA770 的独立前置 [Issue #773](https://github.com/dongyaotalk/stacks-project-zh/issues/773)：
 `tool/pre-adoption-replay`，fresh main `76a9a20a8029f546c5b0763897b2aa98326f2d87`，
@@ -2270,3 +2271,20 @@ make pdf MODEL=openai-gpt-5.6-sol PYTHON="$PYTHON"
   本地验收后仍须完整staged审查、精确head/base远端全部原字节与完整patch、native唯一closing804、最新HEAD双CI run/job成功及fresh main基线核验，才按授权admin squash；合并后核验tree/bytes/MERGED/CLOSED/clean及实际run trailers。下一DATA前先独立progress/plan，即使报告不变仍实际check；其后继续全部S4，再独立S5默认强门禁、S7及F1–F8最终详细开发文档/完整复制提示词。
 
   视觉补充：物理页65/66的公式外句号各占一行，65/66之间一个双语词跨页；未见裁切、重叠、缺字或数学内容缺失。遵循既有风格边界，不仅为孤行或分页改写模型输出、来源或生成TeX，保留该候选版式观察供后续排版维护。
+
+- 独立进度/计划Issue [#808](https://github.com/dongyaotalk/stacks-project-zh/issues/808)，
+  owner dongyaotalk，分支`docs/progress-categories-cofinal-initial`；接受base
+  `80463ead15a4e52bf9dea6cc01255da70a9d24c3`，英文锁定保持。仅三个开发/交接文档，
+  unit/run/model写入范围为空；先claimed与机器允许路径校验，再建分支。完整计划在Issue：
+  实际生成/check进度与计划、与DATA隔离预览逐字比较，fresh main来源库存/对齐check和
+  全部输入hash、workflow/harvest/index/117模板/Schema、事实历史tree/范围外bytes；
+  当前lane实际render/pdf、FinalTeX、463页全文及9张已实际看图PNG重渲染字节比较。
+  报告即使无变化也记录真实检查，不手改数字，不重复未变DATA的239QA或工具测试。
+  详细指南记录PR807精确head/base、32路径原字节、完整patch、双CI run/job、全部来源/
+  模型与历史证据及已合并postmerge结果；复制提示词保留全部F1–F8目标和后续边界。
+  S4仍有107问题batch，Categories9完整范围继续；002U/003D未知数学文字仍BLOCKED，
+  不能因旧粗略预检歧义放宽规则。所有S4之后才独立S5默认强门禁和S7。
+
+  Issue808独立progress/plan本地验收：实际progress/progress-check/plan/plan-check全部通过，三报告与DATA804隔离预览原字节相等；workflow/harvest/index/117模板/Schema、全库extract-all-check及source-alignment-check成功，全部审计输入hash、完整translation-data tree和范围外bytes保持。实测命令{"progress": {"seconds": 3.791, "exit_code": 0}, "progress-check": {"seconds": 3.58, "exit_code": 0}, "plan": {"seconds": 0.575, "exit_code": 0}, "plan-check": {"seconds": 0.576, "exit_code": 0}, "workflow-check": {"seconds": 0.115, "exit_code": 0}, "harvest-check": {"seconds": 0.165, "exit_code": 0}, "upstream-index-check": {"seconds": 0.188, "exit_code": 0}, "chapter-template-check": {"seconds": 1.052, "exit_code": 0}, "schema-check": {"seconds": 2.08, "exit_code": 0}, "extract-all-check": {"seconds": 51.101, "exit_code": 0}, "source-alignment-check": {"seconds": 28.911, "exit_code": 0}, "render": {"seconds": 210.008, "exit_code": 0}, "pdf-marker": {"seconds": 0.401, "exit_code": 0}, "pdf": {"seconds": 65.784, "exit_code": 0}, "pdf-text": {"seconds": 1.225, "exit_code": 0}, "png-14": {"seconds": 0.16, "exit_code": 0}, "png-15": {"seconds": 0.382, "exit_code": 0}, "png-16": {"seconds": 0.229, "exit_code": 0}, "png-17": {"seconds": 0.258, "exit_code": 0}, "png-63": {"seconds": 0.458, "exit_code": 0}, "png-64": {"seconds": 0.441, "exit_code": 0}, "png-65": {"seconds": 0.377, "exit_code": 0}, "png-66": {"seconds": 0.422, "exit_code": 0}, "png-67": {"seconds": 0.502, "exit_code": 0}, "diff-check": {"seconds": 0.046, "exit_code": 0}}。当前lane真实render/pdf零退出、FinalTeX PASS，463页整书全文与DATA804接受PDF逐字相同；9张已实际查看页面重新渲染PNG后原字节和实际visual-evidence hash均相同，因此复用已实际逐张看图证据，没有变化页。不重复未变239QA/工具测试，远端CI仍完整执行；template不适用。
+  239批1208unit、107问题batch、529术语候选/1740诊断，187组218proof全match、零坐标/来源错误保持。三份文档包含DATA804接受main、PR806独立目录前置、32路径/完整patch/精确HEAD双CI/merge证据、原计划stash保留、冻结及真实五字段/44双语要求/所有原历史、复现和维护边界、完整复制提示词。S4及后续S5/S7/F1–F8仍未完成，无术语/critic/语言/数学/发布批准。
+  同时只读重扫剩余Categories完整旧组及锁定Git：0012章标题以真实0011 parent可唯一定位，旧预检的标题歧义被排除；04AQ首段可准备，但末段缺少同batch完整后陈述见证。002Z的0CN1完整remark、04AX的002Y完整proof还各有未分类数学自然文字，和002U/003D一样保持BLOCKED。002Z两段、04AX一段和04AY末段仍须核验完整分组/边界，不能以粗糙预检直接裁剪或放宽规则；002S及0036完整来源可准备。该预检没有认领DATA、生成中文/run或修改事实。

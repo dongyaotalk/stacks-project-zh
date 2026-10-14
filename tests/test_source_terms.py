@@ -39,6 +39,59 @@ def candidate(terms=None):
 
 
 class SourceTermsTests(unittest.TestCase):
+    def test_equivalence_class_requires_the_whole_singular_and_plural_concept(self):
+        row = unit('An equivalence class, equivalence classes, a class and an equivalence.', kind='paragraph')
+        entry = copy.deepcopy(next(item for item in json.loads(
+            (Path(__file__).resolve().parents[1] / 'config/source-terms.json').read_text())['terms']
+            if item['id'] == 'equivalence-class'))
+        self.assertEqual(entry['forms'], ['equivalence class', 'equivalence classes'])
+        self.assertEqual(entry['chapters'], [])
+        words = catalog(row)
+        words['terms'] = [{'id': term, 'forms': forms, 'chapters': [],
+            'evidence': [{'chapter': 'test', 'unit_id': row['unit_id'],
+                          'source_term': term, 'source_tex_hash': source_tex_hash(row)}]}
+            for term, forms in [('equivalence', ['equivalence']), ('class', ['class', 'classes'])]]
+        partial = candidate([('equivalence', '等价'), ('class', '类'),
+                             ('equivalence', '等价'), ('classes', '类'),
+                             ('class', '类'), ('equivalence', '等价')])
+        self.assertEqual(validate_source_terms(row, partial, words), [])
+        words['terms'].append(entry)
+        self.assertEqual([x['source_term'] for x in source_inventory(row, words)['occurrences']],
+                         ['equivalence class', 'equivalence classes', 'class', 'equivalence'])
+        errors = validate_source_terms(row, partial, words)
+        self.assertTrue(any('coverage' in x and 'equivalence class' in x for x in errors))
+        complete = candidate([('equivalence class', '等价类'), ('equivalence classes', '等价类'),
+                              ('class', '类'), ('equivalence', '等价')])
+        before = copy.deepcopy((row, complete, words))
+        self.assertEqual(validate_source_terms(row, complete, words), [])
+        self.assertEqual((row, complete, words), before)
+        title = unit('Equivalence classes', kind='section_title')
+        self.assertEqual(validate_source_terms(title, candidate([('Equivalence classes', '等价类')]), words), [])
+
+    def test_equivalence_class_preserves_case_multiplicity_pending_and_math_opacity(self):
+        row = unit('Equivalence classes and equivalence class and equivalence classes.', kind='paragraph')
+        entry = copy.deepcopy(next(item for item in json.loads(
+            (Path(__file__).resolve().parents[1] / 'config/source-terms.json').read_text())['terms']
+            if item['id'] == 'equivalence-class'))
+        words = catalog(row)
+        words['terms'] = [entry]
+        good = [('Equivalence classes', '等价类'), ('equivalence class', '等价类'),
+                ('equivalence classes', '等价类')]
+        self.assertEqual(validate_source_terms(row, candidate(good), words), [])
+        for terms in [good[1:], [good[0], good[1]], [*good, good[2]],
+                      [('equivalence classes', '等价类'), *good[1:]],
+                      [good[0], ('equivalence classes', '等价类'), good[2]],
+                      [('Equivalence classes and equivalence class and equivalence classes', '一整句')]]:
+            with self.subTest(terms=terms):
+                self.assertTrue(validate_source_terms(row, candidate(terms), words))
+        missing_pending = candidate(good)
+        missing_pending['unknown_terms'].pop(0)
+        self.assertTrue(any('pending' in x for x in validate_source_terms(row, missing_pending, words)))
+        hidden = unit('An equivalence class and <MATH_0001>.',
+                      {'MATH_0001': r'$\text{equivalence classes}$'}, kind='paragraph')
+        self.assertEqual([x['source_term'] for x in source_inventory(hidden, words)['occurrences']],
+                         ['equivalence class'])
+
     def test_functor_of_points_title_and_plain_prose_require_the_complete_compound(self):
         row = unit('Functor of points. A functor of points is a functor.', kind='paragraph')
         entry = copy.deepcopy(next(item for item in json.loads(

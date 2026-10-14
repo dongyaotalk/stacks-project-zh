@@ -383,3 +383,32 @@ DATA合并后独立progress/plan；全部S4完成后才独立S5默认强门禁�
 ### 完整Section0020正文的modules来源见证
 
 独立[Issue #798](https://github.com/dongyaotalk/stacks-project-zh/issues/798)只迁移concept `module`的evidence[0]：原`tag:0020:item004`、词形`modules`、source TeX hash `sha256:6fba1d48c35eae3fc7d743633b9dbe0efafef06ec78e8655b1ca6c5f461663ec`，改为锁定英文`a04446e57ec1fbc252a871afcec7752fb2807b14`的`categories.tex`/owner及Section0020/`categories-section-example-fibre-products`/`prose_block/1`完整Git片段，hash `sha256:2c88e87c7f74c49274cf791e0bb8957e983b1d6b2acd229120efcbd5e83360d4`。完整正文位于两个真实Section标题0020/0021之间，保护投影中精确词形独立核验。原碎片证据可从Git及完整旧输入原字节回查。所有forms/chapters/分类/其他evidence/根字段及中文批准保持；当前1233及未来1225来源库存除catalog_hash外相等。此证据迁移不采用13旧→5完整新DATA或消除114问题batch，未来模型仍须完整来源/旧组/ancestry/context冻结与真实五字段run。
+
+### 完整等价类复合词的单数与复数
+
+独立来源目录任务 [Issue #805](https://github.com/dongyaotalk/stacks-project-zh/issues/805)
+在接受main `4e5cb3339c2de3ae1672fbf9d07aec15a5957218` 新增英语concept `equivalence-class`，完整词形
+为 `equivalence class` 和 `equivalence classes`，章节范围为空，沿用全库扫描。
+当前完整来源中发现两次单数和五次复数，不能把该数学复合词拆为两个中文词来满足
+原 `equivalence` 和 `class` 的词级要求，也不能只依靠候选自报证明覆盖。
+
+英文锁定 `a04446e57ec1fbc252a871afcec7752fb2807b14`。单数见证是 Categories 04E6 完整 definition/1、
+`categories-definition-cofinal`、真实Section09WN，片段hash
+`sha256:257831c4f337891ccd661a42426c731c7a1f72b123fac38357c4cbc32af235e4`；复数见证是09WS完整proof/1、
+`categories-lemma-split-into-connected`、真实Section04AX，片段hash
+`sha256:f7ddc2fd90c714a1c241676a9459d1ccd0823234410021bd0d6d720b6a2efb1a`。从锁定Git重验真实owner/Section/selector、
+完整边界、blob及原字节，保护后的source_projection分别暴露一次单数和两次复数。
+数学、引用与其他保护节点不提供词形见证；字节坐标只作完整边界证据。
+
+既有最长短语规则现在要求每次完整复合词的原大小写和单复数，嵌套单词不重复计数；
+独立出现的equivalence/class/classes仍按原目录要求。标题、普通正文、列表和证明
+均适用；漏报、少次、重复用源出现、大小写/单复数改变、拆词或整句代替复合词
+继续失败。未知译法必须留待决，不形成glossary批准或语言/数学审校。
+
+生产工具、Schema、宏政策、其余词形/证据与非数学分类保持。回归核验完整词形、
+保留独立词、重复次数、待决及数学不透明，全库审计重新测量目录变化产生的要求
+和诊断，不能把其计数降低当作DATA修复。DATA804在首次实际生成前保存完整旧包；
+此前置接受后，必须更新同一任务fresh来源与真实runtime范围，在新目录prepare/check
+并重新冻结六新单元、全部23旧输入/候选/有序组/ancestry和新目录context后实际完整
+生成五字段。原输入/run/raw与历史不变，DATA后独立progress/plan；全部S4之后才
+独立S5默认强门禁、S7及F1–F8最终验收。

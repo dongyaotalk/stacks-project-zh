@@ -581,3 +581,40 @@ source-container-v12只扩展§10的完整来源证据。完整旧batch仍原字
 实际模型每个新unit全部五字段与immutable raw逐项相同，再完整v4重放。准备
 READY不采用事实、不削减问题或授予术语/critic/语言/数学审校/发布批准；详情见
 [source-container-restoration.md](source-container-restoration.md)。
+
+### 集中任务的 v13 完整原生 prose 来源见证
+
+Issue #808 复用草稿 PR #809 完成全部 F1–F8。v13 仅扩展 §10 的来源边界证据，
+不改变 v4 全组修订、真实模型完整五字段和不可变 raw/context/ancestry 的要求。
+完整旧 paragraph/最大 prose_block 及同一冻结 batch 内的完整旧语义锚点，必须
+分别与锁定 Git 对应；真实 Section、原生前后语义边界、整章唯一对应及全部
+保护节点严格核验。除普通 ASCII prose 排版空白、真实永久 Tag 验证的完整引用
+本地/命名空间投影外，任何节点差异继续阻断；数学内部引用原字节不变，
+详情见 source-container-restoration.md 的 v13 合同。原 v1–v12 历史不扩权。
+新证据保存两原生锚点、完整旧锚点和新旧完整签名，按 origin 政策独立重算。
+
+用户的新指示只改变任务组织和验收节奏：工具/政策、数据、S5 与文档在同一
+分支保留逻辑边界，最终一个 PR 集中验收；不授予任何术语、critic、语言/数学
+或发布批准，不隐藏 BLOCKED 来源或丢弃历史。
+
+集中v13的已声明排版对应保留完整原旧快照：平衡普通prose双引号、已验证的初始
+noindent和一个完整列表opening均保存具体presentation_repairs及投影前/后/原生
+签名。旧标题suffix中同一正文初始包装的迁移，另绑定完整旧锚点/原生锚点hash和
+detached_layout，只允许原生相邻标题到正文，无跨容器借用。数学和其他节点不能
+投影，不能把机械补中文当实际修订；完整新源仍需实际模型重新生成全部五字段。
+
+集中v13后续显式扩展见source-container-restoration：真实heading层级、完整literal
+章头/phantom前言，以及严格逐位置记录的历史强调/标点/数学根层换行对应。旧
+v1–v12始终按其origin政策及旧层级重放，不继承这些能力。v13完整旧/新源仍分别
+由不可变快照和锁定Git绑定；数学不做泛化归一，新输出始终保护源Git原字节。
+FDL的历史chapter包装仅由完整章头参数/真实唯一phantom label证明，原完整header
+另作字节hash；新首部/body边界须保存native证据，不能降级旧恢复版本。
+当前没有新DATA/run/raw采用，任何准备数或分类减少均不能声称已修订中文。
+
+独立unit-v3/source-container-v14保存一个完整父参数中两纯叶及原控制空格，不改
+v1/v2定义；完整数学source hash仍包含全部原英文，结构hash绑定全部regions。
+实际候选仍是一个完整五字段记录，原raw不能按叶切开冒称多次模型生成。v14来源
+绑定完整Git与旧batch，v4首次输出v3必须具备v14证据，所有原run/raw/ancestor完整
+保留。ordinary assemble拒绝typed v2/v3，active render验证完整v4/来源/溯源后才
+恢复TeX；程序不能覆写MATHSEG。独立双代历史、实际prepare/check、Schema/溯源/
+结构化render和篡改降级拒绝测试通过，但这不是生产DATA采用或审校批准。

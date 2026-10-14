@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from stacks_zh.pr_contract import ContractApiError, fetch_pr_contract, validate_pr_contract
+from stacks_zh.pr_contract import ContractApiError, fetch_pr_contract, validate_pr_contract, _batch_blob_contents
 
 
 REPOSITORY = "example/stacks-project-zh"
@@ -472,6 +472,244 @@ class PrContractTests(unittest.TestCase):
         self.assertEqual(json.loads(contents[UNIT_PATH])["unit_id"], UNIT_ID)
         self.assertIn(f"/repos/{REPOSITORY}/contents/{UNIT_PATH}", calls[1][0])
         self.assertIn("ref=" + "c" * 40, calls[1][0])
+
+
+MANIFEST_PATH = 'task-scopes/fixture-bulk.json'
+SETS_PATH = 'translation-data/units/sets-0008.jsonl'
+
+
+def bulk_payload(extra_files=0):
+    value = payload()
+    paths = [MANIFEST_PATH,UNIT_PATH,SETS_PATH]+[f'docs/fixture-{i}.md' for i in range(extra_files)]
+    def scope(identifier,chapter,tag,path):
+        return dict(scope_id=identifier,chapter=chapter,parent_tags=[tag],historical_parent_tags=[],
+            unit_ids=['tag:'+tag+':title'],input_unit_ids=['tag:'+tag+':title'],
+            output_unit_ids=['tag:'+tag+':title'],allowed_write_files=[path],run_scope=[],model_scope=[])
+    manifest = dict(schema_version=1,task_id='guide-04V1-scope',owner='contributor',
+        branch=value['headRefName'],source_commit=SOURCE_COMMIT,allowed_write_files=paths,
+        data_scopes=[scope('guide','guide','04V1',UNIT_PATH),scope('sets','sets','0008',SETS_PATH)])
+    value['files']['nodes'] = [dict(path=p,changeType='ADDED') for p in paths]
+    value['changedFiles'] = len(paths)
+    contents = {UNIT_PATH:unit_content(),SETS_PATH:json.dumps(dict(unit_id='tag:0008:title',
+        source_commit=SOURCE_COMMIT,chapter='sets',parent_tag='0008'))}
+    bind_bulk(value,contents,manifest)
+    return value,contents,manifest
+
+
+def bind_bulk(value,contents,manifest):
+    raw = json.dumps(manifest,ensure_ascii=False,sort_keys=True,indent=2)+'\n'
+    digest = 'sha256:'+hashlib.sha256(raw.encode()).hexdigest()
+    contents[MANIFEST_PATH] = raw
+    value['closingIssuesReferences']['nodes'][0]['body'] = (
+        f'task_id: guide-04V1-scope\nowner: @contributor\nbranch: {value["headRefName"]}\n'
+        f'source_commit: {SOURCE_COMMIT}\nscope_manifest: {MANIFEST_PATH}\nscope_manifest_sha256: {digest}\n')
+    value['body'] = f'Closes #42\nTask: guide-04V1-scope\nSource: {SOURCE_COMMIT}\n{MANIFEST_PATH}\n{digest}'
+
+
+class BulkScopeContractTests(unittest.TestCase):
+    def test_batched_git_blob_reads_preserve_utf8_whitespace_and_bound_requests(self):
+        contents={f'translation-data/units/chapter-{i}.jsonl':'中文\r\n  \n' for i in range(26)}
+        calls=[]
+        def request(url,token,*,data=None):
+            calls.append(data);variables=data['variables'];objects={}
+            self.assertEqual((variables['owner'],variables['name']),('fork','repo'))
+            for key,expression in variables.items():
+                if not key.startswith('expr'):continue
+                commit,path=expression.split(':',1);self.assertEqual(commit,'b'*40)
+                raw=contents[path].encode()
+                objects['file'+key[4:]]=dict(oid=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest(),
+                    byteSize=len(raw),isBinary=False,isTruncated=False,text=raw.decode())
+            self.assertLessEqual(len(objects),25)
+            return {'data':{'repository':objects}}
+        actual=_batch_blob_contents(list(contents),'fork/repo','b'*40,'synthetic-token','api','graphql',request)
+        self.assertEqual(actual,contents);self.assertEqual(len(calls),2)
+
+    def test_batched_blob_metadata_and_truncation_fallback_are_verified(self):
+        raw='中文\n '.encode();sha=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest()
+        for fault in [None,'size','bool-size','oid','binary','flag','text','missing','errors','fallback-sha','fallback-bytes','invalid-utf8']:
+            truncated=fault in {None,'fallback-sha','fallback-bytes','invalid-utf8'}
+            test_raw=b'\xff' if fault=='invalid-utf8' else raw
+            test_sha=hashlib.sha1(b'blob '+str(len(test_raw)).encode()+b'\0'+test_raw).hexdigest()
+            calls=[]
+            def request(url,token,*,data=None):
+                calls.append((url,data))
+                if data:
+                    self.assertEqual(data['variables']['expr0'],'c'*40+':deleted.jsonl')
+                    obj=dict(oid=test_sha,byteSize=len(test_raw),isBinary=False,isTruncated=truncated,text=raw.decode())
+                    if fault=='size':obj['byteSize']+=1
+                    if fault=='bool-size':obj['byteSize']=True
+                    if fault=='oid':obj['oid']='d'*40
+                    if fault=='binary':obj['isBinary']=True
+                    if fault=='flag':obj['isTruncated']='false'
+                    if fault=='text':obj['text']=raw.decode().strip()
+                    return {'errors':['unavailable']} if fault=='errors' else {'data':{'repository':{'file0':None if fault=='missing' else obj}}}
+                self.assertEqual(url,'api/repos/base/repo/git/blobs/'+test_sha)
+                return dict(encoding='base64',sha='e'*40 if fault=='fallback-sha' else test_sha,size=len(test_raw),
+                    content=base64.b64encode(b'changed' if fault=='fallback-bytes' else test_raw).decode())
+            with self.subTest(fault=fault):
+                if fault is None:
+                    self.assertEqual(_batch_blob_contents(['deleted.jsonl'],'base/repo','c'*40,'t','api','graphql',request),{'deleted.jsonl':raw.decode()})
+                    self.assertEqual(len(calls),2)
+                else:
+                    with self.assertRaises(ContractApiError):_batch_blob_contents(['deleted.jsonl'],'base/repo','c'*40,'t','api','graphql',request)
+
+    def test_explicit_hash_scopes_allow_many_exact_files_and_distinct_chapters(self):
+        value,contents,_ = bulk_payload(105)
+        self.assertGreater(len(value['files']['nodes']),100)
+        self.assertEqual(validate_pr_contract(REPOSITORY,value,contents),[])
+
+    def test_explicit_scope_keeps_all_nine_declared_parents_without_inline_limit(self):
+        value,contents,m=bulk_payload();scope=m['data_scopes'][0]
+        tags=['04V1',*[f'{i:04d}' for i in range(8)]]
+        ids=['tag:'+tag+':title' for tag in tags]
+        scope.update(parent_tags=tags,unit_ids=ids,input_unit_ids=ids,output_unit_ids=ids)
+        contents[UNIT_PATH]=''.join(json.dumps(dict(unit_id=uid,source_commit=SOURCE_COMMIT,
+            chapter='guide',parent_tag=tag))+'\n' for uid,tag in zip(ids,tags,strict=True))
+        bind_bulk(value,contents,m)
+        self.assertEqual(validate_pr_contract(REPOSITORY,value,contents),[])
+
+    def test_all_bytes_hash_identity_and_pr_reference_are_required(self):
+        for fault in ['bytes','hash','task','owner','branch','source','pr-hash','pr-path','inline','missing']:
+            value,contents,manifest = bulk_payload()
+            if fault in {'task','owner','branch','source'}:
+                key={'task':'task_id','source':'source_commit'}.get(fault,fault)
+                manifest[key]='f'*40 if key=='source_commit' else 'different'
+                bind_bulk(value,contents,manifest)
+            if fault=='bytes':contents[MANIFEST_PATH]+='\n'
+            if fault=='hash':value['closingIssuesReferences']['nodes'][0]['body']=value['closingIssuesReferences']['nodes'][0]['body'].replace('sha256:','sha256:0')
+            if fault=='pr-hash':value['body']=value['body'].split('sha256:')[0]
+            if fault=='pr-path':value['body']=value['body'].replace(MANIFEST_PATH,'other.json')
+            if fault=='inline':value['closingIssuesReferences']['nodes'][0]['body']+='allowed_write_files:\n- '+UNIT_PATH+'\n'
+            if fault=='missing':contents.pop(MANIFEST_PATH)
+            with self.subTest(fault=fault):self.assertTrue(validate_pr_contract(REPOSITORY,value,contents))
+
+    def test_manifest_schema_paths_scope_uniqueness_and_complete_ids_are_strict(self):
+        for fault in ['unknown','glob','directory','escape','absolute','duplicate-path','self','scope-id','scope-path','outside','old-id','newline']:
+            value,contents,m = bulk_payload()
+            if fault=='unknown':m['approved']=True
+            if fault in {'glob','directory','escape','absolute'}:
+                m['allowed_write_files'].append({'glob':'docs/*','directory':'docs/','escape':'../other.json','absolute':'/tmp/other.json'}[fault])
+            if fault=='duplicate-path':m['allowed_write_files'].append(UNIT_PATH)
+            if fault=='self':m['allowed_write_files'].remove(MANIFEST_PATH)
+            if fault=='scope-id':m['data_scopes'][1]['scope_id']='guide'
+            if fault=='scope-path':m['data_scopes'][1]['allowed_write_files']=[UNIT_PATH]
+            if fault=='outside':m['data_scopes'][0]['allowed_write_files']=['translation-data/units/undeclared.jsonl']
+            if fault=='old-id':m['data_scopes'][0]['input_unit_ids']=['tag:9999:title']
+            if fault=='newline':m['data_scopes'][0]['unit_ids'].append('tag:9999:title\nparent_tag: 9999')
+            bind_bulk(value,contents,m)
+            with self.subTest(fault=fault):self.assertTrue(validate_pr_contract(REPOSITORY,value,contents))
+
+    def test_empty_required_collections_cannot_bypass_the_full_contract(self):
+        for key in ['allowed_write_files','data_scopes','parent_tags','unit_ids','scope-files']:
+            value,contents,m=bulk_payload()
+            if key in {'allowed_write_files','data_scopes'}:m[key]=[]
+            else:m['data_scopes'][0]['allowed_write_files' if key=='scope-files' else key]=[]
+            bind_bulk(value,contents,m)
+            with self.subTest(key=key):self.assertTrue(validate_pr_contract(REPOSITORY,value,contents))
+
+    def test_version_and_active_output_roles_cannot_be_falsified(self):
+        for fault in ['boolean','float','missing','old','empty-unit','missing-candidate']:
+            value,contents,m=bulk_payload()
+            if fault in {'boolean','float'}:m['schema_version']=True if fault=='boolean' else 1.0
+            if fault=='missing':m['data_scopes'][0]['output_unit_ids']=[]
+            if fault=='old':
+                m['data_scopes'][0]['unit_ids'].append('tag:04V1:old')
+                m['data_scopes'][0]['output_unit_ids']=['tag:04V1:old']
+            if fault=='empty-unit':contents[UNIT_PATH]=''
+            if fault=='missing-candidate':
+                path='translation-data/candidates/model/guide.jsonl'
+                m['allowed_write_files'].append(path);m['data_scopes'][0]['allowed_write_files'].append(path)
+                value['files']['nodes'].append(dict(path=path,changeType='ADDED'));contents[path]=''
+                value['changedFiles']+=1
+            bind_bulk(value,contents,m)
+            with self.subTest(fault=fault):self.assertTrue(validate_pr_contract(REPOSITORY,value,contents))
+
+    def test_records_cannot_borrow_another_scope_ids_chapter_parent_or_model(self):
+        for key,bad in [('unit_id','tag:0008:title'),('chapter','sets'),('parent_tag','0008'),
+                        ('source_commit','f'*40),('run_id','undeclared-run'),('model_id','undeclared-model'),
+                        ('model_record_id','undeclared:model'),('model',{'resolved_id':'undeclared-model'})]:
+            value,contents,_ = bulk_payload();row=json.loads(contents[UNIT_PATH]);row[key]=bad;contents[UNIT_PATH]=json.dumps(row)
+            with self.subTest(key=key):self.assertTrue(validate_pr_contract(REPOSITORY,value,contents))
+
+    def test_unassigned_managed_file_and_fake_historical_parent_are_not_authorized(self):
+        value,contents,m = bulk_payload();m['data_scopes'][1]['allowed_write_files']=['docs/unused.md'];m['allowed_write_files'].append('docs/unused.md');bind_bulk(value,contents,m)
+        self.assertTrue(any('unique exact data scope' in e for e in validate_pr_contract(REPOSITORY,value,contents)))
+        value,contents,m = bulk_payload();m['data_scopes'][0]['historical_parent_tags']=['0008'];bind_bulk(value,contents,m)
+        row=json.loads(contents[UNIT_PATH]);row['parent_tag']='0008';contents[UNIT_PATH]=json.dumps(row)
+        errors=validate_pr_contract(REPOSITORY,value,contents)
+        self.assertTrue(any('valid v4 derivation' in e for e in errors))
+        self.assertTrue(any('outside Issue' in e for e in errors))
+
+    def test_legacy_without_manifest_retains_file_and_parent_limits(self):
+        value=payload();value['files']['nodes']=[dict(path=f'docs/file-{i}.md') for i in range(101)]
+        value['closingIssuesReferences']['nodes'][0]['body']+='\nallowed_write_files:\n- docs/\n'
+        self.assertTrue(any('more than 100' in e for e in validate_pr_contract(REPOSITORY,value,{})))
+
+    def _fetch(self, fault=None):
+        value,contents,m = bulk_payload(105)
+        if fault=='deleted':
+            m['data_scopes'][0]['output_unit_ids']=[];bind_bulk(value,contents,m)
+        nodes=copy.deepcopy(value['files']['nodes']);initial=copy.deepcopy(value)
+        if fault=='deleted':initial['files']['nodes'][1]['changeType']='DELETED';nodes[1]['changeType']='DELETED'
+        initial['files']={'nodes':nodes[:100],'pageInfo':{'hasNextPage':True,'endCursor':'page-one'}}
+        graph_calls=0;calls=[]
+        def request(url,token,*,data=None):
+            nonlocal graph_calls
+            calls.append((url,data))
+            if data is not None:
+                if 'PrContractBlobs' in data['query']:
+                    self.assertEqual(data['variables']['owner'],'example')
+                    objects={}
+                    for key,expression in data['variables'].items():
+                        if not key.startswith('expr'):continue
+                        commit,path=expression.split(':',1)
+                        self.assertEqual(commit,('c' if fault=='deleted' and path==UNIT_PATH else 'b')*40)
+                        raw=contents[path].encode()
+                        objects['file'+key[4:]]=dict(oid=hashlib.sha1(b'blob '+str(len(raw)).encode()+b'\0'+raw).hexdigest(),
+                            byteSize=len(raw),isBinary=False,isTruncated=False,text=raw.decode())
+                    return {'data':{'repository':objects}}
+                if 'cursor' not in data['variables']:
+                    graph_calls+=1;pr=copy.deepcopy(initial)
+                    if fault=='final-head' and graph_calls>1:pr['headRefOid']='d'*40
+                    if fault=='final-scope' and graph_calls>1:pr['closingIssuesReferences']['nodes'][0]['body']+='\nchanged'
+                    if fault=='final-body' and graph_calls>1:pr['body']+='\nchanged'
+                    if fault=='count':pr['changedFiles']+=1
+                    if fault=='cursor':pr['files']['pageInfo'].pop('endCursor')
+                    return {'data':{'repository':{'pullRequest':pr}}}
+                self.assertEqual(data['variables']['cursor'],'page-one')
+                page=dict(headRefOid='b'*40,baseRefOid='c'*40,files=dict(nodes=copy.deepcopy(nodes[100:]),pageInfo={'hasNextPage':False,'endCursor':'done'}))
+                if fault=='head':page['headRefOid']='d'*40
+                if fault=='base':page['baseRefOid']='d'*40
+                if fault=='duplicate':page['files']['nodes'].append(copy.deepcopy(nodes[0]))
+                if fault=='empty':page['files']['nodes']=[]
+                if fault=='missing-page-info':page['files'].pop('pageInfo')
+                if fault=='cycle':page['files']['pageInfo']={'hasNextPage':True,'endCursor':'page-one'}
+                if fault=='renamed':page['files']['nodes'][0]['changeType']='RENAMED'
+                return {'data':{'repository':{'pullRequest':page}}}
+            from urllib.parse import unquote,urlsplit,parse_qs
+            self.assertEqual(parse_qs(urlsplit(url).query)['ref'],['b'*40])
+            path=unquote(urlsplit(url).path.split('/contents/',1)[1])
+            return {'encoding':'base64','content':base64.b64encode(contents[path].encode()).decode()}
+        result=fetch_pr_contract(REPOSITORY,99,'synthetic-token',api_url='https://api.example.test',
+            graphql_url='https://api.example.test/graphql',request_json=request)
+        return result,nodes,calls
+
+    def test_native_pagination_gets_all_paths_and_pins_every_content_request(self):
+        (value,contents),nodes,calls=self._fetch()
+        self.assertEqual(value['files']['nodes'],nodes)
+        self.assertEqual(validate_pr_contract(REPOSITORY,value,contents),[])
+        self.assertEqual(sum(data is not None for _,data in calls),4)
+
+    def test_deleted_bulk_file_uses_its_exact_base_commit(self):
+        (value,contents),nodes,calls=self._fetch('deleted')
+        self.assertEqual(validate_pr_contract(REPOSITORY,value,contents),[])
+        expressions=[v for _,data in calls if data and 'PrContractBlobs' in data['query']
+                     for k,v in data['variables'].items() if k.startswith('expr')]
+        self.assertIn('c'*40+':'+UNIT_PATH,expressions)
+
+    def test_pagination_refuses_duplicates_empty_pages_cycles_missing_cursors_and_drift(self):
+        for fault in ['head','base','duplicate','empty','missing-page-info','cycle','cursor','final-head','final-scope','final-body','count','renamed']:
+            with self.subTest(fault=fault),self.assertRaises(ContractApiError):self._fetch(fault)
 
 
 if __name__ == "__main__":

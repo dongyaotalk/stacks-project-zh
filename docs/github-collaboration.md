@@ -187,3 +187,29 @@ SHA 请求 Git blob，核验编码、文件大小及原字节 Git blob 哈希后
 PR 文本代替该 commit 中的文件。普通小文件读取及 Issue/坐标/ownership 门禁保持。
 API 依据见 [Contents 文档](https://docs.github.com/en/rest/repos/contents)及
 [Git blobs 文档](https://docs.github.com/en/rest/git/blobs)。
+
+## 集中修复的可信范围清单
+
+显式授权的集中任务可以使用`scope_manifest`与`scope_manifest_sha256`。Issue中的
+原字节hash绑定精确路径清单及每个数据scope的完整来源坐标、旧新ID、实际/历史
+parents和run/model；PR正文引用同一路径/hash。清单自身也在精确允许列表内，
+受管文件恰归一个scope，不能用目录、通配或全局并集借用其他scope的ID。
+
+只有可信main校验器接受这一独立合同后才允许超100文件和多个明确范围；旧内联
+流程及其限制保持。校验器分页读完整native changed files，逐页核验head/base，
+拒绝重复/截断/游标循环/漂移，再读取固定Git对象的全部原字节。原单一closing
+Issue、创建时间/claimed/owner/branch/source和历史验证保持，不信任PR自报通过。
+
+pr-contract的pull_request_target仍固定从main运行代码。若新合同尚未进入main，
+需先以一个小工具前置通过原合同；集中数据仍在一个后续PR统一验收，不能在
+未升级的可信校验器下自证新范围，也不能通过改保护规则或伪造状态绕开。
+
+新清单模式以native `changedFiles`核对分页总数，并限制读取不超过精确允许文件数。
+受管JSON/JSONL按固定head/base commit批量读取Git Blob，每次最多25个；逐个核验
+`oid`、`byteSize`、UTF-8原字节和Git blob SHA1，不去除空白。若GraphQL标记文本
+截断，则只按同一已核验oid读取完整Git blob并复核原字节。读取结束再核对native
+head/base、PR正文及唯一closing Issue合同未变。旧内联模式的读取行为保持。
+
+每个scope发生变更的active units和candidates各自完整ID集合，必须分别等于声明
+的`output_unit_ids`，不能用旧ID并集、空文件或空输出声明掩盖遗漏。历史记录仍走
+原有完整分组/历史验证；本合同不能代替Schema、溯源、来源和模型五字段验收。

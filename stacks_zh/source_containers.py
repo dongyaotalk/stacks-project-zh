@@ -36,11 +36,16 @@ from .source_split_after_paragraph_boundaries import (VERSION as SPLIT_AFTER_PAR
 from .source_section_body_boundaries import (VERSION as SECTION_BODY_END_VERSION,
     section_body_end_witness)
 
+from .source_native_prose_boundaries import (VERSION as NATIVE_PROSE_VERSION,
+    HEADINGS, legacy_heading_kind, native_document_header_witness, native_heading_witness, native_prose_witness,
+    labelled_math_prose_groups, native_labelled_math_prose_witness)
+
 VERSION = 'source-container-v3'
+COMPOSITE_VERSION = 'source-container-v14'
 SUPPORTED_VERSIONS = {'source-container-v1', 'source-container-v2', VERSION,
                       BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION,
                       SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION,
-                      SECTION_BODY_END_VERSION}
+                      SECTION_BODY_END_VERSION, NATIVE_PROSE_VERSION, COMPOSITE_VERSION}
 OUTER_WHITESPACE = ' \t\r\n'
 ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\Z')
 
@@ -62,15 +67,38 @@ def safe_path(root: Path, relative: str, pattern: str) -> Path:
 class Containers:
     """Re-scan actual Git blobs; selection always includes kind and ordinal."""
     def __init__(self, root: Path, harvest: Path | None = None, *, policy_bytes: bytes | None = None,
-                 natural_text_enabled: bool = True):
+                 natural_text_enabled: bool = True, hierarchical_prose: bool = True):
         self.root = root
         self.english = LockedEnglish(root, harvest)
         self.current_policy_bytes = (root / 'config/macro-policy.yml').read_bytes()
         self.policy_bytes = self.current_policy_bytes if policy_bytes is None else policy_bytes
         self.policy = Policy(self.policy_bytes.decode('utf-8'), natural_text_enabled=natural_text_enabled)
+        self.hierarchical_prose = hierarchical_prose
         resolve_natural_math_witnesses(self.policy, self.english)
         self.documents: dict[str, tuple[bytes, list[dict[str, Any]], list[dict[str, Any]]]] = {}
         self.closings: dict[str, int] = {}
+
+    def document(self, chapter: str):
+        if chapter not in self.documents:
+            raw = _git_bytes(self.english.harvest, self.english.commit, chapter + '.tex')
+            rows, segments, diagnostics = chapter_inventory(chapter, raw, self.english.commit,
+                self.english.tags, self.policy, hierarchical_prose=self.hierarchical_prose)
+            self.documents[chapter] = raw, rows, diagnostics
+            closing = [s['location']['byte_start'] for s in segments if s['kind'] == 'document-footer']
+            if len(closing) == 1:
+                self.closings[chapter] = closing[0]
+                if self.hierarchical_prose:
+                    tail_start = closing[0]
+                    for part in reversed([p for p in segments if p['location']['byte_end'] <= closing[0]]):
+                        if part['kind'] == 'whitespace-or-comments':
+                            continue
+                        if (part['kind'] == 'document-infrastructure'
+                                and re.fullmatch(r'\\(?:input\{chapters\}|bibliography\{[^{}\n]+\}|bibliographystyle\{[^{}\n]+\})', part['source'])):
+                            tail_start = part['location']['byte_start']
+                            continue
+                        break
+                    self.closings[chapter] = tail_start
+        return self.documents[chapter]
 
     def select(self, selector: dict[str, Any]) -> dict[str, Any]:
         if set(selector) != {'file', 'owner_tag', 'owner_label', 'parent_tag', 'kind', 'ordinal'}:
@@ -87,15 +115,7 @@ class Containers:
                 or self.english.tags.get(label) != selector['owner_tag']
                 or sum(tag == selector['owner_tag'] for tag in self.english.tags.values()) != 1):
             raise RecordError('container selector owner Tag/label/chapter is wrong or ambiguous')
-        if chapter not in self.documents:
-            raw = _git_bytes(self.english.harvest, self.english.commit, file)
-            rows, segments, diagnostics = chapter_inventory(chapter, raw, self.english.commit,
-                                                      self.english.tags, self.policy)
-            self.documents[chapter] = raw, rows, diagnostics
-            closing = [s['location']['byte_start'] for s in segments if s['kind'] == 'document-footer']
-            if len(closing) == 1:
-                self.closings[chapter] = closing[0]
-        raw, rows, diagnostics = self.documents[chapter]
+        raw, rows, diagnostics = self.document(chapter)
         for tag in {selector['owner_tag'], selector['parent_tag']}:
             anchors = [row for row in rows if row['owner_tag'] == tag and
                        (row['unit']['node_kind'] in STATEMENTS or row['unit']['node_kind'].endswith('_title'))]
@@ -135,6 +155,10 @@ class Containers:
             if before is None:
                 raise RecordError('prose block has no real leading semantic anchor')
             start = before['location']['byte_end']
+            if self.hierarchical_prose and before['unit']['node_kind'] == 'title_title':
+                header = self.select({**selector, 'kind': 'title_title',
+                    'ordinal': int(before['semantic_path'].rsplit('/', 1)[1])})
+                start = header['location']['byte_end']
             if after is None and chapter not in self.closings:
                 raise RecordError('prose block has no real document closing boundary')
             end = after['location']['byte_start'] if after else self.closings[chapter]
@@ -179,8 +203,16 @@ class Containers:
             header = raw[start:end].decode('utf-8')
             scanner = Scanner(header, self.policy)
             cursor, _ = scanner.command_arguments(0)
-            labels = []
+            labels, literal_headers = [], []
             while (cursor := scanner.skip_space(cursor)) < len(header):
+                environment = ENVIRONMENT.match(header, cursor)
+                if (self.hierarchical_prose and environment and environment[1] == 'begin'
+                        and environment[2] in self.policy.literal):
+                    ending = scanner.environment_end(cursor)
+                    literal_headers.append(dict(kind=environment[2], source_hash=byte_hash(header[cursor:ending]),
+                        byte_span=dict(start=len(header[:cursor].encode()),end=len(header[:ending].encode()))))
+                    cursor = ending
+                    continue
                 command = re.match(r'\\(maketitle|phantomsection|tableofcontents|label)\b', header[cursor:])
                 if command is None:
                     raise RecordError('chapter title contains unsupported document header content')
@@ -197,6 +229,8 @@ class Containers:
             row['unit'] = stamp_unit_hashes(row['unit'])
             row['location'].update(byte_end=end, line_end=raw[:end - 1].count(b'\n') + 1,
                                    fragment_hash=byte_hash(header))
+            if literal_headers:
+                row['_document_header_literals'] = literal_headers
             problems += [d for d in diagnostics if d['location']['byte_start'] < end
                          and d['location']['byte_end'] > old_end]
         if row['state'] != 'READY' or problems:
@@ -229,6 +263,9 @@ class Containers:
                 'location': location, 'blob_oid': object_id, 'blob_hash': byte_hash(raw),
                 'source_commit': self.english.commit, 'macro_policy_hash': byte_hash(self.policy_bytes),
                 'inventory_unit': row['unit'], 'boundary_witness': boundary_witness,
+                '_native_phantom_prose': bool(self.hierarchical_prose and kind == 'prose_block'
+                    and boundary_witness['before']['kind'] == 'title_title'),
+                '_document_header_literals': row.get('_document_header_literals', []),
                 '_paragraph_core_matches': paragraph_core_matches,
                 '_paragraph_section_owner': paragraph_section_owner,
                 '_chapter_math_counts': {value: math_counts[value] for value in complete_math_nodes(row['unit'])},
@@ -456,7 +493,9 @@ def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
         elif active:
             blocks.append((active, active_owner))
             active = []
-        if group['kind'] in {'section_title', 'chapter_title'}:
+        if (group['kind'] in {'section_title', 'chapter_title'}
+                or native_containers is not None and native_containers.hierarchical_prose
+                and group['kind'].endswith('_title')):
             section_owner = group['owner_tag']
     if active:
         blocks.append((active, active_owner))
@@ -473,7 +512,13 @@ def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
             continue
         ids = [i for index in indices for i in output[index]['input_unit_ids']]
         members = [u for u in units if u['unit_id'] in ids]
-        if any(u['parent_tag'] != owner for u in members):
+        parents = {owner}
+        if native_containers is not None and native_containers.hierarchical_prose:
+            _, rows, _ = native_containers.document(members[0]['chapter'])
+            headings = [r for r in rows if r['owner_tag'] == owner and r['unit']['node_kind'].endswith('_title')]
+            if len(headings) == 1:
+                parents.add(headings[0]['parent_tag'])
+        if any(u['parent_tag'] not in parents for u in members):
             continue
         key = members[0]['chapter'], owner
         counts[key] = counts.get(key, 0) + 1
@@ -484,6 +529,8 @@ def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
             'boundary_witness': {'before': anchor(before), 'after': anchor(after)}}
         # Append after iterating the original native groups.
         prose_groups.append(output_group)
+    if native_containers is not None and native_containers.hierarchical_prose:
+        prose_groups.extend(labelled_math_prose_groups(native_containers,units))
     return output + prose_groups
 
 
@@ -577,7 +624,38 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
                      allow_paragraph_math_layout: bool = False,
                      allow_historical_parent_paragraph: bool = False,
                      allow_split_after_paragraph: bool = False,
-                     allow_section_body_end: bool = False) -> dict[str, Any] | None:
+                     allow_section_body_end: bool = False,
+                     allow_native_prose: bool = False) -> dict[str, Any] | None:
+    if selected.get('_native_phantom_prose') and not allow_native_prose:
+        raise RecordError('complete phantom header/body boundaries require native v13 evidence')
+    if allow_native_prose and native_containers is not None:
+        if selected.get('_document_header_literals'):
+            groups = old_container_groups(units, tags, native_containers=native_containers)
+            matches = [g for g in groups if g['input_unit_ids'] == ids and g['kind'] == 'chapter_title']
+            if len(matches) != 1:
+                raise RecordError('literal document header requires its complete original chapter title group')
+            return {'native_document_header_anchor': native_document_header_witness(native_containers, units, matches[0], selected)}
+        permissions = {key: value for key, value in locals().items()
+                       if key.startswith('allow_') and key != 'allow_native_prose'}
+        try:
+            return verify_old_group(units, tags, ids, selected,
+                                    native_containers=native_containers, **permissions)
+        except RecordError:
+            groups = old_container_groups(units, tags, native_containers=native_containers)
+            matches = [g for g in groups if g['input_unit_ids'] == ids
+                       and legacy_heading_kind(g, units) == selected['selector']['kind']]
+            if len(matches) != 1:
+                raise
+            if 'labelled_math' in matches[0]:
+                return {'native_labelled_math_prose_anchor': native_labelled_math_prose_witness(
+                    native_containers,units,matches[0],selected)}
+            if selected['selector']['kind'] in HEADINGS:
+                anchor = native_heading_witness(native_containers, units, matches[0], selected)
+                return {'native_heading_anchor': anchor}
+            if selected['selector']['kind'] not in {'paragraph', 'prose_block'}:
+                raise
+            anchor = native_prose_witness(native_containers, units, groups, matches[0], selected)
+            return {'native_prose_anchor': anchor}
     if native_containers is not None:
         if (len({u['unit_id'] for u in units}) != len(units)
                 or any(u['chapter'] + '.tex' != selected['selector']['file']
@@ -626,6 +704,8 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
     if len(matches) != 1:
         raise RecordError('restoration must cover one complete old wrapper chain')
     group, selector = matches[0], selected['selector']
+    if 'labelled_math' in group:
+        raise RecordError('labelled mathematical prose requires independent native v13 evidence')
     old_kind = 'title_title' if group['kind'] == 'chapter_title' else group['kind']
     if native_containers is not None and old_kind == 'paragraph' and group['ordinal'] is None:
         try:
@@ -723,10 +803,11 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
             if key not in historical_containers:
                 historical_containers[key] = Containers(root, harvest,
                     policy_bytes=_git_origin_bytes(root, origin, 'config/macro-policy.yml'),
+                    hierarchical_prose=version in {NATIVE_PROSE_VERSION, COMPOSITE_VERSION},
                     natural_text_enabled=version in {'source-container-v3', BOUNDARY_VERSION,
                                                     PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION,
                                                     SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION,
-                                                    SECTION_BODY_END_VERSION})
+                                                    SECTION_BODY_END_VERSION, NATIVE_PROSE_VERSION, COMPOSITE_VERSION})
             historical = historical_containers[key]
             selected = historical.select(record['selector'])
             for key in ('source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness'):
@@ -750,7 +831,7 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
             boundary = verify_old_group(units, historical.english.tags, record['input_unit_ids'], selected,
                              allow_outer_whitespace=version != 'source-container-v1',
-                             native_containers=historical if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, SECTION_BODY_END_VERSION} else None,
+                             native_containers=historical if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, SECTION_BODY_END_VERSION, NATIVE_PROSE_VERSION, COMPOSITE_VERSION} else None,
                              allow_preceding_paragraph=version in {PRECEDING_VERSION, NESTED_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION},
                              allow_nested_preceding_paragraph=version == NESTED_PRECEDING_VERSION,
                              allow_section_title_paragraph=version == SECTION_TITLE_VERSION,
@@ -758,12 +839,17 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                              allow_paragraph_math_layout=version == PARAGRAPH_LAYOUT_VERSION,
                              allow_historical_parent_paragraph=version == HISTORICAL_PARENT_VERSION,
                              allow_split_after_paragraph=version == SPLIT_AFTER_PARAGRAPH_VERSION,
-                             allow_section_body_end=version == SECTION_BODY_END_VERSION)
-            if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, SECTION_BODY_END_VERSION} and (not boundary or record['legacy_boundary_witness'] != boundary):
+                             allow_section_body_end=version == SECTION_BODY_END_VERSION,
+                             allow_native_prose=version in {NATIVE_PROSE_VERSION, COMPOSITE_VERSION})
+            if version in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, SECTION_BODY_END_VERSION, NATIVE_PROSE_VERSION} and (not boundary or record['legacy_boundary_witness'] != boundary):
                 raise RecordError('legacy boundary witness differs from the actual Git and complete frozen batch')
             expected = lower_container(selected, historical.policy, layout=record['layout'])
+            if version == COMPOSITE_VERSION and record.get('legacy_boundary_witness') != boundary:
+                raise RecordError('composite math legacy boundary witness differs from frozen source')
+            if (version == COMPOSITE_VERSION) != any(u['schema_version'] == 3 for u in expected):
+                raise RecordError('unit-v3 requires source-container-v14 and its complete composite source')
             typed = any(u['schema_version'] == 2 for u in expected)
-            if version not in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION} and typed != (version == 'source-container-v3'):
+            if version not in {BOUNDARY_VERSION, PRECEDING_VERSION, NESTED_PRECEDING_VERSION, SECTION_TITLE_VERSION, SPLIT_PRECEDING_VERSION, PARAGRAPH_LAYOUT_VERSION, HISTORICAL_PARENT_VERSION, SPLIT_AFTER_PARAGRAPH_VERSION, NATIVE_PROSE_VERSION, COMPOSITE_VERSION} and typed != (version == 'source-container-v3'):
                 raise RecordError('math-text unit-v2 requires source-container-v3 or witnessed boundary evidence')
             if record['new_units'] != expected or record['output_unit_ids'] != [u['unit_id'] for u in expected]:
                 raise RecordError('source-container new units differ from deterministic complete lowering')
@@ -913,14 +999,16 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                 selected = containers.select(group['selector'])
                 boundary = None
                 try:
-                    verify_old_group(units, containers.english.tags, ids, selected, allow_outer_whitespace=True)
+                    boundary = verify_old_group(units, containers.english.tags, ids, selected, allow_outer_whitespace=True,
+                        native_containers=containers if selected.get('_document_header_literals') else None,
+                        allow_native_prose=bool(selected.get('_document_header_literals')))
                 except RecordError:
                     boundary = verify_old_group(units, containers.english.tags, ids, selected,
                         allow_outer_whitespace=True, native_containers=containers,
                         allow_preceding_paragraph=True, allow_nested_preceding_paragraph=True,
                         allow_section_title_paragraph=True, allow_split_preceding_paragraph=True,
                         allow_paragraph_math_layout=True, allow_historical_parent_paragraph=True,
-                        allow_split_after_paragraph=True, allow_section_body_end=True)
+                        allow_split_after_paragraph=True, allow_section_body_end=True, allow_native_prose=True)
                     if not boundary:
                         raise RecordError('source boundary extension requires an actual native witness')
                 file, location = selected['selector']['file'], selected['location']
@@ -931,7 +1019,9 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                 witnessed_version = None
                 if boundary:
                     anchor = boundary.get('paragraph_anchor')
-                    witnessed_version = (SECTION_BODY_END_VERSION
+                    witnessed_version = (NATIVE_PROSE_VERSION
+                        if set(boundary) & {'native_prose_anchor', 'native_heading_anchor', 'native_document_header_anchor',
+                                            'native_labelled_math_prose_anchor'} else SECTION_BODY_END_VERSION
                         if 'section_body_anchor' in boundary else SPLIT_AFTER_PARAGRAPH_VERSION
                         if anchor and 'preceding_paragraph_selector' in anchor else HISTORICAL_PARENT_VERSION
                         if anchor and 'following_statement_historical_parent_tag' in anchor else PARAGRAPH_LAYOUT_VERSION
@@ -946,7 +1036,7 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                     'source_commit', 'selector', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness')}
                 evidence.update(schema_version=1, restoration_id=restoration_id, derivation_id=identifier,
                     group_id=group_id, created_at=plan['created_at'], origin_commit=origin_commit,
-                    tool={'id': 'stacks-zh-source-container', 'version': witnessed_version or (VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2')}, layout=group['layout'],
+                    tool={'id': 'stacks-zh-source-container', 'version': COMPOSITE_VERSION if any(u['schema_version'] == 3 for u in new_units) else witnessed_version or (VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2')}, layout=group['layout'],
                     input_unit_ids=ids, output_unit_ids=[u['unit_id'] for u in new_units], new_units=new_units,
                     reason=group['reason'], files=snapshot_files)
                 if boundary:

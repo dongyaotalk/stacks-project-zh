@@ -340,7 +340,7 @@ class ExtractionTests(unittest.TestCase):
                     else:
                         self.assertFalse(rows[-1]['math_text_classifications'])
         for value in [r'\text{Mod}', r'\text{Mod}(R)', r'\text{Mod}_{}',
-                      r'\text{Aut}', r'\text{Aut}(X)', r'\text{Aut}_{}',
+                      r'\text{Aut}', r'\text{Aut}_{}',
                       r'\textit{PAb}', r'\textit{PAb}_X', r'\text{ and }',
                       r'\text{if}', r'\textit{Unknown}']:
             with self.subTest(value=value):
@@ -535,7 +535,7 @@ class ExtractionTests(unittest.TestCase):
                     self.assertEqual(marker.read_bytes(), before)
                 else:
                     upgraded = write_inventory(root, harvest, output)
-                    self.assertEqual(upgraded['extractor_version'], 'source-extraction-v3')
+                    self.assertEqual(upgraded['extractor_version'], 'source-extraction-v4')
                     self.assertEqual(upgraded, write_inventory(root, harvest, output, check=True))
 
     def test_output_safety_and_failed_write_preserve_existing_package(self):

@@ -222,3 +222,55 @@ layout 文本与基线相同；独立 synthetic v4/v3 渲染的三种数学文�
 1,056 个事实/配置文件及来源、术语、proof 三份审计报告原字节保持；756 个
 术语问题候选、12 组 proof mismatch 等事实残项未减少。远端内容、native
 合同和精确 HEAD 两项 CI 仍须在 PR 中分别验证，DATA 采用仍另开任务。
+
+## 9. 集中修复的根层短语、条件前缀和箭头文字
+
+Issue #808 / 草稿 PR #809 统一完成剩余修复；不再逐个数据批开 Issue/PR。
+本扩展沿用 unit-v2 的完整原数学、pieces/slots、双重 hash、真实 Git 见证和
+实际模型完整五字段合同，新增三种精确语法角色。旧三角色的权限保持。
+
+| 角色 | 独立语法条件 | 精确登记的原参数 |
+| --- | --- | --- |
+| root-phrase | 完整数学的根层 text 参数，两侧有真实非 delimiter 节点；不在嵌套命令/脚本或 matrix 内 | `" in "`、`" and "`、`" composes to "`、`" gives "`、`"unit"`、`"counit"`、`"in "`、`" lying over "`、`" monomorphism"` |
+| matrix-prefix-condition | 真实 matrix 内，text 参数紧随列分隔符，后接本列条件 | `"if "` |
+| arrow-label-prefix | 真实 xrightarrow 必选参数内，纯 text 参数是首节点，其后仍有原数学节点 | `"restriction of "` |
+
+双引号标出精确 ASCII 空格，不属于参数。不能 trim、推广其他空白/大小写或
+忽略控制字。政策只有英文来源、命令、角色及真实 witness，不保存中文或批准。
+实际 Git 核验锁定 a04446e57ec1fbc252a871afcec7752fb2807b14：002U、002Z、003D、
+0036、0CXS、0CXY、03IF 等真实完整 Section/陈述分别提供见证。003E未采用定义中
+的 gives 用于核验003D的完整后锚点，不新增003E事实。未知的嵌套文字/语法仍
+BLOCKED；尤其带 TeX 空格的 `irred.\ comp. with` 尚不在本扩展内。
+
+独立 math-text-regions 与 unit-v2 内嵌 Schema 同步登记新 role，unit-v1 和旧
+region 数据不变。v13 prose 对应重组完整原英文 math 后才比较，原 slot/公式
+字节不得消失或被 ASCII prose 空白归一。完整旧源、raw、run 和所有祖先保留。
+
+独立 synthetic Git 测试覆盖全部新字面量、原空格、三语法角色、真实 witness、
+完整region原字节回放、错误命令/角色/嵌套/注释/literal/变体拒绝、数学/slot
+篡改及注入拒绝；另验证旧v1→新v2的v13完整package/check和origin loader历史
+重放。synthetic 输出不冒称模型生成，真正DATA仍须冻结后实际生成五字段。
+
+## 10. 完整参数内受保护 TeX 空格（unit-v3 开发合同）
+
+Issue808的剩余完整02T5 proof中，两处bigcup下标参数为
+`\text{ irred.\ comp. with }`。它是自然语言，不能登记数学记号，也不能放宽v2
+的完整纯参数或plain_text。原unit-v1/v2、独立v2 regions Schema和历史语义保持。
+
+新unit-v3使用独立math-text-components Schema；只登记上述精确完整参数和真实
+indexed-component-description角色。父参数属于bigcup/nolimits的根下标组，前有
+真实对象，后有dim条件；标签/proof/ordinal及全部源Git命令独立见证。将父参数
+分成两个完整纯文字叶` irred.`、`comp. with `，中间原控制空格`\ `单独锁为
+MATHSEG。每叶保存同一父参数原字节/UTF8范围、component序号和separator；完整
+pieces按原序覆盖整个数学，无新增事实unit/候选、丢叶或重复消费。
+
+Schema/QA分别重算：两叶恰好完整覆盖父参数、唯一separator和原边界，完整原
+数学hash、typed skeleton、所有保护token顺序/次数及恢复后全部非文字字节。
+译文只能改变两个纯叶值，原控制空格仍在原参数内。不能插入命令、改数学、
+移动空格、把叶合并到参数外，或借嵌套/注释/literal/未知语法提供角色。
+
+v3仍以完整新unit冻结全部上下文并由实际当前模型生成完整五字段，模型须真实
+翻译全部叶并逐次双语报告待决术语，程序不补中文或猜术语批准。来源采用使用
+独立source-container-v14，并按完整v4分组与全部原历史重放。ordinary assemble
+继续拒绝typed输入，render仍要求活跃真实v4及来源证据。v14不能解释旧v13记录。
+当前只是合同与工具开发，没有新DATA/raw/run或审校/术语/发布批准。

@@ -136,7 +136,7 @@ def fixture(base, count=1, legacy=False, proof=None, detached=False, math_policy
                 evidence = {k: copy.deepcopy(selected[k]) for k in ['selector', 'source_commit', 'fragment', 'location', 'blob_oid', 'blob_hash', 'macro_policy_hash', 'boundary_witness']}
                 evidence.update(schema_version=1, restoration_id=restoration_id, derivation_id=identifier, group_id=group_id,
                     created_at=record['created_at'], origin_commit=record['origin_commit'],
-                    tool={'id': 'stacks-zh-source-container', 'version': VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2'}, layout=layout,
+                    tool={'id': 'stacks-zh-source-container', 'version': 'source-container-v14' if any(u['schema_version'] == 3 for u in new_units) else VERSION if any(u['schema_version'] == 2 for u in new_units) else 'source-container-v2'}, layout=layout,
                     input_unit_ids=ids, output_unit_ids=group['output_unit_ids'], new_units=new_units,
                     reason=group['reason'], files={k:record['files'][k] for k in ['input_units', 'input_candidates']})
                 write(root / f'translation-data/source-container-restorations/{restoration_id}.json', evidence)
@@ -191,6 +191,14 @@ def fixture(base, count=1, legacy=False, proof=None, detached=False, math_policy
                         unknown_terms=[{'source_term': 'affine opens', 'target_term': '仿射开集',
                                         'context': 'Synthetic fixture term pending, never approved.'}],
                         term_status='DECISION_REQUIRED', stage='STRUCTURE_OK')
+            elif unit['schema_version'] == 3:
+                # Literal synthetic leaves only; never a production model run.
+                row['translation'] = unit['source_text'].replace(' irred.',' 不可约（irred.）').replace('comp. with ','分支（comp.）且 ').replace('Café δ.','合成测试。')
+                row.update(term_occurrences=[{'source_term':word,'target_term':target}
+                    for _ in range(unit['source_text'].count('irred.'))
+                    for word,target in [('irred.','不可约'),('comp.','分支')]],
+                    unknown_terms=[{'source_term':word,'target_term':target,'context':'Synthetic pending term.'}
+                        for word,target in [('irred.','不可约'),('comp.','分支')]],term_status='DECISION_REQUIRED',stage='STRUCTURE_OK')
             row['translation_hash'] = sha256_value(row['translation'])
             raw.append(row)
         if record['tool']['version'] != '4':

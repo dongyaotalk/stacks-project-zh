@@ -130,6 +130,8 @@ WORKFLOW_FILES := \
 	stacks_zh/harness.py \
 	stacks_zh/chapter_templates.py \
 	stacks_zh/provenance.py \
+	stacks_zh/current_qa.py \
+	stacks_zh/repository_validation.py \
 	stacks_zh/pr_contract.py \
 	stacks_zh/progress.py \
 	stacks_zh/planning.py \
@@ -402,8 +404,8 @@ assemble-batch: validate-model
 		--run-id "$(RUN_ID)" --model-identity-confidence "$(MODEL_IDENTITY_CONFIDENCE)" \
 		$(if $(strip $(MODEL_SNAPSHOT)),--model-snapshot "$(MODEL_SNAPSHOT)",)
 
-qa-all: workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
-	$(PYTHON) stacks_zh.py validate-all --root . --lock "$(UPSTREAM_LOCK)"
+qa-all: workflow-check harvest-check upstream-index-check chapter-template-check
+	$(PYTHON) stacks_zh.py check-repository --root . --harvest "$(HARVEST_DIR)"
 
 validate-render:
 	@test -n "$(strip $(MODEL_CANDIDATE_FILES))" || { printf 'No candidate batches for MODEL=%s\n' "$(MODEL)" >&2; exit 1; }

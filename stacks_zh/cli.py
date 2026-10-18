@@ -20,6 +20,8 @@ from .planning import (
 )
 from .progress import update_progress_report
 from .records import RecordError
+from .current_qa import CurrentSourceQA
+from .repository_validation import validate_repository
 from .extraction import write_inventory
 from .source_alignment import write_alignment
 from .source_containers import write_container_package, write_container_packages
@@ -124,6 +126,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     validate_all.add_argument("--root", type=Path, default=Path("."))
     validate_all.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+
+    repository_check = subparsers.add_parser('check-repository', help='complete strict repository acceptance in one live session')
+    repository_check.add_argument('--root', type=Path, default=Path('.'))
+    repository_check.add_argument('--harvest', type=Path)
 
     assemble = subparsers.add_parser(
         "assemble", help="attach provenance and deterministic status to translator output"
@@ -232,6 +238,8 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--tags-file", type=Path)
     render.add_argument("--output-dir", type=Path)
     render.add_argument("--chapter", help="preview one complete chapter in an isolated output lane")
+    for current_entry in (validate, validate_many, validate_all, assemble, assemble_many, render):
+        current_entry.add_argument('--harvest', type=Path, help='read-only locked English Git harvest')
 
     build_log = subparsers.add_parser("check-build-log", help="reject defects in a completed final TeX log")
     build_log.add_argument("--log", required=True, type=Path)
@@ -407,6 +415,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "validate":
             count, errors = validate_batch(args.units, args.candidates, args.lock)
+            if not errors:
+                count, errors = CurrentSourceQA(args.lock.resolve().parent, args.harvest).validate_pairs([args.units], [args.candidates])
             if errors:
                 for error in errors:
                     print(f"ERROR: {error}", file=sys.stderr)
@@ -417,14 +427,26 @@ def main(argv: list[str] | None = None) -> int:
             root = args.root.resolve()
             lock = args.lock if args.lock.is_absolute() else root / args.lock
             count, errors = validate_all_candidates(root, lock)
+            if not errors:
+                count, errors = CurrentSourceQA(root, args.harvest).validate_repository()
             if errors:
                 for error in errors:
                     print(f"ERROR: {error}", file=sys.stderr)
                 return 1
             print(f"All candidate batches: PASS ({count} batch(es))")
             return 0
+        if args.command == 'check-repository':
+            count, errors = validate_repository(args.root.resolve(), args.harvest, report=print)
+            for error in errors:
+                print(f'ERROR: {error}', file=sys.stderr)
+            if errors:
+                return 1
+            print(f'Repository acceptance: PASS ({count} candidate batches; no human or publication approval)')
+            return 0
         if args.command == "validate-many":
             count, errors = validate_batches(args.units, args.candidates, args.lock)
+            if not errors:
+                count, errors = CurrentSourceQA(args.lock.resolve().parent, args.harvest).validate_pairs(args.units, args.candidates)
             if errors:
                 for error in errors:
                     print(f"ERROR: {error}", file=sys.stderr)
@@ -435,6 +457,10 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 0
         if args.command == "assemble":
+            current = CurrentSourceQA(args.lock.resolve().parent, args.harvest)
+            current_errors = current.validate_drafts([args.units], args.drafts)
+            if current_errors:
+                raise RecordError('current translator output rejected:\n' + '\n'.join(current_errors))
             harness_config = (
                 args.harness_config
                 if args.harness_config.is_absolute()
@@ -460,9 +486,14 @@ def main(argv: list[str] | None = None) -> int:
                 args.model_identity_confidence,
                 harness_config_path=harness_config,
             )
+            current.assert_unchanged()
             print(f"Assembled {count} candidate record(s): {args.output}")
             return 0
         if args.command == "assemble-many":
+            current = CurrentSourceQA(args.lock.resolve().parent, args.harvest)
+            current_errors = current.validate_drafts(args.units, args.drafts)
+            if current_errors:
+                raise RecordError('current translator output rejected:\n' + '\n'.join(current_errors))
             harness_config = (
                 args.harness_config
                 if args.harness_config.is_absolute()
@@ -488,6 +519,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.model_identity_confidence,
                 harness_config_path=harness_config,
             )
+            current.assert_unchanged()
             print(
                 f"Assembled {count} candidate record(s) across "
                 f"{len(args.output)} batch(es)"
@@ -516,6 +548,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"command: {' '.join(resolution.command)}")
             return 0
         if args.command == "render":
+            current = CurrentSourceQA(args.lock.resolve().parent, args.harvest or args.chapter_source_dir)
+            _, current_errors = current.validate_pairs(args.units, args.candidates, chapter=args.chapter)
+            if current_errors:
+                raise RecordError('current preview source QA failed:\n' + '\n'.join(current_errors))
             output_dir = args.output_dir or DEFAULT_RENDER_ROOT / args.model_lane
             written = render_batch(
                 args.units,
@@ -530,6 +566,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.chapter_title_map,
                 chapter=args.chapter,
             )
+            current.assert_unchanged()
             print(f"Rendered {len(written)} file(s): {output_dir}")
             return 0
         if args.command == "check-build-log":

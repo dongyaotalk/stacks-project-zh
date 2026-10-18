@@ -77,6 +77,9 @@ class Containers:
         resolve_natural_math_witnesses(self.policy, self.english)
         self.documents: dict[str, tuple[bytes, list[dict[str, Any]], list[dict[str, Any]]]] = {}
         self.closings: dict[str, int] = {}
+        self.native_document_footers: set[str] = set()
+        self.chapter_math_counts: dict[str, Counter] = {}
+        self.chapter_math_text_counts: dict[tuple[str, str], int] = {}
 
     def document(self, chapter: str):
         if chapter not in self.documents:
@@ -98,6 +101,8 @@ class Containers:
                             continue
                         break
                     self.closings[chapter] = tail_start
+                    if tail_start != closing[0]:
+                        self.native_document_footers.add(chapter)
         return self.documents[chapter]
 
     def select(self, selector: dict[str, Any]) -> dict[str, Any]:
@@ -243,7 +248,14 @@ class Containers:
         object_id = subprocess.run(['git', '-C', str(self.english.harvest), 'rev-parse',
                                     f'{self.english.commit}:{file}'], check=True,
                                    capture_output=True, text=True).stdout.strip()
-        math_counts = Counter(value for source_row in rows for value in complete_math_nodes(source_row['unit']))
+        if chapter not in self.chapter_math_counts:
+            self.chapter_math_counts[chapter] = Counter(
+                value for source_row in rows for value in complete_math_nodes(source_row['unit']))
+        math_counts = self.chapter_math_counts[chapter]
+        for value in complete_math_nodes(row['unit']):
+            key = chapter, value
+            if key not in self.chapter_math_text_counts:
+                self.chapter_math_text_counts[key] = raw.count(value.encode('utf-8'))
         paragraph_core_matches, paragraph_section_owner = None, None
         if kind == 'paragraph':
             core = fragment.strip(OUTER_WHITESPACE)
@@ -265,11 +277,13 @@ class Containers:
                 'inventory_unit': row['unit'], 'boundary_witness': boundary_witness,
                 '_native_phantom_prose': bool(self.hierarchical_prose and kind == 'prose_block'
                     and boundary_witness['before']['kind'] == 'title_title'),
+                '_native_document_footer': bool(self.hierarchical_prose and kind == 'prose_block'
+                    and boundary_witness['after'] is None and chapter in self.native_document_footers),
                 '_document_header_literals': row.get('_document_header_literals', []),
                 '_paragraph_core_matches': paragraph_core_matches,
                 '_paragraph_section_owner': paragraph_section_owner,
                 '_chapter_math_counts': {value: math_counts[value] for value in complete_math_nodes(row['unit'])},
-                '_chapter_math_text_counts': {value: raw.count(value.encode('utf-8'))
+                '_chapter_math_text_counts': {value: self.chapter_math_text_counts[(chapter, value)]
                     for value in complete_math_nodes(row['unit'])}}
 
     def assert_unchanged(self) -> None:
@@ -628,6 +642,8 @@ def verify_old_group(units: list[dict[str, Any]], tags: dict[str, str],
                      allow_native_prose: bool = False) -> dict[str, Any] | None:
     if selected.get('_native_phantom_prose') and not allow_native_prose:
         raise RecordError('complete phantom header/body boundaries require native v13 evidence')
+    if selected.get('_native_document_footer') and not allow_native_prose:
+        raise RecordError('complete document footer boundary requires native v13 evidence')
     if allow_native_prose and native_containers is not None:
         if selected.get('_document_header_literals'):
             groups = old_container_groups(units, tags, native_containers=native_containers)

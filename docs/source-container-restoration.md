@@ -1,5 +1,31 @@
 # 完整来源容器恢复与分组修订开发设计
 
+## 集中装配发现的章末版本标记错误：2026-10-16
+
+完整准备/check 与正式历史回放使用同一版本合同。准备器曾在章末正文采用新版
+文档基础设施边界，却因旧组坐标已经对应、未返回额外旧边界见证而标成v2。
+正式回放按旧v2语义扫描到正文之外的 `\input{chapters}`，因此正确拒绝。
+本次影响coding/02BZ、guide/05BF、introduction/06LB三个完整正文组。
+
+修复要求：使用原生文档尾边界的完整正文必须取得v13原生正文见证；不能回落到v2。
+见证独立绑定实际Section、前后语义锚点、完整原字节区间、有序旧组和全部原始
+结构／数学签名。已在旧Schema支持的 `list_item_intro`、`nested_list_item`、
+`list_item_outro` 只在这个完整章末正文见证中接受，列表与其闭合仍按完整签名验证。
+未知节点、缺失闭合、边界篡改和 `\input{other}` 继续拒绝。
+没有新增宏许可；旧v2历史仍按原语义验证。
+
+三个尚未首次Git采用的恢复记录仅更正版本标记并补上完整见证，正文片段、单元、
+模型五字段、冻结上下文和runtime逐项保持。更正后的三个完整批次重放与现有输出
+原字节相等。原始错误准备记录的完整UTF-8原字节及hash保存在
+[`docs/evidence/integrated-remediation-footer-v2-preparations.json`](evidence/integrated-remediation-footer-v2-preparations.json)，
+明确记载见证更正发生在生成之后、首次Git采用之前；没有把新见证冒称为旧生成输入。
+原来源包、冻结及失败验收也保留。15项原生边界回归通过，包含准备/check/恢复回放、
+旧v2降级拒绝、完整嵌套列表、缺失闭合、未知尾部输入和见证边界篡改。
+
+```sh
+PYENV_VERSION=3.12.6 pyenv exec python -m unittest discover -s tests -p test_native_prose_boundaries.py
+```
+
 规范任务：[Issue #603](https://github.com/dongyaotalk/stacks-project-zh/issues/603)。
 本设计定义独立 Schema/工具合同，实现见 §9；对应工具 PR 验收合并后才允许另开
 事实采用任务。现行 v1/v2/v3 及 `model-provenance.md` §9 不变。工具实现、具体数据修复和全库集成分别验收，

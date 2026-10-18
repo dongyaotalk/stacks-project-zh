@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from stacks_zh.records import RecordError, stamp_unit_hashes, write_jsonl
+from stacks_zh.records import RecordError, stamp_unit_hashes, write_jsonl, term_display_text, validate_tex_controls
 from stacks_zh.source_terms import audit_repository_terms, load_catalog, source_inventory, source_projection, source_tex_hash, validate_source_terms
 
 COMMIT = "b" * 40
@@ -39,6 +39,36 @@ def candidate(terms=None):
 
 
 class SourceTermsTests(unittest.TestCase):
+    def test_verified_text_accents_expose_whole_words_without_changing_protected_bytes(self):
+        for payload, visible in [(r"\'e", 'é'), (r"\'{e}", 'é'), (r"\'E", 'É'),
+                                 (r'\"o', 'ö'), (r'\"e', 'ë'), (r"\'a", 'á'), (r'\`a', 'à')]:
+            row = unit('An <ACCENT_0001>tale morphism.', {'ACCENT_0001': payload}, 'paragraph')
+            words = catalog(row);words['terms'] = [{'id': 'accent-word', 'forms': [visible+'tale'], 'chapters': [], 'evidence': []}]
+            output = candidate([(visible+'tale', '平展')]);output['translation']='平展（<ACCENT_0001>tale）。'
+            before=copy.deepcopy((row,output,words))
+            with self.subTest(payload=payload):
+                self.assertEqual(source_projection(row)[0], 'An '+visible+'tale morphism.')
+                self.assertTrue(validate_source_terms(row, candidate([]), words))
+                self.assertEqual(validate_source_terms(row,output,words), [])
+                self.assertEqual(validate_tex_controls(row,output), [])
+                self.assertEqual((row,output,words), before)
+
+    def test_legacy_token_spelling_of_a_text_accent_keeps_pending_source_coverage(self):
+        row=unit('An <ACCENT_0001>tale morphism.', {'ACCENT_0001': r"\'e"}, 'paragraph')
+        words=catalog(row);words['terms']=[{'id':'etale','forms':['étale'],'chapters':[],'evidence':[]}]
+        output=candidate([('<ACCENT_0001>tale','平展')])
+        self.assertEqual(validate_source_terms(row,output,words), [])
+        self.assertEqual(term_display_text(output['translation'],row['placeholders']),'平展（étale）')
+
+    def test_unverified_accents_and_math_nodes_remain_opaque(self):
+        for payload in [r"\'ef", r"\'{ef}", r"\'e\input{x}", r"\unknown{e}", '$e$', r"\'{$e$}"]:
+            row=unit('<ACCENT_0001>tale.', {'ACCENT_0001':payload}, 'paragraph')
+            with self.subTest(payload=payload):
+                self.assertEqual(source_projection(row)[0],'<ACCENT_0001>tale.')
+                self.assertEqual(term_display_text(row['source_text'],row['placeholders']),row['source_text'])
+        row=unit('<MATH_0001>.', {'MATH_0001':r"$\text{\'etale}$"}, 'paragraph')
+        self.assertEqual(source_projection(row)[0],'<MATH_0001>.')
+
     def test_equivalence_class_requires_the_whole_singular_and_plural_concept(self):
         row = unit('An equivalence class, equivalence classes, a class and an equivalence.', kind='paragraph')
         entry = copy.deepcopy(next(item for item in json.loads(
@@ -258,6 +288,63 @@ class SourceTermsTests(unittest.TestCase):
     def test_editorial_italics_are_not_automatically_math_definitions(self):
         row = unit("Read <EMPHOPEN_0001>The Book<EMPHCLOSE_0001>.", {"EMPHOPEN_0001": r"\emph{", "EMPHCLOSE_0001": "}"}, "paragraph")
         self.assertEqual(source_inventory(row, catalog(row))["occurrences"], [])
+
+    def test_later_definition_does_not_turn_an_earlier_emphasized_convention_into_a_term(self):
+        row = unit('It is customary to take <TEXTITOPEN_0001>only colimits of systems over <MATH_0001><TEXTITCLOSE_0001>. '
+                   'The colimit of the system is defined as <MATH_0002>.',
+                   {'TEXTITOPEN_0001': r'{\it ', 'TEXTITCLOSE_0001': '}',
+                    'MATH_0001': '$I$', 'MATH_0002': '$L$'}, 'paragraph')
+        self.assertEqual(source_projection(row)[1], [])
+        words = catalog(row)
+        words['terms'] = [{'id': term, 'forms': forms, 'chapters': [], 'evidence': []}
+                          for term, forms in [('colimit', ['colimit', 'colimits']), ('system', ['system', 'systems'])]]
+        self.assertEqual([o['source_term'] for o in source_inventory(row, words)['occurrences']],
+                         ['colimits', 'systems', 'colimit', 'system'])
+        self.assertTrue(validate_source_terms(row, candidate([]), words))
+        self.assertEqual(validate_source_terms(row, candidate([('colimits', '余极限'), ('systems', '系'),
+                               ('colimit', '余极限'), ('system', '系')]), words), [])
+
+    def test_another_sentence_call_does_not_define_an_editorial_title(self):
+        row = unit('Read <EMPHOPEN_0001>The Book<EMPHCLOSE_0001>. '
+                   'We call <EMPHOPEN_0002>frobulator<EMPHCLOSE_0002> a new concept.',
+                   {'EMPHOPEN_0001': r'\emph{', 'EMPHCLOSE_0001': '}',
+                    'EMPHOPEN_0002': r'\emph{', 'EMPHCLOSE_0002': '}'}, 'paragraph')
+        self.assertEqual(source_projection(row)[1], ['frobulator'])
+        self.assertEqual([o['source_term'] for o in source_inventory(row, catalog(row))['occurrences']], ['frobulator'])
+        self.assertTrue(validate_source_terms(row, candidate([]), catalog(row)))
+
+    def test_definition_signal_after_the_name_in_its_own_sentence_is_kept(self):
+        row = unit('A <EMPHOPEN_0001>frobulator<EMPHCLOSE_0001> is defined by this condition. '
+                   'Read <EMPHOPEN_0002>The Book<EMPHCLOSE_0002>.',
+                   {'EMPHOPEN_0001': r'\emph{', 'EMPHCLOSE_0001': '}',
+                    'EMPHOPEN_0002': r'\emph{', 'EMPHCLOSE_0002': '}'}, 'paragraph')
+        self.assertEqual(source_projection(row)[1], ['frobulator'])
+
+    def test_bibliography_item_description_cannot_define_the_italic_title(self):
+        row = unit('<EMPHOPEN_0001>Lecture notes on stacks<EMPHCLOSE_0001> <REF_0001> '
+                   '<STRUCT_0001>This course introduces stacks, first defined in its later lectures.',
+                   {'EMPHOPEN_0001': r'\emph{', 'EMPHCLOSE_0001': '}',
+                    'REF_0001': r'\cite{notes}', 'STRUCT_0001': r'\item'}, 'paragraph')
+        self.assertEqual(source_projection(row)[1], [])
+
+    def test_real_local_define_and_call_inflections_still_introduce_unknown_terms(self):
+        for sentence in ['This paper defines a', 'We define a', 'It is defining a',
+                         'The author calls it a', 'The author says it is a', 'It is said to be a']:
+            row=unit(sentence+' <EMPHOPEN_0001>frobulator<EMPHCLOSE_0001>.',
+                     {'EMPHOPEN_0001':r'\emph{','EMPHCLOSE_0001':'}'},'paragraph')
+            with self.subTest(sentence=sentence):
+                self.assertEqual(source_projection(row)[1],['frobulator'])
+                self.assertTrue(validate_source_terms(row,candidate([]),catalog(row)))
+
+    def test_definition_signals_remain_local_across_paragraph_and_footnote_boundaries(self):
+        for marker, payload in [('STRUCT_0001', r'\noindent'),
+                                ('FOOTNOTEOPEN_0001', r'\footnote{'),
+                                ('FOOTNOTECLOSE_0001', '}')]:
+            row = unit('We call this a construction. <EMPHOPEN_0001>Book title<EMPHCLOSE_0001>'
+                       f'<{marker}>It is defined elsewhere.',
+                       {'EMPHOPEN_0001': r'\emph{', 'EMPHCLOSE_0001': '}', marker: payload}, 'paragraph')
+            with self.subTest(marker=marker):
+                self.assertEqual(source_projection(row)[1], [])
 
     def test_italic_imperatives_do_not_name_terms_but_catalog_coverage_is_required(self):
         for imperative in ["let", "Assume", "suppose"]:

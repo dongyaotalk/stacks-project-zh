@@ -15,7 +15,9 @@ from typing import Any
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
 USAGES = {'quad-connector', 'matrix-condition', 'set-description',
-          'root-phrase', 'matrix-prefix-condition', 'arrow-label-prefix'}
+          'root-phrase', 'matrix-prefix-condition', 'arrow-label-prefix',
+          'matrix-row-text', 'matrix-row-prefix', 'numeric-isomorphism-suffix'}
+MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
 COMPONENT_SEPARATOR = '\\ '
@@ -69,8 +71,12 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                          | ({'slot_schema_version','components','separator'} if component else set())):
             raise ValueError('incomplete natural math-text policy')
         literal = rule['literal']
+        literal_pattern = (r' *[A-Za-z][A-Za-z0-9 -]*'
+                           if rule.get('usage') in MATRIX_ROW_USAGES
+                           else r' *[A-Za-z][A-Za-z -]*')
         if (not isinstance(literal, str) or not (literal == COMPONENT_LITERAL if component else
-                re.fullmatch(r' *[A-Za-z][A-Za-z -]*', literal))
+                literal == '-isomorphism' if rule.get('usage') == 'numeric-isomorphism-suffix'
+                else re.fullmatch(literal_pattern, literal))
                 or not re.search(r'[A-Za-z]{2,}', literal) or literal in seen_literals):
             raise ValueError('invalid or duplicate natural math-text literal')
         if literal in notations:
@@ -193,6 +199,19 @@ def delimiter_kind(source: str) -> str:
     raise ValueError('typed math region is not a complete original math node')
 
 
+def _description_matrix_root(stream, index):
+    openings = [i for i, part in enumerate(stream[:index])
+                if part['token'] == r'\begin{matrix}' and part['depth'] == 0]
+    if not openings:
+        return False
+    start = openings[-1]
+    if start >= 2 and [part['token'] for part in stream[start-2:start]] == [r'\left', r'\{']:
+        start -= 2
+    return (start == 0 or stream[start-1]['depth'] == 0
+            and stream[start-1]['token'] in {'$', r'\[', r'\(', ':', '=',
+                                            r'\leftrightarrow', r'\longrightarrow'})
+
+
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     node = stream[index]
     depth = 1 if kind in {'arrow-label-prefix',COMPONENT_USAGE} else 0
@@ -200,6 +219,7 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
             or set(node['environments']) - MATH_ENVIRONMENTS):
         return None
     before, after = stream[index - 1], stream[index + 1]
+    after_end = after['end']
     if kind == 'quad-connector':
         valid = before['token'] == after['token'] == r'\quad'
     elif kind == 'matrix-condition':
@@ -221,6 +241,32 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
                  and stream[index - 2]['token'] == r'\xrightarrow'
                  and stream[index - 2]['depth'] == 0
                  and after['token'] != '}')
+    elif kind in MATRIX_ROW_USAGES:
+        valid = (node['environments'] == ['matrix'] and before['depth'] == 0
+                 and before['token'] in {r'\begin{matrix}', r'\\'}
+                 and _description_matrix_root(stream, index))
+        row_end = after
+        if valid and kind == 'matrix-row-prefix':
+            atoms = stream[index+1:index+5]
+            valid = (len(atoms) == 4 and index+5 < len(stream)
+                     and source[atoms[0]['start']:atoms[-1]['end']]
+                         == r'\mathcal{' + atoms[2]['token'] + '}'
+                     and re.fullmatch(r'[A-Z]', atoms[2]['token']) is not None
+                     and [part['token'] for part in atoms] == [r'\mathcal', '{', atoms[2]['token'], '}'])
+            if valid:
+                row_end = stream[index+5]
+        if valid:
+            valid = (row_end['depth'] == 0 and row_end['environments'] == ['matrix']
+                     and row_end['token'] in {r'\\', r'\end{matrix}'})
+            after_end = row_end['end']
+    elif kind == 'numeric-isomorphism-suffix':
+        previous = stream[index-3:index]
+        valid = (not node['environments'] and index >= 3
+                 and [part['token'] for part in previous] == [r'\Big', '/', '2']
+                 and all(part['depth'] == 0 and not part['environments'] for part in previous)
+                 and before['end'] == node['start']
+                 and node.get('value', '').startswith('-')
+                 and after['token'] == '=' and after['depth'] == 0 and not after['environments'])
     elif kind == COMPONENT_USAGE:
         openings = [i for i,n in enumerate(stream[:index]) if n['token']=='{' and n['depth']==0]
         opening = openings[-1] if openings else -1
@@ -239,7 +285,7 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     if not valid:
         return None
     return {'before': source[before['start']:node['start']],
-            'after': source[node['end']:after['end']], 'environments': node['environments']}
+            'after': source[node['end']:after_end], 'environments': node['environments']}
 
 
 def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
@@ -504,6 +550,9 @@ def _slot_node(source, stream, slot, version):
     if not component:
         if node['value'] != slot['source']:
             raise ValueError('math slot is not a complete real text command parameter')
+        if (slot['classification_witness']['usage'] == 'numeric-isomorphism-suffix'
+                and slot['source'] != '-isomorphism'):
+            raise ValueError('numeric suffix requires its exact complete isomorphism parameter')
     else:
         if (version != 3 or node['value'] != component['parameter_source']
                 or component['parameter_source'] != COMPONENT_LITERAL

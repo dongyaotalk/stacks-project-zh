@@ -1,5 +1,45 @@
 # 来源侧术语出现清单
 
+## 赋值动词 set 的补充句式
+
+[Issue #815](https://github.com/dongyaotalk/stacks-project-zh/issues/815)补足现有
+`_assignment_set` 合同的三个赋值引导句。仍先要求 `set` 后紧接完整的受保护
+`MATH_####` token；新增的前置语境仅为 `we can now`、句首 `Now,` 和句首
+`To see (数字) just`。后一种句首允许前句句号后闭合一个括号，与实际来源
+`... .) To see (3) just set ...` 对应。不是任意 `now` 或 `just` 白名单。
+
+锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的完整见证均在
+categories 章 Section04VB：Tag04VD proof/1 的 `We can now set`，完整 source
+TeX hash `sha256:5c31c8e2e6b56ce7656bb1027c1696044c7f842235f17ce5c12552ebb07a513e`；
+Tag04VG proof/1 的 `To see (3) just set`，hash
+`sha256:94bf766b0f01922a87b78e6af2869d13eefa34f2e91ec814d30fcaeeb77f7db3`；
+Tag05Q3 proof/1 完整脚注中的 `Now, set`，hash
+`sha256:17f0030500f90ab23ddaabf847fb0dd66c1c902c9af45e7c2091c4bc7f0f17d6`。
+完整容器与数学节点保留，hash 不是行号或页码范围。
+
+名词 `a set`、`the set`、复数 `sets`、非数学 token、未知 token、无受保护
+赋值对象、孤立 `just set` 及没有见证的相近句式仍需现行术语盘点。回归在每种
+合法赋值之后另放真实名词 set，证明只排除动词，遗漏集合双语显示仍失败。
+来源术语目录、词表、宏政策及历史输入、候选、raw、run 不由此工具任务改写；
+不授予中文译法或人工审校批准。
+
+本地验收：来源术语61项测试、完整656项工具测试均通过；`make qa-all` 对
+239个既有候选批次的当前来源、术语、结构、完整历史溯源及决策检查通过。
+从锁定Git重新选择并逐字lower上述三个完整证明，各仅去掉一个赋值动词误报；
+05Q2完整证明中实际表示集合的set仍必须双语覆盖。842个既有unit的6507次来源
+要求逐项不变；221个新准备unit的1786次要求仅减少这三处为1783，其他出现逐项
+相等，核验未使用候选自报数组作为来源见证。
+
+实际执行当前集成通道 `openai-gpt-5.6-sol` 的 `make render`、`make pdf`，每条
+Make命令显式传已解析的Python3.12.6。首次PDF在沙箱字体访问阶段失败，保留
+原日志；核实字体已安装后，同一PDF构建在获准的系统字体访问环境中通过，
+最终TeX日志PASS。119份生成TeX逐字相等，457页整书逐页文字及120dpi像素全部
+与已实际检查的接受基线相同，没有变化页。基线视觉回执hash为
+`sha256:f452068789c24b5d50f97240b6198b0497731ce2ae7fb03b759460f28670ba8b`，
+本次PDF hash为`5f5339cf660bb90f5743ddff5b61eee6217998d5e5a18882b916fbf636fd673e`。
+本地完整证据位于ignored `build/assignment-set/locked-source-and-baseline-inventory.json`、
+`remaining-source-inventory-delta.json`及`visual-evidence.json`；生成物未修改或提交。
+
 `python3 -m stacks_zh audit-terms --output build/source-term-audit.json` 从当前英文
 unit 生成逐次出现要求，再检查每个候选。检查失败返回非零；报告仅写入 ignored
 build 或仓库外，不覆盖事实数据。独立审计保留；S5现由当前候选默认QA及

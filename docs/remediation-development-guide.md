@@ -1,13 +1,332 @@
 # 八项审查修复开发与交接指南
 
+> 2026-10-19 唯一必要纯工具前置 [Issue812](https://github.com/dongyaotalk/stacks-project-zh/issues/812) / [PR813](https://github.com/dongyaotalk/stacks-project-zh/pull/813) 已合并；最终集成接受 main 为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`。用户已明确授权此例外。仅修复可信门禁的大文件可空分类、回归及实测时限，完整原字节/来源/审批要求保持。全部集中DATA仍在原PR809；实际生成的DATA origin与上下文继续绑定5b527d9，不回写历史。
+
 > 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
 
-> 集中任务的唯一必要前置为 claimed [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811)，分支 `tool/bulk-task-scope-validator`，精确范围已先更新为35文件：已完成的来源恢复/组合数学文字基础30文件，加上哈希范围清单合同5文件。原因有二：pr-contract固定从可信main加载且原合同限100文件/单章2–8 parents；恢复历史还强制origin为HEAD可达祖先，并从该提交读取宏政策，故不能把最终squash会丢弃的feature提交作为DATA origin。先接受这一个完整工具前置，再在其实际squash main的干净工作区一次prepare/check全部107批，将包按原字节带回#809生成/装配；不猜未合并SHA，不削弱祖先或政策核验。#809统一完成全部DATA、S5、S7及最终文档，不重新逐批拆任务。e6e1f05/8566396/466e24d原工作保留；未生成或采用新DATA，不改英文lock、CI信任来源或保护规则。
+> 工具前置 [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811) 已完成并合并，接受 main 为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`。完整来源恢复、组合数学文字和哈希范围清单合同已接受；原工具提交与文档历史保留，不重做此前置。后续 DATA 的 origin 使用该已接受提交，英文锁不变；现有 Issue #808 / PR #809 统一收尾全部 DATA、S5、S7和最终文档。
 
 本文是开发方法和交接材料；事实状态必须从当前分支的结构化数据、审计与 GitHub
 重新读取。它不代替 `WORKFLOW.md`、`config/` 政策或不可变溯源证据。
 
-## 当前集中任务在制状态（未合并）
+## 当前集中任务：2026-10-19，本地验收通过，待精确远端验收
+
+本节记录PR809最终集成候选的可复现检查点；以下历史阶段保留原证据。
+工具接受main为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`，239批/1208单元。
+集中DATA已以八个逻辑提交推送，先前验收head为
+`a17f465633986a9578ac3cef6eac283841fd87c8`，PR809已ready、唯一closing Issue808。
+该HEAD的policy-and-data run39160048942/attempt2/job117772514093真实成功，
+653项测试全绿、239批完整QA与117章progress/plan check通过。当前最终合入已接受
+工具main并更新文档；最新HEAD、CI及最终merge SHA从本文命令和PR809原生记录
+取得，不把这份检查点当实时状态，也不猜测尚未产生的合并SHA。
+
+本地已完成165批、1049旧→683完整新单元、172个新实际 revision run，全库为
+239批/842唯一活跃单元。旧输入、原候选、run/raw 和完整递归恢复/派生/归档保留；
+五字段逐项等于实际不可变原输出，范围外事实原字节保持。此前162批/677单元的
+第三次完整 `qa-all` 已终态通过，实测1564.582秒；该证据不冒称覆盖后来的6个新单元。
+
+严格尾空白门禁试运行另外发现 categories-002T、categories-04AR、sets-000I 三个
+完整批次共6单元。每批完整冻结旧组、候选、历史和上下文后，实际模型重新生成全部
+五字段，未用程序补换行。新生成保持原英文单元不变，220来源词的短批次例外明确
+记录，不填充无关文本。冻结包含56份 ancestry；生成输入为当时v16目录，后续目录
+不能回写为当时的模型输入。最新字面输出核验包含286份尝试文件、93份完整记录
+装配、844条实际完整记录（含失败/重试，不能当作活跃数）。
+
+当前精确范围清单为 `task-scopes/integrated-remediation-f1-f8-20261015.json`，
+2591条精确路径，hash
+`sha256:b65670ce591f2cb8cfe64199c161281d928236675221d52512e594a1a923aea6`。
+此前所有scope原字节保存；既有实际生成仍绑定各自原冻结。远端Issue/PR已绑定该最终范围；接受工具main后的最终验收仍使用同一范围。
+
+当前英文目录v18的hash为
+`sha256:4223840c7e8259e889e2c5b45adc3c848f322c2e3704df70ccf94534491943fe`。
+对全842单元识别6507次来源出现，688份锁定Git见证。新词形 affines 和原文拼法
+glueing 逐字来自 sets / 000I / Section000H / proof1；完整片段hash为
+`772cb19314e31636609b48c640216f70eef18c794fca53b6ba4ee4aa592223b5`。
+仅扩展英文识别，不批准中文、不改历史输入。当前239批严格来源/结构/术语探测
+零错误，实测上下文10.103秒、验证47.369秒，共57.473秒；此探测不包含全历史溯源。
+
+### S5 已实现的默认路径
+
+`current_qa.py` 独立约束当前候选，历史事实仍按各自版本合同重放。
+validate、validate-many、validate-all、assemble、assemble-many、render 默认核验
+锁定Git来源、永久Tag、未保护TeX、展开脚注/命名标题、英文目录证据、逐次术语覆盖、
+保护token原序/次数及精确尾空白。装配与渲染先拒绝不合格输入，再调用写出函数；
+这些检查不产生中文、selection或人工批准。工作流的九项当前门禁必须全部开启。
+
+`repository_validation.py` 在一个进程内依次执行完整Schema、完整递归溯源、决策绑定
+和全部当前候选检查。`InputSnapshot` 绑定实际HEAD、文件集合及原字节，期间新增、
+删除、篡改或符号链接导致失败。仅同次调用里实际完整溯源通过后才发出私有内存
+凭证；决策检查据此避免重复递归重放。独立 `decision-check` 仍执行完整溯源，
+不存在磁盘PASS缓存、skip开关或持久凭证。只为真实selection引用的候选计算昂贵的
+复合绑定hash，但所有未被选择的历史事实仍经过完整溯源验证。
+
+锁定英文容器、数学重复计数和正则编译仅作同次调用内的纯计算复用。来源库存
+必须从锁定Git重新验证实际使用章节，过期或篡改库存失败；缺失库存首次完整生成。
+`make qa-all` 与CI调用同一 `check-repository` 入口，完整检查没有删减，也不按
+changed paths漏掉其他lane。CI与本地统一Python3.12。开发时仍可选章预览，最终
+验收保留整库QA与整书构建。
+
+截至本检查点，原34项定点回归通过，覆盖六个CLI实际拒绝、关闭政策/篡改库存绕过、
+来源词漏报、伪CLEAR、保护顺序/尾空白、输入竞态、伪会话凭证和独立决策溯源。
+新的统一 `make qa-all` 已完整退出0，实测989.962秒，Schema、完整递归溯源、
+决策及239批当前严格QA全部通过，受观察输入hash在调用期间保持不变。完整工具
+测试实际执行653项，651通过、2个旧CLI fixture失败；原失败日志保留。成功样例已
+换为独立锁定Git的两个完整来源节点，配对错误测试隔离来源门禁以保留原有计数
+断言；没有降低生产门禁。随后对CLI、当前QA、会话、决策、全lane聚合41项回归
+全部通过。其余651项的生产实现和用例保持，最终远端精确HEAD仍须真实运行全套。
+本地S7构建/视觉已通过，a17f465远端全套CI也已通过；最终合入工具main后的最新HEAD仍须真实双门禁及合并后验证。
+
+此次仅为适配旧测试增加 `tests/test_cli.py` 和此前scope的原字节快照，精确范围
+2591路径。既有模型冻结不重新绑定当前scope。CI时限为60分钟，以容纳实际完整
+工具测试和统一QA，检查项目不减少；Python3.12和单进程默认门禁保持。
+
+本次全部172个实际新revision run的完整冻结输入已另行结构QA通过：683条完整
+记录，与每份correction中声明的unit/candidate原字节hash一致，实测29.382秒。
+此证据覆盖实际新作者输出，不只检查兼容lane；版本化历史、原输出绑定和完整
+递归溯源仍由统一验收负责。最新实际 `progress`、`progress-check`、`plan`、
+`plan-check` 均退出0；另在隔离目录真实生成并check全部117章，README及两份
+报告逐字等于规范输出。没有手改统计数字，也没有授予人工审校或发布状态。
+
+### F1–F8 当前证据矩阵
+
+| 项目 | 本地最终直接证据 | 远端剩余验证 |
+| --- | --- | --- |
+| F1 永久坐标 | 原六批44个数学陈述及842个活跃单元核验；全库对齐/check通过，零错坐标、零重复ID。 | 精确远端文件与合并后原字节。 |
+| F2 来源术语 | 独立6507次要求/688份Git见证零错误；完整239批统一QA通过；六入口漏报回归通过。 | 最新精确HEAD完整CI；不授予词表批准。 |
+| F3 决策门禁 | 正反决策回归及完整全库决策通过，独立命令仍重放完整溯源。 | 最新精确HEAD CI。 |
+| F4 结构与来源 | 683新五字段/raw相等；172新run QA、完整历史、独立source/proof及最终render通过。 | 远端全部原字节与历史绑定。 |
+| F5 替换链 | 正常链及自引用/循环/跨unit/冲突后继回归通过；完整全库决策通过。 | 最新精确HEAD完整工具测试。 |
+| F6 脚注引用 | 两目标脚注实际PDF及邻页已查看，链接注释均指向注记4.2.2；最终引用日志通过。 | 合并后数据原字节。 |
+| F7 字体构建 | render/pdf/template均退出0，457页/13页FinalTeX通过；全部变化及邻页实际查看。 | 远端树与已验收树一致。 |
+| F8 进度计划 | progress/check、plan/check及隔离117章生成/check通过；三报告原字节不变。 | 合并后报告与最终事实一致。 |
+
+最终全库抽取与check现均通过（72.585/72.889秒），117章、116份Git原字节回放，
+43223提议中38422 READY/4801 BLOCKED、12491来源诊断。该库存是全英文准备状态；
+未知语法/数学文字保持BLOCKED，不等于当前842单元失败，也不表示全英文已经翻译。
+本次最终输出使用独立ignored目录，保留前次库存；完整对齐与check继续读取最新事实。
+
+最终对齐生成已完成，实测99.414秒；239批/842单元中745 BYTE_EXACT、97
+PRESENTATION_EQUIVALENT，零坐标迁移、来源错误、术语候选失败/诊断和proof不匹配。
+独立术语审计6507次要求、688份锁定目录见证全部通过；独立来源审计错statement
+Tag、未保护TeX、隐藏脚注、隐藏标题均为0；proof审计187组/187单元全部match，
+unsupported为0。239条统一队列的四类actions/findings均为空。对齐check已退出0，实测102.135秒；最终抽取/对齐四个命令全部通过。
+审计中的目录hash按规范JSON计算为
+`sha256:899a668e50f3487b37dd8781e9b5a88e3e16d272ad91b4078ac6b9d847935c12`，
+与上文文件原字节hash的表示方法不同，所指目录相同；复核时不能混用两种hash。
+
+### 定位失败与后续维护
+
+| 失败位置 | 处理方法与边界 |
+| --- | --- |
+| 当前来源/Tag/保护节点 | 从英文锁定Git重选完整容器，核对真实owner、Section及selector；未知语法继续BLOCKED，不能放宽规则让错误通过。 |
+| 来源目录证据 | 核实整份原片段与hash、可见英文词形和分类；分段变化先迁移英文见证，不能删词或从译文数组反推来源。 |
+| 候选逐次术语/尾空白 | 对声明的完整语义批次冻结全部旧输入和历史，重新实际生成完整五字段；程序不补中文或拼接旧句。 |
+| 历史run/raw/派生重放 | 保留失败原字节；按对应版本合同定位。当前门禁不能重解释旧context，缓存、改hash或删归档不能替代重放。 |
+| selection/revision | 保持真实待决词对与glossary批准、人审和复合来源hash要求；模型无权把CLEAR写成批准。 |
+| TeX/PDF | 修复结构化事实、渲染器或已声明模板的真实原因，再构建；生成TeX和PDF仅作证据，不直接修生成物。 |
+| 进度/计划 | 实际调用生成器和check；在隔离目录逐字比较，再采用生成结果，不手填数字。 |
+
+维护时先按受影响完整batch或章节定位；代码、政策、来源或事实输入未变的成功
+结果不无理由重跑。最终使用统一 `make qa-all` 完整验收，来源清单与队列另行
+重建/check，整书按规定render/pdf并查看全部变化及邻页。私有会话凭证不跨调用
+保存；新run必须重新动态解析Harness和当前实际model/effort/turn，不复制本次身份。
+
+### S7 本地最终构建与视觉证据
+
+当前lane真实render退出0，1215.720秒，119份TeX中仅声明的九章及metadata改变。
+真实pdf退出0，69.975秒，457页；适用template退出0，16.217秒，13页；两个最终
+TeX日志门禁均通过，无缺字、未定义引用或编译错误。首次沙箱PDF构建未能访问
+本机已安装的Noto CJK字体，失败日志保留；访问本机字体服务重试同一Make命令
+成功，未修改模板、译文、生成TeX、字体配置或日志来绕过错误。
+
+整书当前PDF原字节SHA-256为
+`15679221ebf8616cfbb726f661b493593662216375da4c780bb57711490e3b15`，
+模板为`722d8d127019efd8a9dafcf0e79a571a888de8724350f2b4f9b3fca29421e709`。
+接受基线为此前实际查看过的463页PDF，原字节hash为
+`eb5566d1906e989dc97ea867e6aa8dd0a66049dbad4e75a5762266957071cc5b`。
+
+已比较全部书页文字及119份TeX，并实际查看新版237页变化及邻页PNG（119组
+双页图）。另外查看目录第7/8页、书末第457页，合计240个不同新版页；两处脚注
+另作原分辨率检查。其余220个原未入选页与已查看基线的正文文字、字体、坐标及
+矢量绘图逐页等同（排除页眉页码区域，坐标精度0.001pt，且没有栅格图）；其中
+三页又已实际查看，因此剩余217页复用明确绑定的既有视觉证据。没有用缩略抽样
+替代变化及邻页检查。模板全部13页实际查看，包括正文常规、粗体、斜体Greek
+字符及公式、矩阵、交换图和书末表，字形正常；全书文字边界检查无越出纸面的行。
+
+F6的`tag:0AHN:statement`与`tag:0FWX:statement`分别排在当前PDF第88/90页，
+脚注均为中文，相关页及邻页实际查看；同时读取PDF实际链接注释，目标为PDF第44页
+的注记4.2.2，对应aux标签`categories-remark-big-categories`，原引用payload保持。
+书末原文疑点表仍位于最后，明确锁定英文版本及691/698/699留档，不修改原数学。
+这些PDF页仅是验收定位，任务范围始终用永久Tag及完整来源容器。
+
+本地通过的生产代码、政策与事实在统一QA之后保持原字节；随后只适配两个旧CLI
+测试fixture、扩大声明测试路径、调整CI时限和补文档。完整工具测试的原失败和
+后续41项成功均如实保留，远端最新精确HEAD必须再真实执行完整工具测试和全部QA。
+集中数据已提交/推送a17f465，远端完整原字节/patch/native单closing均核验，
+该HEAD的完整数据CI成功。唯一可信工具前置PR813已接受于991e3ed；最终合入该
+工具main后，继续要求最新精确HEAD的双run/job、完整原字节/patch/native合同、
+fresh接受base和授权squash后验证。
+最终接受main及精确门禁证据通过PR809和下列命令取得，不猜测尚未产生的合并SHA。
+
+```sh
+git ls-remote origin refs/heads/main
+gh pr view 809 --json state,mergeCommit,headRefOid,baseRefOid,closingIssuesReferences
+gh issue view 808 --json state,assignees,labels
+gh pr checks 809
+```
+
+完整原字节、来源/历史绑定均由跟踪的unit、candidate、run/raw、derivation/archive
+和restoration记录提供；本机ignored回执、PDF和PNG只是额外现场证据，不提交。
+新克隆按本文命令重新生成并验收，不依赖本机绝对路径、缓存PASS或预先存在的build。
+
+### 最终可信大文件门禁与接受边界
+
+PR813仅四个工具文件，head39d5464c58a93c832bb725923cad56239792d19f；
+policy-and-data run39179060126/job117827741453与pr-contract
+run39179060156/job117827742071均成功。合并main为991e3ed，PR813 MERGED、
+Issue812 CLOSED、main/feature完整树和原字节、工作区clean均已核验。
+实测GitHub截断12MB blob返回isBinary=null；只在明确截断时允许可空分类，
+随后仍校验全部锁定blob长度/Git hash/UTF-8。42回归、真实单文件及整份PR809
+2362文件/2327完整内容的原生合同复验通过，461请求、1386.017秒。原5分钟
+不足，可信job时限30分钟；仍从main运行，权限与全部合同保持。详细复现和
+失败/回退边界见[大文件合同维护](pr-contract-large-blobs.md)。不截短raw、不跳
+文件、不让未合并PR自换可信校验器。
+
+该纯工具前置未改变任何DATA。原生成origin5b527d9、完整scope冻结、run/raw、
+实际model/effort/turn及上下文一律保持；accepted integration base与DATA origin
+用途不同。最终合入工具main不重译、不再认领已完成批次；不重复已通过的未变
+来源审计、冻结run QA和数据验收。新增的实际代码只由42项相关回归及最新远端
+完整工具/数据CI复验；提交前仍按现行要求实际render/pdf并比较整书。
+
+任意新克隆应从原生PR/Actions取得最终HEAD、merge commit、run/job与精确
+base，再按本指南重建审计和构建；本机ignored现场回执与最终交付记录提供本次
+精确值，不作为可跳过检查的PASS缓存。若PR809已MERGED且合并后树/原字节/
+进度证据齐备，直接进入维护，不重做此次165批修复。
+
+## 历史阶段记录：2026-10-16，本地装配后待完整验收
+
+继续使用 claimed Issue808、草稿PR809及原分支。最新只读核验的远端main为
+`5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`，已包含前置PR811；本地HEAD为
+`3af29b005b648a0f4ceaf04d366712323f340488`。原文档提交、所有已合并数据和历史保留。
+远端main仍为239批/1208活跃unit。本地已装配162批/1043旧→677完整新单元，
+全库239批/842个唯一活跃unit；尚未提交或合并，完整递归溯源及S4全量验收正在进行，
+不能把本地提议或审计成功当作main残项已经清零。
+
+原定107批的849旧→483完整来源新单元已经全部取得实际模型五字段。
+在新英文来源词目录v12下，全483单元来源术语检查为0问题单元/0诊断。
+其中55个单元完成了术语或可移植上下文的完整重生成；失败尝试、旧冻结和
+实际模型身份保留。实际会话字面输出绑定检查通过：200个原始尝试文件、
+79个完整记录选择装配文件、624条实际完整记录，包含保留的失败与重试，
+不能将624当作当前活跃unit数。所有最新选择记录的非覆盖类核心检查无错误；
+未变记录复用绑定原字节hash的检查，新记录单独复核，并非新跑了一次239全量QA。
+
+目录扩展后，对原范围外359单元的独立检查还发现55批/73问题单元/109诊断。
+完整范围为Categories45批、Sets10批，共194个当前单元，不能只改73个标记单元。
+55批完整来源预检已通过：194旧→194新、11698来源词、0 BLOCKED。
+与原483提议及范围外数据合并预检后为842个唯一活跃ID，无冲突。
+52份v4及3份v2当前历史均须保留并重放；这些是新目录下的追加术语修订，
+不重复宣称原0AHK等完整来源恢复尚未完成。
+
+追加范围已在本地精确声明：同一owner/branch/英文lock，合计1043旧/677新ID，
+2536条精确允许路径，范围清单hash
+`sha256:77fabf3a694ac0d4925c59f780d179e049cc729ba6dc6d3c9b1eba417ec9fa7a`。
+旧清单原字节保存为`task-scopes/integrated-remediation-f1-f8-20261015-scope-before-extra-v12.json`；
+此前全部实际生成继续绑定原冻结，不回写其模型、run或上下文。
+追加55批计划使用当时实际可见的`gpt-6.1-sol/xhigh`，每次生成前仍动态核验真实
+model/effort/turn及Harness，运行前的计划值不充当生成证据。
+
+未来英文目录v14仅将4条现有见证重新绑定到独立锁定Git完整片段及新坐标，
+hash为`sha256:d5a8e729960fec8dfee0473991cf09f094c74977a9c3729aaed568798b102671`。
+全部词形、分类、章节范围及其他见证保持；实际逐条比较4个受影响库存，
+未对677个匹配输入未变的提议重新进行全量术语扫描。没有中文词条批准。
+
+追加55批的完整来源包已统一prepare/check通过：prepare 610.175秒、check 590.350秒；
+完整194组、全库ID与来源区间不重叠，check期间包的字节及mtime不变，回传副本原字节
+一致。原107批的已通过包未重跑。追加194新单元、完整有序旧组/候选、832份ancestry、
+政策/词表/风格/prompt/来源目录及hash已全部冻结，冻结回执hash为
+`sha256:db6af97e1eadf76f02745a5ec005ae0ede88efb962ab82ec954ef08ca2a5e897`。
+
+追加55批/194完整单元已全部取得实际模型五字段，与原483单元合计677/677，
+不再有未生成单元。最新实际字面绑定核验为283份原始尝试文件、93份完整记录选择
+装配、838条实际完整记录，包含保留的失败与重试，不能当作活跃unit数。全部新记录
+结构、token顺序/次数、尾空白、完整五字段和实际冻结上下文绑定均无非覆盖类错误；
+旧检查绑定原文件hash复用，未重复运行未变239全量QA。
+
+未来英文目录v15对9个完整词形增加独立锁定Git见证，涉及8个完整来源容器、7个
+新concept；原词形、证据、排除项全部保留。目录hash为
+`sha256:2b41a8f200779fb996a47a6c673b7296e316b1266ba05b03ba64903bfe633fe1`。
+除前述词形外还覆盖`categorically compact object(s)`与`transition morphisms`。
+完整新目录下实测677个提议单元及165个范围外单元，共842个单元、6502次来源出现，
+均为0问题单元/0诊断。该结果只证明所声明来源清单的覆盖，不构成人工数学审校。
+原v14的13问题单元/14诊断历史回执保留，不回写实际生成冻结或把新目录冒称生成输入。
+
+已事务化装配2338个声明范围内文件，共162批、169个实际revision run；完整旧输入及
+52份v4、3份v2追加历史和原范围全部祖先保留。所有新run/raw的结构QA通过，全部
+677个新候选五字段逐项等于不可变实际原输出，全库842个ID唯一，范围外事实原字节
+不变。首次qa-all在三个章节挂载清单过期处停止，已经生成器刷新全部117模板，仅
+categories、sets、guide三个文件改变。随后重新执行完整qa-all，尚未宣称最终通过。
+
+生成时Harness版本和装配时动态解析版本分别记录；不以后来安装版本覆盖生成记录。
+新run的置信度标签遵从冻结注册表的declared，真实model/turn/effort逐单元保留，
+snapshot未暴露且不猜测。身份标签规范化只涉及尚未提交的新run/raw/绑定hash，
+全部五字段、context、历史和当前活跃候选内容保持；初始装配原字节及回执另存。
+
+正式装配后的独立v16完整术语审计已通过，实测178.847秒：239批/842单元、6502次
+来源术语出现、0问题候选/0诊断，686条锁定Git目录见证全部通过。此次结果包括完整
+目录证据及范围外候选，不只检查译文自报数组。8条旧003G证据已重新绑定完整003J
+和003N容器，目录hash见来源清单文档；没有改变匹配词形或任何实际生成输入。
+来源结构审计零坐标/未保护TeX/隐藏脚注/命名标题问题；187组/187完整proof全部match。
+这些检查不重跑，除非相应输入或工具改变。完整qa-all/递归溯源仍须取得终态结果。
+
+此次完整重生成还观察到以下来源记号疑点，仅在本开发文档作为 source-only remark
+留档，不改译文、公式或证明，也不独立阻塞忠实候选。英文版本仍为锁定提交
+`a04446e57ec1fbc252a871afcec7752fb2807b14`；均逐字核对该提交的完整 Git 容器。
+
+| 完整语义容器 | 原文观察，均待数学核验 | 完整片段 SHA-256 |
+| --- | --- | --- |
+| categories / 0FWY / Section0FWW / proof1 / categories-lemma-extend-functor-by-colim | `Y = \colim_{j \in J} Y_i` 同时使用 j 与 i；后文 `F(\alpha) : F(X) = \colim F(X_i) \to F(Y)` 与延拓构造中的记号也值得核对。这里只记录字样，不判定结论错误。 | 06495b33551549f438a6b16775ef79a719abac9e70676849f488e751e0d94b61 |
+| categories / 02XR / Section02XJ / proof1 / categories-lemma-cute | `p'(\psi') : W/U \to V/U` 的目标与此前带撇号的记号可能不一致，留待核验；候选原样保留。 | 96a3035aa9363cac17fd1f519740fae27b03f71a1c4a82bc7ebf0dc18bf5547c |
+
+既有691/698/699仍由版本化书末表留档；上述新增观察没有冒充上游勘误确认、
+模型数学审校或新正文说明。
+
+完整全库抽取及对齐已重新生成并check通过：extract-all 62.704秒、check 52.776秒；
+source-alignment 188.066秒、check 198.885秒。当前842个单元中745 BYTE_EXACT、
+97 PRESENTATION_EQUIVALENT；本次677新单元有668字节相等，另外9个是各章标题的
+既有原生标题／渲染包装投影，仍受来源与溯源合同约束，不是检查豁免。239条统一队列
+的actions、source_findings、term_findings、proof_findings全部为空；零坐标、来源、
+术语和proof诊断。全英文库存43223提议/38422 READY/4801 BLOCKED，117章、116次Git
+roundtrip、12491诊断；这是来源准备库存，不是所有英文已经翻译或采用的声明。
+
+第二次完整qa-all在631.709秒后发现三个章末来源恢复记录错误标记v2，拒绝原文正文
+之外的input。已修复准备器的版本选择，并为完整章末正文补齐v13原生边界见证；
+原宏拒绝保持，旧v2不被重新解释。三个完整批次定点重放与输出原字节相等，全部
+五字段和上下文/runtime不变。原错误准备记录逐字保存在跟踪证据文档，原冻结/包
+及失败日志保留；详细合同见来源恢复设计的2026-10-16节。15项原生边界回归通过，
+另103项source-container/v4分组/archives/pre-adoption/model-correction历史回归在
+291.370秒通过。第三次完整qa-all的完整递归溯源已通过；继续同一命令的决策及239批候选检查，
+尚未取得整体终态，不能把前两次失败写成通过。
+
+当前精确范围扩为2538条路径，仅增加原清单快照和原始准备记录留档；所有旧新ID、
+run/model及实际生成冻结保持。新范围清单hash为
+`sha256:3c085f4bd772ad256efda0acbe65e7b8ba3dcb767b125d346b67d6cf00029035`。
+实际生成仍绑定当时的77fabf3等原scope，不回写为新清单hash。
+
+只有全部S4装配及验收通过后，才独立实现
+S5默认强门禁并完成S7、真实render/pdf、全书文字/变化及邻页PNG和远端精确HEAD验收。
+仍使用同一个最终PR，不逐批新开Issue/PR。远端Issue/PR最终精确范围更新尚待本地完成。
+
+ignored证据目录`build/task-integrated-remediation/`中的`generation-checkpoint.json`、
+`current-v13-source-coverage.json`、`actual-draft-authorship.json`、
+`extra-v12-full-preflight.json`、`extra-v12-complete-source-plans-index.json`、
+`scope-extra-v14-install-receipt.json`、`catalog-v14-extra-witness-receipt.json`、
+`extra-v12-complete-package-preparation.json`、`extra-v14-generation-checkpoint-194.json`及
+`catalog-v15-complete-witness-receipt.json`、`canonical-assembly-readiness.json`、
+`canonical-data-install-receipt.json`、`new-run-registry-metadata-normalization.json`
+保存可复核输入hash、实际原输出及追加范围。最终交付仍须把必要证据和复现命令
+写入跟踪文档与事实溯源；不能要求新克隆依赖本机ignored文件。S5、S7及总goal未完成。
+
+## 历史阶段记录：首次集中来源准备（未采用 DATA）
 
 用户最新指示要求集中修复，已复用 [Issue #808](https://github.com/dongyaotalk/stacks-project-zh/issues/808)
 及 [草稿 PR #809](https://github.com/dongyaotalk/stacks-project-zh/pull/809)。分支仍为
@@ -516,6 +835,36 @@ source-only remark Issues691/698/699保留历史，非翻译修复或审批，�
 原开发计划的复选框只在最终真实证据齐备时勾选。一次工具合并、一个数据批次或
 全库提取成功均不能替代总验收；审计中排版差异也不能未经证据一概豁免。
 
+### 指定F1与F6目标的独立核验
+
+原F1六批003G、02X8、003O、02XG、02XJ、04Z2共44个自身带标签的数学陈述，
+已从锁定Git永久Tag表逐项核对，均使用各自真实Tag；六批及全库坐标迁移残项为零。
+不能只抽查新批次或以相同内部hash代替来源归属核验。
+
+F6目标 `tag:0AHN:statement` 与 `tag:0FWX:statement` 各有一处展开脚注，源文均为
+`See Remark <REF_0001>.`，当前候选分别为“见注 <REF_0001>。”与“见注记 <REF_0001>。”。
+两处引用payload均保持 `\ref{remark-big-categories}`，保护token顺序与次数不变，
+没有把整段自然语言锁进不透明脚注token。引用的最终限定与解析仍须通过真实整书
+渲染和FinalTeX未定义引用门禁，当前数据检查不冒充构建结果。
+
+### S5 开发与验收计划（S4完整验收后执行）
+
+1. 为活跃候选增加默认当前来源检查：锁定Git定位、永久Tag、原保护结构、隐藏自然
+   语言和来源术语出现均须通过；CLI validate/validate-many/validate-all、assemble和
+   render入口默认执行。历史raw与旧派生继续使用各自版本合同，不按新目录重写历史。
+2. 独立目录证据核验覆盖全部词形见证，不仅检查候选自报数组；目录缺失、错误版本、
+   过期证据和范围缺失均失败。按章开发检查只减少选定事实范围，不构成最终全库验收。
+3. 用单进程全库验收入口串联Schema、溯源、决策、活跃候选和来源检查，避免Make与
+   决策层重复执行同一次完整历史重放。复用仅限同进程内已验证且未变的输入快照，
+   不接受用户可写缓存作为跳过依据，不提供跳过严格检查的CLI开关。独立溯源／决策
+   命令保留完整默认检查，选定候选仍绑定完整来源与修订历史。
+4. Make与CI默认调用严格入口。补充真实失败回归：漏报／少报／重复术语、错误Tag、
+   未保护TeX、来源内容／hash／证据篡改、范围外最后一批错误、输入检查中变化、
+   待决词条自报CLEAR和历史绑定绕过均须拒绝；合法旧历史继续通过。
+5. 更新同一claimed Issue808的精确范围和任务scope，逻辑上独立实现／审查S5；再执行
+   S7总验收、生成并check进度计划、真实整书构建与全部变化及邻页PNG、文档及提示词。
+   最终仍是一个PR809，不恢复逐批Issue/PR和重复整书验收。
+
 ## 2. 仓库与数据层
 
 英文 `../stacks-project` 是只读 harvest，`upstream.lock` 决定来源 commit，本机
@@ -682,14 +1031,21 @@ make source-alignment-check PYTHON="$TASK_PYTHON"
 
 `qa-all` 已包含 workflow/harvest/index/117 模板/Schema/provenance/decision，
 这组命令不再另跑同一批共享检查。另对每个实际新 run 的完整 frozen unit/raw
-做直接 QA，以免只核对兼容旧 lane；路径以对应 correction record 为准。例如：
+做直接结构QA，以免只核对兼容旧lane；路径以对应correction record为准。历史
+冻结输入使用其版本合同，不能交给默认当前候选CLI重新解释。例如：
 
 ```bash
-TASK_CORRECTION=categories-yoneda-bilingual-followup-gpt61sol-20261012
-"$TASK_PYTHON" stacks_zh.py validate-many \
-  --units "translation-data/retired/model-corrections/$TASK_CORRECTION/units.jsonl" \
-  --candidates "translation-data/retired/model-corrections/$TASK_CORRECTION/candidates.jsonl" \
-  --lock upstream.lock
+"$TASK_PYTHON" - <<'PY'
+from pathlib import Path
+from stacks_zh.workflow import validate_batch
+
+correction = 'categories-yoneda-bilingual-followup-gpt61sol-20261012'
+frozen = Path('translation-data/retired/model-corrections') / correction
+count, errors = validate_batch(frozen / 'units.jsonl', frozen / 'candidates.jsonl',
+                               Path('upstream.lock'))
+assert not errors, errors
+print(f'Frozen revision structural QA: PASS ({count} units)')
+PY
 ```
 
 历史 raw 的 QA 不授予当前采用或术语批准；当前 source-term 审计另验证活跃候选。
@@ -697,8 +1053,9 @@ TASK_CORRECTION=categories-yoneda-bilingual-followup-gpt61sol-20261012
 BYTE_EXACT；对应 actions/findings 清空；所有未声明范围的来源、术语、proof
 及事实变化逐项解释或保持。错误不能靠归档当前问题、改状态或跳检查消失。
 
-数据 PR 中只在 ignored 目录生成进度/计划预览并 check；实际报告在 DATA 合并
-后用独立进度 Issue/PR 更新，必须先于下一 DATA。验证完整 117 章 Section
+日常独立DATA PR中先在ignored目录生成进度/计划预览并check，合并后独立同步；
+本次Issue808整合任务按用户后续授权统一更新报告、隔离复核，不逐批新开PR。
+验证完整117章Section
 差异，完整容器的嵌套 Tag 覆盖要依赖可重放来源证据，不能从候选字符串授予。
 
 ```bash
@@ -741,7 +1098,8 @@ Issue CLOSED、native remote/main SHA、reviewed feature tree、允许文件原�
 | 首次入库前重译导致原 raw 未消费 | 保存旧完整 v4 三文件，实际新 run 在生成前冻结全部原 run/raw/候选/字节绑定，按 §8.5 完整历史重放；已入库历史仍用原 Git archive，不删原输出 |
 | 辅助后处理因日志名或续接变量失败 | 保留原失败脚本与已通过日志/产物，补齐确切依赖并从通过阶段继续；不伪造结果、不重跑未变已通过检查、不改生成物 |
 | 来源包 BLOCKED | 查看完整 diagnostics/selector/源窗口，未知语法另开前置工具或政策任务，不降级或裁源 |
-| 旧术语证据在合并分段后消失 | 独立任务将明确来源锚点迁移到完整锁定容器，验收合并后重新prepare/freeze/实际生成 |
+| 旧术语证据在合并分段后消失 | 独立核验并迁移到完整锁定Git容器，保留旧目录与冻结；只改证据且匹配输入不变时不重生成中文，实际来源／文字变化才重新完整冻结与实际生成 |
+| 章末来源包误标旧v2、回放读到input | 保留拒绝和原始准备元数据；核验完整原生文档尾边界并取得v13见证，证明单元／五字段不变，完整批次重放；不允许未知宏 |
 | 原保护 token、尾空白或完整五字段失败 | 保留原草稿，由实际模型完整重出并复核，不由脚本修中文或冒用旧run |
 | 原 source 缺公式，内部 hash 却一致 | 比较完整锁定 Git 容器，走明确来源恢复/完整模型修订，不只在中文补数学 |
 | progress 与预期数字不同 | 比较117章完整快照及真正来源覆盖，改正独立工具或事实范围，不手调生成表格 |
@@ -766,3 +1124,5 @@ Codex 提示词中的当前接受基线、未完成项、下一动作、禁止�
 粘贴完整提示词后仍须先重新核实状态并保留已合并成果。
 
 - 集中工具CI补充：e6e1f05远端全tool-test 613项中609通过、4失败（两未知宏前缀拒绝被新增arrow-target分支绕过，两旧policy夹具假设失效）。保留全部原拒绝样例，限定新分支独立前缀语法，只增锁定preamble中确认为零参数的Sh/etale；默认旧prefixed-symbol语义不变。18项定点回归通过，真实obsolete09AQ完整28旧分组预检通过，全库extract/check输出不变。实际再次render/pdf、FinalTeX PASS，119生成TeX及463页文字原字节相同；远端新HEAD CI仍须重查，不据局部证据冒称613全绿。
+
+提交合同收尾：将 categories、sets 各按完整批次的英文 unit 文件是否实际进入 Git 差异分为两组，9 章共 11 个机器范围；未改动的源 unit 不伪造差异。全部 165 个完整 batch、旧新及历史 ID、真实/历史 parent、run/model 和原允许路径均保留，原 2590 路径清单按原字节另存 scope-before-pr-partition 快照，现 2591 路径。首次本地完整合同的两项 active-unit 集合错误与完整 1.8GB patch 的单次 Git 重放大小错误均留档；修正仅作用于范围声明和完整差异的分块验证，不改数据或放宽门禁。

@@ -2,8 +2,44 @@
 
 `python3 -m stacks_zh audit-terms --output build/source-term-audit.json` 从当前英文
 unit 生成逐次出现要求，再检查每个候选。检查失败返回非零；报告仅写入 ignored
-build 或仓库外，不覆盖事实数据。这一阶段是独立只读审计，尚未接入默认 QA/CI；
-现有数据修复完成后另开工具任务启用强制门禁。
+build 或仓库外，不覆盖事实数据。独立审计保留；S5现由当前候选默认QA及
+`check-repository`/`make qa-all`/CI调用相同的目录证据及逐次覆盖检查。
+当前实现正在执行最终集成验收，不能据此声称已合并或已批准术语。
+
+## 2026-10-19 当前目录与默认门禁
+
+当前v18目录hash为
+`sha256:4223840c7e8259e889e2c5b45adc3c848f322c2e3704df70ccf94534491943fe`。
+全842个英文单元识别6507次来源出现、688份锁定Git见证。v16的完整证据迁移
+仍保留；v18另加入独立核验的 affines 与原文拼法 glueing。完整见证为锁定
+`a04446e57ec1fbc252a871afcec7752fb2807b14` 的 sets / 000I / Section000H /
+proof1（sets-lemma-bounded-size），完整片段hash为
+`772cb19314e31636609b48c640216f70eef18c794fca53b6ba4ee4aa592223b5`。
+旧字段、词形、排除项及证据全部保留；目录仍不包含译法批准。
+
+`validate_catalog_evidence` 在当前QA和独立审计中共用，对完整目录逐份核验Git
+selector、源片段hash、真实词形与坐标，不能从候选数组反推。只在一次调用内复用
+同一selector对应的实际原容器，逐份证据检查不省略；历史模型context保留原目录。
+
+## 2026-10-16 集中数据装配后的见证迁移
+
+完整容器恢复会改变旧分段的 source TeX hash，即使数学词形与原文含义没有变化，
+旧目录见证也可能过期。不能只检查候选覆盖为零：还须执行完整 `audit-terms`，
+验证所有目录条目的来源证据。此次正式审计在候选覆盖零诊断之外发现8条过期
+绑定，均来自旧 `003G:remark` 或 `003G:definition-004`。
+
+8条绑定重新从锁定英文 Git 的完整容器独立核验，迁移到来源目录v16：
+
+| 完整容器 | 词条 | 完整片段 SHA-256 |
+| --- | --- | --- |
+| categories / 003J / Section003G / remark1 / categories-remark-big-2-categories | algebraic-stack、class、fibred-category、proper-class、setoid | 7da0bb1b26f31f761f6b03c57b3a1e4bc0984bb6b2fbab1ba6e586332dc24e83 |
+| categories / 003N / Section003G / definition1 / categories-definition-functor-into-2-category | 2-morphism、pseudo-functor、weak-functor | 7d9c93af2f3417bb72719c359e2a0698e9864b54e83824d91f1644e575c685f7 |
+
+英文仍锁定 `a04446e57ec1fbc252a871afcec7752fb2807b14`；词形、章节、分类、排除
+和其他见证逐项保持，迁移不修改中文或授予审批。v16文件hash为
+`sha256:6f40a74f011f23ec492aabd54fb61dcdfbf54473b35f77765a983b2520342cca`。
+旧目录、实际生成上下文及失败审计均保留；未来目录的验收状态不能回写为历史
+模型当时实际接收的输入。最终完整目录审计结果以开发指南的验收证据为准。
 
 ## 来源与识别范围
 
@@ -18,10 +54,15 @@ build 或仓库外，不覆盖事实数据。这一阶段是独立只读审计�
 标题与正文重复的同一术语需要分别显示和记录。只读 `audit-source` 报告仍隐藏在
 render.prefix 的标题，以及无效的命名参数边界；简单词组可用 source helper
 无损提取，复杂 TeX 标题须显式任务。本规则不扩大 glossary 批准或审校权限。
-定义节点，或含 called/call/say/defined 的声明语境，还从斜体/emph 包装提取新
+定义节点，或含 call/say/define 及其屈折形式的局部声明语境，还从斜体/emph 包装提取新
 概念。这条规则能发现未登记的新定义词；数学限定表达式保持在受保护节点中，
 清单记录外部的英语词汇核心。冠词、末尾连接词不作为词汇核心；明确的非数学
 声明排除项必须在目录中写明理由。
+
+普通正文的声明提示只在当前句／分句内生效，句号、问号、感叹号、分号以及
+STRUCT、脚注开闭 token 都截断提示范围。后一句的 defined 不能把前一句强调
+文字变成新概念；列表后的 called 也不能把前项书名变成数学声明。定义节点
+仍按完整定义语境检查。书名中的既有数学词照常逐次盘点，不因书目身份豁免。
 
 斜体中以 let/assume/suppose 开始且含数学参数的完整措辞句属于使用示例，不能
 按公式切成新的词汇声明；例如 “let … be the … category associated to …” 不会
@@ -51,6 +92,33 @@ OPEN/CLOSE 字体包装，允许一个词组横跨纯排版边界。`target_term
 中文词形，无须包含单元专用格式 token；历史记录含格式 token 时按相同显示投影
 兼容核对。公式、引用、结构、脚注等语义节点保持不透明，不能用它们连接两个
 不连续词片段。占位符的原始次数与顺序仍由结构检查独立强制验证。
+
+术语显示投影仅透视严格验证的单字母 acute、grave、diaeresis 文本重音 payload，
+将其 NFC 显示字符与相邻文字组合，例如受保护重音后的 tale 可识别为 étale。
+这只服务英文词形识别和双语显示检查，不改写 source_text、原 TeX、token 或
+候选正文。未知命令、多字母／混入命令的 payload、公式及其他语义节点继续
+不透明；不能用重音支持开放任意 TeX。
+
+新增完整数学名称必须先提供锁定 Git 容器或当前完整英文 unit 的精确词形见证，
+再按最长短语规则生成要求。不能把 preordered set 等完整名称拆成通用 set 来
+凑覆盖，也不能申报整句吞掉内部术语。只登记实际观察到的单复数／拼写，保存
+原有 forms、chapters、evidence；未见证的词形不自动添加。普通课程意义的 class
+等排除项绑定具体单元的 source TeX hash 和 occurrence_index，并记录英文语境
+理由，不能按整章排除。上述英文库存不包含中文批准或审校结论。
+
+连字符词也必须保留来源中的完整数学词形。`non-separated` 的否定、
+`quasi-isomorphism` 的限定或 `set-valued` 的后缀不能在双语显示中丢失。
+维护时先在完整来源投影中只读查找含已知数学词的未登记连字符词，再逐项审查
+真实语境并建立完整词形见证；不把所有连字符字符串自动判为数学词，也不改变
+旧单词边界规则来隐藏诊断。最长匹配保留独立出现的原词，完整词形的加入不等于
+中文候选修复，受影响的候选仍须通过当前目录检查，必要时由模型完整重写。
+
+来源语料中的书目可能保留法语数学名称。目录可以登记原文中实际出现的完整
+数学主题，如 `Cohomologie Étale des Schémas`，不能虚构英文回译，或用整本书的
+并列标题代替内部多个独立概念。所有重音 token 原样保留，目录与候选按相同的
+严格显示投影核对。文献分类中的普通 `categories`、其他研究领域意义的 `fields`
+或邮件地址中的词片段，只有绑定具体完整来源 hash 与词例位置的语境见证才可
+排除；不能由英文白名单、候选自报或章节名称直接免除数学覆盖。
 
 ## 能力边界与后续维护
 

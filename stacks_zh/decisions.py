@@ -133,16 +133,32 @@ def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, A
             errors.append(f'{location}: corrected candidate requires its complete composite provenance_hash')
 
 
-def validate_repository_decisions(root: Path, harvest: Path | None = None) -> list[str]:
+def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
+                                  _provenance: object | None = None) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
     errors: list[str] = []
     candidates = _candidate_index(root, errors)
     corrected = [candidate for candidate in candidates.values() if 'model_correction_id' in candidate]
+    if _provenance is not None:
+        from .repository_validation import _require_live_provenance
+        _require_live_provenance(_provenance, root)
     if corrected:
-        provenance_errors = validate_repository_provenance(root, harvest)
+        provenance_errors = [] if _provenance is not None else validate_repository_provenance(root, harvest)
         errors.extend(provenance_errors)
         if not provenance_errors:
+            # A binding is needed only for a real decision referencing it.
+            # Complete provenance above still validates every corrected fact,
+            # including unselected candidates and all historical raw output.
+            selected_keys = set()
+            for path in (root / 'translation-data/selections').glob('*.json'):
+                try:
+                    entry = _read_json(path)
+                except ValueError:
+                    continue  # The normal selection loop reports this error.
+                selected_keys.add(tuple(str(entry.get(k, '')) for k in ('unit_id', 'run_id', 'translation_hash')))
             for candidate in corrected:
+                if (candidate.get('unit_id'), candidate.get('run_id'), candidate.get('translation_hash')) not in selected_keys:
+                    continue
                 try:
                     candidate['_provenance_hash'] = candidate_provenance_hash(root, candidate)
                 except (OSError, ValueError, KeyError, TypeError) as exc:

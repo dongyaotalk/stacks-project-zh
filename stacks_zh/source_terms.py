@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +25,7 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
     source = unit["source_text"]
     pieces: list[str] = []
     declarations: list[str] = []
-    opened: dict[tuple[str, str], int] = {}
+    opened: dict[tuple[str, str], tuple[int, str]] = {}
     cursor = 0
     for match in PLACEHOLDER_TOKEN_RE.finditer(source):
         pieces.append(source[cursor:match.start()])
@@ -34,18 +35,33 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
             if base in {"TEXTIT", "EMPH"}:
                 key = (base, number)
                 if name.endswith("OPEN") and is_font_wrapper(match.group(0), unit["placeholders"]):
-                    opened[key] = len("".join(pieces))
+                    prefix = "".join(pieces)
+                    opened[key] = (len(prefix), prefix)
                 elif name.endswith("CLOSE") and key in opened and is_font_wrapper(match.group(0), unit["placeholders"]):
-                    body = "".join(pieces)[opened.pop(key):]
+                    start, prefix = opened.pop(key)
+                    body = "".join(pieces)[start:]
+                    # A complete restored paragraph can contain several
+                    # sentences. A later "is defined" must not retroactively
+                    # turn an earlier editorial emphasis into a named concept.
+                    # Structural item/paragraph and footnote boundaries also
+                    # prevent a following bibliographic description from
+                    # declaring the preceding italic paper title as a term.
+                    boundary = r"[.!?;]|<(?:STRUCT|FOOTNOTEOPEN|FOOTNOTECLOSE)_[0-9]{4}>"
+                    before = re.split(boundary, prefix)[-1]
+                    after = re.split(boundary, source[match.end():])[0]
+                    introduced = (unit.get("node_kind") == "definition"
+                                  or bool(re.search(r"\b(?:call|calls|called|calling|say|says|said|define|defines|defined|defining)\b",
+                                                    before + " " + after, re.IGNORECASE)))
                     # An italic imperative with mathematical arguments quotes
                     # wording to use, rather than naming a lexical concept.
                     # Its prose remains visible to the ordinary catalog scan.
-                    usage_clause = (re.match(r"^(?:let|assume|suppose)\b", _space(body), re.IGNORECASE)
-                                    and PLACEHOLDER_TOKEN_RE.search(body))
+                    visible_body = term_display_text(body, unit["placeholders"])
+                    usage_clause = (re.match(r"^(?:let|assume|suppose)\b", _space(visible_body), re.IGNORECASE)
+                                    and PLACEHOLDER_TOKEN_RE.search(visible_body))
                     # Math-qualified declarations still expose their prose parts.
-                    for phrase in ([] if usage_clause else PLACEHOLDER_TOKEN_RE.split(body)[::2]):
+                    for phrase in ([] if usage_clause or not introduced else PLACEHOLDER_TOKEN_RE.split(visible_body)[::2]):
                         phrase = _space(phrase).strip(" -.,:;`'\"()")
-                        if PLACEHOLDER_TOKEN_RE.search(body):
+                        if PLACEHOLDER_TOKEN_RE.search(visible_body):
                             # A formula can leave a connector as a whole prose
                             # part, with no lexical concept before it.
                             phrase = re.sub(r"(?:^|\s+)(?:of|over|in|between|with|to|on|from)$", "", phrase, flags=re.IGNORECASE)
@@ -59,18 +75,21 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
             pieces.append(match.group(0))
         cursor = match.end()
     pieces.append(source[cursor:])
-    text = _space("".join(pieces))
-    if unit.get("node_kind") != "definition" and not re.search(r"\b(?:called|call|say|defined)\b", text, re.IGNORECASE):
-        declarations = []
+    text = _space(term_display_text("".join(pieces), unit["placeholders"]))
     # Articles and trailing connectors belong to the surrounding sentence;
     # protected formulas supply qualifiers outside the exposed lexical core.
     declarations = [re.sub(r"^(?:a|an|the)\s+", "", phrase, flags=re.IGNORECASE) for phrase in declarations]
     return text, sorted(set(declarations))
 
 
-def _matches(text: str, phrase: str, *, ignore_case: bool = False):
+@lru_cache(maxsize=8192)
+def _term_pattern(phrase: str, ignore_case: bool):
     expression = r"(?<![\w])" + re.escape(_space(phrase)) + r"(?![\w])"
-    return list(re.finditer(expression, text, re.IGNORECASE if ignore_case else 0))
+    return re.compile(expression, re.IGNORECASE if ignore_case else 0)
+
+
+def _matches(text: str, phrase: str, *, ignore_case: bool = False):
+    return list(_term_pattern(phrase, ignore_case).finditer(text))
 
 
 def _assignment_set(text: str, match: re.Match[str]) -> bool:
@@ -198,7 +217,7 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
             errors.append(f"{uid}: missing or repeated bilingual display: {literal}")
         else:
             target_cursor = position + len(literal)
-        valid.append((index, _space(english)))
+        valid.append((index, _space(term_display_text(english, unit["placeholders"]))))
     # Longer phrases receive source spans first, so a later short word cannot
     # consume the source of an earlier compound. Counts and case stay exact.
     assigned: list[tuple[int, int, str]] = []
@@ -225,29 +244,19 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
     return errors
 
 
-def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dict[str, Any], list[str]]:
-    catalog = load_catalog(root)
-    approved = load_approved_term_pairs(root / "config/glossary.yml")
+def validate_catalog_evidence(root: Path, catalog: dict[str, Any],
+                              units: list[dict[str, Any]], harvest: Path | None = None,
+                              *, containers=None) -> tuple[list[dict[str, Any]], list[str]]:
+    """Verify every English witness; reuse only real selections in this invocation."""
     source_commit = load_upstream_commit(root / "upstream.lock")
     if catalog["source_commit"] != source_commit:
         raise RecordError("source term catalog uses a different locked source commit")
-    units = {}
-    batches = {}
-    for path in sorted((root / "translation-data/units").glob("*.jsonl")):
-        rows = load_jsonl(path)
-        for row in rows:
-            if row["unit_id"] in units:
-                raise RecordError(f"duplicate active source unit: {row['unit_id']}")
-            if row["source_commit"] != source_commit:
-                raise RecordError(f"different source commit: {row['unit_id']}")
-            units[row["unit_id"]] = row
-        batches[path.stem] = rows
     # Evidence is English source, never a candidate's term metadata.
     errors = []
     by_tex = {}
-    for row in units.values():
+    for row in units:
         by_tex.setdefault((row["chapter"], source_tex_hash(row)), []).append(row)
-    containers = None
+    selections = {}
     locked_evidence = []
     for entry in catalog["terms"]:
         for evidence in entry["evidence"]:
@@ -262,7 +271,10 @@ def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dic
                     if containers is None:
                         from .source_containers import Containers
                         containers = Containers(root, harvest)
-                    selected = containers.select(evidence["selector"])
+                    key = json.dumps(evidence["selector"], sort_keys=True)
+                    if key not in selections:
+                        selections[key] = containers.select(evidence["selector"])
+                    selected = selections[key]
                     if evidence["fragment_hash"] != selected["location"]["fragment_hash"]:
                         raise RecordError("catalog evidence full locked-Git fragment hash differs")
                     if not _matches(source_projection(selected["inventory_unit"])[0], evidence["source_term"]):
@@ -287,6 +299,29 @@ def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dic
         rows = by_tex.get((use["chapter"], use["source_tex_hash"]), [])
         if not any(len(_matches(source_projection(row)[0], use["source_term"])) > use["occurrence_index"] for row in rows):
             errors.append(f"{use['chapter']}: nonmathematical occurrence lacks its locked English source evidence")
+    if containers is not None:
+        containers.assert_unchanged()
+    return locked_evidence, errors
+
+
+def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dict[str, Any], list[str]]:
+    catalog = load_catalog(root)
+    approved = load_approved_term_pairs(root / "config/glossary.yml")
+    source_commit = load_upstream_commit(root / "upstream.lock")
+    if catalog["source_commit"] != source_commit:
+        raise RecordError("source term catalog uses a different locked source commit")
+    units = {}
+    batches = {}
+    for path in sorted((root / "translation-data/units").glob("*.jsonl")):
+        rows = load_jsonl(path)
+        for row in rows:
+            if row["unit_id"] in units:
+                raise RecordError(f"duplicate active source unit: {row['unit_id']}")
+            if row["source_commit"] != source_commit:
+                raise RecordError(f"different source commit: {row['unit_id']}")
+            units[row["unit_id"]] = row
+        batches[path.stem] = rows
+    locked_evidence, errors = validate_catalog_evidence(root, catalog, list(units.values()), harvest)
     report = {"schema_version": 1, "source_commit": source_commit,
               "catalog_hash": sha256_value(catalog), "unit_count": len(units),
               "batch_count": len(batches), "required_occurrences": 0, "units": [], "candidates": [],

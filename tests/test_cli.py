@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from stacks_zh.cli import main
@@ -82,12 +84,25 @@ class ValidateManyCliTests(unittest.TestCase):
         return result, stdout.getvalue(), stderr.getvalue()
 
     def test_validate_many_accepts_aligned_paths_and_reports_counts(self) -> None:
+        from test_current_qa import CurrentEntryPointTests
+        from test_workflow import make_batch_candidate
         with tempfile.TemporaryDirectory() as temp_dir:
-            root = Path(temp_dir)
-            lock = root / "upstream.lock"
-            lock.write_text(f'commit = "{SOURCE_COMMIT}"\n', encoding="utf-8")
-            first = self.write_pair(root, "one")
-            second = self.write_pair(root, "two")
+            root, harvest, up, cp, _ = CurrentEntryPointTests().fixture(Path(temp_dir))
+            lock = root / 'upstream.lock'
+            first = up, cp
+            # A second complete, independent source node from the locked Git
+            # inventory; fabricated commits no longer qualify for current QA.
+            inventory = root / 'source-ir/extraction/units.jsonl'
+            heading = json.loads(inventory.read_text().splitlines()[0])['unit']
+            heading['unit_id'] = 'tag:BBBB:title'
+            heading = stamp_unit_hashes(heading)
+            candidate = make_batch_candidate(heading, model_lane='synthetic')
+            candidate.update(source_commit=heading['source_commit'],
+                translation=heading['source_text'].replace('First', '首节'))
+            candidate['translation_hash'] = sha256_value(candidate['translation'])
+            second = (root / 'translation-data/units/alpha-heading.jsonl',
+                      root / 'translation-data/candidates/synthetic/alpha-heading.jsonl')
+            write_jsonl(second[0], [heading]); write_jsonl(second[1], [candidate])
 
             result, stdout, stderr = self.call_cli(
                 "validate-many",
@@ -99,6 +114,8 @@ class ValidateManyCliTests(unittest.TestCase):
                 str(second[1]),
                 "--lock",
                 str(lock),
+                '--harvest',
+                str(harvest),
             )
 
             self.assertEqual(result, 0)
@@ -149,7 +166,11 @@ class BatchWorkflowCliTests(unittest.TestCase):
             result = main(list(arguments))
         return result, stdout.getvalue(), stderr.getvalue()
 
-    def test_assemble_many_rejects_unaligned_outputs(self) -> None:
+    @mock.patch('stacks_zh.cli.CurrentSourceQA', autospec=True)
+    def test_assemble_many_rejects_unaligned_outputs(self, current) -> None:
+        # Isolate output-pair validation. Real strict source gates on all six
+        # CLI entry points are exercised by test_current_qa against English Git.
+        current.return_value.validate_drafts.return_value = []
         result, stdout, stderr = self.call_cli(
             "assemble-many",
             "--units",

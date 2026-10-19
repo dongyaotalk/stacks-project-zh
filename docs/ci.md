@@ -13,14 +13,18 @@
 ~~~bash
 make workflow-check
 make tool-test
-make harvest-check
-make upstream-index-check
-make schema-check
-make provenance-check
-make decision-check
 make qa-all
 git diff --check
 ~~~
+
+`qa-all` 包含 harvest、upstream index、全部117章模板及一次完整
+`check-repository` 会话；会话实际执行全部JSON Schema、完整递归历史溯源、决策
+绑定和全部lane的当前候选严格QA。无需在同一次最终验收中再单独重复这些检查。
+独立 `schema-check`、`provenance-check`、`decision-check` 命令仍可用于定位问题，
+默认验证范围不降低。CI及本地使用Python3.12；本地Make显式传
+`PYTHON="$(pyenv which python)"`，并先确认其版本为3.12。
+当前CI时限为60分钟。本次本地完整工具测试和一次统一QA分别实测1003.383秒、
+989.962秒；时限留出完整检查和执行环境差异，未通过删减测试或校验来缩短门禁。
 
 上游同步 PR 还必须用 `make upstream-diff OLD_UNITS=... NEW_UNITS=...
 NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...` 生成并审查 old/new 报告；报告出现
@@ -67,11 +71,25 @@ make pdf-chapter CHAPTER=categories MODEL=openai-gpt-5.6-sol PYTHON="$(pyenv whi
 不使用整书旧 aux。最终 TeX 日志门禁保持，不忽略缺字/引用错误。这是开发预览，
 PR 前仍执行完整 `render`、`pdf`、`qa-all` 和其他适用检查。
 
-`qa-all` 的共享前置检查保持，候选循环改为 `validate-all` 单进程调用原有
-`validate_batch`，遍历所有模型通道的全部候选文件。每个 pair 的事实边界、来源锁、
-五字段和确定性 QA 保持；不同模型/run 不因进程复用而混合，不使用 `validate-many`
-的单次 run 限制，也不按 changed paths 跳过批次。没有成功结果缓存。来源抽取与
-对齐、术语覆盖、Schema、溯源、决策和人工审校要求均不因此降低。
+`qa-all` 由 `check-repository` 单进程遍历所有模型通道的全部候选文件，保留每个
+pair的事实边界和原有确定性QA，并强制当前锁定Git来源、永久Tag、TeX控制、
+展开脚注/标题、英文目录证据及逐次术语、token原序/次数和尾空白检查。
+不同模型/run不因进程复用而混合，不使用 `validate-many` 的单次run限制，也不按
+changed paths跳过批次。一次会话只执行一次完整历史溯源，通过后发出私有内存
+凭证供同次决策检查使用；实际HEAD、全部输入文件集合/原字节变化立即失败。
+没有磁盘成功缓存或关闭门禁的CLI选项；独立决策命令仍执行完整溯源。
+
+需要快速定位时可以直接对完整批次运行默认严格CLI，避免反复跑历史全链：
+
+~~~bash
+"$(pyenv which python)" stacks_zh.py validate \
+  --units translation-data/units/<batch>.jsonl \
+  --candidates translation-data/candidates/<model-lane>/<batch>.jsonl \
+  --harvest ../stacks-project
+~~~
+
+这会核验真实来源及当前候选，而完整历史溯源由最终 `make qa-all` 统一执行。
+涉及历史/Schema/决策代码时须选择相应回归，不能拿单批检查代替最终验收。
 
 当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
 changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用的本地 LaTeX 编译：

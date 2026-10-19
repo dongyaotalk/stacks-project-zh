@@ -216,6 +216,8 @@ def placeholder_names(text: str) -> list[str]:
 
 FONT_WRAPPER_RE = re.compile(r"<(?:TEXTIT|TEXTBF|TEXTSF|TEXTTT|TEXTSC|TEXTRM|EMPH|TEXT)(?:OPEN|CLOSE)_[0-9]{4}>")
 FONT_OPEN_RE = re.compile(r"(?:\{\\(?:it|bf|rm|sf|tt|sc)\s*|\{\s*\\em\s*|\\(?:textit|textbf|textsf|texttt|textsc|textrm|emph|text)\{)")
+TEXT_ACCENT_TOKEN_RE = re.compile(r"<ACCENT_[0-9]{4}>")
+TEXT_ACCENT_PAYLOAD_RE = re.compile(r'''\\(['`"])[ \t\r\n]*(?:\{([A-Za-z])\}|([A-Za-z]))''')
 
 
 def is_font_wrapper(token: str, placeholders: Mapping[str, str]) -> bool:
@@ -227,7 +229,15 @@ def is_font_wrapper(token: str, placeholders: Mapping[str, str]) -> bool:
 
 
 def term_display_text(text: str, placeholders: Mapping[str, str]) -> str:
-    """Visible prose for terminology QA; semantic protected nodes stay opaque."""
+    """Visible prose only; preserve raw values and all semantic math nodes."""
+    def accent(match: re.Match[str]) -> str:
+        payload = placeholders.get(match.group(0)[1:-1], "")
+        parsed = TEXT_ACCENT_PAYLOAD_RE.fullmatch(payload)
+        if parsed is None:
+            return match.group(0)
+        combining = {"'": "\u0301", "`": "\u0300", '"': "\u0308"}[parsed[1]]
+        return unicodedata.normalize("NFC", (parsed[2] or parsed[3]) + combining)
+    text = TEXT_ACCENT_TOKEN_RE.sub(accent, text)
     return FONT_WRAPPER_RE.sub(lambda match: "" if is_font_wrapper(match.group(0), placeholders) else match.group(0), text)
 
 

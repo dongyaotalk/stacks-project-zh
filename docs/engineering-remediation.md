@@ -1,10 +1,33 @@
 # 2026-10 项目审查修复开发计划
 
-> 集中任务的唯一必要前置为 claimed [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811)，分支 `tool/bulk-task-scope-validator`，精确范围已先更新为35文件：已完成的来源恢复/组合数学文字基础30文件，加上哈希范围清单合同5文件。原因有二：pr-contract固定从可信main加载且原合同限100文件/单章2–8 parents；恢复历史还强制origin为HEAD可达祖先，并从该提交读取宏政策，故不能把最终squash会丢弃的feature提交作为DATA origin。先接受这一个完整工具前置，再在其实际squash main的干净工作区一次prepare/check全部107批，将包按原字节带回#809生成/装配；不猜未合并SHA，不削弱祖先或政策核验。#809统一完成全部DATA、S5、S7及最终文档，不重新逐批拆任务。e6e1f05/8566396/466e24d原工作保留；未生成或采用新DATA，不改英文lock、CI信任来源或保护规则。
+> 2026-10-19 唯一必要纯工具前置 [Issue812](https://github.com/dongyaotalk/stacks-project-zh/issues/812) / [PR813](https://github.com/dongyaotalk/stacks-project-zh/pull/813) 已合并；最终集成接受 main 为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`。用户已明确授权此例外。仅修复可信门禁的大文件可空分类、回归及实测时限，完整原字节/来源/审批要求保持。全部集中DATA仍在原PR809；实际生成的DATA origin与上下文继续绑定5b527d9，不回写历史。
+
+> 工具前置 [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811) 已完成并合并，接受 main 为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`。完整来源恢复、组合数学文字和哈希范围清单合同已接受；原工具提交与文档历史保留，不重做此前置。后续 DATA 的 origin 使用该已接受提交，英文锁不变；现有 Issue #808 / PR #809 统一收尾全部 DATA、S5、S7和最终文档。
 
 > 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
 
-当前续接以[开发指南最新接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data804)
+## 当前整合任务检查点（2026-10-19，尚未合并）
+
+最终集成接受main为`991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`，239批/1208活跃单元。
+本地165批1049旧→683实际完整新单元已装配，全库239批/842唯一活跃单元，
+172新revision run；旧输入、原输出及全部历史原字节保留，没有人审或术语批准。
+英文目录v18覆盖6507次来源出现/688份Git见证；最新严格239批探测零错误，
+实测57.473秒。该探测不包含完整历史溯源，不能代替最终S7。
+
+S5已实现默认六个CLI入口与单进程`check-repository`/Make/CI，当前候选严格检查
+与历史版本重放分开。一次完整溯源的内存结果只供同次未变输入使用，独立命令
+保持完整验证，没有磁盘成功缓存或skip开关。统一qa-all完整通过989.962秒；
+653项工具测试的两项旧CLI fixture失败修正后，41项相关回归通过，原失败保留。
+172新run的683条冻结记录、全库抽取/对齐四项和隔离进度/计划均通过。实际
+render/pdf/template通过；457页整书的全部变化及邻页、另3页和13页模板实际查看，
+其余正文与已查看基线逐页验证等同。a17f465已推送且653项远端测试、完整239QA及
+117章进度/计划成功。唯一工具前置PR813已接受；下一步为合入接受main后的最新
+精确HEAD双门禁、完整远端原字节/patch/native合同及授权合并后验证。完整scope、架构、证据和后续命令见[开发指南](remediation-development-guide.md)
+最新节；同一Issue808/ready PR809集中收尾，不重做已合并数据或逐批开PR。
+
+## 历史接受检查点与原执行顺序
+
+当时续接以[开发指南接受检查点](remediation-development-guide.md#最新接受检查点2026-10-14data804)
 及本文末尾执行记录为准：DATA804/PR807完整四批04E6/04E7/09WP/002R、23旧→6完整新及
 实际gpt-6-astra五字段run已接受，main `80463ead15a4e52bf9dea6cc01255da70a9d24c3`。
 前置PR806完整equivalence class/classes来源见证及DATA800后独立进度PR803均已接受。
@@ -151,6 +174,19 @@ S0/S1 的编译可以保留已知、尚待 S4/S6 修复的两处引用与缺字�
 此清单只有取得对应的实际文件、命令和 GitHub 状态证据后才能勾选。
 
 ## 7. 执行记录
+
+- 2026-10-16集中S4本地续接：全部162批/1043旧→677完整新单元均有实际模型
+  五字段，追加55批/194单元完成，余0未生成单元。所有结构/context/token/尾空白
+  非覆盖类检查通过；实际字面绑定核验283原始尝试/93完整记录装配/838完整记录，
+  包含保留失败与重试。未来英文目录v15增加9个完整词形、8个完整锁定Git容器见证，
+  原字段及证据保留；完整842单元（677提议+165范围外）/6502次来源出现实测0问题/
+  0诊断。未更改中文字段或回写旧冻结，没有术语审批。本地translation-data已事务化装配
+  2338文件，169个新run/raw的677单元结构QA通过，五字段与实际原输出逐项相等，
+  全库239批/842唯一活跃unit，范围外字节保持。远端main仍为前置PR811的5b527d9、
+  239批/1208单元。三个章节挂载清单已用生成器刷新，完整qa-all及递归溯源验收进行中。
+  其后继续S4全量验收、独立S5、统一S7、最终文档/复制提示词、
+  实际整书构建/视觉及远端精确HEAD验收，继续使用同一Issue808/PR809。
+  详细hash及检查点见开发指南2026-10-16节；不授予critic、人审或发布批准。
 
 - 完整来源容器与分组修订工具：Issue
   [#605](https://github.com/dongyaotalk/stacks-project-zh/issues/605)，分支

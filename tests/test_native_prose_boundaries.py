@@ -54,6 +54,83 @@ def fixture(base, tail=LAST + NEXT):
 
 
 class NativeProseTests(unittest.TestCase):
+    def test_complete_footer_prose_uses_native_version_and_replays_nested_history(self):
+        body='\nIntro.\n\\begin{enumerate}\\item Outer.\n\\begin{enumerate}\\item Inner.\n\\end{enumerate}\nEnd outer.\n\\end{enumerate}\n'
+        for nested in (False, True):
+            with self.subTest(nested=nested), tempfile.TemporaryDirectory() as tmp:
+                tail='\n\\section{Closing}\\label{lemma-two}'+body+'\\input{chapters}\n\\bibliography{mybib}\n'
+                root,harvest,source=english_fixture(Path(tmp),statement='',proof='',other=tail)
+                c=Containers(root,harvest)
+                head=old_unit(source,'tag:0002:title','section_title','Closing','\\section{','}\\label{test-lemma-two}')
+                if nested:
+                    pieces=[('paragraph','Intro.','\n','\n'),
+                            ('list_item_intro','Outer.','\\begin{enumerate}\\item ','\n\\begin{enumerate}'),
+                            ('nested_list_item','Inner.','\\item ','\n\\end{enumerate}\n'),
+                            ('list_item_outro','End outer.','','\n\\end{enumerate}\n')]
+                    members=[old_unit(source,f'tag:0002:piece-{i}',kind,text,prefix,suffix)
+                             for i,(kind,text,prefix,suffix) in enumerate(pieces)]
+                else:
+                    text,protected,errors=Scanner(body,c.policy).protect(0,len(body));self.assertFalse(errors)
+                    member=old_unit(source,'tag:0002:body','paragraph',text)
+                    member['placeholders']=protected;members=[stamp_unit_hashes(member)]
+                units=[stamp_unit_hashes({**u,'parent_tag':'0002'}) for u in [head,*members]]
+                template=candidate_fixture()[2][0];candidates=[]
+                for u in units:
+                    candidate=copy.deepcopy(template)
+                    context=dict(unit_id=u['unit_id'],source_commit=source,prompt_version='fixture',policy_revision='fixture')
+                    candidate.update(unit_id=u['unit_id'],source_commit=source,source_text_hash=u['source_text_hash'],
+                        context=context,context_hash=sha256_value(context),run_id='synthetic-footer',
+                        translation=''.join('<'+n+'>' for n in placeholder_names(u['source_text']))+' synthetic.',
+                        allowed_english=[],term_occurrences=[],unknown_terms=[],notes=['Synthetic only.'],
+                        term_status='CLEAR',stage='TERM_OK',qa_status='PASS',publication_status='CANDIDATE')
+                    candidate['translation_hash']=sha256_value(candidate['translation']);candidates.append(candidate)
+                up='translation-data/units/test-footer.jsonl';cp='translation-data/candidates/fixture/test-footer.jsonl'
+                save(root,up,units);save(root,cp,candidates)
+                write(root/'translation-data/runs/synthetic-footer.json',run_for(candidates,source,'translation','synthetic-footer'))
+                git(root,'init','-q');commit(root)
+                coordinate={**selector('prose_block',owner='0002'),'parent_tag':'0002'}
+                selected=c.select(coordinate)
+                self.assertTrue(selected['_native_document_footer']);self.assertNotIn('\\input',selected['fragment'])
+                with self.assertRaisesRegex(RecordError,'footer.*v13'):
+                    verify_old_group(units,c.english.tags,[u['unit_id'] for u in units[1:]],selected,allow_outer_whitespace=True)
+                plan=dict(derivation_id='synthetic-footer',created_at='2026-10-16T00:00:00Z',units_file=up,candidates_file=cp,
+                    groups=[dict(group_id='body',input_unit_ids=[u['unit_id'] for u in units[1:]],identity_anchor=units[1]['unit_id'],
+                                 selector=coordinate,layout='whole',reason='Synthetic complete footer-bound prose.')])
+                # Freeze the complete ordered batch, including the real heading.
+                plan['groups'].insert(0,dict(group_id='heading',input_unit_ids=[units[0]['unit_id']],identity_anchor=units[0]['unit_id'],
+                    selector={**coordinate,'kind':'section_title'},layout='whole',reason='Synthetic actual owning heading.'))
+                path=root/'build/plan.json';write(path,plan);output=root/'build/package'
+                manifest=write_container_package(root,harvest,path,output)
+                self.assertEqual(manifest['state'],'PREPARED',(output/'diagnostics.json').read_text())
+                self.assertEqual(write_container_package(root,harvest,path,output,check=True),manifest)
+                records=json.loads((output/'restorations.json').read_text());record=records[-1]
+                self.assertEqual(record['tool']['version'],'source-container-v13')
+                self.assertIn('native_prose_anchor',record['legacy_boundary_witness'])
+                for role,name in [('input_units','input-units.jsonl'),('input_candidates','input-candidates.jsonl')]:
+                    dest=root/record['files'][role]['path'];dest.parent.mkdir(parents=True,exist_ok=True);dest.write_bytes((output/name).read_bytes())
+                destination=root/f"translation-data/source-container-restorations/{record['restoration_id']}.json";write(destination,record)
+                self.assertFalse(load_source_containers(root,harvest)[1])
+                bad=copy.deepcopy(record);bad['legacy_boundary_witness']['native_prose_anchor']['native_interval']['end']-=1
+                write(destination,bad);self.assertTrue(load_source_containers(root,harvest)[1])
+                bad=copy.deepcopy(record);bad['tool']['version']='source-container-v2';bad.pop('legacy_boundary_witness')
+                write(destination,bad);self.assertTrue(any('input' in e for e in load_source_containers(root,harvest)[1]))
+                bad_units=copy.deepcopy(units)
+                if nested:
+                    bad_units[-1]['render']['suffix']=''
+                else:
+                    token=next(k for k,v in bad_units[-1]['placeholders'].items() if v=='\\end{enumerate}')
+                    bad_units[-1]['source_text']=bad_units[-1]['source_text'].replace('<'+token+'>','',1)
+                    del bad_units[-1]['placeholders'][token]
+                self.assertNotEqual(bad_units,units)
+                with self.assertRaises(RecordError):
+                    verify_old_group(bad_units,c.english.tags,[u['unit_id'] for u in bad_units[1:]],selected,
+                                     native_containers=c,allow_outer_whitespace=True,allow_native_prose=True)
+                raw=(harvest/'test.tex').read_text().replace('\\input{chapters}','\\input{other}')
+                (harvest/'test.tex').write_text(raw);git(harvest,'add','.');git(harvest,'-c','user.name=Synthetic','-c','user.email=fixture@example.invalid','commit','-qm','unclassified footer')
+                (root/'upstream.lock').write_text('commit = "'+git(harvest,'rev-parse','HEAD')+'"\n')
+                with self.assertRaisesRegex(RecordError,'input'):
+                    Containers(root,harvest).select(coordinate)
+
     def test_full_labelled_equation_paragraph_binds_actual_section_and_replays_history(self):
         with tempfile.TemporaryDirectory() as tmp:
             tail='\\noindent\nWe choose $x$.\n\\begin{equation}\n\\label{equation-one}\nx=y.\n\\end{equation}\nThen use $y$.\n'

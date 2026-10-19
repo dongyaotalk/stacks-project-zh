@@ -332,12 +332,18 @@ def native_prose_witness(containers, units, groups, group, selected):
     if order[start:start + len(ids)] != ids:
         raise RecordError('native prose inputs are not the complete ordered frozen interval')
     members = units[start:start + len(ids)]
+    # Historical nested-list pieces are already supported unit kinds. At a
+    # witnessed document footer they remain one complete prose block; the
+    # signature below still verifies every original list/control/math byte.
+    footer_list_kinds = ({'list_item_intro', 'nested_list_item', 'list_item_outro'}
+                         if selected.get('_native_document_footer') and kind == 'prose_block'
+                         else set())
     phantom = (owner == parent == containers.english.tags.get(chapter+'-section-phantom')
                and kind == 'prose_block')
     if (any(u['schema_version'] not in {1, 2, 3} or u['chapter'] != chapter
             or u['source_commit'] != selected['source_commit'] for u in units)
             or selected['inventory_unit']['schema_version'] not in {1, 2, 3}
-            or any(u['node_kind'] not in ({'paragraph', 'list_item', 'display_math'}
+            or any(u['node_kind'] not in ({'paragraph', 'list_item', 'display_math'} | footer_list_kinds
                 | (containers.policy.body - STATEMENTS - {'proof'})
                 | ({'notice', 'heading'} if phantom else set())) for u in members)):
         raise RecordError('native prose requires supported full-batch source nodes')

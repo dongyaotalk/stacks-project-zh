@@ -280,3 +280,41 @@ v3仍以完整新unit冻结全部上下文并由实际当前模型生成完整�
 独立source-container-v14，并按完整v4分组与全部原历史重放。ordinary assemble
 继续拒绝typed输入，render仍要求活跃真实v4及来源证据。v14不能解释旧v13记录。
 当前只是合同与工具开发，没有新DATA/raw/run或审校/术语/发布批准。
+
+## 完整矩阵说明、数值限定同构及命名箭头
+
+[Issue #820](https://github.com/dongyaotalk/stacks-project-zh/issues/820) 在已有
+unit-v2完整纯文字参数合同中增加三个明确usage，不新增unit或历史格式：
+
+- `matrix-row-text`：深度0、唯一matrix环境中的真实行首，前为matrix opening或
+  行分隔，完整参数之后立即是行分隔或matrix closing。
+- `matrix-row-prefix`：相同行首，完整文字参数后恰为完整 `\mathcal{C}` 形式的
+  单个ASCII大写对象，随后即真实行尾。字体、分组、对象及行界原字节继续锁定。
+- `numeric-isomorphism-suffix`：仅精确完整参数 `-isomorphism`，根层无环境，
+  前面必须是真实 `\Big/2`，2紧邻text命令，后继必须为根层等号。
+
+矩阵本身必须从完整数学起点或明确的关系/类型位置开始；不能借未知命令的
+未分组参数提供matrix结构。嵌套、脚本、列内文字、未知环境/参数、注释和literal
+中的伪边界仍拒绝。数字仅在新matrix说明role的纯英文参数中开放，以支持真实
+`the 2-category of categories`；旧role的literal词法不变。前导连字符只为上述
+精确数值同构后缀开放，译文完整叶也须保留该连字符。
+
+已完整验证的数值slot在来源术语投影中暴露完整 `2-isomorphism`，由真实源声明
+要求逐次双语覆盖；仅配对内部isomorphism不能覆盖完整限定术语。原2仍在锁定
+MATHSEG中，unit.source_text、英文回放、全部数学字节及hash语义不变。程序不
+拼接中文；生成模型负责完整参数和全部五字段。英文自身回放不要求中文双语。
+
+同一工具另增加独立锁定notation usage `named-arrow`，只允许单独的text/can
+登记。必须是完整单美元inline数学，开头直接为 `\text{can}`，完整形式为
+`\text{can} : \mathcal{S} \to \mathcal{S}'`
+形式：两个完整mathcal大写对象、可选目标prime、完整类型后立即数学结束。
+普通can、其他字体/箭头、缺类型、脚本、未知参数或尾随运算仍阻断，不能与
+symbol等usage混用。Mor继续使用原applied，不扩大其权限。
+
+现有unit-v1及旧v2/v3记录解释不变；新纯叶也可与已有v3组件共存，组件边界及
+separator合同保持。工具不登记生产字面量、修改config或采用译文。实际来源政策
+须独立验收后才可用于DATA；首次来源仍使用已接受的source-adoption完整冻结/
+模型原输出合同，不伪造旧v4祖先，不授予术语、critic、人审或发布批准。
+
+开发先做synthetic边界回归及锁定Git完整来源探针，稳定后统一最终验收。
+排版按当前用户规则仅检查实际lane编译和最终日志，不做截图或逐页视觉检查。

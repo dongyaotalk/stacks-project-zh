@@ -115,6 +115,7 @@ class Policy:
             prefixed = rule.get('usages') in [['prefixed-symbol'], ['prefixed-symbol', 'arrow-target-prefixed-symbol']]
             sheaf_suffix = rule.get('usages') == ['sheaf-symbol-suffix']
             constructor = rule.get('usages') == ['category-constructor']
+            named_arrow = rule.get('usages') == ['named-arrow']
             fields = ({'commands', 'usages', 'source_label'} |
                       ({'prefix'} if prefixed or sheaf_suffix else set()) |
                       ({'suffix'} if constructor else set()) |
@@ -124,7 +125,7 @@ class Policy:
             for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
                                  ('usages', {'symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
-                                             'sheaf-symbol-suffix', 'category-constructor'})]:
+                                             'sheaf-symbol-suffix', 'category-constructor', 'named-arrow'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -143,6 +144,9 @@ class Policy:
                 raise RecordError('prefixed math-text notation cannot mix usages')
             if 'category-constructor' in rule['usages'] and not constructor:
                 raise RecordError('category constructor notation cannot mix usages')
+            if 'named-arrow' in rule['usages'] and (not named_arrow or notation != 'can'
+                                                  or rule['commands'] != ['text']):
+                raise RecordError('named-arrow notation requires the single explicit text/can role')
             if prefixed and (not isinstance(rule['prefix'], str) or
                              not re.fullmatch(r'[A-Z]', rule['prefix'])):
                 raise RecordError('invalid math-text notation prefix')
@@ -418,6 +422,14 @@ class Scanner:
         for usage in rule['usages']:
             if 'contexts' in rule and command + '/' + usage not in rule['contexts']:
                 continue
+            if usage == 'named-arrow' and command_start is not None:
+                # A complete root morphism declaration, not an ordinary word.
+                # No scripts, unknown arguments, trailing expression or
+                # alternate font spelling can borrow this notation permission.
+                pattern = (r'\$\\text\{can\}\s*:\s*\\mathcal\{[A-Z]\}'
+                           r'\s*\\to\s*\\mathcal\{[A-Z]\}\'?\$')
+                if command_start == 1 and re.fullmatch(pattern, self.text):
+                    return usage, self.text[closing:-1], rule['source_label']
             if usage == 'category-constructor' and command_start is not None:
                 suffix = rule['suffix']
                 stop = cursor + len(suffix)

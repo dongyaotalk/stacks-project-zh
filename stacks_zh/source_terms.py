@@ -25,6 +25,22 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
     source = unit["source_text"]
     pieces: list[str] = []
     declarations: list[str] = []
+    qualified = [slot for region in unit.get('math_text_regions', []) for slot in region['slots']
+                 if slot['classification_witness']['usage'] == 'numeric-isomorphism-suffix']
+    if qualified:
+        from .math_text import validate_regions
+        errors = validate_regions(unit)
+        if errors:
+            raise RecordError('qualified math terminology requires complete typed source: ' + '\n'.join(errors))
+        for slot in qualified:
+            left, right = ('<' + name + '>' for name in slot['boundary_placeholders'])
+            original = left + slot['source'] + right
+            if source.count(original) != 1:
+                raise RecordError('qualified math terminology has no unique complete source slot')
+            # The numeral stays in its locked math piece. Only the terminology
+            # projection exposes the validated complete lexical qualification.
+            source = source.replace(original, left + '2' + slot['source'] + right, 1)
+            declarations.append('2-isomorphism')
     opened: dict[tuple[str, str], tuple[int, str]] = {}
     cursor = 0
     for match in PLACEHOLDER_TOKEN_RE.finditer(source):

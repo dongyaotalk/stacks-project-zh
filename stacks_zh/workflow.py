@@ -605,6 +605,11 @@ def render_batch(
     candidate_paths = [candidate_path] if isinstance(candidate_path, Path) else list(candidate_path)
     if not unit_paths or not candidate_paths:
         raise RecordError("render requires at least one unit and candidate file")
+    render_input_bytes = {path: path.read_bytes() for path in unit_paths}
+    render_input_bytes[lock_path] = lock_path.read_bytes()
+    macro_path = lock_path.parent / 'config/macro-policy.yml'
+    if macro_path.is_file():
+        render_input_bytes[macro_path] = macro_path.read_bytes()
     unit_batches = [load_jsonl(path) for path in unit_paths]
     selected_chapter = chapter
     if selected_chapter is not None:
@@ -632,7 +637,14 @@ def render_batch(
         unit_paths = [unit_paths[i] for i in selected]
         candidate_paths = [candidate_paths[i] for i in selected]
         unit_batches = [unit_batches[i] for i in selected]
+    render_input_bytes.update({path: path.read_bytes() for path in candidate_paths})
     units = [record for batch in unit_batches for record in batch]
+    if chapter_source_dir is not None:
+        for path in {chapter_source_dir / (str(u['chapter']) + '.tex') for u in units}:
+            try:
+                render_input_bytes[path] = path.read_bytes()
+            except OSError as exc:
+                raise RecordError(f'cannot read chapter source {path}: {exc}') from exc
     candidates = [record for path in candidate_paths for record in load_jsonl(path)]
     errors = validate_records(units, candidates, source_commit)
     if errors:
@@ -711,7 +723,7 @@ def render_batch(
             _validate_title_permanent_tags(batch, tags_by_label, tags_path)
     if chapter_source_dir is not None:
         units = _order_unit_batches_by_chapter_source(
-            unit_batches, chapter_source_dir
+            unit_batches, chapter_source_dir, root=root
         )
     candidate_model_ids = {candidate.get("model_id") for candidate in candidates}
     candidate_harness_ids = {candidate.get("harness_id", "legacy") for candidate in candidates}
@@ -865,6 +877,8 @@ def render_batch(
             preview_chapter_index = order_index[selected_chapter]
             chapter_order = [selected_chapter]
 
+    if any(path.read_bytes() != payload for path, payload in render_input_bytes.items()):
+        raise RecordError('render source or candidate files changed during validation')
     output_dir.mkdir(parents=True, exist_ok=True)
     chapters_dir = output_dir / "chapters"
     chapters_dir.mkdir(parents=True, exist_ok=True)
@@ -1196,6 +1210,7 @@ def _validate_title_permanent_tags(
 def _order_unit_batches_by_chapter_source(
     unit_batches: list[list[dict[str, object]]],
     chapter_source_dir: Path,
+    *, root: Path | None = None,
 ) -> list[dict[str, object]]:
     """Order batches by their first label while preserving each batch's AST order."""
     batches_by_chapter: dict[str, list[list[dict[str, object]]]] = {}
@@ -1216,16 +1231,20 @@ def _order_unit_batches_by_chapter_source(
     for chapter in chapter_order:
         source_path = chapter_source_dir / f"{chapter}.tex"
         try:
-            source_text = source_path.read_text(encoding="utf-8")
+            source_bytes = source_path.read_bytes()
+            source_text = source_bytes.decode('utf-8')
         except OSError as exc:
             raise RecordError(f"cannot read chapter source {source_path}: {exc}") from exc
         source_labels = LABEL_RE.findall(source_text)
         if len(source_labels) != len(set(source_labels)):
             raise RecordError(f"{source_path}: duplicate source labels")
-        source_index = {label: index for index, label in enumerate(source_labels)}
+        source_index = {match.group(1): len(source_text[:match.start()].encode('utf-8'))
+                        for match in LABEL_RE.finditer(source_text)}
 
         batch_positions: list[tuple[int, list[dict[str, object]]]] = []
-        for batch in batches_by_chapter[chapter]:
+        unlabeled = set()
+        chapter_batches = batches_by_chapter[chapter]
+        for index, batch in enumerate(chapter_batches):
             matching_positions = []
             for unit in batch:
                 for render_part in (
@@ -1240,10 +1259,16 @@ def _order_unit_batches_by_chapter_source(
                         elif label in source_index:
                             matching_positions.append(source_index[label])
             if not matching_positions:
-                raise RecordError(
-                    f"{batch[0]['unit_id']}: batch has no rendered label in {source_path}"
-                )
-            batch_positions.append((min(matching_positions), batch))
+                unlabeled.add(index)
+            else:
+                batch_positions.append((min(matching_positions), batch))
+        if unlabeled:
+            if root is None:
+                raise RecordError('unlabeled prose placement requires the repository and locked Git')
+            from .source_placement import complete_prose_positions
+            positions = complete_prose_positions(chapter_batches, unlabeled, root,
+                chapter_source_dir, chapter, source_bytes)
+            batch_positions.extend((positions[i], chapter_batches[i]) for i in sorted(unlabeled))
         for _, batch in sorted(batch_positions, key=lambda item: item[0]):
             ordered.extend(batch)
     return ordered

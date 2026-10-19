@@ -131,6 +131,13 @@ def build_parser() -> argparse.ArgumentParser:
     repository_check.add_argument('--root', type=Path, default=Path('.'))
     repository_check.add_argument('--harvest', type=Path)
 
+    first_source = subparsers.add_parser('assemble-source-adoption',
+        help='validate and atomically install complete first-source generation and history')
+    first_source.add_argument('--root', type=Path, default=Path('.'))
+    first_source.add_argument('--input', required=True, type=Path)
+    first_source.add_argument('--raw', required=True, type=Path, nargs='+')
+    first_source.add_argument('--harvest', type=Path)
+
     assemble = subparsers.add_parser(
         "assemble", help="attach provenance and deterministic status to translator output"
     )
@@ -455,6 +462,14 @@ def main(argv: list[str] | None = None) -> int:
                 "Candidate batch QA: PASS "
                 f"({count} unit(s) across {len(args.units)} batch(es))"
             )
+            return 0
+        if args.command == 'assemble-source-adoption':
+            from .source_adoptions import assemble_source_adoption
+            root = args.root.absolute()
+            input_path = args.input if args.input.is_absolute() else root / args.input
+            raw_paths = [p if p.is_absolute() else root / p for p in args.raw]
+            record = assemble_source_adoption(root, input_path, raw_paths, args.harvest)
+            print('Adopted complete first-source run: ' + record['run_id'])
             return 0
         if args.command == "assemble":
             current = CurrentSourceQA(args.lock.resolve().parent, args.harvest)

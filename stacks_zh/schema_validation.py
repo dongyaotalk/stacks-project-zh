@@ -75,6 +75,8 @@ def validate_named_schema(
 def validate_repository_schemas(root: Path) -> list[str]:
     """Validate every tracked structured-record family against its contract."""
     jsonl_families = (
+        ("translation-data/retired/source-adoptions/*/units.jsonl", "unit.schema.json"),
+        ("translation-data/retired/source-adoptions/*/candidates.jsonl", "candidate.schema.json"),
         ("translation-data/units/*.jsonl", "unit.schema.json"),
         ("translation-data/candidates/*/*.jsonl", "candidate.schema.json"),
         ("translation-data/retired/derivations/*/units.jsonl", "unit.schema.json"),
@@ -87,6 +89,8 @@ def validate_repository_schemas(root: Path) -> list[str]:
         ("translation-data/retired/pre-adoption-replays/*/candidates.jsonl", "candidate.schema.json"),
     )
     json_families = (
+        ("translation-data/source-adoptions/*.json", "source-adoption.schema.json"),
+        ("translation-data/source-adoption-inputs/*.json", "source-adoption-input.schema.json"),
         ("config/source-terms.json", "source-terms.schema.json"),
         ("config/translation-priorities.json", "translation-priorities.schema.json"),
         ("translation-data/chapter-templates/*.json", "chapter-template.schema.json"),

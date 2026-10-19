@@ -86,6 +86,9 @@ FIELD_ALIASES = {
 }
 
 TRANSLATION_DATA_PREFIXES = (
+    "translation-data/source-adoptions/",
+    "translation-data/source-adoption-inputs/",
+    "translation-data/retired/source-adoptions/",
     "translation-data/units/",
     "translation-data/candidates/",
     "translation-data/runs/",

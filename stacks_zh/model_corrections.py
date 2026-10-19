@@ -183,6 +183,9 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
     Call only after repository provenance validation; this is a binding hash,
     not a replacement for validating the files or their identity.
     """
+    if candidate.get('source_adoption_id'):
+        from .source_adoptions import source_adoption_provenance_hash
+        return source_adoption_provenance_hash(root, candidate)
     correction_id = candidate['model_correction_id']
     derivation_id = candidate['derivation_id']
     for identifier in (correction_id, derivation_id, candidate['run_id']):

@@ -1,5 +1,11 @@
 # 数学内自然语言的保护与翻译开发合同
 
+完整来源没有旧候选时的独立首次采用及临时生成历史合同见
+[source-adoption.md](source-adoption.md)（Issue #819）。经完整锁定Git、实际run/raw、
+冻结上下文和来源不重叠重放的 `source-adoption-v1` 可采用 unit-v2/v3；普通
+`assemble`/`assemble-many` 无包拒绝规则及下述既有v4历史合同保持。具体DATA须在
+工具接受后另行冻结生成，首次采用不伪造旧候选或给予审校批准。
+
 规范任务：[Issue #652](https://github.com/dongyaotalk/stacks-project-zh/issues/652)。
 本合同定义后续独立 Schema/工具任务的接口；该实现验收合并前，现行数学
 占位符、unit-v1、来源恢复版本及 BLOCKED 规则继续生效。规范合并不授权事实

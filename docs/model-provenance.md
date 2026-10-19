@@ -1,5 +1,10 @@
 # Harness、模型和运行溯源
 
+没有已采用旧候选的完整来源，以及首次Git采用前的完整临时生成历史，使用独立
+[source-adoption-v1 合同](source-adoption.md)（Issue #819）。它保留实际全部
+run/raw/完整输入并逐字段重放，不把临时候选当可达Git前继；原普通装配和下述
+已接受v1/v2/v3/v4历史合同保持。决定必须绑定完整来源和生成历史，不授予批准。
+
 来源边界的独立 v6 合同见 [source-container-restoration.md](source-container-restoration.md)
 及 [Issue #741](https://github.com/dongyaotalk/stacks-project-zh/issues/741)。它仅为完整
 列表陈述后的完整段落增加来源见证：旧链与原生完整陈述签名、末端列表 closing

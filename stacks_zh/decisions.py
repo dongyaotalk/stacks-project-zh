@@ -127,7 +127,7 @@ def _validate_revision_chains(revisions: dict[str, tuple[Path, dict[str, Any]]])
 
 
 def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, Any], location: str, errors: list[str]) -> None:
-    if 'model_correction_id' in candidate:
+    if 'model_correction_id' in candidate or 'source_adoption_id' in candidate:
         expected = candidate.get('_provenance_hash')
         if not isinstance(expected, str) or decision.get('provenance_hash') != expected:
             errors.append(f'{location}: corrected candidate requires its complete composite provenance_hash')
@@ -138,7 +138,8 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
     """Validate candidate selection, human review and formal revision linkage."""
     errors: list[str] = []
     candidates = _candidate_index(root, errors)
-    corrected = [candidate for candidate in candidates.values() if 'model_correction_id' in candidate]
+    corrected = [candidate for candidate in candidates.values()
+                 if 'model_correction_id' in candidate or 'source_adoption_id' in candidate]
     if _provenance is not None:
         from .repository_validation import _require_live_provenance
         _require_live_provenance(_provenance, root)

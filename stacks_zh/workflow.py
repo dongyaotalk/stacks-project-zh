@@ -271,6 +271,21 @@ def _assemble_candidates_with_harness_version(
             details.append("unknown: " + ", ".join(extra))
         raise RecordError("draft coverage mismatch (" + "; ".join(details) + ")")
 
+    candidates = _candidate_records(
+        units, draft_by_id, source_commit, model_id, model_lane, reasoning_effort,
+        prompt_version, policy_revision, glossary_revision, created_at, harness_id,
+        harness_version, model_record_id, run_id, model_snapshot, model_identity_confidence,
+    )
+    write_jsonl(output_path, candidates)
+    return len(candidates)
+
+
+def _candidate_records(
+    units, draft_by_id, source_commit, model_id, model_lane, reasoning_effort,
+    prompt_version, policy_revision, glossary_revision, created_at, harness_id,
+    harness_version, model_record_id, run_id, model_snapshot, model_identity_confidence,
+):
+    """Pure candidate metadata/QA shared by verified entry points; no file writes."""
     candidates: list[dict[str, object]] = []
     translator_fields = (
         "translation",
@@ -347,8 +362,7 @@ def _assemble_candidates_with_harness_version(
     errors = validate_records(units, candidates, source_commit)
     if errors:
         raise RecordError("assembled candidate promotion failed:\n" + "\n".join(errors))
-    write_jsonl(output_path, candidates)
-    return len(candidates)
+    return candidates
 
 
 def assemble_candidates_many(
@@ -655,6 +669,7 @@ def render_batch(
     candidate_by_id = {candidate['unit_id']: candidate for candidate in candidates}
     root = lock_path.parent
     typed_math = any(u.get('schema_version') in {2,3} for u in units)
+    first_source = any(c.get('source_adoption_id') for c in candidates)
     if typed_math:
         from .source_containers import safe_path
         for path in unit_paths + candidate_paths:
@@ -665,12 +680,13 @@ def render_batch(
                 raise RecordError('typed math rendering requires active validated files: ' + str(exc)) from exc
         if (any(not p.resolve().is_relative_to((root / 'translation-data/units').resolve()) for p in unit_paths)
                 or any(not p.resolve().is_relative_to((root / 'translation-data/candidates').resolve()) for p in candidate_paths)
-                or any(not candidate_by_id[u['unit_id']].get('unit_group_id')
-                       or not candidate_by_id[u['unit_id']].get('derivation_id')
+                or any(not candidate_by_id[u['unit_id']].get('source_adoption_id')
+                       and (not candidate_by_id[u['unit_id']].get('unit_group_id')
+                            or not candidate_by_id[u['unit_id']].get('derivation_id'))
                        for u in units if u.get('schema_version') in {2,3})):
             raise RecordError('typed math rendering requires active validated v4/source-container-v3 facts')
     composite = any(c.get('model_correction_id') or c.get('unit_group_id') for c in candidates)
-    if composite or typed_math:
+    if composite or typed_math or first_source:
         provenance_errors = validate_repository_provenance(root, chapter_source_dir)
         if provenance_errors:
             raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
@@ -685,6 +701,14 @@ def render_batch(
     grouped_ids = {candidate['unit_id'] for candidate in candidates
                    if any(e['derivation']['tool']['version'] == '4'
                           for e in histories.get(candidate.get('derivation_id'), []))}
+    source_adoptions = {}
+    if first_source:
+        from .source_adoptions import load_repository_source_adoptions
+        source_adoptions, errors = load_repository_source_adoptions(root, chapter_source_dir)
+        if errors:
+            raise RecordError('render has no complete first-source replay:\n' + '\n'.join(errors))
+        grouped_ids.update(u['unit_id'] for u in units
+                           if candidate_by_id[u['unit_id']].get('source_adoption_id'))
     from .extraction import Policy
     from .source_reextractions import source_tex
     projection_policy = (Policy((root / 'config/macro-policy.yml').read_text())
@@ -696,6 +720,12 @@ def render_batch(
         if unit['unit_id'] not in grouped_ids:
             continue
         policy = projection_policy
+        if candidate_by_id[unit['unit_id']].get('source_adoption_id'):
+            matches = [entry for (_, uid), entry in source_adoptions.items() if uid == unit['unit_id']]
+            if len(matches) != 1 or matches[0]['unit'] != {k:v for k,v in unit.items() if not k.startswith('_')}:
+                raise RecordError('render source adoption does not bind the complete current unit')
+            projection_policies[unit['unit_id']] = matches[0]['policy']
+            continue
         for entry in histories[candidate_by_id[unit['unit_id']]['derivation_id']]:
             for identifier in restoration_bindings(entry['derivation']):
                 evidence = json.loads((root / f'translation-data/source-container-restorations/{identifier}.json').read_text())

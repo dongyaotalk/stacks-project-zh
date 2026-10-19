@@ -64,6 +64,9 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
     corrections, errors = load_repository_corrections(root)
     origins, derivation_errors = load_repository_derivations(root, corrections, harvest)
     errors.extend(derivation_errors)
+    from .source_adoptions import load_repository_source_adoptions
+    source_adoptions, adoption_errors = load_repository_source_adoptions(root, harvest)
+    errors.extend(adoption_errors)
     typed_active = {}
     typed_seen = set()
     for unit_file in sorted((root / 'translation-data/units').glob('*.jsonl')):
@@ -138,6 +141,17 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
             if not isinstance(candidate, dict):
                 errors.append(f"{location}: candidate must be an object")
                 continue
+            adoption_key = (candidate_path.relative_to(root).as_posix(), candidate.get("unit_id"))
+            adoption = source_adoptions.get(adoption_key)
+            if candidate.get("source_adoption_id"):
+                if (adoption is None or candidate != adoption["candidate"]
+                        or candidate.get("derivation_id") or candidate.get("model_correction_id")):
+                    errors.append(f"{location}: candidate has no complete validated first-source adoption")
+                else:
+                    expanded.extend((location + " (prior actual generation)", lane, prior)
+                                    for prior in adoption["prior_candidates"])
+            elif adoption is not None:
+                errors.append(f"{location}: first-source adoption pointer is missing")
             if (candidate_path.parent.parent == candidates_root
                     and candidate.get('unit_id') in typed_active.get(candidate_path.name, set())):
                 typed_seen.add((candidate_path.name, candidate['unit_id']))
@@ -146,7 +160,9 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
                     from .source_containers import safe_path
                     safe_path(root, candidate_path.relative_to(root).as_posix(),
                               r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
-                    if (not isinstance(identifier, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier)
+                    if adoption is not None and candidate == adoption['candidate']:
+                        pass
+                    elif (not isinstance(identifier, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier)
                             or '..' in identifier or (candidate_path.relative_to(root).as_posix(), candidate['unit_id']) not in origins
                             or _read_json(root / 'translation-data/derivations' / (identifier + '.json'))['tool']['version'] != '4'):
                         raise ProvenanceError('active unit-v2 requires validated v4/source-container-v3 adoption')

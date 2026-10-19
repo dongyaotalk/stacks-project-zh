@@ -553,6 +553,33 @@ class BulkScopeContractTests(unittest.TestCase):
                 else:
                     with self.assertRaises(ContractApiError):_batch_blob_contents(['deleted.jsonl'],'base/repo','c'*40,'t','api','graphql',request)
 
+    def test_nullable_large_blob_classification_still_requires_complete_verified_utf8(self):
+        raw = '中文\r\n  '.encode()
+        for fault in [None, 'not-truncated', 'missing-classification', 'binary', 'hash', 'size', 'utf8']:
+            payload = b'\xff' if fault == 'utf8' else raw
+            sha = hashlib.sha1(b'blob '+str(len(payload)).encode()+b'\0'+payload).hexdigest()
+            calls = []
+            def request(url, token, *, data=None):
+                calls.append(url)
+                if data:
+                    obj = dict(oid=sha, byteSize=len(payload), isBinary=None,
+                               isTruncated=fault != 'not-truncated', text=None)
+                    if fault == 'missing-classification': del obj['isBinary']
+                    if fault == 'binary': obj['isBinary'] = True
+                    return {'data': {'repository': {'file0': obj}}}
+                self.assertEqual(url, 'api/repos/base/repo/git/blobs/'+sha)
+                return dict(encoding='base64', sha=sha, size=len(payload)+(fault == 'size'),
+                    content=base64.b64encode(b'changed' if fault == 'hash' else payload).decode())
+            with self.subTest(fault=fault):
+                if fault is None:
+                    self.assertEqual(_batch_blob_contents(['large.jsonl'], 'base/repo', 'c'*40,
+                        'synthetic', 'api', 'graphql', request), {'large.jsonl': raw.decode()})
+                    self.assertEqual(len(calls), 2)
+                else:
+                    with self.assertRaises(ContractApiError):
+                        _batch_blob_contents(['large.jsonl'], 'base/repo', 'c'*40,
+                            'synthetic', 'api', 'graphql', request)
+
     def test_explicit_hash_scopes_allow_many_exact_files_and_distinct_chapters(self):
         value,contents,_ = bulk_payload(105)
         self.assertGreater(len(value['files']['nodes']),100)

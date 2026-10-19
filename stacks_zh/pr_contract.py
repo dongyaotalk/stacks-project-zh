@@ -673,8 +673,13 @@ def _batch_blob_contents(paths, repository, commit, token, api_url, graphql_url,
             if (not isinstance(obj,dict) or not isinstance(obj.get('oid'),str)
                     or not re.fullmatch(r'[0-9a-f]{40}',obj['oid'])
                     or type(obj.get('byteSize')) is not int or not 0 <= obj['byteSize'] <= 100*1024*1024
-                    or obj.get('isBinary') is not False or type(obj.get('isTruncated')) is not bool):
+                    or type(obj.get('isTruncated')) is not bool
+                    or 'isBinary' not in obj
+                    or not (obj['isBinary'] is False
+                            or (obj['isBinary'] is None and obj['isTruncated'] is True))):
                 raise ContractApiError('invalid pinned Git blob metadata for '+path)
+            # GitHub reports a null binary classification for truncated large blobs.
+            # Only complete pinned bytes, size, Git hash and UTF-8 can classify them.
             if obj['isTruncated']:
                 raw = _large_file_bytes(dict(type='file',content='',sha=obj['oid'],size=obj['byteSize']),
                     path,repository,token,api_url,request_json,minimum_size=-1)

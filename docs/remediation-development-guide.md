@@ -1,5 +1,7 @@
 # 八项审查修复开发与交接指南
 
+> 2026-10-19 唯一必要纯工具前置 [Issue812](https://github.com/dongyaotalk/stacks-project-zh/issues/812) / [PR813](https://github.com/dongyaotalk/stacks-project-zh/pull/813) 已合并；最终集成接受 main 为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`。用户已明确授权此例外。仅修复可信门禁的大文件可空分类、回归及实测时限，完整原字节/来源/审批要求保持。全部集中DATA仍在原PR809；实际生成的DATA origin与上下文继续绑定5b527d9，不回写历史。
+
 > 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
 
 > 工具前置 [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811) 已完成并合并，接受 main 为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`。完整来源恢复、组合数学文字和哈希范围清单合同已接受；原工具提交与文档历史保留，不重做此前置。后续 DATA 的 origin 使用该已接受提交，英文锁不变；现有 Issue #808 / PR #809 统一收尾全部 DATA、S5、S7和最终文档。
@@ -9,10 +11,14 @@
 
 ## 当前集中任务：2026-10-19，本地验收通过，待精确远端验收
 
-本节是最新状态；以下带日期的阶段记录保留原有证据，不代表当前仍在运行。
-远端 main 于本日重新核实为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`；
-Issue808 仍由 dongyaotalk 认领，PR809 仍 OPEN/DRAFT、仅 closing Issue808。
-本地分支及 HEAD 未换，全部修改尚未提交或合并。main 的事实仍为239批/1208单元。
+本节记录PR809最终集成候选的可复现检查点；以下历史阶段保留原证据。
+工具接受main为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`，239批/1208单元。
+集中DATA已以八个逻辑提交推送，先前验收head为
+`a17f465633986a9578ac3cef6eac283841fd87c8`，PR809已ready、唯一closing Issue808。
+该HEAD的policy-and-data run39160048942/attempt2/job117772514093真实成功，
+653项测试全绿、239批完整QA与117章progress/plan check通过。当前最终合入已接受
+工具main并更新文档；最新HEAD、CI及最终merge SHA从本文命令和PR809原生记录
+取得，不把这份检查点当实时状态，也不猜测尚未产生的合并SHA。
 
 本地已完成165批、1049旧→683完整新单元、172个新实际 revision run，全库为
 239批/842唯一活跃单元。旧输入、原候选、run/raw 和完整递归恢复/派生/归档保留；
@@ -29,8 +35,7 @@ Issue808 仍由 dongyaotalk 认领，PR809 仍 OPEN/DRAFT、仅 closing Issue808
 当前精确范围清单为 `task-scopes/integrated-remediation-f1-f8-20261015.json`，
 2591条精确路径，hash
 `sha256:b65670ce591f2cb8cfe64199c161281d928236675221d52512e594a1a923aea6`。
-此前所有scope原字节保存；既有实际生成仍绑定各自原冻结。远端Issue/PR的最终
-精确范围更新按授权在本地验收后统一完成。
+此前所有scope原字节保存；既有实际生成仍绑定各自原冻结。远端Issue/PR已绑定该最终范围；接受工具main后的最终验收仍使用同一范围。
 
 当前英文目录v18的hash为
 `sha256:4223840c7e8259e889e2c5b45adc3c848f322c2e3704df70ccf94534491943fe`。
@@ -69,7 +74,7 @@ changed paths漏掉其他lane。CI与本地统一Python3.12。开发时仍可选
 换为独立锁定Git的两个完整来源节点，配对错误测试隔离来源门禁以保留原有计数
 断言；没有降低生产门禁。随后对CLI、当前QA、会话、决策、全lane聚合41项回归
 全部通过。其余651项的生产实现和用例保持，最终远端精确HEAD仍须真实运行全套。
-S7构建/视觉及远端验收未完成，F1–F8总goal保持进行中。
+本地S7构建/视觉已通过，a17f465远端全套CI也已通过；最终合入工具main后的最新HEAD仍须真实双门禁及合并后验证。
 
 此次仅为适配旧测试增加 `tests/test_cli.py` 和此前scope的原字节快照，精确范围
 2591路径。既有模型冻结不重新绑定当前scope。CI时限为60分钟，以容纳实际完整
@@ -157,8 +162,10 @@ F6的`tag:0AHN:statement`与`tag:0FWX:statement`分别排在当前PDF第88/90页
 本地通过的生产代码、政策与事实在统一QA之后保持原字节；随后只适配两个旧CLI
 测试fixture、扩大声明测试路径、调整CI时限和补文档。完整工具测试的原失败和
 后续41项成功均如实保留，远端最新精确HEAD必须再真实执行完整工具测试和全部QA。
-当前尚未提交/推送这份集中数据，远端基线main仍为5b527d9；最终推送、完整远端
-原字节/patch/native合同、双CI run/job以及授权squash与合并后验证是剩余步骤。
+集中数据已提交/推送a17f465，远端完整原字节/patch/native单closing均核验，
+该HEAD的完整数据CI成功。唯一可信工具前置PR813已接受于991e3ed；最终合入该
+工具main后，继续要求最新精确HEAD的双run/job、完整原字节/patch/native合同、
+fresh接受base和授权squash后验证。
 最终接受main及精确门禁证据通过PR809和下列命令取得，不猜测尚未产生的合并SHA。
 
 ```sh
@@ -171,6 +178,30 @@ gh pr checks 809
 完整原字节、来源/历史绑定均由跟踪的unit、candidate、run/raw、derivation/archive
 和restoration记录提供；本机ignored回执、PDF和PNG只是额外现场证据，不提交。
 新克隆按本文命令重新生成并验收，不依赖本机绝对路径、缓存PASS或预先存在的build。
+
+### 最终可信大文件门禁与接受边界
+
+PR813仅四个工具文件，head39d5464c58a93c832bb725923cad56239792d19f；
+policy-and-data run39179060126/job117827741453与pr-contract
+run39179060156/job117827742071均成功。合并main为991e3ed，PR813 MERGED、
+Issue812 CLOSED、main/feature完整树和原字节、工作区clean均已核验。
+实测GitHub截断12MB blob返回isBinary=null；只在明确截断时允许可空分类，
+随后仍校验全部锁定blob长度/Git hash/UTF-8。42回归、真实单文件及整份PR809
+2362文件/2327完整内容的原生合同复验通过，461请求、1386.017秒。原5分钟
+不足，可信job时限30分钟；仍从main运行，权限与全部合同保持。详细复现和
+失败/回退边界见[大文件合同维护](pr-contract-large-blobs.md)。不截短raw、不跳
+文件、不让未合并PR自换可信校验器。
+
+该纯工具前置未改变任何DATA。原生成origin5b527d9、完整scope冻结、run/raw、
+实际model/effort/turn及上下文一律保持；accepted integration base与DATA origin
+用途不同。最终合入工具main不重译、不再认领已完成批次；不重复已通过的未变
+来源审计、冻结run QA和数据验收。新增的实际代码只由42项相关回归及最新远端
+完整工具/数据CI复验；提交前仍按现行要求实际render/pdf并比较整书。
+
+任意新克隆应从原生PR/Actions取得最终HEAD、merge commit、run/job与精确
+base，再按本指南重建审计和构建；本机ignored现场回执与最终交付记录提供本次
+精确值，不作为可跳过检查的PASS缓存。若PR809已MERGED且合并后树/原字节/
+进度证据齐备，直接进入维护，不重做此次165批修复。
 
 ## 历史阶段记录：2026-10-16，本地装配后待完整验收
 

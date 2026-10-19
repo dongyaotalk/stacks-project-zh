@@ -1,5 +1,7 @@
 # 可复制的 Codex 提示词
 
+> 2026-10-19 唯一必要纯工具前置 [Issue812](https://github.com/dongyaotalk/stacks-project-zh/issues/812) / [PR813](https://github.com/dongyaotalk/stacks-project-zh/pull/813) 已合并；最终集成接受 main 为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`。用户已明确授权此例外。仅修复可信门禁的大文件可空分类、回归及实测时限，完整原字节/来源/审批要求保持。全部集中DATA仍在原PR809；实际生成的DATA origin与上下文继续绑定5b527d9，不回写历史。
+
 > 工具前置 [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811) 已完成并合并，接受 main 为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`。完整来源恢复、组合数学文字和哈希范围清单合同已接受；原工具提交与文档历史保留，不重做此前置。后续 DATA 的 origin 使用该已接受提交，英文锁不变；现有 Issue #808 / PR #809 统一收尾全部 DATA、S5、S7和最终文档。
 
 > 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
@@ -12,17 +14,17 @@
 
 ```text
 本 goal 的目标是完成 stacks-project-zh 项目的全部八项审查修复 F1–F8，
-本次按用户最新指示集中修复：复用 Issue808/草稿PR809，一个最终PR完成全部剩余S4，
+本次按用户最新指示集中修复：复用 Issue808/PR809，一个最终PR完成全部剩余S4，
 随后S5默认强门禁、S7总验收及文档提示词；不再逐批开Issue/PR或重复全量验收。
 原始数学、完整历史、逐次双语及真实模型完整五字段等要求保持；只改变组织与检查节奏。
 包括 S4 数据修订、S5 默认强制门禁和 S7 全库集成验收。完成后写详细开发文档
 和可复制的 Codex 提示词，记录架构、复现命令、验收证据和后续维护方法。
 
-用中文回复。远端main最近核验为5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81，
-已含工具前置PR811；最近已接受DATA仍为Issue804/PR807的80463ead15a4e52bf9dea6cc01255da70a9d24c3。
+用中文回复。最终集成接受main为991e3ed2efc22b35dbef028e0cdb5b0ae28fd187，
+已含工具前置PR811及唯一必要前置PR813；最近已接受DATA仍为Issue804/PR807的80463ead15a4e52bf9dea6cc01255da70a9d24c3。
 英文锁定a04446e57ec1fbc252a871afcec7752fb2807b14。所有已合并成果、独立文档/进度
 提交及用户未提交改动保留；实时重查Git和GitHub，不据此检查点覆盖文件。
-复用claimed Issue808、分支docs/progress-categories-cofinal-initial及草稿PR809。
+复用claimed Issue808、分支docs/progress-categories-cofinal-initial及ready PR809。
 
 本地已完成165批/1049旧→683完整新单元的真实模型五字段生成及装配，
 全库239批/842唯一活跃unit；main仍239批/1208单元。172个新revision run的五字段
@@ -42,9 +44,9 @@ sha256:4223840c7e8259e889e2c5b45adc3c848f322c2e3704df70ccf94534491943fe；
 原162批/677单元第三次完整qa-all已终态通过1564.582秒；其后严格探测另发现
 002T/04AR/000I三个完整批次共6单元尾空白不等，已冻结完整旧组/56份ancestry并
 实际重新生成完整五字段，未程序补换行。最新239批/842单元严格来源探测0错误，
-实测57.473秒；该探测不包含完整历史溯源。全库独立源结构及proof审计先前为
-零坐标/未保护TeX/隐藏脚注/标题问题、187组/187完整proof全部match，最终仍需
-对最新输入核验。不能把旧qa-all结果当作新6单元或最终S7证据。
+实测57.473秒；该探测不包含完整历史溯源。全库独立源结构、术语及proof审计已对最新842单元通过，零坐标/未保护TeX/
+隐藏脚注/标题/术语错误，187组/187完整proof全部match。不能把旧677单元qa-all
+冒称后6单元或最终S7证据；当前事实hash不变时保留最新实际通过的独立审计。
 
 S5已在本地实现：current_qa.py默认覆盖六个validate/assemble/render入口；
 repository_validation.py让make qa-all/CI在同次调用执行Schema、完整递归溯源、
@@ -70,10 +72,30 @@ CLI/当前QA/会话/决策/全lane聚合41项全部通过。原失败记录保�
 矢量等同。两处F6脚注中文可读，PDF实际内链到注记4.2.2（PDF44）。
 inspect-final-pdf.py及s7-visual/manifest.json为本机现场证据，不能把旧PENDING
 快照当作当前状态。不要重启已完成的QA/工具测试/抽取对齐或构建。
-下一步完成文档/staged完整审查、同一Issue808/PR809精确scope与run/model合同、
-逻辑提交与当前分支普通推送、远端全部原字节及完整patch/native单closing，
-精确HEAD双CI run/job成功和fresh main，再按已授权admin squash并验证main/tree/
-MERGED/CLOSED/原字节/clean。总goal仍未达到远端最终完成条件。
+这些修复已按8个逻辑提交普通推送到PR809（ready），feature HEAD为
+a17f465633986a9578ac3cef6eac283841fd87c8，tree为7e82b1669690e5fdad6c72d17af64d0da75af8e7。
+完整staged diff、2362文件远端head/base原字节、完整patch分块重放及唯一native closing808均通过。
+最新policy-and-data run39160048942/attempt2/job117772514093真实SUCCESS：653测试全绿，
+完整239批QA及117章progress/plan check通过。首次临时Git清理失败日志保留。
+远端pr-contract run39160074588/job117771399704失败：12MB文件isTruncated=true/
+isBinary=null被main旧工具拒绝。只允许truncated时分类null的草案仍校验完整blob长度、
+Git hash及UTF-8，42回归、真实12MB完整字节和整份PR native复验均通过；整份读取
+1325.148秒，总1386.017秒，2362文件/2327完整内容，零合同错误，不冒充远端job成功。
+草案/计划在build/task-integrated-remediation/trusted-large-blob-fix.patch及
+trusted-large-blob-plan.md，包含可信job时限30分钟，可信main来源和权限保持。
+用户已明确允许唯一必要纯工具前置PR813，它已MERGED、Issue812已CLOSED，
+接受main991e3ed2efc22b35dbef028e0cdb5b0ae28fd187；tool head39d5464的
+policy-and-data run39179060126/job117827741453、pr-contract run39179060156/
+job117827742071均成功，完整远端bytes/patch/native合同、实际render/pdf、全书
+文字/像素及日期变化页/邻页视觉和postmerge tree/bytes/clean通过。工具4文件
+不改任何DATA，原生成origin5b与全部冻结/run/raw不重绑。无需再次询问此前置。
+继续原PR809，普通合入已接受main，不force。完成最终文档、实际lane render/pdf
+和全书差异对照，保留未变完整验收；最终最新精确HEAD双CI run/job真实成功、
+完整remote bytes/patch/native单closing与fresh main正确后，已授权admin squash，
+不再问确认，验MERGED/CLOSED/main-feature树/原字节/clean和最终progress/plan。
+先只读查PR809实时状态：如已MERGED且最终证据齐备，转维护，不重做165批；
+如仍OPEN，完成以上原任务收尾，不新增DATA任务或模型生成。
+总goal仍未完成，不重复生成数据或重跑未变完整本地验收。
 用已保存的accepted-main-5b-render-baseline作为旧视觉基线，不能覆盖基线或改
 生成物绕过失败。最终更新详细指南、全部F1–F8证据和可复制命令/维护提示词。
 当前本地S7及构建视觉已完成，远端验收与合并未完成，保持总goal进行中。远端808/809精确scope
@@ -197,3 +219,67 @@ render/pdf、完整远端diff/native合同及最新精确HEAD双CI run/job通过
 ```
 
 - 集中工具CI补充：e6e1f05远端全tool-test 613项中609通过、4失败（两未知宏前缀拒绝被新增arrow-target分支绕过，两旧policy夹具假设失效）。保留全部原拒绝样例，限定新分支独立前缀语法，只增锁定preamble中确认为零参数的Sh/etale；默认旧prefixed-symbol语义不变。18项定点回归通过，真实obsolete09AQ完整28旧分组预检通过，全库extract/check输出不变。实际再次render/pdf、FinalTeX PASS，119生成TeX及463页文字原字节相同；远端新HEAD CI仍须重查，不据局部证据冒称613全绿。
+
+## 4. 验收后维护的完整提示词
+
+```text
+用中文维护 stacks-project-zh。先只读核实 Git 状态、分支、HEAD、fresh remote
+main、打开/claimed Issue和PR809的实际状态，不据旧文档覆盖当前文件。
+如果PR809已MERGED且合并后证据齐备，不重做此前165完整批次、683新单元和
+172实际run。239批/842单元及零残项是本次检查点，必须从当前事实重新测量。
+
+先读AGENTS.md、WORKFLOW.md和docs/remediation-development-guide.md、
+engineering-remediation、source-extraction、source-alignment、source-container-restoration、
+model-provenance、source-term-inventory、task-allocation、translation-priority、
+github-collaboration、git-conventions及相关config；可信大文件门禁另读
+docs/pr-contract-large-blobs.md。保留已合并成果、用户改动、所有独立文档/进度
+提交和不可变历史。未经明确要求，不创建子代理、新聊天或安装无关依赖。
+
+本地用已安装pyenv3.12；本次实测3.12.6。先设置
+TASK_PYTHON="$(PYENV_VERSION=3.12.6 pyenv which python)"，每条Make显式传同一PYTHON。英文
+harvest只读、upstream.lock锁定a04446e57ec1fbc252a871afcec7752fb2807b14；
+没有专门上游同步授权不改来源。READY/BLOCKED只表示准备状态。
+
+先写开发/验收计划；需要变更时先claimed Issue，声明owner、分支、source commit、
+真实chapter/owner/Section/selector、真实和历史parent Tags、完整旧新/历史IDs、
+精确allowed_write_files及实际run/model范围，再建分支实施。范围扩大先更新Issue。
+存在未合并同unit/candidate任务时先核实收尾，不重复认领；按任务授权组织PR，
+不为同一个完整修复范围逐条开Issue/PR或重复整书验收。
+
+从锁定Git重新验证完整来源容器、边界和原字节，不用行号/页码当范围，不送
+原TeX整文件给模型；未知语法或未分类数学文字继续BLOCKED，不降规则掩盖问题。
+实际生成前冻结完整新unit、每个完整有序旧组/全部候选、全部ancestry、政策/
+风格/词表/prompt/英文目录/context hashes。Harness动态解析，model/effort/turn
+依实际元数据记录，不复制旧值或猜snapshot。实际模型完整生成每个新unit五字段；
+程序只保护、序列化、验证、装配，不能生成中文或机械补词冒称模型输出。
+逐项等于immutable raw，保护token原序/次数/尾空白保持，数学术语逐次双语，
+未知词待决，不批准术语、critic、语言/数学审校或发布。全部旧source/input/raw/
+run/派生/恢复/归档原字节保留，完整v4组重放，不遗弃或归档当前问题减少残项。
+
+源码typo、缺失证明或疑点只source-only remark；书末勘误表注明锁定英文版本，
+不改公式、补证或在正文插译者说明，remark不单独阻断忠实候选。
+
+日常排版用完整章节预览make pdf-chapter CHAPTER=categories
+MODEL=openai-gpt-5.6-sol PYTHON="$TASK_PYTHON"。按实际影响范围回归，未变且已
+通过的检查不无理由重跑。最终统一make qa-all执行完整Schema/历史溯源/决策/
+全部当前严格QA，独立extract-all/check、source-alignment/check及来源/术语/
+proof审计另行核对；不能仅靠qa-all认定术语完整。当前六CLI默认强门禁及
+九项政策保持；不得加入skip或磁盘PASS缓存，独立decision仍完整溯源。
+
+真实生成/check progress和plan，必要时隔离117章核验，不能手改统计。提交前
+实际make render MODEL=openai-gpt-5.6-sol和make pdf同lane，FinalTeX无错误；
+模板/样式/Make/渲染路径改变才追加template。比较全部TeX及整书文字，实际
+查看所有变化及邻页PNG；无变化页须绑定真实视觉基线，不抽样冒充完整检查。
+不改生成物绕过失败；build、PDF、PNG、生成TeX、本机路径和凭据不提交。
+
+审查完整staged diff，仅允许文件提交；当前分支普通推送。核对精确head/base
+全部远端原字节、完整patch与重放树、GitHub-native唯一closing Issue合同和
+最新精确HEAD的pr-contract与policy-and-data真实run/job成功，fresh main等于
+接受base；合并权限依本次任务明确授权执行。当前PR809的admin squash已获授权，
+无需重复询问；未来任务按其授权边界执行。不得直接推main、force、改remote/
+保护规则或伪造人审。合并后验MERGED/CLOSED、main/feature树、原字节和clean。
+
+用简洁中文报告真实计数、下一步和实际阻断，不猜百分比或工期。最终交付详细
+开发说明、实际命令和验收证据、main/PR/CI精确值、维护边界与可复制提示词；
+未完成如实列出，全部目标真实完成后才标goal complete。
+```

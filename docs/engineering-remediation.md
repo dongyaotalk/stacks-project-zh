@@ -1,12 +1,14 @@
 # 2026-10 项目审查修复开发计划
 
+> 2026-10-19 唯一必要纯工具前置 [Issue812](https://github.com/dongyaotalk/stacks-project-zh/issues/812) / [PR813](https://github.com/dongyaotalk/stacks-project-zh/pull/813) 已合并；最终集成接受 main 为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`。用户已明确授权此例外。仅修复可信门禁的大文件可空分类、回归及实测时限，完整原字节/来源/审批要求保持。全部集中DATA仍在原PR809；实际生成的DATA origin与上下文继续绑定5b527d9，不回写历史。
+
 > 工具前置 [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811) 已完成并合并，接受 main 为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`。完整来源恢复、组合数学文字和哈希范围清单合同已接受；原工具提交与文档历史保留，不重做此前置。后续 DATA 的 origin 使用该已接受提交，英文锁不变；现有 Issue #808 / PR #809 统一收尾全部 DATA、S5、S7和最终文档。
 
 > 2026-10-14 用户最新执行指示：利用全库抽取与统一修复队列，集中完成全部剩余修复，取消逐批 Issue/PR 及重复整书验收。复用 claimed Issue #808、分支 `docs/progress-categories-cofinal-initial` 和草稿 PR #809，最终以一个 PR 验收全部 F1–F8（S4 → S5 → S7）。原文中的“下一批前独立进度 PR”“工具必须先单独合并”等是保留的旧执行记录，不再作为本次集中任务的步骤。各类改动保留可审查的逻辑提交，开发期按影响范围检查，最终集中执行完整门禁和 render/pdf、全书文字与全部变化及邻页 PNG 验收。范围变更仍先更新同一 Issue 的精确路径/完整新旧 ID/run/model；未知来源继续 BLOCKED，原输入、raw、历史、保护结构及真实模型生成要求保持。
 
 ## 当前整合任务检查点（2026-10-19，尚未合并）
 
-fresh main仍为`5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`，239批/1208活跃单元。
+最终集成接受main为`991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`，239批/1208活跃单元。
 本地165批1049旧→683实际完整新单元已装配，全库239批/842唯一活跃单元，
 172新revision run；旧输入、原输出及全部历史原字节保留，没有人审或术语批准。
 英文目录v18覆盖6507次来源出现/688份Git见证；最新严格239批探测零错误，
@@ -18,9 +20,10 @@ S5已实现默认六个CLI入口与单进程`check-repository`/Make/CI，当前�
 653项工具测试的两项旧CLI fixture失败修正后，41项相关回归通过，原失败保留。
 172新run的683条冻结记录、全库抽取/对齐四项和隔离进度/计划均通过。实际
 render/pdf/template通过；457页整书的全部变化及邻页、另3页和13页模板实际查看，
-其余正文与已查看基线逐页验证等同。下一步仅为完整提交合同/差异、推送、精确
-远端门禁及授权合并。完整scope、架构、证据和后续命令见[开发指南](remediation-development-guide.md)
-最新节；同一Issue808/草稿PR809集中收尾，不重做已合并数据或逐批开PR。
+其余正文与已查看基线逐页验证等同。a17f465已推送且653项远端测试、完整239QA及
+117章进度/计划成功。唯一工具前置PR813已接受；下一步为合入接受main后的最新
+精确HEAD双门禁、完整远端原字节/patch/native合同及授权合并后验证。完整scope、架构、证据和后续命令见[开发指南](remediation-development-guide.md)
+最新节；同一Issue808/ready PR809集中收尾，不重做已合并数据或逐批开PR。
 
 ## 历史接受检查点与原执行顺序
 

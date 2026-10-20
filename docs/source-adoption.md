@@ -110,3 +110,26 @@ selection、review 和正式 revision 对首次采用候选要求完整 `provena
 
 完整来源首次采用验证过的 OWNARGEND 标题与 v4 标题具有相同来源权限；旧派生
 检查必须消费实际首次采用回放凭证，不能凭 pointer 或任意调用者列表通过。
+
+## 同一普通 run 的范围外参与者（v3）
+
+[Issue #828](https://github.com/dongyaotalk/stacks-project-zh/issues/828) 增加独立
+`source-adoption-input-v3` / `source-adoption-v3` 分支。当同一个普通临时 run 的
+其他完整 batch 已进入首次采用历史时，v3 用 `shared_run_histories` 显式绑定这些
+范围外 adoption 的 record 和全部有序 output 原字节快照。固定快照路径为
+`translation-data/retired/source-adoptions/<new-id>-shared-<old-id>-<batch>/units.jsonl`
+及同目录 `candidates.jsonl`，record 和快照路径均须包含在当前精确任务 scope 内。
+
+每个新 batch 必须具有完整普通 `prior_attempts`。v3 不能同时声明
+`prior_adoptions`；v1/v2 不能声明共享历史。范围外 witness 必须严格早于本次生成、
+与新输出及其他 witness 不重叠，并至少包含一个本次普通原 run 的参与者。
+工具递归重放整个 witness 的来源、政策、全部五字段、raw、run、context 及普通
+历史，再把相关普通参与者插回原 run 的完整路径和顺序。回放 witness 时，同步
+使用新 batch 已验证的普通祖先快照；共同采用后，这些快照也用于其他 active
+adoption 的原 run 回放。原始 manifest 的完整 accepted-record 和 context 顺序
+检查仍必须通过，不能用任意快照或重算 hash 绕过。
+
+共享 witness 只贡献原 run 验证，不消费范围外 adoption，不扩大新输出 ID，不
+覆盖范围外候选，不授予审校或来源修改权限。缺失、重复、截断、时间错误、范围
+越界、快照或原 raw 篡改，以及递归循环均拒绝。v2 完整前次采用历史的限制保持；
+新输出仍须由实际模型完整生成并通过全部现行来源、术语、结构和溯源门禁。

@@ -578,6 +578,147 @@ def followup_fixture(base):
     return root, harvest, new_fp, new_rp, updated, record
 
 
+def shared_run_fixture(base, *, followup=False):
+    """Adopt one ordinary run batch, then adopt its remaining batch."""
+    root, harvest, fp, rp, frozen, raw = provisional_fixture(base)
+    first = copy.deepcopy(frozen)
+    first['batches'] = [first['batches'][0]]
+    first['unit_ids'] = [u['unit_id'] for u in first['batches'][0]['units']]
+    write(fp, first)
+    write_jsonl(rp, [raw[0]])
+    unused = frozen['batches'][1]['prior_attempts'][0]
+    for role in ['units', 'candidates']:
+        (root / unused[role]['path']).unlink()
+    record = assemble_source_adoption(root, fp, [rp], harvest)
+    if followup:
+        updated = copy.deepcopy(first)
+        updated.update(adoption_id='synthetic-followup', run_id='run-synthetic-followup',
+            tool_version='source-adoption-input-v2', created_at='2026-10-19T12:00:00Z')
+        updated['batches'][0]['prior_attempts'] = []
+        saved = {}
+        for role in ['units', 'candidates']:
+            original = record['outputs'][0][role]
+            relative = ('translation-data/retired/source-adoptions/synthetic-followup-'
+                        f'synthetic-first-{Path(original["path"]).stem}/{role}.jsonl')
+            target = root / relative; target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((root / original['path']).read_bytes())
+            saved[role] = dict(path=relative, hash=byte_hash(target.read_bytes()))
+        record_path = 'translation-data/source-adoptions/synthetic-first.json'
+        updated['prior_adoptions'] = [dict(record=dict(path=record_path,
+            hash=byte_hash((root / record_path).read_bytes())), outputs=[saved])]
+        follow_fp = root / 'translation-data/source-adoption-inputs/synthetic-followup.json'
+        follow_rp = root / 'docs/evidence/synthetic-followup-raw.jsonl'
+        scope_path = root / frozen['task']['scope_manifest']; scope = json.loads(scope_path.read_text())
+        extra = [follow_fp.relative_to(root).as_posix(), follow_rp.relative_to(root).as_posix(),
+            'translation-data/source-adoptions/synthetic-followup.json',
+            'translation-data/runs/run-synthetic-followup.json', *[saved[r]['path'] for r in ['units','candidates']]]
+        scope['allowed_write_files'].extend(extra); scope['data_scopes'][0]['allowed_write_files'].extend(extra)
+        scope['data_scopes'][0]['run_scope'].append('run-synthetic-followup'); write(scope_path, scope)
+        updated['task'].update(scope_bytes=scope_path.read_text(), scope_manifest_sha256=byte_hash(scope_path.read_bytes()))
+        write(follow_fp, updated); write_jsonl(follow_rp, [raw[0]])
+        record = assemble_source_adoption(root, follow_fp, [follow_rp], harvest)
+    second = copy.deepcopy(frozen)
+    second.update(adoption_id='synthetic-shared', run_id='run-synthetic-shared',
+        tool_version='source-adoption-input-v3', created_at='2026-10-20T00:00:00Z')
+    second['batches'] = [second['batches'][1]]
+    second['unit_ids'] = [u['unit_id'] for u in second['batches'][0]['units']]
+    for role in ['units', 'candidates']:
+        relative = f'translation-data/retired/source-adoptions/synthetic-shared-prior-001/{role}.jsonl'
+        target = root / relative; target.parent.mkdir(parents=True, exist_ok=True)
+        original = second['batches'][0]['prior_attempts'][0][role]
+        if role == 'units':
+            write_jsonl(target, second['batches'][0]['units'])
+        else:
+            target.write_bytes((root / second['batches'][0]['candidates_path']).read_bytes())
+        original.update(path=relative, hash=byte_hash(target.read_bytes()))
+    outputs = []
+    for output in record['outputs']:
+        saved = {}
+        for role in ['units', 'candidates']:
+            relative = ('translation-data/retired/source-adoptions/synthetic-shared-shared-'
+                        f'{record["adoption_id"]}-{Path(output[role]["path"]).stem}/{role}.jsonl')
+            target = root / relative; target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((root / output[role]['path']).read_bytes())
+            saved[role] = dict(path=relative, hash=byte_hash(target.read_bytes()))
+        outputs.append(saved)
+    prior_path = f'translation-data/source-adoptions/{record["adoption_id"]}.json'
+    second['shared_run_histories'] = [dict(record=dict(path=prior_path,
+        hash=byte_hash((root / prior_path).read_bytes())), outputs=outputs)]
+    new_fp = root / 'translation-data/source-adoption-inputs/synthetic-shared.json'
+    new_rp = root / 'docs/evidence/synthetic-shared-raw.jsonl'
+    scope_path = root / frozen['task']['scope_manifest']; scope = json.loads(scope_path.read_text())
+    extra = [new_fp.relative_to(root).as_posix(), new_rp.relative_to(root).as_posix(),
+        'translation-data/source-adoptions/synthetic-shared.json',
+        'translation-data/runs/run-synthetic-shared.json']
+    extra += [p[role]['path'] for p in second['batches'][0]['prior_attempts'] for role in ['units','candidates']]
+    extra += [o[role]['path'] for o in outputs for role in ['units','candidates']]
+    scope['allowed_write_files'].extend(extra); scope['data_scopes'][0]['allowed_write_files'].extend(extra)
+    scope['data_scopes'][0]['run_scope'].append('run-synthetic-shared'); write(scope_path, scope)
+    second['task'].update(scope_bytes=scope_path.read_text(), scope_manifest_sha256=byte_hash(scope_path.read_bytes()))
+    write(new_fp, second); write_jsonl(new_rp, [raw[1]])
+    return root, harvest, new_fp, new_rp, second
+
+
+class SourceAdoptionSharedRunTests(unittest.TestCase):
+    def test_complete_shared_run_preserves_external_batch_and_public_provenance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root, harvest, fp, rp, frozen = shared_run_fixture(Path(temp))
+            other = root / 'translation-data/candidates/synthetic/test-prose.jsonl'
+            before = other.read_bytes()
+            assemble_source_adoption(root, fp, [rp], harvest)
+            self.assertEqual(other.read_bytes(), before)
+            self.assertEqual(validate_repository_provenance(root, harvest), [])
+
+    def test_v2_witness_recursively_replays_ordinary_history(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root, harvest, fp, rp, frozen = shared_run_fixture(Path(temp), followup=True)
+            other = root / 'translation-data/candidates/synthetic/test-prose.jsonl'
+            before = other.read_bytes()
+            assemble_source_adoption(root, fp, [rp], harvest)
+            self.assertEqual(other.read_bytes(), before)
+            self.assertEqual(validate_repository_provenance(root, harvest), [])
+
+    def test_shared_witness_missing_truncated_duplicate_or_false_raw_fails(self):
+        for mode in ['missing', 'truncated', 'duplicate', 'raw', 'scope', 'time', 'snapshot', 'no-ancestor']:
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as temp:
+                root, harvest, fp, rp, frozen = shared_run_fixture(Path(temp))
+                witness = frozen['shared_run_histories'][0]
+                if mode == 'missing':
+                    frozen['shared_run_histories'] = []
+                elif mode == 'truncated':
+                    witness['outputs'] = []
+                elif mode == 'duplicate':
+                    frozen['shared_run_histories'].append(copy.deepcopy(witness))
+                elif mode == 'scope':
+                    scope = json.loads(frozen['task']['scope_bytes'])
+                    scope['data_scopes'][0]['allowed_write_files'].remove(witness['outputs'][0]['candidates']['path'])
+                    frozen['task'].update(scope_bytes=json.dumps(scope), scope_manifest_sha256=byte_hash(json.dumps(scope).encode()))
+                    (root / frozen['task']['scope_manifest']).write_text(json.dumps(scope))
+                elif mode == 'time':
+                    frozen['created_at'] = '2026-10-18T12:00:00Z'
+                elif mode == 'snapshot':
+                    entry = witness['outputs'][0]['candidates']; path = root / entry['path']
+                    rows = [json.loads(line) for line in path.read_text().splitlines()]
+                    rows[0]['translation'] = 'Synthetic changed snapshot.'; write_jsonl(path, rows)
+                    entry['hash'] = byte_hash(path.read_bytes())
+                elif mode == 'no-ancestor':
+                    frozen['batches'][0]['prior_attempts'] = []
+                else:
+                    path = root / 'docs/evidence/synthetic-prior-raw.jsonl'
+                    rows = [json.loads(line) for line in path.read_text().splitlines()]
+                    rows[0]['translation'] = 'Synthetic false history.'; write_jsonl(path, rows)
+                write(fp, frozen)
+                with self.assertRaises(RecordError):
+                    assemble_source_adoption(root, fp, [rp], harvest)
+
+    def test_old_versions_cannot_claim_shared_history(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root, harvest, fp, rp, frozen = shared_run_fixture(Path(temp))
+            frozen['tool_version'] = 'source-adoption-input-v1'; write(fp, frozen)
+            with self.assertRaises(RecordError):
+                assemble_source_adoption(root, fp, [rp], harvest)
+
+
 class SourceAdoptionFollowupTests(unittest.TestCase):
     def test_complete_followup_preserves_both_runs_and_first_git_adoption(self):
         with tempfile.TemporaryDirectory() as temp:

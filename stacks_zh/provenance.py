@@ -62,11 +62,12 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
     manifests: dict[str, tuple[Path, dict[str, Any]]] = {}
     candidate_context_hashes: dict[str, list[str]] = {}
     corrections, errors = load_repository_corrections(root)
-    origins, derivation_errors = load_repository_derivations(root, corrections, harvest)
-    errors.extend(derivation_errors)
     from .source_adoptions import load_repository_source_adoptions
     source_adoptions, adoption_errors = load_repository_source_adoptions(root, harvest)
     errors.extend(adoption_errors)
+    origins, derivation_errors = load_repository_derivations(root, corrections, harvest,
+        _source_adoptions=source_adoptions)
+    errors.extend(derivation_errors)
     typed_active = {}
     typed_seen = set()
     for unit_file in sorted((root / 'translation-data/units').glob('*.jsonl')):

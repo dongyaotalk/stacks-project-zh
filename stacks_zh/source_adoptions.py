@@ -25,6 +25,30 @@ from .source_containers import Containers, clean, lower_container, safe_path
 from .source_reextractions import byte_hash
 
 VERSION = 'source-adoption-v1'
+_REPLAY_TOKEN = object()
+
+
+class _ValidatedAdoptions(dict):
+    """Private same-session replay receipt; never accepts a caller dictionary."""
+    def __init__(self, token, root, values, snapshots):
+        if token is not _REPLAY_TOKEN:
+            raise RecordError('adoption receipt requires an actual complete replay')
+        super().__init__(values)
+        self.root = root
+        self.snapshots = snapshots
+        self.binding = self._binding()
+
+    def _binding(self):
+        return sha256_value({path + ':' + uid: [value['unit'], value['candidate']]
+                             for (path, uid), value in self.items()})
+
+    def assert_unchanged(self, root):
+        if root.resolve() != self.root:
+            raise RecordError('adoption replay belongs to another repository')
+        if self.binding != self._binding():
+            raise RecordError('adoption replay receipt changed')
+        for snapshot in self.snapshots:
+            snapshot.assert_unchanged()
 FIELDS = ('translation', 'allowed_english', 'term_occurrences', 'unknown_terms', 'notes')
 POLICIES = ('upstream.lock', 'config/workflow.yml', 'config/macro-policy.yml',
             'config/glossary.yml', 'config/source-terms.json', 'config/style-guide.md',
@@ -48,6 +72,9 @@ def _schema(value, name):
     errors = validate_named_schema(value, name, name)
     if errors:
         raise RecordError('\n'.join(errors))
+    if (name == 'source-adoption-input.schema.json' and value.get('tool_version') == 'source-adoption-input-v1'
+            and 'prior_adoptions' in value):
+        raise RecordError('v1 schema cannot declare pre-Git adoption revisions')
 
 
 def _relative_input(root, path):
@@ -82,6 +109,10 @@ def _task_scope(frozen, reads, input_entry, *, current):
         paths.update((batch['units_path'],batch['candidates_path']))
         for prior in batch['prior_attempts']:
             paths.update(prior[role]['path'] for role in ('units','candidates'))
+    for prior in frozen.get('prior_adoptions', []):
+        paths.add(prior['record']['path'])
+        for output in prior['outputs']:
+            paths.update(output[role]['path'] for role in ('units', 'candidates'))
     owners = [child for child in scope['data_scopes'] if paths <= set(child['allowed_write_files'])
               and set(frozen['unit_ids']) <= set(child['output_unit_ids'])]
     if len(owners) != 1:
@@ -176,13 +207,19 @@ def _source_references(text, policy):
 
 
 class Reads:
-    def __init__(self, root):
+    def __init__(self, root, overrides=None):
         self.root = root
         self.snapshot = InputSnapshot(root)
+        self.overrides = overrides or {}
+
+    def output(self, relative):
+        if relative in self.overrides:
+            return self.read(self.overrides[relative], EVIDENCE)
+        return self.snapshot.read(self.root / relative)
 
     def read(self, entry, pattern=EVIDENCE):
         path = safe_path(self.root, entry['path'], pattern)
-        raw = self.snapshot.read(path)
+        raw = self.output(entry['path']) if entry['path'] in self.overrides else self.snapshot.read(path)
         if byte_hash(raw) != entry['hash']:
             raise RecordError('source adoption file hash mismatch: ' + entry['path'])
         _first_addition_is_immutable(self.root, path)
@@ -422,7 +459,7 @@ def _complete_prior_runs(reads, histories):
         for relative in sorted(by_path):
             cp = safe_path(reads.root, relative,
                           r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
-            current = _rows(reads.snapshot.read(cp))
+            current = _rows(reads.output(relative))
             expected_ids = {entry['unit_id'] for entry in by_path[relative]}
             rows = []
             for row in current:
@@ -434,7 +471,7 @@ def _complete_prior_runs(reads, histories):
                     rows.append(row)
             if {row['unit_id'] for row in rows} != expected_ids:
                 raise RecordError('prior run is missing a complete current or historical participant')
-            units = _rows(reads.snapshot.read(reads.root / 'translation-data/units' / cp.name))
+            units = _rows(reads.output('translation-data/units/' + cp.name))
             if validate_records(units, rows, run['source_commit']):
                 raise RecordError('prior run participant fails complete source/structural replay')
             entries = {entry['unit_id']: entry for entry in by_path[relative]}
@@ -464,8 +501,8 @@ def _complete_prior_runs(reads, histories):
             raise RecordError('prior run full context order/coverage differs from its original manifest')
 
 
-def _prepare(root, input_entry, harvest=None, *, current=False):
-    reads = Reads(root)
+def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, visiting=None):
+    reads = Reads(root, overrides)
     frozen = reads.json(input_entry)
     _schema(frozen, 'source-adoption-input.schema.json')
     if input_entry['path'] != f"translation-data/source-adoption-inputs/{frozen['adoption_id']}.json":
@@ -506,7 +543,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False):
         if up.name != cp.name or cp.parent.name != frozen['runtime']['model_lane'] or {str(up), str(cp)} & paths:
             raise RecordError('first adoption has duplicate or mismatched batch paths')
         paths.update((str(up), str(cp)))
-        if _rows(reads.snapshot.read(up)) != batch['units']:
+        if _rows(reads.output(batch['units_path'])) != batch['units']:
             raise RecordError('active source units differ from the complete generation freeze')
         previous, batch_units = None, []
         for group in batch['containers']:
@@ -537,7 +574,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False):
             if old:
                 if reads.snapshot.read(cp) != reads.read(batch['prior_attempts'][-1]['candidates']):
                     raise RecordError('provisional active candidate changed before its complete replacement')
-            elif cp.exists():
+            elif cp.exists() and frozen['tool_version'] != 'source-adoption-input-v2':
                 raise RecordError('first generation cannot overwrite an existing candidate')
         for relative in (batch['units_path'], batch['candidates_path']):
             found = subprocess.run(['git', '-C', str(root), 'ls-tree', origin, '--', relative], capture_output=True)
@@ -619,8 +656,79 @@ def _prepare(root, input_entry, harvest=None, *, current=False):
     native.assert_unchanged()
     alignment_native.assert_unchanged()
     _complete_prior_runs(reads, histories)
+    if frozen['tool_version'] == 'source-adoption-input-v2':
+        prior_histories = _prior_adoptions(root, frozen, reads, harvest, current, visiting or set())
+        for path, groups in prior_histories.items():
+            histories[path].extend(groups)
     reads.snapshot.assert_unchanged()
     return frozen, reads, native, histories
+
+
+def _first_commit(root, relative):
+    commits = subprocess.check_output(['git', '-C', str(root), 'log', '--diff-filter=A',
+                                      '--format=%H', '--reverse', 'HEAD', '--', relative], text=True).splitlines()
+    return commits[0] if commits else None
+
+
+def _prior_adoptions(root, frozen, reads, harvest, current, visiting):
+    """Replay complete pre-Git adoptions through their untouched output snapshots."""
+    identifier = frozen['adoption_id']
+    if identifier in visiting:
+        raise RecordError('cyclic pre-Git source-adoption history')
+    visiting = visiting | {identifier}
+    batches = {b['candidates_path']: b for b in frozen['batches']}
+    if not frozen['prior_adoptions']:
+        raise RecordError('v2 requires nonempty complete prior adoptions')
+    if any(b['prior_attempts'] for b in batches.values()):
+        raise RecordError('v2 prior adoption already owns all ordinary generation ancestry')
+    covered, histories = set(), {}
+    current_commit = _first_commit(root, f'translation-data/source-adoption-inputs/{identifier}.json')
+    for prior in frozen['prior_adoptions']:
+        record = reads.json(prior['record'], r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
+        if prior['record']['path'] != f'translation-data/source-adoptions/{record["adoption_id"]}.json':
+            raise RecordError('prior adoption record filename differs from its actual ID')
+        prior_commit = _first_commit(root, prior['record']['path'])
+        if (record['adoption_id'] in visiting or not _time(record['created_at']) < _time(frozen['created_at'])
+                or current and prior_commit is not None
+                or not current and prior_commit is not None and prior_commit != current_commit):
+            raise RecordError('prior adoption must be complete actual pre-Git history with strict time order')
+        if len(record['outputs']) != len(prior['outputs']):
+            raise RecordError('prior adoption requires every complete original output batch')
+        overrides = {}
+        for original, archive in zip(record['outputs'], prior['outputs'], strict=True):
+            path = original['candidates']['path']
+            if path in covered or path not in batches:
+                raise RecordError('prior adoption outputs overlap or escape the complete new generation')
+            covered.add(path)
+            for role in ('units', 'candidates'):
+                output_commit = _first_commit(root, original[role]['path'])
+                if (current and output_commit is not None or not current and output_commit is not None
+                        and output_commit != current_commit):
+                    raise RecordError('prior adoption output already had an independent Git adoption')
+                entry = archive[role]
+                expected_path = (f'translation-data/retired/source-adoptions/{identifier}-'
+                                 f'{record["adoption_id"]}-{Path(original[role]["path"]).stem}/{role}.jsonl')
+                if entry['path'] != expected_path or entry['hash'] != original[role]['hash']:
+                    raise RecordError('prior adoption snapshot is not its complete exact original bytes')
+                reads.read(entry)
+                overrides[original[role]['path']] = entry
+        old_frozen, old_reads, native, old_histories = _prepare(root, record['input'], harvest,
+            overrides=overrides, visiting=visiting)
+        expected, manifest = _replay_record(record, old_frozen, old_reads, native)
+        for path, rows in expected.items():
+            old_batch = next(b for b in old_frozen['batches'] if b['candidates_path'] == path)
+            if old_batch['units'] != batches[path]['units'] or old_batch['units_path'] != batches[path]['units_path']:
+                raise RecordError('pre-Git adoption revision changes source or complete segmentation')
+            if current and reads.snapshot.read(root / path) != reads.read(overrides[path]):
+                raise RecordError('prior adoption active bytes drifted before complete replacement')
+            histories[path] = [*old_histories[path], rows]
+        native.assert_unchanged()
+        old_reads.snapshot.assert_unchanged()
+        for path in old_reads.snapshot.hashes:
+            reads.snapshot.read(path)
+    if covered != set(batches):
+        raise RecordError('v2 must regenerate every unit of every complete previous adoption')
+    return histories
 
 
 def _generated(frozen, raw, input_entry):
@@ -647,6 +755,8 @@ def _generated(frozen, raw, input_entry):
                 input_freeze=input_entry, turn_id=identity['turn_id'],
                 generation_contexts=frozen['contexts'], prior_generations=batch['prior_attempts'],
                 model_output=dict(path=entry['path'], hash=entry['hash'], record_hash=sha256_value(row)))
+            if frozen['tool_version'] == 'source-adoption-input-v2':
+                candidate['context']['prior_source_adoptions'] = frozen['prior_adoptions']
             candidate['context_hash'] = sha256_value(candidate['context'])
         result[batch['candidates_path']] = rows
     manifest = dict(schema_version=1, run_id=run_id, run_kind='translation', task_id=frozen['task_id'],
@@ -763,7 +873,8 @@ def _assemble_source_adoption(root: Path, input_path: Path, raw_paths: list[Path
             hash=byte_hash(reads.snapshot.read(root / batch['units_path']))),
             candidates=dict(path=batch['candidates_path'], hash=byte_hash(payloads[path]))))
     payloads[run_path] = _json_bytes(manifest)
-    record = dict(schema_version=1, tool_version=VERSION, adoption_id=aid,
+    record = dict(schema_version=1, tool_version=VERSION if frozen['tool_version'].endswith('v1')
+                  else 'source-adoption-v2', adoption_id=aid,
         origin_commit=frozen['origin_commit'], source_commit=frozen['source_commit'],
         created_at=frozen['created_at'], input=entry, raw_attempts=attempts,
         unit_ids=manifest['unit_ids'], chapter=units[0]['chapter'],
@@ -799,6 +910,16 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
     history = subprocess.run(['git', '-C', str(root), 'log', '--diff-filter=A', '--format=',
                               '--name-only', 'HEAD', '--', 'translation-data/source-adoptions'],
                              capture_output=True, text=True)
+    retired = root / 'translation-data/retired/source-adoptions'
+    if not directory.exists() and not retired.exists() and not history.stdout.strip():
+        return {}, []
+    try:
+        inventory = InputSnapshot(root)
+        inventory.watch_tree(root / 'translation-data/source-adoptions')
+        inventory.watch_tree(root / 'translation-data/retired/source-adoptions')
+    except (OSError, ValueError) as exc:
+        return {}, [str(exc)]
+    snapshots = [inventory]
     if history.returncode and directory.exists():
         errors.append('first-adoption immutability requires readable Git history')
     for relative in set(history.stdout.splitlines()) - {''}:
@@ -807,7 +928,35 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
     for path in sorted(directory.glob('*')):
         if path.suffix != '.json':
             errors.append(str(path) + ': unsupported first-adoption evidence')
+    consumed = {}
+    graph = {}
     for path in sorted(directory.glob('*.json')):
+        try:
+            record = json.loads(path.read_bytes())
+            frozen = json.loads((root / record['input']['path']).read_bytes())
+            graph[path.relative_to(root).as_posix()] = [p['record']['path'] for p in frozen.get('prior_adoptions', [])]
+            for prior in frozen.get('prior_adoptions', []):
+                relative = prior['record']['path']
+                if relative in consumed:
+                    raise RecordError('prior adoption has multiple current successors')
+                consumed[relative] = path
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors.append(str(path) + ': ' + str(exc))
+    def visit(relative, chain):
+        if relative in chain:
+            raise RecordError('cyclic pre-Git source-adoption history')
+        if relative not in graph:
+            raise RecordError('prior adoption record disappeared')
+        for prior in graph[relative]:
+            visit(prior, chain | {relative})
+    try:
+        for relative in graph:
+            visit(relative, set())
+    except RecordError as exc:
+        return {}, [*errors, str(exc)]
+    for path in sorted(directory.glob('*.json')):
+        if path.relative_to(root).as_posix() in consumed:
+            continue
         try:
             safe_path(root, path.relative_to(root).as_posix(),
                       r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
@@ -818,29 +967,10 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
             _first_addition_is_immutable(root, path)
             frozen, reads, native, histories = _prepare(root, record['input'], harvest)
             reads.snapshot.read(path)
-            for key in ('adoption_id', 'origin_commit', 'source_commit', 'created_at'):
-                if frozen[key] != record[key]:
-                    raise RecordError('first-adoption record differs from its immutable input')
             units = [u for b in frozen['batches'] for u in b['units']]
-            scope = _task_scope(frozen, reads, record['input'], current=False)
-            raw = _raw_records(reads, record['raw_attempts'], [u['unit_id'] for u in units], scope['allowed_write_files'])
-            expected, manifest = _generated(frozen, raw, record['input'])
-            if (record['unit_ids'] != manifest['unit_ids'] or record['run_id'] != manifest['run_id']
-                    or record['chapter'] != units[0]['chapter']
-                    or record['parent_tags'] != list(dict.fromkeys(u['parent_tag'] for u in units))):
-                raise RecordError('first-adoption declared complete scope differs from actual source/run')
-            if reads.json(record['run'], r'translation-data/runs/[A-Za-z0-9._-]+\.json') != manifest:
-                raise RecordError('first-adoption actual run differs from complete replay')
-            if len(record['outputs']) != len(frozen['batches']):
-                raise RecordError('first-adoption output batch coverage differs')
+            expected, manifest = _replay_record(record, frozen, reads, native)
             for batch, output in zip(frozen['batches'], record['outputs'], strict=True):
-                if output['units']['path'] != batch['units_path'] or output['candidates']['path'] != batch['candidates_path']:
-                    raise RecordError('first-adoption output order/paths differ')
-                if _rows(reads.read(output['units'], r'translation-data/units/[A-Za-z0-9._-]+\.jsonl')) != batch['units']:
-                    raise RecordError('first-adoption source units differ from complete replay')
                 actual = _rows(reads.read(output['candidates'], r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl'))
-                if actual != expected[batch['candidates_path']]:
-                    raise RecordError('first-adoption candidate differs from all five fields or metadata replay')
                 for index, candidate in enumerate(actual):
                     key = (batch['candidates_path'], candidate['unit_id'])
                     if key in adopted or candidate['unit_id'] in owned_ids:
@@ -851,9 +981,47 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
                         policy=native.policy, files=dict(reads.snapshot.hashes))
             native.assert_unchanged()
             reads.snapshot.assert_unchanged()
+            snapshots.append(reads.snapshot)
         except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError) as exc:
             errors.append(str(path) + ': ' + str(exc))
-    return adopted, errors
+    used = {path for snapshot in snapshots[1:] for path in snapshot.hashes}
+    retired = root / 'translation-data/retired/source-adoptions'
+    for path in retired.rglob('*'):
+        if path.is_file() and path not in used:
+            errors.append(str(path) + ': orphaned source-adoption history snapshot')
+    inventory.assert_unchanged()
+    return _ValidatedAdoptions(_REPLAY_TOKEN, root, adopted, snapshots), errors
+
+
+def _replay_record(record, frozen, reads, native):
+    _schema(record, 'source-adoption.schema.json')
+    expected_version = frozen['tool_version'].replace('-input', '')
+    if record['tool_version'] != expected_version:
+        raise RecordError('first-adoption record/input version differs')
+    for key in ('adoption_id', 'origin_commit', 'source_commit', 'created_at'):
+        if frozen[key] != record[key]:
+            raise RecordError('first-adoption record differs from its immutable input')
+    units = [u for b in frozen['batches'] for u in b['units']]
+    scope = _task_scope(frozen, reads, record['input'], current=False)
+    raw = _raw_records(reads, record['raw_attempts'], [u['unit_id'] for u in units], scope['allowed_write_files'])
+    expected, manifest = _generated(frozen, raw, record['input'])
+    if (record['unit_ids'] != manifest['unit_ids'] or record['run_id'] != manifest['run_id']
+            or record['chapter'] != units[0]['chapter']
+            or record['parent_tags'] != list(dict.fromkeys(u['parent_tag'] for u in units))):
+        raise RecordError('first-adoption declared complete scope differs from actual source/run')
+    if reads.json(record['run'], r'translation-data/runs/[A-Za-z0-9._-]+\.json') != manifest:
+        raise RecordError('first-adoption actual run differs from complete replay')
+    if len(record['outputs']) != len(frozen['batches']):
+        raise RecordError('first-adoption output batch coverage differs')
+    for batch, output in zip(frozen['batches'], record['outputs'], strict=True):
+        if output['units']['path'] != batch['units_path'] or output['candidates']['path'] != batch['candidates_path']:
+            raise RecordError('first-adoption output order/paths differ')
+        if _rows(reads.read(output['units'], r'translation-data/units/[A-Za-z0-9._-]+\.jsonl')) != batch['units']:
+            raise RecordError('first-adoption source units differ from complete replay')
+        actual = _rows(reads.read(output['candidates'], r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl'))
+        if actual != expected[batch['candidates_path']]:
+            raise RecordError('first-adoption candidate differs from all five fields or metadata replay')
+    return expected, manifest
 
 
 def source_adoption_provenance_hash(root, candidate):

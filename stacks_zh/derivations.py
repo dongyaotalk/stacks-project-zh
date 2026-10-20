@@ -228,6 +228,7 @@ def replay_derivation(
 def load_repository_derivations(
     root: Path, corrections: dict[tuple[str, str], dict[str, Any]] | None = None,
     harvest: Path | None = None,
+    *, _source_adoptions=None,
 ) -> tuple[dict[tuple[str, str], dict[str, Any]], list[str]]:
     """Validate every historical replay and return ultimate origins of leaves."""
     origins, errors = {}, []
@@ -411,14 +412,30 @@ def load_repository_derivations(
     # for raw historical units to claim an arbitrary complex title boundary.
     owned_units = [unit for identifier in used_restorations
                    for unit in restorations[identifier]['record']['new_units']]
+    owned_rows = []
     for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
         try:
-            for row in load_jsonl(path):
-                if (any(name.startswith('OWNARGEND_') for name in row.get('placeholders', {}))
-                        and clean(row) not in owned_units):
-                    errors.append(f"{path}: {row['unit_id']}: owned title requires validated complete-container evidence")
-        except (RecordError, KeyError) as exc:
+            owned_rows.extend((path, row) for row in load_jsonl(path)
+                              if any(name.startswith('OWNARGEND_') for name in row.get('placeholders', {})))
+        except (RecordError, KeyError, OSError) as exc:
             errors.append(str(exc))
+    if owned_rows:
+        if _source_adoptions is None:
+            from .source_adoptions import load_repository_source_adoptions
+            adoptions, adoption_errors = load_repository_source_adoptions(root, harvest)
+            errors.extend(adoption_errors)
+        elif not _source_adoptions:
+            adoptions = {}
+        else:
+            from .source_adoptions import _ValidatedAdoptions
+            if not isinstance(_source_adoptions, _ValidatedAdoptions):
+                raise DerivationError('owned title requires an actual complete adoption replay')
+            _source_adoptions.assert_unchanged(root)
+            adoptions = _source_adoptions
+        owned_units.extend(value['unit'] for value in adoptions.values())
+    for path, row in owned_rows:
+        if clean(row) not in owned_units:
+            errors.append(f"{path}: {row['unit_id']}: owned title requires validated complete-container evidence")
     if any(r['tool']['version'] == '4' for r in records.values()):
         active_ids = {}
         for path in sorted((root / 'translation-data/units').glob('*.jsonl')):

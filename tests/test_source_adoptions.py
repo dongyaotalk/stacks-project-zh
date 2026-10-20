@@ -536,3 +536,131 @@ class SourceAdoptionTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def followup_fixture(base):
+    """Two complete synthetic generations before a first Git adoption."""
+    root, harvest, fp, rp, frozen, raw = synthetic_fixture(base)
+    record = assemble_source_adoption(root, fp, [rp], harvest)
+    updated = copy.deepcopy(frozen)
+    updated.update(adoption_id='synthetic-followup', run_id='run-synthetic-followup',
+                   tool_version='source-adoption-input-v2', created_at='2026-10-20T00:00:00Z')
+    archives = []
+    for output in record['outputs']:
+        saved = {}
+        for role in ['units', 'candidates']:
+            relative = (f'translation-data/retired/source-adoptions/synthetic-followup-'
+                        f'synthetic-first-{Path(output[role]["path"]).stem}/{role}.jsonl')
+            path = root / relative; path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes((root / output[role]['path']).read_bytes())
+            saved[role] = dict(path=relative, hash=byte_hash(path.read_bytes()))
+        archives.append(saved)
+    prior_path = 'translation-data/source-adoptions/synthetic-first.json'
+    updated['prior_adoptions'] = [dict(record=dict(path=prior_path,
+        hash=byte_hash((root / prior_path).read_bytes())), outputs=archives)]
+    new_fp = root / 'translation-data/source-adoption-inputs/synthetic-followup.json'
+    new_rp = root / 'docs/evidence/synthetic-followup-raw.jsonl'
+    scope_path = root / frozen['task']['scope_manifest']
+    scope = json.loads(scope_path.read_text())
+    extra = [new_fp.relative_to(root).as_posix(), new_rp.relative_to(root).as_posix(),
+             'translation-data/source-adoptions/synthetic-followup.json',
+             'translation-data/runs/run-synthetic-followup.json',
+             *(o[r]['path'] for o in archives for r in ['units','candidates'])]
+    scope['allowed_write_files'].extend(extra); scope['data_scopes'][0]['allowed_write_files'].extend(extra)
+    scope['data_scopes'][0]['run_scope'].append('run-synthetic-followup')
+    write(scope_path, scope)
+    updated['task'].update(scope_bytes=scope_path.read_text(),scope_manifest_sha256=byte_hash(scope_path.read_bytes()))
+    write(new_fp, updated)
+    raw[0]['translation'] = raw[0]['translation'].replace('合成范畴','后续合成范畴')
+    raw[0]['term_occurrences'][0]['target_term'] = '后续合成范畴'
+    raw[0]['unknown_terms'][0]['target_term'] = '后续合成范畴'
+    write_jsonl(new_rp,raw)
+    return root, harvest, new_fp, new_rp, updated, record
+
+
+class SourceAdoptionFollowupTests(unittest.TestCase):
+    def test_complete_followup_preserves_both_runs_and_first_git_adoption(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest,fp,rp,frozen,_=followup_fixture(Path(temp))
+            assemble_source_adoption(root,fp,[rp],harvest)
+            rows,errors=load_repository_source_adoptions(root,harvest)
+            self.assertEqual(errors,[]);self.assertEqual(len(rows),2)
+            self.assertTrue(all(len(v['prior_candidates'])==1 for v in rows.values()))
+            self.assertEqual(validate_repository_provenance(root,harvest),[])
+            git(root,'add','.')
+            git(root,'-c','user.name=Synthetic','-c','user.email=fixture@example.invalid','commit','-qm','Synthetic complete adoption')
+            self.assertEqual(validate_repository_provenance(root,harvest),[])
+
+    def test_rejects_incomplete_prior_outputs_and_unchanged_active_drift(self):
+        for mutation,needle in [('partial','every complete original'),('drift','drifted'),('time','strict time order'),('v1','schema')]:
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as temp:
+                root,harvest,fp,rp,frozen,_=followup_fixture(Path(temp))
+                if mutation=='partial':frozen['prior_adoptions'][0]['outputs'].pop()
+                elif mutation=='drift':
+                    p=root/frozen['batches'][0]['candidates_path'];p.write_bytes(p.read_bytes()+b'\n')
+                elif mutation=='time':frozen['created_at']='2026-10-18T00:00:00Z'
+                else:frozen['tool_version']='source-adoption-input-v1'
+                write(fp,frozen)
+                with self.assertRaises(RecordError):assemble_source_adoption(root,fp,[rp],harvest)
+
+    def test_rejects_already_git_adopted_predecessor(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest,fp,rp,frozen,record=followup_fixture(Path(temp))
+            git(root,'add',record['input']['path'],'translation-data/source-adoptions/synthetic-first.json')
+            git(root,'-c','user.name=Synthetic','-c','user.email=fixture@example.invalid','commit','-qm','Synthetic prior adopted')
+            with self.assertRaisesRegex(RecordError,'pre-Git'):
+                assemble_source_adoption(root,fp,[rp],harvest)
+
+    def test_rejects_changed_prior_raw_even_after_rehash(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest,fp,rp,frozen,record=followup_fixture(Path(temp))
+            p=root/record['raw_attempts'][0]['path'];p.write_bytes(p.read_bytes()+b'\n')
+            record['raw_attempts'][0]['hash']=byte_hash(p.read_bytes())
+            record_path=root/frozen['prior_adoptions'][0]['record']['path'];write(record_path,record)
+            frozen['prior_adoptions'][0]['record']['hash']=byte_hash(record_path.read_bytes());write(fp,frozen)
+            with self.assertRaises(RecordError):assemble_source_adoption(root,fp,[rp],harvest)
+
+    def test_snapshot_missing_changed_and_duplicate_successor_fail(self):
+        for mutation in ['missing','changed','duplicate']:
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as temp:
+                root,harvest,fp,rp,frozen,_=followup_fixture(Path(temp))
+                if mutation=='duplicate':
+                    assemble_source_adoption(root,fp,[rp],harvest)
+                    record_path=root/'translation-data/source-adoptions/synthetic-followup.json'
+                    (record_path.parent/'duplicate.json').write_bytes(record_path.read_bytes())
+                    self.assertTrue(load_repository_source_adoptions(root,harvest)[1])
+                    continue
+                entry=frozen['prior_adoptions'][0]['outputs'][0]['candidates'];p=root/entry['path']
+                if mutation=='missing':p.unlink()
+                else:p.write_bytes(p.read_bytes()+b'\n');entry['hash']=byte_hash(p.read_bytes());write(fp,frozen)
+                with self.assertRaises(RecordError):assemble_source_adoption(root,fp,[rp],harvest)
+
+    def test_complete_owned_title_passes_public_provenance_and_fake_pointer_fails(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest,fp,rp,frozen,raw=synthetic_fixture(Path(temp))
+            english=harvest/'test.tex';english.write_text(english.read_text().replace('\\begin{lemma}\\label{lemma-one}A claim.',
+                '\\begin{lemma}[A title]\\label{lemma-one}A claim.'))
+            git(harvest,'add','.');git(harvest,'-c','user.name=Synthetic','-c','user.email=fixture@example.invalid','commit','-qm','Synthetic named title')
+            source=git(harvest,'rev-parse','HEAD')
+            (root/'upstream.lock').write_text((root/'upstream.lock').read_text().replace(frozen['source_commit'],source))
+            catalog=json.loads((root/'config/source-terms.json').read_text());catalog['source_commit']=source;write(root/'config/source-terms.json',catalog)
+            git(root,'add','upstream.lock','config/source-terms.json');git(root,'-c','user.name=Synthetic','-c','user.email=fixture@example.invalid','commit','-qm','Synthetic updated source policy')
+            frozen['origin_commit']=git(root,'rev-parse','HEAD');frozen['source_commit']=source
+            native=Containers(root,harvest)
+            for batch in frozen['batches']:
+                selected=native.select(batch['containers'][0]['selector']);units=lower_container(selected,native.policy)
+                batch['units']=units;batch['containers'][0].update(selected=selected,unit_ids=[u['unit_id'] for u in units])
+                write_jsonl(root/batch['units_path'],units)
+            frozen['contexts']=[]
+            for row in native.document('test')[1]:
+                value=dict(kind='locked-English-neighbor',location=row['location'],source_commit=source,
+                    source_unit=row['unit'],owner_tag=row['owner_tag'],parent_tag=row['parent_tag'])
+                frozen['contexts'].append(dict(context_id=row['unit']['unit_id'],value=value,hash=sha256_value(value)))
+            frozen['policies']=[dict(path=p,hash=byte_hash((root/p).read_bytes())) for p in POLICIES]
+            scope_path=root/frozen['task']['scope_manifest'];scope=json.loads(scope_path.read_text());scope['source_commit']=source;write(scope_path,scope)
+            frozen['task'].update(scope_bytes=scope_path.read_text(),scope_manifest_sha256=byte_hash(scope_path.read_bytes()));write(fp,frozen)
+            raw[1]['translation']='合成标题<OWNARGEND_0001>合成断言。\n';write_jsonl(rp,raw)
+            assemble_source_adoption(root,fp,[rp],harvest)
+            self.assertEqual(validate_repository_provenance(root,harvest),[])
+            (root/'translation-data/source-adoptions/synthetic-first.json').unlink()
+            self.assertTrue(any('owned title' in e for e in validate_repository_provenance(root,harvest)))

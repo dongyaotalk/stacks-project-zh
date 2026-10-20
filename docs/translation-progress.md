@@ -14,8 +14,8 @@
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
 | 未开始 | 107 | 第 5-111 章 |
-| 翻译中 | 1 | 第 4 章 |
-| 候选译文完成，待审校 | 8 | 第 1-3、112-116 章 |
+| 翻译中 | 0 | — |
+| 候选译文完成，待审校 | 9 | 第 1-4、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 108 / 3,299（3.3%） | 9 | 3,182 |
+| 模型候选译文 | 128 / 3,299（3.9%） | 0 | 3,171 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -39,7 +39,7 @@
 | 1 | 引言（`introduction`） | 候选译文完成，待审校 | 2 / 2（100.0%） | 0 | 0 | 0 | 0 |
 | 2 | 约定（`conventions`） | 候选译文完成，待审校 | 5 / 5（100.0%） | 0 | 0 | 0 | 0 |
 | 3 | 集合论（`sets`） | 候选译文完成，待审校 | 12 / 12（100.0%） | 0 | 0 | 0 | 0 |
-| 4 | 范畴（`categories`） | 翻译中 | 24 / 44（54.5%） | 9 | 11 | 0 | 0 |
+| 4 | 范畴（`categories`） | 候选译文完成，待审校 | 44 / 44（100.0%） | 0 | 0 | 0 | 0 |
 | 5 | 拓扑（`topology`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 6 | 空间上的层（`sheaves`） | 未开始 | 0 / 33（0.0%） | 0 | 33 | 0 | 0 |
 | 7 | 位点与层（`sites`） | 未开始 | 0 / 52（0.0%） | 0 | 52 | 0 | 0 |
@@ -198,7 +198,7 @@
 
 ### 第 4 章 范畴（`categories`）
 
-共 44 个 Section：候选完成 24，翻译中 9，未开始 11。
+共 44 个 Section：候选完成 44，翻译中 0，未开始 0。
 
 | Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
 | ---: | --- | --- | --- | --- | --- |
@@ -206,16 +206,16 @@
 | 2 | `0013` | Definitions | 完成 | 未开始 | 未开始 |
 | 3 | `001L` | Opposite Categories and the Yoneda Lemma | 完成 | 未开始 | 未开始 |
 | 4 | `001R` | Products of pairs | 完成 | 未开始 | 未开始 |
-| 5 | `04AN` | Coproducts of pairs | 进行中 | 未开始 | 未开始 |
-| 6 | `001U` | Fibre products | 进行中 | 未开始 | 未开始 |
+| 5 | `04AN` | Coproducts of pairs | 完成 | 未开始 | 未开始 |
+| 6 | `001U` | Fibre products | 完成 | 未开始 | 未开始 |
 | 7 | `0020` | Examples of fibre products | 完成 | 未开始 | 未开始 |
-| 8 | `0021` | Fibre products and representability | 进行中 | 未开始 | 未开始 |
-| 9 | `0025` | Pushouts | 进行中 | 未开始 | 未开始 |
+| 8 | `0021` | Fibre products and representability | 完成 | 未开始 | 未开始 |
+| 9 | `0025` | Pushouts | 完成 | 未开始 | 未开始 |
 | 10 | `0027` | Equalizers | 完成 | 未开始 | 未开始 |
 | 11 | `0029` | Coequalizers | 完成 | 未开始 | 未开始 |
 | 12 | `002B` | Initial and final objects | 完成 | 未开始 | 未开始 |
-| 13 | `003A` | Monomorphisms and Epimorphisms | 进行中 | 未开始 | 未开始 |
-| 14 | `002D` | Limits and colimits | 进行中 | 未开始 | 未开始 |
+| 13 | `003A` | Monomorphisms and Epimorphisms | 完成 | 未开始 | 未开始 |
+| 14 | `002D` | Limits and colimits | 完成 | 未开始 | 未开始 |
 | 15 | `002U` | Limits and colimits in the category of sets | 完成 | 未开始 | 未开始 |
 | 16 | `04AQ` | Connected limits | 完成 | 未开始 | 未开始 |
 | 17 | `09WN` | Cofinal and initial categories | 完成 | 未开始 | 未开始 |
@@ -224,28 +224,28 @@
 | 20 | `04AY` | Cofiltered limits | 完成 | 未开始 | 未开始 |
 | 21 | `002Z` | Limits and colimits over preordered sets | 完成 | 未开始 | 未开始 |
 | 22 | `05PT` | Essentially constant systems | 完成 | 未开始 | 未开始 |
-| 23 | `0033` | Exact functors | 进行中 | 未开始 | 未开始 |
-| 24 | `0036` | Adjoint functors | 进行中 | 未开始 | 未开始 |
+| 23 | `0033` | Exact functors | 完成 | 未开始 | 未开始 |
+| 24 | `0036` | Adjoint functors | 完成 | 未开始 | 未开始 |
 | 25 | `0AHM` | A criterion for representability | 完成 | 未开始 | 未开始 |
 | 26 | `0FWW` | Categorically compact objects | 完成 | 未开始 | 未开始 |
-| 27 | `04VB` | Localization in categories | 未开始 | 未开始 | 未开始 |
-| 28 | `003D` | Formal properties | 进行中 | 未开始 | 未开始 |
+| 27 | `04VB` | Localization in categories | 完成 | 未开始 | 未开始 |
+| 28 | `003D` | Formal properties | 完成 | 未开始 | 未开始 |
 | 29 | `003G` | 2-categories | 完成 | 未开始 | 未开始 |
 | 30 | `02X8` | (2, 1)-categories | 完成 | 未开始 | 未开始 |
 | 31 | `003O` | 2-fibre products | 完成 | 未开始 | 未开始 |
 | 32 | `02XG` | Categories over categories | 完成 | 未开始 | 未开始 |
 | 33 | `02XJ` | Fibred categories | 完成 | 未开始 | 未开始 |
 | 34 | `04Z2` | Inertia | 完成 | 未开始 | 未开始 |
-| 35 | `003S` | Categories fibred in groupoids | 未开始 | 未开始 | 未开始 |
-| 36 | `02XU` | Presheaves of categories | 未开始 | 未开始 | 未开始 |
-| 37 | `0048` | Presheaves of groupoids | 未开始 | 未开始 | 未开始 |
-| 38 | `0042` | Categories fibred in sets | 未开始 | 未开始 | 未开始 |
-| 39 | `04S9` | Categories fibred in setoids | 未开始 | 未开始 | 未开始 |
-| 40 | `04SE` | Representable categories fibred in groupoids | 未开始 | 未开始 | 未开始 |
-| 41 | `0GWH` | The 2-Yoneda lemma | 未开始 | 未开始 | 未开始 |
-| 42 | `02Y4` | Representable 1-morphisms | 未开始 | 未开始 | 未开始 |
-| 43 | `0FFJ` | Monoidal categories | 未开始 | 未开始 | 未开始 |
-| 44 | `0H17` | Categories of dotted arrows | 未开始 | 未开始 | 未开始 |
+| 35 | `003S` | Categories fibred in groupoids | 完成 | 未开始 | 未开始 |
+| 36 | `02XU` | Presheaves of categories | 完成 | 未开始 | 未开始 |
+| 37 | `0048` | Presheaves of groupoids | 完成 | 未开始 | 未开始 |
+| 38 | `0042` | Categories fibred in sets | 完成 | 未开始 | 未开始 |
+| 39 | `04S9` | Categories fibred in setoids | 完成 | 未开始 | 未开始 |
+| 40 | `04SE` | Representable categories fibred in groupoids | 完成 | 未开始 | 未开始 |
+| 41 | `0GWH` | The 2-Yoneda lemma | 完成 | 未开始 | 未开始 |
+| 42 | `02Y4` | Representable 1-morphisms | 完成 | 未开始 | 未开始 |
+| 43 | `0FFJ` | Monoidal categories | 完成 | 未开始 | 未开始 |
+| 44 | `0H17` | Categories of dotted arrows | 完成 | 未开始 | 未开始 |
 
 ### 第 112 章 文献指南（`guide`）
 

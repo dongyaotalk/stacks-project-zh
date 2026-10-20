@@ -88,3 +88,25 @@ selection、review 和正式 revision 对首次采用候选要求完整 `provena
 当前来源/术语/证明独立审计、真实每个 run QA、全库提取与对应、两个要求的 lane
 完整构建、最终 TeX 日志和精确远端门禁。排版验收默认只检查编译；仅用户明确
 要求页面检查时才做额外检查，默认不生成截图/PNG或逐页目视验证。
+
+## 首次 Git 采用前的完整再次生成（v2）
+
+[Issue #826](https://github.com/dongyaotalk/stacks-project-zh/issues/826) 增加独立
+`source-adoption-input-v2` / `source-adoption-v2` 分支。v1 的 ordinary 临时历史
+权限保持；v2 的 `prior_adoptions` 必须绑定每个前次 adoption 的不可变 record
+和全部有序完整 output unit/candidate 原字节快照。快照路径为
+`translation-data/retired/source-adoptions/<new-id>-<prior-id>-<batch>/units.jsonl`
+及同目录 `candidates.jsonl`。新生成必须完整重译所有前次 adoption 的全部 batch，
+旧新来源及分段逐字相等，不允许只重译一个缺陷字段或部分 batch。
+
+回放按前次原 input、原政策、原 raw、run、context 和所有递归普通历史重新产生
+每个原输出，严格验证时间顺序、快照 hash、完整五字段及原 run 参与者。原 record、
+输入、raw、run 不回写；旧 adoption 由唯一当前后继消费，不成为第二个 active
+末端。新候选声明全部前次 adoption；决定 hash 因此绑定完整递归历史。
+
+生成时前次 record 和 output 均须未曾加入 Git。首次共同提交后只允许按该同一
+首次提交回放历史，已分别采用的前次事实不能以 v2 覆盖。加入 Git 后的 active
+修订仍需另外接受相应合同。本分支不授权来源修订、术语或人工审校批准。
+
+完整来源首次采用验证过的 OWNARGEND 标题与 v4 标题具有相同来源权限；旧派生
+检查必须消费实际首次采用回放凭证，不能凭 pointer 或任意调用者列表通过。

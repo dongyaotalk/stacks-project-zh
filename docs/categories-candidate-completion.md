@@ -469,3 +469,42 @@ snapshot null、declared、replayable false。共享g009候选未改，新输出
 全部418批当前候选的 after-g011 完整QA和两个实际lane的render日志均结束PASS；原进程handle在续接后不可用，绑定复用完成日志，不伪称新跑QA或render。原637输入hash记录继续验证事实、历史、scope及范围外保护。最终两次PDF在当前续接实际执行，各有持久化exit0回执：openai-gpt-6.1-sol为313页、openai-gpt-5.6-sol为457页，均119个TeX文件、最终日志PASS；实际候选通道的179个batch精确包含本次全部244个输出ID。没有截图/PNG、视觉或PDF文本/像素比较，DATA无模板/样式/Makefile/render路径改动，不追加template。
 
 来源/8518次术语/614行完整覆盖、35个真实run结构和五字段原输出、全部历史、3907个范围外原字节、989 BYTE_EXACT及97 PRESENTATION_EQUIVALENT对应、252组证明hash绑定复用、117章模板和隔离progress/plan真实生成/check均通过。703工具测试复用已接受PR829的相同工具证据，不重复无工具改动的全套回归。当前阶段仅剩集中DATA PR的精确远端门禁、合并和一次独立进度/计划PR。完整实际命令回执与日志在ignored build/task-categories-completion-20261019/final-local-build-acceptance.json及final-independent-acceptance-after-g011.json；公开摘要见同目录对应source evidence。生成物未提交，没有授予critic、人审、术语或发布批准。
+
+
+### DATA接受与单次独立进度同步
+
+[DATA PR830](https://github.com/dongyaotalk/stacks-project-zh/pull/830) 已MERGED，
+[Issue814](https://github.com/dongyaotalk/stacks-project-zh/issues/814) 已CLOSED。
+DATA接受main为 `7778d96bacbf4d7cd009ef6dae9eaf07c41d1a29`，feature为
+`4b8c3e25cd70c8fdc1584f740257c072d522e927`，两树逐对象相同，工作区干净且8个stash保持。
+精确head的 policy-and-data run39450338872/job118723163218 和 pr-contract
+run39450339026/job118723166049 均实际SUCCESS；single native closing关系、freshbase
+及全部本地门禁核实后，按用户已授权admin bypass squash合并。
+
+远端验收覆盖完整637文件的7页native清单及每个head/base原字节、Git模式和blob
+OID。GitHub统一diff接口因超过300文件而返回406，原错误保留；随后从同一远端
+精确获取head/base commit及tree和579个必要变更blob，完整50,216,121字节patch与
+本地逐字相同（包含全部hunk范围、模式及内容），SHA256为
+`ad5df60550726a9c5d75732330334456a809c81633bc7162109a69f95a2c2299`。
+验收不是截断网页diff或只比较摘要。早先全仓库抓取和重复API读取的中断/失败
+记录保留，不算通过证据；origin配置未改，SSH一次关闭后通过同仓库HTTPS正常
+读取main。原模型输入、raw、run、历史及所有事实未修改。
+
+按目标只创建一次独立同步[Issue831](https://github.com/dongyaotalk/stacks-project-zh/issues/831)，
+分支 `docs/categories-completion-progress`，基于上述已接受DATA main。实际执行
+`make progress`、`make progress-check`、`make plan`、`make plan-check`，每条显式
+Python3.12.6，均有实际exit0回执。README和进度报告由生成器更新为categories
+44/44 Section“候选译文完成，待审校”，全库候选完成Section从108增至128；
+计划生成器更新README队列，`docs/translation-plan.md`正文无变化，仍真实执行
+生成/check，不制造文件diff或手改数字。实际变更仅README、进度报告和本开发
+记录三个允许文件；四条命令回执在`progress-sync-reports-receipts.json`。
+
+本同步不改变任何unit/candidate/raw/run/冻结/归档、政策、词表或来源锁，不把
+待审校候选提升为人工审校或发布。适用的集成lane render/pdf及精确远端门禁与
+合并状态，以本次独立同步原始日志和native PR记录为准。
+
+
+本同步的排版输入与已接受DATA完全相同（全部数据、工具/Schema/政策、prompt、模板/样式/Makefile和锁定英文来源保持）；接受main7778d96的push CI run39452488174实际SUCCESS。因此按用户现行“输入未变的可信证据直接绑定复用”规则，明确复用accepted-render-gpt56-after-g011.log的实际PASS119TeX证据及hash。误启动的重复render主动停止，不计PASS；原停止日志和exit2回执保留。本次PDF仍实际编译并以独立退出回执和最终TeX日志为准。不是省略来源/溯源/历史或最新精确远端CI门禁，也没有假称这次停止的render已完成。
+
+
+本次独立同步的实际 `make pdf MODEL=openai-gpt-5.6-sol PYTHON=<Python3.12.6>` 已exit0，457页，最终TeX日志PASS；原始命令、时间、退出码及日志hash保存于progress-sync-pdf-receipt.json，综合回执为progress-sync-local-acceptance.json。render绑定原119TeX通过记录，重复启动后停止的调用没有充当成功。没有截图或视觉比较，没有无关工具测试或事实重写。本同步三个实际变更文件全部在Issue831允许范围，四个报告命令的实际结果及无变化计划正文均已记录；后续提交与合并须继续满足精确远端原字节/完整patch及最新真实CI门禁。

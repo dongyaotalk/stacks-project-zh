@@ -75,6 +75,10 @@ def _schema(value, name):
     if (name == 'source-adoption-input.schema.json' and value.get('tool_version') == 'source-adoption-input-v1'
             and 'prior_adoptions' in value):
         raise RecordError('v1 schema cannot declare pre-Git adoption revisions')
+    if (name == 'source-adoption-input.schema.json'
+            and value.get('tool_version') != 'source-adoption-input-v3'
+            and 'shared_run_histories' in value):
+        raise RecordError('shared run histories require the independent v3 contract')
 
 
 def _relative_input(root, path):
@@ -110,6 +114,10 @@ def _task_scope(frozen, reads, input_entry, *, current):
         for prior in batch['prior_attempts']:
             paths.update(prior[role]['path'] for role in ('units','candidates'))
     for prior in frozen.get('prior_adoptions', []):
+        paths.add(prior['record']['path'])
+        for output in prior['outputs']:
+            paths.update(output[role]['path'] for role in ('units', 'candidates'))
+    for prior in frozen.get('shared_run_histories', []):
         paths.add(prior['record']['path'])
         for output in prior['outputs']:
             paths.update(output[role]['path'] for role in ('units', 'candidates'))
@@ -655,13 +663,77 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
                 raise RecordError('first adoption overlaps accepted or other active source')
     native.assert_unchanged()
     alignment_native.assert_unchanged()
-    _complete_prior_runs(reads, histories)
+    complete_histories = dict(histories)
+    if frozen['tool_version'] == 'source-adoption-input-v3':
+        shared = _shared_run_histories(root, frozen, reads, harvest, current, visiting or set(), histories)
+        complete_histories.update(shared)
+    _complete_prior_runs(reads, complete_histories)
     if frozen['tool_version'] == 'source-adoption-input-v2':
         prior_histories = _prior_adoptions(root, frozen, reads, harvest, current, visiting or set())
         for path, groups in prior_histories.items():
             histories[path].extend(groups)
     reads.snapshot.assert_unchanged()
     return frozen, reads, native, histories
+
+
+def _shared_run_histories(root, frozen, reads, harvest, current, visiting, histories):
+    """Verify complete external adoption records solely as original run witnesses."""
+    identifier = frozen['adoption_id']
+    if identifier in visiting:
+        raise RecordError('cyclic shared ordinary-run history')
+    visiting = visiting | {identifier}
+    if (frozen.get('prior_adoptions') or not frozen['shared_run_histories']
+            or any(not b['prior_attempts'] for b in frozen['batches'])):
+        raise RecordError('v3 requires nonempty shared history and ordinary batch ancestors')
+    required_runs = {c['run_id'] for groups in histories.values() for group in groups for c in group}
+    if not required_runs:
+        raise RecordError('shared history has no original ordinary run to validate')
+    result, seen = {}, set()
+    for witness in frozen['shared_run_histories']:
+        record = reads.json(witness['record'], r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
+        old_id = record['adoption_id']
+        if (old_id in visiting or old_id in seen
+                or witness['record']['path'] != f'translation-data/source-adoptions/{old_id}.json'
+                or not _time(record['created_at']) < _time(frozen['created_at'])):
+            raise RecordError('invalid, duplicate or cyclic shared adoption witness')
+        seen.add(old_id)
+        if len(record['outputs']) != len(witness['outputs']):
+            raise RecordError('shared witness requires all complete original output batches')
+        # The witness's original run also includes this new adoption's ordinary
+        # ancestors. Supply their fully validated snapshots while replaying it.
+        overrides = dict(reads.overrides)
+        for batch in frozen['batches']:
+            for attempt in batch['prior_attempts']:
+                overrides[batch['candidates_path']] = attempt['candidates']
+        for original, saved in zip(record['outputs'], witness['outputs'], strict=True):
+            cp = original['candidates']['path']
+            if cp in histories or cp in result:
+                raise RecordError('shared witness overlaps new outputs or another witness')
+            for role in ('units', 'candidates'):
+                entry = saved[role]
+                expected = (f'translation-data/retired/source-adoptions/{identifier}-shared-'
+                            f'{old_id}-{Path(original[role]["path"]).stem}/{role}.jsonl')
+                if entry['path'] != expected or entry['hash'] != original[role]['hash']:
+                    raise RecordError('shared snapshot is not the complete original output bytes')
+                reads.read(entry)
+                overrides[original[role]['path']] = entry
+        old_frozen, old_reads, native, old_histories = _prepare(root, record['input'], harvest,
+            overrides=overrides, visiting=visiting)
+        expected, _ = _replay_record(record, old_frozen, old_reads, native)
+        used = False
+        for cp, rows in expected.items():
+            groups = [*old_histories[cp], rows]
+            relevant = [group for group in groups if any(c['run_id'] in required_runs for c in group)]
+            if relevant:
+                result[cp] = relevant
+                used = True
+        if not used:
+            raise RecordError('shared adoption witness has no required ordinary run participant')
+        native.assert_unchanged()
+        old_reads.snapshot.assert_unchanged()
+        for path in old_reads.snapshot.hashes:
+            reads.snapshot.read(path)
+    return result
 
 
 def _first_commit(root, relative):
@@ -694,7 +766,7 @@ def _prior_adoptions(root, frozen, reads, harvest, current, visiting):
             raise RecordError('prior adoption must be complete actual pre-Git history with strict time order')
         if len(record['outputs']) != len(prior['outputs']):
             raise RecordError('prior adoption requires every complete original output batch')
-        overrides = {}
+        overrides = dict(reads.overrides)
         for original, archive in zip(record['outputs'], prior['outputs'], strict=True):
             path = original['candidates']['path']
             if path in covered or path not in batches:
@@ -757,6 +829,8 @@ def _generated(frozen, raw, input_entry):
                 model_output=dict(path=entry['path'], hash=entry['hash'], record_hash=sha256_value(row)))
             if frozen['tool_version'] == 'source-adoption-input-v2':
                 candidate['context']['prior_source_adoptions'] = frozen['prior_adoptions']
+            if frozen['tool_version'] == 'source-adoption-input-v3':
+                candidate['context']['shared_run_histories'] = frozen['shared_run_histories']
             candidate['context_hash'] = sha256_value(candidate['context'])
         result[batch['candidates_path']] = rows
     manifest = dict(schema_version=1, run_id=run_id, run_kind='translation', task_id=frozen['task_id'],
@@ -873,8 +947,7 @@ def _assemble_source_adoption(root: Path, input_path: Path, raw_paths: list[Path
             hash=byte_hash(reads.snapshot.read(root / batch['units_path']))),
             candidates=dict(path=batch['candidates_path'], hash=byte_hash(payloads[path]))))
     payloads[run_path] = _json_bytes(manifest)
-    record = dict(schema_version=1, tool_version=VERSION if frozen['tool_version'].endswith('v1')
-                  else 'source-adoption-v2', adoption_id=aid,
+    record = dict(schema_version=1, tool_version=frozen['tool_version'].replace('-input', ''), adoption_id=aid,
         origin_commit=frozen['origin_commit'], source_commit=frozen['source_commit'],
         created_at=frozen['created_at'], input=entry, raw_attempts=attempts,
         unit_ids=manifest['unit_ids'], chapter=units[0]['chapter'],
@@ -954,7 +1027,14 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
             visit(relative, set())
     except RecordError as exc:
         return {}, [*errors, str(exc)]
-    for path in sorted(directory.glob('*.json')):
+    shared_overrides = {}
+    def replay_order(path):
+        try:
+            record = json.loads(path.read_bytes())
+            return record.get('tool_version') != 'source-adoption-v3', path.name
+        except (OSError, ValueError):
+            return True, path.name
+    for path in sorted(directory.glob('*.json'), key=replay_order):
         if path.relative_to(root).as_posix() in consumed:
             continue
         try:
@@ -965,7 +1045,11 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
             if path.stem != record['adoption_id']:
                 raise RecordError('first-adoption filename differs from its ID')
             _first_addition_is_immutable(root, path)
-            frozen, reads, native, histories = _prepare(root, record['input'], harvest)
+            input_value = json.loads((root / record['input']['path']).read_bytes())
+            own_paths = {b[role] for b in input_value['batches']
+                         for role in ('units_path', 'candidates_path')}
+            frozen, reads, native, histories = _prepare(root, record['input'], harvest,
+                overrides={p:e for p,e in shared_overrides.items() if p not in own_paths})
             reads.snapshot.read(path)
             units = [u for b in frozen['batches'] for u in b['units']]
             expected, manifest = _replay_record(record, frozen, reads, native)
@@ -982,6 +1066,13 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
             native.assert_unchanged()
             reads.snapshot.assert_unchanged()
             snapshots.append(reads.snapshot)
+            if frozen['tool_version'] == 'source-adoption-input-v3':
+                for batch in frozen['batches']:
+                    relative = batch['candidates_path']
+                    entry = batch['prior_attempts'][-1]['candidates']
+                    if relative in shared_overrides and shared_overrides[relative] != entry:
+                        raise RecordError('shared ordinary history has competing snapshots')
+                    shared_overrides[relative] = entry
         except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError) as exc:
             errors.append(str(path) + ': ' + str(exc))
     used = {path for snapshot in snapshots[1:] for path in snapshot.hashes}

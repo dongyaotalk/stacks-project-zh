@@ -16,7 +16,8 @@ TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
 USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-phrase', 'matrix-prefix-condition', 'arrow-label-prefix',
-          'matrix-row-text', 'matrix-row-prefix', 'numeric-isomorphism-suffix'}
+          'matrix-row-text', 'matrix-row-prefix', 'numeric-isomorphism-suffix',
+          'root-condition', 'matrix-row-condition', 'root-hyphen-phrase'}
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -73,6 +74,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         literal = rule['literal']
         literal_pattern = (r' *[A-Za-z][A-Za-z0-9 -]*'
                            if rule.get('usage') in MATRIX_ROW_USAGES
+                           else r'-[A-Za-z][A-Za-z -]*'
+                           if rule.get('usage') == 'root-hyphen-phrase'
                            else r' *[A-Za-z][A-Za-z -]*')
         if (not isinstance(literal, str) or not (literal == COMPONENT_LITERAL if component else
                 literal == '-isomorphism' if rule.get('usage') == 'numeric-isomorphism-suffix'
@@ -212,6 +215,67 @@ def _description_matrix_root(stream, index):
                                             r'\leftrightarrow', r'\longrightarrow'})
 
 
+_CONDITION_RELATIONS = {r'\Leftarrow', r'\Rightarrow', r'\Leftrightarrow'}
+_CONDITION_SYMBOLS = {r'\to', r'\Spec', r'\QCoh', r'\subset',
+                      r'\left', r'\right', r'\middle', r'\{', r'\}', r'\\'}
+_BRACED_OBJECTS = {r'\mathcal', r'\mathbf', r'\mathbb', r'\mathrm', r'\mathsf'}
+
+
+def _condition_math_context(source, stream):
+    """Bound the new roles; do not infer arguments of ungrouped commands."""
+    try:
+        delimiter_kind(source)
+    except ValueError:
+        return False
+    for index, part in enumerate(stream):
+        token = part['token']
+        if part['depth'] or not token.startswith('\\'):
+            continue
+        if (token in _CONDITION_SYMBOLS | _CONDITION_RELATIONS
+                or token in {r'\(', r'\)', r'\[', r'\]',
+                             r'\begin{matrix}', r'\end{matrix}'}
+                or part.get('command') == 'text'):
+            continue
+        if (token in _BRACED_OBJECTS and index + 1 < len(stream)
+                and stream[index + 1]['token'] == '{'):
+            continue
+        return False
+    return True
+
+
+def _condition_operand_end(part):
+    return re.fullmatch(r"[A-Za-z0-9)\]}']", part['token']) is not None
+
+
+def _condition_relation_object(stream, index):
+    return (index + 2 < len(stream)
+            and stream[index + 1]['token'] in _CONDITION_RELATIONS
+            and re.fullmatch(r'[A-Za-z0-9]', stream[index + 2]['token']) is not None)
+
+
+def _condition_matrix_root(stream, index):
+    if _description_matrix_root(stream, index):
+        return True
+    openings = [i for i, part in enumerate(stream[:index])
+                if part['token'] == r'\begin{matrix}' and part['depth'] == 0]
+    if not openings:
+        return False
+    opening = openings[-1]
+    body = [part['token'] for part in stream[:opening]]
+    while body and body[0] in {'$', r'\[', r'\('}:
+        body.pop(0)
+    if len(body) >= 2 and re.fullmatch(r'[A-Z]', body[0]) and body[1] == '=':
+        body = body[2:]
+    if (body[:5] != [r'\left', r'\{', r'\left', '(', r'\begin{matrix}']
+            or body[-5:] != [r'\end{matrix}', r'\right', ')', r'\middle', '|']):
+        return False
+    closings = [i for i in range(index + 1, len(stream))
+                if stream[i]['token'] == r'\end{matrix}'
+                and stream[i]['depth'] == 0 and stream[i]['environments'] == ['matrix']]
+    return bool(closings and [part['token'] for part in stream[closings[0]+1:closings[0]+3]]
+                == [r'\right', r'\}'])
+
+
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     node = stream[index]
     depth = 1 if kind in {'arrow-label-prefix',COMPONENT_USAGE} else 0
@@ -232,6 +296,30 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
         valid = (not node['environments']
                  and before['token'] not in {'$', r'\[', r'\(', r'\begin{matrix}', r'\end{matrix}', '&'}
                  and after['token'] not in {'$', r'\]', r'\)', r'\begin{matrix}', r'\end{matrix}', '&'})
+    elif kind == 'root-condition':
+        tail = [part['token'] for part in stream[index + 1:]]
+        valid = (not node['environments'] and _condition_operand_end(before)
+                 and _condition_math_context(source, stream)
+                 and (_condition_relation_object(stream, index)
+                      or tail in [['$'], ['$', '$'], [r'\]'], [r'\)']]))
+    elif kind == 'matrix-row-condition':
+        starts = [i for i, part in enumerate(stream[:index])
+                  if part['depth'] == 0 and (part['token'] == r'\begin{matrix}'
+                      or part['token'] == r'\\' and part['environments'] == ['matrix'])]
+        row = stream[starts[-1] + 1:index] if starts else []
+        valid = (node['environments'] == ['matrix'] and _condition_operand_end(before)
+                 and _condition_math_context(source, stream)
+                 and _condition_matrix_root(stream, index) and bool(row)
+                 and not any(part['token'] == '&' and part['depth'] == 0 for part in row)
+                 and (after['token'] in {r'\\', r'\end{matrix}'}
+                      or _condition_relation_object(stream, index)))
+    elif kind == 'root-hyphen-phrase':
+        valid = (not node['environments'] and _condition_math_context(source, stream)
+                 and re.fullmatch(r'[A-Z]', before['token']) is not None
+                 and re.fullmatch(r'[A-Z]', after['token']) is not None
+                 and before['end'] == node['start'] and node['end'] == after['start']
+                 and node.get('value', '').startswith('-')
+                 and not node['value'].startswith('--'))
     elif kind == 'matrix-prefix-condition':
         valid = (before['token'] == '&' and node['environments']
                  and node['environments'][-1] == 'matrix'

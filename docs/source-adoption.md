@@ -133,3 +133,30 @@ adoption 的原 run 回放。原始 manifest 的完整 accepted-record 和 conte
 覆盖范围外候选，不授予审校或来源修改权限。缺失、重复、截断、时间错误、范围
 越界、快照或原 raw 篡改，以及递归循环均拒绝。v2 完整前次采用历史的限制保持；
 新输出仍须由实际模型完整生成并通过全部现行来源、术语、结构和溯源门禁。
+
+## 唯一完整章首标题（v4 独立开发合同）
+
+[Issue #840](https://github.com/dongyaotalk/stacks-project-zh/issues/840) 增加独立
+`source-adoption-input-v4` / `source-adoption-v4`。这里的版本不等于派生 v4 或
+source-container 的版本；v1/v2/v3 的真实 Section、相邻范围和历史权限不变。
+工具验收并合并后，具体 DATA 才能冻结和采用新分支。
+
+新分支只接受一个 batch、一个 `title_title/0001` 完整容器和一个 canonical
+`chapter_title` 单元。它必须是锁定 Git 中唯一、位于首个自然语言节点的真实章首
+标题，其 owner/parent 及唯一 phantom label 都从同一完整 header 重选；不能将
+chapter Tag 改成 Section Tag，不能混入 Section、普通段落或第二个标题。
+完整 title 参数及其后 maketitle、phantomsection、真实 label、tableofcontents
+包装仍按已有完整容器选择器逐字核验，不允许自报边界或截短 header。
+
+冻结 origin 的两份首次采用 Schema 必须真实登记 v4；不能用早于该权限的政策
+origin 声称新分支。完整政策、真实 Issue/scope、模型/Harness、输入、邻近/引用
+上下文、保护结构、来源不重叠和全部五字段/raw/run 继续按原公共入口核验。
+单独标题仍须说明不可分割及词数偏好的例外。新分支不接收 `prior_attempts`、
+`prior_adoptions` 或 `shared_run_histories`；实际原始尝试按原 raw_attempts 保存。
+若以后需要章首采用后的修订或其他历史能力，必须另立完整合同，不能借此覆盖。
+
+记录和输入各自保存独立 v4 身份并完整回放。历史 v1/v2/v3 仍不能使用非 Section
+parent；新 Schema enum 不将旧记录重新解释为章首权限。新分支不生成中文，不
+登记词表、critic、人审或发布批准；普通 assemble 的完整来源限制和 typed guard
+也保持。正反 synthetic Git 回归及完整旧历史、实际本地编译与远端门禁通过后，
+才可由独立的候选任务采用。

@@ -5,6 +5,10 @@
 run/raw/完整输入并逐字段重放，不把临时候选当可达Git前继；原普通装配和下述
 已接受v1/v2/v3/v4历史合同保持。决定必须绑定完整来源和生成历史，不授予批准。
 
+完整章首标题的独立首次采用开发合同见同页 v4 分支（Issue #840）：仅唯一完整
+header，冻结 origin 必须具有新权限；旧首次采用 v1/v2/v3 的 Section 和历史
+权限不变。工具验收合并前不得由 DATA 使用，不与既有派生 v4 混同。
+
 来源边界的独立 v6 合同见 [source-container-restoration.md](source-container-restoration.md)
 及 [Issue #741](https://github.com/dongyaotalk/stacks-project-zh/issues/741)。它仅为完整
 列表陈述后的完整段落增加来源见证：旧链与原生完整陈述签名、末端列表 closing

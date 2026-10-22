@@ -79,6 +79,11 @@ def _schema(value, name):
             and value.get('tool_version') != 'source-adoption-input-v3'
             and 'shared_run_histories' in value):
         raise RecordError('shared run histories require the independent v3 contract')
+    if (name == 'source-adoption-input.schema.json'
+            and value.get('tool_version') == 'source-adoption-input-v4'
+            and ('prior_adoptions' in value
+                 or any(batch['prior_attempts'] for batch in value['batches']))):
+        raise RecordError('chapter-header v4 cannot declare generation ancestry')
 
 
 def _relative_input(root, path):
@@ -533,6 +538,15 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
         policy_bytes[entry['path']] = payload
         if current and reads.snapshot.read(root / entry['path']) != payload:
             raise RecordError('generation policy drifted since its frozen origin')
+    if frozen['tool_version'] == 'source-adoption-input-v4':
+        for name, version in [('schema/source-adoption-input.schema.json', 'source-adoption-input-v4'),
+                              ('schema/source-adoption.schema.json', 'source-adoption-v4')]:
+            try:
+                allowed = json.loads(policy_bytes[name])['properties']['tool_version']['enum']
+            except (ValueError, KeyError, TypeError) as exc:
+                raise RecordError('accepted origin lacks the chapter-header contract') from exc
+            if version not in allowed:
+                raise RecordError('accepted origin does not permit chapter-header adoption')
     if source not in policy_bytes['upstream.lock'].decode():
         raise RecordError('first adoption does not use the accepted English lock')
     seen_contexts = set()
@@ -618,12 +632,27 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
             raise RecordError('first-source generation lacks a complete neighboring English context')
     sections = [row['owner_tag'] for row in chapter_rows if row['unit']['node_kind'] == 'section_title']
     parents = [list(dict.fromkeys(u['parent_tag'] for u in batch['units'])) for batch in frozen['batches']]
-    if any(len(tags) != 1 or tags[0] not in sections for tags in parents):
-        raise RecordError('each complete first-source batch must have one actual Section parent')
-    ordinals = [sections.index(tags[0]) for tags in parents]
-    unique = list(dict.fromkeys(ordinals))
-    if ordinals != sorted(ordinals) or unique != list(range(unique[0], unique[0] + len(unique))):
-        raise RecordError('first-source package must follow adjacent Section order')
+    if frozen['tool_version'] == 'source-adoption-input-v4':
+        headers = [row for row in chapter_rows if row['unit']['node_kind'] == 'title_title']
+        groups = [group for batch in frozen['batches'] for group in batch['containers']]
+        if (len(frozen['batches']) != 1 or len(groups) != 1 or len(headers) != 1
+                or len(all_units) != 1 or all_units[0]['node_kind'] != 'chapter_title'):
+            raise RecordError('chapter-header v4 requires one complete chapter title only')
+        header, selector = headers[0], groups[0]['selector']
+        if (header != chapter_rows[0]
+                or selector['kind'] != 'title_title' or selector['ordinal'] != 1
+                or selector['owner_tag'] != header['owner_tag']
+                or selector['parent_tag'] != header['parent_tag']
+                or header['owner_tag'] != header['parent_tag']
+                or parents != [[header['parent_tag']]]):
+            raise RecordError('chapter-header v4 requires its real canonical header owner')
+    else:
+        if any(len(tags) != 1 or tags[0] not in sections for tags in parents):
+            raise RecordError('each complete first-source batch must have one actual Section parent')
+        ordinals = [sections.index(tags[0]) for tags in parents]
+        unique = list(dict.fromkeys(ordinals))
+        if ordinals != sorted(ordinals) or unique != list(range(unique[0], unique[0] + len(unique))):
+            raise RecordError('first-source package must follow adjacent Section order')
     from .batching import LIMIT_RE, _source_word_count
     limits = {match['key']:int(match['value']) for match in
               LIMIT_RE.finditer(policy_bytes['config/workflow.yml'].decode('utf-8'))}

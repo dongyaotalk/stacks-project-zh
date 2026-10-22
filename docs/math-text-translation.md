@@ -318,3 +318,34 @@ separator合同保持。工具不登记生产字面量、修改config或采用�
 
 开发先做synthetic边界回归及锁定Git完整来源探针，稳定后统一最终验收。
 排版按当前用户规则仅检查实际lane编译和最终日志，不做截图或逐页视觉检查。
+
+## 根层和矩阵行条件及带连字符短语（独立开发合同）
+
+[Issue #840](https://github.com/dongyaotalk/stacks-project-zh/issues/840) 为完整纯文字
+叶增加三个显式 usage，不改变旧 usage、unit-v1/v2/v3、组件或历史回放语义。
+本工具不登记生产字面量；具体英文参数、精确空白及真实 Git witness 须在独立
+政策任务接受后才可暴露，DATA 仍须重新冻结并由实际模型生成全部五字段。
+
+- `root-condition`：完整数学的根层，真实数学对象末端之后的 text 参数，后面是
+  真实逻辑关系及单字母/数字对象，或恰好完整数学的结束 delimiter。
+- `matrix-row-condition`：深度0、唯一 matrix 环境的非空无列行中，数学对象之后
+  的 text 参数，后面是逻辑关系及对象，或本行的分隔/closing。matrix 本身必须
+  是原有明确根层说明位置，或完整 `left brace / left parenthesis / matrix /
+  right parenthesis / middle bar / matrix / right brace` 集合条件结构的第二个
+  matrix。该完整集合可直接位于根层，或紧随单个 ASCII 大写对象及根层等号；
+  不能借其他表达式前缀、未知命令、其他包裹或嵌套环境构造条件矩阵。
+- `root-hyphen-phrase`：根层两个相邻的单个 ASCII 大写对象之间，完整 text
+  参数以单个 ASCII 连字符开始。对象必须紧邻命令两侧，参数只有已登记英文
+  纯文字；源参数之外的每个字节仍锁定。译文的同一完整叶必须保留开头连字符。
+
+新角色仅在完整 inline/display 数学 delimiter 内使用。对象末端限单字母/数字、
+真实闭合分组/括号及 prime，逻辑关系限 Leftarrow、Rightarrow、Leftrightarrow。
+为避免把未分组命令参数当根层文字，根层命令只接收明确的结构/关系、Spec/QCoh
+操作记号、以及带显式花括号的 mathcal/mathbf/mathbb/mathrm/mathsf 对象。
+其他命令、脚本 text、嵌套 text、伪环境、列中参数及不完整边界继续拒绝；现有
+Scanner 的未知宏/环境门禁不能被这些 usage 绕过。
+
+完整数学/typed skeleton 的双重核验、真实前后 witness、UTF-8 范围和数学非文字
+原字节均保持。三个 usage 同步进入独立 regions、components 中的普通叶及 unit
+内嵌 Schema；v3 组件分隔控制空格的权限没有变化。syntax 能力不等于政策授权，
+不把自然文字登记成 notation，也不授予词条、critic、人审或发布批准。

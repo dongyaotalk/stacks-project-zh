@@ -349,3 +349,30 @@ Scanner 的未知宏/环境门禁不能被这些 usage 绕过。
 原字节均保持。三个 usage 同步进入独立 regions、components 中的普通叶及 unit
 内嵌 Schema；v3 组件分隔控制空格的权限没有变化。syntax 能力不等于政策授权，
 不把自然文字登记成 notation，也不授予词条、critic、人审或发布批准。
+
+## 第105章完整来源的英文登记
+
+[Issue #842](https://github.com/dongyaotalk/stacks-project-zh/issues/842) 在已接受的
+Issue840工具上，独立登记以下完整英文参数。双引号标示精确ASCII空格，不属于
+参数；不trim、改大小写或推广其他字面量。来源均为锁定英文
+`a04446e57ec1fbc252a871afcec7752fb2807b14`，完整Git见证、命令范围和hash保存在
+[`stacks-introduction-math-policy-20261022.json`](evidence/stacks-introduction-math-policy-20261022.json)。
+
+| 完整原参数 | 已接受usage | 真实见证 |
+| --- | --- | --- |
+| `" as above"` | root-phrase | 072M完整lemma |
+| `" unit"`、`" arbitrary"` | matrix-row-condition | 072T完整proof |
+| `" is smooth"` | root-condition | 072V完整Section |
+| `" is quasi-compact"`、`" is irreducible"` | matrix-row-condition | 072V完整Section |
+| `"-equivariant quasi-coherent modules on "` | root-hyphen-phrase | 072V完整Section |
+| `" factors "` | root-phrase | 072V完整Section |
+
+既有`Gal`记号只增加实际`applied`用法，保留`subscripted`及原有obsolete见证；
+新增使用另有第105章真实Git数学节点见证。自然文字不登记成记号，所有slot外
+数学字节、完整参数和旧usage权限保持。当前1090单元/9130完整数学节点的实际
+影响扫描未发现新增自然文字分类或Gal-applied命中；旧unit/candidate/run/raw和
+冻结政策不回写，历史仍按各自真实origin完整重放。
+
+这只是英文来源政策，不生成或批准中文。完整来源库存和对齐在政策稳定后集中
+重建并检查；工具和政策接受后，DATA另行冻结完整输入并由实际模型生成五字段。
+术语、critic、人工审校及发布仍各有门禁。

@@ -83,7 +83,13 @@ tooling, documentation, blocked, claimed
 
 ## 4. 分支和 PR
 
-分支、提交标题和 trailer 按 `docs/git-conventions.md` 执行。一个翻译 PR：
+用户明确指定整章候选的默认调度见 [章节执行规则](chapter-translation.md)。它使用
+本文末已接受的精确哈希范围清单机制，一个章节任务可含多个实际模型包/run；
+每个 scope 保持完整来源，同一任务保持同一 lane、Harness 和具体模型，每个 run
+独立真实溯源。获得相应 GitHub 写入授权后仍只关联一个 closing Issue，
+不改变下述旧内联合同。
+
+分支、提交标题和 trailer 按 `docs/git-conventions.md` 执行。旧内联翻译 PR：
 
 - 只处理一个 Section、一个明确连续的 unit 范围，或同章 2–8 个相邻 Tag 的 batch；
 - 只使用一个 Harness、具体模型和不可变 run；
@@ -188,9 +194,10 @@ PR 文本代替该 commit 中的文件。普通小文件读取及 Issue/坐标/o
 API 依据见 [Contents 文档](https://docs.github.com/en/rest/repos/contents)及
 [Git blobs 文档](https://docs.github.com/en/rest/git/blobs)。
 
-## 集中修复的可信范围清单
+## 集中任务的可信范围清单
 
-显式授权的集中任务可以使用`scope_manifest`与`scope_manifest_sha256`。Issue中的
+明确指定章节的集中候选翻译和明确授权的集中修复可以使用`scope_manifest`与
+`scope_manifest_sha256`；创建 Issue/PR、推送和合并仍各按用户实际授权执行。Issue中的
 原字节hash绑定精确路径清单及每个数据scope的完整来源坐标、旧新ID、实际/历史
 parents和run/model；PR正文引用同一路径/hash。清单自身也在精确允许列表内，
 受管文件恰归一个scope，不能用目录、通配或全局并集借用其他scope的ID。

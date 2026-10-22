@@ -97,6 +97,12 @@ make next-task CHAPTER=obsolete TAG=0BM0
 
 ## 2. 允许和禁止的范围
 
+用户明确指定整章候选翻译时，默认按 [章节执行规则](chapter-translation.md)
+采用本文末的精确哈希范围清单，一个集中任务包含多个明确 data scope。
+每个 data scope 仍满足配置的单 Section/连续 unit 限制，同一任务保持同一 lane、
+Harness 和具体模型，每个 run 独立冻结并溯源。每个模型输入包仍遵守2–8文件及
+完整语义约束；不是扩大旧内联 Issue 的 Tag 权限。GitHub 写入按用户实际授权执行。
+
 允许的任务范围：
 
 - 一个 Section；
@@ -146,7 +152,8 @@ AVAILABLE ← ABANDONED
 认领步骤：
 
 1. 创建或更新翻译任务 Issue；
-2. 填写 `source_commit`、一个 `parent_tag` 或 2–8 个 `parent_tags`，以及完整 unit 列表；
+2. 旧内联模式填写 `source_commit`、一个 `parent_tag` 或 2–8 个 `parent_tags`，以及
+   完整 unit 列表；精确范围清单模式按本文末声明清单路径/hash 及各 data scope；
 3. 由负责人认领 Issue，并写入分支名；
 4. 从最新 `main` 创建任务分支；
 5. 只写任务声明的文件；
@@ -233,7 +240,8 @@ GitHub Issue 是协作认领记录，`translation-data/` 是译文事实来源�
 
 ## 显式哈希范围清单的集中任务
 
-对于明确授权的集中修复，Issue可以改为声明`scope_manifest`与
+对于明确指定章节的集中候选翻译或明确授权的集中修复，在获准进行相应 GitHub
+写入后，Issue可以改为声明`scope_manifest`与
 `scope_manifest_sha256`，指向`task-scopes/<task-id>.json`及该文件完整UTF-8原字节
 的SHA256。清单必须在实际写入/生成前完整冻结，变更先更新同一Issue的hash；
 PR正文引用同一路径/hash。它不能与内联allowed_write_files混用。

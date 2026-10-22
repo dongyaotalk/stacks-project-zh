@@ -3,6 +3,9 @@
 ## Required reading
 
 - Read `WORKFLOW.md` before translation, review, synchronization, or release work.
+- For chapter translation, also read `docs/chapter-translation.md` and follow its
+  default execution rules: batch generation, local checks during development,
+  one final acceptance per task, and no screenshots unless explicitly requested.
 - Read the matching file under `docs/` before changing that part of the workflow.
 - Read `docs/task-allocation.md` and `docs/translation-priority.md` for translation scope and
   `docs/github-collaboration.md` for GitHub work.

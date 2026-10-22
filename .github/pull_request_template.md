@@ -49,6 +49,10 @@
 
 ## QA
 
+章节候选按 [默认执行规则](../docs/chapter-translation.md) 集中验收；`qa-all` 已覆盖的
+子检查可引用同一次完整通过证据，无需重复执行。默认只检查实际 lane 的 LaTeX
+编译和最终日志，不要求截图、PDF全文/像素比较或逐页视觉验收。
+
 - [ ] `make workflow-check`
 - [ ] `make harvest-check`
 - [ ] `make upstream-index-check`
@@ -57,7 +61,8 @@
 - [ ] `make provenance-check`（模型候选/run 变更必需）
 - [ ] `make decision-check`（selection/review/revision 变更必需）
 - [ ] `make qa BATCH=<batch> MODEL=<model-lane>`（翻译候选必需）
-- [ ] 若使用 batch：Issue 以 `parent_tags` 声明 2–8 个相邻 Tag，并执行 `make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>`；各事实文件仍独立
+- [ ] 若使用旧内联 batch：Issue 以 `parent_tags` 声明 2–8 个相邻 Tag；开发期按需执行 `qa-batch` 或已包含 QA 的 `render-batch`，各事实文件仍独立
+- [ ] 若为整章集中候选：Issue/PR 绑定相同 `scope_manifest` 路径/hash，各 data scope 的来源、文件和 ID 完整且互不借用，各真实 run 独立冻结并溯源
 - [ ] `make progress-check`（独立进度报告 PR 必需）
 - [ ] `git diff --check`
 - [ ] 结构检查（如适用）
@@ -67,7 +72,7 @@
 - [ ] 提交前已针对当前候选通道执行 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`（翻译候选及其他文档/工具修改必需）
 - [ ] 若修改模板、样式、Makefile 或渲染路径，已额外执行 `make template`
 - [ ] 适用的本地 LaTeX 编译以零状态退出；无错误且未修改生成文件绕过失败
-- [ ] 已检查未定义引用、重复标签、目录、链接、字体和索引
+- [ ] 最终 TeX 日志无编译错误、缺字、未定义引用/引用键或重复标签；额外页面检查仅在用户明确要求时执行
 
 ## 审校
 

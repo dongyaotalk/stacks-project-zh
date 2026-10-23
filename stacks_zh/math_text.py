@@ -17,7 +17,9 @@ COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
 USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-phrase', 'matrix-prefix-condition', 'arrow-label-prefix',
           'matrix-row-text', 'matrix-row-prefix', 'numeric-isomorphism-suffix',
-          'root-condition', 'matrix-row-condition', 'root-hyphen-phrase'}
+          'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
+          'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
+          'matrix-row-statement', 'matrix-operator-compatibility'}
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -41,30 +43,35 @@ def plain_text(text: str) -> bool:
 def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Strict, JSON-valued subset of the macro policy's explicit registry."""
     rules, active, seen, entry, components = {}, False, set(), None, False
+    contexts, contextual = {}, False
     for line in text.splitlines():
         if not line.strip() or line.lstrip().startswith('#'):
             continue
         if not line.startswith(' '):
             section = line.partition(':')[0]
             components = section == 'translatable_math_text_components'
-            active = line in {'translatable_math_text:', 'translatable_math_text_components:'}
-            if section in {'translatable_math_text', 'translatable_math_text_components'}:
+            contextual = section == 'translatable_math_text_contexts'
+            active = line in {'translatable_math_text:', 'translatable_math_text_components:',
+                              'translatable_math_text_contexts:'}
+            if section in {'translatable_math_text', 'translatable_math_text_components',
+                           'translatable_math_text_contexts'}:
                 if not active or section in seen:
                     raise ValueError('invalid or duplicate natural math-text policy section')
                 seen.add(section)
             entry = None
         elif active:
+            destination = contexts if contextual else rules
             match = re.fullmatch(r'  ([a-z][a-z0-9-]*):', line)
             if match:
                 entry = match[1]
-                if entry in rules:
+                if entry in rules or entry in contexts:
                     raise ValueError('duplicate natural math-text policy entry')
-                rules[entry] = {'slot_schema_version':3} if components else {}
+                destination[entry] = {'slot_schema_version':3} if components else {}
             else:
                 field = re.fullmatch(r'    ([a-z_]+): (.+)', line)
-                if field is None or entry is None or field[1] in rules[entry]:
+                if field is None or entry is None or field[1] in destination[entry]:
                     raise ValueError('invalid or duplicate natural math-text policy field')
-                rules[entry][field[1]] = json.loads(field[2])
+                destination[entry][field[1]] = json.loads(field[2])
     seen_literals = set()
     for rule in rules.values():
         component = rule.get('slot_schema_version') == 3
@@ -97,6 +104,27 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 or rule['witness_kind'] not in {'section', 'lemma', 'proof'}
                 or type(rule['witness_ordinal']) is not int or rule['witness_ordinal'] < 1):
             raise ValueError('invalid natural math-text source witness')
+    context_pairs = set()
+    for key, context in contexts.items():
+        if set(context) != {'base_rule', 'usage', 'source_label', 'witness_kind', 'witness_ordinal'}:
+            raise ValueError('incomplete natural math-text context')
+        base = rules.get(context['base_rule']) if isinstance(context['base_rule'], str) else None
+        expected = {'matrix-membership': ' in ', 'aligned-set-connector': ' and '}
+        if (base is None or base.get('slot_schema_version') == 3
+                or base['usage'] != 'root-phrase'
+                or context['usage'] not in expected
+                or base['literal'] != expected[context['usage']]):
+            raise ValueError('natural context requires its exact ordinary root literal and new role')
+        pair = (base['literal'], context['usage'])
+        if pair in context_pairs:
+            raise ValueError('duplicate natural math-text context role')
+        context_pairs.add(pair)
+        if (not isinstance(context['source_label'], str)
+                or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', context['source_label'])
+                or context['witness_kind'] not in {'section', 'lemma', 'proof'}
+                or type(context['witness_ordinal']) is not int or context['witness_ordinal'] < 1):
+            raise ValueError('invalid natural math-text context witness')
+        rules[key] = {**base, **{name: value for name, value in context.items() if name != 'base_rule'}}
     return rules
 
 
@@ -276,6 +304,132 @@ def _condition_matrix_root(stream, index):
                 == [r'\right', r'\}'])
 
 
+_CONTEXT_COMMANDS = {
+    r'\mathcal', r'\text', r'\textit', r'\Ob', r'\Mor', r'\Sh',
+    r'\phi', r'\varphi', r'\psi', r'\beta', r'\forall', r'\in', r'\mid',
+    r'\to', r'\longmapsto', r'\circ', r'\times', r'\left', r'\right',
+    r'\{', r'\}', r'\#', r'\\',
+}
+
+
+def _context_math(source, stream):
+    """Finite commands for the independently registered context roles only."""
+    try:
+        delimiter_kind(source)
+    except ValueError:
+        return False
+    for part in stream:
+        token = part['token']
+        if part.get('command') in {'text', 'textit'}:
+            continue
+        if not token.startswith('\\') or token in _CONTEXT_COMMANDS:
+            continue
+        if token in {r'\(', r'\)', r'\[', r'\]', r'\label'}:
+            continue
+        if re.fullmatch(r'\\(?:begin|end)\{(?:matrix|equation|equation\*|align\*)\}', token):
+            continue
+        # Labels are a single opaque lexer node, never a source of tokens.
+        if token.startswith(r'\label{'):
+            continue
+        return False
+    return True
+
+
+def _matrix_row(stream, index):
+    node = stream[index]
+    if (node['depth'] != 0 or node['environments'] not in
+            (['matrix'], ['equation', 'matrix'], ['equation*', 'matrix'])):
+        return None
+    start = next((i for i in range(index - 1, -1, -1)
+                  if stream[i]['depth'] == 0 and
+                  (stream[i]['token'] == r'\begin{matrix}'
+                   or stream[i]['token'] == r'\\' and stream[i]['environments'] == node['environments'])), None)
+    end = next((i for i in range(index + 1, len(stream))
+                if stream[i]['depth'] == 0 and stream[i]['environments'] == node['environments']
+                and stream[i]['token'] in {r'\\', r'\end{matrix}'}), None)
+    if start is None or end is None:
+        return None
+    return start, end
+
+
+def _category_end(stream, index, stop):
+    """One mathcal category, optionally bearing the actual left index {}_V."""
+    cursor = index
+    if [n['token'] for n in stream[cursor:cursor+3]] == ['{', '}', '_']:
+        cursor += 3
+        if cursor >= stop or not re.fullmatch(r'[A-Z]', stream[cursor]['token']):
+            return None
+        cursor += 1
+    parts = stream[cursor:cursor+4]
+    if (len(parts) != 4 or cursor+4 > stop
+            or [n['token'] for n in parts[:2]] != [r'\mathcal', '{']
+            or not re.fullmatch(r'[A-Z]', parts[2]['token']) or parts[3]['token'] != '}'
+            or [n['depth'] for n in parts] != [0, 0, 1, 1]):
+        return None
+    return cursor+4
+
+
+def _matrix_description_frame(stream, start, end):
+    """A one-column matrix inside the actual left-brace/right-brace frame."""
+    opening = next((i for i in range(start, -1, -1)
+                    if stream[i]['token'] == r'\begin{matrix}' and stream[i]['depth'] == 0), None)
+    closing = next((i for i in range(end, len(stream))
+                    if stream[i]['token'] == r'\end{matrix}' and stream[i]['depth'] == 0), None)
+    return (opening is not None and closing is not None and opening >= 2
+            and [n['token'] for n in stream[opening-2:opening]] == [r'\left', r'\{']
+            and [n['token'] for n in stream[closing+1:closing+3]] == [r'\right', r'\}']
+            and not any(n['token'] == '&' and n['depth'] == 0 for n in stream[opening+1:closing]))
+
+
+def _context_usage(source, stream, index, kind):
+    node = stream[index]
+    if node['depth'] != 0 or not _context_math(source, stream):
+        return False
+    if kind == 'aligned-set-connector':
+        if node['environments'] != ['align*']:
+            return False
+        start = next((i for i in range(index-1, -1, -1)
+                      if stream[i]['token'] == r'\{' and stream[i]['depth'] == 0), None)
+        end = next((i for i in range(index+1, len(stream))
+                    if stream[i]['token'] == r'\}' and stream[i]['depth'] == 0), None)
+        if start is None or end is None:
+            return False
+        left = [n['token'] for n in stream[start+1:index] if n['depth'] == 0]
+        right = [n['token'] for n in stream[index+1:end] if n['depth'] == 0]
+        return (r'\mid' in left and '=' in left[left.index(r'\mid')+1:] and '=' in right
+                and not any(n['token'] in {'&', r'\\'} and n['depth'] == 0
+                            for n in stream[start+1:end]))
+    row = _matrix_row(stream, index)
+    if row is None:
+        return False
+    start, end = row
+    before = [n['token'] for n in stream[start+1:index] if n['depth'] == 0]
+    after = [n['token'] for n in stream[index+1:end] if n['depth'] == 0]
+    if kind == 'matrix-membership':
+        category_end = _category_end(stream, index+1, end)
+        if category_end is None or r'\to' not in before or ':' not in before:
+            return False
+        if category_end == end:
+            return bool(before and before[0] == r'\forall'
+                        and _matrix_description_frame(stream, start, end))
+        if r'\{' not in before:
+            return False
+        prefix = before[:before.index(r'\{')]
+        return (stream[category_end]['token'] == r'\mid' and r'\}' in after
+                and bool(prefix) and prefix[0] == r'\Mor'
+                and prefix[-3:] == ['&', '=', '&'] and prefix.count('&') == 2
+                and '&' not in before[before.index(r'\{')+1:] and '&' not in after)
+    if not _matrix_description_frame(stream, start, end):
+        return False
+    if kind == 'matrix-row-description':
+        return index == start+1 and bool(after) and r'\in' in after and '=' not in after
+    if kind == 'matrix-row-statement':
+        return index == start+1 and bool(after) and '=' in after and r'\in' not in after
+    if kind == 'matrix-operator-compatibility':
+        return before == [r'\varphi'] and after == ['+', ',', '0', ',', 'i']
+    return False
+
+
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     node = stream[index]
     depth = 1 if kind in {'arrow-label-prefix',COMPONENT_USAGE} else 0
@@ -320,6 +474,9 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
                  and before['end'] == node['start'] and node['end'] == after['start']
                  and node.get('value', '').startswith('-')
                  and not node['value'].startswith('--'))
+    elif kind in {'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
+                  'matrix-row-statement', 'matrix-operator-compatibility'}:
+        valid = _context_usage(source, stream, index, kind)
     elif kind == 'matrix-prefix-condition':
         valid = (before['token'] == '&' and node['environments']
                  and node['environments'][-1] == 'matrix'
@@ -384,10 +541,15 @@ def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, 
     for index, node in enumerate(stream):
         if node.get('command') != 'text':
             continue
+        matched = False
         for key, rule in rules.items():
             if node['value'] != rule['literal'] or node['command'] != rule['command']:
                 continue
             witness = usage(source, stream, index, rule['usage'])
+            if witness is not None and (rule.get('slot_schema_version') == 3 or plain_text(node['value'])):
+                if matched:
+                    raise ValueError('ambiguous natural math-text roles for one complete parameter')
+                matched = True
             if witness is not None and rule.get('slot_schema_version') == 3:
                 start = node['parameter_start']
                 for ordinal,leaf in enumerate(rule['components'],1):

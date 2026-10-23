@@ -38,6 +38,71 @@ class SyntaxProblem(RecordError):
         self.offset = offset
 
 
+def _notation_context_registry(text, notations):
+    """Independent opt-in variants; the legacy registry keeps its exact grammar."""
+    entries, entry, active, seen = {}, None, False, False
+    for line in text.splitlines():
+        if not line.strip() or line.lstrip().startswith('#'):
+            continue
+        if not line.startswith(' '):
+            active = line.partition(':')[0] == 'locked_math_text_contexts'
+            entry = None
+            if active:
+                if seen or line != 'locked_math_text_contexts:':
+                    raise RecordError('invalid or duplicate notation context section')
+                seen = True
+        elif active:
+            match = re.fullmatch(r'  ([a-z][a-z0-9-]*):', line)
+            if match:
+                entry = match[1]
+                if entry in entries:
+                    raise RecordError('duplicate notation context entry')
+                entries[entry] = {}
+            else:
+                field = re.fullmatch(r'    ([a-z_]+): (.+)', line)
+                if field is None or entry is None or field[1] in entries[entry]:
+                    raise RecordError('invalid or duplicate notation context field')
+                try:
+                    entries[entry][field[1]] = json.loads(field[2])
+                except json.JSONDecodeError as exc:
+                    raise RecordError('notation context fields require JSON values') from exc
+    result, seen_contexts = {}, set()
+    for value in entries.values():
+        base = value.get('base_notation')
+        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets'}:
+            raise RecordError('notation context requires its existing direct pr/-Sets base')
+        fields = {'base_notation', 'commands', 'usages', 'source_label'}
+        if base == '-Sets':
+            fields.add('prefix')
+        if set(value) != fields:
+            raise RecordError('incomplete notation context')
+        commands, usages = value['commands'], value['usages']
+        expected_commands = ['text'] if base == 'pr' else ['textit']
+        allowed = ({'starred-subscripted'} if base == 'pr' else
+                   {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol'})
+        if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
+                or not isinstance(usages, list) or not usages
+                or any(not isinstance(v, str) or v not in allowed for v in usages)
+                or len(usages) != len(set(usages))):
+            raise RecordError('unsupported notation context command or usage')
+        if base == '-Sets' and (not isinstance(value['prefix'], str) or value['prefix'] not in {'G', 'H'}):
+            raise RecordError('notation context requires an explicit witnessed G/H prefix')
+        if base == '-Sets' and value['prefix'] == 'G' and 'prefixed-symbol' in usages:
+            raise RecordError('notation context duplicates the existing primary prefix rule')
+        if base == '-Sets' and 'diagram-category-prefixed-symbol' in usages and value['prefix'] != 'G':
+            raise RecordError('diagram category context requires its witnessed G prefix')
+        if (not isinstance(value['source_label'], str)
+                or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', value['source_label'])):
+            raise RecordError('invalid notation context source label')
+        for kind in usages:
+            identity = base, tuple(commands), kind, value.get('prefix')
+            if identity in seen_contexts:
+                raise RecordError('duplicate notation context permission')
+            seen_contexts.add(identity)
+        result.setdefault(base, []).append({k: v for k, v in value.items() if k != 'base_notation'})
+    return result
+
+
 class Policy:
     """Read the current explicit YAML subset; never infer unknown macro policy."""
     def __init__(self, text: str, *, natural_text_enabled: bool = True):
@@ -170,6 +235,7 @@ class Policy:
                 raise RecordError('category constructor requires its explicit usage')
             if not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label']):
                 raise RecordError('invalid math-text notation source label')
+        self.math_text_notation_contexts = _notation_context_registry(text, self.math_text_notations)
         from .math_text import policy_rules
         try:
             self.math_text_rules = policy_rules(text, self.math_text_notations) if natural_text_enabled else {}
@@ -416,10 +482,88 @@ class Scanner:
     def notation_usage(self, command: str, value: str, closing: int, *, command_start: int | None = None):
         """Match an explicit notation rule and its original following tokens."""
         rule = self.policy.math_text_notations.get(value)
-        if rule is None or command not in rule['commands']:
+        if rule is None:
+            return None
+        primary = self._notation_rule_usage(command, value, closing, command_start, rule)
+        if primary is not None:
+            return primary
+        for context in getattr(self.policy, 'math_text_notation_contexts', {}).get(value, []):
+            found = self._notation_rule_usage(command, value, closing, command_start, context)
+            if found is not None:
+                return found
+        return None
+
+    def _explicit_notation_context(self, command_start, closing, value, rule, kind):
+        from .math_text import delimiter_kind, nodes
+        if command_start is None:
+            return None
+        try:
+            delimiter_kind(self.text)
+            stream = nodes(self.text)
+            index = next(i for i, part in enumerate(stream) if part['start'] == command_start)
+        except (ValueError, StopIteration):
+            return None
+        node = stream[index]
+        if kind == 'starred-subscripted':
+            # The witnessed bare-star projection atom, never a new general
+            # superscript permission or an ungrouped macro argument.
+            tokens = [p['token'] for p in stream]
+            if (value == 'pr' and index == 1 and len(tokens) == 7
+                    and tokens[0] == tokens[-1] == '$'
+                    and tokens[2:5] == ['^', '*', '_']
+                    and re.fullmatch(r'[A-Za-z0-9]', tokens[5])
+                    and all(p['depth'] == 0 and not p['environments'] for p in stream)):
+                return self.text[closing:stream[-2]['end']]
+            return None
+        if value != '-Sets' or node['environments'] or index < 2:
+            return None
+        prefix = stream[index-1]
+        if prefix['token'] != rule['prefix'] or prefix['depth'] != node['depth']:
+            return None
+        if kind == 'morphism-category-prefixed-symbol':
+            if (index < 4 or node['depth'] != 1
+                    or [p['token'] for p in stream[index-4:index-1]] != [r'\Mor', '_', '{']
+                    or [p['depth'] for p in stream[index-4:index-1]] != [0, 0, 0]
+                    or index+2 >= len(stream)
+                    or [p['token'] for p in stream[index+1:index+3]] != ['}', '(']
+                    or [p['depth'] for p in stream[index+1:index+3]] != [1, 0]):
+                return None
+            start = stream[index-4]['start']
+            if self.preceding_math_prefix(start, None,
+                    extra_zero_arguments=frozenset({'Mor', 'prod'})) is None:
+                return None
+            return self.text[start:stream[index+2]['end']]
+        if kind == 'diagram-category-prefixed-symbol':
+            if (node['depth'] != 1 or stream[index-2]['token'] != '&'
+                    or stream[index-2]['depth'] != 1 or index+2 >= len(stream)
+                    or stream[index+1]['token'] != r'\ar' or stream[index+1]['depth'] != 1
+                    or stream[index+2]['token'] != '[' or stream[index+2]['depth'] != 1):
+                return None
+            host = next((i for i in range(index-2, 0, -1)
+                         if stream[i]['token'] == '{' and stream[i]['depth'] == 0), None)
+            if (host is None or stream[host-1]['token'] != r'\xymatrix'
+                    or self.preceding_math_prefix(stream[host-1]['start'], None) is None):
+                return None
+            end = next((i for i in range(index+3, len(stream))
+                        if stream[i]['token'] == ']' and stream[i]['depth'] == 2), None)
+            if end is None or end == index+3:
+                return None
+            if not all(p['depth'] == 2 and re.fullmatch(r'[lrud]', p['token'])
+                       for p in stream[index+3:end]):
+                return None
+            return self.text[prefix['start']:command_start] + self.text[closing:stream[end]['end']]
+        return None
+
+    def _notation_rule_usage(self, command, value, closing, command_start, rule):
+        if command not in rule['commands']:
             return None
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
+            if usage in {'starred-subscripted', 'morphism-category-prefixed-symbol',
+                         'diagram-category-prefixed-symbol'}:
+                context = self._explicit_notation_context(command_start, closing, value, rule, usage)
+                if context is not None:
+                    return usage, context, rule['source_label']
             if 'contexts' in rule and command + '/' + usage not in rule['contexts']:
                 continue
             if usage == 'named-arrow' and command_start is not None:

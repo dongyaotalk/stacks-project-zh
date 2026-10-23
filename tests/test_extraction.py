@@ -253,22 +253,28 @@ class ExtractionTests(unittest.TestCase):
               'categories-definition-presheaf', r'\left(')])
 
     def test_psh_wrong_shapes_and_old_policy_still_block_and_prose_stays_visible(self):
+        # Keep the historical applied-only contract explicit after the Sites
+        # policy independently registers the standalone category symbol.
+        current = ('  PSh:\n    commands: ["textit"]\n    usages: ["applied", "symbol"]\n'
+                   '    source_label: categories-definition-presheaf\n')
+        entry = ('  PSh:\n    commands: ["textit"]\n    usages: ["applied"]\n'
+                 '    source_label: categories-definition-presheaf\n')
+        self.assertIn(current, POLICY_RAW)
+        historical = Policy(POLICY_RAW.replace(current, entry))
         for text in [r'\text{PSh}(C)', r'\textbf{PSh}(C)', r'\textit{psh}(C)',
                      r'\textit{PSH}(C)', r'\textit{ PSh}(C)', r'\textit{PSh }(C)',
                      r'\textit{PShaves}(C)', r'\textit{\textit{PSh}}(C)',
                      r'\textit{PSh}', r'\textit{PSh}_C', r'\textit{PSh}\mathcal{C}',
                      r'\text{ and }']:
             with self.subTest(text=text):
-                rows, _, errors = inventory(
-                    r'\section{First}\label{section-first}' + '\nA $' + text + '$.')
+                raw = ('\\begin{document}\n' + r'\section{First}\label{section-first}'
+                       + '\nA $' + text + '$.\n\\end{document}\n').encode()
+                rows, _, errors = chapter_inventory('alpha', raw, COMMIT, TAGS, historical)
                 self.assertEqual(rows[-1]['state'], 'BLOCKED')
                 self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
                 self.assertFalse(rows[-1]['math_text_classifications'])
-        entry = ('  PSh:\n    commands: ["textit"]\n    usages: ["applied"]\n'
-                 '    source_label: categories-definition-presheaf\n')
-        self.assertIn(entry, POLICY_RAW)
         source = r'$\textit{PSh}(C)$'
-        scanner = Scanner(source, Policy(POLICY_RAW.replace(entry, '')))
+        scanner = Scanner(source, Policy(POLICY_RAW.replace(current, '')))
         _, tokens, errors = scanner.protect(0, len(source))
         self.assertEqual(tokens['MATH_0001'], source)
         self.assertTrue(any(e['kind'] == 'math-text' for e in errors))

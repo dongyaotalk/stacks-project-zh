@@ -359,3 +359,30 @@ source_label，完整 MATH 原字节保持；不会生成中文或批准数学�
 数学内 `in`、`and`、集合描述和相容条件遵守独立
 [自然文字上下文合同](math-text-translation.md)，不会登记为记号。工具接受前继续
 BLOCKED；具体政策与实际 DATA 分别另行声明、冻结和验收。
+
+## 位点章实际记号政策（Issue #849）
+
+在上下文工具 PR #848 接受后，当前锁定英文
+`a04446e57ec1fbc252a871afcec7752fb2807b14` 的独立政策登记如下。已有条目保留
+原 `source_label` 和原用法顺序；表中是新增位置的真实见证，不改历史政策或审批。
+
+| 完整记号 | 新登记 usage / 字体 | sites 真实来源 |
+| --- | --- | --- |
+| `pr` | `superscripted` / `text` | section 00VL 的分组上标投影，如 `\text{pr}^{(i_0, i_1)}_{i_0}` |
+| `Cov` | `primed-applied` / `text` | example 0EWI 的 `\text{Cov}'(\mathcal{C})` |
+| `PSh` | `symbol` / `textit` | lemma 00X5 的 proof 中作为范畴名的独立 `\textit{PSh}` |
+| `Map` | `subscripted` / `text` | example 08LS 的 `\text{Map}_G(H,S)` |
+| `inl`、`inr` | `subscripted` / `text` | lemma 00V7 的 proof 中余积两条典范映射 |
+
+独立 `locked_math_text_contexts` 的五项分别是：00VL 的裸星投影
+`starred-subscripted`；00VZ 的 G-Sets 态射类别下标和真实 xymatrix 对象格；
+04D4 的 H-Sets 态射类别下标及显式 H 裸前缀。它们仅引用已有 `pr` 或 `-Sets`，
+不重写主 registry 的 G 前缀，也不把自然文字登记为记号。完整数学原字节保持。
+
+旧 PSh applied-only 和 pr subscripted-only 的负例使用显式旧政策 fixture；
+新的实际政策另测新增合法形状及错误字体、大小写、空白、参数和上下文的拒绝。
+这保证旧负例仍验证原权限，同时不把新增政策误称为工具自身放宽。
+
+本政策仅开放来源准备。政策稳定后集中重建并核验默认全库来源库存和对齐，
+现有候选继续全量 QA；READY、候选编译或政策合并不代表中文生成、事实采用、
+术语批准、语言/数学审校或正式发布。实际 DATA 仍需独立精确任务及冻结证据。

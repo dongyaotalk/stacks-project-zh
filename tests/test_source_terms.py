@@ -487,6 +487,35 @@ class SourceTermsTests(unittest.TestCase):
                 expected = "sets" if " sets " in text else "set"
                 self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], [expected])
 
+    def test_sites_assignment_introductions_keep_following_collection_noun(self):
+        for introduction in ["To prove existence, just", "Then", "A sentence. Then"]:
+            with self.subTest(introduction=introduction):
+                row = unit(introduction + " set <MATH_0001>. The set <MATH_0002>.",
+                           {"MATH_0001": "$G'(U)=f(F(U))$", "MATH_0002": "$S$"}, "paragraph")
+                scope = catalog(row)
+                scope["terms"] = [{"id": "set", "forms": ["set", "sets"],
+                                   "chapters": [], "evidence": []}]
+                self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], ["set"])
+                self.assertTrue(validate_source_terms(row, candidate([]), scope))
+                self.assertEqual(validate_source_terms(row, candidate([("set", "集合")]), scope), [])
+
+    def test_sites_assignment_introductions_do_not_license_other_syntax(self):
+        texts = ["To prove existence just set <MATH_0001>.",
+                 "To prove uniqueness, just set <MATH_0001>.",
+                 "Consider then set <MATH_0001>.",
+                 "Then the set <MATH_0001>.",
+                 "To prove existence, just consider a set <MATH_0001>.",
+                 "Then set <REF_0001>.", "Then set <MATH_BAD>.",
+                 "Then set a value.", "Then sets <MATH_0001>."]
+        for text in texts:
+            with self.subTest(text=text):
+                row = unit(text, {"MATH_0001": "$S$", "REF_0001": r"\ref{x}"}, "paragraph")
+                scope = catalog(row)
+                scope["terms"] = [{"id": "set", "forms": ["set", "sets"],
+                                   "chapters": [], "evidence": []}]
+                expected = "sets" if " sets " in text else "set"
+                self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], [expected])
+
     def test_evidence_bound_exclusion_only_removes_the_named_occurrence(self):
         row = unit("A category and another category.")
         scope = catalog(row)

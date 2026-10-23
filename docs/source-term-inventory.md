@@ -1,5 +1,23 @@
 # 来源侧术语出现清单
 
+## Sites 中赋值动词 set 的两种引导句
+
+[Issue #852](https://github.com/dongyaotalk/stacks-project-zh/issues/852)补足两个
+从锁定英文完整证明核实的语境：句首 `To prove existence, just set` 和句首
+`Then set`。两者仍要求 `set` 后紧接完整受保护的 `MATH_####` token；句首
+可以位于前一句的句号、问号或感叹号之后。此处 `set` 表示赋值，不表示集合。
+
+见证均来自锁定提交 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的 sites 章：
+Section00V5、Tag00V9、proof1（`sites-lemma-image`）的完整片段 hash 为
+`sha256:5a249652b12cf486dde61d22bd485e38c59f373b6981c82338f74fdd4ac74dd5`；
+Section00ZG、Tag00ZJ、proof1（`sites-theorem-L-topology`）的完整片段 hash 为
+`sha256:6386385fca57e6ca1e0290a28e0fadac13097d81836b63420d955bf98ba59c57`。
+
+这两个引导句不排除随后真正的集合名词。孤立 `just set`、缺逗号的
+`To prove existence just set`、其他未经登记的证明引导句、非句首 `then set`、
+复数 `sets`、引用 token、未知 token 和没有受保护数学对象的用法保持原规则。
+此工具扩展不修改术语目录、词表、来源锁、历史输入或译文，也不批准中文译法。
+
 ## 赋值动词 set 的补充句式
 
 [Issue #815](https://github.com/dongyaotalk/stacks-project-zh/issues/815)补足现有

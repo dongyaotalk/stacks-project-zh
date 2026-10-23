@@ -117,6 +117,7 @@ def _assignment_set(text: str, match: re.Match[str]) -> bool:
             or bool(re.search(r"\bwe(?:\s+(?:now|first|then|finally|similarly))*\s*$", before, re.IGNORECASE))
             or bool(re.search(r"\bwe\s+can\s+now$", before, re.IGNORECASE))
             or bool(re.search(r"(?:^|[.!?]\)?\s+)(?:now,|to see \([0-9]+\) just)$", before, re.IGNORECASE))
+            or bool(re.search(r"(?:^|[.!?]\s+)(?:to prove existence, just|then)$", before, re.IGNORECASE))
             or bool(re.search(r"(?:^|[.!?]\s+)(?:for (?:every|each)\b[^.!?]*|finally|similarly),$", before, re.IGNORECASE)))
 
 

@@ -327,3 +327,35 @@ READY38422/BLOCKED4801、12491诊断；声明notation10822处，自然数学regi
 slot874。v4分段始终完整回放；已分类且无可译正文的整条数学可进入锁定段，
 提议unit数相对旧缓存减少不能解释成删除源字节或采用译文。全活跃事实数学
 探针未分类0、待真实typed迁移11节点；完整Git来源支持不代表中文已经修复。
+
+## 位点章记号上下文的独立工具合同（Issue #847）
+
+当前锁定英文的 sites section 00VL 使用独立的 `$\text{pr}^*_i$`；section 00VZ、
+04D4 在真实 `Mor` 类别下标和 `xymatrix` 对象格中使用 `G\textit{-Sets}`，并明确
+使用 `H\textit{-Sets}`。这些位置不能借现有裸 G 前缀或一般 `symbol` 放行。
+本工具不登记实际宏政策，后续独立政策必须提供完整锁定 Git 见证。
+
+新增可选 `locked_math_text_contexts`；每个命名项的全部字段均为 JSON 值，必须有
+`base_notation`、`commands`、`usages`、`source_label`。基记号只能直接引用原已登记
+的 `pr` 或 `-Sets`，不能引用另一个上下文或发明普通文字记号。`pr` 只允许 `text`
+与 `starred-subscripted`；`-Sets` 只允许 `textit`，还须有显式 `prefix` G 或 H，
+用法限于原 `prefixed-symbol` 或以下两个新上下文。不能用新项重复旧的裸 G 权限，
+重复权限、字段、条目/节、错误命令、字体、前缀、来源 label 及不支持的基记号失败。
+
+- `starred-subscripted` 仅接受一个完整 inline 数学原子 `\text{pr}^*_i` 的裸星、
+  下划线和单个 ASCII 字母/数字指标；没有应用尾部、分组星号或未知宏参数权限。
+- `morphism-category-prefixed-symbol` 要求完整的 `\Mor_{G\textit{-Sets}}(...)` 或
+  显式 H 变体；后缀是该单独类别下标的直接文字节点，不能借其他构造、额外前缀、
+  未完成的下标或未知命令参数。有限前置算子支持不改变旧前缀扫描权限。
+- `diagram-category-prefixed-symbol` 只识别根层 `\xymatrix` 的直接 G 对象格：真实列
+  分隔符后为显式前缀及完整后缀，随后是带非空 l/r/u/d 路由的真实 `\ar`；脚本、
+  嵌套组、伪图、metadata/literal/注释及未知箭头命令不能提供该位置。
+
+主 registry 的字段、原使用顺序和全部旧权限保持，优先采用已有效的原规则；只在
+原规则不匹配时检查显式新上下文。没有新节的历史政策不获得新权限。新项不改变
+`math_text_classifications` 记录结构：仍保存原命令、usage、实际相邻原字节和
+source_label，完整 MATH 原字节保持；不会生成中文或批准数学术语。
+
+数学内 `in`、`and`、集合描述和相容条件遵守独立
+[自然文字上下文合同](math-text-translation.md)，不会登记为记号。工具接受前继续
+BLOCKED；具体政策与实际 DATA 分别另行声明、冻结和验收。

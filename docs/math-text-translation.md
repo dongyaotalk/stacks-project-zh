@@ -375,4 +375,37 @@ Issue840工具上，独立登记以下完整英文参数。双引号标示精确
 
 这只是英文来源政策，不生成或批准中文。完整来源库存和对齐在政策稳定后集中
 重建并检查；工具和政策接受后，DATA另行冻结完整输入并由实际模型生成五字段。
+
+## 位点章的独立上下文工具合同（Issue #847）
+
+本工具扩展来自锁定英文的实际新位置，不修改现有 `root-phrase` 等角色的权限。
+`sites` 的 section 00VC、00XF、proof 04IL 和 proof 00YV 中，下列完整参数不能借用
+既有根层、独立文字列或特殊行首规则。每个参数以原大小写、全部空白和完整命令匹配；
+其他数学节点和字节继续锁定。
+
+| 新 usage | 有限语法范围 | 实际来源 |
+| --- | --- | --- |
+| `matrix-membership` | matrix 的态射类别归属：集合行中声明态射后接一个完整 `mathcal` 类别并紧接 `mid`；或单列集合描述中以 `forall` 开始的态射行，后接 `{}_V` 左指标的完整类别并结束该行 | section 00VC 的 equation/1；section 00XF 的 paragraph/2 |
+| `aligned-set-connector` | `align*` 中真实集合条件的连接词，前有集合描述的 `mid`、两侧均有等式，不跨列或换行 | proof 04IL |
+| `matrix-row-description` | 实际左右花括号包围的单列 matrix 行首完整文字，后有属于关系的数学对象描述 | section 00XF 的 paragraph/2 |
+| `matrix-row-statement` | 同一单列集合 matrix 行首完整文字，后有数学等式陈述 | section 00XF 的 paragraph/2 |
+| `matrix-operator-compatibility` | 同一单列集合 matrix 内，完整 `varphi` 后的文字与原算子列 `+,0,i` | proof 00YV |
+
+这些角色只接受有限数学命令和真实完整边界。错误环境、额外列、脚本/命令参数中的
+假位置、嵌套文字、未知宏、metadata、literal 和注释不能提供结构；同一公式的其他
+未知文字仍阻断。它们不是一般的 matrix/align 文本解锁，也不修正原文。
+
+原 `translatable_math_text` 继续拒绝重复字面量，原组件规则保持。新的可选
+`translatable_math_text_contexts` 仅表达原根层 `" in "`、`" and "` 的独立新位置。
+每个命名项精确包含 JSON 值 `base_rule`、`usage`、`source_label`、`witness_kind` 和
+`witness_ordinal`；继承直接普通根规则的完整 `literal` 与 `command`，不能改写它们。
+目前只允许 `" in "` → `matrix-membership`、`" and "` → `aligned-set-connector`。
+基规则不能是组件、其他上下文或不存在的条目；重复权限、缺失/多余字段、错误见证、
+循环及同一实际参数匹配多个角色均失败。新角色与原根层规则互不借用位置。
+
+归一后的新项仍是原 unit-v2 的完整普通参数叶，有独立 `policy_entry`、真实 Git
+见证和当前政策 hash；不新增 unit、组件、来源采用或历史版本。普通叶的枚举同步到
+unit、独立 regions 和 components 内的普通叶；组件拆分语义、全部旧政策和历史回放
+保持。只有独立工具验收合并后，后续政策任务才登记真实规则；DATA 再冻结完整来源、
+邻近/引用英文和实际模型五字段。工具、只读英文探针及 READY 不授予译文或批准。
 术语、critic、人工审校及发布仍各有门禁。

@@ -74,7 +74,13 @@ def natural_policy():
 
 
 def notation_policy():
-    text = BASE_POLICY + '\nlocked_math_text_contexts:\n'
+    # Isolate this context tool from the independently expanded Sites policy.
+    # These original negative cases deliberately use subscripted-only pr.
+    current = ('  pr:\n    commands: ["text"]\n'
+               '    usages: ["subscripted", "superscripted"]\n')
+    historical = current.replace('["subscripted", "superscripted"]', '["subscripted"]')
+    assert current in BASE_POLICY
+    text = BASE_POLICY.replace(current, historical) + '\nlocked_math_text_contexts:\n'
     for key, base, command, roles, prefix in [
         ('projection-pullback', 'pr', 'text', ['starred-subscripted'], None),
         ('g-morphisms', '-Sets', 'textit', ['morphism-category-prefixed-symbol'], 'G'),
@@ -221,7 +227,7 @@ class NotationContextTests(unittest.TestCase):
                     self.assertIn(prefix, items[0]['usage_source'])
 
     def test_existing_primary_rules_win_and_are_not_mutated(self):
-        old = Policy(BASE_POLICY)
+        old = Policy(notation_policy().split('\nlocked_math_text_contexts:')[0])
         new = Policy(notation_policy())
         self.assertEqual(old.math_text_notations, new.math_text_notations)
         for source in [r'$\text{pr}_0$', r'$G\textit{-Sets}$']:

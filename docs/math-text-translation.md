@@ -409,3 +409,37 @@ unit、独立 regions 和 components 内的普通叶；组件拆分语义、全�
 保持。只有独立工具验收合并后，后续政策任务才登记真实规则；DATA 再冻结完整来源、
 邻近/引用英文和实际模型五字段。工具、只读英文探针及 READY 不授予译文或批准。
 术语、critic、人工审校及发布仍各有门禁。
+
+## 位点章完整自然参数政策（Issue #849）
+
+以下登记使用 PR #848 已接受的有限角色，以锁定英文
+`a04446e57ec1fbc252a871afcec7752fb2807b14` 的完整真实容器见证。引号中的空白
+均属于参数；不能修剪、拆词或以近似文字匹配。所有见证 ordinal 均为 1。
+
+| 精确完整参数 | usage | 真实 Tag / witness kind |
+| --- | --- | --- |
+| `"  and  "` | `root-phrase` | 00VB / section |
+| `"collections "` | `matrix-row-description` | 00XF / section |
+| `" we have "` | `matrix-row-statement` | 00XF / section |
+| `" is compatible with "` | `matrix-operator-compatibility` | 00YV / proof |
+| `"infinite set"` | `root-phrase` | 00X9 / section |
+| `"for presheaves and"` | `quad-connector` | 00Y1 / proof |
+| `"where"` | `quad-connector` | 0D5R / lemma |
+| `" is a right inverse to "` | `root-phrase` | 04H0 / lemma |
+| `"class of "` | `root-phrase` | 00Y6 / proof |
+| `"or"` | `quad-connector` | 04I9 / section |
+| `" and correspondingly "` | `root-phrase` | 00YP / proof |
+| `" is sheaf theoretically empty"` | `root-phrase` | 04B8 / proof |
+| `"versus"` | `quad-connector` | 0CMZ / section |
+
+另有两个显式 `translatable_math_text_contexts`：原 `root-in` 的 `" in "`
+在 section 00VC 以 `matrix-membership` 见证；原 `root-and` 的 `" and "`
+在 proof 04IL 以 `aligned-set-connector` 见证。继承原 literal/command，保留
+独立实际 anchor，不重写根层规则，不复制 literal 到原普通 registry，也不允许
+上下文链或组件借用。00XF 的同角色归属仍须通过完整实际 matrix 语法核验。
+
+每项在来源库存生成时从真实锁定 Git 验证 Tag、种类、ordinal、完整命令及结构，
+其他数学节点/字节保持。政策改变后使用新政策 hash 的真实来源库存和对齐；
+此前只读提案不冒充采用。当前 unit/candidate/raw/run/freeze 和历史不迁移。
+具体候选在独立 DATA Issue 中冻结完整英文、邻近与引用上下文，再由实际模型
+生成完整五字段。当前政策没有中文译名、术语批准、critic 或人工审校记录。

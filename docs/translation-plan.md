@@ -25,7 +25,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | --- | --- | --- | --- | --- |
 | P0 | 第 4 章 范畴（`categories`） | Section 1 / `0012` | `READY` | `REVIEW` |
 | P0 | 第 105 章 代数栈导论（`stacks-introduction`） | Section 1 / `072I` | `READY` | `REVIEW` |
-| P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 7 章 位点与层（`sites`） | Section 1 / `00V0` | `READY` | `REVIEW` |
 | P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 34 章 概形上的拓扑（`topologies`） | Section 1 / `020L` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 35 章 下降（`descent`） | Section 1 / `0239` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -50,7 +50,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | --- | ---: | --- | --- | --- | --- | --- |
 | P0 | 1 / 1 | 第 4 章 范畴（`categories`） | `foundations`, `explicit-user-scope` | Section 1 / `0012` | `REVIEW` | 用户明确要求先完成第 4 章候选翻译；这是高于默认稀缺度排序的唯一第一 wave 覆盖 |
 | P0 | 2 / 1 | 第 105 章 代数栈导论（`stacks-introduction`） | `entry`, `stacks-moduli` | Section 1 / `072I` | `REVIEW` | 作者设计的代数栈快速入口，重要且系统中文同类材料稀缺 |
-| P0 | 2 / 2 | 第 7 章 位点与层（`sites`） | `scheme-to-stack` | Section 1 / `00V0` | `PREPARE_SCOPE` | 位点与层是下降和栈理论核心语言，系统中文资料稀缺 |
+| P0 | 2 / 2 | 第 7 章 位点与层（`sites`） | `scheme-to-stack` | Section 1 / `00V0` | `REVIEW` | 位点与层是下降和栈理论核心语言，系统中文资料稀缺 |
 | P0 | 2 / 3 | 第 8 章 栈（`stacks`） | `scheme-to-stack` | Section 1 / `0267` | `PREPARE_SCOPE` | 进入代数栈的直接概念前置，系统中文材料稀缺 |
 | P0 | 2 / 4 | 第 34 章 概形上的拓扑（`topologies`） | `scheme-to-stack`, `etale-cohomology` | Section 1 / `020L` | `PREPARE_SCOPE` | étale、fppf、fpqc 主线共同基础，系统中文资料稀缺 |
 | P0 | 2 / 5 | 第 35 章 下降（`descent`） | `scheme-to-stack` | Section 1 / `0239` | `PREPARE_SCOPE` | 下降是核心通用技术，也是 Stacks Project 中文化边际价值最高的主题之一 |

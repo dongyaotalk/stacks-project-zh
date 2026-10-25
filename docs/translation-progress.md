@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 106 | 第 5-104、106-111 章 |
+| 未开始 | 105 | 第 5-6、8-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 10 | 第 1-4、105、112-116 章 |
+| 候选译文完成，待审校 | 11 | 第 1-4、7、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 135 / 3,299（4.1%） | 0 | 3,164 |
+| 模型候选译文 | 187 / 3,299（5.7%） | 0 | 3,112 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -42,7 +42,7 @@
 | 4 | 范畴（`categories`） | 候选译文完成，待审校 | 44 / 44（100.0%） | 0 | 0 | 0 | 0 |
 | 5 | 拓扑（`topology`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 6 | 空间上的层（`sheaves`） | 未开始 | 0 / 33（0.0%） | 0 | 33 | 0 | 0 |
-| 7 | 位点与层（`sites`） | 未开始 | 0 / 52（0.0%） | 0 | 52 | 0 | 0 |
+| 7 | 位点与层（`sites`） | 候选译文完成，待审校 | 52 / 52（100.0%） | 0 | 0 | 0 | 0 |
 | 8 | 栈（`stacks`） | 未开始 | 0 / 13（0.0%） | 0 | 13 | 0 | 0 |
 | 9 | 域（`fields`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 10 | 交换代数（`algebra`） | 未开始 | 0 / 168（0.0%） | 0 | 168 | 0 | 0 |
@@ -246,6 +246,65 @@
 | 42 | `02Y4` | Representable 1-morphisms | 完成 | 未开始 | 未开始 |
 | 43 | `0FFJ` | Monoidal categories | 完成 | 未开始 | 未开始 |
 | 44 | `0H17` | Categories of dotted arrows | 完成 | 未开始 | 未开始 |
+
+### 第 7 章 位点与层（`sites`）
+
+共 52 个 Section：候选完成 52，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `00V0` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `00V1` | Presheaves | 完成 | 未开始 | 未开始 |
+| 3 | `00V5` | Injective and surjective maps of presheaves | 完成 | 未开始 | 未开始 |
+| 4 | `00VB` | Limits and colimits of presheaves | 完成 | 未开始 | 未开始 |
+| 5 | `00VC` | Functoriality of categories of presheaves | 完成 | 未开始 | 未开始 |
+| 6 | `00VG` | Sites | 完成 | 未开始 | 未开始 |
+| 7 | `00VL` | Sheaves | 完成 | 未开始 | 未开始 |
+| 8 | `00VS` | Families of morphisms with fixed target | 完成 | 未开始 | 未开始 |
+| 9 | `00VZ` | The example of G-sets | 完成 | 未开始 | 未开始 |
+| 10 | `00W1` | Sheafification | 完成 | 未开始 | 未开始 |
+| 11 | `00WL` | Injective and surjective maps of sheaves | 完成 | 未开始 | 未开始 |
+| 12 | `00WO` | Representable sheaves | 完成 | 未开始 | 未开始 |
+| 13 | `00WU` | Continuous functors | 完成 | 未开始 | 未开始 |
+| 14 | `00X0` | Morphisms of sites | 完成 | 未开始 | 未开始 |
+| 15 | `00X9` | Topoi | 完成 | 未开始 | 未开始 |
+| 16 | `04D4` | G-sets and morphisms | 完成 | 未开始 | 未开始 |
+| 17 | `090G` | Quasi-compact objects and colimits | 完成 | 未开始 | 未开始 |
+| 18 | `0EXI` | Colimits of sites | 完成 | 未开始 | 未开始 |
+| 19 | `00XF` | More functoriality of presheaves | 完成 | 未开始 | 未开始 |
+| 20 | `00XI` | Cocontinuous functors | 完成 | 未开始 | 未开始 |
+| 21 | `00XN` | Cocontinuous functors and morphisms of topoi | 完成 | 未开始 | 未开始 |
+| 22 | `00XW` | Cocontinuous functors which have a right adjoint | 完成 | 未开始 | 未开始 |
+| 23 | `08NG` | Cocontinuous functors which have a left adjoint | 完成 | 未开始 | 未开始 |
+| 24 | `09YW` | Existence of lower shriek | 完成 | 未开始 | 未开始 |
+| 25 | `00XZ` | Localization | 完成 | 未开始 | 未开始 |
+| 26 | `04TP` | Glueing sheaves | 完成 | 未开始 | 未开始 |
+| 27 | `04IM` | More localization | 完成 | 未开始 | 未开始 |
+| 28 | `04I8` | Localization and morphisms | 完成 | 未开始 | 未开始 |
+| 29 | `039Z` | Morphisms of topoi | 完成 | 未开始 | 未开始 |
+| 30 | `04GY` | Localization of topoi | 完成 | 未开始 | 未开始 |
+| 31 | `04IT` | Localization and morphisms of topoi | 完成 | 未开始 | 未开始 |
+| 32 | `00Y3` | Points | 完成 | 未开始 | 未开始 |
+| 33 | `05UZ` | Constructing points | 完成 | 未开始 | 未开始 |
+| 34 | `05V0` | Points and morphisms of topoi | 完成 | 未开始 | 未开始 |
+| 35 | `04EK` | Localization and points | 完成 | 未开始 | 未开始 |
+| 36 | `04I9` | 2-morphisms of topoi | 完成 | 未开始 | 未开始 |
+| 37 | `00YG` | Morphisms between points | 完成 | 未开始 | 未开始 |
+| 38 | `00YJ` | Sites with enough points | 完成 | 未开始 | 未开始 |
+| 39 | `00YN` | Criterion for existence of points | 完成 | 未开始 | 未开始 |
+| 40 | `090J` | Weakly contractible objects | 完成 | 未开始 | 未开始 |
+| 41 | `04D5` | Exactness properties of pushforward | 完成 | 未开始 | 未开始 |
+| 42 | `04B4` | Almost cocontinuous functors | 完成 | 未开始 | 未开始 |
+| 43 | `08LT` | Subtopoi | 完成 | 未开始 | 未开始 |
+| 44 | `00YR` | Sheaves of algebraic structures | 完成 | 未开始 | 未开始 |
+| 45 | `06UM` | Pullback maps | 完成 | 未开始 | 未开始 |
+| 46 | `0CMZ` | Comparison with SGA4 | 完成 | 未开始 | 未开始 |
+| 47 | `00YW` | Topologies | 完成 | 未开始 | 未开始 |
+| 48 | `00ZB` | The topology defined by a site | 完成 | 未开始 | 未开始 |
+| 49 | `00ZG` | Sheafification in a topology | 完成 | 未开始 | 未开始 |
+| 50 | `00ZN` | Topologies and sheaves | 完成 | 未开始 | 未开始 |
+| 51 | `00ZR` | Topologies and continuous functors | 完成 | 未开始 | 未开始 |
+| 52 | `00ZS` | Points and topologies | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

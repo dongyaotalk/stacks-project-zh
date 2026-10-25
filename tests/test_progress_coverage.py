@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from test_group_derivations import commit, save, write
 from test_source_container_boundaries import LIST, fixture
 from test_source_containers import old_unit
+from test_source_containers import git
 from stacks_zh.progress import collect_progress
 from stacks_zh.progress_coverage import container_tag_coverage
 from stacks_zh.records import RecordError, load_jsonl
@@ -190,6 +192,209 @@ class ContainerProgressTests(unittest.TestCase):
                 section(root,harvest)
             loader.assert_called_once_with(root,harvest,identifiers={record['unit_groups'][0]['source_container_restoration_id']})
             self.assertEqual(len(record['unit_groups']),2)
+
+
+def adoption_setup(base, *, named=False, extra=''):
+    """Real Git/source bindings; synthetic metadata is not a valid model run."""
+    from test_source_adoptions import synthetic_fixture
+    from stacks_zh.source_adoptions import POLICIES
+    from stacks_zh.source_containers import Containers, lower_container, clean
+    from stacks_zh.source_reextractions import byte_hash
+
+    seed, _, _, _, frozen, _ = synthetic_fixture(base / 'seed', typed=False)
+    root, harvest, _, derived, path = setup(base / 'adopted', named=named, extra=extra)
+    path.unlink()
+    native = Containers(root, harvest)
+    groups = []
+    for group in derived['unit_groups']:
+        restoration = json.loads((root / ('translation-data/source-container-restorations/'
+            + group['source_container_restoration_id'] + '.json')).read_text())
+        selected = native.select(restoration['selector'])
+        units = [clean(u) for u in lower_container(selected, native.policy)]
+        groups.append(dict(selector=selected['selector'], selected=selected,
+                           unit_ids=[u['unit_id'] for u in units]))
+    units = [clean(u) for g in groups for u in lower_container(g['selected'], native.policy)]
+    candidates = [{'unit_id':u['unit_id'], 'source_commit':u['source_commit'],
+                   'source_status':'CURRENT'} for u in units]
+    (root / derived['files']['output_units']['path']).unlink()
+    (root / derived['files']['output_candidates']['path']).unlink()
+    up = 'translation-data/units/test-first.jsonl'
+    cp = 'translation-data/candidates/synthetic/test-first.jsonl'
+    unit_entry = save(root, up, units); candidate_entry = save(root, cp, candidates)
+    for name in POLICIES:
+        if name in {'upstream.lock', 'config/macro-policy.yml'}:
+            continue
+        target = root / name; target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(seed / name, target)
+    commit(root)
+    frozen.update(origin_commit=git(root,'rev-parse','HEAD'),
+        source_commit=units[0]['source_commit'], unit_ids=[u['unit_id'] for u in units],
+        parent_tags=list(dict.fromkeys(u['parent_tag'] for u in units)),
+        policies=[{'path':name,'hash':byte_hash((root/name).read_bytes())} for name in POLICIES],
+        batches=[dict(units_path=up,candidates_path=cp,units=units,containers=groups,prior_attempts=[])])
+    frozen['contexts'] = []
+    identifier = frozen['adoption_id']
+    ip = f'translation-data/source-adoption-inputs/{identifier}.json'
+    ap = f'translation-data/source-adoptions/{identifier}.json'
+    rp = f'docs/evidence/{identifier}-raw.jsonl'
+    run = f'translation-data/runs/{frozen["run_id"]}.json'
+    scope_path = 'task-scopes/synthetic-first.json'
+    files = [ip,ap,up,cp,rp,run]
+    scope = dict(schema_version=1,task_id=frozen['task_id'],owner='synthetic',
+        branch=git(root,'branch','--show-current'),source_commit=frozen['source_commit'],
+        allowed_write_files=[scope_path,*files],data_scopes=[dict(scope_id='synthetic',chapter='test',
+        parent_tags=frozen['parent_tags'],historical_parent_tags=[],unit_ids=frozen['unit_ids'],
+        input_unit_ids=frozen['unit_ids'],output_unit_ids=frozen['unit_ids'],allowed_write_files=files,
+        run_scope=[frozen['run_id']],model_scope=['synthetic','synthetic:fixture:declared'])])
+    write(root/scope_path,scope)
+    frozen['task'].update(branch=scope['branch'],scope_manifest=scope_path,
+        scope_manifest_sha256=byte_hash((root/scope_path).read_bytes()),scope_bytes=(root/scope_path).read_text())
+    write(root/ip,frozen)
+    record={k:copy.deepcopy(frozen[k]) for k in ('schema_version','adoption_id','origin_commit',
+        'source_commit','created_at','unit_ids','chapter','parent_tags','run_id')}
+    record.update(tool_version='source-adoption-v1',input={'path':ip,'hash':byte_hash((root/ip).read_bytes())},
+        raw_attempts=[dict(path=rp,hash='sha256:'+'0'*64,unit_ids=frozen['unit_ids'])],
+        run=dict(path=run,hash='sha256:'+'0'*64),outputs=[dict(units=unit_entry,candidates=candidate_entry)])
+    write(root/ap,record)
+    return root,harvest,record,frozen,root/ap
+
+
+class FirstAdoptionProgressTests(unittest.TestCase):
+    def test_complete_native_adoption_adds_scope_without_model_or_review_approval(self):
+        from stacks_zh.source_adoptions import load_repository_source_adoptions
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,record,_,_=adoption_setup(Path(tmp))
+            result=section(root,harvest)
+            self.assertEqual((result.required_tags,result.prepared_tags),(4,4))
+            self.assertTrue(result.candidate_complete)
+            self.assertFalse(result.reviewed_complete);self.assertFalse(result.published_complete)
+            # The source-only fixture deliberately has no model raw/run. Full
+            # provenance still rejects it; progress cannot approve a model run.
+            self.assertTrue(load_repository_source_adoptions(root,harvest)[1])
+
+    def test_named_split_group_and_candidate_absence_preserve_preparation_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,record,_,_=adoption_setup(Path(tmp),named=True)
+            self.assertTrue(section(root,harvest).candidate_complete)
+            (root/record['outputs'][0]['candidates']['path']).unlink()
+            result=section(root,harvest)
+            self.assertEqual(result.prepared_tags,4)
+            self.assertFalse(result.candidate_complete)
+            self.assertFalse(result.reviewed_complete);self.assertFalse(result.published_complete)
+
+    def test_candidate_text_and_unbound_units_do_not_supply_native_scope(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,record,_,path=adoption_setup(Path(tmp))
+            cp=root/record['outputs'][0]['candidates']['path'];rows=load_jsonl(cp)
+            rows[0]['translation']=r'\\item\\label{item-first} arbitrary candidate'
+            save(root,cp.relative_to(root).as_posix(),rows)
+            path.unlink()
+            self.assertEqual(section(root,harvest).prepared_tags,2)
+            self.assertFalse(section(root,harvest).candidate_complete)
+
+    def test_fake_nested_labels_are_excluded_for_first_adoptions(self):
+        fake=['$\\item\\label{lemma-two}$','%\\item\\label{lemma-two}\n',
+              '\\footnote{\\item\\label{lemma-two}}','\\ref{lemma-two}',
+              '\\begin{verbatim}\\item\\label{lemma-two}\\end{verbatim}']
+        for text in fake:
+            with self.subTest(text=text),tempfile.TemporaryDirectory() as tmp:
+                root,harvest,_,_,_=adoption_setup(Path(tmp),extra=text)
+                covered=container_tag_coverage(root,harvest,current_units(root))
+                self.assertEqual(set().union(*covered.values()),{'0003','0004'})
+
+    def test_rehashed_incomplete_or_changed_source_bindings_are_rejected(self):
+        from stacks_zh.source_reextractions import byte_hash
+        faults=['source','policy','fragment','unit','partial','order','output-path','input-hash','stale','bytes']
+        for fault in faults:
+            with self.subTest(fault=fault),tempfile.TemporaryDirectory() as tmp:
+                root,harvest,record,frozen,path=adoption_setup(Path(tmp),named=True)
+                batch=frozen['batches'][0];up=batch['units_path']
+                if fault=='source':record['source_commit']=frozen['source_commit']='a'*40
+                if fault=='policy':frozen['policies'][0]['hash']='sha256:'+'0'*64
+                if fault=='fragment':batch['containers'][0]['selected']['fragment']+=' Incomplete.'
+                if fault=='unit':batch['units'][0]['source_text']='Only part of the source.'
+                if fault=='stale':batch['units'][0]['source_status']='STALE'
+                if fault=='partial':
+                    batch['units']=batch['units'][1:]
+                    batch['containers'][0]['unit_ids']=batch['containers'][0]['unit_ids'][1:]
+                    frozen['unit_ids']=record['unit_ids']=[u['unit_id'] for u in batch['units']]
+                if fault=='order':batch['units'].reverse()
+                if fault=='output-path':record['outputs'][0]['units']['path']='translation-data/units/absent.jsonl'
+                if fault in {'unit','partial','order','stale'}:
+                    record['outputs'][0]['units']=save(root,up,batch['units'])
+                if fault=='bytes':
+                    with (root/up).open('ab') as stream:stream.write(b'\n')
+                write(root/record['input']['path'],frozen)
+                record['input']['hash']=byte_hash((root/record['input']['path']).read_bytes())
+                if fault=='input-hash':record['input']['hash']='sha256:'+'0'*64
+                write(path,record)
+                with self.assertRaises(RecordError):container_tag_coverage(root,harvest,current_units(root))
+
+    def test_immutable_record_and_file_set_changes_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,record,_,path=adoption_setup(Path(tmp));commit(root)
+            record['created_at']='2026-10-20T00:00:00Z';write(path,record)
+            with self.assertRaisesRegex(RecordError,'first Git addition'):
+                container_tag_coverage(root,harvest,current_units(root))
+
+    def test_source_query_checks_only_relevant_adoptions_and_never_model_history(self):
+        from stacks_zh.source_containers import Containers
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,_,frozen,_=adoption_setup(Path(tmp))
+            write(root/'translation-data/source-adoptions/unrelated.json',{'not':'a current source owner'})
+            original=Containers.select;seen=[]
+            def observe(native,selector):
+                seen.append(selector)
+                return original(native,selector)
+            with patch.object(Containers,'select',observe), \
+                    patch('stacks_zh.source_adoptions.load_repository_source_adoptions',side_effect=AssertionError('full replay')), \
+                    patch('stacks_zh.source_adoptions._replay_record',side_effect=AssertionError('model replay')):
+                self.assertEqual(section(root,harvest).prepared_tags,4)
+            self.assertEqual(seen,[g['selector'] for b in frozen['batches'] for g in b['containers']])
+
+    def test_consumed_adoption_is_not_a_second_current_source_owner(self):
+        from stacks_zh.source_reextractions import byte_hash
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,record,frozen,path=adoption_setup(Path(tmp))
+            child=copy.deepcopy(frozen);child_record=copy.deepcopy(record)
+            child.update(tool_version='source-adoption-input-v2',adoption_id='synthetic-next',
+                run_id='run-synthetic-next',created_at='2026-10-20T00:00:00Z',
+                prior_adoptions=[dict(record=dict(path=path.relative_to(root).as_posix(),
+                    hash=byte_hash(path.read_bytes())),outputs=copy.deepcopy(record['outputs']))])
+            ip='translation-data/source-adoption-inputs/synthetic-next.json'
+            ap='translation-data/source-adoptions/synthetic-next.json'
+            raw='docs/evidence/synthetic-next-raw.jsonl';run='translation-data/runs/run-synthetic-next.json'
+            scope=json.loads(frozen['task']['scope_bytes'])
+            extra=[ip,ap,raw,run]
+            scope['allowed_write_files']+=extra;scope['data_scopes'][0]['allowed_write_files']+=extra
+            scope['data_scopes'][0]['run_scope'].append(child['run_id'])
+            sp='task-scopes/synthetic-next.json';scope['allowed_write_files'].append(sp)
+            write(root/sp,scope);child['task'].update(scope_manifest=sp,
+                scope_manifest_sha256=byte_hash((root/sp).read_bytes()),scope_bytes=(root/sp).read_text())
+            write(root/ip,child)
+            child_record.update(tool_version='source-adoption-v2',adoption_id=child['adoption_id'],
+                run_id=child['run_id'],created_at=child['created_at'],
+                input=dict(path=ip,hash=byte_hash((root/ip).read_bytes())),
+                raw_attempts=[dict(path=raw,hash='sha256:'+'0'*64,unit_ids=child['unit_ids'])],
+                run=dict(path=run,hash='sha256:'+'0'*64))
+            write(root/ap,child_record)
+            self.assertEqual(section(root,harvest).prepared_tags,4)
+            duplicate=copy.deepcopy(child);duplicate_record=copy.deepcopy(child_record)
+            ip2='translation-data/source-adoption-inputs/synthetic-other.json'
+            duplicate['adoption_id']='synthetic-other';write(root/ip2,duplicate)
+            duplicate_record.update(adoption_id='synthetic-other',input=dict(path=ip2,hash=byte_hash((root/ip2).read_bytes())))
+            write(root/'translation-data/source-adoptions/synthetic-other.json',duplicate_record)
+            with self.assertRaisesRegex(RecordError,'multiple current successors'):
+                container_tag_coverage(root,harvest,current_units(root))
+        from stacks_zh.source_containers import Containers
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,_,_,_=adoption_setup(Path(tmp));original=Containers.select
+            def change(native,selector):
+                selected=original(native,selector)
+                write(root/'translation-data/source-adoptions/added.json',{'changed':'during source query'})
+                return selected
+            with patch.object(Containers,'select',change),self.assertRaisesRegex(RecordError,'paths changed'):
+                container_tag_coverage(root,harvest,current_units(root))
 
 
 if __name__=='__main__':unittest.main()

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import read_text as _input_text
+
 import json
 import re
 from pathlib import Path
@@ -172,7 +174,7 @@ def _yaml_entries(text: str) -> list[dict[str, Any]]:
 def load_approved_term_pairs(path: Path) -> set[tuple[str, str]]:
     """Return approvals from the authoritative glossary, failing closed on bad entries."""
     try:
-        text = path.read_text(encoding="utf-8")
+        text = _input_text(path, encoding="utf-8")
         if text.lstrip().startswith("{"):
             document = json.loads(text, object_pairs_hook=_unique_object)
             entries = document.get("entries") if isinstance(document, dict) else None

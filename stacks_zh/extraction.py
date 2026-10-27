@@ -5,6 +5,8 @@ is retained and reported; writing an inventory does not make it adoptable.
 """
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import ast
 import bisect
 import collections
@@ -1099,8 +1101,8 @@ def _current_index(root: Path, tags: dict[str, str]):
     from .source_integrity import permanent_tag_mapping
     result: dict[tuple[str, str], list[dict[str, Any]]] = collections.defaultdict(list)
     snapshots = []
-    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
-        raw = path.read_bytes()
+    for path in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
+        raw = _input_bytes(path)
         snapshots.append([path.relative_to(root).as_posix(), byte_hash(raw)])
         units = [json.loads(line) for line in raw.decode('utf-8').splitlines() if line.strip()]
         mapping = permanent_tag_mapping(units, tags)
@@ -1176,7 +1178,7 @@ def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> No
 
 def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None):
     english = LockedEnglish(root, harvest)
-    policy_raw = (root / 'config/macro-policy.yml').read_bytes()
+    policy_raw = _input_bytes(root / 'config/macro-policy.yml')
     policy = Policy(policy_raw.decode('utf-8'))
     resolve_natural_math_witnesses(policy, english)
     manifest_raw = _git_bytes(harvest, english.commit, 'chapters.tex')
@@ -1229,7 +1231,7 @@ def build_inventory(root: Path, harvest: Path, chapters: list[str] | None = None
     manifest['current_units_hash'] = current_hash
     current_english = LockedEnglish(root, harvest)
     if (current_english.commit != english.commit or current_english.tags != english.tags
-            or policy_raw != (root / 'config/macro-policy.yml').read_bytes()
+            or policy_raw != _input_bytes(root / 'config/macro-policy.yml')
             or _current_index(root, english.tags)[1] != current_hash):
         raise RecordError('macro policy/current facts changed during source extraction')
     return manifest, units, segments, diagnostics
@@ -1245,7 +1247,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
         raise RecordError('extraction output must be a dedicated ignored source-ir/ or build/ subdirectory')
     if output.exists() and not check:
         marker = output / 'manifest.json'
-        previous = json.loads(marker.read_text(encoding='utf-8')) if marker.is_file() and not marker.is_symlink() else {}
+        previous = json.loads(_input_text(marker, encoding='utf-8')) if marker.is_file() and not marker.is_symlink() else {}
         if (not output.is_dir() or not marker.is_file() or marker.is_symlink() or not isinstance(previous, dict)
                 or previous.get('schema_version') != 1
                 or previous.get('extractor_version') not in {VERSION, 'source-extraction-v1', 'source-extraction-v2', 'source-extraction-v3'}):
@@ -1256,7 +1258,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
             raise RecordError('refusing to replace an inventory containing symlinks')
         files = previous.get('files', {})
         if (not isinstance(files, dict) or set(files) != {'units.jsonl', 'segments.jsonl', 'diagnostics.jsonl', 'report.md'}
-                or any(byte_hash((output / name).read_bytes()) != expected for name, expected in files.items())):
+                or any(byte_hash(_input_bytes(output / name)) != expected for name, expected in files.items())):
             raise RecordError('refusing to regenerate an invalid source inventory')
     manifest, units, segments, diagnostics = build_inventory(root, harvest, chapters)
 
@@ -1281,7 +1283,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
         if not output.is_dir() or {p.name for p in output.iterdir()} != set(payloads):
             raise RecordError('source inventory files missing, extra or stale')
         for name, raw in payloads.items():
-            if (output / name).is_symlink() or (output / name).read_bytes() != raw:
+            if (output / name).is_symlink() or _input_bytes(output / name) != raw:
                 raise RecordError('source inventory out of date: ' + name)
         return manifest
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -1292,7 +1294,7 @@ def write_inventory(root: Path, harvest: Path, output: Path, *, chapters: list[s
             (temporary / name).write_bytes(raw)
         current = LockedEnglish(root, harvest)
         if (current.commit != manifest['source_commit']
-                or byte_hash((root / 'config/macro-policy.yml').read_bytes()) != manifest['macro_policy_hash']
+                or byte_hash(_input_bytes(root / 'config/macro-policy.yml')) != manifest['macro_policy_hash']
                 or _current_index(root, current.tags)[1] != manifest['current_units_hash']):
             raise RecordError('locked source, macro policy or facts changed before installing inventory')
         if output.exists():

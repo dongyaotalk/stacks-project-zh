@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import copy
 import hashlib
 import json
@@ -46,7 +48,7 @@ def _first_addition_is_immutable(root: Path, path: Path) -> None:
     if not commits:
         return
     original = subprocess.run(['git', '-C', str(root), 'show', f'{commits[0]}:{relative}'], capture_output=True)
-    if original.returncode or original.stdout != path.read_bytes():
+    if original.returncode or original.stdout != _input_bytes(path):
         raise RecordError(f'{relative}: immutable evidence differs from its first Git addition')
 
 
@@ -56,9 +58,9 @@ def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[
     errors: list[str] = []
     snapshots: set[str] = set()
     runs: set[str] = set()
-    for path in sorted((root / 'translation-data/model-corrections').glob('*.json')):
+    for path in sorted(_input_glob(root / 'translation-data/model-corrections', '*.json')):
         try:
-            record = json.loads(path.read_text(encoding='utf-8'))
+            record = json.loads(_input_text(path, encoding='utf-8'))
             schema_errors = validate_named_schema(record, 'model-correction.schema.json', str(path))
             if schema_errors:
                 raise RecordError('\n'.join(schema_errors))
@@ -76,10 +78,10 @@ def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[
                 if entry['path'] in snapshots:
                     raise RecordError('model-correction snapshot is claimed twice')
                 snapshots.add(entry['path'])
-                if _hash(resolved[role].read_bytes()) != entry['hash']:
+                if _hash(_input_bytes(resolved[role])) != entry['hash']:
                     raise RecordError(f'{role}: correction snapshot hash mismatch')
             run_path = _safe_path(root, f"translation-data/runs/{record['run_id']}.json", r'translation-data/runs/[A-Za-z0-9._-]+\.json')
-            manifest = json.loads(run_path.read_text(encoding='utf-8'))
+            manifest = json.loads(_input_text(run_path, encoding='utf-8'))
             schema_errors = validate_named_schema(manifest, 'run-manifest.schema.json', str(run_path))
             if schema_errors:
                 raise RecordError('\n'.join(schema_errors))
@@ -171,7 +173,7 @@ def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[
                 }
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f'{path}: {exc}')
-    for path in sorted((root / 'translation-data/retired/model-corrections').glob('*/*.jsonl')):
+    for path in sorted(_input_glob(root / 'translation-data/retired/model-corrections', '*/*.jsonl')):
         if path.relative_to(root).as_posix() not in snapshots:
             errors.append(f'{path}: orphaned raw model-correction snapshot')
     return corrections, errors
@@ -192,7 +194,7 @@ def candidate_provenance_hash(root: Path, candidate: dict[str, Any]) -> str:
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier) or '..' in identifier:
             raise RecordError('invalid composite provenance ID')
     def read(relative: str) -> dict[str, Any]:
-        return json.loads((root / relative).read_text(encoding='utf-8'))
+        return json.loads(_input_text(root / relative, encoding='utf-8'))
     correction = read(f'translation-data/model-corrections/{correction_id}.json')
     binding = {
         'candidate': _clean(candidate),

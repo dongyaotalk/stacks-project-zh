@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import copy
 import hashlib
 import json
@@ -244,9 +246,9 @@ def load_repository_derivations(
     restorations, restoration_errors = load_source_containers(root, harvest)
     errors.extend(restoration_errors)
     records = {}
-    for path in sorted((root / "translation-data/derivations").glob("*.json")):
+    for path in sorted(_input_glob(root / "translation-data/derivations", "*.json")):
         try:
-            record = json.loads(path.read_text(encoding="utf-8"))
+            record = json.loads(_input_text(path, encoding="utf-8"))
             schema_errors = validate_named_schema(record, "derivation.schema.json", str(path))
             if schema_errors:
                 raise DerivationError("\n".join(schema_errors))
@@ -285,7 +287,7 @@ def load_repository_derivations(
             for role in ("input_units", "input_candidates"):
                 entry = entries[role]
                 resolved[role] = _path(root, entry["path"], input_pattern)
-                if byte_hash(resolved[role].read_bytes()) != entry["hash"]:
+                if byte_hash(_input_bytes(resolved[role])) != entry["hash"]:
                     raise DerivationError(f"{role}: file hash mismatch")
                 _first_addition_is_immutable(root, resolved[role])
                 if entry["path"] in seen_snapshots:
@@ -304,7 +306,7 @@ def load_repository_derivations(
                     if entries[role]["path"] in seen_outputs:
                         raise DerivationError("active file belongs to multiple derivations")
                     seen_outputs.add(entries[role]["path"])
-                if byte_hash(resolved[role].read_bytes()) != entries[role]["hash"]:
+                if byte_hash(_input_bytes(resolved[role])) != entries[role]["hash"]:
                     raise DerivationError(f"{role}: file hash mismatch")
             if Path(entries["output_units"]["path"]).name != Path(entries["output_candidates"]["path"]).name:
                 raise DerivationError("active unit/candidate batch names differ")
@@ -324,7 +326,7 @@ def load_repository_derivations(
                 parent_units, parent_candidates, parent_origins = visit(previous)
                 previous_outputs = (parent_units, parent_candidates)
             for input_role, output_role in [("input_units", "output_units"), ("input_candidates", "output_candidates")]:
-                if resolved[input_role].read_bytes() != _git_origin_bytes(root, record["origin_commit"], entries[output_role]["path"]):
+                if _input_bytes(resolved[input_role]) != _git_origin_bytes(root, record["origin_commit"], entries[output_role]["path"]):
                     raise DerivationError(f"{input_role}: snapshot differs from original Git bytes")
             if parent_origins is None:
                 raw_origins = {row["unit_id"]: clean(row) for row in candidates}
@@ -336,12 +338,12 @@ def load_repository_derivations(
                 if not isinstance(run_id, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", run_id) or ".." in run_id:
                     raise DerivationError("origin candidate has invalid run ID")
                 run_path = f"translation-data/runs/{run_id}.json"
-                if (root / run_path).read_bytes() != _git_origin_bytes(root, record["origin_commit"], run_path):
+                if _input_bytes(root / run_path) != _git_origin_bytes(root, record["origin_commit"], run_path):
                     raise DerivationError(f"{run_path}: original run bytes have changed")
             output_units, output_candidates = replay_derivation(record, units, candidates, corrections,
                                                                 previous_outputs, reextractions, restorations, tags)
             for role, rows in [("output_units", output_units), ("output_candidates", output_candidates)]:
-                if jsonl_bytes(rows) != resolved[role].read_bytes():
+                if jsonl_bytes(rows) != _input_bytes(resolved[role]):
                     raise DerivationError(f"{role}: active output does not match replay")
             mapped_origins = {}
             for operation in record.get('operations', []):
@@ -394,7 +396,7 @@ def load_repository_derivations(
         successor = entry["manifest"]["successor_derivation_id"]
         if prior not in cache or successor not in cache or records[successor].get("previous_derivation_id") != prior:
             errors.append(f"archive {prior}: missing valid direct successor/replay")
-    for path in sorted((root / "translation-data/retired/derivations").glob("*/*.jsonl")):
+    for path in sorted(_input_glob(root / "translation-data/retired/derivations", "*/*.jsonl")):
         if path.relative_to(root).as_posix() not in seen_snapshots:
             errors.append(f"{path}: orphaned raw derivation snapshot")
     from .pre_adoption_replays import validate_pre_adoption_replays
@@ -413,7 +415,7 @@ def load_repository_derivations(
     owned_units = [unit for identifier in used_restorations
                    for unit in restorations[identifier]['record']['new_units']]
     owned_rows = []
-    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+    for path in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
         try:
             owned_rows.extend((path, row) for row in load_jsonl(path)
                               if any(name.startswith('OWNARGEND_') for name in row.get('placeholders', {})))
@@ -428,9 +430,9 @@ def load_repository_derivations(
             adoptions = {}
         else:
             from .source_adoptions import _ValidatedAdoptions
-            if not isinstance(_source_adoptions, _ValidatedAdoptions):
+            if type(_source_adoptions) is not _ValidatedAdoptions:
                 raise DerivationError('owned title requires an actual complete adoption replay')
-            _source_adoptions.assert_unchanged(root)
+            _source_adoptions.assert_unchanged(root, harvest)
             adoptions = _source_adoptions
         owned_units.extend(value['unit'] for value in adoptions.values())
     for path, row in owned_rows:
@@ -438,7 +440,7 @@ def load_repository_derivations(
             errors.append(f"{path}: {row['unit_id']}: owned title requires validated complete-container evidence")
     if any(r['tool']['version'] == '4' for r in records.values()):
         active_ids = {}
-        for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+        for path in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
             try:
                 for row in load_jsonl(path):
                     if row['unit_id'] in active_ids:
@@ -446,7 +448,7 @@ def load_repository_derivations(
                     active_ids[row['unit_id']] = path
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 errors.append(f'{path}: {exc}')
-    for path in sorted((root / "translation-data/candidates").glob("*/*.jsonl")):
+    for path in sorted(_input_glob(root / "translation-data/candidates", "*/*.jsonl")):
         try:
             for row in load_jsonl(path):
                 key = (path.relative_to(root).as_posix(), row["unit_id"])

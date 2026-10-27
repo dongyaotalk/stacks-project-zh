@@ -1,6 +1,8 @@
 """Full provisional v4 replay before its first Git adoption, never a waiver."""
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import copy
 import json
 import re
@@ -17,7 +19,7 @@ from .schema_validation import validate_named_schema
 def _read(root: Path, entry: dict, pattern: str) -> tuple[Path, bytes]:
     from .derivations import byte_hash
     path = _safe_path(root, entry['path'], pattern)
-    payload = path.read_bytes()
+    payload = _input_bytes(path)
     if byte_hash(payload) != entry['hash']:
         raise RecordError('pre-adoption snapshot hash mismatch')
     _first_addition_is_immutable(root, path)
@@ -38,11 +40,11 @@ def _first_adoption(root: Path, origin: str, record_path: str, manifest_path: st
         raise RecordError('pre-adoption requires readable Git history')
     additions = history.stdout.decode().splitlines()
     if additions:
-        manifest = json.loads((root / manifest_path).read_text())
+        manifest = json.loads(_input_text(root / manifest_path))
         paths = [manifest_path, *(entry['path'] for entry in manifest['files'].values())]
         for relative in paths:
             original = git('show', f'{additions[0]}:{relative}')
-            if original.returncode or original.stdout != (root / relative).read_bytes():
+            if original.returncode or original.stdout != _input_bytes(root / relative):
                 raise RecordError('pre-adoption evidence must accompany the first derivation addition')
 
 
@@ -52,7 +54,7 @@ def _prior_run_files(root: Path, evidence: dict) -> dict[str, str]:
     paths = [f"translation-data/model-corrections/{record['correction_id']}.json",
              f"translation-data/runs/{record['run_id']}.json",
              *(record['files'][role]['path'] for role in ('units', 'candidates'))]
-    return {path: byte_hash((root / path).read_bytes()) for path in paths}
+    return {path: byte_hash(_input_bytes(root / path)) for path in paths}
 
 
 def validate_pre_adoption_replays(
@@ -63,12 +65,12 @@ def validate_pre_adoption_replays(
     from .derivations import clean, jsonl_bytes, replay_derivation
     consumed, errors, claimed, seen_files = set(), [], set(), set()
     folder = root / 'translation-data/pre-adoption-replays'
-    for path in sorted(folder.glob('*')):
+    for path in sorted(_input_glob(folder, '*')):
         if path.suffix != '.json':
             errors.append(f'{path}: unsupported pre-adoption evidence file')
-    for path in sorted(folder.glob('*.json')):
+    for path in sorted(_input_glob(folder, '*.json')):
         try:
-            manifest = json.loads(path.read_text(encoding='utf-8'))
+            manifest = json.loads(_input_text(path, encoding='utf-8'))
             schema_errors = validate_named_schema(manifest, 'pre-adoption-replay.schema.json', str(path))
             if schema_errors:
                 raise RecordError('\n'.join(schema_errors))
@@ -156,7 +158,7 @@ def validate_pre_adoption_replays(
             consumed.update(keys)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f'{path}: {exc}')
-    for path in sorted((root / 'translation-data/retired/pre-adoption-replays').glob('**/*')):
+    for path in sorted(_input_glob(root / 'translation-data/retired/pre-adoption-replays', '**/*')):
         if (path.is_file() or path.is_symlink()) and path.relative_to(root).as_posix() not in seen_files:
             errors.append(f'{path}: orphaned pre-adoption snapshot')
     return consumed, errors
@@ -165,8 +167,8 @@ def validate_pre_adoption_replays(
 def pre_adoption_history(root: Path, derivation_id: str) -> list[dict[str, Any]]:
     """Binding/disclosure data, called only after full repository validation."""
     result = []
-    for path in sorted((root / 'translation-data/pre-adoption-replays').glob('*.json')):
-        manifest = json.loads(path.read_text(encoding='utf-8'))
+    for path in sorted(_input_glob(root / 'translation-data/pre-adoption-replays', '*.json')):
+        manifest = json.loads(_input_text(path, encoding='utf-8'))
         if manifest['current_derivation_id'] != derivation_id:
             continue
         snapshots = {}
@@ -174,11 +176,11 @@ def pre_adoption_history(root: Path, derivation_id: str) -> list[dict[str, Any]]
             snapshot, _ = _read(root, manifest['files'][role],
                 rf"translation-data/retired/pre-adoption-replays/{re.escape(manifest['replay_id'])}/{re.escape(name)}")
             if role == 'derivation':
-                snapshots[role] = json.loads(snapshot.read_text())
+                snapshots[role] = json.loads(_input_text(snapshot))
             else:
                 from .derivations import clean
                 snapshots[role] = [clean(row) for row in load_jsonl(snapshot)]
-        correction = json.loads((root / f"translation-data/model-corrections/{manifest['predecessor_correction_id']}.json").read_text())
+        correction = json.loads(_input_text(root / f"translation-data/model-corrections/{manifest['predecessor_correction_id']}.json"))
         result.append({'manifest': manifest, 'snapshots': snapshots, 'correction': correction,
-            'run': json.loads((root / f"translation-data/runs/{correction['run_id']}.json").read_text())})
+            'run': json.loads(_input_text(root / f"translation-data/runs/{correction['run_id']}.json"))})
     return result

@@ -280,7 +280,12 @@ class BatchMakefileTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("validate-many", result.stdout)
+        self.assertIn("stacks_zh.py check-batches", result.stdout)
+        self.assertEqual(result.stdout.count('stacks_zh.py check-batches'), 1)
+        for command in ['Workflow policy: OK', 'Harvest remote mismatch', 'upstream-index-check', 'init-chapters']:
+            self.assertIn(command, result.stdout)
+        for command in ['stacks_zh.py provenance-check', 'stacks_zh.py decision-check', 'stacks_zh.py schema-check']:
+            self.assertNotIn(command, result.stdout)
         self.assertIn("translation-data/units/alpha.jsonl", result.stdout)
         self.assertIn("translation-data/units/beta.jsonl", result.stdout)
         self.assertIn(
@@ -306,7 +311,12 @@ class BatchMakefileTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("stacks_zh.py render", result.stdout)
+        self.assertIn("stacks_zh.py check-and-render", result.stdout)
+        self.assertEqual(result.stdout.count('stacks_zh.py check-and-render'), 1)
+        for command in ['Workflow policy: OK', 'Harvest remote mismatch', 'upstream-index-check', 'init-chapters']:
+            self.assertIn(command, result.stdout)
+        for command in ['stacks_zh.py check-batches', 'stacks_zh.py provenance-check', 'stacks_zh.py decision-check', 'stacks_zh.py schema-check']:
+            self.assertNotIn(command, result.stdout)
         self.assertIn("--output-dir \"build/test-batch-render\"", result.stdout)
 
 

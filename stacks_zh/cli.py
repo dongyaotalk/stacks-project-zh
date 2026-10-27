@@ -21,7 +21,7 @@ from .planning import (
 from .progress import update_progress_report
 from .records import RecordError
 from .current_qa import CurrentSourceQA
-from .repository_validation import validate_repository
+from .repository_validation import validate_repository, validate_batches_session
 from .extraction import write_inventory
 from .source_alignment import write_alignment
 from .source_containers import write_container_package, write_container_packages
@@ -120,6 +120,13 @@ def build_parser() -> argparse.ArgumentParser:
     validate_many.add_argument("--units", required=True, type=Path, nargs="+")
     validate_many.add_argument("--candidates", required=True, type=Path, nargs="+")
     validate_many.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
+
+    check_batches = subparsers.add_parser('check-batches',
+        help='complete shared gates and strict single-run QA in one live session')
+    check_batches.add_argument('--units', required=True, type=Path, nargs='+')
+    check_batches.add_argument('--candidates', required=True, type=Path, nargs='+')
+    check_batches.add_argument('--lock', type=Path, default=DEFAULT_LOCK_FILE)
+    check_batches.add_argument('--harvest', type=Path)
 
     validate_all = subparsers.add_parser(
         "validate-all", help="run every candidate batch QA in one process, across all lanes/runs"
@@ -233,7 +240,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="allow an indivisible scope outside the preferred source-word range",
     )
 
-    render = subparsers.add_parser("render", help="generate an ignored LaTeX preview directory")
+    render = subparsers.add_parser("render", aliases=['check-and-render'],
+        help="generate an ignored LaTeX preview; check-and-render includes shared batch gates")
     render.add_argument("--units", required=True, type=Path, nargs="+")
     render.add_argument("--candidates", required=True, type=Path, nargs="+")
     render.add_argument("--lock", type=Path, default=DEFAULT_LOCK_FILE)
@@ -450,6 +458,16 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             print(f'Repository acceptance: PASS ({count} candidate batches; no human or publication approval)')
             return 0
+        if args.command == 'check-batches':
+            result, errors = validate_batches_session(args.units, args.candidates, args.lock,
+                                                       args.harvest, report=print)
+            if errors:
+                for error in errors:
+                    print(f'ERROR: {error}', file=sys.stderr)
+                return 1
+            result.assert_valid(args.lock.resolve().parent, args.harvest, args.units, args.candidates)
+            print(f'Candidate batch QA: PASS ({result.count} unit(s) across {len(args.units)} batch(es))')
+            return 0
         if args.command == "validate-many":
             count, errors = validate_batches(args.units, args.candidates, args.lock)
             if not errors:
@@ -562,9 +580,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{resolution.harness_id}: {resolution.version}")
             print(f"command: {' '.join(resolution.command)}")
             return 0
-        if args.command == "render":
-            current = CurrentSourceQA(args.lock.resolve().parent, args.harvest or args.chapter_source_dir)
-            _, current_errors = current.validate_pairs(args.units, args.candidates, chapter=args.chapter)
+        if args.command in {"render", "check-and-render"}:
+            validation = None
+            harvest = args.harvest or args.chapter_source_dir
+            if args.command == 'check-and-render':
+                if args.chapter is not None:
+                    raise RecordError('batch acceptance requires exact pairs; use render for chapter selection')
+                validation, current_errors = validate_batches_session(args.units, args.candidates,
+                    args.lock, harvest, report=print)
+                current = validation.current if validation is not None else None
+            else:
+                current = CurrentSourceQA(args.lock.resolve().parent, harvest)
+                _, current_errors = current.validate_pairs(args.units, args.candidates, chapter=args.chapter)
             if current_errors:
                 raise RecordError('current preview source QA failed:\n' + '\n'.join(current_errors))
             output_dir = args.output_dir or DEFAULT_RENDER_ROOT / args.model_lane
@@ -580,8 +607,13 @@ def main(argv: list[str] | None = None) -> int:
                 args.chapter_source_dir,
                 args.chapter_title_map,
                 chapter=args.chapter,
+                _validation=validation,
+                harvest=harvest,
+                _current=current,
             )
-            current.assert_unchanged()
+            if validation is not None:
+                print('Candidate batch QA: PASS '
+                      f'({validation.count} unit(s) across {len(args.units)} batch(es))')
             print(f"Rendered {len(written)} file(s): {output_dir}")
             return 0
         if args.command == "check-build-log":

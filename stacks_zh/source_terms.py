@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import glob_paths as _input_glob, read_text as _input_text
+
 import json
 import re
 from collections import Counter
@@ -124,7 +126,7 @@ def _assignment_set(text: str, match: re.Match[str]) -> bool:
 def load_catalog(root: Path) -> dict[str, Any]:
     path = root / "config/source-terms.json"
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(_input_text(path, encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise RecordError(f"cannot read source term catalog: {exc}") from exc
     errors = validate_named_schema(value, "source-terms.schema.json", str(path))
@@ -331,7 +333,7 @@ def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dic
         raise RecordError("source term catalog uses a different locked source commit")
     units = {}
     batches = {}
-    for path in sorted((root / "translation-data/units").glob("*.jsonl")):
+    for path in sorted(_input_glob(root / "translation-data/units", "*.jsonl")):
         rows = load_jsonl(path)
         for row in rows:
             if row["unit_id"] in units:
@@ -349,7 +351,7 @@ def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dic
         inventory = source_inventory(row, catalog)
         report["units"].append(inventory)
         report["required_occurrences"] += len(inventory["occurrences"])
-    for path in sorted((root / "translation-data/candidates").glob("*/*.jsonl")):
+    for path in sorted(_input_glob(root / "translation-data/candidates", "*/*.jsonl")):
         rows = load_jsonl(path)
         if path.stem not in batches or Counter(row["unit_id"] for row in rows) != Counter(row["unit_id"] for row in batches.get(path.stem, [])):
             errors.append(f"{path.relative_to(root)}: candidate batch does not exactly cover its source units")
@@ -360,7 +362,7 @@ def audit_repository_terms(root: Path, harvest: Path | None = None) -> tuple[dic
             report["candidates"].append({"path": str(path.relative_to(root)),
                                          "unit_id": candidate["unit_id"], "errors": findings})
             errors.extend(findings)
-    candidate_stems = {path.stem for path in (root / "translation-data/candidates").glob("*/*.jsonl")}
+    candidate_stems = {path.stem for path in _input_glob(root / "translation-data/candidates", "*/*.jsonl")}
     for stem in sorted(set(batches) - candidate_stems):
         errors.append(f"{stem}: source batch has no candidate coverage")
     return report, errors

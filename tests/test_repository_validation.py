@@ -7,6 +7,7 @@ from unittest import mock
 
 from stacks_zh.current_qa import InputSnapshot
 from stacks_zh.decisions import validate_repository_decisions
+from stacks_zh.source_adoptions import load_repository_source_adoptions
 from stacks_zh.records import RecordError
 from stacks_zh.repository_validation import _ProvenancePass, _require_live_provenance, validate_repository
 
@@ -25,9 +26,9 @@ class RepositoryValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp).resolve();self.repository(root);proofs=[]
             def decisions(path, harvest, *, _provenance):
-                _require_live_provenance(_provenance,path);proofs.append(_provenance);return []
+                _require_live_provenance(_provenance,path,harvest);proofs.append(_provenance);return []
             with mock.patch('stacks_zh.repository_validation.validate_repository_schemas',return_value=[]) as schema, \
-                 mock.patch('stacks_zh.repository_validation.validate_repository_provenance',return_value=[]) as provenance, \
+                 mock.patch('stacks_zh.repository_validation._validate_repository_provenance',return_value=load_repository_source_adoptions(root)) as provenance, \
                  mock.patch('stacks_zh.decisions.validate_repository_decisions',side_effect=decisions) as decision, \
                  mock.patch('stacks_zh.repository_validation.CurrentSourceQA', autospec=True) as current:
                 current.return_value.validate_repository.return_value=(2,[])
@@ -39,7 +40,7 @@ class RepositoryValidationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);self.repository(root)
             with mock.patch('stacks_zh.repository_validation.validate_repository_schemas',return_value=[]), \
-                 mock.patch('stacks_zh.repository_validation.validate_repository_provenance',return_value=['bad immutable raw']), \
+                 mock.patch('stacks_zh.repository_validation._validate_repository_provenance',return_value=({},['bad immutable raw'])), \
                  mock.patch('stacks_zh.decisions.validate_repository_decisions') as decision, \
                  mock.patch('stacks_zh.repository_validation.CurrentSourceQA', autospec=True) as current:
                 self.assertEqual(validate_repository(root),(0,['bad immutable raw']));decision.assert_not_called();current.assert_not_called()
@@ -47,10 +48,11 @@ class RepositoryValidationTests(unittest.TestCase):
     def test_fact_change_during_validation_is_not_certified(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);self.repository(root)
+            adoptions,_=load_repository_source_adoptions(root)
             def changed(*args):
-                (root/'translation-data/injected.json').write_text('{}\n');return []
+                (root/'translation-data/injected.json').write_text('{}\n');return adoptions,[]
             with mock.patch('stacks_zh.repository_validation.validate_repository_schemas',return_value=[]), \
-                 mock.patch('stacks_zh.repository_validation.validate_repository_provenance',side_effect=changed), \
+                 mock.patch('stacks_zh.repository_validation._validate_repository_provenance',side_effect=changed), \
                  mock.patch('stacks_zh.decisions.validate_repository_decisions') as decision:
                 with self.assertRaisesRegex(RecordError,'paths changed'):validate_repository(root)
                 decision.assert_not_called()
@@ -69,6 +71,19 @@ class RepositoryValidationTests(unittest.TestCase):
             cache=root/'stacks_zh/__pycache__';cache.mkdir();(cache/'example.pyc').write_bytes(b'synthetic cache');snapshot.assert_unchanged()
             source.write_text('value=2\n')
             with self.assertRaisesRegex(RecordError,'changed'):snapshot.assert_unchanged()
+
+    def test_empty_watched_directory_replaced_with_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);self.repository(root)
+            target=root/'review';snapshot=InputSnapshot(root);snapshot.watch_tree(target)
+            target.rmdir();outside=root/'empty';outside.mkdir()
+            target.symlink_to(outside,target_is_directory=True)
+            with self.assertRaisesRegex(RecordError,'symlink'):snapshot.assert_unchanged()
+
+    def test_subdirectory_cannot_inherit_parent_head_as_its_repository_identity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);self.repository(root);child=root/'child';child.mkdir()
+            with self.assertRaisesRegex(RecordError,'actual Git worktree root'):InputSnapshot(child)
 
     def test_standalone_decision_command_still_replays_unselected_corrections(self):
         with tempfile.TemporaryDirectory() as temp:

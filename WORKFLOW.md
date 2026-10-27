@@ -206,6 +206,14 @@ make render-batch \
 `model_lane`、具体模型、Harness 或 `run_id`。错误仍按 batch 报告，修复后可以只重跑
 失败 pair。
 
+`qa` / `qa-batch` 的 Python 入口为 `check-batches`；`render-batch` 使用
+`check-and-render`，已在同一次会话完成全部批量 QA，无需先另跑 `qa-batch`。
+workflow、harvest、index 和章节模板仍由 Make 的共同前置检查覆盖。完整历史回放
+产生私有内存凭证，决策、渲染及 typed 正文定位复用同次来源采用结果；凭证绑定
+实际 root、HEAD、来源身份、输入文件集合和原字节，以及完整有序 pair。输入变化
+立即失败，不读取磁盘 PASS，也不跨进程免检。普通渲染和章节预览内部同样复用
+本次完整回放；默认严格 `validate` / `validate-many` 的定位范围保持。
+
 这里的 batch 是开发调度边界，不是新的翻译事实文件：每个 Tag 仍保留独立 unit 和
 candidate 文件及可审计溯源。一个 batch 任务可以在同一章用 `parent_tags` 声明 2–8 个
 相邻、语义完整的 Tag，并共享一次模型运行、一个 Issue 和一个 PR；不得跨章节、切断证明链

@@ -132,6 +132,7 @@ WORKFLOW_FILES := \
 	stacks_zh/provenance.py \
 	stacks_zh/current_qa.py \
 	stacks_zh/repository_validation.py \
+	stacks_zh/validation_io.py \
 	stacks_zh/pr_contract.py \
 	stacks_zh/progress.py \
 	stacks_zh/planning.py \
@@ -341,13 +342,14 @@ validate-batch:
 	@test -f "$(UNIT_FILE)" || { printf 'Missing unit file: %s\n' "$(UNIT_FILE)" >&2; exit 1; }
 	@test -f "$(CANDIDATE_FILE)" || { printf 'Missing candidate file: %s\n' "$(CANDIDATE_FILE)" >&2; exit 1; }
 
-qa: validate-model validate-batch workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
-	$(PYTHON) stacks_zh.py validate \
+qa: validate-model validate-batch workflow-check harvest-check upstream-index-check chapter-template-check
+	$(PYTHON) stacks_zh.py check-batches \
 		--units "$(UNIT_FILE)" \
 		--candidates "$(CANDIDATE_FILE)" \
-		--lock "$(UPSTREAM_LOCK)"
+		--lock "$(UPSTREAM_LOCK)" --harvest "$(HARVEST_DIR)"
 
-qa-batch: validate-model workflow-check harvest-check upstream-index-check chapter-template-check schema-check provenance-check decision-check
+.PHONY: validate-batch-list
+validate-batch-list:
 	@test -n "$(strip $(BATCHES))" || { printf 'BATCHES is required; use BATCHES="batch-a batch-b"\n' >&2; exit 1; }
 	@test "$(MODEL)" != template || { printf 'MODEL must identify a candidate lane\n' >&2; exit 1; }
 	@test "$(words $(BATCH_UNIT_FILES))" -eq "$(words $(BATCH_CANDIDATE_FILES))" || { printf 'BATCHES expansion mismatch\n' >&2; exit 1; }
@@ -357,10 +359,11 @@ qa-batch: validate-model workflow-check harvest-check upstream-index-check chapt
 	for file in $(BATCH_UNIT_FILES) $(BATCH_CANDIDATE_FILES); do \
 		test -f "$$file" || { printf 'Missing batch file: %s\n' "$$file" >&2; exit 1; }; \
 	done
-	$(PYTHON) stacks_zh.py validate-many \
+qa-batch: validate-model validate-batch-list workflow-check harvest-check upstream-index-check chapter-template-check
+	$(PYTHON) stacks_zh.py check-batches \
 		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
 		--candidates $(foreach file,$(BATCH_CANDIDATE_FILES),"$(file)") \
-		--lock "$(UPSTREAM_LOCK)"
+		--lock "$(UPSTREAM_LOCK)" --harvest "$(HARVEST_DIR)"
 
 batch-pack:
 	@test -n "$(strip $(BATCHES))" || { printf 'BATCHES is required; use BATCHES="batch-a batch-b"\n' >&2; exit 1; }
@@ -426,8 +429,8 @@ render: validate-model validate-render workflow-check harvest-check
 		--tags-file "$(TAGS_FILE)" \
 		--output-dir "$(MODEL_DIR)"
 
-render-batch: qa-batch
-	$(PYTHON) stacks_zh.py render \
+render-batch: validate-model validate-batch-list workflow-check harvest-check upstream-index-check chapter-template-check
+	$(PYTHON) stacks_zh.py check-and-render \
 		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
 		--candidates $(foreach file,$(BATCH_CANDIDATE_FILES),"$(file)") \
 		--lock "$(UPSTREAM_LOCK)" \

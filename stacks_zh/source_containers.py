@@ -5,6 +5,8 @@ cached spans and current unit IDs are not authority for selecting English.
 """
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import copy
 import json
 import re
@@ -70,7 +72,7 @@ class Containers:
                  natural_text_enabled: bool = True, hierarchical_prose: bool = True):
         self.root = root
         self.english = LockedEnglish(root, harvest)
-        self.current_policy_bytes = (root / 'config/macro-policy.yml').read_bytes()
+        self.current_policy_bytes = _input_bytes(root / 'config/macro-policy.yml')
         self.policy_bytes = self.current_policy_bytes if policy_bytes is None else policy_bytes
         self.policy = Policy(self.policy_bytes.decode('utf-8'), natural_text_enabled=natural_text_enabled)
         self.hierarchical_prose = hierarchical_prose
@@ -287,7 +289,7 @@ class Containers:
                     for value in complete_math_nodes(row['unit'])}}
 
     def assert_unchanged(self) -> None:
-        if (self.root / 'config/macro-policy.yml').read_bytes() != self.current_policy_bytes:
+        if _input_bytes(self.root / 'config/macro-policy.yml') != self.current_policy_bytes:
             raise RecordError('macro policy changed during container generation')
         current = LockedEnglish(self.root, self.english.harvest)
         if current.commit != self.english.commit or current.tags != self.english.tags:
@@ -785,7 +787,7 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
     evidence, errors = {}, []
     directory = root / 'translation-data/source-container-restorations'
     if identifiers is None:
-        paths = sorted(directory.glob('*.json'))
+        paths = sorted(_input_glob(directory, '*.json'))
     else:
         if (not isinstance(identifiers, set) or any(
                 not isinstance(i, str) or not ID.fullmatch(i) or '..' in i for i in identifiers)):
@@ -802,7 +804,7 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
         try:
             safe_path(root, path.relative_to(root).as_posix(),
                       r'translation-data/source-container-restorations/[A-Za-z0-9._-]+\.json')
-            record = json.loads(path.read_text(encoding='utf-8'))
+            record = json.loads(_input_text(path, encoding='utf-8'))
             problems = validate_named_schema(record, 'source-container-restoration.schema.json', str(path))
             if problems:
                 raise RecordError('\n'.join(problems))
@@ -837,7 +839,7 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 entry = record['files'][role]
                 pattern = rf"translation-data/retired/derivations/{re.escape(record['derivation_id'])}/{name}\.jsonl"
                 frozen_path = safe_path(root, entry['path'], pattern)
-                if byte_hash(frozen_path.read_bytes()) != entry['hash']:
+                if byte_hash(_input_bytes(frozen_path)) != entry['hash']:
                     raise RecordError('source-container full-batch snapshot hash mismatch')
                 _first_addition_is_immutable(root, frozen_path)
                 frozen[role] = [clean(u) for u in load_jsonl(frozen_path)]
@@ -884,16 +886,16 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
 
 
 def _repository_state(root: Path):
-    paths = [root / 'upstream.lock', *sorted((root / 'config').glob('*')),
-             *sorted((root / 'translation-data').rglob('*.json')),
-             *sorted((root / 'translation-data').rglob('*.jsonl')),
-             *sorted((root / 'review').rglob('*.json'))]
+    paths = [root / 'upstream.lock', *sorted(_input_glob(root / 'config', '*')),
+             *sorted(_input_glob(root / 'translation-data', '*.json', recursive=True)),
+             *sorted(_input_glob(root / 'translation-data', '*.jsonl', recursive=True)),
+             *sorted(_input_glob(root / 'review', '*.json', recursive=True))]
     state = {}
     for path in paths:
         if not path.is_file() or path.name == 'local.mk':
             continue
         safe_path(root, path.relative_to(root).as_posix(), r'[A-Za-z0-9._/-]+')
-        state[path.relative_to(root).as_posix()] = byte_hash(path.read_bytes())
+        state[path.relative_to(root).as_posix()] = byte_hash(_input_bytes(path))
     return state
 
 
@@ -920,14 +922,14 @@ class _VerifiedPreparation:
                              capture_output=True).stdout
         paths = {self.root / name.decode('utf-8') for name in raw.split(b'\0') if name}
         for directory in ('translation-data', 'review'):
-            paths.update(p for p in (self.root / directory).rglob('*') if p.is_file() or p.is_symlink())
+            paths.update(p for p in _input_glob(self.root / directory, '*', recursive=True) if p.is_file() or p.is_symlink())
         state = {}
         for path in sorted(paths):
             relative = path.relative_to(self.root).as_posix()
             if (not path.resolve().is_relative_to(self.root.resolve()) or any(
                     p.is_symlink() for p in [path, *path.parents] if p.is_relative_to(self.root))):
                 raise RecordError('tracked preparation input escapes repository or is a symlink')
-            state[relative] = byte_hash(path.read_bytes())
+            state[relative] = byte_hash(_input_bytes(path))
         return state
 
     def assert_unchanged(self):
@@ -963,7 +965,7 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
     if unit_path.name != candidate_path.name:
         raise RecordError('container plan must name one paired complete logical batch')
     origin_commit = preparation.origin
-    frozen = {p: p.read_bytes() for p in (unit_path, candidate_path)}
+    frozen = {p: _input_bytes(p) for p in (unit_path, candidate_path)}
     for path, raw in frozen.items():
         original = _git_origin_bytes(root, origin_commit, path.relative_to(root).as_posix())
         if raw != original:
@@ -1071,12 +1073,12 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
         except RecordError as exc:
             diagnostics.append({'group_id': group_id, 'input_unit_ids': ids, 'severity': 'BLOCKED', 'message': str(exc)})
         proposals.append(proposed)
-    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+    for path in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
         if path != unit_path:
             for row in load_jsonl(path):
                 if row['unit_id'] in seen_outputs:
                     raise RecordError('proposed output ID collides with another active fact batch: ' + row['unit_id'])
-    other_lanes = [p for p in (root / 'translation-data/candidates').glob('*/' + unit_path.name) if p != candidate_path]
+    other_lanes = [p for p in _input_glob(root / 'translation-data/candidates', '*/' + unit_path.name) if p != candidate_path]
     if other_lanes and lowered != units:
         raise RecordError('source changes affect other active model lanes; declare their full adoption separately')
     manifest = {'schema_version': 1, 'generator': VERSION, 'source_commit': containers.english.commit,
@@ -1090,7 +1092,7 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
     def current_inputs():
         preparation.assert_unchanged()
         for path, raw in frozen.items():
-            if path.read_bytes() != raw:
+            if _input_bytes(path) != raw:
                 raise RecordError('current full batch changed during source-container preparation')
 
     current_inputs()
@@ -1140,14 +1142,14 @@ def write_container_package(root: Path, harvest: Path, plan_path: Path, output: 
             raise RecordError('container package destination contains unrelated or incomplete files')
         if any(p.is_symlink() or not p.is_file() for p in output.iterdir()):
             raise RecordError('container package destination contains unsafe files')
-        previous = {p.name: p.read_bytes() for p in output.iterdir()}
+        previous = {p.name: _input_bytes(p) for p in output.iterdir()}
         previous_manifest = json.loads(previous['manifest.json'])
         if previous_manifest.get('generator') != VERSION:
             raise RecordError('container package destination is not owned by this generator')
         if (set(previous_manifest.get('files', {})) != names - {'manifest.json'}
                 or any(byte_hash(previous[name]) != value for name, value in previous_manifest['files'].items())):
             raise RecordError('container package has stale or tampered file hashes')
-    raw_plan = plan_path.read_bytes()
+    raw_plan = _input_bytes(plan_path)
     plan = json.loads(raw_plan)
     manifest, groups, restorations, diagnostics, units, frozen, assert_inputs = prepare_containers(root, harvest, plan)
     payloads = _container_payloads(manifest, groups, restorations, diagnostics, units, frozen)
@@ -1157,11 +1159,11 @@ def write_container_package(root: Path, harvest: Path, plan_path: Path, output: 
         if (not output.resolve().is_relative_to(root) or any(
                 path.is_symlink() for path in [output, *output.parents] if path.is_relative_to(root))):
             raise RecordError('container output or parent changed to a symlink during generation')
-        if plan_path.read_bytes() != raw_plan:
+        if _input_bytes(plan_path) != raw_plan:
             raise RecordError('container plan changed during generation')
         if output.exists() != (previous is not None) or (previous is not None and (
                 {p.name for p in output.iterdir()} != names or any(p.is_symlink() for p in output.iterdir())
-                or {p.name: p.read_bytes() for p in output.iterdir()} != previous)):
+                or {p.name: _input_bytes(p) for p in output.iterdir()} != previous)):
             raise RecordError('container output changed concurrently')
 
     unchanged()
@@ -1220,10 +1222,10 @@ def _read_collection(output: Path):
         return None
     if not output.is_dir():
         raise RecordError('container collection destination is not a directory')
-    paths = list(output.rglob('*'))
+    paths = list(_input_glob(output, '*', recursive=True))
     if any(p.is_symlink() or (not p.is_file() and not p.is_dir()) for p in paths):
         raise RecordError('container collection contains unsafe files')
-    contents = {p.relative_to(output).as_posix(): p.read_bytes() for p in paths if p.is_file()}
+    contents = {p.relative_to(output).as_posix(): _input_bytes(p) for p in paths if p.is_file()}
     try:
         manifest = json.loads(contents['manifest.json'])
         if (not isinstance(manifest, dict) or not isinstance(manifest.get('packages'), list)
@@ -1273,7 +1275,7 @@ def write_container_packages(root: Path, harvest: Path, plan_paths: list[Path], 
         path = path.resolve()
         if path in raw_plans:
             raise RecordError('container collection repeats a plan')
-        raw = path.read_bytes()
+        raw = _input_bytes(path)
         plan = json.loads(raw)
         if not isinstance(plan, dict) or set(plan) != {'derivation_id', 'created_at', 'units_file', 'candidates_file', 'groups'}:
             raise RecordError('container plan needs exact identity, full-batch files and groups')
@@ -1296,7 +1298,7 @@ def write_container_packages(root: Path, harvest: Path, plan_paths: list[Path], 
         _many_destination(root, output)
         for path, raw in raw_plans.items():
             if (any(p.is_symlink() for p in [path, *path.parents] if p.is_relative_to(root))
-                    or path.read_bytes() != raw):
+                    or _input_bytes(path) != raw):
                 raise RecordError('container collection plan changed during generation')
         if _read_collection(output) != previous:
             raise RecordError('container collection output changed concurrently')

@@ -1,6 +1,8 @@
 """Read-only correspondence and repair planning; never adopts source or text."""
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import collections
 import difflib
 import json
@@ -274,10 +276,10 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
     if inventory.is_symlink() or (inventory / 'manifest.json').is_symlink():
         raise RecordError('source inventory must not be a symlink')
     english = LockedEnglish(root, harvest)
-    raw_policy = (root / 'config/macro-policy.yml').read_bytes()
+    raw_policy = _input_bytes(root / 'config/macro-policy.yml')
     policy = Policy(raw_policy.decode('utf-8'))
     resolve_natural_math_witnesses(policy, english)
-    manifest_bytes = (inventory / 'manifest.json').read_bytes()
+    manifest_bytes = _input_bytes(inventory / 'manifest.json')
     manifest = json.loads(manifest_bytes)
     if (not isinstance(manifest, dict) or manifest.get('extractor_version') != EXTRACTION_VERSION
             or manifest.get('source_commit') != english.commit
@@ -288,14 +290,13 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
         raise RecordError('source inventory manifest has invalid paths')
     for name, expected in manifest['files'].items():
         path = inventory / name
-        if path.is_symlink() or byte_hash(path.read_bytes()) != expected:
+        if path.is_symlink() or byte_hash(_input_bytes(path)) != expected:
             raise RecordError('source inventory file hash mismatch: ' + name)
     rows = []
-    with (inventory / 'units.jsonl').open(encoding='utf-8') as stream:
-        for line in stream:
-            row = json.loads(line)
-            if row['unit']['chapter'] in chapters:
-                rows.append(row)
+    for line in _input_text(inventory / 'units.jsonl', encoding='utf-8').splitlines():
+        row = json.loads(line)
+        if row['unit']['chapter'] in chapters:
+            rows.append(row)
     by_id = {}
     for row in rows:
         if row['inventory_id'] in by_id:
@@ -348,22 +349,22 @@ def verified_inventory(root: Path, harvest: Path, inventory: Path, chapters: set
 
 def _read_facts(root: Path):
     batches, hashes, seen = {}, {}, set()
-    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+    for path in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
         rows = load_jsonl(path)
         for row in rows:
             if row['unit_id'] in seen:
                 raise RecordError('duplicate current source unit: ' + row['unit_id'])
             seen.add(row['unit_id'])
         batches[path.stem] = rows
-        hashes[path.relative_to(root).as_posix()] = byte_hash(path.read_bytes())
+        hashes[path.relative_to(root).as_posix()] = byte_hash(_input_bytes(path))
     if not batches:
         raise RecordError('no current source units')
-    for path in sorted((root / 'translation-data/candidates').glob('*/*.jsonl')):
-        hashes[path.relative_to(root).as_posix()] = byte_hash(path.read_bytes())
+    for path in sorted(_input_glob(root / 'translation-data/candidates', '*/*.jsonl')):
+        hashes[path.relative_to(root).as_posix()] = byte_hash(_input_bytes(path))
     for name in ('upstream.lock', 'config/macro-policy.yml', 'config/source-terms.json', 'config/glossary.yml'):
         path = root / name
         if path.is_file():
-            hashes[name] = byte_hash(path.read_bytes())
+            hashes[name] = byte_hash(_input_bytes(path))
     return batches, hashes
 
 
@@ -492,10 +493,10 @@ def build_alignment(root: Path, harvest: Path, inventory: Path):
     # Audits reread facts; never combine observations from different revisions.
     if _read_facts(root)[1] != inputs:
         raise RecordError('current facts changed while preparing the repair queue')
-    if byte_hash((inventory / 'manifest.json').read_bytes()) != inventory_hash:
+    if byte_hash(_input_bytes(inventory / 'manifest.json')) != inventory_hash:
         raise RecordError('source inventory changed while preparing the repair queue')
-    manifest = json.loads((inventory / 'manifest.json').read_bytes())
-    if any(byte_hash((inventory / name).read_bytes()) != expected for name, expected in manifest['files'].items()):
+    manifest = json.loads(_input_bytes(inventory / 'manifest.json'))
+    if any(byte_hash(_input_bytes(inventory / name)) != expected for name, expected in manifest['files'].items()):
         raise RecordError('source inventory changed while preparing the repair queue')
     native.assert_unchanged()
     return report, queue, {'term-audit.json': {**terms, 'errors': term_errors},
@@ -517,7 +518,7 @@ def write_alignment(root: Path, harvest: Path, inventory: Path, output: Path, *,
             return
         marker = output / 'alignment.json'
         if (not output.is_dir() or not marker.is_file() or marker.is_symlink()
-                or json.loads(marker.read_text()).get('version') not in OWNED_VERSIONS
+                or json.loads(_input_text(marker)).get('version') not in OWNED_VERSIONS
                 or {p.name for p in output.iterdir()} != expected_names
                 or any(p.is_symlink() for p in output.iterdir())):
             raise RecordError('refusing to replace an unrelated alignment directory')
@@ -540,7 +541,7 @@ def write_alignment(root: Path, harvest: Path, inventory: Path, output: Path, *,
         if not output.is_dir() or {p.name for p in output.iterdir()} != expected_names:
             raise RecordError('alignment files missing, extra or stale')
         for name, raw in payloads.items():
-            if (output / name).is_symlink() or (output / name).read_bytes() != raw:
+            if (output / name).is_symlink() or _input_bytes(output / name) != raw:
                 raise RecordError('alignment output out of date: ' + name)
         return report
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from .validation_io import tracked_inputs, current_inputs
+
+from .validation_io import glob_paths as _input_glob, read_text as _input_text
+
 import json
 from pathlib import Path
 from typing import Any
@@ -13,7 +17,7 @@ from .provenance import validate_repository_provenance
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(_input_text(path, encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise ValueError(f"cannot read {path}: {exc}") from exc
     if not isinstance(value, dict):
@@ -23,8 +27,8 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _candidate_index(root: Path, errors: list[str]) -> dict[tuple[str, str, str], dict[str, Any]]:
     result: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for path in sorted((root / "translation-data" / "candidates").glob("*/*.jsonl")):
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for path in sorted(_input_glob(root / "translation-data" / "candidates", "*/*.jsonl")):
+        for line_number, line in enumerate(_input_text(path, encoding="utf-8").splitlines(), 1):
             if not line.strip():
                 continue
             location = f"{path}:{line_number}"
@@ -49,8 +53,8 @@ def _candidate_index(root: Path, errors: list[str]) -> dict[tuple[str, str, str]
 
 def _unit_facts(root: Path, errors: list[str]) -> dict[str, dict[str, str]]:
     result: dict[str, dict[str, str]] = {}
-    for path in sorted((root / "translation-data" / "units").glob("*.jsonl")):
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for path in sorted(_input_glob(root / "translation-data" / "units", "*.jsonl")):
+        for line_number, line in enumerate(_input_text(path, encoding="utf-8").splitlines(), 1):
             if not line.strip():
                 continue
             try:
@@ -133,16 +137,21 @@ def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, A
             errors.append(f'{location}: corrected candidate requires its complete composite provenance_hash')
 
 
+@tracked_inputs
 def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
                                   _provenance: object | None = None) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
+    from .repository_validation import _ImplementationIdentity
+    implementation = _ImplementationIdentity()
+    current_inputs().seed_implementation(implementation)
+    current_inputs().watch_root(root)
     errors: list[str] = []
     candidates = _candidate_index(root, errors)
     corrected = [candidate for candidate in candidates.values()
                  if 'model_correction_id' in candidate or 'source_adoption_id' in candidate]
     if _provenance is not None:
         from .repository_validation import _require_live_provenance
-        _require_live_provenance(_provenance, root)
+        _require_live_provenance(_provenance, root, harvest)
     if corrected:
         provenance_errors = [] if _provenance is not None else validate_repository_provenance(root, harvest)
         errors.extend(provenance_errors)
@@ -151,7 +160,7 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
             # Complete provenance above still validates every corrected fact,
             # including unselected candidates and all historical raw output.
             selected_keys = set()
-            for path in (root / 'translation-data/selections').glob('*.json'):
+            for path in _input_glob(root / 'translation-data/selections', '*.json'):
                 try:
                     entry = _read_json(path)
                 except ValueError:
@@ -168,7 +177,7 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
     approved_terms: set[tuple[str, str]] | None = None
 
     selections: dict[str, tuple[Path, dict[str, Any]]] = {}
-    for path in sorted((root / "translation-data" / "selections").glob("*.json")):
+    for path in sorted(_input_glob(root / "translation-data" / "selections", "*.json")):
         try:
             selection = _read_json(path)
         except ValueError as exc:
@@ -208,7 +217,7 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
 
     reviews: dict[str, tuple[Path, dict[str, Any]]] = {}
     for review_type in ("language", "mathematics"):
-        for path in sorted((root / "review" / review_type).rglob("*.json")):
+        for path in sorted(_input_glob(root / "review" / review_type, "*.json", recursive=True)):
             try:
                 review = _read_json(path)
             except ValueError as exc:
@@ -240,7 +249,7 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
 
     revisions: dict[str, tuple[Path, dict[str, Any]]] = {}
     current_by_unit: dict[str, str] = {}
-    for path in sorted((root / "translation-data" / "reviewed").rglob("*.json")):
+    for path in sorted(_input_glob(root / "translation-data" / "reviewed", "*.json", recursive=True)):
         try:
             revision = _read_json(path)
         except ValueError as exc:

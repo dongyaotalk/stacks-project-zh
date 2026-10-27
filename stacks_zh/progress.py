@@ -221,8 +221,8 @@ def _read_jsonl(paths: Iterable[Path]) -> Iterable[tuple[Path, int, dict[str, An
             yield path, line_number, value
 
 
-def _load_chapters(root: Path, source_commit: str) -> list[dict[str, Any]]:
-    templates = [
+def _load_chapters(root: Path, source_commit: str, *, templates: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    templates = templates if templates is not None else [
         _read_json(path)
         for path in sorted((root / "translation-data/chapter-templates").glob("*.json"))
     ]
@@ -254,9 +254,9 @@ def _load_titles(root: Path) -> dict[str, str]:
     return value
 
 
-def _load_tag_index(tags_path: Path, chapter_slugs: set[str]) -> _TagIndex:
+def _load_tag_index(tags_path: Path, chapter_slugs: set[str], *, tags_text: str | None = None) -> _TagIndex:
     try:
-        lines = tags_path.read_text(encoding="utf-8").splitlines()
+        lines = (tags_path.read_text(encoding="utf-8") if tags_text is None else tags_text).splitlines()
     except OSError as exc:
         raise RecordError(f"cannot read permanent Tag map {tags_path}: {exc}") from exc
     sorted_slugs = sorted(chapter_slugs, key=len, reverse=True)
@@ -302,6 +302,7 @@ def _chapter_source(
     harvest_root: Path,
     template: dict[str, Any],
     tag_index: _TagIndex,
+    *, source_text: str | None = None,
 ) -> _ChapterSource:
     chapter = str(template["chapter"])
     raw_sections = template.get("sections")
@@ -314,7 +315,8 @@ def _chapter_source(
         raise RecordError(f"chapter template {chapter!r}: source_file is required")
     source_path = harvest_root / source_file
     try:
-        source_text = source_path.read_text(encoding="utf-8")
+        if source_text is None:
+            source_text = source_path.read_text(encoding="utf-8")
     except OSError as exc:
         raise RecordError(f"cannot read locked chapter source {source_path}: {exc}") from exc
 

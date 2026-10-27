@@ -16,6 +16,29 @@ from .source_integrity import STATEMENTS
 from .source_reextractions import byte_hash, source_tex
 
 
+def native_container_tag_coverage(selected, policy, tags):
+    """Native item Tags of an already selected complete statement, without candidates.
+
+    Callers retain authority for the actual locked selector/lowering. This helper
+    grants neither current fact coverage nor candidate/review approval on its own.
+    """
+    kind = selected['selector']['kind']
+    if kind not in STATEMENTS:
+        return frozenset()
+    fragment = selected['fragment']
+    opening = ENVIRONMENT.match(fragment)
+    if opening is None or opening.group() != f'\\begin{{{kind}}}':
+        raise RecordError('native Tag coverage requires the complete statement opening')
+    scanner = Scanner(fragment, policy)
+    position = scanner.skip_space(opening.end())
+    if fragment[position:position + 1] == '[':
+        fragment = fragment[:opening.end()] + fragment[scanner.argument_end(position):]
+    found = _item_tags(fragment, policy, tags, selected['selector']['file'][:-4])
+    if len(set(found)) != len(found):
+        raise RecordError('progress source container has duplicate native item Tags')
+    return frozenset(found)
+
+
 def _restored_container_tag_coverage(
     root: Path, harvest: Path, units_by_file: dict[str, list[dict[str, Any]]],
 ) -> dict[str, frozenset[str]]:
@@ -112,18 +135,7 @@ def _restored_container_tag_coverage(
         selected = restored['selected']
         if selected['selector']['kind'] not in STATEMENTS:
             raise RecordError('progress nested Tags require a complete statement container')
-        fragment = selected['fragment']
-        scanner = Scanner(fragment, restored['policy'])
-        opening = ENVIRONMENT.match(fragment)
-        position = scanner.skip_space(opening.end())
-        if fragment[position:position + 1] == '[':
-            # A named environment title is a parameter, not a native list.
-            # It remains fully verified in the source/lowering above.
-            fragment = fragment[:opening.end()] + fragment[scanner.argument_end(position):]
-        tags = _item_tags(fragment, restored['policy'], restored['tags'],
-                          selected['selector']['file'][:-4])
-        if len(set(tags)) != len(tags):
-            raise RecordError('progress source container has duplicate native item Tags')
+        tags = native_container_tag_coverage(selected, restored['policy'], restored['tags'])
         coverage[group['output_unit_ids'][0]] = frozenset(tags)
     return coverage
 
@@ -231,15 +243,8 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
                 expected.extend(lowered)
                 if group not in relevant:
                     continue
-                fragment = selected['fragment']
-                scanner = Scanner(fragment, native.policy)
-                opening = ENVIRONMENT.match(fragment)
-                position = scanner.skip_space(opening.end())
-                if fragment[position:position + 1] == '[':
-                    fragment = fragment[:opening.end()] + fragment[scanner.argument_end(position):]
-                tags = _item_tags(fragment, native.policy, native.english.tags,
-                                  group['selector']['file'][:-4])
-                if len(set(tags)) != len(tags) or owned.intersection(tags):
+                tags = native_container_tag_coverage(selected, native.policy, native.english.tags)
+                if owned.intersection(tags):
                     raise RecordError('progress first adoption has duplicate native item Tags')
                 owned.update(tags)
                 coverage[group['unit_ids'][0]] = frozenset(tags)

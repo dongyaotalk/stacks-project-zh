@@ -12,7 +12,7 @@ from .source_containers import Containers, clean, lower_container
 
 def complete_prose_positions(batches: list[list[dict]], indices: set[int],
                              root: Path, harvest: Path, chapter: str,
-                             chapter_bytes: bytes) -> dict[int, int]:
+                             chapter_bytes: bytes, *, _source_adoptions=None) -> dict[int, int]:
     """Require canonical complete lowering, then reject overlap and interleaving.
 
     Other units are located through the existing owner/proof-aware source
@@ -27,7 +27,13 @@ def complete_prose_positions(batches: list[list[dict]], indices: set[int],
     if len(ids) != len(set(ids)):
         raise RecordError('duplicate render source unit ID')
     adopted = {}
-    if any(u.get('schema_version') in {2,3} for i in indices for u in batches[i]):
+    if _source_adoptions is not None:
+        from .source_adoptions import _ValidatedAdoptions
+        if type(_source_adoptions) is not _ValidatedAdoptions:
+            raise RecordError('typed placement requires an actual complete adoption replay')
+        _source_adoptions.assert_unchanged(root, harvest)
+        adopted = _source_adoptions
+    elif any(u.get('schema_version') in {2,3} for i in indices for u in batches[i]):
         from .source_adoptions import load_repository_source_adoptions
         adopted, errors = load_repository_source_adoptions(root, harvest)
         if errors:
@@ -88,6 +94,8 @@ def complete_prose_positions(batches: list[list[dict]], indices: set[int],
         for spans in other_batches.values():
             if min(a for a, _ in spans) < start and max(b for _, b in spans) > end:
                 raise RecordError('unlabeled prose would interleave an existing render batch')
+    if _source_adoptions is not None:
+        _source_adoptions.assert_unchanged(root, harvest)
     native.assert_unchanged()
     alignment_native.assert_unchanged()
     if json.dumps(batches, sort_keys=True) != before:

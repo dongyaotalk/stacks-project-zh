@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import glob_paths as _input_glob, read_text as _input_text
+
 import json
 import re
 from pathlib import Path
@@ -7,6 +9,8 @@ from typing import Any
 
 from .derivations import load_repository_derivations
 from .model_corrections import load_repository_corrections
+from .records import _read_record_bytes
+from .validation_io import tracked_inputs, current_inputs
 from .schema_validation import validate_named_schema
 
 
@@ -48,7 +52,7 @@ def _registry_scalar(value: Any) -> str:
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(_read_record_bytes(path).decode("utf-8"))
     except (OSError, ValueError) as exc:
         raise ProvenanceError(f"cannot read {path}: {exc}") from exc
     if not isinstance(value, dict):
@@ -57,6 +61,29 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def validate_repository_provenance(root: Path, harvest: Path | None = None) -> list[str]:
+    """Compatible independent entry: return failures as errors, never a receipt."""
+    from .records import RecordError
+    try:
+        return _independent_repository_provenance(root, harvest)
+    except (OSError, RecordError) as exc:
+        return [str(exc)]
+
+
+@tracked_inputs
+def _independent_repository_provenance(root: Path, harvest: Path | None = None) -> list[str]:
+    """Always perform a complete replay and check the actual inputs before returning."""
+    from .repository_validation import _ImplementationIdentity
+    implementation = _ImplementationIdentity()
+    reads = current_inputs()
+    reads.seed_implementation(implementation)
+    reads.watch_root(root)
+    errors = _validate_repository_provenance(root, harvest)[1]
+    implementation.assert_valid()
+    return errors
+
+
+def _validate_repository_provenance(root: Path, harvest: Path | None = None):
+    """Return the actual adoption receipt as well as errors for this live replay."""
     runs_root = root / "translation-data" / "runs"
     candidates_root = root / "translation-data" / "candidates"
     manifests: dict[str, tuple[Path, dict[str, Any]]] = {}
@@ -70,9 +97,9 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
     errors.extend(derivation_errors)
     typed_active = {}
     typed_seen = set()
-    for unit_file in sorted((root / 'translation-data/units').glob('*.jsonl')):
+    for unit_file in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
         try:
-            rows = [json.loads(line) for line in unit_file.read_text(encoding='utf-8').splitlines() if line.strip()]
+            rows = [json.loads(line) for line in _read_record_bytes(unit_file).decode('utf-8').splitlines() if line.strip()]
             if any(not isinstance(row, dict) for row in rows):
                 raise ProvenanceError('active unit records must be objects')
             typed_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') in {2,3}}
@@ -82,12 +109,12 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
                           r'translation-data/units/[A-Za-z0-9._-]+\.jsonl')
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f'{unit_file}: cannot inspect typed math adoption: {exc}')
-    harness_registry = (root / "config" / "harnesses.yml").read_text(encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
-    model_registry = (root / "config" / "models.yml").read_text(encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""
+    harness_registry = _input_text(root / "config" / "harnesses.yml", encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
+    model_registry = _input_text(root / "config" / "models.yml", encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""
     model_lanes = _parse_registry_section(model_registry, "lanes")
     model_records = _parse_registry_section(model_registry, "model_records")
     harness_records = _parse_registry_section(harness_registry, "harnesses")
-    for manifest_path in sorted(runs_root.glob("*.json")):
+    for manifest_path in sorted(_input_glob(runs_root, "*.json")):
         try:
             manifest = _read_json(manifest_path)
         except ProvenanceError as exc:
@@ -123,10 +150,10 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
     correction_paths = {entry['candidate_path']: entry['candidate']['model_lane'] for entry in corrections.values()}
     expanded = []
     seen_origins = set()
-    for candidate_path in [*sorted(candidates_root.glob("*/*.jsonl")), *sorted(correction_paths)]:
+    for candidate_path in [*sorted(_input_glob(candidates_root, "*/*.jsonl")), *sorted(correction_paths)]:
         lane = correction_paths.get(candidate_path, candidate_path.parent.name)
         try:
-            lines = candidate_path.read_text(encoding="utf-8").splitlines()
+            lines = _read_record_bytes(candidate_path).decode("utf-8").splitlines()
         except OSError as exc:
             errors.append(f"cannot read {candidate_path}: {exc}")
             continue
@@ -286,4 +313,4 @@ def validate_repository_provenance(root: Path, harvest: Path | None = None) -> l
         for identifier in sorted(identifiers):
             if (batch, identifier) not in typed_seen:
                 errors.append(f'{batch}: active unit-v2 requires a validated candidate: {identifier}')
-    return errors
+    return source_adoptions, errors

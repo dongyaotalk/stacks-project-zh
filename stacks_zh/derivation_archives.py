@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import hashlib
 import json
 import re
@@ -44,10 +46,10 @@ def load_derivation_archives(root: Path) -> tuple[dict[str, dict[str, Any]], lis
     inputs or the new current record's output.
     """
     archives, errors = {}, []
-    for path in sorted((root / 'translation-data/derivation-archives').glob('*.json')):
+    for path in sorted(_input_glob(root / 'translation-data/derivation-archives', '*.json')):
         try:
             _path(root, path.relative_to(root).as_posix(), path.relative_to(root).as_posix())
-            archive = json.loads(path.read_text(encoding='utf-8'))
+            archive = json.loads(_input_text(path, encoding='utf-8'))
             schema_errors = validate_named_schema(archive, 'derivation-archive.schema.json', str(path))
             if schema_errors:
                 raise RecordError('\n'.join(schema_errors))
@@ -59,7 +61,7 @@ def load_derivation_archives(root: Path) -> tuple[dict[str, dict[str, Any]], lis
             if archive['source_commit'] != load_upstream_commit(root / 'upstream.lock'):
                 raise RecordError('archive has a stale source commit')
             record_path = _path(root, archive['record']['path'], f'translation-data/derivations/{prior}.json')
-            record_bytes = record_path.read_bytes()
+            record_bytes = _input_bytes(record_path)
             if _hash(record_bytes) != archive['record']['hash']:
                 raise RecordError('archive prior record hash mismatch')
             if record_bytes != _git_bytes(root, archive['origin_commit'], archive['record']['path']):
@@ -72,7 +74,7 @@ def load_derivation_archives(root: Path) -> tuple[dict[str, dict[str, Any]], lis
                 entry = archive['files'][role]
                 frozen = _path(root, entry['path'], f'translation-data/retired/derivations/{prior}/{name}.jsonl')
                 _first_addition_is_immutable(root, frozen)
-                payload = frozen.read_bytes()
+                payload = _input_bytes(frozen)
                 if _hash(payload) != entry['hash'] or entry['hash'] != record['files'][role]['hash']:
                     raise RecordError(f'{role}: archive output hash mismatch')
                 logical = record['files'][role]['path']
@@ -96,11 +98,11 @@ def derivation_history(root: Path, derivation_id: str) -> list[dict[str, Any]]:
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier) or '..' in identifier or identifier in visiting:
             raise RecordError('invalid or cyclic derivation history')
         visiting.add(identifier)
-        record = json.loads((root / f'translation-data/derivations/{identifier}.json').read_text())
+        record = json.loads(_input_text(root / f'translation-data/derivations/{identifier}.json'))
         previous = record.get('previous_derivation_id')
         if previous:
             visit(previous)
-            archive = json.loads((root / f'translation-data/derivation-archives/{previous}.json').read_text())
+            archive = json.loads(_input_text(root / f'translation-data/derivation-archives/{previous}.json'))
             if archive['successor_derivation_id'] != identifier:
                 raise RecordError('derivation history has a different successor')
         else:

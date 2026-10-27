@@ -5,6 +5,10 @@ Ordinary assembly and all accepted derivation versions keep their guards.
 """
 from __future__ import annotations
 
+from .validation_io import isolated_inputs, current_inputs
+
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import io
 import json
 import os
@@ -14,6 +18,7 @@ import tarfile
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from weakref import WeakValueDictionary, finalize
 
 from .current_qa import InputSnapshot
 from .derivations import _git_origin_bytes
@@ -26,27 +31,110 @@ from .source_reextractions import byte_hash
 
 VERSION = 'source-adoption-v1'
 _REPLAY_TOKEN = object()
+_REPLAY_RECEIPTS = WeakValueDictionary()
+_REPLAY_BINDINGS = {}
+_SOURCE_UNSPECIFIED = object()
 
 
 class _ValidatedAdoptions(dict):
     """Private same-session replay receipt; never accepts a caller dictionary."""
-    def __init__(self, token, root, values, snapshots):
+    def __init__(self, token, root, values, snapshots, harvest=None, *, source=None, implementation=None, reads=None):
         if token is not _REPLAY_TOKEN:
             raise RecordError('adoption receipt requires an actual complete replay')
         super().__init__(values)
         self.root = root
-        self.snapshots = snapshots
+        self.source = source
+        self.implementation = implementation
+        self.reads = reads
+        self.harvest = (harvest if harvest is not None else root.parent / 'stacks-project').resolve()
+        dependencies = InputSnapshot(root)
+        for snapshot in snapshots:
+            dependencies.include_dependencies(snapshot)
+        dependencies.assert_unchanged()
+        self.snapshots = (dependencies,)
         self.binding = self._binding()
 
     def _binding(self):
-        return sha256_value({path + ':' + uid: [value['unit'], value['candidate']]
-                             for (path, uid), value in self.items()})
+        # Bind every consumed value, including historical disclosure and the
+        # effective parsed policy; retaining only current unit/candidate is not enough.
+        values = {path + ':' + uid: {
+            **value, 'files': {str(p): digest for p, digest in value['files'].items()},
+            'policy': {key: sorted(item) if isinstance(item, set) else item
+                       for key, item in vars(value['policy']).items()}}
+            for (path, uid), value in self.items()}
+        dependencies = [dict(root=str(snapshot.root), head=snapshot.head,
+            hashes={str(p): digest for p, digest in snapshot.hashes.items()},
+            trees={str(path) + ':' + pattern: sorted(str(p) for p in paths)
+                   for (path, pattern), paths in snapshot.trees.items()})
+            for snapshot in self.snapshots]
+        source = self.source
+        source_binding = None if source is None else dict(identity=id(source), path=str(source.path),
+            exists=source.exists, files=sorted(source.source_files), repository=source.repository,
+            head=source.snapshot.head if source.snapshot is not None else None,
+            trees={str(path) + ':' + pattern: sorted(str(p) for p in paths)
+                   for (path, pattern), paths in source.snapshot.trees.items()}
+                  if source.snapshot is not None else {},
+            git_paths=sorted(str(p) for p in source.snapshot.git_paths)
+                      if source.snapshot is not None and source.snapshot.git_paths is not None else None,
+            hashes={str(p): digest for p, digest in source.snapshot.hashes.items()}
+                   if source.snapshot is not None else {})
+        implementation = self.implementation
+        payload = dict(root=str(self.root), harvest=str(self.harvest),
+            values=values, dependencies=dependencies, source=source_binding,
+            implementation=None if implementation is None else
+                (id(implementation), implementation.binding()),
+            reads=None if self.reads is None else (id(self.reads), self.reads.binding()))
+        # Frozen inputs and policies are shared by all units in a package. Hash
+        # their full object graph once per binding check, without expanding the
+        # same large input once per unit. No digest survives this call.
+        memo, visiting = {}, set()
+        def digest(value):
+            identity = id(value)
+            if identity in memo:
+                return memo[identity]
+            if identity in visiting:
+                raise RecordError('cyclic adoption receipt content')
+            visiting.add(identity)
+            if isinstance(value, dict):
+                node = ['dict', sorted((digest(key), digest(item)) for key, item in value.items())]
+            elif isinstance(value, (list, tuple)):
+                node = [type(value).__name__, [digest(item) for item in value]]
+            elif isinstance(value, (set, frozenset)):
+                node = [type(value).__name__, sorted(digest(item) for item in value)]
+            elif isinstance(value, Path):
+                node = ['path', str(value)]
+            elif value is None or isinstance(value, (str, int, float, bool)):
+                node = [type(value).__name__, value]
+            else:
+                raise RecordError(f'unsupported adoption receipt content: {type(value).__name__}')
+            result = sha256_value(node)
+            visiting.remove(identity)
+            memo[identity] = result
+            return result
+        return digest(payload)
 
-    def assert_unchanged(self, root):
+    def assert_unchanged(self, root, harvest=_SOURCE_UNSPECIFIED):
+        if _REPLAY_RECEIPTS.get(id(self)) is not self:
+            raise RecordError('adoption receipt was not issued by a complete replay')
         if root.resolve() != self.root:
             raise RecordError('adoption replay belongs to another repository')
-        if self.binding != self._binding():
+        # Keep the original one-argument private check compatible; consumers
+        # that know their source explicitly bind it, including default None.
+        source = (self.harvest if harvest is _SOURCE_UNSPECIFIED else
+                  harvest if harvest is not None else root.resolve().parent / 'stacks-project')
+        if source.is_symlink() or source.resolve() != self.harvest:
+            raise RecordError('adoption replay belongs to another source identity')
+        if self.binding != _REPLAY_BINDINGS.get(id(self)) or self.binding != self._binding():
             raise RecordError('adoption replay receipt changed')
+        if self.source is None:
+            raise RecordError('adoption receipt has no actual source identity')
+        if self.implementation is None:
+            raise RecordError('adoption receipt has no actual implementation identity')
+        if self.reads is None:
+            raise RecordError('adoption receipt has no actual input reads')
+        self.implementation.assert_valid()
+        self.reads.assert_unchanged()
+        self.source.assert_valid(self.root, self.harvest)
         for snapshot in self.snapshots:
             snapshot.assert_unchanged()
 FIELDS = ('translation', 'allowed_english', 'term_occurrences', 'unknown_terms', 'notes')
@@ -668,7 +756,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
         raise RecordError('first adoption unit ID already exists in accepted origin')
     others, other_batches = [], {}
     unit_paths = {b['units_path'] for b in frozen['batches']}
-    for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
+    for path in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
         if path.relative_to(root).as_posix() not in unit_paths:
             selected_rows = [clean(u) for u in reads.snapshot.jsonl(path) if u.get('chapter') == chapter]
             if selected_rows:
@@ -890,7 +978,7 @@ def _install(root, payloads, unchanged):
     """Stage all bytes, check again, and roll back every installed file on failure."""
     build = root / 'build'
     build.mkdir(exist_ok=True)
-    previous = {path: path.read_bytes() if path.exists() else None for path in payloads}
+    previous = {path: _input_bytes(path) if path.exists() else None for path in payloads}
     with tempfile.TemporaryDirectory(prefix='.source-adoption-', dir=build) as folder:
         staged = {}
         for ordinal, (path, raw) in enumerate(payloads.items()):
@@ -922,17 +1010,17 @@ def _assemble_source_adoption(root: Path, input_path: Path, raw_paths: list[Path
     relative = _relative_input(root, input_path)
     raw_relative = [_relative_input(root, path) for path in raw_paths]
     root = root.resolve()
-    entry = dict(path=relative, hash=byte_hash((root / relative).read_bytes()))
+    entry = dict(path=relative, hash=byte_hash(_input_bytes(root / relative)))
     frozen, reads, native, _ = _prepare(root, entry, harvest, current=True)
     identity = frozen['runtime']
     observed = resolve_harness(identity['harness']['id'], root / 'config/harnesses.yml')
     if observed.version != identity['harness']['version']:
         raise RecordError('Harness changed between actual generation freeze and assembly')
-    records = _parse_registry_section((root / 'config/models.yml').read_text(), 'model_records')
-    lanes = _parse_registry_section((root / 'config/models.yml').read_text(), 'lanes')
+    records = _parse_registry_section(_input_text(root / 'config/models.yml'), 'model_records')
+    lanes = _parse_registry_section(_input_text(root / 'config/models.yml'), 'lanes')
     registered = records.get(identity['model']['record_id'])
     lane = lanes.get(identity['model_lane'])
-    harnesses = _parse_registry_section((root / 'config/harnesses.yml').read_text(), 'harnesses')
+    harnesses = _parse_registry_section(_input_text(root / 'config/harnesses.yml'), 'harnesses')
     if harnesses.get(identity['harness']['id'], {}).get('adapter_version') != identity['harness']['adapter_version']:
         raise RecordError('first adoption Harness adapter differs from registry')
     if registered is None or lane is None:
@@ -1004,6 +1092,7 @@ def assemble_source_adoption(root: Path, input_path: Path, raw_paths: list[Path]
         raise RecordError('invalid complete first-source adoption input: ' + str(exc)) from exc
 
 
+@isolated_inputs
 def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
     """Replay all complete active first-adoption records, including every prior model."""
     root = root.resolve()
@@ -1013,9 +1102,18 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
                               '--name-only', 'HEAD', '--', 'translation-data/source-adoptions'],
                              capture_output=True, text=True)
     retired = root / 'translation-data/retired/source-adoptions'
-    if not directory.exists() and not retired.exists() and not history.stdout.strip():
+    if (not directory.exists() and not retired.exists() and not history.stdout.strip()
+            and history.returncode):
+        # Preserve the ordinary, adoption-free Python API for non-Git inputs.
+        # A live repository session requires HEAD and never consumes this dict.
         return {}, []
     try:
+        from .repository_validation import _SourceIdentity, _ImplementationIdentity
+        implementation = _ImplementationIdentity()
+        reads_session = current_inputs()
+        reads_session.seed_implementation(implementation)
+        reads_session.watch_root(root)
+        source = _SourceIdentity(root, harvest)
         inventory = InputSnapshot(root)
         inventory.watch_tree(root / 'translation-data/source-adoptions')
         inventory.watch_tree(root / 'translation-data/retired/source-adoptions')
@@ -1027,15 +1125,15 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
     for relative in set(history.stdout.splitlines()) - {''}:
         if not (root / relative).is_file():
             errors.append(relative + ': immutable first-adoption record disappeared')
-    for path in sorted(directory.glob('*')):
+    for path in sorted(_input_glob(directory, '*')):
         if path.suffix != '.json':
             errors.append(str(path) + ': unsupported first-adoption evidence')
     consumed = {}
     graph = {}
-    for path in sorted(directory.glob('*.json')):
+    for path in sorted(_input_glob(directory, '*.json')):
         try:
-            record = json.loads(path.read_bytes())
-            frozen = json.loads((root / record['input']['path']).read_bytes())
+            record = json.loads(_input_bytes(path))
+            frozen = json.loads(_input_bytes(root / record['input']['path']))
             graph[path.relative_to(root).as_posix()] = [p['record']['path'] for p in frozen.get('prior_adoptions', [])]
             for prior in frozen.get('prior_adoptions', []):
                 relative = prior['record']['path']
@@ -1059,22 +1157,22 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
     shared_overrides = {}
     def replay_order(path):
         try:
-            record = json.loads(path.read_bytes())
+            record = json.loads(_input_bytes(path))
             return record.get('tool_version') != 'source-adoption-v3', path.name
         except (OSError, ValueError):
             return True, path.name
-    for path in sorted(directory.glob('*.json'), key=replay_order):
+    for path in sorted(_input_glob(directory, '*.json'), key=replay_order):
         if path.relative_to(root).as_posix() in consumed:
             continue
         try:
             safe_path(root, path.relative_to(root).as_posix(),
                       r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
-            record = json.loads(path.read_bytes())
+            record = json.loads(_input_bytes(path))
             _schema(record, 'source-adoption.schema.json')
             if path.stem != record['adoption_id']:
                 raise RecordError('first-adoption filename differs from its ID')
             _first_addition_is_immutable(root, path)
-            input_value = json.loads((root / record['input']['path']).read_bytes())
+            input_value = json.loads(_input_bytes(root / record['input']['path']))
             own_paths = {b[role] for b in input_value['batches']
                          for role in ('units_path', 'candidates_path')}
             frozen, reads, native, histories = _prepare(root, record['input'], harvest,
@@ -1106,11 +1204,20 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
             errors.append(str(path) + ': ' + str(exc))
     used = {path for snapshot in snapshots[1:] for path in snapshot.hashes}
     retired = root / 'translation-data/retired/source-adoptions'
-    for path in retired.rglob('*'):
+    for path in _input_glob(retired, '*', recursive=True):
         if path.is_file() and path not in used:
             errors.append(str(path) + ': orphaned source-adoption history snapshot')
     inventory.assert_unchanged()
-    return _ValidatedAdoptions(_REPLAY_TOKEN, root, adopted, snapshots), errors
+    if errors:
+        return adopted, errors
+    source.assert_valid(root, harvest)
+    implementation.assert_valid()
+    result = _ValidatedAdoptions(_REPLAY_TOKEN, root, adopted, snapshots, harvest,
+                                 source=source, implementation=implementation, reads=reads_session)
+    _REPLAY_RECEIPTS[id(result)] = result
+    _REPLAY_BINDINGS[id(result)] = result.binding
+    finalize(result, _REPLAY_BINDINGS.pop, id(result), None)
+    return result, []
 
 
 def _replay_record(record, frozen, reads, native):

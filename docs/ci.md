@@ -28,8 +28,9 @@ git diff --check
 独立 `schema-check`、`provenance-check`、`decision-check` 命令仍可用于定位问题，
 默认验证范围不降低。CI及本地使用Python3.12；本地Make显式传
 `PYTHON="$(pyenv which python)"`，并先确认其版本为3.12。
-当前CI时限为60分钟。本次本地完整工具测试和一次统一QA分别实测1003.383秒、
-989.962秒；时限留出完整检查和执行环境差异，未通过删减测试或校验来缩短门禁。
+当前CI时限为60分钟。完整门禁和本地编译要求保持，不通过删减历史递归或检查来
+缩短门禁。同进程复用的接口、依赖和验证边界见
+[严格验证会话](validation-sessions.md)；本地实测不能冒称远端CI结果。
 
 上游同步 PR 还必须用 `make upstream-diff OLD_UNITS=... NEW_UNITS=...
 NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...` 生成并审查 old/new 报告；报告出现
@@ -55,6 +56,21 @@ make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 写入选定 batch 的忽略目录。该模式是快速本地迭代，不是 CI 增量门禁；PR 前仍须执行
 目标模型通道的完整 `make render`、`make pdf`，CI 仍运行全量 `make qa-all` 和其他
 必需检查。
+
+`qa` 和 `qa-batch` 由 `check-batches` 在一个 Python 会话内执行 Schema、完整
+溯源、决策和当前候选 QA。`render-batch` 保留相同 Make 前置门禁，调用
+`check-and-render` 将批量 QA 与生成串在同次会话，不再先启动独立 `qa-batch`。
+联合入口只接受本次仓库溯源实际覆盖的活跃 unit/candidate 路径，不能借仓库通过
+结果验证任意临时目录的候选；默认严格 `validate` / `validate-many` 的定位范围保持。
+一次联合调用的完整 provenance 与仓库来源采用装载入口各执行一次，祖先和共享
+历史的必要递归不减少。普通 render、章节预览和 typed 无标签正文定位也消费
+本次实际回放结果；独立调用无结果时仍完整验证。
+
+会话同时绑定 `docs/evidence/` 中 raw/冻结证据、全部 retired/嵌套快照、prompts、
+政策及来源库存实际输入；保留来源采用结果自身的内容绑定和全部快照检查。
+来源位置、锁定提交、英文 tracked 文件集合/原字节，以及中文 HEAD/输入变化
+均拒绝继续消费结果。日志和字节码不是成功缓存。前置失败不会进入渲染，生成中
+变化不能产生成功回执；独立进程各自严格验证，最终 PDF 日志/复制门禁保持。
 
 如果目标是减少模型 token，而不只是减少 QA 进程，应先运行 `make batch-pack`，让一次
 请求覆盖多个同章 unit，再运行 `make assemble-batch` 按 `unit_id` 拆分草稿。拆分后仍

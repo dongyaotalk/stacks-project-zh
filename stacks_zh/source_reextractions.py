@@ -5,6 +5,8 @@ of missing coverage, never a successful comparison or permission to guess.
 """
 from __future__ import annotations
 
+from .validation_io import glob_paths as _input_glob, read_text as _input_text
+
 import copy
 import hashlib
 import json
@@ -298,10 +300,10 @@ def extract_plain_proof(old_unit: dict[str, Any], fragment: str, new_id: str | N
 
 def load_source_reextractions(root: Path, harvest: Path | None = None) -> tuple[dict[str, dict[str, Any]], list[str]]:
     records, errors, english = {}, [], None
-    for path in sorted((root / 'translation-data/source-reextractions').rglob('*.json')):
+    for path in sorted(_input_glob(root / 'translation-data/source-reextractions', '*.json', recursive=True)):
         try:
             _safe_path(root, path.relative_to(root).as_posix(), rf'translation-data/source-reextractions/{ID}\.json')
-            record = json.loads(path.read_text(encoding='utf-8'))
+            record = json.loads(_input_text(path, encoding='utf-8'))
             problems = validate_named_schema(record, 'source-reextraction.schema.json', str(path))
             for role in ('old_unit', 'new_unit'):
                 problems.extend(validate_named_schema(record.get(role), 'unit.schema.json', f'{path}:{role}'))
@@ -366,7 +368,7 @@ def _comparison(tex: str) -> tuple[list[str], str]:
 def audit_repository_proofs(root: Path, harvest: Path | None = None) -> tuple[dict[str, Any], list[str]]:
     english = LockedEnglish(root, harvest)
     entries, errors, unit_count = [], [], 0
-    batches = sorted((root / 'translation-data/units').glob('*.jsonl'))
+    batches = sorted(_input_glob(root / 'translation-data/units', '*.jsonl'))
     for path in batches:
         try:
             units = load_jsonl(path)

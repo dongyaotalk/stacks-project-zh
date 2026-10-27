@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from .validation_io import render_inputs, current_inputs
+
+from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
+
 import json
 import os
 import re
@@ -23,7 +27,6 @@ from .records import (
 from .schema_validation import validate_named_schema
 from .model_corrections import load_repository_corrections
 from .derivation_archives import derivation_history
-from .provenance import validate_repository_provenance
 
 
 SAFE_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -57,7 +60,7 @@ def validate_all_candidates(root: Path, lock_path: Path) -> tuple[int, list[str]
     Unlike validate_batches, this is not a single-model/run request. Shared
     repository checks remain separate Make prerequisites.
     """
-    paths = sorted((root / "translation-data/candidates").glob("*/*.jsonl"))
+    paths = sorted(_input_glob(root / "translation-data/candidates", "*/*.jsonl"))
     if not paths:
         raise RecordError("no candidate batches found for full repository QA")
     errors: list[str] = []
@@ -598,6 +601,7 @@ def _project_container_tex(text, chapter, policy, tags, resolved_labels=None, *,
     return text, labels
 
 
+@render_inputs
 def render_batch(
     unit_path: Path | Iterable[Path],
     candidate_path: Path | Iterable[Path],
@@ -611,6 +615,9 @@ def render_batch(
     chapter_title_path: Path | None = None,
     *,
     chapter: str | None = None,
+    _validation: object | None = None,
+    harvest: Path | None = None,
+    _current: object | None = None,
 ) -> list[Path]:
     if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
         raise RecordError(f"invalid model lane {model_lane!r}")
@@ -619,11 +626,32 @@ def render_batch(
     candidate_paths = [candidate_path] if isinstance(candidate_path, Path) else list(candidate_path)
     if not unit_paths or not candidate_paths:
         raise RecordError("render requires at least one unit and candidate file")
-    render_input_bytes = {path: path.read_bytes() for path in unit_paths}
-    render_input_bytes[lock_path] = lock_path.read_bytes()
+    validation = None
+    proof = None
+    effective_harvest = harvest or chapter_source_dir
+    source_root = effective_harvest or lock_path.parent.resolve().parent / 'stacks-project'
+    if ((source_root.resolve() != lock_path.parent.resolve()
+         and output_dir.resolve().is_relative_to(source_root.resolve()))
+            or output_dir.resolve().is_relative_to((lock_path.parent / 'translation-data').resolve())):
+        raise RecordError('render output cannot write English source or translation facts')
+    if (harvest is not None and chapter_source_dir is not None
+            and harvest.resolve() != chapter_source_dir.resolve()):
+        raise RecordError('render chapter source differs from the verified harvest identity')
+    if _validation is not None:
+        from .repository_validation import _require_batch_validation
+        validation = _require_batch_validation(_validation, lock_path.parent, effective_harvest,
+                                               unit_paths, candidate_paths)
+        proof = validation.provenance
+    if any(path.is_symlink() for path in [*unit_paths, *candidate_paths]):
+        raise RecordError('render requires active validated files; input is a symlink')
+    render_input_bytes = {path: _input_bytes(path) for path in unit_paths}
+    for path in (chapter_manifest_path, tags_path, chapter_title_path):
+        if path is not None:
+            render_input_bytes[path] = _input_bytes(path)
+    render_input_bytes[lock_path] = _input_bytes(lock_path)
     macro_path = lock_path.parent / 'config/macro-policy.yml'
     if macro_path.is_file():
-        render_input_bytes[macro_path] = macro_path.read_bytes()
+        render_input_bytes[macro_path] = _input_bytes(macro_path)
     unit_batches = [load_jsonl(path) for path in unit_paths]
     selected_chapter = chapter
     if selected_chapter is not None:
@@ -651,12 +679,12 @@ def render_batch(
         unit_paths = [unit_paths[i] for i in selected]
         candidate_paths = [candidate_paths[i] for i in selected]
         unit_batches = [unit_batches[i] for i in selected]
-    render_input_bytes.update({path: path.read_bytes() for path in candidate_paths})
+    render_input_bytes.update({path: _input_bytes(path) for path in candidate_paths})
     units = [record for batch in unit_batches for record in batch]
     if chapter_source_dir is not None:
         for path in {chapter_source_dir / (str(u['chapter']) + '.tex') for u in units}:
             try:
-                render_input_bytes[path] = path.read_bytes()
+                render_input_bytes[path] = _input_bytes(path)
             except OSError as exc:
                 raise RecordError(f'cannot read chapter source {path}: {exc}') from exc
     candidates = [record for path in candidate_paths for record in load_jsonl(path)]
@@ -687,9 +715,16 @@ def render_batch(
             raise RecordError('typed math rendering requires active validated v4/source-container-v3 facts')
     composite = any(c.get('model_correction_id') or c.get('unit_group_id') for c in candidates)
     if composite or typed_math or first_source:
-        provenance_errors = validate_repository_provenance(root, chapter_source_dir)
+        if proof is None:
+            from .repository_validation import _complete_provenance
+            proof, provenance_errors = _complete_provenance(root, effective_harvest)
+        else:
+            proof.assert_valid(root, effective_harvest)
+            provenance_errors = []
         if provenance_errors:
             raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
+        from .repository_validation import _active_provenance_pairs
+        _active_provenance_pairs(proof.snapshot, unit_paths, candidate_paths)
         if typed_math:
             from .derivations import clean
             if ([clean(u) for p in unit_paths for u in load_jsonl(p)] != [clean(u) for u in units]
@@ -698,20 +733,26 @@ def render_batch(
     histories = {identifier:derivation_history(root, identifier)
                  for identifier in {c['derivation_id'] for c in candidates if c.get('derivation_id')}
                  } if composite else {}
+    if proof is not None:
+        for path in render_input_bytes:
+            if path.is_symlink():
+                raise RecordError(f'render input is a symlink: {path}')
+            if path.resolve().is_relative_to(root.resolve()):
+                proof.snapshot.read(path)
+            elif proof.source.snapshot is not None and path.resolve().is_relative_to(proof.source.path):
+                proof.source.snapshot.read(path)
     grouped_ids = {candidate['unit_id'] for candidate in candidates
                    if any(e['derivation']['tool']['version'] == '4'
                           for e in histories.get(candidate.get('derivation_id'), []))}
     source_adoptions = {}
     if first_source:
-        from .source_adoptions import load_repository_source_adoptions
-        source_adoptions, errors = load_repository_source_adoptions(root, chapter_source_dir)
-        if errors:
-            raise RecordError('render has no complete first-source replay:\n' + '\n'.join(errors))
+        proof.assert_valid(root, effective_harvest)
+        source_adoptions = proof.adoptions
         grouped_ids.update(u['unit_id'] for u in units
                            if candidate_by_id[u['unit_id']].get('source_adoption_id'))
     from .extraction import Policy
     from .source_reextractions import source_tex
-    projection_policy = (Policy((root / 'config/macro-policy.yml').read_text())
+    projection_policy = (Policy(_input_text(root / 'config/macro-policy.yml'))
                          if grouped_ids else None)
     projection_policies = {}
     from .derivations import _git_origin_bytes, clean
@@ -728,7 +769,7 @@ def render_batch(
             continue
         for entry in histories[candidate_by_id[unit['unit_id']]['derivation_id']]:
             for identifier in restoration_bindings(entry['derivation']):
-                evidence = json.loads((root / f'translation-data/source-container-restorations/{identifier}.json').read_text())
+                evidence = json.loads(_input_text(root / f'translation-data/source-container-restorations/{identifier}.json'))
                 if clean(unit) in evidence['new_units']:
                     policy = Policy(_git_origin_bytes(root, evidence['origin_commit'], 'config/macro-policy.yml').decode('utf-8'))
         projection_policies[unit['unit_id']] = policy
@@ -753,7 +794,8 @@ def render_batch(
             _validate_title_permanent_tags(batch, tags_by_label, tags_path)
     if chapter_source_dir is not None:
         units = _order_unit_batches_by_chapter_source(
-            unit_batches, chapter_source_dir, root=root
+            unit_batches, chapter_source_dir, root=root,
+            _source_adoptions=proof.adoptions if proof is not None else None,
         )
     candidate_model_ids = {candidate.get("model_id") for candidate in candidates}
     candidate_harness_ids = {candidate.get("harness_id", "legacy") for candidate in candidates}
@@ -880,7 +922,7 @@ def render_batch(
     preview_chapter_index = None
     if chapter_manifest_path is not None:
         try:
-            manifest_text = chapter_manifest_path.read_text(encoding="utf-8")
+            manifest_text = _input_text(chapter_manifest_path, encoding="utf-8")
         except OSError as exc:
             raise RecordError(f"cannot read chapter manifest {chapter_manifest_path}: {exc}") from exc
         canonical_chapters = manifest_chapters(manifest_text)
@@ -907,12 +949,27 @@ def render_batch(
             preview_chapter_index = order_index[selected_chapter]
             chapter_order = [selected_chapter]
 
-    if any(path.read_bytes() != payload for path, payload in render_input_bytes.items()):
-        raise RecordError('render source or candidate files changed during validation')
-    output_dir.mkdir(parents=True, exist_ok=True)
+    def assert_inputs():
+        # Keep the existing renderer's public drift diagnostic. These are control
+        # rereads; the bytes actually parsed above remain registered separately.
+        try:
+            changed = any(path.is_symlink() or path.read_bytes() != payload
+                          for path, payload in render_input_bytes.items())
+        except OSError as exc:
+            raise RecordError('render source or candidate files changed during validation') from exc
+        if changed:
+            raise RecordError('render source or candidate files changed during validation')
+        current_inputs().assert_unchanged()
+        if validation is not None:
+            validation.assert_valid(root, effective_harvest, unit_paths, candidate_paths)
+        elif proof is not None:
+            proof.assert_valid(root, effective_harvest)
+        if _current is not None:
+            _current.assert_unchanged()
+
+    assert_inputs()
     chapters_dir = output_dir / "chapters"
-    chapters_dir.mkdir(parents=True, exist_ok=True)
-    written: list[Path] = []
+    payloads: dict[Path, bytes] = {}
     for chapter in chapter_order:
         chapter_path = chapters_dir / f"{chapter}.tex"
         chunks = chapter_chunks.get(chapter)
@@ -924,11 +981,10 @@ def render_batch(
                 )
         else:
             chapter_text = _chapter_scaffold(chapter, *chapter_titles[chapter])
-        chapter_path.write_text(chapter_text, encoding="utf-8")
-        written.append(chapter_path)
+        payloads[chapter_path] = chapter_text.encode('utf-8')
 
     metadata = output_dir / "metadata.tex"
-    metadata.write_text(
+    payloads[metadata] = (
         "% Generated from translation-data; do not edit.\n"
         f"\\renewcommand{{\\TranslationModelName}}{{{display_name} ({model_id}){correction_name}}}\n"
         "\\renewcommand{\\TranslationMaintainer}{OpenSSL}\n"
@@ -939,28 +995,77 @@ def render_batch(
         f"{correction_notice}"
         + (f"仅含 {selected_chapter} 章的开发预览；跨章引用显示永久 Tag；"
            if selected_chapter is not None else "")
-        + "尚未完成人工语言或数学审校，不得作为正式译本发布。}\n",
-        encoding="utf-8",
-    )
-    written.append(metadata)
+        + "尚未完成人工语言或数学审校，不得作为正式译本发布。}\n"
+    ).encode('utf-8')
     contents = output_dir / "contents.tex"
-    contents.write_text(
+    payloads[contents] = (
         "% Generated from translation-data; do not edit.\n"
         + (f"\\setcounter{{chapter}}{{{preview_chapter_index}}}\n"
            if preview_chapter_index is not None else "")
         + "".join(
             f"\\input{{\\TranslationModelDirectory/chapters/{chapter}}}\n"
             for chapter in chapter_order
-        ),
-        encoding="utf-8",
-    )
-    written.append(contents)
-    return written
+        )
+    ).encode('utf-8')
+    return _install_render_outputs(output_dir, payloads, assert_inputs)
+
+
+def _install_render_outputs(output_dir: Path, payloads: dict[Path, bytes], assert_inputs) -> list[Path]:
+    """Stage a whole preview and restore previous files if inputs or installation fail."""
+    assert_inputs()
+    # Reject output symlinks too: replacement and rollback must stay in the requested tree.
+    for destination in [output_dir, *payloads]:
+        if any(p.is_symlink() for p in [destination, *destination.parents]
+               if p == output_dir or p.is_relative_to(output_dir)):
+            raise RecordError(f'render output is a symlink: {destination}')
+        if not destination.is_relative_to(output_dir):
+            raise RecordError('render output escapes requested directory')
+    missing = set()
+    for destination in payloads:
+        parent = destination.parent
+        while not parent.exists():
+            missing.add(parent)
+            parent = parent.parent
+    # The staging area is a sibling, never a new successful preview.
+    staging_parent = output_dir.parent
+    staging_parent.mkdir(parents=True, exist_ok=True)
+    installed = []
+    previous = {}
+    try:
+        with tempfile.TemporaryDirectory(prefix='.render-', dir=staging_parent) as folder:
+            stage = Path(folder)
+            for index, (destination, payload) in enumerate(payloads.items()):
+                (stage / f'new-{index}').write_bytes(payload)
+            assert_inputs()
+            try:
+                for index, destination in enumerate(payloads):
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    if destination.exists():
+                        if not destination.is_file():
+                            raise RecordError(f'render output is not a regular file: {destination}')
+                        backup = stage / f'old-{index}'
+                        os.replace(destination, backup)
+                        previous[destination] = backup
+                    os.replace(stage / f'new-{index}', destination)
+                    installed.append(destination)
+                assert_inputs()
+            except BaseException:
+                for destination in reversed(installed):
+                    destination.unlink()
+                for destination, backup in previous.items():
+                    os.replace(backup, destination)
+                raise
+    except BaseException:
+        for directory in sorted(missing, key=lambda p: len(p.parts), reverse=True):
+            if directory.exists():
+                directory.rmdir()
+        raise
+    return list(payloads)
 
 
 def _load_chapter_title_translations(path: Path, chapters: list[str]) -> dict[str, str]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(_input_text(path, encoding="utf-8"))
     except OSError as exc:
         raise RecordError(f"cannot read chapter title map {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
@@ -1001,7 +1106,7 @@ def _chapter_scaffold(chapter: str, target_title: str, source_title: str) -> str
 
 def _load_tags(path: Path) -> dict[str, str]:
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        lines = _input_text(path, encoding="utf-8").splitlines()
     except OSError as exc:
         raise RecordError(f"cannot read permanent Tag map {path}: {exc}") from exc
     tags_by_label: dict[str, str] = {}
@@ -1240,7 +1345,7 @@ def _validate_title_permanent_tags(
 def _order_unit_batches_by_chapter_source(
     unit_batches: list[list[dict[str, object]]],
     chapter_source_dir: Path,
-    *, root: Path | None = None,
+    *, root: Path | None = None, _source_adoptions=None,
 ) -> list[dict[str, object]]:
     """Order batches by their first label while preserving each batch's AST order."""
     batches_by_chapter: dict[str, list[list[dict[str, object]]]] = {}
@@ -1261,7 +1366,7 @@ def _order_unit_batches_by_chapter_source(
     for chapter in chapter_order:
         source_path = chapter_source_dir / f"{chapter}.tex"
         try:
-            source_bytes = source_path.read_bytes()
+            source_bytes = _input_bytes(source_path)
             source_text = source_bytes.decode('utf-8')
         except OSError as exc:
             raise RecordError(f"cannot read chapter source {source_path}: {exc}") from exc
@@ -1297,7 +1402,7 @@ def _order_unit_batches_by_chapter_source(
                 raise RecordError('unlabeled prose placement requires the repository and locked Git')
             from .source_placement import complete_prose_positions
             positions = complete_prose_positions(chapter_batches, unlabeled, root,
-                chapter_source_dir, chapter, source_bytes)
+                chapter_source_dir, chapter, source_bytes, _source_adoptions=_source_adoptions)
             batch_positions.extend((positions[i], chapter_batches[i]) for i in sorted(unlabeled))
         for _, batch in sorted(batch_positions, key=lambda item: item[0]):
             ordered.extend(batch)

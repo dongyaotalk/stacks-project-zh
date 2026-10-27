@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from .validation_io import read_bytes as _input_bytes, read_text as _input_text
+
 import hashlib
+from contextlib import contextmanager
+from contextvars import ContextVar
 import json
 import re
 import unicodedata
@@ -78,10 +82,28 @@ def stamp_unit_hashes(unit: dict[str, Any]) -> dict[str, Any]:
     return stamped
 
 
+_VALIDATION_INPUTS = ContextVar('validation_inputs', default=None)
+
+
+@contextmanager
+def _validation_reads(snapshot):
+    """Register actual historical reads only during the private live replay."""
+    token = _VALIDATION_INPUTS.set(snapshot)
+    try:
+        yield
+    finally:
+        _VALIDATION_INPUTS.reset(token)
+
+
+def _read_record_bytes(path: Path) -> bytes:
+    snapshot = _VALIDATION_INPUTS.get()
+    return snapshot.read(path) if snapshot is not None else _input_bytes(path)
+
+
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        lines = _read_record_bytes(path).decode("utf-8").splitlines()
     except OSError as exc:
         raise RecordError(f"cannot read {path}: {exc}") from exc
     for line_number, line in enumerate(lines, start=1):
@@ -113,7 +135,7 @@ def load_upstream_commit(path: Path) -> str:
     try:
         import tomllib
 
-        value = tomllib.loads(path.read_text(encoding="utf-8"))
+        value = tomllib.loads(_input_text(path, encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise RecordError(f"cannot read upstream lock {path}: {exc}") from exc
     commit = value.get("commit")

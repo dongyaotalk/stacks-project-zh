@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .validation_io import glob_paths as _input_glob, read_text as _input_text
+
 import json
 import re
 from datetime import datetime
@@ -34,7 +36,7 @@ SUPPORTED_SCHEMA_KEYS = {
 @lru_cache(maxsize=None)
 def load_schema(name: str) -> dict[str, Any]:
     path = SCHEMA_ROOT / name
-    value = json.loads(path.read_text(encoding="utf-8"))
+    value = json.loads(_input_text(path, encoding="utf-8"))
     if not isinstance(value, dict):
         raise ValueError(f"{path}: schema root must be an object")
     unsupported = _unsupported_schema_keywords(value, str(path))
@@ -111,9 +113,9 @@ def validate_repository_schemas(root: Path) -> list[str]:
     )
     errors: list[str] = []
     for pattern, schema_name in jsonl_families:
-        for path in sorted(root.glob(pattern)):
+        for path in sorted(_input_glob(root, pattern)):
             try:
-                lines = path.read_text(encoding="utf-8").splitlines()
+                lines = _input_text(path, encoding="utf-8").splitlines()
             except OSError as exc:
                 errors.append(f"{path}: cannot read file: {exc}")
                 continue
@@ -128,9 +130,9 @@ def validate_repository_schemas(root: Path) -> list[str]:
                     continue
                 errors.extend(validate_named_schema(value, schema_name, location))
     for pattern, schema_name in json_families:
-        for path in sorted(root.glob(pattern)):
+        for path in sorted(_input_glob(root, pattern)):
             try:
-                value = json.loads(path.read_text(encoding="utf-8"))
+                value = json.loads(_input_text(path, encoding="utf-8"))
             except (OSError, ValueError) as exc:
                 errors.append(f"{path}: invalid JSON: {exc}")
                 continue

@@ -348,6 +348,13 @@ ignored 来源恢复待审包；对应 `-check` 只读核验确定性产物。�
 不生成中文、模型运行或审批。具体采用使用独立 v4 分组和实际模型五字段修订，
 仍须另开数据任务。详见 `docs/source-container-restoration.md` §9。
 
+整章来源能力预检已实现为 `python3 stacks_zh.py chapter-preflight --root .
+--harvest ../stacks-project --chapter <ordinal-or-slug>`。它沿真实 selector/lowering 和
+进度 Tag 语义生成 ignored 完整来源计划，分别报告来源 READY、当前候选检查及人审
+记录；不生成译文/run/采用。`--resume` 核对实际进程与输入后观察原作业或恢复剩余
+checkpoint，`--check` 独立重新计算并只读比较。完整接口、例外和边界见
+[整章预检与恢复](docs/chapter-preflight.md)。
+
 以下是流水线必须实现的稳定接口，目前仅是命令契约，不得声称已经可用：
 
 ```bash

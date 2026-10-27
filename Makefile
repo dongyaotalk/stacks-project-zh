@@ -135,6 +135,11 @@ WORKFLOW_FILES := \
 	stacks_zh/validation_io.py \
 	stacks_zh/pr_contract.py \
 	stacks_zh/progress.py \
+	stacks_zh/chapter_preflight.py \
+	stacks_zh/preflight_state.py \
+	tests/test_chapter_preflight.py \
+	tests/test_preflight_state.py \
+	docs/chapter-preflight.md \
 	stacks_zh/planning.py \
 	stacks_zh/records.py \
 	stacks_zh/schema_validation.py \

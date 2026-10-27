@@ -64,6 +64,19 @@ def build_parser() -> argparse.ArgumentParser:
     extract.add_argument("--check", action="store_true")
     extract.add_argument("--require-ready", action="store_true")
 
+    preflight = subparsers.add_parser(
+        "chapter-preflight", help="prepare a complete chapter source/capability plan without generating translations")
+    preflight.add_argument("--root", type=Path, default=Path("."))
+    preflight.add_argument("--harvest", type=Path, required=True)
+    preflight.add_argument("--chapter", required=True, help="locked chapter ordinal or slug")
+    preflight.add_argument("--inventory", type=Path, default=Path("source-ir/extraction"))
+    preflight.add_argument("--output", type=Path, default=Path("build/chapter-preflight"))
+    preflight.add_argument("--state-dir", type=Path, default=Path("build/chapter-preflight-state"))
+    preflight.add_argument("--resume", action="store_true", help="observe a live owner or resume input-bound source checkpoints")
+    preflight.add_argument("--check", action="store_true", help="recompute and read-only compare the complete existing preparation")
+    preflight.add_argument("--require-ready", action="store_true", help="return nonzero when any source scope remains blocked")
+    preflight.add_argument("--json", action="store_true", help="print machine-readable status and the bound report path")
+
     alignment = subparsers.add_parser(
         "source-alignment", help="align current units with locked source and prepare a repair queue"
     )
@@ -374,6 +387,21 @@ def main(argv: list[str] | None = None) -> int:
                 print("ERROR: source inventory still contains blockers or unavailable chapters", file=sys.stderr)
                 return 1
             return 0
+        if args.command == "chapter-preflight":
+            from .chapter_preflight import run_chapter_preflight
+            result = run_chapter_preflight(args.root, args.harvest, args.chapter,
+                output=args.output, state_dir=args.state_dir, inventory=args.inventory,
+                resume=args.resume, check=args.check, require_ready=args.require_ready)
+            if args.json:
+                print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            elif result['stage'] == 'RUNNING':
+                print(f"Chapter preflight: RUNNING pid={result['process']['pid']}; same live job, no duplicate started.")
+            else:
+                report = result['report']
+                print(f"Chapter preflight: {report['chapter']} {report['state']}; "
+                      f"{report['container_count']} complete containers; {report['package_count']} packages; "
+                      f"{result['output']}. Adopted: false. Human approval: false.")
+            return result['exit_code']
         if args.command == "source-alignment":
             root = args.root.resolve()
             inventory = args.inventory if args.inventory.is_absolute() else root / args.inventory

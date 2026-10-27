@@ -26,6 +26,13 @@ run，每个包独立冻结、独立记录身份并完整溯源。比较或切�
 这是对精确范围清单模式的章节候选用途说明，旧内联 Issue 的单 run、单章及
 2–8 Tags 限制保持；不能只凭“整章”字样绕过范围、来源或远端门禁。
 
+## 已实现的整章来源预检
+
+生成前可先运行 `chapter-preflight --root . --harvest ../stacks-project --chapter <章号或slug>`，
+一次准备完整来源 selector、原生 Tag 覆盖、阻断和有序包/文件所有权提案。入口和恢复
+用法见 [整章预检与恢复](chapter-preflight.md)。READY 仅表示来源能力，候选/人审完成
+分别报告；它不替代实际任务范围、生成冻结、来源采用、完整 QA 或发布权限。
+
 ## 先收敛前置，再连续生成
 
 1. 复用锁定 Git 全库抽取库存及统一队列，核对 source/config/input hashes。

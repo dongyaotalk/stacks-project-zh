@@ -136,7 +136,7 @@ class ChapterPreflightTests(unittest.TestCase):
             self.assertEqual(reused[:2],[True,True])
             self.assertEqual(len(calls),len(reused)-2)
             self.assertEqual(result['report']['state'],'READY')
-            attempts=list((root/'build/chapter-preflight-state/attempts').glob('*.json'))
+            attempts=sorted((root/'build/chapter-preflight-state/attempts').glob('*.json'))
             self.assertEqual(len(attempts),2)
             self.assertEqual(json.loads(attempts[0].read_text())['exit_code'],130)
 

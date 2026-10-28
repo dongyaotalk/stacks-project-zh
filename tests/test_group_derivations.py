@@ -54,7 +54,8 @@ def run_for(rows, source, kind, identifier):
         'created_at': row['created_at'], 'replayable': False}
 
 
-def fixture(base, count=1, legacy=False, proof=None, detached=False, math_policy=None):
+def fixture(base, count=1, legacy=False, proof=None, detached=False, math_policy=None,
+            synthetic_fields=None):
     root, harvest, source = english_fixture(base, **({'proof':proof} if proof is not None else {}))
     if math_policy is not None:
         (root / 'config/macro-policy.yml').write_text(math_policy)
@@ -199,6 +200,8 @@ def fixture(base, count=1, legacy=False, proof=None, detached=False, math_policy
                     for word,target in [('irred.','不可约'),('comp.','分支')]],
                     unknown_terms=[{'source_term':word,'target_term':target,'context':'Synthetic pending term.'}
                         for word,target in [('irred.','不可约'),('comp.','分支')]],term_status='DECISION_REQUIRED',stage='STRUCTURE_OK')
+            if synthetic_fields is not None:
+                row.update(synthetic_fields(unit))
             row['translation_hash'] = sha256_value(row['translation'])
             raw.append(row)
         if record['tool']['version'] != '4':

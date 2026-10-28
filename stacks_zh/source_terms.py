@@ -28,7 +28,8 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
     pieces: list[str] = []
     declarations: list[str] = []
     qualified = [slot for region in unit.get('math_text_regions', []) for slot in region['slots']
-                 if slot['classification_witness']['usage'] == 'numeric-isomorphism-suffix']
+                 if slot['classification_witness']['usage'] in
+                    {'numeric-isomorphism-suffix', 'matrix-numeric-category-prefix'}]
     if qualified:
         from .math_text import validate_regions
         errors = validate_regions(unit)
@@ -42,7 +43,7 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
             # The numeral stays in its locked math piece. Only the terminology
             # projection exposes the validated complete lexical qualification.
             source = source.replace(original, left + '2' + slot['source'] + right, 1)
-            declarations.append('2-isomorphism')
+            declarations.append('2' + slot['source'].split()[0])
     opened: dict[tuple[str, str], tuple[int, str]] = {}
     cursor = 0
     for match in PLACEHOLDER_TOKEN_RE.finditer(source):

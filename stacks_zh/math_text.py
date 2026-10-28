@@ -19,7 +19,8 @@ USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'matrix-row-text', 'matrix-row-prefix', 'numeric-isomorphism-suffix',
           'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
           'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
-          'matrix-row-statement', 'matrix-operator-compatibility'}
+          'matrix-row-statement', 'matrix-operator-compatibility',
+          'matrix-numeric-category-prefix', 'matrix-category-description'}
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -82,7 +83,7 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         literal_pattern = (r' *[A-Za-z][A-Za-z0-9 -]*'
                            if rule.get('usage') in MATRIX_ROW_USAGES
                            else r'-[A-Za-z][A-Za-z -]*'
-                           if rule.get('usage') == 'root-hyphen-phrase'
+                           if rule.get('usage') in {'root-hyphen-phrase', 'matrix-numeric-category-prefix'}
                            else r' *[A-Za-z][A-Za-z -]*')
         if (not isinstance(literal, str) or not (literal == COMPONENT_LITERAL if component else
                 literal == '-isomorphism' if rule.get('usage') == 'numeric-isomorphism-suffix'
@@ -109,7 +110,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         if set(context) != {'base_rule', 'usage', 'source_label', 'witness_kind', 'witness_ordinal'}:
             raise ValueError('incomplete natural math-text context')
         base = rules.get(context['base_rule']) if isinstance(context['base_rule'], str) else None
-        expected = {'matrix-membership': ' in ', 'aligned-set-connector': ' and '}
+        expected = {'matrix-membership': ' in ', 'aligned-set-connector': ' and ',
+                    'matrix-category-description': ' over '}
         if (base is None or base.get('slot_schema_version') == 3
                 or base['usage'] != 'root-phrase'
                 or context['usage'] not in expected
@@ -477,6 +479,9 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
     elif kind in {'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
                   'matrix-row-statement', 'matrix-operator-compatibility'}:
         valid = _context_usage(source, stream, index, kind)
+    elif kind in {'matrix-numeric-category-prefix', 'matrix-category-description'}:
+        from .math_text_matrix_categories import category_description_roles
+        valid = category_description_roles(source, stream).get(index) == kind
     elif kind == 'matrix-prefix-condition':
         valid = (before['token'] == '&' and node['environments']
                  and node['environments'][-1] == 'matrix'

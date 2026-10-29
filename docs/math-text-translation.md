@@ -443,3 +443,53 @@ unit、独立 regions 和 components 内的普通叶；组件拆分语义、全�
 此前只读提案不冒充采用。当前 unit/candidate/raw/run/freeze 和历史不迁移。
 具体候选在独立 DATA Issue 中冻结完整英文、邻近与引用上下文，再由实际模型
 生成完整五字段。当前政策没有中文译名、术语批准、critic 或人工审校记录。
+
+## 第8章04WV的有限矩阵描述工具合同
+
+本地独立工具任务仅增加两个显式 usage，不登记生产政策或采用事实：
+
+| usage | 可验证的位置 |
+| --- | --- |
+| `matrix-numeric-category-prefix` | 下述完整矩阵结构中，真实行首数字2后紧邻的完整 text 参数，参数保留单个前导 ASCII 连字符 |
+| `matrix-category-description` | 同一完整结构中的六个自然说明参数：切片范畴说明前缀、有序对之后的行尾说明、对象行的三个文字参数及态射行的底范畴说明 |
+
+验证器消费整个原数学节点，仅接受完整美元、圆括号或方括号数学 delimiter。
+节点内恰为两个 `left brace / matrix / right brace`，中间为 `leftrightarrow`；
+左矩阵恰有两行，右矩阵恰有三行，无列分隔。其有限语法为：
+
+```text
+左1：2 + 文字
+左2：文字 + mathcal对象 / 单个大写对象
+右1：2 + 文字 + (mathcal对象, 单个小写态射) + 文字
+右2：文字 + mathcal对象 + 文字 + mathcal对象 + 文字
+右3：单个小写态射 : mathcal对象 to mathcal对象 / 单个大写对象 + 文字 + mathcal对象
+```
+
+每个 mathcal 对象原字节须恰为 `\mathcal{C}` 形式的单个 ASCII 大写字母，
+不归一花括号内空白；所有文字均为完整、非空、纯 text 参数。未知命令、其他
+环境、额外前后表达式、脚本/命令参数包裹、嵌套参数、额外行列或不完整边界
+不能提供位置。既有所有 usage 的权限保持，不开放一般矩阵文字。
+
+实际锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的
+`stacks-lemma-localize-stacks`（04WV，parent04WT，lemma/1）提供八个参数：
+`"-category of"`、`"stacks over "`、`"-category of pairs "`、`" consisting"`、
+`"of a stack "`、`" over "`、`" and a morphism"`、`" of stacks over "`。
+引号标示精确空格，不属于参数；这里只列工具见证，不构成政策授权。
+
+`translatable_math_text_contexts` 另允许精确 `" over "` 从直接普通
+`root-phrase` 基规则继承到 `matrix-category-description`。根层见证来自
+0CKJ 的完整 lemma，矩阵见证须独立核验04WV完整 lemma。不能重复登记普通
+literal、改写继承的 command/literal、引用上下文链或组件、重复权限或制造
+同一实际参数的角色歧义。原 `" in "`、`" and "` 上下文权限保持。
+
+新叶沿用 unit-v2；与既有组件共存时沿用 unit-v3。独立 regions、components
+和两处内嵌 unit Schema 同步登记 usage，完整参数、UTF-8范围、原数学 hash、
+typed skeleton、真实 witness、保护 token 顺序及原字节回放继续分别核验。
+数字2保持锁定，术语投影暴露完整 `2-category`，两次出现分别计数；译文的数字
+前缀叶仍须保留连字符。工具不生成中文，不批准术语或人审。
+
+首次采用、旧batch恢复、冻结origin及全部历史重放仍走原合同，普通 assemble
+不能直接采用 typed 输入。真实来源探针可以在内存中使用明确标记的未批准
+实验政策证明两处完整容器的能力，但不能安装到 config 或称为事实采用。
+工具接受后，另开集中政策任务登记这些完整参数和 Stacks/Eq/pr 的缺失用法，
+再以新政策核验库存和预检；DATA冻结、实际模型及独立审校另行执行。

@@ -493,3 +493,52 @@ typed skeleton、真实 witness、保护 token 顺序及原字节回放继续分
 实验政策证明两处完整容器的能力，但不能安装到 config 或称为事实采用。
 工具接受后，另开集中政策任务登记这些完整参数和 Stacks/Eq/pr 的缺失用法，
 再以新政策核验库存和预检；DATA冻结、实际模型及独立审校另行执行。
+
+## 第8章完整英文参数与投影函数应用政策
+
+本次只登记锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的英文用法，
+不改变有限矩阵语法、Schema、来源采用和历史合同，不包含中文译文或词条批准。
+
+| 登记 | 精确命令/usage | 完整来源依据 |
+| --- | --- | --- |
+| `Stacks` | `textit/symbol` | 02ZG definition/1定义栈的2范畴；04W9 lemma/1、04WK lemma/1、04WS lemma/1与proof/1合计7处使用 |
+| `Eq` | `text/applied` | 04WG proof/1明确指equalizer，3处实际函数应用 |
+| `pr`新增用途 | `text/applied` | 04WI proof/1定义投影函子，12处实际应用，包含xymatrix内位置 |
+
+`pr`原 `text/subscripted`、`text/superscripted` 及原定义标签
+`categories-lemma-representable-diagonal` 保持；新增应用的独立见证为
+`stacks-lemma-adjointness-pullback-pushforward` 的完整proof/1。
+定义锚点与新增使用见证分别保留，不声称旧锚点提供本章所有新用法。
+`sites-projection-pullback` 的 `starred-subscripted` context及其独立见证保持。
+
+普通registry精确新增以下8个完整参数。引号只显示空格，不属于参数。
+
+| 完整参数 | usage | witness |
+| --- | --- | --- |
+| `" over "` | root-phrase | 0CKJ lemma/1，parent042Y |
+| `"-category of"` | matrix-numeric-category-prefix | 04WV lemma/1，parent04WT |
+| `"stacks over "` | matrix-category-description | 同上 |
+| `"-category of pairs "` | matrix-numeric-category-prefix | 同上 |
+| `" consisting"` | matrix-category-description | 同上 |
+| `"of a stack "` | matrix-category-description | 同上 |
+| `" and a morphism"` | matrix-category-description | 同上 |
+| `" of stacks over "` | matrix-category-description | 同上 |
+
+唯一新增自然文字context `stacks-matrix-over` 直接继承 `stacks-root-over`，
+以04WV完整lemma独立见证 `matrix-category-description`；不复制普通literal、
+修改继承命令或引用context链。完整矩阵8个叶仍只在既有有限框架内暴露，两个
+数字2及单前导连字符保持，两个完整 `2-category` 术语逐次可见。
+
+### 尚未登记的裸pr：明确工具边界
+
+04WI proof/1中 `\text{pr}` 的独立符号定义仍保持BLOCKED，不能借can的named-arrow
+权限，也不能登记成可译自然语言。现有解析器先匹配主记号，再尝试独立context；
+主规则添加通用 `symbol` 会抢先接受 `pr^*_i` 并改变其旧见证，还会使原拒绝的
+`pr^*`、`pr^*_i(x)` 通过。现有pr context仅支持 `starred-subscripted`，不能在
+政策内独立表达新增 `symbol/applied` context。因此本次只安全追加 `applied`，
+保留裸pr阻断；独立工具任务处理前，不放宽解析器或以READY掩盖此缺口。
+
+政策影响须沿全部现有unit的完整原数学及锁定Git库存重新扫描，包括章外命中。
+旧unit/candidate/run/raw/freeze/history不回写，历史始终按各自origin政策重放。
+新库存、来源对应与整章预检绑定实际新政策和新指纹，旧准备包保留；来源READY、
+当前候选QA、contract support及人工审校分开报告，不把准备结果当作采用或批准。

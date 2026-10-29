@@ -285,13 +285,69 @@ class MatrixCategoryTests(unittest.TestCase):
             self.assertEqual(sum('parameter_components' in s for r in unit['math_text_regions']
                                  for s in r['slots']), 2)
 
-    def test_production_policy_stays_blocked_without_explicit_rules(self):
+    def test_production_policy_registers_exact_complete_parameters(self):
         root = Path(__file__).resolve().parents[1]
         policy = Policy((root / 'config/macro-policy.yml').read_text())
+        slots = find_slots(MATRIX, policy.math_text_rules)
+        self.assertEqual([(s['value'], s['usage']) for s in slots], EXPECTED)
+        self.assertEqual([s['policy_entry'] for s in slots], [
+            'stacks-category-of', 'stacks-stacks-over', 'stacks-category-of-pairs',
+            'stacks-consisting', 'stacks-of-a-stack', 'stacks-matrix-over',
+            'stacks-and-a-morphism', 'stacks-of-stacks-over'])
+        self.assertEqual([s['policy_entry'] for s in find_slots(ROOT_OVER, policy.math_text_rules)],
+                         ['stacks-root-over'])
+        self.assertEqual(policy.math_text_rules['stacks-root-over']['source_label'],
+                         'stacks-lemma-relative-sheaf-over-stack-is-stack')
+        self.assertEqual(policy.math_text_rules['stacks-matrix-over']['source_label'],
+                         'stacks-lemma-localize-stacks')
+
+    def test_missing_explicit_registry_still_blocks_all_eight_parameters(self):
+        # The old rejection is retained under an explicit policy with no new rules.
+        policy = Policy(BASE_POLICY)
         self.assertEqual(find_slots(MATRIX, policy.math_text_rules), [])
         scanner = Scanner(MATRIX, policy)
         _, _, problems = scanner.protect(0, len(MATRIX))
         self.assertEqual(len(problems), 8)
+
+    def test_production_notation_permissions_keep_primary_and_explicit_contexts(self):
+        root = Path(__file__).resolve().parents[1]
+        policy = Policy((root / 'config/macro-policy.yml').read_text(), natural_text_enabled=False)
+        self.assertEqual(policy.math_text_notations['Stacks'], {
+            'commands': ['textit'], 'usages': ['symbol'],
+            'source_label': 'stacks-definition-stacks-over-C'})
+        self.assertEqual(policy.math_text_notations['Eq'], {
+            'commands': ['text'], 'usages': ['applied'],
+            'source_label': 'stacks-lemma-fibred-category-pullback'})
+        self.assertEqual(policy.math_text_notations['pr'], {
+            'commands': ['text'], 'usages': ['subscripted', 'superscripted', 'applied'],
+            'source_label': 'categories-lemma-representable-diagonal'})
+        cases = [
+            (r'$\Mor_{\textit{Stacks}/\mathcal{C}}(S,T)$', 'Stacks', 'symbol'),
+            (r'$\text{Eq}(a_0,a_1)$', 'Eq', 'applied'),
+            (r'$\phi^*\text{pr}(H(x))$', 'pr', 'applied'),
+            (r'$\text{pr}_1$', 'pr', 'subscripted'),
+            (r'$\text{pr}^{(i,j)}_i$', 'pr', 'superscripted'),
+            (r'$\text{pr}^*_i$', 'pr', 'starred-subscripted'),
+        ]
+        for source, notation, usage in cases:
+            with self.subTest(source=source):
+                scanner = Scanner(source, policy)
+                text, protected, problems = scanner.protect(0, len(source))
+                self.assertEqual(problems, [])
+                self.assertEqual((text, protected), ('<MATH_0001>', {'MATH_0001': source}))
+                self.assertEqual([(x['notation'], x['usage']) for x in scanner.math_text_classifications],
+                                 [(notation, usage)])
+                if usage == 'starred-subscripted':
+                    self.assertEqual(scanner.math_text_classifications[0]['source_label'],
+                                     'sites-section-sheaves')
+        for source in [r'$\text{Stacks}$', r'$\textit{stacks}$', r'$\text{Eq}$',
+                       r'$\textit{Eq}(x)$', r'$\text{ Eq}(x)$', r'$\text{pr}$',
+                       r'$\text{pr}^*$', r'$\text{pr}^*_i(x)$', r'$\textit{pr}(x)$']:
+            with self.subTest(blocked=source):
+                scanner = Scanner(source, policy)
+                _, protected, problems = scanner.protect(0, len(source))
+                self.assertTrue(any(p['kind'] == 'math-text' for p in problems))
+                self.assertEqual(protected, {'MATH_0001': source})
 
     def test_unclassified_neighbor_still_blocks_complete_adoption(self):
         with tempfile.TemporaryDirectory() as temp:

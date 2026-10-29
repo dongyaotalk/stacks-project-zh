@@ -74,11 +74,11 @@ def natural_policy():
 
 
 def notation_policy():
-    # Isolate this context tool from the independently expanded Sites policy.
+    # Isolate this context tool from independently expanded production policy.
     # These original negative cases deliberately use subscripted-only pr.
     current = ('  pr:\n    commands: ["text"]\n'
-               '    usages: ["subscripted", "superscripted"]\n')
-    historical = current.replace('["subscripted", "superscripted"]', '["subscripted"]')
+               '    usages: ["subscripted", "superscripted", "applied"]\n')
+    historical = current.replace('["subscripted", "superscripted", "applied"]', '["subscripted"]')
     assert current in BASE_POLICY
     text = BASE_POLICY.replace(current, historical) + '\nlocked_math_text_contexts:\n'
     for key, base, command, roles, prefix in [

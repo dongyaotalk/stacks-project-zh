@@ -80,13 +80,16 @@ def _notation_context_registry(text, notations):
             raise RecordError('incomplete notation context')
         commands, usages = value['commands'], value['usages']
         expected_commands = ['text'] if base == 'pr' else ['textit']
-        allowed = ({'starred-subscripted'} if base == 'pr' else
+        allowed = ({'starred-subscripted', 'projection-declaration'} if base == 'pr' else
                    {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol'})
         if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
                 or not isinstance(usages, list) or not usages
                 or any(not isinstance(v, str) or v not in allowed for v in usages)
                 or len(usages) != len(set(usages))):
             raise RecordError('unsupported notation context command or usage')
+        if 'projection-declaration' in usages and (
+                usages != ['projection-declaration'] or 'symbol' in notations[base]['usages']):
+            raise RecordError('projection declaration requires its sole context role and no primary symbol')
         if base == '-Sets' and (not isinstance(value['prefix'], str) or value['prefix'] not in {'G', 'H'}):
             raise RecordError('notation context requires an explicit witnessed G/H prefix')
         if base == '-Sets' and value['prefix'] == 'G' and 'prefixed-symbol' in usages:
@@ -506,6 +509,24 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind == 'projection-declaration':
+            # The complete witnessed root declaration, not a general symbol
+            # permission. Internal object/script bytes cannot be normalized.
+            expected = [('$', 0), (r'\text{pr}', 0), (':', 0), ('u', 0),
+                        ('^', 0), ('p', 0), (r'\mathcal', 0), ('{', 0),
+                        ('T', 1), ('}', 1), (r'\to', 0), (r'\mathcal', 0),
+                        ('{', 0), ('T', 1), ('}', 1), ('$', 0)]
+            if (value != 'pr' or index != 1 or command_start != 1
+                    or delimiter_kind(self.text) != 'inline-dollar'
+                    or [(p['token'], p['depth']) for p in stream] != expected
+                    or any(p['environments'] for p in stream)):
+                return None
+            for left, (before, after) in enumerate(zip(stream, stream[1:])):
+                gap = self.text[before['end']:after['start']]
+                if gap and (left not in {1, 2, 9, 10}
+                            or any(c not in ' \t\r\n' for c in gap)):
+                    return None
+            return self.text[closing:stream[-1]['start']]
         if kind == 'starred-subscripted':
             # The witnessed bare-star projection atom, never a new general
             # superscript permission or an ungrouped macro argument.
@@ -561,7 +582,7 @@ class Scanner:
             return None
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
-            if usage in {'starred-subscripted', 'morphism-category-prefixed-symbol',
+            if usage in {'starred-subscripted', 'projection-declaration', 'morphism-category-prefixed-symbol',
                          'diagram-category-prefixed-symbol'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:

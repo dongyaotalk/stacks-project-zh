@@ -386,3 +386,20 @@ BLOCKED；具体政策与实际 DATA 分别另行声明、冻结和验收。
 本政策仅开放来源准备。政策稳定后集中重建并核验默认全库来源库存和对齐，
 现有候选继续全量 QA；READY、候选编译或政策合并不代表中文生成、事实采用、
 术语批准、语言/数学审校或正式发布。实际 DATA 仍需独立精确任务及冻结证据。
+
+## 独立投影声明上下文（Issue #865）
+
+新增可选 `projection-declaration` 的完整有限语法、空白边界及真实04WI完整
+proof见证见 [数学文字合同](math-text-translation.md#完整投影函子声明的独立上下文工具issue-865)。
+它仅存在于已有 `locked_math_text_contexts` 的直接pr/text条目中，不扩展primary
+记号语法、通用symbol、函数应用或旧Sites上下文。新role单独声明，不能与primary
+pr/symbol并用；没有新项时所有原分类、诊断和字节输出保持。
+
+接受项保存完整原命令、位置、`projection-declaration`、完整声明后缀
+`usage_source`和独立`source_label`；全部MATH仍锁定。库存五文件及v4格式、unit、
+typed regions、历史origin和真实来源采用合同保持，不需要新Schema。未知邻居
+仍阻断完整来源，完整回放和实际owner/proof选择不可省略。
+
+本工具不修改生产config，实验政策仅用于fixture或build中的显式内存探针。
+全库新旧生产结果与当前事实完整数学逐项比较，实验影响另列；新增接受不能被
+当作生产READY或译文修复。生产政策登记须在工具接受后独立验收，DATA再冻结。

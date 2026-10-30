@@ -534,7 +534,7 @@ typed skeleton、真实 witness、保护 token 顺序及原字节回放继续分
 04WI proof/1中 `\text{pr}` 的独立符号定义仍保持BLOCKED，不能借can的named-arrow
 权限，也不能登记成可译自然语言。现有解析器先匹配主记号，再尝试独立context；
 主规则添加通用 `symbol` 会抢先接受 `pr^*_i` 并改变其旧见证，还会使原拒绝的
-`pr^*`、`pr^*_i(x)` 通过。现有pr context仅支持 `starred-subscripted`，不能在
+`pr^*`、`pr^*_i(x)` 通过。登记该政策时pr context仅支持 `starred-subscripted`，不能在
 政策内独立表达新增 `symbol/applied` context。因此本次只安全追加 `applied`，
 保留裸pr阻断；独立工具任务处理前，不放宽解析器或以READY掩盖此缺口。
 
@@ -542,3 +542,50 @@ typed skeleton、真实 witness、保护 token 顺序及原字节回放继续分
 旧unit/candidate/run/raw/freeze/history不回写，历史始终按各自origin政策重放。
 新库存、来源对应与整章预检绑定实际新政策和新指纹，旧准备包保留；来源READY、
 当前候选QA、contract support及人工审校分开报告，不把准备结果当作采用或批准。
+
+## 完整投影函子声明的独立上下文工具（Issue #865）
+
+本工具只扩展显式可选的 `locked_math_text_contexts`，生产宏政策保持原字节。
+在工具验收合入及后续独立政策登记之前，04WI proof/1的裸pr仍为生产BLOCKED；
+实验完整来源可lowering不表示已采用、已有中文或获得审校/术语/发布批准。
+
+独立 usage `projection-declaration` 仅允许直接引用已有 `pr`，命令仅 `text`。
+沿用上下文原四字段 `base_notation`、`commands`、`usages`、`source_label`，
+均为JSON值；新usage必须单独列出，不能与其他usage混用，也不能与primary
+pr的通用 `symbol` 并用。重复权限、额外/缺失/错误字段、借用其他基记号仍失败。
+新usage不能写进primary registry；没有新项的所有旧政策保持原解释。
+
+匹配消费完整单美元inline数学，唯一支持的有限类型声明为：
+
+```tex
+$\text{pr} : u^p\mathcal{T} \to \mathcal{T}$
+```
+
+必须从第一个美元后立即开始精确 `\text{pr}`，末尾mathcal对象后立即结束数学。
+token序列、分组深度和环境全部核验；冒号、源对象 `u^p\mathcal{T}`、箭头
+`\to` 及目标对象 `\mathcal{T}` 均完整匹配。只在pr与冒号、冒号与u、源对象与
+箭头、箭头与目标对象四处允许零个或多个ASCII空格/tab/CR/LF，保留原字节。
+对象/脚本、mathcal命令及参数内部不允许额外空白，字母u/p/T不泛化。
+
+错误字体/大小写/参数空白、裸pr、脚本或应用形式、其他对象/箭头、缺类型、
+尾随运算、未知前缀/参数、包裹/嵌套、注释、Unicode空白、literal及其他数学
+delimiter/environment均不能提供这个角色。已被原规则接受的应用等形状继续
+使用其原usage和见证，不获得声明权限；同一完整容器的未知邻居仍使其阻断。
+
+primary匹配顺序及所有旧context保持，新项仅在原规则未匹配时检查。原
+Categories定义标签、pr应用及Sites starred-subscripted见证不替换、不迁移。
+接受项仍是完整锁定MATH节点，沿用分类记录结构；`usage_source` 保存pr完整
+命令结束后至最后美元之前的完整声明后缀，`source_label` 来自新独立上下文。
+无可译pr slot、不新增unit/region/来源/历史Schema版本，不改变旧origin重放。
+
+真实见证从锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的Stacks
+04WI、parent04WA、`stacks-lemma-adjointness-pullback-pushforward` 完整proof/1
+重选。该证明4348个UTF-8字节，SHA256为
+`c85ef6d777e3e832c7e0a59395a962e16376708ad6d06fa7a34a683a7b7236ff`；
+原文明确称其为投影函子，并在同一证明中另有12处已登记的pr应用。声明及
+已有应用分别核验，不能以一个标签代替完整Git边界、语义和实际数学位置。
+
+回归覆盖显式启用/缺省拒绝、完整有限边界、旧分类/负例、UTF-8完整来源及
+Schema/lowering回放、与v2/v3 typed叶共存和重算hash后的数学篡改拒绝。
+全库生产影响、实验新增命中及章外影响分别报告；生产预检、实验能力和DATA
+采用严格分开。工具接受后另开真实政策登记，再准备新指纹及实际模型任务。

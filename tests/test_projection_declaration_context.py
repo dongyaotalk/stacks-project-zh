@@ -1,4 +1,4 @@
-"""Independent synthetic syntax/Git fixtures; no model output or policy adoption."""
+"""Production registration and independent synthetic syntax/Git fixtures."""
 import copy
 import tempfile
 import unittest
@@ -17,6 +17,13 @@ from stacks_zh.source_reextractions import source_tex
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTION = (ROOT / 'config/macro-policy.yml').read_text()
+LEGACY = (ROOT / 'tests/fixtures/macro-policy-before-projection-declaration.yml').read_text()
+PRODUCTION_ENTRY = '''  stacks-projection-declaration:
+    base_notation: "pr"
+    commands: ["text"]
+    usages: ["projection-declaration"]
+    source_label: "stacks-lemma-adjointness-pullback-pushforward"
+'''
 DECLARATION = r'$\text{pr} : u^p\mathcal{T} \to \mathcal{T}$'
 ENTRY = '''  projection-declaration:
     base_notation: "pr"
@@ -26,7 +33,10 @@ ENTRY = '''  projection-declaration:
 '''
 
 
-def experimental_policy(base=PRODUCTION):
+def experimental_policy(base=LEGACY):
+    # Synthetic sources own their own witness label. Strip only the exact
+    # real production registration before adding that synthetic witness.
+    base = base.replace(PRODUCTION_ENTRY, "", 1)
     header = 'locked_math_text_contexts:\n'
     return base.replace(header, header + ENTRY, 1) if header in base else base + '\n' + header + ENTRY
 
@@ -55,6 +65,19 @@ def git_fixture(base, *, typed=False, component=False, tail=''):
 
 
 class ProjectionDeclarationTests(unittest.TestCase):
+    def test_production_registration_is_exact_and_preserves_primary_rules(self):
+        self.assertEqual(PRODUCTION.count(PRODUCTION_ENTRY), 1)
+        self.assertEqual(PRODUCTION.replace(PRODUCTION_ENTRY, '', 1), LEGACY)
+        old, new = Policy(LEGACY), Policy(PRODUCTION)
+        self.assertEqual(old.math_text_notations, new.math_text_notations)
+        self.assertEqual(old.math_text_rules, new.math_text_rules)
+        (text, protected, errors), classified, regions = scan(DECLARATION, PRODUCTION)
+        self.assertEqual((text, protected, errors), ('<MATH_0001>', {'MATH_0001': DECLARATION}, []))
+        self.assertEqual(regions, [])
+        self.assertEqual(classified, [dict(start=1, end=10, source=r'\text{pr}', notation='pr',
+            command='text', usage='projection-declaration', usage_source=DECLARATION[10:-1],
+            source_label='stacks-lemma-adjointness-pullback-pushforward')])
+
     def test_explicit_context_locks_complete_math_and_records_full_suffix(self):
         (text, protected, errors), classified, regions = scan(DECLARATION, experimental_policy())
         self.assertEqual((text, protected, errors), ('<MATH_0001>', {'MATH_0001': DECLARATION}, []))
@@ -64,17 +87,17 @@ class ProjectionDeclarationTests(unittest.TestCase):
             usage_source=r' : u^p\mathcal{T} \to \mathcal{T}', source_label='test-lemma-one')])
 
     def test_explicit_opt_in_and_primary_registry_stay_separate(self):
-        (text, protected, errors), classified, _ = scan(DECLARATION, PRODUCTION)
+        (text, protected, errors), classified, _ = scan(DECLARATION, LEGACY)
         self.assertEqual((text, protected), ('<MATH_0001>', {'MATH_0001': DECLARATION}))
         self.assertEqual(len(errors), 1)
         self.assertEqual(classified, [])
-        old, new = Policy(PRODUCTION), Policy(experimental_policy())
+        old, new = Policy(LEGACY), Policy(experimental_policy())
         self.assertEqual(old.math_text_notations, new.math_text_notations)
         self.assertEqual(old.math_text_rules, new.math_text_rules)
         for name, rules in old.math_text_notation_contexts.items():
             self.assertEqual([r for r in new.math_text_notation_contexts[name]
                               if r['usages'] != ['projection-declaration']], rules)
-        primary = PRODUCTION.replace('usages: ["subscripted", "superscripted", "applied"]',
+        primary = LEGACY.replace('usages: ["subscripted", "superscripted", "applied"]',
                                      'usages: ["projection-declaration"]', 1)
         with self.assertRaises(RecordError):
             Policy(primary)
@@ -143,7 +166,8 @@ class ProjectionDeclarationTests(unittest.TestCase):
                  r'$K\textit{-Sets}$', r'$\text{can}:\mathcal{S}\to\mathcal{S}$']
         for source in cases:
             with self.subTest(source=source):
-                self.assertEqual(scan(source, PRODUCTION), scan(source, experimental_policy()))
+                self.assertEqual(scan(source, LEGACY), scan(source, experimental_policy()))
+                self.assertEqual(scan(source, LEGACY), scan(source, PRODUCTION))
         starred = scan(r'$\text{pr}^*_i$', experimental_policy())[1][0]
         self.assertEqual((starred['usage'], starred['source_label']),
                          ('starred-subscripted', 'sites-section-sheaves'))
@@ -175,7 +199,7 @@ class ProjectionDeclarationTests(unittest.TestCase):
                 Policy(source)
 
     def test_rejected_primary_symbol_reproduction_is_not_a_legacy_rewrite(self):
-        unsafe = PRODUCTION.replace('usages: ["subscripted", "superscripted", "applied"]',
+        unsafe = LEGACY.replace('usages: ["subscripted", "superscripted", "applied"]',
                                     'usages: ["subscripted", "superscripted", "applied", "symbol"]', 1)
         for source in [r'$\text{pr}^*_i$', r'$\text{pr}^*$', r'$\text{pr}^*_i(x)$']:
             (_, _, errors), classified, _ = scan(source, unsafe)

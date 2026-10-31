@@ -403,3 +403,19 @@ typed regions、历史origin和真实来源采用合同保持，不需要新Sche
 本工具不修改生产config，实验政策仅用于fixture或build中的显式内存探针。
 全库新旧生产结果与当前事实完整数学逐项比较，实验影响另列；新增接受不能被
 当作生产READY或译文修复。生产政策登记须在工具接受后独立验收，DATA再冻结。
+
+## 投影声明的独立生产登记（Issue #867）
+
+工具 PR #866 合入后，生产政策在已有 `locked_math_text_contexts` 中新增
+`stacks-projection-declaration`，直接引用已有pr，仅允许text及单独的
+projection-declaration usage，见证为
+`stacks-lemma-adjointness-pullback-pushforward`。完整有限结构及原字节保护见
+[数学文字合同](math-text-translation.md#完整投影函子声明的生产政策issue-867)。
+
+登记只解除完整04WI proof/1中的该声明阻断；不授予通用symbol权限，不改变
+Categories/Sites旧见证、旧分类优先级、typed叶或未知邻居阻断。登记前完整
+政策fixture保留缺省拒绝及旧行为，真实生产正例独立验证。库存中的实际新政策
+hash绑定与语义变化分别核对，既有事实和历史origin保持原绑定。
+
+生产来源能力以政策合入后的实际main完整预检及check为准；工具实验、政策分支
+验收和主线READY分别报告。实际DATA仍需独立任务、完整来源及真实模型冻结。

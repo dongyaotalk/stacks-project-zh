@@ -589,3 +589,27 @@ Categories定义标签、pr应用及Sites starred-subscripted见证不替换、�
 Schema/lowering回放、与v2/v3 typed叶共存和重算hash后的数学篡改拒绝。
 全库生产影响、实验新增命中及章外影响分别报告；生产预检、实验能力和DATA
 采用严格分开。工具接受后另开真实政策登记，再准备新指纹及实际模型任务。
+
+## 完整投影函子声明的生产政策（Issue #867）
+
+工具 PR #866 接受合入后，本独立政策仅在既有
+`locked_math_text_contexts` 节登记一项：
+
+```yaml
+  stacks-projection-declaration:
+    base_notation: "pr"
+    commands: ["text"]
+    usages: ["projection-declaration"]
+    source_label: "stacks-lemma-adjointness-pullback-pushforward"
+```
+
+它使用上一节的完整04WI proof/1见证及有限语法，整个声明仍为锁定MATH，
+没有可译pr slot。primary pr的Categories标签、既有应用权限和Sites上下文
+保持；未知邻居、其他对象/脚本/箭头或未登记形状继续阻断。不新增解析器或
+Schema，不把新增政策绑定回写到既有unit/candidate/run/origin历史。
+
+`tests/fixtures/macro-policy-before-projection-declaration.yml` 保存本次登记前的
+完整政策原字节，用于证明无此登记仍阻断及历史primary行为；真实生产配置
+另有精确正例。后续政策变更应单独审查兼容性，不改写这份历史fixture来消除失败。
+新政策下的库存、来源对应及整章预检必须绑定实际输入；分支验收不代替合入后
+新main的预检/check。来源READY仍不表示已采用、已生成中文、术语批准或人工审校。

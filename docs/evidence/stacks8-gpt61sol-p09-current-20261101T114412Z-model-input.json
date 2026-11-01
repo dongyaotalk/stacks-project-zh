@@ -1,0 +1,1565 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a196e4-8b41-74e2-af45-f550c8856485",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/stacks8-gpt61sol-p09-current-20261101T114412Z.json",
+    "hash": "sha256:fbdedfa3d268e77cdba8db47c4b8bc8575dbe285106124e7f0ebacfc3d93fcd9"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:04WG:statement",
+      "source_text": "With notation and assumptions as in\nLemma <REF_0001>.\nSet <MATH_0001>, see\nCategories, Section <REF_0002>.\nThen <MATH_0002> is a fibred category over <MATH_0003>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "Categories",
+          "projection_start": 75,
+          "projection_end": 85,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 129,
+          "projection_end": 144,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WG:proof",
+      "source_text": "We use the description of <MATH_0001> given just above\nCategories, Lemma <REF_0001>.\nNote that the functor <MATH_0002>\ntransforms every element of <MATH_0003> to an identity morphism.\nHence by\nCategories, Lemma <REF_0002>\nwe obtain a canonical functor <MATH_0004>\nextending the given functor. This is how we think of\n<MATH_0005> as a category over <MATH_0006>.\n\n<STRUCT_0001><STRUCT_0002>\nFirst we want to characterize the <MATH_0007>-strongly cartesian morphisms\nin <MATH_0008>.\nA morphism <MATH_0009> of <MATH_0010> is the equivalence class of\na pair <MATH_0011> with <MATH_0012>.\nIn fact, in <MATH_0013> we have <MATH_0014>\nwith obvious notation.\nNote that an isomorphism is always strongly cartesian, as are\ncompositions of strongly cartesian morphisms, see\nCategories, Lemma <REF_0003>.\nHence <MATH_0015> is strongly cartesian if and only if <MATH_0016> is so.\nThus the following claim completely characterizes strongly cartesian\nmorphisms. Claim: A morphism\n<MATH_0017>\nof <MATH_0018> has image <MATH_0019>\nstrongly cartesian in <MATH_0020> if and only if <MATH_0021>\nis a strongly cartesian morphism of <MATH_0022>.\n\n<STRUCT_0003><STRUCT_0004>\nAssume <MATH_0023> strongly cartesian.\nLet <MATH_0024> be another object, and let\n<MATH_0025> be a morphism of <MATH_0026>\nsuch that <MATH_0027> for some <MATH_0028>.\nTo show that <MATH_0029> is strongly cartesian we have to show\nthat there exists a unique morphism <MATH_0030> in <MATH_0031>\nsuch that <MATH_0032> and <MATH_0033> in <MATH_0034>.\nWrite <MATH_0035>. Again we can write\n<MATH_0036> in <MATH_0037>. Since <MATH_0038>\nis an isomorphism whose image in <MATH_0039> is an identity we\nsee that finding a morphism <MATH_0040> with the required\nproperties is the same thing as finding a morphism <MATH_0041>\nin <MATH_0042> with <MATH_0043> and <MATH_0044>.\nHence we may assume that <MATH_0045> is of the form\n<MATH_0046> with <MATH_0047>. Here is\na picture\n<MATH_0048>\nNow it is clear how to construct the morphism <MATH_0049>.\nNamely, set <MATH_0050> with projections\n<MATH_0051> and <MATH_0052>.\nPick a strongly cartesian morphism <MATH_0053>\nlifting the morphism <MATH_0054>. Since <MATH_0055>,\nand since <MATH_0056> we see that\n<MATH_0057>. Since\n<MATH_0058> is strongly cartesian, and\n<MATH_0059>\nthere exists a morphism\n<MATH_0060> lifting <MATH_0061> such that\n<MATH_0062>.\nSet <MATH_0063>.\nThus we see that\n<MATH_0064>\nworks, in fact the diagram\n<MATH_0065>\nis commutative by construction. This proves existence.\n\n<STRUCT_0005><STRUCT_0006>\nNext we prove uniqueness, still in the special case\n<MATH_0066> and <MATH_0067>.\nWe strongly advise the reader to skip this part.\nSuppose that <MATH_0068> are two morphisms of\n<MATH_0069> such that <MATH_0070> and\n<MATH_0071>. Our goal is to show that\n<MATH_0072>. By\nCategories, Lemma <REF_0004>\nwe may represent <MATH_0073> and <MATH_0074> as the equivalence classes of\n<MATH_0075> and\n<MATH_0076> for some <MATH_0077>. By\nCategories, Lemma <REF_0005>\nwe see that <MATH_0078> means that there\nexists a morphism <MATH_0079> in <MATH_0080> such that\n<MATH_0081> and\n<MATH_0082>\nin <MATH_0083>. Note that\nnow <MATH_0084> is represented by <MATH_0085> and\nsimilarly for <MATH_0086>. Hence we may assume that\n<MATH_0087>\nWrite <MATH_0088>,\n<MATH_0089>, and <MATH_0090>.\nHere we have used the condition that <MATH_0091>.\nThe equalities above are now equivalent to\n<MATH_0092> and\n<MATH_0093>.\nIt need not be the case that <MATH_0094> in this situation.\nThus we have to precompose by one more morphism from <MATH_0095>.\nNamely, let <MATH_0096> be the equalizer of\n<MATH_0097> and <MATH_0098> which is a subobject of <MATH_0099>. Denote\n<MATH_0100> the canonical monomorphism.\nBecause of the relations among the morphisms\nabove we see that <MATH_0101> maps into\n<MATH_0102>.\nHence we get a new object <MATH_0103>, where\n<MATH_0104> is a strongly cartesian morphism lifting <MATH_0105>.\nThen we see that we may precompose <MATH_0106> and <MATH_0107> with the element\n<MATH_0108> of <MATH_0109>. After doing this, i.e., replacing\n<MATH_0110> with\n<MATH_0111>, we get back to the previous\nsituation where in addition we now have that <MATH_0112>.\nIn this case it follows formally from the fact that <MATH_0113>\nis strongly cartesian (!) that <MATH_0114>.\nThis shows that <MATH_0115> as desired.\n\n<STRUCT_0007><STRUCT_0008>\nWe omit the proof of the fact that for any strongly cartesian morphism\nof <MATH_0116> of the form <MATH_0117> the morphism\n<MATH_0118> is strongly cartesian in <MATH_0119>.\n(We do not need the characterization of strongly cartesian morphisms\nin the rest of the proof, although we do use it later in this section.)\n\n<STRUCT_0009><STRUCT_0010>\nLet <MATH_0120> be an object of <MATH_0121>.\nLet <MATH_0122> be a morphism of <MATH_0123>. Then the morphism\n<MATH_0124>\nis strongly cartesian by the result of the preceding paragraphs and we win.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Categories",
+          "projection_start": 55,
+          "projection_end": 65,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 99,
+          "projection_end": 106,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 136,
+          "projection_end": 143,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "identity morphism",
+          "projection_start": 165,
+          "projection_end": 182,
+          "concept": "identity-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 193,
+          "projection_end": 203,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 234,
+          "projection_end": 243,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 244,
+          "projection_end": 251,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 284,
+          "projection_end": 291,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 334,
+          "projection_end": 342,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 434,
+          "projection_end": 452,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 453,
+          "projection_end": 462,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 481,
+          "projection_end": 489,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence class",
+          "projection_start": 524,
+          "projection_end": 541,
+          "concept": "equivalence-class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 662,
+          "projection_end": 673,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 684,
+          "projection_end": 702,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "compositions",
+          "projection_start": 711,
+          "projection_end": 723,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 727,
+          "projection_end": 745,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 746,
+          "projection_end": 755,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 761,
+          "projection_end": 771,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 812,
+          "projection_end": 830,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 915,
+          "projection_end": 933,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 934,
+          "projection_end": 943,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 954,
+          "projection_end": 962,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 994,
+          "projection_end": 999,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1012,
+          "projection_end": 1030,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1078,
+          "projection_end": 1096,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1097,
+          "projection_end": 1105,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1168,
+          "projection_end": 1186,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1215,
+          "projection_end": 1221,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1248,
+          "projection_end": 1256,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1344,
+          "projection_end": 1362,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1406,
+          "projection_end": 1414,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1586,
+          "projection_end": 1597,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 1604,
+          "projection_end": 1609,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1662,
+          "projection_end": 1670,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1743,
+          "projection_end": 1751,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1962,
+          "projection_end": 1970,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1992,
+          "projection_end": 1995,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2061,
+          "projection_end": 2079,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2080,
+          "projection_end": 2088,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2113,
+          "projection_end": 2121,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2222,
+          "projection_end": 2240,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2273,
+          "projection_end": 2281,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 2402,
+          "projection_end": 2409,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 2425,
+          "projection_end": 2436,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 2667,
+          "projection_end": 2676,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 2772,
+          "projection_end": 2782,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence classes",
+          "projection_start": 2853,
+          "projection_end": 2872,
+          "concept": "equivalence-class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 2929,
+          "projection_end": 2939,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 3008,
+          "projection_end": 3016,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 3350,
+          "projection_end": 3360,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 3492,
+          "projection_end": 3500,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 3550,
+          "projection_end": 3559,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 3651,
+          "projection_end": 3660,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphism",
+          "projection_start": 3661,
+          "projection_end": 3673,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 3690,
+          "projection_end": 3699,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 3710,
+          "projection_end": 3719,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 3750,
+          "projection_end": 3754,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 3792,
+          "projection_end": 3798,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 3835,
+          "projection_end": 3853,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 3854,
+          "projection_end": 3862,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 3956,
+          "projection_end": 3963,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 4209,
+          "projection_end": 4227,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 4360,
+          "projection_end": 4378,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 4379,
+          "projection_end": 4387,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 4431,
+          "projection_end": 4439,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 4455,
+          "projection_end": 4473,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 4530,
+          "projection_end": 4548,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 4549,
+          "projection_end": 4558,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 4680,
+          "projection_end": 4686,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 4724,
+          "projection_end": 4732,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 4758,
+          "projection_end": 4766,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 4782,
+          "projection_end": 4800,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WH:statement",
+      "source_text": "With notation and assumptions as in\nLemma <REF_0001>.\nIf <MATH_0001> is fibred in groupoids, then <MATH_0002> is fibred\nin groupoids.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "groupoids",
+          "projection_start": 82,
+          "projection_end": 91,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 123,
+          "projection_end": 132,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WH:proof",
+      "source_text": "By\nLemma <REF_0001>\nwe know that <MATH_0001> is a fibred category.\nLet <MATH_0002> be a morphism of <MATH_0003> with\n<MATH_0004>. We are done if we can show that <MATH_0005> is invertible, see\nCategories, Lemma <REF_0002>.\nWrite <MATH_0006> as the equivalence class of\na pair <MATH_0007> with <MATH_0008>. Then <MATH_0009>,\nhence <MATH_0010>. Hence <MATH_0011>.\nBut any morphism of <MATH_0012> is strongly cartesian, see\nCategories, Lemma <REF_0003>\nhence we see that <MATH_0013> is invertible\nin <MATH_0014> as desired.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibred category",
+          "projection_start": 50,
+          "projection_end": 65,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 88,
+          "projection_end": 96,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "invertible",
+          "projection_start": 177,
+          "projection_end": 187,
+          "concept": "invertible",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 193,
+          "projection_end": 203,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence class",
+          "projection_start": 248,
+          "projection_end": 265,
+          "concept": "equivalence-class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 370,
+          "projection_end": 378,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 397,
+          "projection_end": 415,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 421,
+          "projection_end": 431,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "invertible",
+          "projection_start": 483,
+          "projection_end": 493,
+          "concept": "invertible",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WI:statement",
+      "source_text": "Let <MATH_0001> be a functor.\nLet <MATH_0002> and <MATH_0003>\nbe categories over <MATH_0004> and <MATH_0005>. Assume that\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0006> is a fibred category,\n<STRUCT_0003> <MATH_0007> is a fibred category,\n<STRUCT_0004> <MATH_0008> has nonempty finite limits, and\n<STRUCT_0005> <MATH_0009> commutes with nonempty finite limits.\n<STRUCT_0006>\nThen we have a canonical equivalence of categories\n<MATH_0010>\nof morphism categories.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 65,
+          "projection_end": 75,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 167,
+          "projection_end": 182,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 215,
+          "projection_end": 230,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "nonempty",
+          "projection_start": 262,
+          "projection_end": 270,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite limits",
+          "projection_start": 271,
+          "projection_end": 284,
+          "concept": "source-phrase-finite-limits",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 316,
+          "projection_end": 324,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "nonempty",
+          "projection_start": 330,
+          "projection_end": 338,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite limits",
+          "projection_start": 339,
+          "projection_end": 352,
+          "concept": "source-phrase-finite-limits",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 383,
+          "projection_end": 392,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 393,
+          "projection_end": 418,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 434,
+          "projection_end": 442,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 443,
+          "projection_end": 453,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WI:proof",
+      "source_text": "In this proof we use the notation <MATH_0001> to denote an object\n<MATH_0002> of <MATH_0003> which lies over <MATH_0004> in <MATH_0005>.\nSimilarly <MATH_0006> denotes an object <MATH_0007> of <MATH_0008>\nwhich lies over <MATH_0009> in <MATH_0010>. In the same vein\n<MATH_0011> denotes the morphism\n<MATH_0012> with image <MATH_0013> in <MATH_0014>.\n\n<STRUCT_0001><STRUCT_0002>\nLet <MATH_0015> be a <MATH_0016>-morphism of fibred\ncategories over <MATH_0017>. Denote <MATH_0018>\nthe composition of <MATH_0019> with the canonical (localization) functor\n<MATH_0020>. Then consider the functor\n<MATH_0021> given by\n<MATH_0022>\non objects and by\n<MATH_0023>\non morphisms. Since <MATH_0024> transforms strongly cartesian morphisms\ninto strongly cartesian morphisms, we see that if <MATH_0025> is strongly\ncartesian, then <MATH_0026> is strongly cartesian.\nNamely, we've seen in the proof of\nLemma <REF_0001>\nthat in this case the map <MATH_0027> becomes\nstrongly cartesian in <MATH_0028>. Clearly this construction is\nfunctorial in <MATH_0029> and we obtain a functor\n<MATH_0030>\n\n<STRUCT_0003><STRUCT_0004>\nConversely, let <MATH_0031> be a <MATH_0032>-morphism\nof fibred categories. Recall that an object of <MATH_0033> is\na pair <MATH_0034> with <MATH_0035>. We denote\n<MATH_0036> the functor <MATH_0037>.\nIn this case we define a functor\n<MATH_0038> by the rules\n<MATH_0039>\non objects and we let\n<MATH_0040>\nbe the unique morphism\n<MATH_0041>\nsuch that <MATH_0042> and the diagram\n<MATH_0043>\nSuch a morphism exists and is unique because <MATH_0044> is a fibred\ncategory.\n\n<STRUCT_0005><STRUCT_0006>\nWe check that <MATH_0045> is an isomorphism if <MATH_0046>.\nNamely, if\n<MATH_0047>\nwith <MATH_0048> strongly cartesian is an element of the right multiplicative\nsystem <MATH_0049> of\nLemma <REF_0002>\nthen <MATH_0050> is strongly cartesian, and\n<MATH_0051> is strongly cartesian, see proof of\nLemma <REF_0003>.\nHence in this case the morphism <MATH_0052> has <MATH_0053>\nand is strongly cartesian. Hence <MATH_0054> is an isomorphism by\nCategories, Lemma <REF_0004>.\nThus by\nCategories, Lemma <REF_0005>\nwe obtain a canonical extension <MATH_0055>.\n\n<STRUCT_0007><STRUCT_0008>\nNext, let us prove that <MATH_0056> transforms strongly cartesian morphisms\ninto strongly cartesian morphisms.\nSuppose that <MATH_0057> is a strongly cartesian. By the characterization\nof strongly cartesian morphisms in <MATH_0058> we can write <MATH_0059> as\n<MATH_0060> where <MATH_0061> and\n<MATH_0062> strongly cartesian in <MATH_0063>. By the above it suffices\nto show that <MATH_0064> is strongly cartesian. As before\nthe condition that <MATH_0065> is strongly cartesian implies that\n<MATH_0066>\nis strongly cartesian in <MATH_0067>. Since in the commutative\nsquare above now all arrows except possibly <MATH_0068> is strongly cartesian\nit follows that also <MATH_0069> is strongly cartesian as desired.\nClearly the construction <MATH_0070> is functorial in <MATH_0071> and we\nobtain a functor\n<MATH_0072>\nTo finish the proof of the lemma we have to show that the functors\n<MATH_0073> and <MATH_0074> are mutually quasi-inverse. We omit the verifications.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "object",
+          "projection_start": 59,
+          "projection_end": 65,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 170,
+          "projection_end": 176,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 289,
+          "projection_end": 297,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 315,
+          "projection_end": 320,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 409,
+          "projection_end": 417,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 421,
+          "projection_end": 438,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 480,
+          "projection_end": 491,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 516,
+          "projection_end": 525,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 527,
+          "projection_end": 539,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 541,
+          "projection_end": 548,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 580,
+          "projection_end": 587,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 624,
+          "projection_end": 631,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 654,
+          "projection_end": 663,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 694,
+          "projection_end": 712,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 713,
+          "projection_end": 722,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 728,
+          "projection_end": 746,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 747,
+          "projection_end": 756,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 788,
+          "projection_end": 806,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 828,
+          "projection_end": 846,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 922,
+          "projection_end": 925,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 946,
+          "projection_end": 964,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1052,
+          "projection_end": 1059,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1144,
+          "projection_end": 1152,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 1156,
+          "projection_end": 1173,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1190,
+          "projection_end": 1196,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1278,
+          "projection_end": 1285,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1324,
+          "projection_end": 1331,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 1372,
+          "projection_end": 1379,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1417,
+          "projection_end": 1425,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1468,
+          "projection_end": 1475,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1495,
+          "projection_end": 1503,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 1550,
+          "projection_end": 1565,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1626,
+          "projection_end": 1637,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1694,
+          "projection_end": 1712,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1719,
+          "projection_end": 1726,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1814,
+          "projection_end": 1832,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1853,
+          "projection_end": 1871,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1927,
+          "projection_end": 1935,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1971,
+          "projection_end": 1989,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 2015,
+          "projection_end": 2026,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 2030,
+          "projection_end": 2040,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 2068,
+          "projection_end": 2078,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 2109,
+          "projection_end": 2118,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2216,
+          "projection_end": 2234,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 2235,
+          "projection_end": 2244,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2250,
+          "projection_end": 2268,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 2269,
+          "projection_end": 2278,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2310,
+          "projection_end": 2328,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2357,
+          "projection_end": 2375,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 2376,
+          "projection_end": 2385,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2475,
+          "projection_end": 2493,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2563,
+          "projection_end": 2581,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2627,
+          "projection_end": 2645,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2674,
+          "projection_end": 2692,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 2722,
+          "projection_end": 2733,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2793,
+          "projection_end": 2811,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 2848,
+          "projection_end": 2866,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 2961,
+          "projection_end": 2968,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 3039,
+          "projection_end": 3047,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-inverse",
+          "projection_start": 3089,
+          "projection_end": 3102,
+          "concept": "quasi-inverse",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WJ:statement",
+      "source_text": "Let <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> be a stack over <MATH_0004>.\nIn this setting we write <TEXTITOPEN_0001><MATH_0005><TEXTITCLOSE_0001> for the stackification\nof the fibred category <MATH_0006> over <MATH_0007> constructed\nabove. We say that <MATH_0008> is the\n<TEXTITOPEN_0002>pullback of <MATH_0009> along <MATH_0010><TEXTITCLOSE_0002>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 33,
+          "projection_end": 38,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 61,
+          "projection_end": 68,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 126,
+          "projection_end": 131,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 178,
+          "projection_end": 183,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 269,
+          "projection_end": 284,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 364,
+          "projection_end": 372,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "along",
+          "projection_start": 388,
+          "projection_end": 393,
+          "concept": "along",
+          "rule": "source-declaration"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WA:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nOf course, if <MATH_0001> is a stack in groupoids, then <MATH_0002>\nis a stack in groupoids by\nLemmas <REF_0001> and\n<REF_0002>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 45,
+          "projection_end": 50,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 54,
+          "projection_end": 63,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 87,
+          "projection_end": 92,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 96,
+          "projection_end": 105,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WK:statement",
+      "source_text": "Let <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> and\n<MATH_0004> be stacks.\nThen we have a canonical equivalence of categories\n<MATH_0005>\nof morphism categories.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 33,
+          "projection_end": 38,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 61,
+          "projection_end": 68,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 126,
+          "projection_end": 131,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 192,
+          "projection_end": 198,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 215,
+          "projection_end": 224,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 225,
+          "projection_end": 250,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 266,
+          "projection_end": 274,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 275,
+          "projection_end": 285,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WK:proof",
+      "source_text": "For <MATH_0001> an <MATH_0002>-morphism of stacks is the same thing as a\n<MATH_0003>-morphism of fibred categories, see\nDefinition <REF_0001>.\nBy\nLemma <REF_0002>\nwe have already\n<MATH_0004>\nHence the result follows from\nLemma <REF_0003>\nas <MATH_0005> and <MATH_0006> is the\nstackification of <MATH_0007>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 31,
+          "projection_end": 39,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 43,
+          "projection_end": 49,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 85,
+          "projection_end": 93,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 97,
+          "projection_end": 114,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:stacks:04WF:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAccording to\nCategories, Definition <REF_0001>\nwe have to check RMS1, RMS2, RMS3.\nCondition RMS1 holds as a composition of strongly cartesian morphisms is\nstrongly cartesian, see\nCategories, Lemma <REF_0002>.\n\n<STRUCT_0002><STRUCT_0003>\nTo check RMS2 suppose we have a morphism\n<MATH_0001>\nof <MATH_0002> and a morphism\n<MATH_0003>\nwith <MATH_0004> strongly cartesian from <MATH_0005>. In this situation set\n<MATH_0006>, and denote <MATH_0007> and\n<MATH_0008> the projections.\nAs <MATH_0009>\nwe see that <MATH_0010> is\na morphism in <MATH_0011>. Let <MATH_0012>\nbe a strongly cartesian morphism of <MATH_0013> with\n<MATH_0014> (which exists because <MATH_0015> is a\nfibred category over <MATH_0016>). Then as <MATH_0017> is\nstrongly cartesian there exists a unique morphism\n<MATH_0018> with <MATH_0019>.\nAt this point we see that\n<MATH_0020>\nis a morphism and that\n<MATH_0021>\nis an element of <MATH_0022> which form a solution of the existence problem\nposed by RMS2.\n\n<STRUCT_0004><STRUCT_0005>\nFinally, suppose that\n<MATH_0023>\nare two morphisms of <MATH_0024> and suppose that\n<MATH_0025>\nis an element of <MATH_0026> which equalizes the morphisms\n<MATH_0027> and <MATH_0028>. This implies in particular\nthat <MATH_0029>. Let <MATH_0030> be the equalizer of <MATH_0031> which\nexists (see\nCategories, Lemma <REF_0003>).\nMoreover, <MATH_0032> is the equalizer of <MATH_0033>\nhence (as <MATH_0034>) there is a morphism <MATH_0035> such that\n<MATH_0036>. Let <MATH_0037> be a strongly\ncartesian morphism of <MATH_0038> with <MATH_0039>.\nNow we claim that <MATH_0040>.\nThis is true because\n<MATH_0041> is strongly cartesian,\n<MATH_0042>, and\n<MATH_0043>.\nHence the arrow\n<MATH_0044>\nis an element of <MATH_0045> and equalizes <MATH_0046> and <MATH_0047>.\nHence <MATH_0048> satisfies RMS3 as well.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WG:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe use the description of <MATH_0001> given just above\nCategories, Lemma <REF_0001>.\nNote that the functor <MATH_0002>\ntransforms every element of <MATH_0003> to an identity morphism.\nHence by\nCategories, Lemma <REF_0002>\nwe obtain a canonical functor <MATH_0004>\nextending the given functor. This is how we think of\n<MATH_0005> as a category over <MATH_0006>.\n\n<STRUCT_0002><STRUCT_0003>\nFirst we want to characterize the <MATH_0007>-strongly cartesian morphisms\nin <MATH_0008>.\nA morphism <MATH_0009> of <MATH_0010> is the equivalence class of\na pair <MATH_0011> with <MATH_0012>.\nIn fact, in <MATH_0013> we have <MATH_0014>\nwith obvious notation.\nNote that an isomorphism is always strongly cartesian, as are\ncompositions of strongly cartesian morphisms, see\nCategories, Lemma <REF_0003>.\nHence <MATH_0015> is strongly cartesian if and only if <MATH_0016> is so.\nThus the following claim completely characterizes strongly cartesian\nmorphisms. Claim: A morphism\n<MATH_0017>\nof <MATH_0018> has image <MATH_0019>\nstrongly cartesian in <MATH_0020> if and only if <MATH_0021>\nis a strongly cartesian morphism of <MATH_0022>.\n\n<STRUCT_0004><STRUCT_0005>\nAssume <MATH_0023> strongly cartesian.\nLet <MATH_0024> be another object, and let\n<MATH_0025> be a morphism of <MATH_0026>\nsuch that <MATH_0027> for some <MATH_0028>.\nTo show that <MATH_0029> is strongly cartesian we have to show\nthat there exists a unique morphism <MATH_0030> in <MATH_0031>\nsuch that <MATH_0032> and <MATH_0033> in <MATH_0034>.\nWrite <MATH_0035>. Again we can write\n<MATH_0036> in <MATH_0037>. Since <MATH_0038>\nis an isomorphism whose image in <MATH_0039> is an identity we\nsee that finding a morphism <MATH_0040> with the required\nproperties is the same thing as finding a morphism <MATH_0041>\nin <MATH_0042> with <MATH_0043> and <MATH_0044>.\nHence we may assume that <MATH_0045> is of the form\n<MATH_0046> with <MATH_0047>. Here is\na picture\n<MATH_0048>\nNow it is clear how to construct the morphism <MATH_0049>.\nNamely, set <MATH_0050> with projections\n<MATH_0051> and <MATH_0052>.\nPick a strongly cartesian morphism <MATH_0053>\nlifting the morphism <MATH_0054>. Since <MATH_0055>,\nand since <MATH_0056> we see that\n<MATH_0057>. Since\n<MATH_0058> is strongly cartesian, and\n<MATH_0059>\nthere exists a morphism\n<MATH_0060> lifting <MATH_0061> such that\n<MATH_0062>.\nSet <MATH_0063>.\nThus we see that\n<MATH_0064>\nworks, in fact the diagram\n<MATH_0065>\nis commutative by construction. This proves existence.\n\n<STRUCT_0006><STRUCT_0007>\nNext we prove uniqueness, still in the special case\n<MATH_0066> and <MATH_0067>.\nWe strongly advise the reader to skip this part.\nSuppose that <MATH_0068> are two morphisms of\n<MATH_0069> such that <MATH_0070> and\n<MATH_0071>. Our goal is to show that\n<MATH_0072>. By\nCategories, Lemma <REF_0004>\nwe may represent <MATH_0073> and <MATH_0074> as the equivalence classes of\n<MATH_0075> and\n<MATH_0076> for some <MATH_0077>. By\nCategories, Lemma <REF_0005>\nwe see that <MATH_0078> means that there\nexists a morphism <MATH_0079> in <MATH_0080> such that\n<MATH_0081> and\n<MATH_0082>\nin <MATH_0083>. Note that\nnow <MATH_0084> is represented by <MATH_0085> and\nsimilarly for <MATH_0086>. Hence we may assume that\n<MATH_0087>\nWrite <MATH_0088>,\n<MATH_0089>, and <MATH_0090>.\nHere we have used the condition that <MATH_0091>.\nThe equalities above are now equivalent to\n<MATH_0092> and\n<MATH_0093>.\nIt need not be the case that <MATH_0094> in this situation.\nThus we have to precompose by one more morphism from <MATH_0095>.\nNamely, let <MATH_0096> be the equalizer of\n<MATH_0097> and <MATH_0098> which is a subobject of <MATH_0099>. Denote\n<MATH_0100> the canonical monomorphism.\nBecause of the relations among the morphisms\nabove we see that <MATH_0101> maps into\n<MATH_0102>.\nHence we get a new object <MATH_0103>, where\n<MATH_0104> is a strongly cartesian morphism lifting <MATH_0105>.\nThen we see that we may precompose <MATH_0106> and <MATH_0107> with the element\n<MATH_0108> of <MATH_0109>. After doing this, i.e., replacing\n<MATH_0110> with\n<MATH_0111>, we get back to the previous\nsituation where in addition we now have that <MATH_0112>.\nIn this case it follows formally from the fact that <MATH_0113>\nis strongly cartesian (!) that <MATH_0114>.\nThis shows that <MATH_0115> as desired.\n\n<STRUCT_0008><STRUCT_0009>\nWe omit the proof of the fact that for any strongly cartesian morphism\nof <MATH_0116> of the form <MATH_0117> the morphism\n<MATH_0118> is strongly cartesian in <MATH_0119>.\n(We do not need the characterization of strongly cartesian morphisms\nin the rest of the proof, although we do use it later in this section.)\n\n<STRUCT_0010><STRUCT_0011>\nLet <MATH_0120> be an object of <MATH_0121>.\nLet <MATH_0122> be a morphism of <MATH_0123>. Then the morphism\n<MATH_0124>\nis strongly cartesian by the result of the preceding paragraphs and we win.\n<STRUCT_0012>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WG:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notation and assumptions as in\nLemma <REF_0001>.\nSet <MATH_0001>, see\nCategories, Section <REF_0002>.\nThen <MATH_0002> is a fibred category over <MATH_0003>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WH:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notation and assumptions as in\nLemma <REF_0001>.\nIf <MATH_0001> is fibred in groupoids, then <MATH_0002> is fibred\nin groupoids.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WH:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy\nLemma <REF_0001>\nwe know that <MATH_0001> is a fibred category.\nLet <MATH_0002> be a morphism of <MATH_0003> with\n<MATH_0004>. We are done if we can show that <MATH_0005> is invertible, see\nCategories, Lemma <REF_0002>.\nWrite <MATH_0006> as the equivalence class of\na pair <MATH_0007> with <MATH_0008>. Then <MATH_0009>,\nhence <MATH_0010>. Hence <MATH_0011>.\nBut any morphism of <MATH_0012> is strongly cartesian, see\nCategories, Lemma <REF_0003>\nhence we see that <MATH_0013> is invertible\nin <MATH_0014> as desired.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WI:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a functor.\nLet <MATH_0002> and <MATH_0003>\nbe categories over <MATH_0004> and <MATH_0005>. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0006> is a fibred category,\n<STRUCT_0004> <MATH_0007> is a fibred category,\n<STRUCT_0005> <MATH_0008> has nonempty finite limits, and\n<STRUCT_0006> <MATH_0009> commutes with nonempty finite limits.\n<STRUCT_0007>\nThen we have a canonical equivalence of categories\n<MATH_0010>\nof morphism categories.\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WI:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this proof we use the notation <MATH_0001> to denote an object\n<MATH_0002> of <MATH_0003> which lies over <MATH_0004> in <MATH_0005>.\nSimilarly <MATH_0006> denotes an object <MATH_0007> of <MATH_0008>\nwhich lies over <MATH_0009> in <MATH_0010>. In the same vein\n<MATH_0011> denotes the morphism\n<MATH_0012> with image <MATH_0013> in <MATH_0014>.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0015> be a <MATH_0016>-morphism of fibred\ncategories over <MATH_0017>. Denote <MATH_0018>\nthe composition of <MATH_0019> with the canonical (localization) functor\n<MATH_0020>. Then consider the functor\n<MATH_0021> given by\n<MATH_0022>\non objects and by\n<MATH_0023>\non morphisms. Since <MATH_0024> transforms strongly cartesian morphisms\ninto strongly cartesian morphisms, we see that if <MATH_0025> is strongly\ncartesian, then <MATH_0026> is strongly cartesian.\nNamely, we've seen in the proof of\nLemma <REF_0001>\nthat in this case the map <MATH_0027> becomes\nstrongly cartesian in <MATH_0028>. Clearly this construction is\nfunctorial in <MATH_0029> and we obtain a functor\n<MATH_0030>\n\n<STRUCT_0004><STRUCT_0005>\nConversely, let <MATH_0031> be a <MATH_0032>-morphism\nof fibred categories. Recall that an object of <MATH_0033> is\na pair <MATH_0034> with <MATH_0035>. We denote\n<MATH_0036> the functor <MATH_0037>.\nIn this case we define a functor\n<MATH_0038> by the rules\n<MATH_0039>\non objects and we let\n<MATH_0040>\nbe the unique morphism\n<MATH_0041>\nsuch that <MATH_0042> and the diagram\n<MATH_0043>\nSuch a morphism exists and is unique because <MATH_0044> is a fibred\ncategory.\n\n<STRUCT_0006><STRUCT_0007>\nWe check that <MATH_0045> is an isomorphism if <MATH_0046>.\nNamely, if\n<MATH_0047>\nwith <MATH_0048> strongly cartesian is an element of the right multiplicative\nsystem <MATH_0049> of\nLemma <REF_0002>\nthen <MATH_0050> is strongly cartesian, and\n<MATH_0051> is strongly cartesian, see proof of\nLemma <REF_0003>.\nHence in this case the morphism <MATH_0052> has <MATH_0053>\nand is strongly cartesian. Hence <MATH_0054> is an isomorphism by\nCategories, Lemma <REF_0004>.\nThus by\nCategories, Lemma <REF_0005>\nwe obtain a canonical extension <MATH_0055>.\n\n<STRUCT_0008><STRUCT_0009>\nNext, let us prove that <MATH_0056> transforms strongly cartesian morphisms\ninto strongly cartesian morphisms.\nSuppose that <MATH_0057> is a strongly cartesian. By the characterization\nof strongly cartesian morphisms in <MATH_0058> we can write <MATH_0059> as\n<MATH_0060> where <MATH_0061> and\n<MATH_0062> strongly cartesian in <MATH_0063>. By the above it suffices\nto show that <MATH_0064> is strongly cartesian. As before\nthe condition that <MATH_0065> is strongly cartesian implies that\n<MATH_0066>\nis strongly cartesian in <MATH_0067>. Since in the commutative\nsquare above now all arrows except possibly <MATH_0068> is strongly cartesian\nit follows that also <MATH_0069> is strongly cartesian as desired.\nClearly the construction <MATH_0070> is functorial in <MATH_0071> and we\nobtain a functor\n<MATH_0072>\nTo finish the proof of the lemma we have to show that the functors\n<MATH_0073> and <MATH_0074> are mutually quasi-inverse. We omit the verifications.\n<STRUCT_0010>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WJ:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> be a stack over <MATH_0004>.\nIn this setting we write <TEXTITOPEN_0001><MATH_0005><TEXTITCLOSE_0001> for the stackification\nof the fibred category <MATH_0006> over <MATH_0007> constructed\nabove. We say that <MATH_0008> is the\n<TEXTITOPEN_0002>pullback of <MATH_0009> along <MATH_0010><TEXTITCLOSE_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WA:paragraph/0007",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOf course, if <MATH_0001> is a stack in groupoids, then <MATH_0002>\nis a stack in groupoids by\nLemmas <REF_0001> and\n<REF_0002>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WK:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> and\n<MATH_0004> be stacks.\nThen we have a canonical equivalence of categories\n<MATH_0005>\nof morphism categories.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFor <MATH_0001> an <MATH_0002>-morphism of stacks is the same thing as a\n<MATH_0003>-morphism of fibred categories, see\nDefinition <REF_0001>.\nBy\nLemma <REF_0002>\nwe have already\n<MATH_0004>\nHence the result follows from\nLemma <REF_0003>\nas <MATH_0005> and <MATH_0006> is the\nstackification of <MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WR:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> be a fibred category, and\nlet <MATH_0004> be the stackification of <MATH_0005>.\nThen <MATH_0006> is the stackification of\n<MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:categories-lemma-composition-cartesian",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a category over <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> The composition of two strongly cartesian morphisms\nis strongly cartesian.\n<STRUCT_0004> Any isomorphism of <MATH_0004> is strongly cartesian.\n<STRUCT_0005> Any strongly cartesian morphism <MATH_0005> such that <MATH_0006>\nis an isomorphism, is an isomorphism.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-lemma-composition-cartesian",
+      "requested_tag": "02XL"
+    },
+    {
+      "context_id": "reference:categories-lemma-equality-morphisms-right-localization",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category and let <MATH_0002> be a right multiplicative\nsystem of morphisms of <MATH_0003>. Let <MATH_0004> be\nmorphisms of <MATH_0005> which are the equivalence\nclasses of <MATH_0006> and\n<MATH_0007>. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0008>,\n<STRUCT_0004> there exists a morphism <MATH_0009> in <MATH_0010> with\n<MATH_0011>, and\n<STRUCT_0005> there exists a morphism <MATH_0012> with\n<MATH_0013> and <MATH_0014>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-lemma-equality-morphisms-right-localization",
+      "requested_tag": "04VJ"
+    },
+    {
+      "context_id": "reference:categories-lemma-fibred-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a functor.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is a category\nfibred in groupoids, and\n<STRUCT_0004> all fibre categories are groupoids and\n<MATH_0003> is a fibred category over <MATH_0004>.\n<STRUCT_0005>\nMoreover, in this case every morphism of <MATH_0005> is\nstrongly cartesian. In addition, given <MATH_0006>\nlying over <MATH_0007> for all <MATH_0008> the data\n<MATH_0009>\nconstructed in Lemma <REF_0001>\ndefines a pseudo functor from <MATH_0010> in to\nthe <MATH_0011>-category of groupoids.\n<STRUCT_0006>",
+      "requested_label": "categories-lemma-fibred-groupoids",
+      "requested_tag": "003V"
+    },
+    {
+      "context_id": "reference:categories-lemma-morphisms-right-localization",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category and let <MATH_0002> be a right multiplicative\nsystem of morphisms of <MATH_0003>. Given any finite collection\n<MATH_0004> of morphisms of <MATH_0005>\n(indexed by <MATH_0006>),\nwe can find an element <MATH_0007> of <MATH_0008> and a family\nof morphisms <MATH_0009> of <MATH_0010> such that\n<MATH_0011> is the equivalence class of the pair\n<MATH_0012>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-morphisms-right-localization",
+      "requested_tag": "04VI"
+    },
+    {
+      "context_id": "reference:categories-lemma-properties-right-localization",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category and let <MATH_0002> be a right multiplicative\nsystem of morphisms of <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> The rules <MATH_0004> and\n<MATH_0005>\ndefine a functor <MATH_0006>.\n<STRUCT_0004> For any <MATH_0007> the morphism <MATH_0008> is an isomorphism in\n<MATH_0009>.\n<STRUCT_0005> If <MATH_0010> is any functor such that\n<MATH_0011> is invertible for every <MATH_0012>, then there exists a\nunique functor <MATH_0013>\nsuch that <MATH_0014>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-lemma-properties-right-localization",
+      "requested_tag": "04VK"
+    },
+    {
+      "context_id": "reference:categories-lemma-right-localization",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category and let <MATH_0002> be a right multiplicative\nsystem.\n<STRUCT_0002>\n<STRUCT_0003> The relation on pairs defined above is an equivalence relation.\n<STRUCT_0004> The composition rule given above is well defined on equivalence\nclasses.\n<STRUCT_0005> Composition is associative (and the identity morphisms satisfy\nthe identity axioms), and hence <MATH_0003> is a category.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-lemma-right-localization",
+      "requested_tag": "04VH"
+    },
+    {
+      "context_id": "reference:categories-section-localization",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Localization in categories<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "categories-section-localization",
+      "requested_tag": "04VB"
+    },
+    {
+      "context_id": "reference:sites-proposition-get-morphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites. Let\n<MATH_0003> be continuous.\nAssume furthermore the following:\n<STRUCT_0002>\n<STRUCT_0003> the category <MATH_0004> has a final object <MATH_0005> and\n<MATH_0006> is a final object of <MATH_0007> , and\n<STRUCT_0004> the category <MATH_0008> has fibre products and\n<MATH_0009> commutes with them.\n<STRUCT_0005>\nThen <MATH_0010> defines a morphism of sites <MATH_0011>, in other words <MATH_0012> is exact.\n<STRUCT_0006>",
+      "requested_label": "sites-proposition-get-morphism",
+      "requested_tag": "00X6"
+    },
+    {
+      "context_id": "reference:stacks-definition-stacks-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nThe <TEXTITOPEN_0001><MATH_0002>-category of stacks over <MATH_0003><TEXTITCLOSE_0001>\nis the sub <MATH_0004>-category of the <MATH_0005>-category of fibred categories\nover <MATH_0006> (see\nCategories, Definition <REF_0001>)\ndefined as follows:\n<STRUCT_0002>\n<STRUCT_0003> Its objects will be stacks <MATH_0007>.\n<STRUCT_0004> Its <MATH_0008>-morphisms <MATH_0009>\nwill be functors <MATH_0010> such that\n<MATH_0011> and such that <MATH_0012> maps strongly cartesian\nmorphisms to strongly cartesian morphisms.\n<STRUCT_0005> Its <MATH_0013>-morphisms <MATH_0014> for\n<MATH_0015>\nwill be morphisms of functors\nsuch that <MATH_0016>\nfor all <MATH_0017>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-definition-stacks-over-C",
+      "requested_tag": "02ZG"
+    },
+    {
+      "context_id": "reference:stacks-lemma-fibred-category-pushforward",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation above, if <MATH_0001> is a fibred category over\n<MATH_0002> then <MATH_0003> is a fibred category over <MATH_0004>.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-fibred-category-pushforward",
+      "requested_tag": "04WB"
+    },
+    {
+      "context_id": "reference:stacks-lemma-right-multiplicative-system",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation above assume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is a fibred category,\n<STRUCT_0004> <MATH_0002> has nonempty finite limits, and\n<STRUCT_0005> <MATH_0003> commutes with nonempty finite limits.\n<STRUCT_0006>\nConsider the set <MATH_0004> of morphisms\nof the form\n<MATH_0005>\nwith <MATH_0006> strongly cartesian. Then <MATH_0007> is a right multiplicative system.\n<STRUCT_0007>",
+      "requested_label": "stacks-lemma-right-multiplicative-system",
+      "requested_tag": "04WF"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stackify-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a category\nfibred in groupoids over <MATH_0003>.\nThere exists a stack in groupoids\n<MATH_0004> and a\n<MATH_0005>-morphism <MATH_0006>\nof categories fibred in groupoids over <MATH_0007> (see\nCategories, Definition\n<REF_0001>)\nsuch that\n<STRUCT_0002>\n<STRUCT_0003> for every <MATH_0008>, and any\n<MATH_0009> the map\n<MATH_0010>\ninduced by <MATH_0011> identifies the right hand side with the sheafification\nof the left hand side, and\n<STRUCT_0004> for every <MATH_0012>, and any\n<MATH_0013> there exists a covering\n<MATH_0014> such that for every <MATH_0015> the\nobject <MATH_0016> is in the essential image of the\nfunctor <MATH_0017>.\n<STRUCT_0005>\nMoreover the stack in groupoids <MATH_0018> is determined up to unique\n<MATH_0019>-isomorphism by these conditions.\n<STRUCT_0006>",
+      "requested_label": "stacks-lemma-stackify-groupoids",
+      "requested_tag": "02ZP"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stackify-universal-property-more",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in\nLemma <REF_0001>.\nThere is a canonical equivalence of categories\n<MATH_0001>\ngiven by the constructions in the proof of the aforementioned lemma.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-stackify-universal-property-more",
+      "requested_tag": "04W9"
+    }
+  ]
+}

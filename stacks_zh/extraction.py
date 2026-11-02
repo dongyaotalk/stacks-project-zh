@@ -196,7 +196,7 @@ class Policy:
             if set(rule) != fields:
                 raise RecordError('incomplete math-text notation policy')
             for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
-                                 ('usages', {'symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
+                                 ('usages', {'symbol', 'bare-symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
                                              'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
                                              'descent-relative-proj'})]:
@@ -655,6 +655,26 @@ class Scanner:
                                 and self.skip_space(argument+1) >= self.argument_end(argument)-1):
                             continue
                     return usage, self.text[start:command_start], rule['source_label']
+            if usage == 'bare-symbol' and command_start is not None:
+                from .math_text import nodes
+                try:
+                    current = next(n for n in nodes(self.text) if n['start'] == command_start)
+                except (ValueError, StopIteration):
+                    continue
+                if (current['depth'] != 0 or
+                        self.preceding_math_prefix(command_start, None) is None or
+                        self.text[cursor:cursor + 1] in {'_', '^', "'", '(', '['}):
+                    continue
+                size = COMMAND.match(self.text, cursor)
+                if size:
+                    following_command = size.group()[1:]
+                    if following_command in {'prime', 'lparen', 'lbrack'}:
+                        continue
+                    if (following_command in {'left', 'big', 'Big', 'bigg', 'Bigg',
+                                              'bigl', 'Bigl', 'biggl', 'Biggl'}
+                            and self.text[self.skip_space(size.end()):self.skip_space(size.end()) + 1] in {'(', '['}):
+                        continue
+                return usage, '', rule['source_label']
             if usage == 'symbol':
                 return usage, '', rule['source_label']
             if usage in {'applied', 'primed-applied'}:

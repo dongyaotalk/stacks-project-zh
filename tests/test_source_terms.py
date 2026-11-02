@@ -516,6 +516,56 @@ class SourceTermsTests(unittest.TestCase):
                 expected = "sets" if " sets " in text else "set"
                 self.assertEqual([o["source_term"] for o in source_inventory(row, scope)["occurrences"]], [expected])
 
+    def test_qualified_pullback_assignment_keeps_nouns_other_terms_and_pending(self):
+        frame = ('we set for <MATH_0001> the pullback <MATH_0002> '
+                 'equal to <MATH_0003>')
+        for text in [frame, frame.upper(), frame.replace(' ', '\n\t'),
+                     'As restriction mapping, given <MATH_0004> ' + frame]:
+            with self.subTest(text=text):
+                row = unit(text + '. A set <MATH_0005>. The sets <MATH_0006>.',
+                           {f'MATH_{i:04d}': f'$x_{i}$' for i in range(1, 7)}, 'proof')
+                scope = catalog(row)
+                scope['terms'] = [{'id': word, 'forms': forms, 'chapters': [], 'evidence': []}
+                                  for word, forms in [('set', ['set', 'sets']), ('pullback', ['pullback'])]]
+                source_terms = [x['source_term'] for x in source_inventory(row, scope)['occurrences']]
+                pullback = 'PULLBACK' if text == frame.upper() else 'pullback'
+                self.assertEqual(source_terms, [pullback, 'set', 'sets'])
+                terms = [(pullback, '拉回'), ('set', '集合'), ('sets', '集合')]
+                output = candidate(terms)
+                before = copy.deepcopy((row, scope, output))
+                self.assertEqual(validate_source_terms(row, output, scope), [])
+                self.assertEqual((row, scope, output), before)
+                for index in range(3):
+                    incomplete = candidate(terms[:index] + terms[index + 1:])
+                    self.assertTrue(any('coverage' in x for x in validate_source_terms(row, incomplete, scope)))
+                output['unknown_terms'].pop(0)
+                self.assertTrue(any('pending' in x for x in validate_source_terms(row, output, scope)))
+
+    def test_qualified_pullback_assignment_rejects_unwitnessed_frames_and_tokens(self):
+        frame = ('we set for <MATH_0001> the pullback <MATH_0002> '
+                 'equal to <MATH_0003>')
+        texts = [frame.replace('we set', prefix) for prefix in
+                 ['a set', 'the set', 'we consider the set', 'set', 'we now set', 'we sets']]
+        texts += [frame.replace(old, new) for old, new in
+                  [('for', 'on'), ('the pullback', 'a pullback'), ('equal to', 'not equal to'),
+                   ('equal to', 'equal'), ('the pullback', 'the pullback. Then'),
+                   ('the pullback', 'the <STRUCT_0001> pullback')]]
+        for i in range(1, 4):
+            token = f'<MATH_{i:04d}>'
+            texts += [frame.replace(token, wrong) for wrong in
+                      ['<REF_0001>', '<MATH_BAD>', '<MATH_001>', '<math_0001>', 'an object']]
+        for text in texts:
+            with self.subTest(text=text):
+                tokens = {f'MATH_{i:04d}': f'$x_{i}$' for i in range(1, 4)}
+                tokens.update(REF_0001=r'\ref{x}', STRUCT_0001=r'\item')
+                row = unit(text, tokens, 'proof')
+                scope = catalog(row)
+                scope['terms'] = [{'id': word, 'forms': forms, 'chapters': [], 'evidence': []}
+                                  for word, forms in [('set', ['set', 'sets']), ('pullback', ['pullback'])]]
+                expected = 'sets' if 'we sets' in text else 'set'
+                self.assertEqual([x['source_term'] for x in source_inventory(row, scope)['occurrences']],
+                                 [expected, 'pullback'])
+
     def test_evidence_bound_exclusion_only_removes_the_named_occurrence(self):
         row = unit("A category and another category.")
         scope = catalog(row)

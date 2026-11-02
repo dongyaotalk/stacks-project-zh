@@ -112,9 +112,18 @@ def _matches(text: str, phrase: str, *, ignore_case: bool = False):
 
 
 def _assignment_set(text: str, match: re.Match[str]) -> bool:
-    if match.group(0).casefold() != "set" or not re.match(r"\s+<MATH_[0-9]{4}>", text[match.end():]):
+    if match.group(0).casefold() != "set":
         return False
     before = text[:match.start()].rstrip()
+    after = text[match.end():]
+    # The two locked Topologies proofs put the parameter before the assigned
+    # pullback. Keep every frame word and all three opaque math boundaries.
+    if (re.search(r"\bwe$", before, re.IGNORECASE)
+            and re.match(r"\s+(?i:for)\s+<MATH_[0-9]{4}>\s+(?i:the\s+pullback)\s+"
+                         r"<MATH_[0-9]{4}>\s+(?i:equal\s+to)\s+<MATH_[0-9]{4}>", after)):
+        return True
+    if not re.match(r"\s+<MATH_[0-9]{4}>", after):
+        return False
     return (not before or before[-1] in ".!?"
             or bool(re.search(r"\b(?:us|can|could|may|must|shall|will|and)\s*$", before, re.IGNORECASE))
             or bool(re.search(r"\bwe(?:\s+(?:now|first|then|finally|similarly))*\s*$", before, re.IGNORECASE))

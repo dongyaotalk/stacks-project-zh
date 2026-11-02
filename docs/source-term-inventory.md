@@ -1,5 +1,25 @@
 # 来源侧术语出现清单
 
+## Topologies 中带 for 参数的 pullback 赋值
+
+独立工具 [Issue #875](https://github.com/dongyaotalk/stacks-project-zh/issues/875)
+补足完整句式 `we set for <MATH_####> the pullback <MATH_####> equal to
+<MATH_####>`。此处 set 是赋值动词；只识别紧邻的 we 和完整后置框架，允许
+框架词大小写与空白变化，数学 token 名称保持严格格式；不读取或改变数学内容。
+旧的直接数学参数赋值规则保持。
+
+见证从锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的 topologies.tex
+完整 proof/1 独立选择、保护并 lowering：0213 / Section020N /
+`topologies-lemma-characterize-sheaf-big`，完整片段 hash 为
+`sha256:e2a840bee2535f49d9fa848b3f6c473fc839010cdaf94f0d6e3b1075e3b79c79`；
+021K / Section0214 / `topologies-lemma-characterize-sheaf-big-etale`，hash 为
+`sha256:931f760206da4fed252e887c43a315f9e207d247278b3d036781999068695f73`。
+
+框架中的 pullback 及其余数学词仍逐次盘点。真正的 a/the set、复数 sets、
+缺失 we 或框架词、非数学/无效 token、跨句或结构边界的相似句式不由本扩展
+排除。验收逐项比较全部当前单元及297个拟议完整单元的来源库存，仅允许上述
+两处赋值动词要求减少；原目录、词表、来源锁和模型历史不修改，不批准中文译法。
+
 ## Sites 中赋值动词 set 的两种引导句
 
 [Issue #852](https://github.com/dongyaotalk/stacks-project-zh/issues/852)补足两个

@@ -80,7 +80,7 @@ def _notation_context_registry(text, notations):
             raise RecordError('incomplete notation context')
         commands, usages = value['commands'], value['usages']
         expected_commands = ['text'] if base == 'pr' else ['textit']
-        allowed = ({'starred-subscripted', 'projection-declaration'} if base == 'pr' else
+        allowed = ({'starred-subscripted', 'projection-declaration', 'descent-projection'} if base == 'pr' else
                    {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol'})
         if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
                 or not isinstance(usages, list) or not usages
@@ -90,6 +90,9 @@ def _notation_context_registry(text, notations):
         if 'projection-declaration' in usages and (
                 usages != ['projection-declaration'] or 'symbol' in notations[base]['usages']):
             raise RecordError('projection declaration requires its sole context role and no primary symbol')
+        if 'descent-projection' in usages and (
+                usages != ['descent-projection'] or 'symbol' in notations[base]['usages']):
+            raise RecordError('descent projection requires its sole finite context and no primary symbol')
         if base == '-Sets' and (not isinstance(value['prefix'], str) or value['prefix'] not in {'G', 'H'}):
             raise RecordError('notation context requires an explicit witnessed G/H prefix')
         if base == '-Sets' and value['prefix'] == 'G' and 'prefixed-symbol' in usages:
@@ -195,7 +198,8 @@ class Policy:
             for key, allowed in [('commands', {'text', 'textit', 'textbf'}),
                                  ('usages', {'symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
-                                             'sheaf-symbol-suffix', 'category-constructor', 'named-arrow'})]:
+                                             'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
+                                             'descent-relative-proj'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -217,6 +221,10 @@ class Policy:
             if 'named-arrow' in rule['usages'] and (not named_arrow or notation != 'can'
                                                   or rule['commands'] != ['text']):
                 raise RecordError('named-arrow notation requires the single explicit text/can role')
+            if 'descent-relative-proj' in rule['usages'] and (
+                    notation != 'Proj' or rule['commands'] != ['text']
+                    or rule['usages'] != ['descent-relative-proj'] or 'contexts' in rule):
+                raise RecordError('relative Proj requires its sole explicit finite text role')
             if prefixed and (not isinstance(rule['prefix'], str) or
                              not re.fullmatch(r'[A-Z]', rule['prefix'])):
                 raise RecordError('invalid math-text notation prefix')
@@ -509,6 +517,9 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind in {'descent-relative-proj', 'descent-projection'}:
+            from .math_text_descent import notation_context
+            return notation_context(self.text, stream, index, value, kind)
         if kind == 'projection-declaration':
             # The complete witnessed root declaration, not a general symbol
             # permission. Internal object/script bytes cannot be normalized.
@@ -583,7 +594,7 @@ class Scanner:
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
             if usage in {'starred-subscripted', 'projection-declaration', 'morphism-category-prefixed-symbol',
-                         'diagram-category-prefixed-symbol'}:
+                         'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']

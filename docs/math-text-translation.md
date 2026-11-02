@@ -613,3 +613,79 @@ Schema，不把新增政策绑定回写到既有unit/candidate/run/origin历史�
 另有精确正例。后续政策变更应单独审查兼容性，不改写这份历史fixture来消除失败。
 新政策下的库存、来源对应及整章预检必须绑定实际输入；分支验收不代替合入后
 新main的预检/check。来源READY仍不表示已采用、已生成中文、术语批准或人工审校。
+
+## 第35章完整下降框架的独立工具合同（Issue #883）
+
+第35章的真实完整来源预检有550个容器，522个READY、28个BLOCKED；80条
+诊断均为数学文字分类。此工具任务保留生产 `config/macro-policy.yml` 原字节，
+不采用来源或候选。接受合并后另开英文政策登记，再绑定新指纹准备具体DATA。
+
+新增 `math_text_descent` 模块，只支持以下有限、完整数学框架：
+
+| 角色 | 锁定Git中的完整框架 |
+| --- | --- |
+| `descent-finite-free-chain` | 0GNE完整proof/1中的五句align*；F的fppf有限局部自由、H在S上有限局部自由、F的平展有限局部自由、同一H条件、F的Zariski有限局部自由，以四个Leftrightarrow连接 |
+| `descent-data-matrices` | 023X完整陈述的两个两行matrix及中间longrightarrow；左侧为相对于族 `{X_i→S}_{i∈I}` 的下降数据，右侧相对于X/S |
+| `descent-sheaf-set-matrices` | 02W5完整陈述的两组带花括号集合描述及leftrightarrow；下降数据的对象条件与层的可表条件完整保留 |
+| `descent-lemma-reference` | 02VZ完整proof/1的DD方图中两个上下标箭头标签；只暴露完整 `"Lemma "` 参数，原ref及其键锁定 |
+| `descent-data-arrow` | 02VZ/02VY/02W0完整陈述的同一display，两个 `"descent data relative to "` 参数分别接mathcal(V)与mathcal(U)，中间longrightarrow；左侧紧邻display边界，不能借root-phrase接受 |
+
+框架识别逐项核验完整delimiter、全部token、分组深度、环境及原token间空白。
+除被登记的自然文字值外，源对象、下标、箭头、列/行边界、标签、ref及全部
+其他原字节与有限模板完全相同。原参数的完整大小写、首尾空格和字体由英文
+registry再精确匹配；没有登记不会开放slot。模板不能当作采用坐标，真实
+owner/Tag、kind/ordinal和完整来源仍通过锁定Git独立验证。
+
+这不是任意矩阵文字或箭头文字权限。截断框架、改对象/箭头、嵌套、未知命令、
+插入注释/literal、不同数学delimiter、额外参数或不同间隔均不能获得新角色。
+译文沿同一完整框架重放，只允许自然叶值变化，不修改数学或原参数包装。
+
+### 重音组件与逐次术语
+
+0GNE的完整 `\text{ finite locally free in \'etale topology}` 使用独立
+unit-v3组件角色 `descent-etale-component`：
+
+- 参数原字节为 `" finite locally free in \\'etale topology"`；
+- 两个纯文字叶依次为 `" finite locally free in "`、`"tale topology"`；
+- 两叶中间的完整原重音 `\'e` 是锁定MATHSEG，separator精确为该命令；
+- 新组件只在上述完整align*的第三句、F后的位置成立。
+
+原 `indexed-component-description` 的irred.控制空格组件分支保持不变；旧
+unit-v1/v2不获得组件权限。组件Schema使用独立oneOf分支，父参数、两叶
+次序、完整UTF-8跨度、separator及coverage分别验证。降级版本、交换组件、
+缺叶、改重音或重算hash后改数学均失败。
+
+经完整unit-v3及该框架核验后，来源/候选的只读术语投影把两叶之间的已验证
+重音呈现为 `é`，从而完整检查 `étale` 的来源次数和跨组件双语显示。例如
+译文可以在前叶中保留 `平展（`，后叶以 `tale）` 接续；原 `\'e` 仍由程序
+锁定恢复。此投影不改变source/renderer字节，不把其他MATHSEG、任意TeX或
+未经核验的片段当作可见文字；未提供完整unit的旧term_display_text行为保持。
+术语漏次、错误双语显示及伪组件不能因参数拆分而免检，词条仍须待决或批准。
+
+### 有限记号上下文
+
+`descent-relative-proj` 是独立、默认关闭的 `text/Proj` 记号角色，只允许
+0D2P完整proof/1中 `r_{\mathcal{L}, \psi} : X \longrightarrow
+\underline{\text{Proj}}_S(\mathcal{A})` 的完整display。必须作为Proj的唯一
+角色登记；不能混合symbol、其他字体或其他对象。它始终为锁定数学，不是slot。
+
+`descent-projection` 只在独立 `locked_math_text_contexts` 项中引用原pr
+base，且是该项的唯一usage。它支持04R2完整proof/1中的有限投影声明、
+对Delta(Y)及Y'的两个restriction、与f_Y的composition，以及两个完整
+xymatrix中的实际箭头标签。六个完整数学框架覆盖原证明七次出现（composition
+出现两次），全部对象/箭头/下标/字体和原间隔分别验证。
+
+pr的primary、Sites starred-subscripted和Stacks projection-declaration保持
+原匹配优先级、见证及负例；不增加通用symbol，也不把新来源标签借给旧用法。
+Rings、Mod、Cov、trdeg及已有root文字的英文登记属于后续独立政策任务。
+
+05VG完整条件等价式的 `\text{-module}` 另有一项读取器缺口：其语法位置已经
+满足root-condition，但普通自然literal正则拒绝连字符开头。仅为该角色的
+精确完整 `"-module"` 增加字面量例外；不扩大其他角色或其他连字符词权限。
+原root-condition的完整数学条件、最后位置和保护规则保持，生产登记仍独立。
+
+独立回归覆盖有限框架正负例、真实synthetic Git来源与错误owner/proof、
+UTF-8原字节回放、完整数学骨架、两种组件兼容、逐次术语、重算hash篡改、
+历史完整batch回放、首次source-adoption、严格QA和renderer。synthetic文本
+只为测试，不冒称真实模型输出。最终工具测试、全量候选QA、实际集成lane
+render/pdf、最终日志和精确PR head必需CI仍须通过；不授予critic、人审或发布。

@@ -24,6 +24,11 @@ PRODUCTION_ENTRY = '''  stacks-projection-declaration:
     usages: ["projection-declaration"]
     source_label: "stacks-lemma-adjointness-pullback-pushforward"
 '''
+AFF_ENTRY = '''  Aff:
+    commands: ["textit"]
+    usages: ["symbol"]
+    source_label: topologies-section-procedure
+'''
 DECLARATION = r'$\text{pr} : u^p\mathcal{T} \to \mathcal{T}$'
 ENTRY = '''  projection-declaration:
     base_notation: "pr"
@@ -67,9 +72,16 @@ def git_fixture(base, *, typed=False, component=False, tail=''):
 class ProjectionDeclarationTests(unittest.TestCase):
     def test_production_registration_is_exact_and_preserves_primary_rules(self):
         self.assertEqual(PRODUCTION.count(PRODUCTION_ENTRY), 1)
-        self.assertEqual(PRODUCTION.replace(PRODUCTION_ENTRY, '', 1), LEGACY)
+        # The historical pre-projection fixture stays byte-for-byte frozen.
+        # Only the independently declared projection and Aff additions differ.
+        self.assertEqual(PRODUCTION.count(AFF_ENTRY), 1)
+        self.assertEqual(PRODUCTION.replace(PRODUCTION_ENTRY, '', 1).replace(AFF_ENTRY, '', 1), LEGACY)
         old, new = Policy(LEGACY), Policy(PRODUCTION)
-        self.assertEqual(old.math_text_notations, new.math_text_notations)
+        self.assertEqual(new.math_text_notations, {
+            **old.math_text_notations,
+            'Aff': {'commands': ['textit'], 'usages': ['symbol'],
+                    'source_label': 'topologies-section-procedure'},
+        })
         self.assertEqual(old.math_text_rules, new.math_text_rules)
         (text, protected, errors), classified, regions = scan(DECLARATION, PRODUCTION)
         self.assertEqual((text, protected, errors), ('<MATH_0001>', {'MATH_0001': DECLARATION}, []))
@@ -77,6 +89,26 @@ class ProjectionDeclarationTests(unittest.TestCase):
         self.assertEqual(classified, [dict(start=1, end=10, source=r'\text{pr}', notation='pr',
             command='text', usage='projection-declaration', usage_source=DECLARATION[10:-1],
             source_label='stacks-lemma-adjointness-pullback-pushforward')])
+
+    def test_aff_notation_locks_math_but_wrong_fonts_and_prose_stay_blocked(self):
+        for source in [r'$\textit{Aff}$', r'$(\textit{Aff}/S)_\tau$',
+                       r'$(\textit{Aff}/S)_{fppf}$']:
+            with self.subTest(source=source):
+                (text, protected, errors), classified, regions = scan(source, PRODUCTION)
+                self.assertEqual((text, protected, errors),
+                                 ('<MATH_0001>', {'MATH_0001': source}, []))
+                self.assertEqual(regions, [])
+                self.assertEqual([(c['notation'], c['command'], c['usage'], c['source_label'])
+                                  for c in classified],
+                                 [('Aff', 'textit', 'symbol', 'topologies-section-procedure')])
+        for source in [r'$\text{Aff}$', r'$\textit{aff}$', r'$\textit{ Aff}$',
+                       r'$\textit{Aff }$', r'$\textit{affine schemes}$']:
+            with self.subTest(source=source):
+                (_, protected, errors), classified, regions = scan(source, PRODUCTION)
+                self.assertEqual(protected, {'MATH_0001': source})
+                self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
+                self.assertEqual(classified, [])
+                self.assertEqual(regions, [])
 
     def test_explicit_context_locks_complete_math_and_records_full_suffix(self):
         (text, protected, errors), classified, regions = scan(DECLARATION, experimental_policy())

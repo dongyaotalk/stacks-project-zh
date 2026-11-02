@@ -1,0 +1,1677 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19b97-ed2d-7f63-8dd4-38426ff657ce",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/topologies34-gpt61sol-p12-20261102T121045Z.json",
+    "hash": "sha256:1d1c8df2400d29ea105172a529aef2e6bbfc1f79e72f9a82ef008967d7761f53"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:0EUV:title",
+      "source_text": "Extending functors",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "functors",
+          "projection_start": 10,
+          "projection_end": 18,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUV:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nLet us start with a simple example which explains what we are doing.\nLet <MATH_0001> be a ring. Suppose <MATH_0002> is a functor defined on the category\n<MATH_0003> of <MATH_0004>-algebras of the form\n<MATH_0005>\nfor <MATH_0006> integers and <MATH_0007>\nelements. Then for any <MATH_0008>-algebra <MATH_0009> we can define\n<MATH_0010>\nIt turns out <MATH_0011> is the unique functor on the category\nof all <MATH_0012>-algebras which extends <MATH_0013> and commutes with filtered\ncolimits. The same procedure works in the category of schemes\nif we impose that our functor is a Zariski sheaf.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 104,
+          "projection_end": 108,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 135,
+          "projection_end": 142,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 158,
+          "projection_end": 166,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 194,
+          "projection_end": 202,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 268,
+          "projection_end": 276,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 303,
+          "projection_end": 310,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 388,
+          "projection_end": 395,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 403,
+          "projection_end": 411,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 431,
+          "projection_end": 439,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 470,
+          "projection_end": 478,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "filtered colimits",
+          "projection_start": 484,
+          "projection_end": 501,
+          "concept": "filtered-colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 535,
+          "projection_end": 543,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 547,
+          "projection_end": 554,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 577,
+          "projection_end": 584,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 598,
+          "projection_end": 603,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUW:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a full subcategory\nof the category <MATH_0003> of all schemes over <MATH_0004>. Assume\n<STRUCT_0001>\n<STRUCT_0002> if <MATH_0005> is an object of <MATH_0006> and\n<MATH_0007> is an affine open, then <MATH_0008> is isomorphic\nto an object of <MATH_0009>,\n<STRUCT_0003> if <MATH_0010> is an affine scheme lying over an affine open <MATH_0011>\nsuch that <MATH_0012> is of finite presentation, then <MATH_0013> is isomorphic\nto an object of <MATH_0014>.\n<STRUCT_0004>\nLet <MATH_0015> be a functor.\nAssume\n<STRUCT_0005>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> for any Zariski covering <MATH_0016>\nwith <MATH_0017> objects of <MATH_0018> we have\nthe sheaf condition for <MATH_0019> and this family<FOOTNOTEOPEN_0001>As we\ndo not know that <MATH_0020> is in <MATH_0021>\nthis has to be interpreted as follows: by property (1)\nthere exist Zariski coverings <MATH_0022>\nwith <MATH_0023> an object of <MATH_0024>. Then the sheaf condition\nsays that <MATH_0025> is the equalizer of the two maps\nfrom <MATH_0026> to <MATH_0027>.<FOOTNOTECLOSE_0001>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> if <MATH_0028> is a directed limit of affine schemes\nover <MATH_0029> with <MATH_0030> objects of <MATH_0031>, then\n<MATH_0032>.\n<STRUCT_0006>\nThen there is a unique way to extend <MATH_0033> to a functor\n<MATH_0034> satisfying the analogues of\n(a) and (b), i.e., <MATH_0035> satisfies the sheaf condition for any\nZariski covering and <MATH_0036> whenever <MATH_0037>\nis a directed limit of affine schemes over <MATH_0038>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 50,
+          "projection_end": 66,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 74,
+          "projection_end": 82,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 102,
+          "projection_end": 109,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 184,
+          "projection_end": 190,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 228,
+          "projection_end": 239,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 261,
+          "projection_end": 271,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 278,
+          "projection_end": 284,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 336,
+          "projection_end": 349,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 364,
+          "projection_end": 375,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 416,
+          "projection_end": 435,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 457,
+          "projection_end": 467,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 474,
+          "projection_end": 480,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 532,
+          "projection_end": 539,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 605,
+          "projection_end": 621,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 651,
+          "projection_end": 658,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 686,
+          "projection_end": 701,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 880,
+          "projection_end": 889,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 922,
+          "projection_end": 928,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 954,
+          "projection_end": 969,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 999,
+          "projection_end": 1008,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 1020,
+          "projection_end": 1024,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limit",
+          "projection_start": 1143,
+          "projection_end": 1148,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 1152,
+          "projection_end": 1166,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 1201,
+          "projection_end": 1208,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1311,
+          "projection_end": 1318,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 1404,
+          "projection_end": 1419,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 1428,
+          "projection_end": 1444,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limit",
+          "projection_start": 1496,
+          "projection_end": 1501,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 1505,
+          "projection_end": 1519,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUW:proof",
+      "source_text": "The idea will be to first extend <MATH_0001> to a sufficiently large collection of\naffine schemes over <MATH_0002> and then use the Zariski sheaf property to extend\nto all schemes.\n\n<STRUCT_0001><STRUCT_0002>\nSuppose that <MATH_0003> is an affine scheme over <MATH_0004> whose structure morphism\n<MATH_0005> factors through some affine open <MATH_0006>. In this case\nwe can write\n<MATH_0007>\nas a cofiltered limit with <MATH_0008> of finite presentation\nand <MATH_0009> affine. See Algebra, Lemma <REF_0001>.\nBy conditions (1) and (2)\nwe may replace our <MATH_0010> by objects of <MATH_0011>.\nObserve that <MATH_0012> is locally of finite presentation\n(if <MATH_0013> is quasi-separated, then these morphisms are actually\nof finite presentation). Then we set\n<MATH_0014>\nActually, we can give a more canonical expression, namely\n<MATH_0015>\nwhere the colimit is over the category of morphisms <MATH_0016> over <MATH_0017>\nwhere <MATH_0018> is an object of <MATH_0019> whose structure\nmorphism <MATH_0020> is locally of finite presentation.\nThe reason this is the same as the first formula is that by\nLimits, Proposition\n<REF_0002>\nour inverse system <MATH_0021> is cofinal in this category!\nFinally, note that if <MATH_0022> were an object of <MATH_0023>,\nthen <MATH_0024> by assumption (b).\n\n<STRUCT_0003><STRUCT_0004>\nThe second formula turns <MATH_0025> into a contravariant functor\non the category formed by affine schemes <MATH_0026> over <MATH_0027> whose\nstructure morphism factors through an affine open of <MATH_0028>.\nLet <MATH_0029> be such an affine scheme over <MATH_0030> and\nsuppose that <MATH_0031> is a finite open covering\nby affines. Then it makes sense to ask if the sheaf condition\nholds for <MATH_0032> and this open covering.\nThis is true and easy to show: write <MATH_0033> as in\nthe previous paragraph. By Limits, Lemma <REF_0003>\nfor all sufficiently large <MATH_0034> we can find affine opens\n<MATH_0035> compatible with transition maps\npulling back to <MATH_0036> in <MATH_0037>. Thus\n<MATHSEG_0001>and<MATHSEG_0002>\nStrictly speaking in these formulas we need to replace <MATH_0038> and\n<MATH_0039> by isomorphic affine objects of <MATH_0040>\nbefore applying the functor <MATH_0041>.\nSince <MATH_0042> is directed the colimits pass through equalizers.\nHence the sheaf condition (b) for <MATH_0043> and the Zariski coverings\n<MATH_0044> implies the sheaf\ncondition for <MATH_0045> and this covering.\n\n<STRUCT_0005><STRUCT_0006>\nLet <MATH_0046> be a general scheme over <MATH_0047>. Let <MATH_0048> denote\nthe collection of affine opens of <MATH_0049> whose structure morphism\nto <MATH_0050> maps into an affine open of <MATH_0051>. It is clear that\n<MATH_0052> is a basis for the topology of <MATH_0053>.\nBy the result of the previous paragraph and Sheaves, Lemma\n<REF_0004>\nwe see that <MATH_0054> is a sheaf on <MATH_0055>.\nHence <MATH_0056> restricted to <MATH_0057>\nextends uniquely to a sheaf <MATH_0058> on <MATH_0059>, see\nSheaves, Lemma <REF_0005>.\nIf <MATH_0060> is an object of <MATH_0061> then we have a canonical\nidentification <MATH_0062> by the agreement of <MATH_0063> and <MATH_0064>\non the objects for which they are both defined and\nthe fact that <MATH_0065> satisfies the sheaf condition for\nZariski coverings.\n\n<STRUCT_0007><STRUCT_0008>\nLet <MATH_0066> be a morphism of schemes over <MATH_0067>.\nWe get a unique <MATH_0068>-map from <MATH_0069> to <MATH_0070> compatible\nwith the maps <MATH_0071> for all\n<MATH_0072> and <MATH_0073>\nwith <MATH_0074>, see\nSheaves, Lemma <REF_0006>.\nWe omit the verification that these maps compose\ncorrectly given morphisms <MATH_0075> of schemes over <MATH_0076>.\nWe also omit the verification that if <MATH_0077> is a morphism\nof <MATH_0078>, then the induced map <MATH_0079>\nis the same as the map <MATH_0080> via the identifications\n<MATH_0081> and <MATH_0082> above.\nIn this way we see that the desired extension of\n<MATH_0083> is the functor which sends <MATH_0084> to <MATH_0085>.\n\n<STRUCT_0009><STRUCT_0010>\nProperty (a) for the functor <MATH_0086> is almost immediate\nfrom the construction; we omit the details.\nSuppose that <MATH_0087>\nis a directed limit of affine schemes over <MATH_0088>. We have to show that\n<MATH_0089>\nFirst assume that there is some <MATH_0090> such that\n<MATH_0091> factors through an affine open <MATH_0092>.\nThen <MATH_0093> is defined on <MATH_0094> and on <MATH_0095> for <MATH_0096>\nand we see that <MATH_0097> for\n<MATH_0098> and <MATH_0099>. In this case every arrow\n<MATH_0100> with <MATH_0101> locally of finite presentation\nover <MATH_0102> factors as <MATH_0103> for some\n<MATH_0104>, see Limits, Proposition\n<REF_0007>.\nThus we have\n<MATH_0105>\nas desired. Finally, in general we pick any <MATH_0106> and we choose\na finite affine open covering <MATH_0107>\nsuch that <MATH_0108> factors through an affine open of <MATH_0109>.\nLet <MATH_0110> and <MATH_0111> for <MATH_0112>\nbe the inverse images of <MATH_0113>.\nBy the previous case we see that\n<MATH_0114>\nand\n<MATH_0115>\nBy the sheaf property and exactness of filtered colimits\nwe find that <MATH_0116>\nalso in this case. This finishes the proof of property (b)\nand hence finishes the proof of the lemma.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "large",
+          "projection_start": 63,
+          "projection_end": 68,
+          "concept": "large",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 83,
+          "projection_end": 97,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 140,
+          "projection_end": 154,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 172,
+          "projection_end": 179,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 239,
+          "projection_end": 252,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 276,
+          "projection_end": 294,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 328,
+          "projection_end": 339,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cofiltered",
+          "projection_start": 396,
+          "projection_end": 406,
+          "concept": "cofiltered",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limit",
+          "projection_start": 407,
+          "projection_end": 412,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 433,
+          "projection_end": 452,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 469,
+          "projection_end": 475,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 481,
+          "projection_end": 488,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 568,
+          "projection_end": 575,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 620,
+          "projection_end": 650,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-separated",
+          "projection_start": 670,
+          "projection_end": 685,
+          "concept": "quasi-separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 698,
+          "projection_end": 707,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 724,
+          "projection_end": 743,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 799,
+          "projection_end": 808,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "colimit",
+          "projection_start": 850,
+          "projection_end": 857,
+          "concept": "colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 870,
+          "projection_end": 878,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 882,
+          "projection_end": 891,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 945,
+          "projection_end": 951,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 973,
+          "projection_end": 991,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 1007,
+          "projection_end": 1037,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Limits",
+          "projection_start": 1099,
+          "projection_end": 1105,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse system",
+          "projection_start": 1134,
+          "projection_end": 1148,
+          "concept": "inverse-system",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cofinal",
+          "projection_start": 1164,
+          "projection_end": 1171,
+          "concept": "cofinal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1180,
+          "projection_end": 1188,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1232,
+          "projection_end": 1238,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "contravariant functor",
+          "projection_start": 1362,
+          "projection_end": 1383,
+          "concept": "contravariant-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1391,
+          "projection_end": 1399,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 1410,
+          "projection_end": 1424,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 1460,
+          "projection_end": 1478,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1498,
+          "projection_end": 1509,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 1553,
+          "projection_end": 1566,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 1618,
+          "projection_end": 1624,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1630,
+          "projection_end": 1638,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 1642,
+          "projection_end": 1649,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 1685,
+          "projection_end": 1700,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1737,
+          "projection_end": 1745,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Limits",
+          "projection_start": 1829,
+          "projection_end": 1835,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "large",
+          "projection_start": 1875,
+          "projection_end": 1880,
+          "concept": "large",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 1905,
+          "projection_end": 1917,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "transition maps",
+          "projection_start": 1946,
+          "projection_end": 1961,
+          "concept": "transition-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 2129,
+          "projection_end": 2139,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 2140,
+          "projection_end": 2146,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 2147,
+          "projection_end": 2154,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 2190,
+          "projection_end": 2197,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "colimits",
+          "projection_start": 2245,
+          "projection_end": 2253,
+          "concept": "colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizers",
+          "projection_start": 2267,
+          "projection_end": 2277,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 2289,
+          "projection_end": 2304,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 2341,
+          "projection_end": 2350,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 2375,
+          "projection_end": 2390,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 2416,
+          "projection_end": 2424,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 2482,
+          "projection_end": 2488,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 2548,
+          "projection_end": 2560,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 2582,
+          "projection_end": 2600,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2616,
+          "projection_end": 2620,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 2629,
+          "projection_end": 2640,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 2705,
+          "projection_end": 2713,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sheaves",
+          "projection_start": 2774,
+          "projection_end": 2781,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 2829,
+          "projection_end": 2834,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 2917,
+          "projection_end": 2922,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sheaves",
+          "projection_start": 2955,
+          "projection_end": 2962,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 3003,
+          "projection_end": 3009,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 3040,
+          "projection_end": 3049,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 3132,
+          "projection_end": 3139,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 3216,
+          "projection_end": 3231,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 3244,
+          "projection_end": 3253,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 3303,
+          "projection_end": 3311,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 3315,
+          "projection_end": 3322,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3369,
+          "projection_end": 3372,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 3425,
+          "projection_end": 3429,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sheaves",
+          "projection_start": 3500,
+          "projection_end": 3507,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 3563,
+          "projection_end": 3567,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 3592,
+          "projection_end": 3601,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 3617,
+          "projection_end": 3624,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 3698,
+          "projection_end": 3706,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "induced map",
+          "projection_start": 3732,
+          "projection_end": 3743,
+          "concept": "source-phrase-induced-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3775,
+          "projection_end": 3778,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 3918,
+          "projection_end": 3925,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 4014,
+          "projection_end": 4021,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limit",
+          "projection_start": 4137,
+          "projection_end": 4142,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 4146,
+          "projection_end": 4160,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 4297,
+          "projection_end": 4308,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 4515,
+          "projection_end": 4545,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Limits",
+          "projection_start": 4612,
+          "projection_end": 4618,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 4741,
+          "projection_end": 4747,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 4748,
+          "projection_end": 4759,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 4760,
+          "projection_end": 4768,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 4822,
+          "projection_end": 4833,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 4905,
+          "projection_end": 4912,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "images",
+          "projection_start": 4913,
+          "projection_end": 4919,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 5004,
+          "projection_end": 5018,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "filtered colimits",
+          "projection_start": 5036,
+          "projection_end": 5053,
+          "concept": "filtered-colimit",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:049N:statement",
+      "source_text": "Let <MATH_0001>.\nLet <MATH_0002> be an affine scheme which is written as a limit\n<MATH_0003> of a directed inverse system of affine schemes.\n<STRUCT_0001>\n<STRUCT_0002> Let <MATH_0004> be a\nstandard <MATH_0005>-covering of <MATH_0006>, see Definitions\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.\nThen there exists an index <MATH_0007> and a standard <MATH_0008>-covering\n<MATH_0009>\nwhose base change <MATH_0010> to <MATH_0011>\nis isomorphic to <MATH_0012>.\n<STRUCT_0003> Let <MATH_0013>, <MATH_0014> be a pair of standard\n<MATH_0015>-coverings of <MATH_0016>. If\n<MATH_0017> is\na morphism of coverings of <MATH_0018>, then there exists an index\n<MATH_0019> and a morphism\n<MATH_0020>\nwhose base change to <MATH_0021> is <MATH_0022>.\n<STRUCT_0004> If\n<MATH_0023>\nare morphisms of standard <MATH_0024>-coverings of <MATH_0025> whose\nbase changes <MATH_0026> to <MATH_0027> are equal then there exists an\nindex <MATH_0028> such that <MATH_0029>.\n<STRUCT_0005>\nIn other words, the category of standard <MATH_0030>-coverings of <MATH_0031> is\nthe colimit over <MATH_0032> of the categories of standard <MATH_0033>-coverings of <MATH_0034>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 39,
+          "projection_end": 52,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limit",
+          "projection_start": 75,
+          "projection_end": 80,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "directed inverse system",
+          "projection_start": 98,
+          "projection_end": 121,
+          "concept": "directed-inverse-system",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 125,
+          "projection_end": 139,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 211,
+          "projection_end": 219,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 382,
+          "projection_end": 390,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 409,
+          "projection_end": 420,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 451,
+          "projection_end": 461,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 555,
+          "projection_end": 564,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 601,
+          "projection_end": 609,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 613,
+          "projection_end": 622,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 684,
+          "projection_end": 692,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 711,
+          "projection_end": 722,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 787,
+          "projection_end": 796,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 821,
+          "projection_end": 830,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base changes",
+          "projection_start": 852,
+          "projection_end": 864,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 998,
+          "projection_end": 1006,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 1031,
+          "projection_end": 1040,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "colimit",
+          "projection_start": 1063,
+          "projection_end": 1070,
+          "concept": "colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 1095,
+          "projection_end": 1105,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 1130,
+          "projection_end": 1139,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:049N:proof",
+      "source_text": "Let us prove this for <MATH_0001>.\nBy Limits, Lemma <REF_0001>\nthe category of schemes of finite presentation over <MATH_0002> is the\ncolimit over <MATH_0003> of the categories of finite presentation over <MATH_0004>. By\nLimits, Lemmas <REF_0002>\nand <REF_0003>\nthe same is true for category of schemes which are affine, flat and\nof finite presentation over <MATH_0005>.\nTo finish the proof of the lemma it suffices to show that if\n<MATH_0006> is a finite family of\nflat finitely presented morphisms with <MATH_0007> affine, and the\nbase change <MATH_0008> is surjective,\nthen for some <MATH_0009> the morphism\n<MATH_0010> is surjective.\nDenote <MATH_0011>, resp.<SPACE_0001><MATH_0012> the image.\nOf course <MATH_0013> by assumption.\nSince the morphisms are flat and of finite presentation we see that\n<MATH_0014> is a quasi-compact open of <MATH_0015>, see\nMorphisms, Lemma <REF_0004>.\nMoreover, <MATH_0016> (formation of image commutes\nwith base change). Hence by\nLimits, Lemma <REF_0005>\nwe conclude that <MATH_0017> for some large enough <MATH_0018>\nand we win.\n\n<STRUCT_0001><STRUCT_0002>\nFor <MATH_0019> a standard <MATH_0020>-covering\nis a standard fppf covering. Hence the fully faithfulness of the functor\nholds. The only issue is to show that given a standard fppf covering\n<MATH_0021> for some <MATH_0022> such that <MATH_0023>\nis a standard <MATH_0024>-covering, then <MATH_0025>\nis a standard <MATH_0026>-covering for all <MATH_0027>. This follows immediately\nfrom Limits, Lemmas\n<REF_0006>,\n<REF_0007>,\n<REF_0008>, and\n<REF_0009>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Limits",
+          "projection_start": 38,
+          "projection_end": 44,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 67,
+          "projection_end": 75,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 79,
+          "projection_end": 86,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 90,
+          "projection_end": 109,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "colimit",
+          "projection_start": 134,
+          "projection_end": 141,
+          "concept": "colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 166,
+          "projection_end": 176,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 180,
+          "projection_end": 199,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Limits",
+          "projection_start": 221,
+          "projection_end": 227,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 283,
+          "projection_end": 291,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 295,
+          "projection_end": 302,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 313,
+          "projection_end": 319,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 321,
+          "projection_end": 325,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 333,
+          "projection_end": 352,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 449,
+          "projection_end": 455,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 466,
+          "projection_end": 470,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 471,
+          "projection_end": 489,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 490,
+          "projection_end": 499,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 517,
+          "projection_end": 523,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 533,
+          "projection_end": 544,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 560,
+          "projection_end": 570,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 602,
+          "projection_end": 610,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 626,
+          "projection_end": 636,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 691,
+          "projection_end": 696,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 745,
+          "projection_end": 754,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 759,
+          "projection_end": 763,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 771,
+          "projection_end": 790,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact open",
+          "projection_start": 820,
+          "projection_end": 838,
+          "concept": "source-phrase-quasi-compact-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 859,
+          "projection_end": 868,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 924,
+          "projection_end": 929,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 930,
+          "projection_end": 938,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 944,
+          "projection_end": 955,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Limits",
+          "projection_start": 967,
+          "projection_end": 973,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "large",
+          "projection_start": 1030,
+          "projection_end": 1035,
+          "concept": "large",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1133,
+          "projection_end": 1141,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fppf covering",
+          "projection_start": 1156,
+          "projection_end": 1169,
+          "concept": "source-phrase-fppf-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1207,
+          "projection_end": 1214,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fppf covering",
+          "projection_start": 1270,
+          "projection_end": 1283,
+          "concept": "source-phrase-fppf-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1365,
+          "projection_end": 1373,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1418,
+          "projection_end": 1426,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Limits",
+          "projection_start": 1478,
+          "projection_end": 1484,
+          "concept": "limit",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:topologies:022I:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nDiscussion:\nThe functor <MATH_0001> is simply the restriction functor which associates\nto a sheaf <MATH_0002> on <MATH_0003> the restriction\n<MATH_0004>. Hence this lemma simply says that given\nany sheaf of sets <MATH_0005> on <MATH_0006> there exists a\ncanonical sheaf <MATH_0007> on <MATH_0008> such that\n<MATH_0009>. In fact the sheaf\n<MATH_0010> has the following description: it is the sheafification\nof the presheaf\n<MATH_0011>\nwhere <MATH_0012> is an object of <MATH_0013>. This is true because\n<MATH_0014> according to\nSites, Lemmas <REF_0001> and <REF_0002>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0EUV:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us start with a simple example which explains what we are doing.\nLet <MATH_0001> be a ring. Suppose <MATH_0002> is a functor defined on the category\n<MATH_0003> of <MATH_0004>-algebras of the form\n<MATH_0005>\nfor <MATH_0006> integers and <MATH_0007>\nelements. Then for any <MATH_0008>-algebra <MATH_0009> we can define\n<MATH_0010>\nIt turns out <MATH_0011> is the unique functor on the category\nof all <MATH_0012>-algebras which extends <MATH_0013> and commutes with filtered\ncolimits. The same procedure works in the category of schemes\nif we impose that our functor is a Zariski sheaf.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0EUV:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Extending functors<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0EUW:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a full subcategory\nof the category <MATH_0003> of all schemes over <MATH_0004>. Assume\n<STRUCT_0002>\n<STRUCT_0003> if <MATH_0005> is an object of <MATH_0006> and\n<MATH_0007> is an affine open, then <MATH_0008> is isomorphic\nto an object of <MATH_0009>,\n<STRUCT_0004> if <MATH_0010> is an affine scheme lying over an affine open <MATH_0011>\nsuch that <MATH_0012> is of finite presentation, then <MATH_0013> is isomorphic\nto an object of <MATH_0014>.\n<STRUCT_0005>\nLet <MATH_0015> be a functor.\nAssume\n<STRUCT_0006>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> for any Zariski covering <MATH_0016>\nwith <MATH_0017> objects of <MATH_0018> we have\nthe sheaf condition for <MATH_0019> and this family<FOOTNOTEOPEN_0001>As we\ndo not know that <MATH_0020> is in <MATH_0021>\nthis has to be interpreted as follows: by property (1)\nthere exist Zariski coverings <MATH_0022>\nwith <MATH_0023> an object of <MATH_0024>. Then the sheaf condition\nsays that <MATH_0025> is the equalizer of the two maps\nfrom <MATH_0026> to <MATH_0027>.<FOOTNOTECLOSE_0001>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> if <MATH_0028> is a directed limit of affine schemes\nover <MATH_0029> with <MATH_0030> objects of <MATH_0031>, then\n<MATH_0032>.\n<STRUCT_0007>\nThen there is a unique way to extend <MATH_0033> to a functor\n<MATH_0034> satisfying the analogues of\n(a) and (b), i.e., <MATH_0035> satisfies the sheaf condition for any\nZariski covering and <MATH_0036> whenever <MATH_0037>\nis a directed limit of affine schemes over <MATH_0038>.\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0EUW:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe idea will be to first extend <MATH_0001> to a sufficiently large collection of\naffine schemes over <MATH_0002> and then use the Zariski sheaf property to extend\nto all schemes.\n\n<STRUCT_0002><STRUCT_0003>\nSuppose that <MATH_0003> is an affine scheme over <MATH_0004> whose structure morphism\n<MATH_0005> factors through some affine open <MATH_0006>. In this case\nwe can write\n<MATH_0007>\nas a cofiltered limit with <MATH_0008> of finite presentation\nand <MATH_0009> affine. See Algebra, Lemma <REF_0001>.\nBy conditions (1) and (2)\nwe may replace our <MATH_0010> by objects of <MATH_0011>.\nObserve that <MATH_0012> is locally of finite presentation\n(if <MATH_0013> is quasi-separated, then these morphisms are actually\nof finite presentation). Then we set\n<MATH_0014>\nActually, we can give a more canonical expression, namely\n<MATH_0015>\nwhere the colimit is over the category of morphisms <MATH_0016> over <MATH_0017>\nwhere <MATH_0018> is an object of <MATH_0019> whose structure\nmorphism <MATH_0020> is locally of finite presentation.\nThe reason this is the same as the first formula is that by\nLimits, Proposition\n<REF_0002>\nour inverse system <MATH_0021> is cofinal in this category!\nFinally, note that if <MATH_0022> were an object of <MATH_0023>,\nthen <MATH_0024> by assumption (b).\n\n<STRUCT_0004><STRUCT_0005>\nThe second formula turns <MATH_0025> into a contravariant functor\non the category formed by affine schemes <MATH_0026> over <MATH_0027> whose\nstructure morphism factors through an affine open of <MATH_0028>.\nLet <MATH_0029> be such an affine scheme over <MATH_0030> and\nsuppose that <MATH_0031> is a finite open covering\nby affines. Then it makes sense to ask if the sheaf condition\nholds for <MATH_0032> and this open covering.\nThis is true and easy to show: write <MATH_0033> as in\nthe previous paragraph. By Limits, Lemma <REF_0003>\nfor all sufficiently large <MATH_0034> we can find affine opens\n<MATH_0035> compatible with transition maps\npulling back to <MATH_0036> in <MATH_0037>. Thus\n<MATHSEG_0001>and<MATHSEG_0002>\nStrictly speaking in these formulas we need to replace <MATH_0038> and\n<MATH_0039> by isomorphic affine objects of <MATH_0040>\nbefore applying the functor <MATH_0041>.\nSince <MATH_0042> is directed the colimits pass through equalizers.\nHence the sheaf condition (b) for <MATH_0043> and the Zariski coverings\n<MATH_0044> implies the sheaf\ncondition for <MATH_0045> and this covering.\n\n<STRUCT_0006><STRUCT_0007>\nLet <MATH_0046> be a general scheme over <MATH_0047>. Let <MATH_0048> denote\nthe collection of affine opens of <MATH_0049> whose structure morphism\nto <MATH_0050> maps into an affine open of <MATH_0051>. It is clear that\n<MATH_0052> is a basis for the topology of <MATH_0053>.\nBy the result of the previous paragraph and Sheaves, Lemma\n<REF_0004>\nwe see that <MATH_0054> is a sheaf on <MATH_0055>.\nHence <MATH_0056> restricted to <MATH_0057>\nextends uniquely to a sheaf <MATH_0058> on <MATH_0059>, see\nSheaves, Lemma <REF_0005>.\nIf <MATH_0060> is an object of <MATH_0061> then we have a canonical\nidentification <MATH_0062> by the agreement of <MATH_0063> and <MATH_0064>\non the objects for which they are both defined and\nthe fact that <MATH_0065> satisfies the sheaf condition for\nZariski coverings.\n\n<STRUCT_0008><STRUCT_0009>\nLet <MATH_0066> be a morphism of schemes over <MATH_0067>.\nWe get a unique <MATH_0068>-map from <MATH_0069> to <MATH_0070> compatible\nwith the maps <MATH_0071> for all\n<MATH_0072> and <MATH_0073>\nwith <MATH_0074>, see\nSheaves, Lemma <REF_0006>.\nWe omit the verification that these maps compose\ncorrectly given morphisms <MATH_0075> of schemes over <MATH_0076>.\nWe also omit the verification that if <MATH_0077> is a morphism\nof <MATH_0078>, then the induced map <MATH_0079>\nis the same as the map <MATH_0080> via the identifications\n<MATH_0081> and <MATH_0082> above.\nIn this way we see that the desired extension of\n<MATH_0083> is the functor which sends <MATH_0084> to <MATH_0085>.\n\n<STRUCT_0010><STRUCT_0011>\nProperty (a) for the functor <MATH_0086> is almost immediate\nfrom the construction; we omit the details.\nSuppose that <MATH_0087>\nis a directed limit of affine schemes over <MATH_0088>. We have to show that\n<MATH_0089>\nFirst assume that there is some <MATH_0090> such that\n<MATH_0091> factors through an affine open <MATH_0092>.\nThen <MATH_0093> is defined on <MATH_0094> and on <MATH_0095> for <MATH_0096>\nand we see that <MATH_0097> for\n<MATH_0098> and <MATH_0099>. In this case every arrow\n<MATH_0100> with <MATH_0101> locally of finite presentation\nover <MATH_0102> factors as <MATH_0103> for some\n<MATH_0104>, see Limits, Proposition\n<REF_0007>.\nThus we have\n<MATH_0105>\nas desired. Finally, in general we pick any <MATH_0106> and we choose\na finite affine open covering <MATH_0107>\nsuch that <MATH_0108> factors through an affine open of <MATH_0109>.\nLet <MATH_0110> and <MATH_0111> for <MATH_0112>\nbe the inverse images of <MATH_0113>.\nBy the previous case we see that\n<MATH_0114>\nand\n<MATH_0115>\nBy the sheaf property and exactness of filtered colimits\nwe find that <MATH_0116>\nalso in this case. This finishes the proof of property (b)\nand hence finishes the proof of the lemma.\n<STRUCT_0012>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:049N:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nLet <MATH_0002> be an affine scheme which is written as a limit\n<MATH_0003> of a directed inverse system of affine schemes.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0004> be a\nstandard <MATH_0005>-covering of <MATH_0006>, see Definitions\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.\nThen there exists an index <MATH_0007> and a standard <MATH_0008>-covering\n<MATH_0009>\nwhose base change <MATH_0010> to <MATH_0011>\nis isomorphic to <MATH_0012>.\n<STRUCT_0004> Let <MATH_0013>, <MATH_0014> be a pair of standard\n<MATH_0015>-coverings of <MATH_0016>. If\n<MATH_0017> is\na morphism of coverings of <MATH_0018>, then there exists an index\n<MATH_0019> and a morphism\n<MATH_0020>\nwhose base change to <MATH_0021> is <MATH_0022>.\n<STRUCT_0005> If\n<MATH_0023>\nare morphisms of standard <MATH_0024>-coverings of <MATH_0025> whose\nbase changes <MATH_0026> to <MATH_0027> are equal then there exists an\nindex <MATH_0028> such that <MATH_0029>.\n<STRUCT_0006>\nIn other words, the category of standard <MATH_0030>-coverings of <MATH_0031> is\nthe colimit over <MATH_0032> of the categories of standard <MATH_0033>-coverings of <MATH_0034>.\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:049N:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us prove this for <MATH_0001>.\nBy Limits, Lemma <REF_0001>\nthe category of schemes of finite presentation over <MATH_0002> is the\ncolimit over <MATH_0003> of the categories of finite presentation over <MATH_0004>. By\nLimits, Lemmas <REF_0002>\nand <REF_0003>\nthe same is true for category of schemes which are affine, flat and\nof finite presentation over <MATH_0005>.\nTo finish the proof of the lemma it suffices to show that if\n<MATH_0006> is a finite family of\nflat finitely presented morphisms with <MATH_0007> affine, and the\nbase change <MATH_0008> is surjective,\nthen for some <MATH_0009> the morphism\n<MATH_0010> is surjective.\nDenote <MATH_0011>, resp.<SPACE_0001><MATH_0012> the image.\nOf course <MATH_0013> by assumption.\nSince the morphisms are flat and of finite presentation we see that\n<MATH_0014> is a quasi-compact open of <MATH_0015>, see\nMorphisms, Lemma <REF_0004>.\nMoreover, <MATH_0016> (formation of image commutes\nwith base change). Hence by\nLimits, Lemma <REF_0005>\nwe conclude that <MATH_0017> for some large enough <MATH_0018>\nand we win.\n\n<STRUCT_0002><STRUCT_0003>\nFor <MATH_0019> a standard <MATH_0020>-covering\nis a standard fppf covering. Hence the fully faithfulness of the functor\nholds. The only issue is to show that given a standard fppf covering\n<MATH_0021> for some <MATH_0022> such that <MATH_0023>\nis a standard <MATH_0024>-covering, then <MATH_0025>\nis a standard <MATH_0026>-covering for all <MATH_0027>. This follows immediately\nfrom Limits, Lemmas\n<REF_0006>,\n<REF_0007>,\n<REF_0008>, and\n<REF_0009>.\n<STRUCT_0004>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0GDW:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002>, <MATH_0003> satisfy conditions (1), (2), (a), and (b) of\nLemma <REF_0001> and denote <MATH_0004>\nthe unique extension constructed in the lemma. Let\n<MATH_0005>. Assume\n<STRUCT_0002>\n<ITEMOPEN_0001>(c)<ITEMCLOSE_0001> for any standard <MATH_0006>-covering <MATH_0007>\nof affines in <MATH_0008> such that <MATH_0009> factors through an affine open\n<MATH_0010> and <MATH_0011> is of finite presentation, the sheaf condition\nhold for <MATH_0012> and <MATH_0013><FOOTNOTEOPEN_0001>This makes\nsense as <MATH_0014>, <MATH_0015>, and <MATH_0016> are isomorphic to objects\nof <MATH_0017> by (2).<FOOTNOTECLOSE_0001>.\n<STRUCT_0003>\nThen <MATH_0018> satisfies the sheaf condition for all <MATH_0019>-coverings.\n<STRUCT_0004>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-ring-colimit-fp",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. There exists a directed system <MATH_0002> of\n<MATH_0003>-algebras of finite presentation such that <MATH_0004>.\nIf <MATH_0005> is of finite type over <MATH_0006> we may arrange it so that all the\ntransition maps in the system of <MATH_0007> are surjective.\n<STRUCT_0002>",
+      "requested_label": "algebra-lemma-ring-colimit-fp",
+      "requested_tag": "00QN"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-affine-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Situation <REF_0001>.\nIf <MATH_0001> is affine, then there exists an index <MATH_0002>\nsuch that <MATH_0003> is affine.\n<STRUCT_0002>",
+      "requested_label": "limits-lemma-descend-affine-finite-presentation",
+      "requested_tag": "01ZN"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Situation <REF_0001>.\nIf\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is <ACCENT_0001>tale,\n<STRUCT_0004> <MATH_0002> is locally of finite presentation,\n<STRUCT_0005>\nthen <MATH_0003> is <ACCENT_0002>tale for some <MATH_0004>.\n<STRUCT_0006>",
+      "requested_label": "limits-lemma-descend-etale",
+      "requested_tag": "07RP"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a directed set.\nLet <MATH_0002> be an inverse system of schemes over <MATH_0003>.\nAssume\n<STRUCT_0002>\n<STRUCT_0003> the morphisms <MATH_0004> are affine,\n<STRUCT_0004> the schemes <MATH_0005> are quasi-compact and quasi-separated.\n<STRUCT_0005>\nLet <MATH_0006>. Then we have the following:\n<STRUCT_0006>\n<STRUCT_0007> For any morphism of finite presentation <MATH_0007>\nthere exists an index <MATH_0008> and a morphism of finite\npresentation <MATH_0009> such that <MATH_0010> as\nschemes over <MATH_0011>.\n<STRUCT_0008> Given an index <MATH_0012>, schemes\n<MATH_0013>, <MATH_0014> of finite presentation over <MATH_0015>, and a morphism\n<MATH_0016> over <MATH_0017>, there exists an index\n<MATH_0018> and a morphism\n<MATH_0019>\nwhose base change to <MATH_0020> is <MATH_0021>.\n<STRUCT_0009> Given an index <MATH_0022>, schemes <MATH_0023>, <MATH_0024> of finite presentation\nover <MATH_0025> and a pair of morphisms <MATH_0026>\nwhose base changes <MATH_0027> are equal,\nthere exists an index <MATH_0028> such that\n<MATH_0029>.\n<STRUCT_0010>\nIn other words, the category of schemes of finite presentation over\n<MATH_0030> is the colimit over <MATH_0031> of the categories of schemes of finite\npresentation over <MATH_0032>.\n<STRUCT_0011>",
+      "requested_label": "limits-lemma-descend-finite-presentation",
+      "requested_tag": "01ZM"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-flat-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Situation <REF_0001>.\nIf\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is flat,\n<STRUCT_0004> <MATH_0002> is locally of finite presentation,\n<STRUCT_0005>\nthen <MATH_0003> is flat for some <MATH_0004>.\n<STRUCT_0006>",
+      "requested_label": "limits-lemma-descend-flat-finite-presentation",
+      "requested_tag": "04AI"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-open-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Situation <REF_0001>.\nIf\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is an open immersion, and\n<STRUCT_0004> <MATH_0002> is locally of finite presentation,\n<STRUCT_0005>\nthen <MATH_0003> is an open immersion for some <MATH_0004>.\n<STRUCT_0006>",
+      "requested_label": "limits-lemma-descend-open-immersion",
+      "requested_tag": "0EUU"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-opens",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn Situation <REF_0001> we have the following:\n<STRUCT_0002>\n<STRUCT_0003> Given any quasi-compact open <MATH_0001>\nthere exists an <MATH_0002> and a quasi-compact open <MATH_0003>\nsuch that <MATH_0004>.\n<STRUCT_0004> Given <MATH_0005> and <MATH_0006>\nquasi-compact opens such that <MATH_0007>\nthere exists an index <MATH_0008> such that\n<MATH_0009>.\n<STRUCT_0005> If <MATH_0010> are quasi-compact\nopens and <MATH_0011>\nthen <MATH_0012>\nfor some <MATH_0013>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "limits-lemma-descend-opens",
+      "requested_tag": "01Z4"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Situation <REF_0001>.\nIf\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is smooth,\n<STRUCT_0004> <MATH_0002> is locally of finite presentation,\n<STRUCT_0005>\nthen <MATH_0003> is smooth for some <MATH_0004>.\n<STRUCT_0006>",
+      "requested_label": "limits-lemma-descend-smooth",
+      "requested_tag": "0C0C"
+    },
+    {
+      "context_id": "reference:limits-lemma-descend-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Situation <REF_0001>.\nIf\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is syntomic, and\n<STRUCT_0004> <MATH_0002> is locally of finite presentation,\n<STRUCT_0005>\nthen there exists an <MATH_0003> such that <MATH_0004> is syntomic.\n<STRUCT_0006>",
+      "requested_label": "limits-lemma-descend-syntomic",
+      "requested_tag": "0C3L"
+    },
+    {
+      "context_id": "reference:limits-proposition-characterize-locally-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0002> is locally of finite presentation.\n<STRUCT_0004> For any directed set <MATH_0003>, and any\ninverse system <MATH_0004> of <MATH_0005>-schemes over <MATH_0006>\nwith each <MATH_0007> affine, we have\n<MATH_0008>\n<STRUCT_0005> For any directed set <MATH_0009>, and any\ninverse system <MATH_0010> of <MATH_0011>-schemes over <MATH_0012>\nwith each <MATH_0013> affine and every <MATH_0014> quasi-compact and\nquasi-separated as a scheme, we have\n<MATH_0015>\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "limits-proposition-characterize-locally-finite-presentation",
+      "requested_tag": "01ZC"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-fppf-open",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA flat morphism locally of finite presentation is universally open.\n<STRUCT_0002>",
+      "requested_label": "morphisms-lemma-fppf-open",
+      "requested_tag": "01UA"
+    },
+    {
+      "context_id": "reference:sheaves-lemma-cofinal-systems-coverings-standard-case",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a topological space. Let <MATH_0002> be a basis for the\ntopology on <MATH_0003>. Assume that for every triple <MATH_0004>\nwith <MATH_0005> and <MATH_0006> we have <MATH_0007>.\nFor each <MATH_0008>, let <MATH_0009>\nbe a cofinal system.\nLet <MATH_0010> be a presheaf of sets on <MATH_0011>.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The presheaf <MATH_0012> is a sheaf on <MATH_0013>.\n<STRUCT_0004> For every <MATH_0014> and every covering\n<MATH_0015> in <MATH_0016> and for every\nfamily of sections <MATH_0017> such\nthat <MATH_0018> there\nexists a unique section <MATH_0019> which\nrestricts to <MATH_0020> on <MATH_0021>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "sheaves-lemma-cofinal-systems-coverings-standard-case",
+      "requested_tag": "009L"
+    },
+    {
+      "context_id": "reference:sheaves-lemma-extend-off-basis",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a topological space.\nLet <MATH_0002> be a basis for the topology on <MATH_0003>.\nLet <MATH_0004> be a sheaf of sets on <MATH_0005>.\nThere exists a unique sheaf of sets <MATH_0006>\non <MATH_0007> such that <MATH_0008>\nfor all <MATH_0009> compatibly with the restriction\nmappings.\n<STRUCT_0002>",
+      "requested_label": "sheaves-lemma-extend-off-basis",
+      "requested_tag": "009N"
+    },
+    {
+      "context_id": "reference:sheaves-lemma-f-map-basis-above-and-below-structures",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a continuous map of topological spaces.\nLet <MATH_0002> be a type of algebraic structures.\nLet <MATH_0003> be a sheaf with values in <MATH_0004> on <MATH_0005>.\nLet <MATH_0006> be a sheaf with values in <MATH_0007> on <MATH_0008>.\nLet <MATH_0009> be a basis for the topology on <MATH_0010>.\nLet <MATH_0011> be a basis for the topology on <MATH_0012>.\nSuppose given for every <MATH_0013>, and\n<MATH_0014> such that <MATH_0015> a morphism\n<MATH_0016>\nof <MATH_0017> compatible with restriction mappings.\nThen there is a unique <MATH_0018>-map (see\nDefinition <REF_0001> and the discussion\nof <MATH_0019>-maps in Section <REF_0002>)\n<MATH_0020>\nrecovering <MATH_0021> as the composition\n<MATH_0022>\nfor every pair <MATH_0023> as above.\n<STRUCT_0002>",
+      "requested_label": "sheaves-lemma-f-map-basis-above-and-below-structures",
+      "requested_tag": "009X"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-Zariski",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nCompare Schemes, Definition <REF_0001>.\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard Zariski covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a Zariski covering <MATH_0003>\nwith each <MATH_0004> inducing an isomorphism with a standard affine open\nof <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-Zariski",
+      "requested_tag": "020R"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard <ACCENT_0001>tale covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a family <MATH_0003>\nwith each <MATH_0004> is affine and <ACCENT_0002>tale over <MATH_0005> and\n<MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-etale",
+      "requested_tag": "0219"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-fppf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard fppf covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a family <MATH_0003>\nwith each <MATH_0004> is affine, flat and of finite presentation over <MATH_0005>\nand <MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-fppf",
+      "requested_tag": "021Q"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard smooth covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a family <MATH_0003>\nwith each <MATH_0004> is affine, <MATH_0005> standard smooth\nand <MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-smooth",
+      "requested_tag": "0223"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard syntomic covering<TEXTITCLOSE_0001> of <MATH_0002> is\na family <MATH_0003> with each <MATH_0004> is\naffine, <MATH_0005> standard syntomic and <MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-syntomic",
+      "requested_tag": "0229"
+    }
+  ]
+}

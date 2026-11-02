@@ -1,0 +1,2675 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19b97-ed2d-7f63-8dd4-38426ff657ce",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/topologies34-gpt61sol-p05-20261102T113628Z.json",
+    "hash": "sha256:654e59679ecf964097895e35407837e6b6e376be0844ddef25244ed3d487a783"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:021J:statement",
+      "source_text": "Given schemes <MATH_0001>, <MATH_0002>, <MATH_0003> in <MATH_0004>\nand morphisms <MATH_0005>, <MATH_0006> we have\n<MATH_0007> and\n<MATH_0008>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 6,
+          "projection_end": 13,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 71,
+          "projection_end": 80,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021J:proof",
+      "source_text": "This follows from the simple description of pushforward\nand pullback for the functors on the big sites from\nLemma <REF_0001>. For the functors\non the small sites this follows from the description of\nthe pushforward functors in Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "pullback",
+          "projection_start": 60,
+          "projection_end": 68,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 77,
+          "projection_end": 85,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 97,
+          "projection_end": 102,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 134,
+          "projection_end": 142,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 150,
+          "projection_end": 155,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 156,
+          "projection_end": 161,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 215,
+          "projection_end": 223,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0DDA:statement",
+      "source_text": "Let <MATH_0001> be a big <ACCENT_0001>tale site. Consider a cartesian diagram\n<MATH_0002>\nin <MATH_0003>. Then\n<MATH_0004>\nand <MATH_0005>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 25,
+          "projection_end": 30,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 31,
+          "projection_end": 35,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 48,
+          "projection_end": 57,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 58,
+          "projection_end": 65,
+          "concept": "diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0DDA:proof",
+      "source_text": "Since the diagram is cartesian, we have for <MATH_0001>\nthat <MATH_0002>. Hence both\n<MATH_0003> and <MATH_0004>\nsend a sheaf <MATH_0005> on <MATH_0006> to the sheaf\n<MATH_0007> on <MATH_0008>\n(use Lemmas <REF_0001> and <REF_0002>).\nThe second equality can be proved in the same manner or can be\ndeduced from the very general\nSites, Lemma <REF_0003>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "diagram",
+          "projection_start": 10,
+          "projection_end": 17,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 21,
+          "projection_end": 30,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 120,
+          "projection_end": 125,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 160,
+          "projection_end": 165,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 326,
+          "projection_end": 331,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0214:prose-0011",
+      "source_text": "\n\n<STRUCT_0001>\nWe can think about a sheaf on the big <ACCENT_0001>tale site of <MATH_0001> as a collection\nof ``usual'' sheaves on all schemes over <MATH_0002>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "sheaf",
+          "projection_start": 35,
+          "projection_end": 40,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 52,
+          "projection_end": 57,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 58,
+          "projection_end": 62,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 107,
+          "projection_end": 114,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 122,
+          "projection_end": 129,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021K:statement",
+      "source_text": "Let <MATH_0001> be a scheme contained in a big <ACCENT_0001>tale site\n<MATH_0002>.\nA sheaf <MATH_0003> on the big <ACCENT_0002>tale site\n<MATH_0004> is given by the following data:\n<STRUCT_0001>\n<STRUCT_0002> for every <MATH_0005> a sheaf\n<MATH_0006> on <MATH_0007>,\n<STRUCT_0003> for every <MATH_0008> in\n<MATH_0009> a map\n<MATH_0010>.\n<STRUCT_0004>\nThese data are subject to the following conditions:\n<STRUCT_0005>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> given any <MATH_0011> and <MATH_0012> in\n<MATH_0013> the composition\n<MATH_0014> is equal to <MATH_0015>, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> if <MATH_0016> in <MATH_0017>\nis <ACCENT_0003>tale then <MATH_0018> is an isomorphism.\n<STRUCT_0006>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 47,
+          "projection_end": 52,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 53,
+          "projection_end": 57,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 73,
+          "projection_end": 78,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 102,
+          "projection_end": 107,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 108,
+          "projection_end": 112,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 209,
+          "projection_end": 214,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 296,
+          "projection_end": 299,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 485,
+          "projection_end": 496,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 606,
+          "projection_end": 611,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 635,
+          "projection_end": 646,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021K:proof",
+      "source_text": "This lemma follows from a purely sheaf theoretic statement discussed\nin Sites, Remark <REF_0001>.\nWe also give a direct proof in this case.\n\n<STRUCT_0001><STRUCT_0002>\nGiven a sheaf <MATH_0001> on <MATH_0002>\nwe set <MATH_0003> where <MATH_0004>\nis the structure morphism. Note that\n<MATH_0005> for any <MATH_0006>\nin <MATH_0007> see Lemma <REF_0002>.\nHence given <MATH_0008> over <MATH_0009> and <MATH_0010> we get a canonical\nmap <MATH_0011> where the middle is the restriction map\nof <MATH_0012> with respect to the morphism\n<MATH_0013> over <MATH_0014>. The collection of these maps are\ncompatible with restrictions, and hence define a map\n<MATH_0015> where\n<MATH_0016> is the base change functor\nassociated to <MATH_0017>. By adjunction of <MATH_0018> (see\nSites, Section <REF_0003>) with\n<MATH_0019> this is the same as a map\n<MATH_0020>.\nIt is clear that <MATH_0021> is the composition of\n<MATH_0022> and <MATH_0023>, since composition of restriction maps\nof <MATH_0024> gives restriction maps, and this gives the desired\nrelationship among <MATH_0025>, <MATH_0026> and <MATH_0027>.\n\n<STRUCT_0003><STRUCT_0004>\nConversely, given a system <MATH_0028> as in the lemma\nwe may define a presheaf <MATH_0029> on\n<MATH_0030>\nby simply setting <MATH_0031>. As restriction\nmapping, given <MATH_0032> we set for <MATH_0033>\nthe pullback <MATH_0034> equal to <MATH_0035> where we think of <MATH_0036> as\na map <MATH_0037> again.\nThe condition on the <MATH_0038> guarantees that\npullbacks satisfy the required functoriality property.\nWe omit the verification that this is a sheaf.\nIt is clear that the constructions so defined are mutually inverse.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "sheaf",
+          "projection_start": 33,
+          "projection_end": 38,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 72,
+          "projection_end": 77,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 175,
+          "projection_end": 180,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 252,
+          "projection_end": 270,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical map",
+          "projection_start": 417,
+          "projection_end": 430,
+          "concept": "source-phrase-canonical-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 479,
+          "projection_end": 482,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 518,
+          "projection_end": 526,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 581,
+          "projection_end": 585,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 639,
+          "projection_end": 642,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 680,
+          "projection_end": 691,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 692,
+          "projection_end": 699,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "adjunction",
+          "projection_start": 730,
+          "projection_end": 740,
+          "concept": "adjunction",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 761,
+          "projection_end": 766,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 827,
+          "projection_end": 830,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 880,
+          "projection_end": 891,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 930,
+          "projection_end": 941,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 957,
+          "projection_end": 961,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 995,
+          "projection_end": 999,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 1187,
+          "projection_end": 1195,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 1323,
+          "projection_end": 1331,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1400,
+          "projection_end": 1403,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullbacks",
+          "projection_start": 1472,
+          "projection_end": 1481,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 1567,
+          "projection_end": 1572,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 1633,
+          "projection_end": 1640,
+          "concept": "inverse",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:title",
+      "source_text": "The smooth topology",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 4,
+          "projection_end": 10,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 11,
+          "projection_end": 19,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we define the smooth topology.\nThis is a bit pointless as it will turn out later (see\nMore on Morphisms, Section <REF_0001>)\nthat this topology defines the same topos as the\n<ACCENT_0001>tale topology. But still it makes sense and it is used\noccasionally.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 44,
+          "projection_end": 50,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 51,
+          "projection_end": 59,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 124,
+          "projection_end": 133,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 165,
+          "projection_end": 173,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 204,
+          "projection_end": 209,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 210,
+          "projection_end": 218,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Z:statement",
+      "source_text": "Let <MATH_0001> be a scheme. A <TEXTITOPEN_0001>smooth covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is smooth and such\nthat <MATH_0005>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth covering",
+          "projection_start": 31,
+          "projection_end": 46,
+          "concept": "smooth covering",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 67,
+          "projection_end": 86,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 102,
+          "projection_end": 109,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 140,
+          "projection_end": 146,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0220:statement",
+      "source_text": "Any <ACCENT_0001>tale covering is a smooth covering, and a fortiori,\nany Zariski covering is a smooth covering.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 4,
+          "projection_end": 9,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 10,
+          "projection_end": 18,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 24,
+          "projection_end": 30,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 31,
+          "projection_end": 39,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 61,
+          "projection_end": 77,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 83,
+          "projection_end": 89,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 90,
+          "projection_end": 98,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0220:proof",
+      "source_text": "This is clear from the definitions, the fact that an <ACCENT_0001>tale morphism is\nsmooth see\nMorphisms, Definition <REF_0001>\nand Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 53,
+          "projection_end": 58,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 59,
+          "projection_end": 67,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 71,
+          "projection_end": 77,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 82,
+          "projection_end": 91,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nNext, we show that this notion satisfies the conditions of\nSites, Definition <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "Sites",
+          "projection_start": 73,
+          "projection_end": 78,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0221:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a smooth covering of <MATH_0004>.\n<STRUCT_0003> If <MATH_0005> is a smooth covering and for each\n<MATH_0006> we have a smooth covering <MATH_0007>, then\n<MATH_0008> is a smooth covering.\n<STRUCT_0004> If <MATH_0009> is a smooth covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a smooth covering.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 78,
+          "projection_end": 89,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 112,
+          "projection_end": 118,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 119,
+          "projection_end": 127,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 178,
+          "projection_end": 184,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 185,
+          "projection_end": 193,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 229,
+          "projection_end": 235,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 236,
+          "projection_end": 244,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 280,
+          "projection_end": 286,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 287,
+          "projection_end": 295,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 331,
+          "projection_end": 337,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 338,
+          "projection_end": 346,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 368,
+          "projection_end": 376,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 380,
+          "projection_end": 387,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 410,
+          "projection_end": 416,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 417,
+          "projection_end": 425,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0221:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0222:statement",
+      "source_text": "Let <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a smooth covering of <MATH_0003>.\nThen there exists a smooth covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsmooth, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 58,
+          "projection_end": 64,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 65,
+          "projection_end": 73,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 110,
+          "projection_end": 116,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 117,
+          "projection_end": 125,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 208,
+          "projection_end": 221,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 242,
+          "projection_end": 250,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 275,
+          "projection_end": 281,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 287,
+          "projection_end": 296,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 373,
+          "projection_end": 379,
+          "concept": "affine",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0222:proof",
+      "source_text": "Omitted, but see Algebra, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Algebra",
+          "projection_start": 17,
+          "projection_end": 24,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nThus we define the corresponding standard coverings of affines as follows.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "coverings",
+          "projection_start": 56,
+          "projection_end": 65,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 69,
+          "projection_end": 76,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0223:statement",
+      "source_text": "Let <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard smooth covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a family <MATH_0003>\nwith each <MATH_0004> is affine, <MATH_0005> standard smooth\nand <MATH_0006>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "standard smooth covering",
+          "projection_start": 39,
+          "projection_end": 63,
+          "concept": "standard smooth covering",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 128,
+          "projection_end": 134,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 157,
+          "projection_end": 163,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03WY:statement",
+      "source_text": "A <TEXTITOPEN_0001>big smooth site<TEXTITCLOSE_0001> is any site <MATH_0001> as in\nSites, Definition <REF_0001> constructed as follows:\n<STRUCT_0001>\n<STRUCT_0002> Choose any set of schemes <MATH_0002>, and any set of smooth coverings\n<MATH_0003> among these schemes.\n<STRUCT_0003> As underlying category take any category <MATH_0004>\nconstructed as in Sets, Lemma <REF_0002>\nstarting with the set <MATH_0005>.\n<STRUCT_0004> Choose any set of coverings as in\nSets, Lemma <REF_0003> starting with the\ncategory <MATH_0006> and the class of smooth coverings,\nand the set <MATH_0007> chosen above.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "big smooth site",
+          "projection_start": 2,
+          "projection_end": 17,
+          "concept": "big smooth site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 25,
+          "projection_end": 29,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 48,
+          "projection_end": 53,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 140,
+          "projection_end": 143,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 147,
+          "projection_end": 154,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 176,
+          "projection_end": 179,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 183,
+          "projection_end": 189,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 190,
+          "projection_end": 199,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 224,
+          "projection_end": 231,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "underlying category",
+          "projection_start": 250,
+          "projection_end": 269,
+          "concept": "source-phrase-underlying-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 279,
+          "projection_end": 287,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 318,
+          "projection_end": 322,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 359,
+          "projection_end": 362,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 401,
+          "projection_end": 404,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 408,
+          "projection_end": 417,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 424,
+          "projection_end": 428,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 465,
+          "projection_end": 473,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 494,
+          "projection_end": 499,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 503,
+          "projection_end": 509,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 510,
+          "projection_end": 519,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 529,
+          "projection_end": 532,
+          "concept": "set",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nSee the remarks following Definition <REF_0001>\nfor motivation and explanation regarding the definition of big sites.\n\n<STRUCT_0002><STRUCT_0003>\nBefore we continue with the introduction of the big smooth site of\na scheme <MATH_0001>, let us point out that the topology on a big smooth site\n<MATH_0002> is in some sense induced from the smooth topology\non the category of all schemes.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "sites",
+          "projection_start": 125,
+          "projection_end": 130,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 211,
+          "projection_end": 217,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 218,
+          "projection_end": 222,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 228,
+          "projection_end": 234,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 274,
+          "projection_end": 282,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 292,
+          "projection_end": 298,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 299,
+          "projection_end": 303,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 350,
+          "projection_end": 356,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 357,
+          "projection_end": 365,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 373,
+          "projection_end": 381,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 389,
+          "projection_end": 396,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03WZ:statement",
+      "source_text": "Let <MATH_0001> be a big smooth site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary smooth covering of <MATH_0004>.\n<STRUCT_0001>\n<STRUCT_0002> There exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which refines <MATH_0008>.\n<STRUCT_0003> If <MATH_0009> is a standard smooth covering, then\nit is tautologically equivalent to a covering of <MATH_0010>.\n<STRUCT_0004> If <MATH_0011> is a Zariski covering, then\nit is tautologically equivalent to a covering of <MATH_0012>.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 25,
+          "projection_end": 31,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 32,
+          "projection_end": 36,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 115,
+          "projection_end": 121,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 122,
+          "projection_end": 130,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 190,
+          "projection_end": 198,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 233,
+          "projection_end": 237,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 320,
+          "projection_end": 326,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 327,
+          "projection_end": 335,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 363,
+          "projection_end": 373,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 379,
+          "projection_end": 387,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 438,
+          "projection_end": 454,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 482,
+          "projection_end": 492,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 498,
+          "projection_end": 506,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03WZ:proof",
+      "source_text": "For each <MATH_0001> choose an affine open covering <MATH_0002>\nsuch that each <MATH_0003> maps into an affine open subscheme of <MATH_0004>. By\nLemma <REF_0001>\nthe refinement <MATH_0005> is a smooth covering\nof <MATH_0006> as well. Hence we may assume each <MATH_0007> is affine, and maps into\nan affine open <MATH_0008> of <MATH_0009>. Applying\nSets, Lemma <REF_0002>\nwe see that <MATH_0010> is isomorphic to an object of <MATH_0011>.\nBut then <MATH_0012> as a finite type scheme over <MATH_0013>\nis isomorphic to an object <MATH_0014> of <MATH_0015> by a second\napplication of\nSets, Lemma <REF_0003>.\nThe covering <MATH_0016> refines <MATH_0017>\n(because they are isomorphic).\nMoreover, <MATH_0018> is combinatorially equivalent to a\ncovering <MATH_0019> of <MATH_0020> in the site\n<MATH_0021> by\nSets, Lemma <REF_0004>.\nThe covering <MATH_0022> is a refinement as in (1).\nIn the situation of (2), (3) each of the\nschemes <MATH_0023> is isomorphic to an object of <MATH_0024> by\nSets, Lemma <REF_0005>,\nand another application of\nSets, Lemma <REF_0006>\ngives what we want.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "affine open",
+          "projection_start": 31,
+          "projection_end": 42,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 43,
+          "projection_end": 51,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 91,
+          "projection_end": 95,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 104,
+          "projection_end": 115,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 194,
+          "projection_end": 200,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 201,
+          "projection_end": 209,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 274,
+          "projection_end": 280,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 286,
+          "projection_end": 290,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 299,
+          "projection_end": 310,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 348,
+          "projection_end": 352,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 398,
+          "projection_end": 408,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 415,
+          "projection_end": 421,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 464,
+          "projection_end": 475,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 476,
+          "projection_end": 482,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 503,
+          "projection_end": 513,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 520,
+          "projection_end": 526,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 581,
+          "projection_end": 585,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 609,
+          "projection_end": 617,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 668,
+          "projection_end": 678,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "combinatorially equivalent",
+          "projection_start": 706,
+          "projection_end": 732,
+          "concept": "combinatorially-equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 738,
+          "projection_end": 746,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 781,
+          "projection_end": 785,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 801,
+          "projection_end": 805,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 829,
+          "projection_end": 837,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 918,
+          "projection_end": 925,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 941,
+          "projection_end": 951,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 958,
+          "projection_end": 964,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 983,
+          "projection_end": 987,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 1034,
+          "projection_end": 1038,
+          "concept": "set",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03X0:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a big smooth\nsite containing <MATH_0003>.\n<STRUCT_0001>\n<STRUCT_0002> The <TEXTITOPEN_0001>big smooth site of <MATH_0004><TEXTITCLOSE_0001>, denoted\n<MATH_0005>, is the site <MATH_0006>\nintroduced in Sites, Section <REF_0001>.\n<STRUCT_0003> The <TEXTITOPEN_0002>big affine smooth site of <MATH_0007><TEXTITCLOSE_0002>, denoted\n<MATH_0008>, is the full subcategory of\n<MATH_0009> whose objects are affine <MATH_0010>.\nA covering of <MATH_0011> is any covering\n<MATH_0012> of <MATH_0013> which is a\nstandard smooth covering.\n<STRUCT_0004>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "big smooth site",
+          "projection_start": 50,
+          "projection_end": 65,
+          "concept": "big smooth site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "big smooth site",
+          "projection_start": 122,
+          "projection_end": 137,
+          "concept": "big smooth site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 182,
+          "projection_end": 186,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 213,
+          "projection_end": 218,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "big affine smooth site",
+          "projection_start": 258,
+          "projection_end": 280,
+          "concept": "big affine smooth site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 325,
+          "projection_end": 341,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 363,
+          "projection_end": 370,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 375,
+          "projection_end": 381,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 397,
+          "projection_end": 405,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 428,
+          "projection_end": 436,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 484,
+          "projection_end": 490,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 491,
+          "projection_end": 499,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nNext, we check that the big affine site defines the same\ntopos as the big site.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 42,
+          "projection_end": 48,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 49,
+          "projection_end": 53,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 88,
+          "projection_end": 92,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06VC:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a big smooth\nsite containing <MATH_0003>.\nThe functor\n<MATH_0004>\nis special cocontinuous and induces an equivalence of topoi from\n<MATH_0005> to\n<MATH_0006>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 54,
+          "projection_end": 60,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 61,
+          "projection_end": 65,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 94,
+          "projection_end": 101,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 153,
+          "projection_end": 164,
+          "concept": "equivalence",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06VC:proof",
+      "source_text": "The notion of a special cocontinuous functor is introduced in\nSites, Definition <REF_0001>.\nThus we have to verify assumptions (1) -- (5) of\nSites, Lemma <REF_0002>.\nDenote the inclusion functor\n<MATH_0001>.\nBeing cocontinuous just means that any smooth covering of\n<MATH_0002>, <MATH_0003> affine, can be refined by a standard smooth covering of <MATH_0004>.\nThis is the content of\nLemma <REF_0003>.\nHence (1) holds. We see <MATH_0005> is continuous simply because a standard\nsmooth covering is a smooth covering. Hence (2) holds.\nParts (3) and (4) follow immediately from the fact that <MATH_0006> is\nfully faithful. And finally condition (5) follows from the\nfact that every scheme has an affine open covering.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 37,
+          "projection_end": 44,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 62,
+          "projection_end": 67,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 141,
+          "projection_end": 146,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inclusion functor",
+          "projection_start": 177,
+          "projection_end": 194,
+          "concept": "source-phrase-inclusion-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 247,
+          "projection_end": 253,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 254,
+          "projection_end": 262,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 291,
+          "projection_end": 297,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 328,
+          "projection_end": 334,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 335,
+          "projection_end": 343,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 477,
+          "projection_end": 483,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 484,
+          "projection_end": 492,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 498,
+          "projection_end": 504,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 505,
+          "projection_end": 513,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 603,
+          "projection_end": 617,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 678,
+          "projection_end": 684,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 692,
+          "projection_end": 703,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 704,
+          "projection_end": 712,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:021Y:prose-0006",
+      "source_text": "\n\n<STRUCT_0001>\nTo be continued...\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:04HC:statement",
+      "source_text": "Let <MATH_0001> be a big smooth site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\nThe functor\n<MATH_0004>\nis cocontinuous, and has a continuous right adjoint\n<MATH_0005>\nThey induce the same morphism of topoi\n<MATH_0006>\nWe have <MATH_0007>.\nWe have <MATH_0008>.\nAlso, <MATH_0009> has a left adjoint <MATH_0010> which commutes with\nfibre products and equalizers.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 25,
+          "projection_end": 31,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 32,
+          "projection_end": 36,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 59,
+          "projection_end": 67,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 88,
+          "projection_end": 95,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "right adjoint",
+          "projection_start": 146,
+          "projection_end": 159,
+          "concept": "right-adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism of topoi",
+          "projection_start": 193,
+          "projection_end": 210,
+          "concept": "source-phrase-morphism-of-topoi",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "left adjoint",
+          "projection_start": 289,
+          "projection_end": 301,
+          "concept": "left-adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 320,
+          "projection_end": 328,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 334,
+          "projection_end": 348,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizers",
+          "projection_start": 353,
+          "projection_end": 363,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04HC:proof",
+      "source_text": "The functor <MATH_0001> is cocontinuous, continuous, and commutes with fibre products\nand equalizers. Hence\nSites, Lemmas <REF_0001> and\n<REF_0002>\napply and we deduce the formula\nfor <MATH_0002> and the existence of <MATH_0003>. Moreover,\nthe functor <MATH_0004> is a right adjoint because given <MATH_0005> and <MATH_0006>\nwe have <MATH_0007>\nas desired. Thus we may apply\nSites, Lemmas <REF_0003> and\n<REF_0004> to get the\nformula for <MATH_0008>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 4,
+          "projection_end": 11,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 57,
+          "projection_end": 65,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 71,
+          "projection_end": 85,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizers",
+          "projection_start": 90,
+          "projection_end": 100,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 108,
+          "projection_end": 113,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 244,
+          "projection_end": 251,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "right adjoint",
+          "projection_start": 269,
+          "projection_end": 282,
+          "concept": "right-adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 375,
+          "projection_end": 380,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0224:title",
+      "source_text": "The syntomic topology",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 13,
+          "projection_end": 21,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0224:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we define the syntomic topology.\nThis topology is quite interesting in that it often\nhas the same cohomology groups as the fppf topology\nbut is technically easier to deal with.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 53,
+          "projection_end": 61,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 68,
+          "projection_end": 76,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology groups",
+          "projection_start": 128,
+          "projection_end": 145,
+          "concept": "source-phrase-cohomology-groups",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 158,
+          "projection_end": 166,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0225:statement",
+      "source_text": "Let <MATH_0001> be a scheme. An <TEXTITOPEN_0001>syntomic covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is syntomic and such\nthat <MATH_0005>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "syntomic covering",
+          "projection_start": 32,
+          "projection_end": 49,
+          "concept": "syntomic covering",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 70,
+          "projection_end": 89,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 105,
+          "projection_end": 112,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0226:statement",
+      "source_text": "Any smooth covering is a syntomic covering, and a fortiori,\nany <ACCENT_0001>tale or Zariski covering is a syntomic covering.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 4,
+          "projection_end": 10,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 11,
+          "projection_end": 19,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 34,
+          "projection_end": 42,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 64,
+          "projection_end": 69,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 73,
+          "projection_end": 89,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 104,
+          "projection_end": 112,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0226:proof",
+      "source_text": "This is clear from the definitions and the fact that a smooth\nmorphism is syntomic, see\nMorphisms, Lemma <REF_0001>\nand Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 55,
+          "projection_end": 61,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 62,
+          "projection_end": 70,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 88,
+          "projection_end": 97,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0224:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nNext, we show that this notion satisfies the conditions of\nSites, Definition <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "Sites",
+          "projection_start": 73,
+          "projection_end": 78,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0227:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a syntomic covering of <MATH_0004>.\n<STRUCT_0003> If <MATH_0005> is a syntomic covering and for each\n<MATH_0006> we have a syntomic covering <MATH_0007>, then\n<MATH_0008> is a syntomic covering.\n<STRUCT_0004> If <MATH_0009> is a syntomic covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a syntomic covering.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 78,
+          "projection_end": 89,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 121,
+          "projection_end": 129,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 189,
+          "projection_end": 197,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 242,
+          "projection_end": 250,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 295,
+          "projection_end": 303,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 348,
+          "projection_end": 356,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 378,
+          "projection_end": 386,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 390,
+          "projection_end": 397,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 429,
+          "projection_end": 437,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0227:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:topologies:0214:paragraph/0012",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn the situation of the lemma, using the terminology of\nDefinition <REF_0001>\nwe have: for <MATH_0001> a sheaf on the big <ACCENT_0001>tale site of <MATH_0002>\n<MATH_0003>\nThis equality is clear from the commutativity of the diagram of\nsites of the lemma, since restriction to the small <ACCENT_0002>tale site of\n<MATH_0004>, resp.<SPACE_0001><MATH_0005> is given by <MATH_0006>, resp.<SPACE_0002><MATH_0007>. A similar\nformula involving pullbacks and restrictions is false.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021J:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows from the simple description of pushforward\nand pullback for the functors on the big sites from\nLemma <REF_0001>. For the functors\non the small sites this follows from the description of\nthe pushforward functors in Lemma <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021J:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nGiven schemes <MATH_0001>, <MATH_0002>, <MATH_0003> in <MATH_0004>\nand morphisms <MATH_0005>, <MATH_0006> we have\n<MATH_0007> and\n<MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0DDA:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site. Consider a cartesian diagram\n<MATH_0002>\nin <MATH_0003>. Then\n<MATH_0004>\nand <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0DDA:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nSince the diagram is cartesian, we have for <MATH_0001>\nthat <MATH_0002>. Hence both\n<MATH_0003> and <MATH_0004>\nsend a sheaf <MATH_0005> on <MATH_0006> to the sheaf\n<MATH_0007> on <MATH_0008>\n(use Lemmas <REF_0001> and <REF_0002>).\nThe second equality can be proved in the same manner or can be\ndeduced from the very general\nSites, Lemma <REF_0003>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0214:paragraph/0013",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe can think about a sheaf on the big <ACCENT_0001>tale site of <MATH_0001> as a collection\nof ``usual'' sheaves on all schemes over <MATH_0002>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021K:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme contained in a big <ACCENT_0001>tale site\n<MATH_0002>.\nA sheaf <MATH_0003> on the big <ACCENT_0002>tale site\n<MATH_0004> is given by the following data:\n<STRUCT_0002>\n<STRUCT_0003> for every <MATH_0005> a sheaf\n<MATH_0006> on <MATH_0007>,\n<STRUCT_0004> for every <MATH_0008> in\n<MATH_0009> a map\n<MATH_0010>.\n<STRUCT_0005>\nThese data are subject to the following conditions:\n<STRUCT_0006>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> given any <MATH_0011> and <MATH_0012> in\n<MATH_0013> the composition\n<MATH_0014> is equal to <MATH_0015>, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> if <MATH_0016> in <MATH_0017>\nis <ACCENT_0003>tale then <MATH_0018> is an isomorphism.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021K:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis lemma follows from a purely sheaf theoretic statement discussed\nin Sites, Remark <REF_0001>.\nWe also give a direct proof in this case.\n\n<STRUCT_0002><STRUCT_0003>\nGiven a sheaf <MATH_0001> on <MATH_0002>\nwe set <MATH_0003> where <MATH_0004>\nis the structure morphism. Note that\n<MATH_0005> for any <MATH_0006>\nin <MATH_0007> see Lemma <REF_0002>.\nHence given <MATH_0008> over <MATH_0009> and <MATH_0010> we get a canonical\nmap <MATH_0011> where the middle is the restriction map\nof <MATH_0012> with respect to the morphism\n<MATH_0013> over <MATH_0014>. The collection of these maps are\ncompatible with restrictions, and hence define a map\n<MATH_0015> where\n<MATH_0016> is the base change functor\nassociated to <MATH_0017>. By adjunction of <MATH_0018> (see\nSites, Section <REF_0003>) with\n<MATH_0019> this is the same as a map\n<MATH_0020>.\nIt is clear that <MATH_0021> is the composition of\n<MATH_0022> and <MATH_0023>, since composition of restriction maps\nof <MATH_0024> gives restriction maps, and this gives the desired\nrelationship among <MATH_0025>, <MATH_0026> and <MATH_0027>.\n\n<STRUCT_0004><STRUCT_0005>\nConversely, given a system <MATH_0028> as in the lemma\nwe may define a presheaf <MATH_0029> on\n<MATH_0030>\nby simply setting <MATH_0031>. As restriction\nmapping, given <MATH_0032> we set for <MATH_0033>\nthe pullback <MATH_0034> equal to <MATH_0035> where we think of <MATH_0036> as\na map <MATH_0037> again.\nThe condition on the <MATH_0038> guarantees that\npullbacks satisfy the required functoriality property.\nWe omit the verification that this is a sheaf.\nIt is clear that the constructions so defined are mutually inverse.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>The smooth topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we define the smooth topology.\nThis is a bit pointless as it will turn out later (see\nMore on Morphisms, Section <REF_0001>)\nthat this topology defines the same topos as the\n<ACCENT_0001>tale topology. But still it makes sense and it is used\noccasionally.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Z:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. A <TEXTITOPEN_0001>smooth covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is smooth and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0220:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny <ACCENT_0001>tale covering is a smooth covering, and a fortiori,\nany Zariski covering is a smooth covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0220:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is clear from the definitions, the fact that an <ACCENT_0001>tale morphism is\nsmooth see\nMorphisms, Definition <REF_0001>\nand Lemma <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNext, we show that this notion satisfies the conditions of\nSites, Definition <REF_0001>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0221:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a smooth covering of <MATH_0004>.\n<STRUCT_0004> If <MATH_0005> is a smooth covering and for each\n<MATH_0006> we have a smooth covering <MATH_0007>, then\n<MATH_0008> is a smooth covering.\n<STRUCT_0005> If <MATH_0009> is a smooth covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a smooth covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0221:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0222:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a smooth covering of <MATH_0003>.\nThen there exists a smooth covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsmooth, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0222:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted, but see Algebra, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThus we define the corresponding standard coverings of affines as follows.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0223:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard smooth covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a family <MATH_0003>\nwith each <MATH_0004> is affine, <MATH_0005> standard smooth\nand <MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:03WY:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>big smooth site<TEXTITCLOSE_0001> is any site <MATH_0001> as in\nSites, Definition <REF_0001> constructed as follows:\n<STRUCT_0002>\n<STRUCT_0003> Choose any set of schemes <MATH_0002>, and any set of smooth coverings\n<MATH_0003> among these schemes.\n<STRUCT_0004> As underlying category take any category <MATH_0004>\nconstructed as in Sets, Lemma <REF_0002>\nstarting with the set <MATH_0005>.\n<STRUCT_0005> Choose any set of coverings as in\nSets, Lemma <REF_0003> starting with the\ncategory <MATH_0006> and the class of smooth coverings,\nand the set <MATH_0007> chosen above.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nSee the remarks following Definition <REF_0001>\nfor motivation and explanation regarding the definition of big sites.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:03WZ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big smooth site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary smooth covering of <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> There exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which refines <MATH_0008>.\n<STRUCT_0004> If <MATH_0009> is a standard smooth covering, then\nit is tautologically equivalent to a covering of <MATH_0010>.\n<STRUCT_0005> If <MATH_0011> is a Zariski covering, then\nit is tautologically equivalent to a covering of <MATH_0012>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nBefore we continue with the introduction of the big smooth site of\na scheme <MATH_0001>, let us point out that the topology on a big smooth site\n<MATH_0002> is in some sense induced from the smooth topology\non the category of all schemes.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:03WZ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFor each <MATH_0001> choose an affine open covering <MATH_0002>\nsuch that each <MATH_0003> maps into an affine open subscheme of <MATH_0004>. By\nLemma <REF_0001>\nthe refinement <MATH_0005> is a smooth covering\nof <MATH_0006> as well. Hence we may assume each <MATH_0007> is affine, and maps into\nan affine open <MATH_0008> of <MATH_0009>. Applying\nSets, Lemma <REF_0002>\nwe see that <MATH_0010> is isomorphic to an object of <MATH_0011>.\nBut then <MATH_0012> as a finite type scheme over <MATH_0013>\nis isomorphic to an object <MATH_0014> of <MATH_0015> by a second\napplication of\nSets, Lemma <REF_0003>.\nThe covering <MATH_0016> refines <MATH_0017>\n(because they are isomorphic).\nMoreover, <MATH_0018> is combinatorially equivalent to a\ncovering <MATH_0019> of <MATH_0020> in the site\n<MATH_0021> by\nSets, Lemma <REF_0004>.\nThe covering <MATH_0022> is a refinement as in (1).\nIn the situation of (2), (3) each of the\nschemes <MATH_0023> is isomorphic to an object of <MATH_0024> by\nSets, Lemma <REF_0005>,\nand another application of\nSets, Lemma <REF_0006>\ngives what we want.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:03X0:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big smooth\nsite containing <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> The <TEXTITOPEN_0001>big smooth site of <MATH_0004><TEXTITCLOSE_0001>, denoted\n<MATH_0005>, is the site <MATH_0006>\nintroduced in Sites, Section <REF_0001>.\n<STRUCT_0004> The <TEXTITOPEN_0002>big affine smooth site of <MATH_0007><TEXTITCLOSE_0002>, denoted\n<MATH_0008>, is the full subcategory of\n<MATH_0009> whose objects are affine <MATH_0010>.\nA covering of <MATH_0011> is any covering\n<MATH_0012> of <MATH_0013> which is a\nstandard smooth covering.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0006",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNext, we check that the big affine site defines the same\ntopos as the big site.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:06VC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big smooth\nsite containing <MATH_0003>.\nThe functor\n<MATH_0004>\nis special cocontinuous and induces an equivalence of topoi from\n<MATH_0005> to\n<MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:06VC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe notion of a special cocontinuous functor is introduced in\nSites, Definition <REF_0001>.\nThus we have to verify assumptions (1) -- (5) of\nSites, Lemma <REF_0002>.\nDenote the inclusion functor\n<MATH_0001>.\nBeing cocontinuous just means that any smooth covering of\n<MATH_0002>, <MATH_0003> affine, can be refined by a standard smooth covering of <MATH_0004>.\nThis is the content of\nLemma <REF_0003>.\nHence (1) holds. We see <MATH_0005> is continuous simply because a standard\nsmooth covering is a smooth covering. Hence (2) holds.\nParts (3) and (4) follow immediately from the fact that <MATH_0006> is\nfully faithful. And finally condition (5) follows from the\nfact that every scheme has an affine open covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:021Y:paragraph/0007",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo be continued...",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:04HC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big smooth site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\nThe functor\n<MATH_0004>\nis cocontinuous, and has a continuous right adjoint\n<MATH_0005>\nThey induce the same morphism of topoi\n<MATH_0006>\nWe have <MATH_0007>.\nWe have <MATH_0008>.\nAlso, <MATH_0009> has a left adjoint <MATH_0010> which commutes with\nfibre products and equalizers.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:04HC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe functor <MATH_0001> is cocontinuous, continuous, and commutes with fibre products\nand equalizers. Hence\nSites, Lemmas <REF_0001> and\n<REF_0002>\napply and we deduce the formula\nfor <MATH_0002> and the existence of <MATH_0003>. Moreover,\nthe functor <MATH_0004> is a right adjoint because given <MATH_0005> and <MATH_0006>\nwe have <MATH_0007>\nas desired. Thus we may apply\nSites, Lemmas <REF_0003> and\n<REF_0004> to get the\nformula for <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0224:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>The syntomic topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0224:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we define the syntomic topology.\nThis topology is quite interesting in that it often\nhas the same cohomology groups as the fppf topology\nbut is technically easier to deal with.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0225:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001>syntomic covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is syntomic and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0226:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny smooth covering is a syntomic covering, and a fortiori,\nany <ACCENT_0001>tale or Zariski covering is a syntomic covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0226:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is clear from the definitions and the fact that a smooth\nmorphism is syntomic, see\nMorphisms, Lemma <REF_0001>\nand Lemma <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0224:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNext, we show that this notion satisfies the conditions of\nSites, Definition <REF_0001>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0227:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a syntomic covering of <MATH_0004>.\n<STRUCT_0004> If <MATH_0005> is a syntomic covering and for each\n<MATH_0006> we have a syntomic covering <MATH_0007>, then\n<MATH_0008> is a syntomic covering.\n<STRUCT_0005> If <MATH_0009> is a syntomic covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a syntomic covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0227:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0228:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a syntomic covering of <MATH_0003>.\nThen there exists a syntomic covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsyntomic, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-smooth-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a smooth ring map.\nThere exists an open covering of <MATH_0002> by\nstandard opens <MATH_0003> such that each <MATH_0004> is standard smooth\nover <MATH_0005>. In particular <MATH_0006> is syntomic.\n<STRUCT_0002>",
+      "requested_label": "algebra-lemma-smooth-syntomic",
+      "requested_tag": "00TA"
+    },
+    {
+      "context_id": "reference:more-morphisms-section-etale-over-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Slicing smooth morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "more-morphisms-section-etale-over-smooth",
+      "requested_tag": "055S"
+    },
+    {
+      "context_id": "reference:morphisms-definition-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\n<STRUCT_0002>\n<STRUCT_0003> We say that <MATH_0002> is <TEXTITOPEN_0001><ACCENT_0001>tale at <MATH_0003><TEXTITCLOSE_0001> if\nthere exists an affine open neighbourhood <MATH_0004>\nof <MATH_0005> and affine open <MATH_0006>\nwith <MATH_0007> such that the induced ring map\n<MATH_0008> is <ACCENT_0002>tale.\n<STRUCT_0004> We say that <MATH_0009> is <TEXTITOPEN_0002><ACCENT_0003>tale<TEXTITCLOSE_0002> if it is <ACCENT_0004>tale at every point of <MATH_0010>.\n<STRUCT_0005> A morphism of affine schemes <MATH_0011> is called\n<TEXTITOPEN_0003>standard <ACCENT_0005>tale<TEXTITCLOSE_0003> if <MATH_0012> is isomorphic to\n<MATH_0013>\nwhere <MATH_0014> is a standard <ACCENT_0006>tale ring map, see\nAlgebra, Definition <REF_0001>,\ni.e., <MATH_0015> is monic and <MATH_0016> invertible in <MATH_0017>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "morphisms-definition-etale",
+      "requested_tag": "02GI"
+    },
+    {
+      "context_id": "reference:morphisms-definition-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\n<STRUCT_0002>\n<STRUCT_0003> We say that <MATH_0002> is <TEXTITOPEN_0001>smooth at <MATH_0003><TEXTITCLOSE_0001> if\nthere exist an affine open neighbourhood <MATH_0004>\nof <MATH_0005> and affine open <MATH_0006>\nwith <MATH_0007> such that the induced ring map\n<MATH_0008> is smooth.\n<STRUCT_0004> We say that <MATH_0009> is <TEXTITOPEN_0002>smooth<TEXTITCLOSE_0002> if it is smooth at every point of <MATH_0010>.\n<STRUCT_0005> A morphism of affine schemes <MATH_0011>\nis called <TEXTITOPEN_0003>standard smooth<TEXTITCLOSE_0003> if there exists a standard smooth ring\nmap <MATH_0012> (see\nAlgebra, Definition <REF_0001>)\nsuch that <MATH_0013> is isomorphic to\n<MATH_0014>\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "morphisms-definition-smooth",
+      "requested_tag": "01V5"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-smooth-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA smooth morphism is syntomic.\n<STRUCT_0002>",
+      "requested_label": "morphisms-lemma-smooth-syntomic",
+      "requested_tag": "01VD"
+    },
+    {
+      "context_id": "reference:sets-lemma-construct-category",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notations <MATH_0001>, <MATH_0002> and <MATH_0003> as above.\nLet <MATH_0004> be a set of schemes. There exists a limit ordinal\n<MATH_0005> with the following properties:\n<STRUCT_0002>\n<STRUCT_0003>\n<LOCKED_0002>\nWe have <MATH_0006>; in other words,\n<MATH_0007>.\n<STRUCT_0004>\n<LOCKED_0003>\nFor any <MATH_0008> and any\nscheme <MATH_0009> with <MATH_0010>,\nthere exists a scheme <MATH_0011>\nsuch that <MATH_0012>.\n<STRUCT_0005>\n<LOCKED_0004>\nFor any countable<FOOTNOTEOPEN_0001>Both the set of objects and\nthe morphism sets are countable. In fact you can prove the lemma with\n<MATH_0013> replaced by any cardinal whatsoever in (3) and (4).<FOOTNOTECLOSE_0001> diagram\ncategory <MATH_0014> and\nany functor <MATH_0015>, the limit\n<MATH_0016> exists in <MATH_0017> if and\nonly if it exists in <MATH_0018> and moreover, in this case,\nthe natural morphism between them is an isomorphism.\n<STRUCT_0006>\n<LOCKED_0005>\nFor any countable index category <MATH_0019> and\nany functor <MATH_0020>, the colimit\n<MATH_0021> exists in <MATH_0022> if and\nonly if it exists in <MATH_0023> and moreover, in this case,\nthe natural morphism between them is an isomorphism.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "requested_label": "sets-lemma-construct-category",
+      "requested_tag": "000J"
+    },
+    {
+      "context_id": "reference:sets-lemma-coverings-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notations as above.\nLet <MATH_0001>\nbe a set contained in <MATH_0002>.\nThere exist a cardinal <MATH_0003> and a limit ordinal <MATH_0004>\nwith the following properties:\n<STRUCT_0002>\n<STRUCT_0003> We have <MATH_0005>.\n<STRUCT_0004> The set of coverings\n<MATH_0006> satisfies\n(1), (2), and (3) of Sites, Definition <REF_0001> (see above).\nIn other words <MATH_0007>\nis a site.\n<STRUCT_0005> Every covering in <MATH_0008>\nis combinatorially equivalent\nto a covering in <MATH_0009>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "sets-lemma-coverings-site",
+      "requested_tag": "000X"
+    },
+    {
+      "context_id": "reference:sets-lemma-what-is-in-it",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an ordinal as in Lemma <REF_0001> above.\nThe category <MATH_0002> satisfies the following\nproperties:\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0003>, then\nfor any morphisms <MATH_0004>, <MATH_0005> the fibre\nproduct <MATH_0006> in <MATH_0007> exists\nand is a fibre product in the category of schemes.\n<STRUCT_0004> Given any at most countable collection <MATH_0008>\nof elements of <MATH_0009>, the coproduct\n<MATH_0010> exists in <MATH_0011> and\nis a coproduct in the category of schemes.\n<STRUCT_0005> For any <MATH_0012> and\nany open immersion <MATH_0013>, there exists a\n<MATH_0014> with <MATH_0015>.\n<STRUCT_0006> For any <MATH_0016> and\nany closed immersion <MATH_0017>, there exists an\n<MATH_0018> with <MATH_0019>.\n<STRUCT_0007> For any <MATH_0020> and\nany finite type morphism <MATH_0021>, there exists an\n<MATH_0022> with <MATH_0023>.\n<STRUCT_0008> Suppose <MATH_0024> is a scheme which has an open covering\n<MATH_0025> such that there exists\na <MATH_0026> with\n(a) <MATH_0027> for all\n<MATH_0028>, and (b) <MATH_0029>.\nThen <MATH_0030> is isomorphic to an object of <MATH_0031>.\n<STRUCT_0009> For any <MATH_0032> and\nany morphism <MATH_0033> locally of finite type such\nthat <MATH_0034> can be covered by at most\n<MATH_0035> open affines, there exists an\n<MATH_0036> with <MATH_0037>.\nFor example this holds if <MATH_0038> can be covered by at most\n<MATH_0039> open affines.\n<STRUCT_0010> For any <MATH_0040> and\nany monomorphism <MATH_0041> which is either locally of finite presentation\nor quasi-compact, there exists an\n<MATH_0042> with <MATH_0043>.\n<STRUCT_0011> Suppose that <MATH_0044> is\naffine. Write <MATH_0045>.\nThen any of the following schemes is isomorphic to a scheme\nin <MATH_0046>:\n<STRUCT_0012>\n<STRUCT_0013> For any ideal <MATH_0047> with completion\n<MATH_0048>, the scheme <MATH_0049>.\n<STRUCT_0014> For any finite type <MATH_0050>-algebra <MATH_0051>, the\nscheme <MATH_0052>.\n<STRUCT_0015> For any localization <MATH_0053>, the scheme <MATH_0054>.\n<STRUCT_0016> For any prime <MATH_0055>, the scheme\n<MATH_0056>.\n<STRUCT_0017> For any subring <MATH_0057>, the scheme\n<MATH_0058>.\n<STRUCT_0018> Any scheme of finite type over a ring of cardinality at most\n<MATH_0059>.\n<STRUCT_0019> And so on.\n<STRUCT_0020>\n<STRUCT_0021>\n<STRUCT_0022>",
+      "requested_label": "sets-lemma-what-is-in-it",
+      "requested_tag": "000R"
+    },
+    {
+      "context_id": "reference:sites-definition-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>site<TEXTITCLOSE_0001><FOOTNOTEOPEN_0001>This notation differs from that of <REF_0001>, as\nexplained in the introduction.<FOOTNOTECLOSE_0001> is given by a category <MATH_0001> and a set\n<MATH_0002> of families of morphisms with fixed target\n<MATH_0003>, called <TEXTITOPEN_0002>coverings of <MATH_0004><TEXTITCLOSE_0002>,\nsatisfying the following axioms\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0005> is an isomorphism then <MATH_0006>.\n<STRUCT_0004> If <MATH_0007> and for each\n<MATH_0008> we have <MATH_0009>, then\n<MATH_0010>.\n<STRUCT_0005> If <MATH_0011>\nand <MATH_0012> is a morphism of <MATH_0013> then <MATH_0014>\nexists for all <MATH_0015> and\n<MATH_0016>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "sites-definition-site",
+      "requested_tag": "00VH"
+    },
+    {
+      "context_id": "reference:sites-definition-special-cocontinuous-functor",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002> be sites.\nA <TEXTITOPEN_0001>special cocontinuous functor <MATH_0003> from <MATH_0004> to <MATH_0005><TEXTITCLOSE_0001>\nis a cocontinuous functor <MATH_0006> satisfying\nthe assumptions and conclusions of Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": "sites-definition-special-cocontinuous-functor",
+      "requested_tag": "03CG"
+    },
+    {
+      "context_id": "reference:sites-lemma-equivalence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is cocontinuous,\n<STRUCT_0004> <MATH_0005> is continuous,\n<STRUCT_0005> given <MATH_0006> in <MATH_0007> such that\n<MATH_0008>, then there exists a covering <MATH_0009>\nin <MATH_0010> such that <MATH_0011>,\n<STRUCT_0006> given <MATH_0012> and\na morphism <MATH_0013> in <MATH_0014> there exists\na covering <MATH_0015> in <MATH_0016>\nand morphisms <MATH_0017> such that <MATH_0018>, and\n<STRUCT_0007> given <MATH_0019> there exists a covering\nof <MATH_0020> in <MATH_0021> of the form <MATH_0022>.\n<STRUCT_0008>\nThen the morphism of topoi\n<MATH_0023>\nassociated to the cocontinuous functor <MATH_0024> by\nLemma <REF_0001>\nis an equivalence.\n<STRUCT_0009>",
+      "requested_label": "sites-lemma-equivalence",
+      "requested_tag": "03A0"
+    },
+    {
+      "context_id": "reference:sites-lemma-have-functor-other-way",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites. Let\n<MATH_0003>, and <MATH_0004>\nbe functors. Assume that <MATH_0005> is cocontinuous\nand that <MATH_0006> is a right adjoint to <MATH_0007>.\nLet <MATH_0008> be\nthe morphism of topoi associated to <MATH_0009>, see\nLemma <REF_0001>.\nThen\n<STRUCT_0002>\n<STRUCT_0003> for a sheaf <MATH_0010> on <MATH_0011> the sheaf\n<MATH_0012> is equal to the presheaf <MATH_0013>, in other words,\n<MATH_0014>, and\n<STRUCT_0004> for a sheaf <MATH_0015> on <MATH_0016> we have\n<MATH_0017>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "sites-lemma-have-functor-other-way",
+      "requested_tag": "00XX"
+    },
+    {
+      "context_id": "reference:sites-lemma-have-functor-other-way-morphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Lemma <REF_0001>.\nIf in addition <MATH_0001> is continuous then <MATH_0002> defines a morphism of sites\n<MATH_0003> whose associated morphism\nof topoi is equal to <MATH_0004>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-have-functor-other-way-morphism",
+      "requested_tag": "00XY"
+    },
+    {
+      "context_id": "reference:sites-lemma-localize-morphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of sites\ncorresponding to the continuous functor <MATH_0002>.\nLet <MATH_0003> and set <MATH_0004>.\nThen the functor <MATH_0005>,\n<MATH_0006> determines a morphism of sites\n<MATH_0007>.\nThe morphism <MATH_0008> fits into a commutative diagram of topoi\n<MATH_0009>\nUsing the identifications\n<MATH_0010> and\n<MATH_0011> of\nLemma <REF_0001>\nthe functor <MATH_0012> is described by the rule\n<MATH_0013>\nFinally, we have <MATH_0014>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-localize-morphism",
+      "requested_tag": "03CF"
+    },
+    {
+      "context_id": "reference:sites-lemma-preserve-equalizers",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous, and\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> fibre products and equalizers exist in <MATH_0006> and\n<MATH_0007> commutes with them.\n<STRUCT_0003>\nIn this case the functor <MATH_0008> above commutes with fibre products and\nequalizers (and more generally with finite connected limits).\n<STRUCT_0004>",
+      "requested_label": "sites-lemma-preserve-equalizers",
+      "requested_tag": "00XS"
+    },
+    {
+      "context_id": "reference:sites-lemma-when-shriek",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous.\n<STRUCT_0003>\nLet <MATH_0006>\nbe the associated morphism of topoi. Then\n<STRUCT_0004>\n<STRUCT_0005> sheafification in the formula <MATH_0007> is\nunnecessary, in other words <MATH_0008>,\n<STRUCT_0006> <MATH_0009> has a left adjoint <MATH_0010>, and\n<STRUCT_0007> <MATH_0011> commutes with arbitrary limits and colimits.\n<STRUCT_0008>\n<STRUCT_0009>",
+      "requested_label": "sites-lemma-when-shriek",
+      "requested_tag": "00XR"
+    },
+    {
+      "context_id": "reference:sites-remark-variant-glue-sheaves-absolute",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThere is a variant of Lemma <REF_0001>\nwhich comes up in algebraic geometry. Namely, suppose that <MATH_0001>\nis a site with all fibre products and for each <MATH_0002>\nwe are given a full subcategory <MATH_0003> with\nthe following properties\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is in <MATH_0005>,\n<STRUCT_0004> for <MATH_0006> in <MATH_0007> and covering <MATH_0008>\nof <MATH_0009> we have <MATH_0010> in <MATH_0011> and\n<STRUCT_0005> for a morphism <MATH_0012> of <MATH_0013> and <MATH_0014> in <MATH_0015>\nthe base change <MATH_0016> is in <MATH_0017>.\n<STRUCT_0006>\nIn this setting <MATH_0018> is a site for all <MATH_0019> in <MATH_0020>\nand the base change functor <MATH_0021> defines a morphism\n<MATH_0022> of sites for all morphisms <MATH_0023>\nof <MATH_0024>. The glueing statement we obtain then reads as follows:\nA sheaf <MATH_0025> on <MATH_0026> is given by the following data:\n<STRUCT_0007>\n<STRUCT_0008> for every <MATH_0027> a sheaf\n<MATH_0028> on <MATH_0029>,\n<STRUCT_0009> for every <MATH_0030> in <MATH_0031> a map\n<MATH_0032>.\n<STRUCT_0010>\nThese data are subject to the following conditions:\n<STRUCT_0011>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> given <MATH_0033> and <MATH_0034> in\n<MATH_0035> the composition\n<MATH_0036> is equal to <MATH_0037>, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> if <MATH_0038> is in <MATH_0039> then <MATH_0040> is an isomorphism.\n<STRUCT_0012>\nIf we ever need this we will precisely state and prove this here.\n(Note that this result is slightly different from the statements\nabove as we are not requiring all the maps <MATH_0041> to be isomorphisms!)\n<STRUCT_0013>",
+      "requested_label": "sites-remark-variant-glue-sheaves-absolute",
+      "requested_tag": "0GWL"
+    },
+    {
+      "context_id": "reference:sites-section-continuous-functors",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Continuous functors<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "sites-section-continuous-functors",
+      "requested_tag": "00WU"
+    },
+    {
+      "context_id": "reference:sites-section-localize",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Localization<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "sites-section-localize",
+      "requested_tag": "00XZ"
+    },
+    {
+      "context_id": "reference:topologies-definition-big-zariski-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>big Zariski site<TEXTITCLOSE_0001> is any site <MATH_0001> as in\nSites, Definition <REF_0001> constructed as follows:\n<STRUCT_0002>\n<STRUCT_0003> Choose any set of schemes <MATH_0002>, and any set of Zariski coverings\n<MATH_0003> among these schemes.\n<STRUCT_0004> As underlying category of <MATH_0004>\ntake any category <MATH_0005> constructed as in\nSets, Lemma <REF_0002> starting with the set <MATH_0006>.\n<STRUCT_0005> As coverings of <MATH_0007> choose any set of coverings as in\nSets, Lemma <REF_0003> starting with the\ncategory <MATH_0008> and the class of Zariski coverings,\nand the set <MATH_0009> chosen above.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-definition-big-zariski-site",
+      "requested_tag": "020S"
+    },
+    {
+      "context_id": "reference:topologies-lemma-morphism-big-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\nThe functor\n<MATH_0004>\nis cocontinuous, and has a continuous right adjoint\n<MATH_0005>\nThey induce the same morphism of topoi\n<MATH_0006>\nWe have <MATH_0007>.\nWe have <MATH_0008>.\nAlso, <MATH_0009> has a left adjoint <MATH_0010> which commutes with\nfibre products and equalizers.\n<STRUCT_0002>",
+      "requested_label": "topologies-lemma-morphism-big-etale",
+      "requested_tag": "021H"
+    },
+    {
+      "context_id": "reference:topologies-lemma-morphism-big-small-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> We have <MATH_0004> with <MATH_0005> as in\nLemma <REF_0001> and <MATH_0006> as in\nLemma <REF_0002>.\n<STRUCT_0004> The functor <MATH_0007>,\n<MATH_0008> is continuous and induces\na morphism of sites\n<MATH_0009>\nWe have <MATH_0010>.\n<STRUCT_0005> We have a commutative diagram of morphisms of sites\n<MATH_0011>\nso that <MATH_0012> as morphisms of topoi.\n<STRUCT_0006> We have <MATH_0013>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "requested_label": "topologies-lemma-morphism-big-small-etale",
+      "requested_tag": "021I"
+    },
+    {
+      "context_id": "reference:topologies-lemma-put-in-T-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\nThe functor <MATH_0004>\nis cocontinuous and induces a morphism of topoi\n<MATH_0005>\nFor a sheaf <MATH_0006> on <MATH_0007>\nwe have the formula <MATH_0008>.\nThe functor <MATH_0009> also has a left adjoint <MATH_0010> which commutes\nwith fibre products and equalizers.\n<STRUCT_0002>",
+      "requested_label": "topologies-lemma-put-in-T-etale",
+      "requested_tag": "021F"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny Zariski covering is an <ACCENT_0001>tale covering.\n<STRUCT_0002>",
+      "requested_label": "topologies-lemma-zariski-etale",
+      "requested_tag": "0216"
+    }
+  ]
+}

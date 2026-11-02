@@ -1,0 +1,627 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19b97-ed2d-7f63-8dd4-38426ff657ce",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/topologies34-gpt61sol-p13-20261102T121603Z.json",
+    "hash": "sha256:af74ff988007234b2c01b6d6262c3fe631474fd3092a7d009fb308639d1d5289"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:0GDW:statement",
+      "source_text": "Let <MATH_0001>, <MATH_0002>, <MATH_0003> satisfy conditions (1), (2), (a), and (b) of\nLemma <REF_0001> and denote <MATH_0004>\nthe unique extension constructed in the lemma. Let\n<MATH_0005>. Assume\n<STRUCT_0001>\n<ITEMOPEN_0001>(c)<ITEMCLOSE_0001> for any standard <MATH_0006>-covering <MATH_0007>\nof affines in <MATH_0008> such that <MATH_0009> factors through an affine open\n<MATH_0010> and <MATH_0011> is of finite presentation, the sheaf condition\nhold for <MATH_0012> and <MATH_0013><FOOTNOTEOPEN_0001>This makes\nsense as <MATH_0014>, <MATH_0015>, and <MATH_0016> are isomorphic to objects\nof <MATH_0017> by (2).<FOOTNOTECLOSE_0001>.\n<STRUCT_0002>\nThen <MATH_0018> satisfies the sheaf condition for all <MATH_0019>-coverings.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 276,
+          "projection_end": 284,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 300,
+          "projection_end": 307,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 364,
+          "projection_end": 375,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 410,
+          "projection_end": 429,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 435,
+          "projection_end": 450,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 572,
+          "projection_end": 582,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 586,
+          "projection_end": 593,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 683,
+          "projection_end": 698,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 719,
+          "projection_end": 728,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0GDW:proof",
+      "source_text": "Let <MATH_0001> be a scheme over <MATH_0002> and let <MATH_0003>\nbe a <MATH_0004>-covering. Let <MATH_0005> be elements such that\n<MATH_0006> and <MATH_0007> map to the same element of <MATH_0008>\nfor all <MATH_0009>. We have to show that there is a\nunique element <MATH_0010> restricting to <MATH_0011> for all <MATH_0012>.\n\n<STRUCT_0001><STRUCT_0002>\nSpecial case: <MATH_0013> is an affine such that the structure morphism\nmaps into an affine open <MATH_0014> of <MATH_0015> and the covering\n<MATH_0016> is a standard <MATH_0017>-covering.\nIn this case we can write\n<MATH_0018>\nas a cofiltered limit with <MATH_0019> of finite presentation\nand <MATH_0020> affine. See Algebra, Lemma <REF_0001>.\nBy Lemma <REF_0002> there exists a <MATH_0021> and a standard\n<MATH_0022>-covering <MATH_0023> whose base change\nto <MATH_0024> is the given covering. For <MATH_0025> denote\n<MATH_0026> the base change to <MATH_0027>\nof our covering. Then we see that\n<MATH_0028>\nThe first equality holds by construction of <MATH_0029>. The second holds by\nassumption (c). The third holds because filtered colimits are exact.\nThe fourth again holds by construction of <MATH_0030>.\nIn this way we find that the sheaf property holds for <MATH_0031>\nwith respect to <MATH_0032>.\n\n<STRUCT_0003><STRUCT_0004>\nGeneral case. Choose an affine open covering <MATH_0033> such that\neach <MATH_0034> maps into an affine open of <MATH_0035>. For every <MATH_0036> we may choose\na standard <MATH_0037>-covering <MATH_0038>\nwhich refines <MATH_0039>. For each\n<MATH_0040> choose an index <MATH_0041>\nand a morphism <MATH_0042> over <MATH_0043>.\nLet <MATH_0044> be the element of <MATH_0045> we get by restricting\n<MATH_0046> via <MATH_0047>. Observe that <MATH_0048> and <MATH_0049>\nrestrict to the same element of <MATH_0050>\nfor all <MATH_0051> and <MATH_0052> and all <MATH_0053>\nand <MATH_0054>; verification omitted.\nIn particular, by the result of the previous paragraph there is a unique\nelement <MATH_0055> restricting to <MATH_0056> for all <MATH_0057>.\nWith this notation we are ready to finish the proof.\n\n<STRUCT_0005><STRUCT_0006>\nProof of uniqueness of <MATH_0058>: this is true because <MATH_0059> satisfies\nthe sheaf property for Zariski coverings and <MATH_0060> must be equal\nto <MATH_0061> because both restrict to <MATH_0062> for all <MATH_0063>.\nThis uniqueness then shows that <MATH_0064> and <MATH_0065> must restrict\nto the same section of <MATH_0066> over (the non-affine scheme) <MATH_0067>\nbecause these sections restrict to the same section over the\n<MATH_0068>-covering <MATH_0069>.\nThus by the sheaf property for Zariski coverings, there is a unique\nsection <MATH_0070> of <MATH_0071> over <MATH_0072> whose restriction to <MATH_0073> is <MATH_0074>.\nWe omit the verification (similar to the above) that <MATH_0075> restricts\nto <MATH_0076> over <MATH_0077>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 82,
+          "projection_end": 90,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 111,
+          "projection_end": 119,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 158,
+          "projection_end": 161,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 174,
+          "projection_end": 181,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 257,
+          "projection_end": 264,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 384,
+          "projection_end": 390,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 405,
+          "projection_end": 423,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 424,
+          "projection_end": 428,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 437,
+          "projection_end": 448,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 484,
+          "projection_end": 492,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 531,
+          "projection_end": 539,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cofiltered",
+          "projection_start": 584,
+          "projection_end": 594,
+          "concept": "cofiltered",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limit",
+          "projection_start": 595,
+          "projection_end": 600,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 621,
+          "projection_end": 640,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 657,
+          "projection_end": 663,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 669,
+          "projection_end": 676,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 770,
+          "projection_end": 778,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 797,
+          "projection_end": 808,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 837,
+          "projection_end": 845,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 886,
+          "projection_end": 897,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 920,
+          "projection_end": 928,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "filtered colimits",
+          "projection_start": 1076,
+          "projection_end": 1093,
+          "concept": "filtered-colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 1189,
+          "projection_end": 1203,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1306,
+          "projection_end": 1317,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1318,
+          "projection_end": 1326,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 1366,
+          "projection_end": 1370,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1379,
+          "projection_end": 1390,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1466,
+          "projection_end": 1474,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1569,
+          "projection_end": 1577,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1631,
+          "projection_end": 1638,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1767,
+          "projection_end": 1774,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1958,
+          "projection_end": 1965,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 2189,
+          "projection_end": 2203,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 2216,
+          "projection_end": 2225,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 2452,
+          "projection_end": 2465,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 2552,
+          "projection_end": 2560,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 2586,
+          "projection_end": 2600,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 2613,
+          "projection_end": 2622,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUX:statement",
+      "source_text": "Let <MATH_0001>.\nLet <MATH_0002> be a scheme contained in a big site <MATH_0003>.\nLet <MATH_0004> be a <MATH_0005>-sheaf\nsatisfying property (b) of Lemma <REF_0001> with\n<MATH_0006>. Then the extension\n<MATH_0007> of <MATH_0008> to the category of all schemes over <MATH_0009>\nsatisfies the sheaf condition for all <MATH_0010>-coverings.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 38,
+          "projection_end": 44,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 64,
+          "projection_end": 68,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 115,
+          "projection_end": 120,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 236,
+          "projection_end": 244,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 252,
+          "projection_end": 259,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 291,
+          "projection_end": 306,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 327,
+          "projection_end": 336,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUX:proof",
+      "source_text": "This follows from Lemma <REF_0001>\napplied with <MATH_0001>.\nConditions (1), (2), (a), and (b) of Lemma <REF_0002>\nhold; we omit the details. Thus we get our unique extension <MATH_0002>\nto the category of all schemes over <MATH_0003>. Finally, observe that\nany standard <MATH_0004>-covering is tautologically equivalent to a\ncovering in <MATH_0005>, see Sets, Lemma <REF_0003>\nas well as Lemmas <REF_0004>,\n<REF_0005>,\n<REF_0006>,\n<REF_0007>, and\n<REF_0008>. By\nSites, Lemma <REF_0009>\nthe sheaf property passes through tautological equivalence\nof coverings. Hence the fact that <MATH_0006> is a <MATH_0007>-sheaf implies\nthat property (c) of Lemma <REF_0010> holds\nand we conclude.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 194,
+          "projection_end": 202,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 210,
+          "projection_end": 217,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 283,
+          "projection_end": 291,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 310,
+          "projection_end": 320,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 326,
+          "projection_end": 334,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 355,
+          "projection_end": 359,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 463,
+          "projection_end": 468,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 491,
+          "projection_end": 505,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 534,
+          "projection_end": 545,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 549,
+          "projection_end": 558,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 609,
+          "projection_end": 614,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:topologies:049N:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us prove this for <MATH_0001>.\nBy Limits, Lemma <REF_0001>\nthe category of schemes of finite presentation over <MATH_0002> is the\ncolimit over <MATH_0003> of the categories of finite presentation over <MATH_0004>. By\nLimits, Lemmas <REF_0002>\nand <REF_0003>\nthe same is true for category of schemes which are affine, flat and\nof finite presentation over <MATH_0005>.\nTo finish the proof of the lemma it suffices to show that if\n<MATH_0006> is a finite family of\nflat finitely presented morphisms with <MATH_0007> affine, and the\nbase change <MATH_0008> is surjective,\nthen for some <MATH_0009> the morphism\n<MATH_0010> is surjective.\nDenote <MATH_0011>, resp.<SPACE_0001><MATH_0012> the image.\nOf course <MATH_0013> by assumption.\nSince the morphisms are flat and of finite presentation we see that\n<MATH_0014> is a quasi-compact open of <MATH_0015>, see\nMorphisms, Lemma <REF_0004>.\nMoreover, <MATH_0016> (formation of image commutes\nwith base change). Hence by\nLimits, Lemma <REF_0005>\nwe conclude that <MATH_0017> for some large enough <MATH_0018>\nand we win.\n\n<STRUCT_0002><STRUCT_0003>\nFor <MATH_0019> a standard <MATH_0020>-covering\nis a standard fppf covering. Hence the fully faithfulness of the functor\nholds. The only issue is to show that given a standard fppf covering\n<MATH_0021> for some <MATH_0022> such that <MATH_0023>\nis a standard <MATH_0024>-covering, then <MATH_0025>\nis a standard <MATH_0026>-covering for all <MATH_0027>. This follows immediately\nfrom Limits, Lemmas\n<REF_0006>,\n<REF_0007>,\n<REF_0008>, and\n<REF_0009>.\n<STRUCT_0004>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0GDW:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a scheme over <MATH_0002> and let <MATH_0003>\nbe a <MATH_0004>-covering. Let <MATH_0005> be elements such that\n<MATH_0006> and <MATH_0007> map to the same element of <MATH_0008>\nfor all <MATH_0009>. We have to show that there is a\nunique element <MATH_0010> restricting to <MATH_0011> for all <MATH_0012>.\n\n<STRUCT_0002><STRUCT_0003>\nSpecial case: <MATH_0013> is an affine such that the structure morphism\nmaps into an affine open <MATH_0014> of <MATH_0015> and the covering\n<MATH_0016> is a standard <MATH_0017>-covering.\nIn this case we can write\n<MATH_0018>\nas a cofiltered limit with <MATH_0019> of finite presentation\nand <MATH_0020> affine. See Algebra, Lemma <REF_0001>.\nBy Lemma <REF_0002> there exists a <MATH_0021> and a standard\n<MATH_0022>-covering <MATH_0023> whose base change\nto <MATH_0024> is the given covering. For <MATH_0025> denote\n<MATH_0026> the base change to <MATH_0027>\nof our covering. Then we see that\n<MATH_0028>\nThe first equality holds by construction of <MATH_0029>. The second holds by\nassumption (c). The third holds because filtered colimits are exact.\nThe fourth again holds by construction of <MATH_0030>.\nIn this way we find that the sheaf property holds for <MATH_0031>\nwith respect to <MATH_0032>.\n\n<STRUCT_0004><STRUCT_0005>\nGeneral case. Choose an affine open covering <MATH_0033> such that\neach <MATH_0034> maps into an affine open of <MATH_0035>. For every <MATH_0036> we may choose\na standard <MATH_0037>-covering <MATH_0038>\nwhich refines <MATH_0039>. For each\n<MATH_0040> choose an index <MATH_0041>\nand a morphism <MATH_0042> over <MATH_0043>.\nLet <MATH_0044> be the element of <MATH_0045> we get by restricting\n<MATH_0046> via <MATH_0047>. Observe that <MATH_0048> and <MATH_0049>\nrestrict to the same element of <MATH_0050>\nfor all <MATH_0051> and <MATH_0052> and all <MATH_0053>\nand <MATH_0054>; verification omitted.\nIn particular, by the result of the previous paragraph there is a unique\nelement <MATH_0055> restricting to <MATH_0056> for all <MATH_0057>.\nWith this notation we are ready to finish the proof.\n\n<STRUCT_0006><STRUCT_0007>\nProof of uniqueness of <MATH_0058>: this is true because <MATH_0059> satisfies\nthe sheaf property for Zariski coverings and <MATH_0060> must be equal\nto <MATH_0061> because both restrict to <MATH_0062> for all <MATH_0063>.\nThis uniqueness then shows that <MATH_0064> and <MATH_0065> must restrict\nto the same section of <MATH_0066> over (the non-affine scheme) <MATH_0067>\nbecause these sections restrict to the same section over the\n<MATH_0068>-covering <MATH_0069>.\nThus by the sheaf property for Zariski coverings, there is a unique\nsection <MATH_0070> of <MATH_0071> over <MATH_0072> whose restriction to <MATH_0073> is <MATH_0074>.\nWe omit the verification (similar to the above) that <MATH_0075> restricts\nto <MATH_0076> over <MATH_0077>.\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0GDW:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002>, <MATH_0003> satisfy conditions (1), (2), (a), and (b) of\nLemma <REF_0001> and denote <MATH_0004>\nthe unique extension constructed in the lemma. Let\n<MATH_0005>. Assume\n<STRUCT_0002>\n<ITEMOPEN_0001>(c)<ITEMCLOSE_0001> for any standard <MATH_0006>-covering <MATH_0007>\nof affines in <MATH_0008> such that <MATH_0009> factors through an affine open\n<MATH_0010> and <MATH_0011> is of finite presentation, the sheaf condition\nhold for <MATH_0012> and <MATH_0013><FOOTNOTEOPEN_0001>This makes\nsense as <MATH_0014>, <MATH_0015>, and <MATH_0016> are isomorphic to objects\nof <MATH_0017> by (2).<FOOTNOTECLOSE_0001>.\n<STRUCT_0003>\nThen <MATH_0018> satisfies the sheaf condition for all <MATH_0019>-coverings.\n<STRUCT_0004>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0EUX:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nLet <MATH_0002> be a scheme contained in a big site <MATH_0003>.\nLet <MATH_0004> be a <MATH_0005>-sheaf\nsatisfying property (b) of Lemma <REF_0001> with\n<MATH_0006>. Then the extension\n<MATH_0007> of <MATH_0008> to the category of all schemes over <MATH_0009>\nsatisfies the sheaf condition for all <MATH_0010>-coverings.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0EUX:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows from Lemma <REF_0001>\napplied with <MATH_0001>.\nConditions (1), (2), (a), and (b) of Lemma <REF_0002>\nhold; we omit the details. Thus we get our unique extension <MATH_0002>\nto the category of all schemes over <MATH_0003>. Finally, observe that\nany standard <MATH_0004>-covering is tautologically equivalent to a\ncovering in <MATH_0005>, see Sets, Lemma <REF_0003>\nas well as Lemmas <REF_0004>,\n<REF_0005>,\n<REF_0006>,\n<REF_0007>, and\n<REF_0008>. By\nSites, Lemma <REF_0009>\nthe sheaf property passes through tautological equivalence\nof coverings. Hence the fact that <MATH_0006> is a <MATH_0007>-sheaf implies\nthat property (c) of Lemma <REF_0010> holds\nand we conclude.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-ring-colimit-fp",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. There exists a directed system <MATH_0002> of\n<MATH_0003>-algebras of finite presentation such that <MATH_0004>.\nIf <MATH_0005> is of finite type over <MATH_0006> we may arrange it so that all the\ntransition maps in the system of <MATH_0007> are surjective.\n<STRUCT_0002>",
+      "requested_label": "algebra-lemma-ring-colimit-fp",
+      "requested_tag": "00QN"
+    },
+    {
+      "context_id": "reference:sets-lemma-what-is-in-it",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an ordinal as in Lemma <REF_0001> above.\nThe category <MATH_0002> satisfies the following\nproperties:\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0003>, then\nfor any morphisms <MATH_0004>, <MATH_0005> the fibre\nproduct <MATH_0006> in <MATH_0007> exists\nand is a fibre product in the category of schemes.\n<STRUCT_0004> Given any at most countable collection <MATH_0008>\nof elements of <MATH_0009>, the coproduct\n<MATH_0010> exists in <MATH_0011> and\nis a coproduct in the category of schemes.\n<STRUCT_0005> For any <MATH_0012> and\nany open immersion <MATH_0013>, there exists a\n<MATH_0014> with <MATH_0015>.\n<STRUCT_0006> For any <MATH_0016> and\nany closed immersion <MATH_0017>, there exists an\n<MATH_0018> with <MATH_0019>.\n<STRUCT_0007> For any <MATH_0020> and\nany finite type morphism <MATH_0021>, there exists an\n<MATH_0022> with <MATH_0023>.\n<STRUCT_0008> Suppose <MATH_0024> is a scheme which has an open covering\n<MATH_0025> such that there exists\na <MATH_0026> with\n(a) <MATH_0027> for all\n<MATH_0028>, and (b) <MATH_0029>.\nThen <MATH_0030> is isomorphic to an object of <MATH_0031>.\n<STRUCT_0009> For any <MATH_0032> and\nany morphism <MATH_0033> locally of finite type such\nthat <MATH_0034> can be covered by at most\n<MATH_0035> open affines, there exists an\n<MATH_0036> with <MATH_0037>.\nFor example this holds if <MATH_0038> can be covered by at most\n<MATH_0039> open affines.\n<STRUCT_0010> For any <MATH_0040> and\nany monomorphism <MATH_0041> which is either locally of finite presentation\nor quasi-compact, there exists an\n<MATH_0042> with <MATH_0043>.\n<STRUCT_0011> Suppose that <MATH_0044> is\naffine. Write <MATH_0045>.\nThen any of the following schemes is isomorphic to a scheme\nin <MATH_0046>:\n<STRUCT_0012>\n<STRUCT_0013> For any ideal <MATH_0047> with completion\n<MATH_0048>, the scheme <MATH_0049>.\n<STRUCT_0014> For any finite type <MATH_0050>-algebra <MATH_0051>, the\nscheme <MATH_0052>.\n<STRUCT_0015> For any localization <MATH_0053>, the scheme <MATH_0054>.\n<STRUCT_0016> For any prime <MATH_0055>, the scheme\n<MATH_0056>.\n<STRUCT_0017> For any subring <MATH_0057>, the scheme\n<MATH_0058>.\n<STRUCT_0018> Any scheme of finite type over a ring of cardinality at most\n<MATH_0059>.\n<STRUCT_0019> And so on.\n<STRUCT_0020>\n<STRUCT_0021>\n<STRUCT_0022>",
+      "requested_label": "sets-lemma-what-is-in-it",
+      "requested_tag": "000R"
+    },
+    {
+      "context_id": "reference:sites-lemma-tautological-same-sheaf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. Let\n<MATH_0002>, and\n<MATH_0003> be two families of morphisms\nwith the same fixed target. Assume that the fibre products\n<MATH_0004> and <MATH_0005> exist.\nIf <MATH_0006> and <MATH_0007> are\ntautologically equivalent, then for any presheaf <MATH_0008> on\n<MATH_0009> the sheaf condition for <MATH_0010> with respect to\n<MATH_0011> is equivalent to the sheaf condition for <MATH_0012>\nwith respect to <MATH_0013>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-tautological-same-sheaf",
+      "requested_tag": "00VW"
+    },
+    {
+      "context_id": "reference:topologies-lemma-etale-induced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary <ACCENT_0002>tale covering of <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> There exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which refines <MATH_0008>.\n<STRUCT_0004> If <MATH_0009> is a standard <ACCENT_0003>tale covering, then\nit is tautologically equivalent to a covering in <MATH_0010>.\n<STRUCT_0005> If <MATH_0011> is a Zariski covering, then\nit is tautologically equivalent to a covering in <MATH_0012>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-etale-induced",
+      "requested_tag": "03WW"
+    },
+    {
+      "context_id": "reference:topologies-lemma-extend",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a full subcategory\nof the category <MATH_0003> of all schemes over <MATH_0004>. Assume\n<STRUCT_0002>\n<STRUCT_0003> if <MATH_0005> is an object of <MATH_0006> and\n<MATH_0007> is an affine open, then <MATH_0008> is isomorphic\nto an object of <MATH_0009>,\n<STRUCT_0004> if <MATH_0010> is an affine scheme lying over an affine open <MATH_0011>\nsuch that <MATH_0012> is of finite presentation, then <MATH_0013> is isomorphic\nto an object of <MATH_0014>.\n<STRUCT_0005>\nLet <MATH_0015> be a functor.\nAssume\n<STRUCT_0006>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> for any Zariski covering <MATH_0016>\nwith <MATH_0017> objects of <MATH_0018> we have\nthe sheaf condition for <MATH_0019> and this family<FOOTNOTEOPEN_0001>As we\ndo not know that <MATH_0020> is in <MATH_0021>\nthis has to be interpreted as follows: by property (1)\nthere exist Zariski coverings <MATH_0022>\nwith <MATH_0023> an object of <MATH_0024>. Then the sheaf condition\nsays that <MATH_0025> is the equalizer of the two maps\nfrom <MATH_0026> to <MATH_0027>.<FOOTNOTECLOSE_0001>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> if <MATH_0028> is a directed limit of affine schemes\nover <MATH_0029> with <MATH_0030> objects of <MATH_0031>, then\n<MATH_0032>.\n<STRUCT_0007>\nThen there is a unique way to extend <MATH_0033> to a functor\n<MATH_0034> satisfying the analogues of\n(a) and (b), i.e., <MATH_0035> satisfies the sheaf condition for any\nZariski covering and <MATH_0036> whenever <MATH_0037>\nis a directed limit of affine schemes over <MATH_0038>.\n<STRUCT_0008>",
+      "requested_label": "topologies-lemma-extend",
+      "requested_tag": "0EUW"
+    },
+    {
+      "context_id": "reference:topologies-lemma-fppf-induced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big fppf site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary fppf covering of <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> There exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which refines <MATH_0008>.\n<STRUCT_0004> If <MATH_0009> is a standard fppf covering, then\nit is tautologically equivalent to a covering of <MATH_0010>.\n<STRUCT_0005> If <MATH_0011> is a Zariski covering, then\nit is tautologically equivalent to a covering of <MATH_0012>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-fppf-induced",
+      "requested_tag": "03WX"
+    },
+    {
+      "context_id": "reference:topologies-lemma-limit-fppf-topology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nLet <MATH_0002> be an affine scheme which is written as a limit\n<MATH_0003> of a directed inverse system of affine schemes.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0004> be a\nstandard <MATH_0005>-covering of <MATH_0006>, see Definitions\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.\nThen there exists an index <MATH_0007> and a standard <MATH_0008>-covering\n<MATH_0009>\nwhose base change <MATH_0010> to <MATH_0011>\nis isomorphic to <MATH_0012>.\n<STRUCT_0004> Let <MATH_0013>, <MATH_0014> be a pair of standard\n<MATH_0015>-coverings of <MATH_0016>. If\n<MATH_0017> is\na morphism of coverings of <MATH_0018>, then there exists an index\n<MATH_0019> and a morphism\n<MATH_0020>\nwhose base change to <MATH_0021> is <MATH_0022>.\n<STRUCT_0005> If\n<MATH_0023>\nare morphisms of standard <MATH_0024>-coverings of <MATH_0025> whose\nbase changes <MATH_0026> to <MATH_0027> are equal then there exists an\nindex <MATH_0028> such that <MATH_0029>.\n<STRUCT_0006>\nIn other words, the category of standard <MATH_0030>-coverings of <MATH_0031> is\nthe colimit over <MATH_0032> of the categories of standard <MATH_0033>-coverings of <MATH_0034>.\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-limit-fppf-topology",
+      "requested_tag": "049N"
+    },
+    {
+      "context_id": "reference:topologies-lemma-smooth-induced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big smooth site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary smooth covering of <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> There exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which refines <MATH_0008>.\n<STRUCT_0004> If <MATH_0009> is a standard smooth covering, then\nit is tautologically equivalent to a covering of <MATH_0010>.\n<STRUCT_0005> If <MATH_0011> is a Zariski covering, then\nit is tautologically equivalent to a covering of <MATH_0012>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-smooth-induced",
+      "requested_tag": "03WZ"
+    },
+    {
+      "context_id": "reference:topologies-lemma-syntomic-induced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big syntomic site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary syntomic covering of <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> There exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which refines <MATH_0008>.\n<STRUCT_0004> If <MATH_0009> is a standard syntomic covering, then\nit is tautologically equivalent to a covering in <MATH_0010>.\n<STRUCT_0005> If <MATH_0011> is a Zariski covering, then\nit is tautologically equivalent to a covering in <MATH_0012>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-syntomic-induced",
+      "requested_tag": "03X2"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-induced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big Zariski site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary Zariski covering of <MATH_0004>.\nThere exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which is tautologically equivalent (see\nSites, Definition <REF_0002>)\nto <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": "topologies-lemma-zariski-induced",
+      "requested_tag": "03WV"
+    }
+  ]
+}

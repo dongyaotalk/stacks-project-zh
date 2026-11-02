@@ -1,0 +1,1976 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19b97-ed2d-7f63-8dd4-38426ff657ce",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/topologies34-gpt61sol-p10-20261102T115715Z.json",
+    "hash": "sha256:bb9ecf761ec200ad334835ba583178a29c389dde536f9b959d787134661ea259"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:022A:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nWe try to avoid using the terminology ``<MATH_0001> is a sheaf'' in this\nsituation since we are not defining a category of fpqc sheaves\nas we explained above.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "sheaf",
+          "projection_start": 71,
+          "projection_end": 76,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 125,
+          "projection_end": 133,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 142,
+          "projection_end": 149,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:022H:statement",
+      "source_text": "Let <MATH_0001> be a contravariant functor on the category\nof schemes with values in sets. Then <MATH_0002> satisfies\nthe sheaf property for the fpqc topology if and only\nif it satisfies\n<STRUCT_0001>\n<STRUCT_0002> the sheaf property for every Zariski covering, and\n<STRUCT_0003> the sheaf property for any standard fpqc covering.\n<STRUCT_0004>\nMoreover, in the presence of (1) property (2) is equivalent to\nproperty\n<STRUCT_0005>\n<ITEMOPEN_0001>(2')<ITEMCLOSE_0001> the sheaf property for <MATH_0003>\nwith <MATH_0004>, <MATH_0005> affine and <MATH_0006> faithfully flat.\n<STRUCT_0006>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "contravariant functor",
+          "projection_start": 21,
+          "projection_end": 42,
+          "concept": "contravariant-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 50,
+          "projection_end": 58,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 62,
+          "projection_end": 69,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 85,
+          "projection_end": 89,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 122,
+          "projection_end": 136,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 145,
+          "projection_end": 158,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 219,
+          "projection_end": 233,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 244,
+          "projection_end": 260,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 284,
+          "projection_end": 298,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 316,
+          "projection_end": 329,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 394,
+          "projection_end": 404,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 471,
+          "projection_end": 485,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 532,
+          "projection_end": 538,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 555,
+          "projection_end": 570,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:022H:proof",
+      "source_text": "Assume (1) and (2) hold.\nLet <MATH_0001> be an fpqc covering. Let <MATH_0002>\nbe a family of elements such that <MATH_0003> and <MATH_0004> map to the same element\nof <MATH_0005>. Let <MATH_0006> be the maximal open subset\nsuch that there exists a unique <MATH_0007> with\n<MATH_0008> for all <MATH_0009>.\nSuch a maximal open exists because <MATH_0010> satisfies the\nsheaf property for Zariski coverings; in fact <MATH_0011> is the\nunion of all opens with this property. Let <MATH_0012>.\nWe will show <MATH_0013>. To do this we pick an affine open\n<MATH_0014> and we will show there is a unique\n<MATH_0015> with\n<MATH_0016> for all <MATH_0017>.\n\n<STRUCT_0001><STRUCT_0002>\nBy Lemma <REF_0001> we can find a standard fpqc covering\n<MATH_0018> refining <MATH_0019>,\nsay by morphisms <MATH_0020>. By (2) we obtain a unique element\n<MATH_0021> such that <MATH_0022>. Note that for any\nscheme <MATH_0023> over <MATH_0024> there is a unique section <MATH_0025>\nwhich restricts to <MATH_0026> on\n<MATH_0027> for <MATH_0028>. Namely, this is true if <MATH_0029>\nis affine by (2) as <MATH_0030> is a standard fpqc covering\nand in general this follows from (1) and the affine case by choosing an\naffine open covering of <MATH_0031>. In particular, <MATH_0032>.\nNow, taking <MATH_0033> and using that\n<MATH_0034>\nwe conclude that <MATH_0035>\nwhich is what we had to show.\n\n<STRUCT_0003><STRUCT_0004>\nProof of the equivalence of (2) and (2') in the presence of (1).\nSuppose <MATH_0036> is a standard fpqc covering, then\n<MATH_0037> is a faithfully flat morphism of affine schemes.\nIn the presence of (1) we have <MATH_0038>\nand similarly\n<MATH_0039>.\nThus the sheaf condition for <MATH_0040> and <MATH_0041>\nis the same.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 47,
+          "projection_end": 60,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 93,
+          "projection_end": 101,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 140,
+          "projection_end": 143,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 156,
+          "projection_end": 163,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open subset",
+          "projection_start": 211,
+          "projection_end": 222,
+          "concept": "open-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 366,
+          "projection_end": 380,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 393,
+          "projection_end": 402,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 535,
+          "projection_end": 546,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 714,
+          "projection_end": 727,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 769,
+          "projection_end": 778,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 818,
+          "projection_end": 825,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 879,
+          "projection_end": 885,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 1055,
+          "projection_end": 1061,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 1098,
+          "projection_end": 1111,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 1157,
+          "projection_end": 1163,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1184,
+          "projection_end": 1195,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1196,
+          "projection_end": 1204,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 1399,
+          "projection_end": 1410,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 1485,
+          "projection_end": 1498,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1522,
+          "projection_end": 1537,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1538,
+          "projection_end": 1546,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 1550,
+          "projection_end": 1564,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 1645,
+          "projection_end": 1660,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:022A:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nThe following lemma is here just to point out set theoretical difficulties\ndo indeed arise and should be ignored by most readers.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "set",
+          "projection_start": 60,
+          "projection_end": 63,
+          "concept": "set",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0BBK:statement",
+      "source_text": "Let <MATH_0001> be a nonzero ring. There does not exist a set <MATH_0002> of\nfpqc-coverings of <MATH_0003> such that every fpqc-covering can\nbe refined by an element of <MATH_0004>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 29,
+          "projection_end": 33,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 58,
+          "projection_end": 61,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 82,
+          "projection_end": 91,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 128,
+          "projection_end": 136,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 158,
+          "projection_end": 165,
+          "concept": "element",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0BBK:proof",
+      "source_text": "Let us first explain this when <MATH_0001> is a field. For any set <MATH_0002> consider\nthe purely transcendental field extension\n<MATH_0003>. Since <MATH_0004> is faithfully flat\nwe see that <MATH_0005> is an fpqc covering.\nLet <MATH_0006> be a set and for each <MATH_0007> let\n<MATH_0008> be an\nfpqc covering. If <MATH_0009> refines <MATH_0010>\nthen the morphisms <MATH_0011> factor through\n<MATH_0012>. Since <MATH_0013> is a covering,\nat least some <MATH_0014> is nonempty. Pick a\npoint <MATH_0015>. Since we have the factorization\n<MATH_0016>\nwe obtain a homomorphism of fields <MATH_0017>.\nIn particular, we see that the cardinality of <MATH_0018>\nis at least the cardinality of <MATH_0019>. Thus if we take <MATH_0020> to be a set\nof cardinality bigger than the cardinalities of the residue fields\nof all the schemes <MATH_0021>, then such a factorization does\nnot exist and the lemma holds for <MATH_0022>.\n\n<STRUCT_0001><STRUCT_0002>\nGeneral case. Since <MATH_0023> is nonzero it has a maximal prime ideal\n<MATH_0024> with residue field <MATH_0025>. Let <MATH_0026> be a set and\nconsider <MATH_0027>\nwhere <MATH_0028> is the multiplicative\nsubset of <MATH_0029> such that <MATH_0030> maps to\na nonzero element of <MATH_0031> for\nall primes <MATH_0032> of <MATH_0033>. Then <MATH_0034> is a faithfully\nflat <MATH_0035>-algebra and <MATH_0036> is an\nfpqc covering. We leave it as an exercise to the reader to show that\n<MATH_0037>\nwith notation as above (hint: use that <MATH_0038> is surjective\nand that any <MATH_0039> one of whose monomials occurs\nwith coefficient <MATH_0040> is an element of <MATH_0041>). Let <MATH_0042> be a set and\nfor each <MATH_0043> let\n<MATH_0044> be an\nfpqc covering. If <MATH_0045> refines <MATH_0046>,\nthen by base change we conclude that\n<MATH_0047>\nrefines <MATH_0048>.\nHence by the result of the previous paragraph, there exists an <MATH_0049>\nsuch that this is not the case and the lemma is proved.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "field",
+          "projection_start": 48,
+          "projection_end": 53,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 63,
+          "projection_end": 66,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 114,
+          "projection_end": 119,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 164,
+          "projection_end": 179,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 210,
+          "projection_end": 223,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 246,
+          "projection_end": 249,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 297,
+          "projection_end": 310,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 356,
+          "projection_end": 365,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 429,
+          "projection_end": 437,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "nonempty",
+          "projection_start": 468,
+          "projection_end": 476,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 560,
+          "projection_end": 572,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fields",
+          "projection_start": 576,
+          "projection_end": 582,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cardinality",
+          "projection_start": 627,
+          "projection_end": 638,
+          "concept": "cardinality",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cardinality",
+          "projection_start": 670,
+          "projection_end": 681,
+          "concept": "cardinality",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 734,
+          "projection_end": 737,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cardinality",
+          "projection_start": 741,
+          "projection_end": 752,
+          "concept": "cardinality",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cardinalities",
+          "projection_start": 769,
+          "projection_end": 782,
+          "concept": "cardinality",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "residue fields",
+          "projection_start": 790,
+          "projection_end": 804,
+          "concept": "residue-field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 816,
+          "projection_end": 823,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1008,
+          "projection_end": 1013,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "residue field",
+          "projection_start": 1031,
+          "projection_end": 1044,
+          "concept": "residue-field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1079,
+          "projection_end": 1082,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "subset",
+          "projection_start": 1148,
+          "projection_end": 1154,
+          "concept": "subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 1192,
+          "projection_end": 1196,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1210,
+          "projection_end": 1217,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1298,
+          "projection_end": 1313,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1326,
+          "projection_end": 1333,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 1356,
+          "projection_end": 1369,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1491,
+          "projection_end": 1501,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1592,
+          "projection_end": 1599,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1638,
+          "projection_end": 1641,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 1689,
+          "projection_end": 1702,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 1748,
+          "projection_end": 1759,
+          "concept": "base-change",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETA:title",
+      "source_text": "The V topology",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 6,
+          "projection_end": 14,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETA:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nThe V topology is stronger than all other topologies in this chapter.\nRoughly speaking it is generated by Zariski coverings and\nby quasi-compact morphisms satisfying a lifting property\nfor specializations (Lemma <REF_0001>).\nHowever, the procedure we will use to define V coverings is a bit different.\nWe will first define standard V coverings of affines and then\nuse these to define V coverings in general. Typographical point:\nin the literature sometimes ``<MATH_0001>-covering'' is used instead of ``V covering''.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 20,
+          "projection_end": 28,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topologies",
+          "projection_start": 56,
+          "projection_end": 66,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 128,
+          "projection_end": 137,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 145,
+          "projection_end": 158,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 159,
+          "projection_end": 168,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 286,
+          "projection_end": 295,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 348,
+          "projection_end": 357,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 361,
+          "projection_end": 368,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 400,
+          "projection_end": 409,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 485,
+          "projection_end": 493,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 519,
+          "projection_end": 527,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETB:statement",
+      "source_text": "Let <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard V covering<TEXTITCLOSE_0001> is a finite family\n<MATH_0002> with <MATH_0003> affine\nsuch that for every morphism <MATH_0004> where <MATH_0005>\nis a valuation ring, there is an extension <MATH_0006> of valuation rings\n(More on Algebra, Definition\n<REF_0001>),\nan index <MATH_0007>, and a commutative diagram\n<MATH_0008>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "standard V covering",
+          "projection_start": 39,
+          "projection_end": 58,
+          "concept": "standard V covering",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 64,
+          "projection_end": 70,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 107,
+          "projection_end": 113,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 134,
+          "projection_end": 142,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 188,
+          "projection_end": 192,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 241,
+          "projection_end": 246,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 256,
+          "projection_end": 263,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 317,
+          "projection_end": 336,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETA:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nWe first prove a few basic lemmas about this notion.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0ETC:statement",
+      "source_text": "A standard fpqc covering is a standard V covering.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 11,
+          "projection_end": 24,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 41,
+          "projection_end": 49,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETC:proof",
+      "source_text": "Let <MATH_0001> be a standard fpqc covering\n(Definition <REF_0001>). Let <MATH_0002>\nbe a morphism where <MATH_0003> is a valuation ring. Let <MATH_0004> be the\nimage of the closed point of <MATH_0005>. Choose an <MATH_0006> and a point\n<MATH_0007> mapping to <MATH_0008>. Then <MATH_0009>\nhas a point <MATH_0010> mapping to the closed point of <MATH_0011>.\nSince <MATH_0012> is flat\nwe can find a specialization <MATH_0013> of\npoints of <MATH_0014> with <MATH_0015> mapping to\nthe generic point of <MATH_0016>, see\nMorphisms, Lemma <REF_0002>. By\nSchemes, Lemma <REF_0003>\nwe can choose a valuation ring <MATH_0017> and a morphism\n<MATH_0018> such that <MATH_0019>\nmaps the generic point of <MATH_0020> to <MATH_0021> and the\nclosed point of <MATH_0022> to <MATH_0023>. We obtain a\ncommutative diagram\n<MATH_0024>\nwhere <MATH_0025> is an extension of valuation rings.\nThis proves the lemma.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 30,
+          "projection_end": 43,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 90,
+          "projection_end": 98,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 132,
+          "projection_end": 136,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 161,
+          "projection_end": 166,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 379,
+          "projection_end": 383,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 516,
+          "projection_end": 525,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 548,
+          "projection_end": 555,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 600,
+          "projection_end": 604,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 623,
+          "projection_end": 631,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 666,
+          "projection_end": 670,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 783,
+          "projection_end": 802,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 862,
+          "projection_end": 867,
+          "concept": "ring",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETD:statement",
+      "source_text": "A standard ph covering is a standard V covering.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 14,
+          "projection_end": 22,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 39,
+          "projection_end": 47,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETD:proof",
+      "source_text": "Let <MATH_0001> be an affine scheme. Let <MATH_0002> be a proper surjective\nmorphism. Let <MATH_0003> be a finite\naffine open covering. We have to show that <MATH_0004>\nis a standard V covering, see\nDefinition <REF_0001>.\nLet <MATH_0005>\nbe a morphism where <MATH_0006> is a valuation ring with fraction field <MATH_0007>.\nSince <MATH_0008> is surjective, we may choose a field extension\n<MATH_0009> and a commutative diagram\n<MATH_0010>\nBy Algebra, Lemma <REF_0002> we can choose a valuation ring\n<MATH_0011> dominating <MATH_0012>. By the valuative criterion of\nproperness (Morphisms, Lemma <REF_0003>)\nwe can then find the morphism <MATH_0013> in the commutative\ndiagram\n<MATH_0014>\nSince <MATH_0015> has a unique closed point, we see that <MATH_0016>\nis contained in <MATH_0017> for some <MATH_0018>. Thus <MATH_0019>\nis the desired lift and we conclude <MATH_0020> is a standard V covering.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 58,
+          "projection_end": 64,
+          "concept": "proper",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 65,
+          "projection_end": 75,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 76,
+          "projection_end": 84,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 107,
+          "projection_end": 113,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 114,
+          "projection_end": 125,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 126,
+          "projection_end": 134,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 185,
+          "projection_end": 193,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 243,
+          "projection_end": 251,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 285,
+          "projection_end": 289,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fraction field",
+          "projection_start": 295,
+          "projection_end": 309,
+          "concept": "source-phrase-fraction-field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 344,
+          "projection_end": 354,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 372,
+          "projection_end": 377,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 406,
+          "projection_end": 425,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 441,
+          "projection_end": 448,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 493,
+          "projection_end": 497,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 576,
+          "projection_end": 585,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 626,
+          "projection_end": 634,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 654,
+          "projection_end": 673,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 886,
+          "projection_end": 894,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETE:statement",
+      "source_text": "Let <MATH_0001> be a standard V covering.\nLet <MATH_0002> be a morphism of affine schemes.\nThen <MATH_0003> is a\nstandard V covering.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 32,
+          "projection_end": 40,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 63,
+          "projection_end": 71,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 75,
+          "projection_end": 89,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 124,
+          "projection_end": 132,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETE:proof",
+      "source_text": "Let <MATH_0001> be a morphism where <MATH_0002> is a valuation ring.\nBy assumption we can find an extension of valuation rings <MATH_0003>,\nan <MATH_0004>, and a commutative diagram\n<MATH_0005>\nBy the universal property of fibre products\nwe obtain a morphism <MATH_0006>\nas desired.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 63,
+          "projection_end": 67,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 121,
+          "projection_end": 126,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 162,
+          "projection_end": 181,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "universal property",
+          "projection_start": 201,
+          "projection_end": 219,
+          "concept": "universal-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 223,
+          "projection_end": 237,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 250,
+          "projection_end": 258,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETF:statement",
+      "source_text": "Let <MATH_0001> be an affine scheme. Let <MATH_0002>\nbe a standard V covering. Let <MATH_0003>\nbe a standard V covering. Then <MATH_0004>\nis a standard V covering.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 69,
+          "projection_end": 77,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 111,
+          "projection_end": 119,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 154,
+          "projection_end": 162,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETF:proof",
+      "source_text": "This follows formally from the observation that if\n<MATH_0001> and <MATH_0002> are extensions of\nvaluation rings, then <MATH_0003> is an extension\nof valuation rings.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "rings",
+          "projection_start": 107,
+          "projection_end": 112,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 160,
+          "projection_end": 165,
+          "concept": "ring",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETG:statement",
+      "source_text": "Let <MATH_0001> be an affine scheme. Let <MATH_0002>\nbe a family of morphisms with <MATH_0003> affine for all <MATH_0004>.\nThe following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0005> is a standard V covering,\n<STRUCT_0003> there is a standard V covering which refines\n<MATH_0006>, and\n<STRUCT_0004> <MATH_0007> is a standard\nV covering.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 58,
+          "projection_end": 77,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 95,
+          "projection_end": 101,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 141,
+          "projection_end": 151,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 208,
+          "projection_end": 216,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 254,
+          "projection_end": 262,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 336,
+          "projection_end": 344,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETG:proof",
+      "source_text": "Omitted. Hints: This follows almost immediately from the definition.\nThe only slightly interesting point is that\na morphism from the spectrum of a local ring into\n<MATH_0001> must factor through some <MATH_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 115,
+          "projection_end": 123,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local ring",
+          "projection_start": 147,
+          "projection_end": 157,
+          "concept": "local-ring",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETH:statement",
+      "source_text": "Let <MATH_0001> be a scheme. A <TEXTITOPEN_0001>V covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes such that for every\naffine open <MATH_0004> there exists a standard V covering\n<MATH_0005> refining the family\n<MATH_0006>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "V covering",
+          "projection_start": 31,
+          "projection_end": 41,
+          "concept": "V covering",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 62,
+          "projection_end": 81,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 97,
+          "projection_end": 104,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 125,
+          "projection_end": 136,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "V covering",
+          "projection_start": 173,
+          "projection_end": 183,
+          "concept": "V covering",
+          "rule": "source-declaration"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETA:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nThe V topology has the same set theoretical problems as\nthe fpqc topology. Thus we refrain from defining V sites\nand we will not consider cohomology with respect to the V topology.\nOn the other hand, given a \n<MATH_0001>\nit does make sense to ask whether <MATH_0002> satisfies the sheaf property\nfor the V topology, see below.\nMoreover, we can wonder about descent of object\nin the V topology, etc.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 20,
+          "projection_end": 28,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 42,
+          "projection_end": 45,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 74,
+          "projection_end": 87,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 121,
+          "projection_end": 126,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology",
+          "projection_start": 152,
+          "projection_end": 162,
+          "concept": "cohomology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 185,
+          "projection_end": 193,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 294,
+          "projection_end": 308,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 319,
+          "projection_end": 327,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 370,
+          "projection_end": 377,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 381,
+          "projection_end": 387,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 397,
+          "projection_end": 405,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETI:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a family\nof morphisms. The following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0003> is a V covering,\n<STRUCT_0003> there is a V covering which refines <MATH_0004>, and\n<STRUCT_0004> <MATH_0005> is a V covering.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 89,
+          "projection_end": 99,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 147,
+          "projection_end": 155,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 184,
+          "projection_end": 192,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 257,
+          "projection_end": 265,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETI:proof",
+      "source_text": "Omitted. Hint: compare with the proof of\nLemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0ETJ:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a V covering of <MATH_0004>.\n<STRUCT_0003> If <MATH_0005> is a V covering and for each\n<MATH_0006> we have a V covering <MATH_0007>, then\n<MATH_0008> is a V covering.\n<STRUCT_0004> If <MATH_0009> is a V covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a V covering.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 78,
+          "projection_end": 89,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 114,
+          "projection_end": 122,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 175,
+          "projection_end": 183,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 221,
+          "projection_end": 229,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 267,
+          "projection_end": 275,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 313,
+          "projection_end": 321,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 343,
+          "projection_end": 351,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 355,
+          "projection_end": 362,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 387,
+          "projection_end": 395,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0ETJ:proof",
+      "source_text": "Assertion (1) is clear.\n\n<STRUCT_0001><STRUCT_0002>\nProof of (3).\nLet <MATH_0001> be an affine open subscheme.\nSince <MATH_0002> is quasi-compact we can find a finite affine open\ncovering <MATH_0003> such that\n<MATH_0004> maps into an affine open <MATH_0005>.\nChoose a standard V covering <MATH_0006>\nrefining <MATH_0007>.\nBy Lemma <REF_0001>\nthe base change <MATH_0008>\nis a standard V covering. Note that <MATH_0009>\nis a standard V covering\n(for example by Lemma <REF_0002>).\nBy Lemma <REF_0003> \nthe family <MATH_0010>\nis a standard V covering. Since\n<MATH_0011> refines <MATH_0012>\nwe conclude.\n\n<STRUCT_0003><STRUCT_0004>\nProof of (2).\nLet <MATH_0013> be affine open. First we pick a standard V covering\n<MATH_0014> refining\n<MATH_0015>.\nSay the refinement is given by morphisms <MATH_0016> over <MATH_0017>.\nThen\n<MATH_0018>\nis a V covering by part (3). As <MATH_0019> is affine,\nwe can find a standard V covering\n<MATH_0020> refining this family.\nThen we apply Lemma <REF_0004>\nto see that <MATH_0021> is a standard V covering which\nrefines <MATH_0022>. This finishes the proof.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "affine open",
+          "projection_start": 87,
+          "projection_end": 98,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 131,
+          "projection_end": 144,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 159,
+          "projection_end": 165,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 166,
+          "projection_end": 177,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 178,
+          "projection_end": 186,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 221,
+          "projection_end": 225,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 234,
+          "projection_end": 245,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 279,
+          "projection_end": 287,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 346,
+          "projection_end": 357,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 386,
+          "projection_end": 394,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 434,
+          "projection_end": 442,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 537,
+          "projection_end": 545,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 658,
+          "projection_end": 669,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 698,
+          "projection_end": 706,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 772,
+          "projection_end": 781,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 836,
+          "projection_end": 844,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 876,
+          "projection_end": 882,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 909,
+          "projection_end": 917,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1023,
+          "projection_end": 1031,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:topologies:022G:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a contravariant functor on the category\nof schemes with values in sets.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0002> be a family of morphisms\nof schemes with fixed target.\nWe say that <MATH_0003> <TEXTITOPEN_0001>satisfies the sheaf property for the given family<TEXTITCLOSE_0001>\nif for any collection of elements <MATH_0004> such that\n<MATH_0005>\nthere exists a unique element\n<MATH_0006> such that <MATH_0007> in <MATH_0008>.\n<STRUCT_0004> We say that <MATH_0009> <TEXTITOPEN_0002>satisfies the sheaf property for the\nfpqc topology<TEXTITCLOSE_0002> if it satisfies the sheaf property for any\nfpqc covering.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:022H:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a contravariant functor on the category\nof schemes with values in sets. Then <MATH_0002> satisfies\nthe sheaf property for the fpqc topology if and only\nif it satisfies\n<STRUCT_0002>\n<STRUCT_0003> the sheaf property for every Zariski covering, and\n<STRUCT_0004> the sheaf property for any standard fpqc covering.\n<STRUCT_0005>\nMoreover, in the presence of (1) property (2) is equivalent to\nproperty\n<STRUCT_0006>\n<ITEMOPEN_0001>(2')<ITEMCLOSE_0001> the sheaf property for <MATH_0003>\nwith <MATH_0004>, <MATH_0005> affine and <MATH_0006> faithfully flat.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:022A:paragraph/0007",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe try to avoid using the terminology ``<MATH_0001> is a sheaf'' in this\nsituation since we are not defining a category of fpqc sheaves\nas we explained above.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:022H:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssume (1) and (2) hold.\nLet <MATH_0001> be an fpqc covering. Let <MATH_0002>\nbe a family of elements such that <MATH_0003> and <MATH_0004> map to the same element\nof <MATH_0005>. Let <MATH_0006> be the maximal open subset\nsuch that there exists a unique <MATH_0007> with\n<MATH_0008> for all <MATH_0009>.\nSuch a maximal open exists because <MATH_0010> satisfies the\nsheaf property for Zariski coverings; in fact <MATH_0011> is the\nunion of all opens with this property. Let <MATH_0012>.\nWe will show <MATH_0013>. To do this we pick an affine open\n<MATH_0014> and we will show there is a unique\n<MATH_0015> with\n<MATH_0016> for all <MATH_0017>.\n\n<STRUCT_0002><STRUCT_0003>\nBy Lemma <REF_0001> we can find a standard fpqc covering\n<MATH_0018> refining <MATH_0019>,\nsay by morphisms <MATH_0020>. By (2) we obtain a unique element\n<MATH_0021> such that <MATH_0022>. Note that for any\nscheme <MATH_0023> over <MATH_0024> there is a unique section <MATH_0025>\nwhich restricts to <MATH_0026> on\n<MATH_0027> for <MATH_0028>. Namely, this is true if <MATH_0029>\nis affine by (2) as <MATH_0030> is a standard fpqc covering\nand in general this follows from (1) and the affine case by choosing an\naffine open covering of <MATH_0031>. In particular, <MATH_0032>.\nNow, taking <MATH_0033> and using that\n<MATH_0034>\nwe conclude that <MATH_0035>\nwhich is what we had to show.\n\n<STRUCT_0004><STRUCT_0005>\nProof of the equivalence of (2) and (2') in the presence of (1).\nSuppose <MATH_0036> is a standard fpqc covering, then\n<MATH_0037> is a faithfully flat morphism of affine schemes.\nIn the presence of (1) we have <MATH_0038>\nand similarly\n<MATH_0039>.\nThus the sheaf condition for <MATH_0040> and <MATH_0041>\nis the same.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:022A:paragraph/0008",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe following lemma is here just to point out set theoretical difficulties\ndo indeed arise and should be ignored by most readers.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0BBK:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a nonzero ring. There does not exist a set <MATH_0002> of\nfpqc-coverings of <MATH_0003> such that every fpqc-covering can\nbe refined by an element of <MATH_0004>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0BBK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us first explain this when <MATH_0001> is a field. For any set <MATH_0002> consider\nthe purely transcendental field extension\n<MATH_0003>. Since <MATH_0004> is faithfully flat\nwe see that <MATH_0005> is an fpqc covering.\nLet <MATH_0006> be a set and for each <MATH_0007> let\n<MATH_0008> be an\nfpqc covering. If <MATH_0009> refines <MATH_0010>\nthen the morphisms <MATH_0011> factor through\n<MATH_0012>. Since <MATH_0013> is a covering,\nat least some <MATH_0014> is nonempty. Pick a\npoint <MATH_0015>. Since we have the factorization\n<MATH_0016>\nwe obtain a homomorphism of fields <MATH_0017>.\nIn particular, we see that the cardinality of <MATH_0018>\nis at least the cardinality of <MATH_0019>. Thus if we take <MATH_0020> to be a set\nof cardinality bigger than the cardinalities of the residue fields\nof all the schemes <MATH_0021>, then such a factorization does\nnot exist and the lemma holds for <MATH_0022>.\n\n<STRUCT_0002><STRUCT_0003>\nGeneral case. Since <MATH_0023> is nonzero it has a maximal prime ideal\n<MATH_0024> with residue field <MATH_0025>. Let <MATH_0026> be a set and\nconsider <MATH_0027>\nwhere <MATH_0028> is the multiplicative\nsubset of <MATH_0029> such that <MATH_0030> maps to\na nonzero element of <MATH_0031> for\nall primes <MATH_0032> of <MATH_0033>. Then <MATH_0034> is a faithfully\nflat <MATH_0035>-algebra and <MATH_0036> is an\nfpqc covering. We leave it as an exercise to the reader to show that\n<MATH_0037>\nwith notation as above (hint: use that <MATH_0038> is surjective\nand that any <MATH_0039> one of whose monomials occurs\nwith coefficient <MATH_0040> is an element of <MATH_0041>). Let <MATH_0042> be a set and\nfor each <MATH_0043> let\n<MATH_0044> be an\nfpqc covering. If <MATH_0045> refines <MATH_0046>,\nthen by base change we conclude that\n<MATH_0047>\nrefines <MATH_0048>.\nHence by the result of the previous paragraph, there exists an <MATH_0049>\nsuch that this is not the case and the lemma is proved.\n<STRUCT_0004>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETA:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>The V topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETA:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe V topology is stronger than all other topologies in this chapter.\nRoughly speaking it is generated by Zariski coverings and\nby quasi-compact morphisms satisfying a lifting property\nfor specializations (Lemma <REF_0001>).\nHowever, the procedure we will use to define V coverings is a bit different.\nWe will first define standard V coverings of affines and then\nuse these to define V coverings in general. Typographical point:\nin the literature sometimes ``<MATH_0001>-covering'' is used instead of ``V covering''.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETB:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard V covering<TEXTITCLOSE_0001> is a finite family\n<MATH_0002> with <MATH_0003> affine\nsuch that for every morphism <MATH_0004> where <MATH_0005>\nis a valuation ring, there is an extension <MATH_0006> of valuation rings\n(More on Algebra, Definition\n<REF_0001>),\nan index <MATH_0007>, and a commutative diagram\n<MATH_0008>\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETA:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe first prove a few basic lemmas about this notion.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA standard fpqc covering is a standard V covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a standard fpqc covering\n(Definition <REF_0001>). Let <MATH_0002>\nbe a morphism where <MATH_0003> is a valuation ring. Let <MATH_0004> be the\nimage of the closed point of <MATH_0005>. Choose an <MATH_0006> and a point\n<MATH_0007> mapping to <MATH_0008>. Then <MATH_0009>\nhas a point <MATH_0010> mapping to the closed point of <MATH_0011>.\nSince <MATH_0012> is flat\nwe can find a specialization <MATH_0013> of\npoints of <MATH_0014> with <MATH_0015> mapping to\nthe generic point of <MATH_0016>, see\nMorphisms, Lemma <REF_0002>. By\nSchemes, Lemma <REF_0003>\nwe can choose a valuation ring <MATH_0017> and a morphism\n<MATH_0018> such that <MATH_0019>\nmaps the generic point of <MATH_0020> to <MATH_0021> and the\nclosed point of <MATH_0022> to <MATH_0023>. We obtain a\ncommutative diagram\n<MATH_0024>\nwhere <MATH_0025> is an extension of valuation rings.\nThis proves the lemma.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETD:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA standard ph covering is a standard V covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETD:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be an affine scheme. Let <MATH_0002> be a proper surjective\nmorphism. Let <MATH_0003> be a finite\naffine open covering. We have to show that <MATH_0004>\nis a standard V covering, see\nDefinition <REF_0001>.\nLet <MATH_0005>\nbe a morphism where <MATH_0006> is a valuation ring with fraction field <MATH_0007>.\nSince <MATH_0008> is surjective, we may choose a field extension\n<MATH_0009> and a commutative diagram\n<MATH_0010>\nBy Algebra, Lemma <REF_0002> we can choose a valuation ring\n<MATH_0011> dominating <MATH_0012>. By the valuative criterion of\nproperness (Morphisms, Lemma <REF_0003>)\nwe can then find the morphism <MATH_0013> in the commutative\ndiagram\n<MATH_0014>\nSince <MATH_0015> has a unique closed point, we see that <MATH_0016>\nis contained in <MATH_0017> for some <MATH_0018>. Thus <MATH_0019>\nis the desired lift and we conclude <MATH_0020> is a standard V covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETE:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a standard V covering.\nLet <MATH_0002> be a morphism of affine schemes.\nThen <MATH_0003> is a\nstandard V covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETE:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a morphism where <MATH_0002> is a valuation ring.\nBy assumption we can find an extension of valuation rings <MATH_0003>,\nan <MATH_0004>, and a commutative diagram\n<MATH_0005>\nBy the universal property of fibre products\nwe obtain a morphism <MATH_0006>\nas desired.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETF:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. Let <MATH_0002>\nbe a standard V covering. Let <MATH_0003>\nbe a standard V covering. Then <MATH_0004>\nis a standard V covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETF:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows formally from the observation that if\n<MATH_0001> and <MATH_0002> are extensions of\nvaluation rings, then <MATH_0003> is an extension\nof valuation rings.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETG:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. Let <MATH_0002>\nbe a family of morphisms with <MATH_0003> affine for all <MATH_0004>.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a standard V covering,\n<STRUCT_0004> there is a standard V covering which refines\n<MATH_0006>, and\n<STRUCT_0005> <MATH_0007> is a standard\nV covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETG:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hints: This follows almost immediately from the definition.\nThe only slightly interesting point is that\na morphism from the spectrum of a local ring into\n<MATH_0001> must factor through some <MATH_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETH:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. A <TEXTITOPEN_0001>V covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes such that for every\naffine open <MATH_0004> there exists a standard V covering\n<MATH_0005> refining the family\n<MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETA:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe V topology has the same set theoretical problems as\nthe fpqc topology. Thus we refrain from defining V sites\nand we will not consider cohomology with respect to the V topology.\nOn the other hand, given a \n<MATH_0001>\nit does make sense to ask whether <MATH_0002> satisfies the sheaf property\nfor the V topology, see below.\nMoreover, we can wonder about descent of object\nin the V topology, etc.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETI:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a family\nof morphisms. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is a V covering,\n<STRUCT_0004> there is a V covering which refines <MATH_0004>, and\n<STRUCT_0005> <MATH_0005> is a V covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETI:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hint: compare with the proof of\nLemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETJ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a V covering of <MATH_0004>.\n<STRUCT_0004> If <MATH_0005> is a V covering and for each\n<MATH_0006> we have a V covering <MATH_0007>, then\n<MATH_0008> is a V covering.\n<STRUCT_0005> If <MATH_0009> is a V covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a V covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETJ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssertion (1) is clear.\n\n<STRUCT_0002><STRUCT_0003>\nProof of (3).\nLet <MATH_0001> be an affine open subscheme.\nSince <MATH_0002> is quasi-compact we can find a finite affine open\ncovering <MATH_0003> such that\n<MATH_0004> maps into an affine open <MATH_0005>.\nChoose a standard V covering <MATH_0006>\nrefining <MATH_0007>.\nBy Lemma <REF_0001>\nthe base change <MATH_0008>\nis a standard V covering. Note that <MATH_0009>\nis a standard V covering\n(for example by Lemma <REF_0002>).\nBy Lemma <REF_0003> \nthe family <MATH_0010>\nis a standard V covering. Since\n<MATH_0011> refines <MATH_0012>\nwe conclude.\n\n<STRUCT_0004><STRUCT_0005>\nProof of (2).\nLet <MATH_0013> be affine open. First we pick a standard V covering\n<MATH_0014> refining\n<MATH_0015>.\nSay the refinement is given by morphisms <MATH_0016> over <MATH_0017>.\nThen\n<MATH_0018>\nis a V covering by part (3). As <MATH_0019> is affine,\nwe can find a standard V covering\n<MATH_0020> refining this family.\nThen we apply Lemma <REF_0004>\nto see that <MATH_0021> is a standard V covering which\nrefines <MATH_0022>. This finishes the proof.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0ETK:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny fpqc covering is a V covering. A fortiori,\nany fppf, syntomic, smooth, <ACCENT_0001>tale or Zariski covering is a V covering.\nAlso, a ph covering is a V covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-dominate",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a field. Let <MATH_0002> be a local subring.\nThen there exists a valuation ring with fraction field <MATH_0003>\ndominating <MATH_0004>.\n<STRUCT_0002>",
+      "requested_label": "algebra-lemma-dominate",
+      "requested_tag": "00IA"
+    },
+    {
+      "context_id": "reference:more-algebra-definition-extension-valuation-rings",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe say that <MATH_0001> or <MATH_0002> is an\n<TEXTITOPEN_0001>extension of valuation rings<TEXTITCLOSE_0001> if <MATH_0003> and <MATH_0004> are\nvaluation rings and <MATH_0005> is injective and local.\nSuch an extension induces a commutative diagram\n<MATH_0006>\nwhere <MATH_0007> and <MATH_0008> are the value groups.\nWe say that <MATH_0009> is <TEXTITOPEN_0002>weakly unramified<TEXTITCLOSE_0002> over <MATH_0010> if\nthe lower horizontal arrow is a bijection.\nIf the extension of residue fields\n<MATH_0011>\nis finite, then we set <MATH_0012> and we\ncall it the <TEXTITOPEN_0003>residual degree<TEXTITCLOSE_0003> or <TEXTITOPEN_0004>residue degree<TEXTITCLOSE_0004>\nof the extension <MATH_0013>.\n<STRUCT_0002>",
+      "requested_label": "more-algebra-definition-extension-valuation-rings",
+      "requested_tag": "0ASG"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-characterize-proper",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Valuative criterion for properness<ENVARGEND_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a morphism of schemes\nover <MATH_0003>. Assume <MATH_0004> is of finite type and quasi-separated.\nThen the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is proper,\n<STRUCT_0004> <MATH_0006> satisfies the valuative criterion\n(Schemes, Definition <REF_0001>),\n<STRUCT_0005> given any commutative solid diagram\n<MATH_0007>\nwhere <MATH_0008> is a valuation ring with field of fractions <MATH_0009>, there exists\na unique dotted arrow making the diagram commute.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "morphisms-lemma-characterize-proper",
+      "requested_tag": "0BX5"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-generalizations-lift-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat morphism of schemes.\nThen generalizations lift along <MATH_0002>, see\nTopology, Definition <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": "morphisms-lemma-generalizations-lift-flat",
+      "requested_tag": "03HV"
+    },
+    {
+      "context_id": "reference:schemes-lemma-points-specialize",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a specialization of points of <MATH_0003>.\nThen\n<STRUCT_0002>\n<STRUCT_0003> there exists a valuation ring <MATH_0004> and a morphism\n<MATH_0005> such that the generic point <MATH_0006> of\n<MATH_0007> maps to <MATH_0008> and the special point maps to <MATH_0009>, and\n<STRUCT_0004> given a field extension <MATH_0010>\nwe may arrange it so that the extension\n<MATH_0011> induced by <MATH_0012>\nis isomorphic to the given extension.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "schemes-lemma-points-specialize",
+      "requested_tag": "01J8"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-fpqc",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard fpqc covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a family <MATH_0003>\nwith each <MATH_0004> is affine, flat over <MATH_0005> and <MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-fpqc",
+      "requested_tag": "022F"
+    },
+    {
+      "context_id": "reference:topologies-definition-standard-ph-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard ph covering<TEXTITCLOSE_0001> is a family\n<MATH_0002> constructed from a\nproper surjective morphism <MATH_0003> and an affine open covering\n<MATH_0004> by setting <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": "topologies-definition-standard-ph-covering",
+      "requested_tag": "0DBD"
+    },
+    {
+      "context_id": "reference:topologies-lemma-fpqc-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an fpqc covering of <MATH_0003>.\nThen there exists an fpqc covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": "topologies-lemma-fpqc-affine",
+      "requested_tag": "022E"
+    },
+    {
+      "context_id": "reference:topologies-lemma-refine-by-ph",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a family\nof morphisms such that <MATH_0003> is locally of finite type for all <MATH_0004>.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a ph covering,\n<STRUCT_0004> there is a ph covering which refines <MATH_0006>, and\n<STRUCT_0005> <MATH_0007> is a ph covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-refine-by-ph",
+      "requested_tag": "0ET9"
+    },
+    {
+      "context_id": "reference:topologies-lemma-refine-qcqs-V",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a quasi-compact morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is a V covering,\n<STRUCT_0004> for any valuation ring <MATH_0003> and morphism <MATH_0004>\nthere exists an extension of valuation rings <MATH_0005>\nand a commutative diagram\n<MATH_0006>\n<STRUCT_0005> for any morphism <MATH_0007> and specialization <MATH_0008>\nof points in <MATH_0009>, there is a specialization <MATH_0010>\nof points in <MATH_0011> mapping to <MATH_0012>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "topologies-lemma-refine-qcqs-V",
+      "requested_tag": "0ETN"
+    }
+  ]
+}

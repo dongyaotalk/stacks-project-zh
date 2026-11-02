@@ -1,0 +1,1081 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1972a-81a5-7fa2-a056-96b8cf161aff",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/stacks8-gpt61sol-p10-current-20261101T125312Z.json",
+    "hash": "sha256:4af47e5ac0570df4adbce78cc2cc6b4ff7f7ad3aa38933075ebefdfc98dceec4"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:04WR:statement",
+      "source_text": "Let <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> be a fibred category, and\nlet <MATH_0004> be the stackification of <MATH_0005>.\nThen <MATH_0006> is the stackification of\n<MATH_0007>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 33,
+          "projection_end": 38,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 61,
+          "projection_end": 68,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 126,
+          "projection_end": 131,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 178,
+          "projection_end": 193,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WR:proof",
+      "source_text": "Omitted. Hint:\nThis is the analogue of Sites, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Sites",
+          "projection_start": 39,
+          "projection_end": 44,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WA:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nThe following lemma tells us that the <MATH_0001>-category of stacks\nover <MATH_0002> is a ``full 2-sub category'' of the\n<MATH_0003>-category of stacks over <MATH_0004> provided that\n<MATH_0005> contains <MATH_0006> (see\nTopologies, Section <REF_0001>).\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 64,
+          "projection_end": 72,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 76,
+          "projection_end": 82,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 118,
+          "projection_end": 126,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 148,
+          "projection_end": 156,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 160,
+          "projection_end": 166,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 236,
+          "projection_end": 246,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WS:statement",
+      "source_text": "Let <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor satisfying the\nassumptions of\nSites, Lemma <REF_0001>.\nLet <MATH_0004> be the corresponding\nmorphism of sites. Then\n<STRUCT_0001>\n<STRUCT_0002> for every stack <MATH_0005> the\ncanonical functor <MATH_0006> is\nan equivalence of stacks,\n<STRUCT_0003> given stacks <MATH_0007> over <MATH_0008>\nthe construction <MATH_0009>\ninduces an equivalence\n<MATH_0010>\nof morphism categories.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "sites",
+          "projection_start": 35,
+          "projection_end": 40,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 63,
+          "projection_end": 70,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 101,
+          "projection_end": 106,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 163,
+          "projection_end": 171,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 175,
+          "projection_end": 180,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 225,
+          "projection_end": 230,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 247,
+          "projection_end": 256,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 257,
+          "projection_end": 264,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 283,
+          "projection_end": 294,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 298,
+          "projection_end": 304,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 326,
+          "projection_end": 332,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 402,
+          "projection_end": 413,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 429,
+          "projection_end": 437,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 438,
+          "projection_end": 448,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WS:proof",
+      "source_text": "Note that by\nLemma <REF_0001>\nwe have an equivalence of categories\n<MATH_0001>\nHence (2) follows from (1).\n\n<STRUCT_0001><STRUCT_0002>\nTo prove (1) we are going to use\nLemma <REF_0002>.\nThis lemma tells us that we have to show that\n<MATH_0002> is\nfully faithful and that all objects of <MATH_0003>\nare locally in the essential image.\n\n<STRUCT_0003><STRUCT_0004>\nWe quickly describe the functor <MATH_0004>, see proof of\nLemma <REF_0003>.\nTo do this we introduce the functor\n<MATH_0005> defined by\n<MATH_0006>, and\n<MATH_0007>. We set\n<MATH_0008> equal to the composition\nof <MATH_0009> and the canonical functor <MATH_0010>.\nWe set <MATH_0011> equal to the composition\nof <MATH_0012> and the canonical functor <MATH_0013>.\nThen <MATH_0014> is the functor\nwhich to <MATH_0015> associates the pair <MATH_0016> and to\n<MATH_0017> the morphism <MATH_0018>.\n\n<STRUCT_0005><STRUCT_0006>\nFully faithfulness. To prove this we are going to use\nLemma <REF_0004>.\nLet <MATH_0019>.\nLet <MATH_0020>.\nFirst off, as <MATH_0021> is fully faithful, we have\n<MATH_0022>\ndirectly from the definition of <MATH_0023>. Similar holds after\npulling back to any <MATH_0024>. Because <MATH_0025> is the\nstackification of <MATH_0026>, and since <MATH_0027> is continuous\nand cocontinuous the presheaf\n<MATH_0028>\nis the sheafification of the presheaf\n<MATH_0029>\nHence to finish the proof of fully faithfulness it suffices\nto show that for any <MATH_0030> and <MATH_0031> the map\n<MATH_0032>\nis bijective. A morphism <MATH_0033> in <MATH_0034> over <MATH_0035>\nis given by an equivalence class of diagrams\n<MATH_0036>\nwith <MATH_0037> strongly cartesian and <MATH_0038>.\nBut since <MATH_0039> is fully faithful we can write <MATH_0040> for some\nmorphism <MATH_0041>\nand then we see that <MATH_0042> and\n<MATH_0043>. Because <MATH_0044> is strongly cartesian\nwe can find a morphism <MATH_0045> lifting <MATH_0046> such that\n<MATH_0047>. By definition of the equivalence\nclasses defining morphisms in <MATH_0048> it follows that\nthe morphism\n<MATH_0049>\nof <MATH_0050> induces the morphism <MATH_0051> in <MATH_0052>.\nThis proves that the map is surjective. We omit the proof that it is\ninjective.\n\n<STRUCT_0007><STRUCT_0008>\nFinally, we have to show that any object of <MATH_0053>\nlocally comes from an object of <MATH_0054>. This is clear from the\nconstructions (details omitted).\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 41,
+          "projection_end": 66,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 246,
+          "projection_end": 260,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 274,
+          "projection_end": 281,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 326,
+          "projection_end": 331,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 384,
+          "projection_end": 391,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 464,
+          "projection_end": 471,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 557,
+          "projection_end": 568,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 592,
+          "projection_end": 601,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 602,
+          "projection_end": 609,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 655,
+          "projection_end": 666,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 690,
+          "projection_end": 699,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 700,
+          "projection_end": 707,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 745,
+          "projection_end": 752,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 829,
+          "projection_end": 837,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 1013,
+          "projection_end": 1027,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 1262,
+          "projection_end": 1270,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 1312,
+          "projection_end": 1320,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1446,
+          "projection_end": 1449,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijective",
+          "projection_start": 1465,
+          "projection_end": 1474,
+          "concept": "bijective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1478,
+          "projection_end": 1486,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence class",
+          "projection_start": 1546,
+          "projection_end": 1563,
+          "concept": "equivalence-class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagrams",
+          "projection_start": 1567,
+          "projection_end": 1575,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1605,
+          "projection_end": 1623,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 1666,
+          "projection_end": 1680,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1715,
+          "projection_end": 1723,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1809,
+          "projection_end": 1827,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1842,
+          "projection_end": 1850,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence classes",
+          "projection_start": 1927,
+          "projection_end": 1946,
+          "concept": "equivalence-class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1956,
+          "projection_end": 1965,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2001,
+          "projection_end": 2009,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2049,
+          "projection_end": 2057,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2107,
+          "projection_end": 2110,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 2114,
+          "projection_end": 2124,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 2155,
+          "projection_end": 2164,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 2227,
+          "projection_end": 2233,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 2271,
+          "projection_end": 2277,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WT:title",
+      "source_text": "Stacks and localization",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "Stacks",
+          "projection_start": 0,
+          "projection_end": 6,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 11,
+          "projection_end": 23,
+          "concept": "localization",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WT:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be an object of <MATH_0003>.\nWe want to understand stacks over <MATH_0004> as stacks\nover <MATH_0005> together with a morphism towards <MATH_0006>.\nThe following lemma is the reason why this is easier to do\nwhen the presheaf <MATH_0007> is a sheaf.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 35,
+          "projection_end": 39,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 63,
+          "projection_end": 69,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 108,
+          "projection_end": 114,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 135,
+          "projection_end": 141,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 175,
+          "projection_end": 183,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 273,
+          "projection_end": 281,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 299,
+          "projection_end": 304,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WU:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>.\nThen <MATH_0003> is a stack over <MATH_0004>\nif and only if <MATH_0005> is a sheaf.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 66,
+          "projection_end": 71,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 121,
+          "projection_end": 126,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WU:proof",
+      "source_text": "Combine\nLemma <REF_0001>\nwith\nCategories,\nExample <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Categories",
+          "projection_start": 30,
+          "projection_end": 40,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WT:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nAssume that <MATH_0001> is a site,\nand <MATH_0002> is an object of <MATH_0003> whose associated representable\npresheaf is a sheaf. We denote <MATH_0004>\nthe localization functor.\n\n<STRUCT_0002><STRUCT_0003>\n<TEXTBFOPEN_0001>Construction A.<TEXTBFCLOSE_0001> Let <MATH_0005> be a stack\nover the site <MATH_0006>. We define a stack\n<MATH_0007> as follows:\n<STRUCT_0004>\n<STRUCT_0005> As a category <MATH_0008>, and\n<STRUCT_0006> the functor <MATH_0009>\nis just the composition <MATH_0010>.\n<STRUCT_0007>\nWe omit the verification that this is a stack (hint: Use that\n<MATH_0011> is a sheaf to glue morphisms to <MATH_0012>). There is a canonical\nfunctor\n<MATH_0013>\nnamely the functor <MATH_0014> which is a <MATH_0015>-morphism of stacks over <MATH_0016>.\n\n<STRUCT_0008><STRUCT_0009>\n<TEXTBFOPEN_0002>Construction B.<TEXTBFCLOSE_0002>\nLet <MATH_0017> be a stack over <MATH_0018>\nwhich is endowed with a morphism of stacks <MATH_0019>\nover <MATH_0020>. In this case it is automatically the case that\n<MATH_0021> is a stack over <MATH_0022>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 43,
+          "projection_end": 47,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 71,
+          "projection_end": 77,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 110,
+          "projection_end": 123,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 124,
+          "projection_end": 132,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 138,
+          "projection_end": 143,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 171,
+          "projection_end": 183,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 184,
+          "projection_end": 191,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 257,
+          "projection_end": 262,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 272,
+          "projection_end": 276,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 302,
+          "projection_end": 307,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 365,
+          "projection_end": 373,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 409,
+          "projection_end": 416,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 441,
+          "projection_end": 452,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 520,
+          "projection_end": 525,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 559,
+          "projection_end": 564,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 573,
+          "projection_end": 582,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 611,
+          "projection_end": 620,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 621,
+          "projection_end": 628,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 652,
+          "projection_end": 659,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 695,
+          "projection_end": 703,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 707,
+          "projection_end": 713,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 796,
+          "projection_end": 801,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 843,
+          "projection_end": 851,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 855,
+          "projection_end": 861,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 956,
+          "projection_end": 961,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WV:statement",
+      "source_text": "Assume that <MATH_0001> is a site,\nand <MATH_0002> is an object of <MATH_0003> whose associated representable\npresheaf is a sheaf. Constructions A and B above define\nmutually inverse (!) functors of <MATH_0004>-categories\n<MATHSEG_0001>-category of<MATHSEG_0002>stacks over <MATHSEG_0003>-category of pairs <MATHSEG_0004> consisting<MATHSEG_0005>of a stack <MATHSEG_0006> over <MATHSEG_0007> and a morphism<MATHSEG_0008> of stacks over <MATHSEG_0009>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 29,
+          "projection_end": 33,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 57,
+          "projection_end": 63,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 96,
+          "projection_end": 109,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 110,
+          "projection_end": 118,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 124,
+          "projection_end": 129,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 175,
+          "projection_end": 182,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 187,
+          "projection_end": 195,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 211,
+          "projection_end": 221,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "2-category",
+          "projection_start": 236,
+          "projection_end": 246,
+          "concept": "2-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 263,
+          "projection_end": 269,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "2-category",
+          "projection_start": 289,
+          "projection_end": 299,
+          "concept": "2-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 353,
+          "projection_end": 358,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 400,
+          "projection_end": 408,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 426,
+          "projection_end": 432,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WV:proof",
+      "source_text": "This is clear.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:stacks:04WK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFor <MATH_0001> an <MATH_0002>-morphism of stacks is the same thing as a\n<MATH_0003>-morphism of fibred categories, see\nDefinition <REF_0001>.\nBy\nLemma <REF_0002>\nwe have already\n<MATH_0004>\nHence the result follows from\nLemma <REF_0003>\nas <MATH_0005> and <MATH_0006> is the\nstackification of <MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WR:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hint:\nThis is the analogue of Sites, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WR:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> be a fibred category, and\nlet <MATH_0004> be the stackification of <MATH_0005>.\nThen <MATH_0006> is the stackification of\n<MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WA:paragraph/0008",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe following lemma tells us that the <MATH_0001>-category of stacks\nover <MATH_0002> is a ``full 2-sub category'' of the\n<MATH_0003>-category of stacks over <MATH_0004> provided that\n<MATH_0005> contains <MATH_0006> (see\nTopologies, Section <REF_0001>).",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WS:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor satisfying the\nassumptions of\nSites, Lemma <REF_0001>.\nLet <MATH_0004> be the corresponding\nmorphism of sites. Then\n<STRUCT_0002>\n<STRUCT_0003> for every stack <MATH_0005> the\ncanonical functor <MATH_0006> is\nan equivalence of stacks,\n<STRUCT_0004> given stacks <MATH_0007> over <MATH_0008>\nthe construction <MATH_0009>\ninduces an equivalence\n<MATH_0010>\nof morphism categories.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WS:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote that by\nLemma <REF_0001>\nwe have an equivalence of categories\n<MATH_0001>\nHence (2) follows from (1).\n\n<STRUCT_0002><STRUCT_0003>\nTo prove (1) we are going to use\nLemma <REF_0002>.\nThis lemma tells us that we have to show that\n<MATH_0002> is\nfully faithful and that all objects of <MATH_0003>\nare locally in the essential image.\n\n<STRUCT_0004><STRUCT_0005>\nWe quickly describe the functor <MATH_0004>, see proof of\nLemma <REF_0003>.\nTo do this we introduce the functor\n<MATH_0005> defined by\n<MATH_0006>, and\n<MATH_0007>. We set\n<MATH_0008> equal to the composition\nof <MATH_0009> and the canonical functor <MATH_0010>.\nWe set <MATH_0011> equal to the composition\nof <MATH_0012> and the canonical functor <MATH_0013>.\nThen <MATH_0014> is the functor\nwhich to <MATH_0015> associates the pair <MATH_0016> and to\n<MATH_0017> the morphism <MATH_0018>.\n\n<STRUCT_0006><STRUCT_0007>\nFully faithfulness. To prove this we are going to use\nLemma <REF_0004>.\nLet <MATH_0019>.\nLet <MATH_0020>.\nFirst off, as <MATH_0021> is fully faithful, we have\n<MATH_0022>\ndirectly from the definition of <MATH_0023>. Similar holds after\npulling back to any <MATH_0024>. Because <MATH_0025> is the\nstackification of <MATH_0026>, and since <MATH_0027> is continuous\nand cocontinuous the presheaf\n<MATH_0028>\nis the sheafification of the presheaf\n<MATH_0029>\nHence to finish the proof of fully faithfulness it suffices\nto show that for any <MATH_0030> and <MATH_0031> the map\n<MATH_0032>\nis bijective. A morphism <MATH_0033> in <MATH_0034> over <MATH_0035>\nis given by an equivalence class of diagrams\n<MATH_0036>\nwith <MATH_0037> strongly cartesian and <MATH_0038>.\nBut since <MATH_0039> is fully faithful we can write <MATH_0040> for some\nmorphism <MATH_0041>\nand then we see that <MATH_0042> and\n<MATH_0043>. Because <MATH_0044> is strongly cartesian\nwe can find a morphism <MATH_0045> lifting <MATH_0046> such that\n<MATH_0047>. By definition of the equivalence\nclasses defining morphisms in <MATH_0048> it follows that\nthe morphism\n<MATH_0049>\nof <MATH_0050> induces the morphism <MATH_0051> in <MATH_0052>.\nThis proves that the map is surjective. We omit the proof that it is\ninjective.\n\n<STRUCT_0008><STRUCT_0009>\nFinally, we have to show that any object of <MATH_0053>\nlocally comes from an object of <MATH_0054>. This is clear from the\nconstructions (details omitted).\n<STRUCT_0010>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WT:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Stacks and localization<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WT:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be an object of <MATH_0003>.\nWe want to understand stacks over <MATH_0004> as stacks\nover <MATH_0005> together with a morphism towards <MATH_0006>.\nThe following lemma is the reason why this is easier to do\nwhen the presheaf <MATH_0007> is a sheaf.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WU:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>.\nThen <MATH_0003> is a stack over <MATH_0004>\nif and only if <MATH_0005> is a sheaf.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WU:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nCombine\nLemma <REF_0001>\nwith\nCategories,\nExample <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WT:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssume that <MATH_0001> is a site,\nand <MATH_0002> is an object of <MATH_0003> whose associated representable\npresheaf is a sheaf. We denote <MATH_0004>\nthe localization functor.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WV:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAssume that <MATH_0001> is a site,\nand <MATH_0002> is an object of <MATH_0003> whose associated representable\npresheaf is a sheaf. Constructions A and B above define\nmutually inverse (!) functors of <MATH_0004>-categories\n<MATHSEG_0001>-category of<MATHSEG_0002>stacks over <MATHSEG_0003>-category of pairs <MATHSEG_0004> consisting<MATHSEG_0005>of a stack <MATHSEG_0006> over <MATHSEG_0007> and a morphism<MATHSEG_0008> of stacks over <MATHSEG_0009>\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WT:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\n<TEXTBFOPEN_0001>Construction B.<TEXTBFCLOSE_0001>\nLet <MATH_0001> be a stack over <MATH_0002>\nwhich is endowed with a morphism of stacks <MATH_0003>\nover <MATH_0004>. In this case it is automatically the case that\n<MATH_0005> is a stack over <MATH_0006>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WV:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is clear.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:categories-example-fibred-category-from-functor-of-points",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. Let <MATH_0002>.\nConsider the representable presheaf <MATH_0003>\n(see Example <REF_0001>).\nOn the other hand, consider the category <MATH_0004>\nfrom Example <REF_0002>.\nThe fibre category <MATH_0005> has as objects morphisms\n<MATH_0006>, and only identities as morphisms. Hence we see that\nunder the correspondence of\nLemma <REF_0003>\nwe have\n<MATH_0007>\nIn other words, the category <MATH_0008> is canonically equivalent\nto the category <MATH_0009> associated\nto <MATH_0010> in\nExample <REF_0004>.\n<STRUCT_0002>",
+      "requested_label": "categories-example-fibred-category-from-functor-of-points",
+      "requested_tag": "0044"
+    },
+    {
+      "context_id": "reference:sites-lemma-bigger-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous,\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> <MATH_0006> is fully faithful,\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004> fibre products exist in <MATH_0007> and <MATH_0008> commutes with them,\nand\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005> there exist final objects\n<MATH_0009>,\n<MATH_0010> such that\n<MATH_0011>.\n<STRUCT_0003>\nLet <MATH_0012> be as above. Then, <MATH_0013> defines a morphism of sites\n<MATH_0014> with <MATH_0015>, <MATH_0016>.\nThe composition\n<MATH_0017>\nis isomorphic to the identity morphism of the topos\n<MATH_0018>. Moreover, the functor <MATH_0019> is fully faithful.\n<STRUCT_0004>",
+      "requested_label": "sites-lemma-bigger-site",
+      "requested_tag": "00XU"
+    },
+    {
+      "context_id": "reference:sites-lemma-technical-up",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation of Lemma <REF_0001>.\nFor any presheaf <MATH_0001> on <MATH_0002>\nwe have <MATH_0003>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-technical-up",
+      "requested_tag": "00WY"
+    },
+    {
+      "context_id": "reference:sites-proposition-get-morphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites. Let\n<MATH_0003> be continuous.\nAssume furthermore the following:\n<STRUCT_0002>\n<STRUCT_0003> the category <MATH_0004> has a final object <MATH_0005> and\n<MATH_0006> is a final object of <MATH_0007> , and\n<STRUCT_0004> the category <MATH_0008> has fibre products and\n<MATH_0009> commutes with them.\n<STRUCT_0005>\nThen <MATH_0010> defines a morphism of sites <MATH_0011>, in other words <MATH_0012> is exact.\n<STRUCT_0006>",
+      "requested_label": "sites-proposition-get-morphism",
+      "requested_tag": "00X6"
+    },
+    {
+      "context_id": "reference:stacks-lemma-adjointness-pullback-pushforward",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a functor.\nLet <MATH_0002> and <MATH_0003>\nbe categories over <MATH_0004> and <MATH_0005>. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0006> is a fibred category,\n<STRUCT_0004> <MATH_0007> is a fibred category,\n<STRUCT_0005> <MATH_0008> has nonempty finite limits, and\n<STRUCT_0006> <MATH_0009> commutes with nonempty finite limits.\n<STRUCT_0007>\nThen we have a canonical equivalence of categories\n<MATH_0010>\nof morphism categories.\n<STRUCT_0008>",
+      "requested_label": "stacks-lemma-adjointness-pullback-pushforward",
+      "requested_tag": "04WI"
+    },
+    {
+      "context_id": "reference:stacks-lemma-adjointness-pullback-pushforward-stacks",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of sites\ngiven by a continuous functor <MATH_0002>\nsatisfying the hypotheses and conclusions of\nSites, Proposition <REF_0001>.\nLet <MATH_0003> and\n<MATH_0004> be stacks.\nThen we have a canonical equivalence of categories\n<MATH_0005>\nof morphism categories.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-adjointness-pullback-pushforward-stacks",
+      "requested_tag": "04WK"
+    },
+    {
+      "context_id": "reference:stacks-lemma-characterize-essentially-surjective-when-ff",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism which is\nfully faithful. Then the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is an equivalence,\n<STRUCT_0004> for every <MATH_0008> and for every\n<MATH_0009> there exists a covering\n<MATH_0010> such that <MATH_0011> is in the essential image\nof the functor <MATH_0012>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "stacks-lemma-characterize-essentially-surjective-when-ff",
+      "requested_tag": "046N"
+    },
+    {
+      "context_id": "reference:stacks-lemma-characterize-ff",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism.\nThen the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is fully faithful,\n<STRUCT_0004> for every <MATH_0008> and for every\n<MATH_0009> the map\n<MATH_0010>\nis an isomorphism of sheaves on <MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "stacks-lemma-characterize-ff",
+      "requested_tag": "04WQ"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stack-in-setoids-characterize",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a category fibred in setoids over <MATH_0003>.\nThen <MATH_0004> is a stack in setoids if and only if the unique\nequivalent category <MATH_0005> fibred in sets (see\nCategories, Lemma <REF_0001>)\nis a stack in sets. In other words, if and only if the presheaf\n<MATH_0006>\nis a sheaf.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-stack-in-setoids-characterize",
+      "requested_tag": "0432"
+    },
+    {
+      "context_id": "reference:topologies-section-change-alpha",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Change of big sites<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "topologies-section-change-alpha",
+      "requested_tag": "022I"
+    }
+  ]
+}

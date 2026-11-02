@@ -1,0 +1,2170 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a192b1-73e3-71e0-b877-efe73579bbd0",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/stacks8-gpt61sol-p06-20261031T160125Z.json",
+    "hash": "sha256:e4f842da6d2e025dfa0e100ffbec25991e0db566816ed253824923378824e0c6"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:0435:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category over <MATH_0003>.\nLet <MATH_0004> and <MATH_0005>\nthe stack and <MATH_0006>-morphism constructed in Lemma <REF_0001>.\nThis construction has the following universal property: Given a stack\n<MATH_0007> and a <MATH_0008>-morphism\n<MATH_0009> of fibred categories over <MATH_0010>\nthere exists a <MATH_0011>-morphism <MATH_0012>\nsuch that the diagram\n<MATH_0013>\nis <MATH_0014>-commutative.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 48,
+          "projection_end": 63,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 118,
+          "projection_end": 123,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 140,
+          "projection_end": 148,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "universal property",
+          "projection_start": 218,
+          "projection_end": 236,
+          "concept": "universal-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 246,
+          "projection_end": 251,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 282,
+          "projection_end": 290,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 306,
+          "projection_end": 323,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 368,
+          "projection_end": 376,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 403,
+          "projection_end": 410,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 438,
+          "projection_end": 449,
+          "concept": "commutative",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0435:proof",
+      "source_text": "Omitted. Hint: Suppose that <MATH_0001>.\nBy the result of Lemma <REF_0001>\nthere exists a covering <MATH_0002>\nsuch that <MATH_0003> for some <MATH_0004>.\nMoreover, there exist coverings <MATH_0005>\nand isomorphisms <MATH_0006>\nwith <MATH_0007>. Set <MATH_0008>.\nThen you can check that\n<MATH_0009>\nagree on overlaps and therefore (as <MATH_0010> is a stack) define\na morphism <MATH_0011>.\nNext, you check that the <MATH_0012> define a descent datum. Since\n<MATH_0013> is a stack these descent data are effective and we find\nan object <MATH_0014> of <MATH_0015> agreeing with <MATH_0016> over <MATH_0017>.\nThe hint is to set <MATH_0018>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 90,
+          "projection_end": 98,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 177,
+          "projection_end": 186,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 203,
+          "projection_end": 215,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 352,
+          "projection_end": 357,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 368,
+          "projection_end": 376,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 436,
+          "projection_end": 443,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 474,
+          "projection_end": 479,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 486,
+          "projection_end": 493,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 528,
+          "projection_end": 534,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 621,
+          "projection_end": 624,
+          "concept": "set",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04W9:statement",
+      "source_text": "Notation and assumptions as in\nLemma <REF_0001>.\nThere is a canonical equivalence of categories\n<MATH_0001>\ngiven by the constructions in the proof of the aforementioned lemma.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "canonical",
+          "projection_start": 60,
+          "projection_end": 69,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 70,
+          "projection_end": 95,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04W9:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:04Y1:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> and <MATH_0003>\nbe morphisms of fibred categories over <MATH_0004>.\nIn this case the stackification of the <MATH_0005>-fibre product is the <MATH_0006>-fibre\nproduct of the stackifications.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 62,
+          "projection_end": 71,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 75,
+          "projection_end": 92,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 162,
+          "projection_end": 175,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 195,
+          "projection_end": 208,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04Y1:proof",
+      "source_text": "Let us denote <MATH_0001> the stackifications\nand <MATH_0002> the stackification of\n<MATH_0003>. By construction of <MATH_0004>-fibre\nproducts there is a canonical <MATH_0005>-morphism\n<MATH_0006>.\nAs the second <MATH_0007>-fibre product is a stack (see\nLemma <REF_0001>)\nthis <MATH_0008>-morphism induces a <MATH_0009>-morphism\n<MATH_0010>\nby the universal property of stackification, see\nLemma <REF_0002>.\nNow <MATH_0011> is a morphism of stacks, and we may check that it is an\nequivalence using\nLemmas <REF_0003> and\n<REF_0004>.\n\n<STRUCT_0001><STRUCT_0002>\nThus we first prove that <MATH_0012> induces isomorphisms of <MATH_0013>-sheaves.\nLet <MATH_0014> be objects of <MATH_0015> over\n<MATH_0016>. We want to show that\n<MATH_0017>\nis an isomorphism. To do this we may work locally on <MATH_0018> (see\nSites, Section <REF_0005>).\nHence by construction of <MATH_0019> (see\nLemma <REF_0006>)\nwe may assume that <MATH_0020>\nactually come from objects <MATH_0021> and <MATH_0022>\nof <MATH_0023> over <MATH_0024>.\nBy the same lemma once more we see that in this case\n<MATH_0025> is the sheafification of\n<MATH_0026>\nand that <MATH_0027> is equal to the fibre product\n<MATH_0028>\nwhere <MATH_0029>,\n<MATH_0030>, and\n<MATH_0031> are the canonical functors.\nThus the first displayed map of this paragraph is an isomorphism as\nsheafification is exact (and hence the sheafification of a fibre product\nof presheaves is the fibre product of the sheafifications).\n\n<STRUCT_0003><STRUCT_0004>\nFinally, we have to check that any object of\n<MATH_0032>\nover <MATH_0033> is locally on <MATH_0034> in the essential image of <MATH_0035>.\nWrite such an object as a triple <MATH_0036>.\nThen <MATH_0037> locally comes from an object of <MATH_0038>,\n<MATH_0039> locally comes from an object of <MATH_0040>, and\nhaving made suitable replacements for <MATH_0041>, <MATH_0042> the morphism\n<MATH_0043> of <MATH_0044> locally comes from a morphism of\n<MATH_0045>. In other words, we have shown that any object of\n<MATH_0046>\nover <MATH_0047> is locally on <MATH_0048> in the essential image of\n<MATH_0049>, hence\na fortiori it is locally in the essential image of <MATH_0050>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibre products",
+          "projection_start": 128,
+          "projection_end": 142,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 154,
+          "projection_end": 163,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 176,
+          "projection_end": 184,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 224,
+          "projection_end": 237,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 243,
+          "projection_end": 248,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 289,
+          "projection_end": 297,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 320,
+          "projection_end": 328,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "universal property",
+          "projection_start": 348,
+          "projection_end": 366,
+          "concept": "universal-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 429,
+          "projection_end": 437,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 441,
+          "projection_end": 447,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 480,
+          "projection_end": 491,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 604,
+          "projection_end": 616,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 632,
+          "projection_end": 639,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 660,
+          "projection_end": 667,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 740,
+          "projection_end": 751,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 804,
+          "projection_end": 809,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 942,
+          "projection_end": 949,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 1150,
+          "projection_end": 1163,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1232,
+          "projection_end": 1241,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 1242,
+          "projection_end": 1250,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1277,
+          "projection_end": 1280,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1305,
+          "projection_end": 1316,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 1379,
+          "projection_end": 1392,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 1396,
+          "projection_end": 1406,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 1414,
+          "projection_end": 1427,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1515,
+          "projection_end": 1521,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 1597,
+          "projection_end": 1602,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1633,
+          "projection_end": 1639,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1704,
+          "projection_end": 1710,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1761,
+          "projection_end": 1767,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1855,
+          "projection_end": 1863,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1912,
+          "projection_end": 1920,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1976,
+          "projection_end": 1982,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 2058,
+          "projection_end": 2063,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 2128,
+          "projection_end": 2133,
+          "concept": "image",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NS:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category over <MATH_0003>.\nThe stackification of the inertia fibred category <MATH_0004>\nis inertia of the stackification of <MATH_0005>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 48,
+          "projection_end": 63,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 116,
+          "projection_end": 131,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NS:proof",
+      "source_text": "This follows from the fact that stackification is compatible\nwith <MATH_0001>-fibre products by\nLemma <REF_0001>\nand the fact that there is a formula for the inertia in terms of\n<MATH_0002>-fibre products of categories over <MATH_0003>, see\nCategories, Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibre products",
+          "projection_start": 78,
+          "projection_end": 92,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 190,
+          "projection_end": 204,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 208,
+          "projection_end": 218,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 241,
+          "projection_end": 251,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZO:title",
+      "source_text": "Stackification of categories fibred in groupoids",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "categories",
+          "projection_start": 18,
+          "projection_end": 28,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 39,
+          "projection_end": 48,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZO:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nHere is the result.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:02ZP:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> be a category\nfibred in groupoids over <MATH_0003>.\nThere exists a stack in groupoids\n<MATH_0004> and a\n<MATH_0005>-morphism <MATH_0006>\nof categories fibred in groupoids over <MATH_0007> (see\nCategories, Definition\n<REF_0001>)\nsuch that\n<STRUCT_0001>\n<STRUCT_0002> for every <MATH_0008>, and any\n<MATH_0009> the map\n<MATH_0010>\ninduced by <MATH_0011> identifies the right hand side with the sheafification\nof the left hand side, and\n<STRUCT_0003> for every <MATH_0012>, and any\n<MATH_0013> there exists a covering\n<MATH_0014> such that for every <MATH_0015> the\nobject <MATH_0016> is in the essential image of the\nfunctor <MATH_0017>.\n<STRUCT_0004>\nMoreover the stack in groupoids <MATH_0018> is determined up to unique\n<MATH_0019>-isomorphism by these conditions.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category fibred in groupoids",
+          "projection_start": 48,
+          "projection_end": 76,
+          "concept": "source-phrase-category-fibred-in-groupoids",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 110,
+          "projection_end": 115,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 119,
+          "projection_end": 128,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 159,
+          "projection_end": 167,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 183,
+          "projection_end": 193,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 204,
+          "projection_end": 213,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 236,
+          "projection_end": 246,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 356,
+          "projection_end": 359,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 549,
+          "projection_end": 557,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 606,
+          "projection_end": 612,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 645,
+          "projection_end": 650,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 658,
+          "projection_end": 665,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 706,
+          "projection_end": 711,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 715,
+          "projection_end": 724,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 776,
+          "projection_end": 787,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZP:proof",
+      "source_text": "Apply Lemma <REF_0001>. The result will be a\nstack in groupoids by applying Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 45,
+          "projection_end": 50,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 54,
+          "projection_end": 63,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0436:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> be a category fibred in groupoids\nover <MATH_0003>. Let <MATH_0004> and\n<MATH_0005>\nthe stack in groupoids and <MATH_0006>-morphism constructed in\nLemma <REF_0001>.\nThis construction has the following universal property: Given a stack\nin groupoids <MATH_0007> and a <MATH_0008>-morphism\n<MATH_0009> of categories over <MATH_0010>\nthere exists a <MATH_0011>-morphism <MATH_0012>\nsuch that the diagram\n<MATH_0013>\nis <MATH_0014>-commutative.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category fibred in groupoids",
+          "projection_start": 48,
+          "projection_end": 76,
+          "concept": "source-phrase-category-fibred-in-groupoids",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 131,
+          "projection_end": 136,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 140,
+          "projection_end": 149,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 166,
+          "projection_end": 174,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "universal property",
+          "projection_start": 244,
+          "projection_end": 262,
+          "concept": "universal-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 272,
+          "projection_end": 277,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 281,
+          "projection_end": 290,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 321,
+          "projection_end": 329,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 345,
+          "projection_end": 355,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 400,
+          "projection_end": 408,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 435,
+          "projection_end": 442,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 470,
+          "projection_end": 481,
+          "concept": "commutative",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0436:proof",
+      "source_text": "This is a special case of\nLemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:04Y2:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> and <MATH_0003>\nbe morphisms of categories fibred in groupoids over <MATH_0004>.\nIn this case the stackification of the <MATH_0005>-fibre product is the <MATH_0006>-fibre\nproduct of the stackifications.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 62,
+          "projection_end": 71,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 75,
+          "projection_end": 85,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 96,
+          "projection_end": 105,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 175,
+          "projection_end": 188,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 208,
+          "projection_end": 221,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04Y2:proof",
+      "source_text": "This is a special case of\nLemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:06NT:title",
+      "source_text": "Inherited topologies",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "topologies",
+          "projection_start": 10,
+          "projection_end": 20,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NT:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIt turns out that a fibred category over a site inherits a canonical\ntopology from the underlying site.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "fibred category",
+          "projection_start": 34,
+          "projection_end": 49,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 57,
+          "projection_end": 61,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 73,
+          "projection_end": 82,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 83,
+          "projection_end": 91,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 112,
+          "projection_end": 116,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NU:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nbe a fibred category. Let <MATH_0003>\nbe the set of families <MATH_0004> of morphisms in <MATH_0005>\nwith fixed target such that (a) each <MATH_0006> is strongly cartesian,\nand (b) <MATH_0007> is a covering of <MATH_0008>.\nThen <MATH_0009> is a site.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 48,
+          "projection_end": 63,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 88,
+          "projection_end": 91,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 119,
+          "projection_end": 128,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 196,
+          "projection_end": 214,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 241,
+          "projection_end": 249,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 288,
+          "projection_end": 292,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NU:proof",
+      "source_text": "We have to check the three conditions of\nSites, Definition <REF_0001>.\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0001> is an isomorphism of <MATH_0002>, then\nit is strongly cartesian by\nCategories, Lemma <REF_0002>\nand <MATH_0003> is an isomorphism of <MATH_0004>. Thus\n<MATH_0005> is a covering of <MATH_0006> whence\n<MATH_0007>.\n<STRUCT_0003> If <MATH_0008> and for each\n<MATH_0009> we have <MATH_0010>, then\neach composition <MATH_0011> is strongly cartesian by\nCategories, Lemma <REF_0003>\nand <MATH_0012>.\nHence also <MATH_0013>.\n<STRUCT_0004> Suppose <MATH_0014>\nand <MATH_0015> is a morphism of <MATH_0016>. As <MATH_0017>\nis a covering of <MATH_0018> we see that <MATH_0019>\nexists. Hence\nCategories, Lemma <REF_0004>\nimplies that <MATH_0020> exists, that <MATH_0021>, and that <MATH_0022> is\nstrongly cartesian. Since also\n<MATH_0023>\nwe conclude that\n<MATH_0024>\n<STRUCT_0005>\nThis finishes the proof.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Sites",
+          "projection_start": 41,
+          "projection_end": 46,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 120,
+          "projection_end": 131,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 159,
+          "projection_end": 177,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 181,
+          "projection_end": 191,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 232,
+          "projection_end": 243,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 282,
+          "projection_end": 290,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 411,
+          "projection_end": 422,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 438,
+          "projection_end": 456,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 460,
+          "projection_end": 470,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 585,
+          "projection_end": 593,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 630,
+          "projection_end": 638,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 692,
+          "projection_end": 702,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 796,
+          "projection_end": 814,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NT:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nNote that if <MATH_0001> is fibred in groupoids, then\nthe coverings of the site <MATH_0002> in\nLemma <REF_0001>\nare characterized by\n<MATH_0003>\nbecause every morphism of <MATH_0004> is strongly cartesian.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "groupoids",
+          "projection_start": 52,
+          "projection_end": 61,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 72,
+          "projection_end": 81,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 89,
+          "projection_end": 93,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 173,
+          "projection_end": 181,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 200,
+          "projection_end": 218,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NV:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002> be a\nfibred category. We say <MATH_0003> as in\nLemma <REF_0001>\nis the <TEXTITOPEN_0001>structure of site on <MATH_0004> inherited from <MATH_0005><TEXTITCLOSE_0001>.\nWe sometimes indicate this by saying that\n<TEXTITOPEN_0002><MATH_0006> is endowed with the topology inherited from <MATH_0007><TEXTITCLOSE_0002>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 48,
+          "projection_end": 63,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure of site",
+          "projection_start": 114,
+          "projection_end": 131,
+          "concept": "structure of site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "inherited",
+          "projection_start": 147,
+          "projection_end": 156,
+          "concept": "inherited",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "is endowed with the topology inherited",
+          "projection_start": 229,
+          "projection_end": 267,
+          "concept": "is endowed with the topology inherited",
+          "rule": "source-declaration"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NT:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nIn particular we obtain a topos of sheaves <MATH_0001>\nin this situation. It turns out that this topos is functorial with respect\nto <MATH_0002>-morphisms of fibred categories.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "sheaves",
+          "projection_start": 49,
+          "projection_end": 56,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 159,
+          "projection_end": 168,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 172,
+          "projection_end": 189,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NW:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nbe a <MATH_0003>-morphism of fibred categories over <MATH_0004>.\nThen <MATH_0005> is a continuous and cocontinuous functor between the structure\nof sites inherited from <MATH_0006>. Hence <MATH_0007> induces a morphism of topoi\n<MATH_0008> with\n<MATH_0009> and <MATH_0010>. In particular\n<MATH_0011>\nfor a sheaf <MATH_0012> on <MATH_0013> and object <MATH_0014> of <MATH_0015>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 60,
+          "projection_end": 68,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 72,
+          "projection_end": 89,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 158,
+          "projection_end": 165,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 191,
+          "projection_end": 196,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism of topoi",
+          "projection_start": 253,
+          "projection_end": 270,
+          "concept": "source-phrase-morphism-of-topoi",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 349,
+          "projection_end": 354,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 386,
+          "projection_end": 392,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NW:proof",
+      "source_text": "We first prove that <MATH_0001> is continuous.\nLet <MATH_0002> be a covering of <MATH_0003>. By\nCategories, Definition <REF_0001>\nthe functor <MATH_0004> transforms strongly cartesian morphisms into strongly\ncartesian morphisms, hence <MATH_0005> is a covering\nof <MATH_0006>. This proves part (1) of\nSites, Definition <REF_0002>.\nMoreover, let <MATH_0007> be a morphism of <MATH_0008>. By\nCategories, Lemma <REF_0003>\nthe fibre product <MATH_0009> exists and <MATH_0010>\nis strongly cartesian. Hence <MATH_0011> is strongly\ncartesian. By\nCategories, Lemma <REF_0004>\napplied to <MATH_0012> this means that\n<MATH_0013>.\nThis proves part (2) of\nSites, Definition <REF_0005>\nand we conclude that <MATH_0014> is continuous.\n\n<STRUCT_0001><STRUCT_0002>\nNext we prove that <MATH_0015> is cocontinuous.\nLet <MATH_0016> and let <MATH_0017>\nbe a covering in <MATH_0018>. Denote <MATH_0019> the\ncorresponding covering of <MATH_0020>. For each <MATH_0021> choose a strongly\ncartesian morphism <MATH_0022> in <MATH_0023> lying over <MATH_0024>.\nThen <MATH_0025> and <MATH_0026> are both a strongly cartesian\nmorphisms in <MATH_0027> lying over <MATH_0028>. Hence there exists\na unique isomorphism <MATH_0029> in <MATH_0030> compatible\nwith the maps to <MATH_0031>. Thus <MATH_0032> is a covering of\n<MATH_0033> such that <MATH_0034> is isomorphic to\n<MATH_0035>. Hence <MATH_0036> is cocontinuous, see\nSites, Definition <REF_0006>.\n\n<STRUCT_0003><STRUCT_0004>\nThe final assertion follows from the first two, see\nSites, Lemmas\n<REF_0007>,\n<REF_0008>, and\n<REF_0009>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 68,
+          "projection_end": 76,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 96,
+          "projection_end": 106,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 134,
+          "projection_end": 141,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 165,
+          "projection_end": 183,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 184,
+          "projection_end": 193,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 199,
+          "projection_end": 217,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 218,
+          "projection_end": 227,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 252,
+          "projection_end": 260,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 301,
+          "projection_end": 306,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 362,
+          "projection_end": 370,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 390,
+          "projection_end": 400,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 423,
+          "projection_end": 436,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 475,
+          "projection_end": 493,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 516,
+          "projection_end": 534,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 539,
+          "projection_end": 549,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 644,
+          "projection_end": 649,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 837,
+          "projection_end": 845,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 899,
+          "projection_end": 907,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 954,
+          "projection_end": 972,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 973,
+          "projection_end": 981,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 1077,
+          "projection_end": 1095,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1096,
+          "projection_end": 1105,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1173,
+          "projection_end": 1184,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 1232,
+          "projection_end": 1236,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1275,
+          "projection_end": 1283,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1324,
+          "projection_end": 1334,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 1390,
+          "projection_end": 1395,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 1499,
+          "projection_end": 1504,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0CN0:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nbe a category fibred in groupoids. Let <MATH_0003>\nlying over <MATH_0004>. The functor <MATH_0005> induces an equivalence of sites\n<MATH_0006> where <MATH_0007> is endowed with\nthe topology inherited from <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category fibred in groupoids",
+          "projection_start": 48,
+          "projection_end": 76,
+          "concept": "source-phrase-category-fibred-in-groupoids",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 122,
+          "projection_end": 129,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 153,
+          "projection_end": 164,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 168,
+          "projection_end": 173,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 224,
+          "projection_end": 232,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0CN0:proof",
+      "source_text": "Here <MATH_0001> is the localization of the site\n<MATH_0002> at the object <MATH_0003> and similarly for <MATH_0004>.\nIt follows from\nCategories, Definition <REF_0001>\nthat the rule <MATH_0005> defines an equivalence of\ncategories <MATH_0006>. Whereupon it follows from\nDefinition <REF_0002>\nthat coverings of <MATH_0007> in <MATH_0008> are in bijective correspondence\nwith coverings of <MATH_0009> in <MATH_0010>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "localization",
+          "projection_start": 24,
+          "projection_end": 36,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 44,
+          "projection_end": 48,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 68,
+          "projection_end": 74,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 134,
+          "projection_end": 144,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 205,
+          "projection_end": 230,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 297,
+          "projection_end": 306,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijective",
+          "projection_start": 344,
+          "projection_end": 353,
+          "concept": "bijective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 374,
+          "projection_end": 383,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NX:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003>\nbe stacks in groupoids. Let <MATH_0004>\nbe a <MATH_0005>-morphism of categories over <MATH_0006>. If <MATH_0007> turns\n<MATH_0008> into a category fibred in groupoids over <MATH_0009>,\nthen <MATH_0010> is a stack in groupoids over <MATH_0011> (with\ntopology inherited from <MATH_0012>).\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 62,
+          "projection_end": 68,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 72,
+          "projection_end": 81,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 116,
+          "projection_end": 124,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 128,
+          "projection_end": 138,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category fibred in groupoids",
+          "projection_start": 197,
+          "projection_end": 225,
+          "concept": "source-phrase-category-fibred-in-groupoids",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 266,
+          "projection_end": 271,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 275,
+          "projection_end": 284,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 308,
+          "projection_end": 316,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NX:proof",
+      "source_text": "Let us prove descent for objects. Let <MATH_0001> be a covering\nof <MATH_0002>. Let <MATH_0003> be a descent datum in <MATH_0004>\nwith respect to this covering. Then <MATH_0005> is also a descent\ndatum with respect to the covering <MATH_0006> of\n<MATH_0007>. As <MATH_0008> is a stack in groupoids we obtain an\nobject <MATH_0009> over <MATH_0010> and isomorphisms <MATH_0011>\nover <MATH_0012> compatible with the <MATH_0013>, i.e., such that\n<MATH_0014>\nConsider the sheaf <MATH_0015>\non <MATH_0016>. Note that <MATH_0017>\nbecause <MATH_0018>. Because <MATH_0019> (as we started\nwith a descent datum over <MATH_0020>) the displayed formula shows\nthat <MATH_0021>.\nHence the local sections <MATH_0022> glue to <MATH_0023>. As <MATH_0024> is fibred in\ngroupoids we see that <MATH_0025> is isomorphic to an object <MATH_0026> with <MATH_0027>.\nWe omit the verification that <MATH_0028> in the fibre category of <MATH_0029>\nover <MATH_0030> is a solution to the problem of descent posed by the descent datum\n<MATH_0031>. We also omit the proof of the sheaf property\nof the <MATH_0032>-presheaves of <MATH_0033>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 13,
+          "projection_end": 20,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 25,
+          "projection_end": 32,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 55,
+          "projection_end": 63,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 101,
+          "projection_end": 108,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 151,
+          "projection_end": 159,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 188,
+          "projection_end": 195,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 222,
+          "projection_end": 230,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 279,
+          "projection_end": 284,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 288,
+          "projection_end": 297,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 311,
+          "projection_end": 317,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 351,
+          "projection_end": 363,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 467,
+          "projection_end": 472,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 586,
+          "projection_end": 593,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 750,
+          "projection_end": 759,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 787,
+          "projection_end": 797,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 804,
+          "projection_end": 810,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 896,
+          "projection_end": 904,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 969,
+          "projection_end": 976,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 990,
+          "projection_end": 997,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 1047,
+          "projection_end": 1061,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 1081,
+          "projection_end": 1091,
+          "concept": "presheaf",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:stacks:02ZN:proof/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Less naive proof<ENVARGEND_0001>\nHere is a less naive proof.\nBy Categories, Lemma <REF_0001>\nthere exists an equivalence of\nfibred categories <MATH_0001> where <MATH_0002>\nis a split fibred category, i.e., one in which the pullback\nfunctors compose on the nose. Obviously the lemma for <MATH_0003>\nimplies the lemma for <MATH_0004>. Hence we may think of <MATH_0005>\nas a presheaf in categories.\n\n<STRUCT_0002><STRUCT_0003>\nConsider the <MATH_0006>-category <MATH_0007> temporarily as a\ncategory by forgetting about <MATH_0008>-morphisms.\nLet us think of a category as a quintuple\n<MATH_0009> as in\nCategories, Section <REF_0002>.\nConsider the forgetful functor\n<MATH_0010>\nThen <MATH_0011> is faithful, <MATH_0012> has limits and\n<MATH_0013> commutes with them, <MATH_0014> has directed colimits and\n<MATH_0015> commutes with them, and <MATH_0016> reflects isomorphisms.\nWe can sheafify presheaves with values in <MATH_0017>, and\nby an argument similar to the one in the first part of\nSites, Section <REF_0003>\nthe result commutes with <MATH_0018>. Applying this to\n<MATH_0019> we obtain a sheafification <MATH_0020>\nwhich has a sheaf of objects and a sheaf of morphisms\nboth of which are the sheafifications of the corresponding\npresheaves for <MATH_0021>. In this case it is quite\neasy to see that the map <MATH_0022>\nhas the properties (1) and (2) of the lemma.\n\n<STRUCT_0004><STRUCT_0005>\nHowever, the category <MATH_0023> may not yet be a\nstack since, although the presheaf of objects is a sheaf,\nthe descent condition may not yet be satisfied.\nTo remedy this we have to add more objects. But the argument\nabove does reduce us to the case where <MATH_0024>\nfor some sheaf(!) <MATH_0025> of\ncategories. In this case consider the functor\n<MATH_0026> defined by\n<STRUCT_0006>\n<STRUCT_0007> The set <MATH_0027> is the set of pairs\n<MATH_0028> where <MATH_0029>\nis a covering of <MATH_0030> and <MATH_0031> is\na descent datum relative to <MATH_0032>.\n<STRUCT_0008> A morphism in <MATH_0033> from\n<MATH_0034> to <MATH_0035>\nis an element of\n<MATH_0036>\nwhere the colimit is over all common refinements\n<MATH_0037>, <MATH_0038>.\nThis colimit is filtered (verification omitted).\nHence composition of morphisms in <MATH_0039> is defined by\nfinding a common refinement and composing in <MATH_0040>.\n<STRUCT_0009> Given <MATH_0041> and an object\n<MATH_0042> of <MATH_0043> we set <MATH_0044>\nequal to <MATH_0045>.\nMore precisely, if <MATH_0046>\nand <MATH_0047>, then\n<MATH_0048>\nwhich comes with a canonical morphism\n<MATH_0049> and\n<MATH_0050> is the pullback of <MATH_0051> with respect to\nthis morphism (see Definition <REF_0004>).\n<STRUCT_0010> Given <MATH_0052>, objects <MATH_0053>\nand <MATH_0054> and a morphism between them, represented by\n<MATH_0055>, <MATH_0056>,\nand <MATH_0057>, then <MATH_0058> is\nrepresented by\n<MATH_0059>,\n<MATH_0060>,\nand the pullback <MATH_0061> of the morphism <MATH_0062> via\nthe map <MATH_0063>. This works\nsince pullbacks in <MATH_0064> commute on the nose.\n<STRUCT_0011>\nThere is a map <MATH_0065> given by associating to\nan object <MATH_0066> of <MATH_0067> the object <MATH_0068> of\n<MATH_0069>. At this point you have to check that the corresponding\nfunctor <MATH_0070> has properties (1)\nand (2) of the lemma, and finally that <MATH_0071> is\na stack. Details omitted.\n<STRUCT_0012>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0435:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hint: Suppose that <MATH_0001>.\nBy the result of Lemma <REF_0001>\nthere exists a covering <MATH_0002>\nsuch that <MATH_0003> for some <MATH_0004>.\nMoreover, there exist coverings <MATH_0005>\nand isomorphisms <MATH_0006>\nwith <MATH_0007>. Set <MATH_0008>.\nThen you can check that\n<MATH_0009>\nagree on overlaps and therefore (as <MATH_0010> is a stack) define\na morphism <MATH_0011>.\nNext, you check that the <MATH_0012> define a descent datum. Since\n<MATH_0013> is a stack these descent data are effective and we find\nan object <MATH_0014> of <MATH_0015> agreeing with <MATH_0016> over <MATH_0017>.\nThe hint is to set <MATH_0018>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0435:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category over <MATH_0003>.\nLet <MATH_0004> and <MATH_0005>\nthe stack and <MATH_0006>-morphism constructed in Lemma <REF_0001>.\nThis construction has the following universal property: Given a stack\n<MATH_0007> and a <MATH_0008>-morphism\n<MATH_0009> of fibred categories over <MATH_0010>\nthere exists a <MATH_0011>-morphism <MATH_0012>\nsuch that the diagram\n<MATH_0013>\nis <MATH_0014>-commutative.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04W9:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in\nLemma <REF_0001>.\nThere is a canonical equivalence of categories\n<MATH_0001>\ngiven by the constructions in the proof of the aforementioned lemma.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04W9:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04Y1:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> and <MATH_0003>\nbe morphisms of fibred categories over <MATH_0004>.\nIn this case the stackification of the <MATH_0005>-fibre product is the <MATH_0006>-fibre\nproduct of the stackifications.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04Y1:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us denote <MATH_0001> the stackifications\nand <MATH_0002> the stackification of\n<MATH_0003>. By construction of <MATH_0004>-fibre\nproducts there is a canonical <MATH_0005>-morphism\n<MATH_0006>.\nAs the second <MATH_0007>-fibre product is a stack (see\nLemma <REF_0001>)\nthis <MATH_0008>-morphism induces a <MATH_0009>-morphism\n<MATH_0010>\nby the universal property of stackification, see\nLemma <REF_0002>.\nNow <MATH_0011> is a morphism of stacks, and we may check that it is an\nequivalence using\nLemmas <REF_0003> and\n<REF_0004>.\n\n<STRUCT_0002><STRUCT_0003>\nThus we first prove that <MATH_0012> induces isomorphisms of <MATH_0013>-sheaves.\nLet <MATH_0014> be objects of <MATH_0015> over\n<MATH_0016>. We want to show that\n<MATH_0017>\nis an isomorphism. To do this we may work locally on <MATH_0018> (see\nSites, Section <REF_0005>).\nHence by construction of <MATH_0019> (see\nLemma <REF_0006>)\nwe may assume that <MATH_0020>\nactually come from objects <MATH_0021> and <MATH_0022>\nof <MATH_0023> over <MATH_0024>.\nBy the same lemma once more we see that in this case\n<MATH_0025> is the sheafification of\n<MATH_0026>\nand that <MATH_0027> is equal to the fibre product\n<MATH_0028>\nwhere <MATH_0029>,\n<MATH_0030>, and\n<MATH_0031> are the canonical functors.\nThus the first displayed map of this paragraph is an isomorphism as\nsheafification is exact (and hence the sheafification of a fibre product\nof presheaves is the fibre product of the sheafifications).\n\n<STRUCT_0004><STRUCT_0005>\nFinally, we have to check that any object of\n<MATH_0032>\nover <MATH_0033> is locally on <MATH_0034> in the essential image of <MATH_0035>.\nWrite such an object as a triple <MATH_0036>.\nThen <MATH_0037> locally comes from an object of <MATH_0038>,\n<MATH_0039> locally comes from an object of <MATH_0040>, and\nhaving made suitable replacements for <MATH_0041>, <MATH_0042> the morphism\n<MATH_0043> of <MATH_0044> locally comes from a morphism of\n<MATH_0045>. In other words, we have shown that any object of\n<MATH_0046>\nover <MATH_0047> is locally on <MATH_0048> in the essential image of\n<MATH_0049>, hence\na fortiori it is locally in the essential image of <MATH_0050>.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NS:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category over <MATH_0003>.\nThe stackification of the inertia fibred category <MATH_0004>\nis inertia of the stackification of <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NS:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows from the fact that stackification is compatible\nwith <MATH_0001>-fibre products by\nLemma <REF_0001>\nand the fact that there is a formula for the inertia in terms of\n<MATH_0002>-fibre products of categories over <MATH_0003>, see\nCategories, Lemma <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZO:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Stackification of categories fibred in groupoids<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZO:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere is the result.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZP:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a category\nfibred in groupoids over <MATH_0003>.\nThere exists a stack in groupoids\n<MATH_0004> and a\n<MATH_0005>-morphism <MATH_0006>\nof categories fibred in groupoids over <MATH_0007> (see\nCategories, Definition\n<REF_0001>)\nsuch that\n<STRUCT_0002>\n<STRUCT_0003> for every <MATH_0008>, and any\n<MATH_0009> the map\n<MATH_0010>\ninduced by <MATH_0011> identifies the right hand side with the sheafification\nof the left hand side, and\n<STRUCT_0004> for every <MATH_0012>, and any\n<MATH_0013> there exists a covering\n<MATH_0014> such that for every <MATH_0015> the\nobject <MATH_0016> is in the essential image of the\nfunctor <MATH_0017>.\n<STRUCT_0005>\nMoreover the stack in groupoids <MATH_0018> is determined up to unique\n<MATH_0019>-isomorphism by these conditions.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZP:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nApply Lemma <REF_0001>. The result will be a\nstack in groupoids by applying Lemma <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0436:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a category fibred in groupoids\nover <MATH_0003>. Let <MATH_0004> and\n<MATH_0005>\nthe stack in groupoids and <MATH_0006>-morphism constructed in\nLemma <REF_0001>.\nThis construction has the following universal property: Given a stack\nin groupoids <MATH_0007> and a <MATH_0008>-morphism\n<MATH_0009> of categories over <MATH_0010>\nthere exists a <MATH_0011>-morphism <MATH_0012>\nsuch that the diagram\n<MATH_0013>\nis <MATH_0014>-commutative.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0436:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is a special case of\nLemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04Y2:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> and <MATH_0003>\nbe morphisms of categories fibred in groupoids over <MATH_0004>.\nIn this case the stackification of the <MATH_0005>-fibre product is the <MATH_0006>-fibre\nproduct of the stackifications.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04Y2:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is a special case of\nLemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NT:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Inherited topologies<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NT:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt turns out that a fibred category over a site inherits a canonical\ntopology from the underlying site.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NU:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nbe a fibred category. Let <MATH_0003>\nbe the set of families <MATH_0004> of morphisms in <MATH_0005>\nwith fixed target such that (a) each <MATH_0006> is strongly cartesian,\nand (b) <MATH_0007> is a covering of <MATH_0008>.\nThen <MATH_0009> is a site.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NU:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe have to check the three conditions of\nSites, Definition <REF_0001>.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0001> is an isomorphism of <MATH_0002>, then\nit is strongly cartesian by\nCategories, Lemma <REF_0002>\nand <MATH_0003> is an isomorphism of <MATH_0004>. Thus\n<MATH_0005> is a covering of <MATH_0006> whence\n<MATH_0007>.\n<STRUCT_0004> If <MATH_0008> and for each\n<MATH_0009> we have <MATH_0010>, then\neach composition <MATH_0011> is strongly cartesian by\nCategories, Lemma <REF_0003>\nand <MATH_0012>.\nHence also <MATH_0013>.\n<STRUCT_0005> Suppose <MATH_0014>\nand <MATH_0015> is a morphism of <MATH_0016>. As <MATH_0017>\nis a covering of <MATH_0018> we see that <MATH_0019>\nexists. Hence\nCategories, Lemma <REF_0004>\nimplies that <MATH_0020> exists, that <MATH_0021>, and that <MATH_0022> is\nstrongly cartesian. Since also\n<MATH_0023>\nwe conclude that\n<MATH_0024>\n<STRUCT_0006>\nThis finishes the proof.\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NT:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote that if <MATH_0001> is fibred in groupoids, then\nthe coverings of the site <MATH_0002> in\nLemma <REF_0001>\nare characterized by\n<MATH_0003>\nbecause every morphism of <MATH_0004> is strongly cartesian.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NV:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002> be a\nfibred category. We say <MATH_0003> as in\nLemma <REF_0001>\nis the <TEXTITOPEN_0001>structure of site on <MATH_0004> inherited from <MATH_0005><TEXTITCLOSE_0001>.\nWe sometimes indicate this by saying that\n<TEXTITOPEN_0002><MATH_0006> is endowed with the topology inherited from <MATH_0007><TEXTITCLOSE_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NT:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn particular we obtain a topos of sheaves <MATH_0001>\nin this situation. It turns out that this topos is functorial with respect\nto <MATH_0002>-morphisms of fibred categories.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NW:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nbe a <MATH_0003>-morphism of fibred categories over <MATH_0004>.\nThen <MATH_0005> is a continuous and cocontinuous functor between the structure\nof sites inherited from <MATH_0006>. Hence <MATH_0007> induces a morphism of topoi\n<MATH_0008> with\n<MATH_0009> and <MATH_0010>. In particular\n<MATH_0011>\nfor a sheaf <MATH_0012> on <MATH_0013> and object <MATH_0014> of <MATH_0015>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NW:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe first prove that <MATH_0001> is continuous.\nLet <MATH_0002> be a covering of <MATH_0003>. By\nCategories, Definition <REF_0001>\nthe functor <MATH_0004> transforms strongly cartesian morphisms into strongly\ncartesian morphisms, hence <MATH_0005> is a covering\nof <MATH_0006>. This proves part (1) of\nSites, Definition <REF_0002>.\nMoreover, let <MATH_0007> be a morphism of <MATH_0008>. By\nCategories, Lemma <REF_0003>\nthe fibre product <MATH_0009> exists and <MATH_0010>\nis strongly cartesian. Hence <MATH_0011> is strongly\ncartesian. By\nCategories, Lemma <REF_0004>\napplied to <MATH_0012> this means that\n<MATH_0013>.\nThis proves part (2) of\nSites, Definition <REF_0005>\nand we conclude that <MATH_0014> is continuous.\n\n<STRUCT_0002><STRUCT_0003>\nNext we prove that <MATH_0015> is cocontinuous.\nLet <MATH_0016> and let <MATH_0017>\nbe a covering in <MATH_0018>. Denote <MATH_0019> the\ncorresponding covering of <MATH_0020>. For each <MATH_0021> choose a strongly\ncartesian morphism <MATH_0022> in <MATH_0023> lying over <MATH_0024>.\nThen <MATH_0025> and <MATH_0026> are both a strongly cartesian\nmorphisms in <MATH_0027> lying over <MATH_0028>. Hence there exists\na unique isomorphism <MATH_0029> in <MATH_0030> compatible\nwith the maps to <MATH_0031>. Thus <MATH_0032> is a covering of\n<MATH_0033> such that <MATH_0034> is isomorphic to\n<MATH_0035>. Hence <MATH_0036> is cocontinuous, see\nSites, Definition <REF_0006>.\n\n<STRUCT_0004><STRUCT_0005>\nThe final assertion follows from the first two, see\nSites, Lemmas\n<REF_0007>,\n<REF_0008>, and\n<REF_0009>.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0CN0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nbe a category fibred in groupoids. Let <MATH_0003>\nlying over <MATH_0004>. The functor <MATH_0005> induces an equivalence of sites\n<MATH_0006> where <MATH_0007> is endowed with\nthe topology inherited from <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0CN0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere <MATH_0001> is the localization of the site\n<MATH_0002> at the object <MATH_0003> and similarly for <MATH_0004>.\nIt follows from\nCategories, Definition <REF_0001>\nthat the rule <MATH_0005> defines an equivalence of\ncategories <MATH_0006>. Whereupon it follows from\nDefinition <REF_0002>\nthat coverings of <MATH_0007> in <MATH_0008> are in bijective correspondence\nwith coverings of <MATH_0009> in <MATH_0010>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NX:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003>\nbe stacks in groupoids. Let <MATH_0004>\nbe a <MATH_0005>-morphism of categories over <MATH_0006>. If <MATH_0007> turns\n<MATH_0008> into a category fibred in groupoids over <MATH_0009>,\nthen <MATH_0010> is a stack in groupoids over <MATH_0011> (with\ntopology inherited from <MATH_0012>).\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NX:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us prove descent for objects. Let <MATH_0001> be a covering\nof <MATH_0002>. Let <MATH_0003> be a descent datum in <MATH_0004>\nwith respect to this covering. Then <MATH_0005> is also a descent\ndatum with respect to the covering <MATH_0006> of\n<MATH_0007>. As <MATH_0008> is a stack in groupoids we obtain an\nobject <MATH_0009> over <MATH_0010> and isomorphisms <MATH_0011>\nover <MATH_0012> compatible with the <MATH_0013>, i.e., such that\n<MATH_0014>\nConsider the sheaf <MATH_0015>\non <MATH_0016>. Note that <MATH_0017>\nbecause <MATH_0018>. Because <MATH_0019> (as we started\nwith a descent datum over <MATH_0020>) the displayed formula shows\nthat <MATH_0021>.\nHence the local sections <MATH_0022> glue to <MATH_0023>. As <MATH_0024> is fibred in\ngroupoids we see that <MATH_0025> is isomorphic to an object <MATH_0026> with <MATH_0027>.\nWe omit the verification that <MATH_0028> in the fibre category of <MATH_0029>\nover <MATH_0030> is a solution to the problem of descent posed by the descent datum\n<MATH_0031>. We also omit the proof of the sheaf property\nof the <MATH_0032>-presheaves of <MATH_0033>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:09WX:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nbe a stack. Endow <MATH_0003> with the topology inherited from\n<MATH_0004> and let <MATH_0005> be a stack.\nThen <MATH_0006> is a stack over <MATH_0007>.\nIf <MATH_0008> and <MATH_0009> define stacks in groupoids, then\n<MATH_0010> is a stack in groupoids over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:categories-definition-categories-fibred-in-groupoids-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nThe <TEXTITOPEN_0001><MATH_0002>-category of categories fibred in groupoids over <MATH_0003><TEXTITCLOSE_0001>\nis the sub <MATH_0004>-category of the <MATH_0005>-category of fibred categories\nover <MATH_0006> (see Definition <REF_0001>)\ndefined as follows:\n<STRUCT_0002>\n<STRUCT_0003> Its objects will be categories\n<MATH_0007> fibred in groupoids.\n<STRUCT_0004> Its <MATH_0008>-morphisms <MATH_0009>\nwill be functors <MATH_0010> such that\n<MATH_0011> (since every morphism is strongly cartesian\n<MATH_0012> automatically preserves them).\n<STRUCT_0005> Its <MATH_0013>-morphisms <MATH_0014> for\n<MATH_0015>\nwill be morphisms of functors\nsuch that <MATH_0016>\nfor all <MATH_0017>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-definition-categories-fibred-in-groupoids-over-C",
+      "requested_tag": "02XS"
+    },
+    {
+      "context_id": "reference:categories-definition-fibred-categories-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nThe <TEXTITOPEN_0001><MATH_0002>-category of fibred categories over <MATH_0003><TEXTITCLOSE_0001>\nis the sub <MATH_0004>-category of the <MATH_0005>-category of categories\nover <MATH_0006> (see Definition <REF_0001>)\ndefined as follows:\n<STRUCT_0002>\n<STRUCT_0003> Its objects will be fibred categories\n<MATH_0007>.\n<STRUCT_0004> Its <MATH_0008>-morphisms <MATH_0009>\nwill be functors <MATH_0010> such that\n<MATH_0011> and such that <MATH_0012> maps strongly cartesian\nmorphisms to strongly cartesian morphisms.\n<STRUCT_0005> Its <MATH_0013>-morphisms <MATH_0014> for\n<MATH_0015>\nwill be morphisms of functors\nsuch that <MATH_0016>\nfor all <MATH_0017>.\n<STRUCT_0006>\nIn this situation we will denote\n<MATH_0018>\nthe category of <MATH_0019>-morphisms between\n<MATH_0020> and <MATH_0021>\n<STRUCT_0007>",
+      "requested_label": "categories-definition-fibred-categories-over-C",
+      "requested_tag": "02XP"
+    },
+    {
+      "context_id": "reference:categories-definition-fibred-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a functor.\nWe say that <MATH_0002> is <TEXTITOPEN_0001>fibred in groupoids<TEXTITCLOSE_0001> over <MATH_0003> if\nthe following two conditions hold:\n<STRUCT_0002>\n<STRUCT_0003> For every morphism <MATH_0004> in <MATH_0005> and every\nlift <MATH_0006> of <MATH_0007> there is a lift <MATH_0008> of <MATH_0009> with\ntarget <MATH_0010>.\n<STRUCT_0004> For every pair of morphisms <MATH_0011> and <MATH_0012>\nand any morphism <MATH_0013> such that <MATH_0014>\nthere exists a unique lift <MATH_0015> of <MATH_0016> such that\n<MATH_0017>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "categories-definition-fibred-groupoids",
+      "requested_tag": "003T"
+    },
+    {
+      "context_id": "reference:categories-lemma-composition-cartesian",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a category over <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> The composition of two strongly cartesian morphisms\nis strongly cartesian.\n<STRUCT_0004> Any isomorphism of <MATH_0004> is strongly cartesian.\n<STRUCT_0005> Any strongly cartesian morphism <MATH_0005> such that <MATH_0006>\nis an isomorphism, is an isomorphism.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-lemma-composition-cartesian",
+      "requested_tag": "02XL"
+    },
+    {
+      "context_id": "reference:categories-lemma-fibred-category-representable-goes-up",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a fibred category.\nLet <MATH_0002> and <MATH_0003> be morphisms of <MATH_0004>\nwith <MATH_0005> strongly cartesian. If <MATH_0006> exists,\nthen <MATH_0007> exists, <MATH_0008>,\nand <MATH_0009> is strongly cartesian.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-fibred-category-representable-goes-up",
+      "requested_tag": "06N5"
+    },
+    {
+      "context_id": "reference:categories-lemma-inertia-fibred-category",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. Let\n<MATH_0002> and\n<MATH_0003> be fibred categories.\nLet <MATH_0004> be a <MATH_0005>-morphism of\nfibred categories over <MATH_0006>. Consider the category\n<MATH_0007> over <MATH_0008> whose\n<STRUCT_0002>\n<STRUCT_0003> objects are pairs <MATH_0009> where <MATH_0010>\nand <MATH_0011> is an automorphism with <MATH_0012>,\n<STRUCT_0004> morphisms <MATH_0013> are given by morphisms\n<MATH_0014> such that\n<MATH_0015>\ncommutes, and\n<STRUCT_0005> the functor <MATH_0016>\nis given by <MATH_0017>.\n<STRUCT_0006>\nThen\n<STRUCT_0007>\n<STRUCT_0008> there is an equivalence\n<MATH_0018>\nin the <MATH_0019>-category of categories over <MATH_0020>, and\n<STRUCT_0009> <MATH_0021> is a fibred category over\n<MATH_0022>.\n<STRUCT_0010>\n<STRUCT_0011>",
+      "requested_label": "categories-lemma-inertia-fibred-category",
+      "requested_tag": "034H"
+    },
+    {
+      "context_id": "reference:sites-definition-cocontinuous",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nThe functor <MATH_0004> is called <TEXTITOPEN_0001>cocontinuous<TEXTITCLOSE_0001>\nif for every <MATH_0005>\nand every covering <MATH_0006> of <MATH_0007>\nthere exists a covering\n<MATH_0008> of <MATH_0009>\nsuch that the family of maps <MATH_0010>\nrefines the covering <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": "sites-definition-cocontinuous",
+      "requested_tag": "00XJ"
+    },
+    {
+      "context_id": "reference:sites-definition-continuous",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nA functor <MATH_0003> is called\n<TEXTITOPEN_0001>continuous<TEXTITCLOSE_0001> if for every\n<MATH_0004>\nwe have the following\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is in <MATH_0006>, and\n<STRUCT_0004> for any morphism <MATH_0007> in <MATH_0008> the morphism\n<MATH_0009> is an isomorphism.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "sites-definition-continuous",
+      "requested_tag": "00WV"
+    },
+    {
+      "context_id": "reference:sites-definition-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>site<TEXTITCLOSE_0001><FOOTNOTEOPEN_0001>This notation differs from that of <REF_0001>, as\nexplained in the introduction.<FOOTNOTECLOSE_0001> is given by a category <MATH_0001> and a set\n<MATH_0002> of families of morphisms with fixed target\n<MATH_0003>, called <TEXTITOPEN_0002>coverings of <MATH_0004><TEXTITCLOSE_0002>,\nsatisfying the following axioms\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0005> is an isomorphism then <MATH_0006>.\n<STRUCT_0004> If <MATH_0007> and for each\n<MATH_0008> we have <MATH_0009>, then\n<MATH_0010>.\n<STRUCT_0005> If <MATH_0011>\nand <MATH_0012> is a morphism of <MATH_0013> then <MATH_0014>\nexists for all <MATH_0015> and\n<MATH_0016>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "sites-definition-site",
+      "requested_tag": "00VH"
+    },
+    {
+      "context_id": "reference:sites-lemma-cocontinuous-morphism-topoi",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be cocontinuous.\nThe functors <MATH_0004> and <MATH_0005>\ndefine a morphism of topoi\n<MATH_0006> from  <MATH_0007> to <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-cocontinuous-morphism-topoi",
+      "requested_tag": "00XO"
+    },
+    {
+      "context_id": "reference:sites-lemma-pu-sheaf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be cocontinuous.\nLet <MATH_0004> be a sheaf on <MATH_0005>.\nThen <MATH_0006> is a sheaf on <MATH_0007>,\nwhich we will denote <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-pu-sheaf",
+      "requested_tag": "00XK"
+    },
+    {
+      "context_id": "reference:sites-lemma-when-shriek",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous.\n<STRUCT_0003>\nLet <MATH_0006>\nbe the associated morphism of topoi. Then\n<STRUCT_0004>\n<STRUCT_0005> sheafification in the formula <MATH_0007> is\nunnecessary, in other words <MATH_0008>,\n<STRUCT_0006> <MATH_0009> has a left adjoint <MATH_0010>, and\n<STRUCT_0007> <MATH_0011> commutes with arbitrary limits and colimits.\n<STRUCT_0008>\n<STRUCT_0009>",
+      "requested_label": "sites-lemma-when-shriek",
+      "requested_tag": "00XR"
+    },
+    {
+      "context_id": "reference:sites-section-glueing-sheaves",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Glueing sheaves<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "sites-section-glueing-sheaves",
+      "requested_tag": "04TP"
+    },
+    {
+      "context_id": "reference:stacks-lemma-2-product-stacks",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nThe <MATH_0002>-category of stacks over <MATH_0003>\nhas 2-fibre products, and they are described as in\nCategories, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-2-product-stacks",
+      "requested_tag": "026G"
+    },
+    {
+      "context_id": "reference:stacks-lemma-characterize-essentially-surjective-when-ff",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism which is\nfully faithful. Then the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is an equivalence,\n<STRUCT_0004> for every <MATH_0008> and for every\n<MATH_0009> there exists a covering\n<MATH_0010> such that <MATH_0011> is in the essential image\nof the functor <MATH_0012>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "stacks-lemma-characterize-essentially-surjective-when-ff",
+      "requested_tag": "046N"
+    },
+    {
+      "context_id": "reference:stacks-lemma-characterize-ff",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism.\nThen the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is fully faithful,\n<STRUCT_0004> for every <MATH_0008> and for every\n<MATH_0009> the map\n<MATH_0010>\nis an isomorphism of sheaves on <MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "stacks-lemma-characterize-ff",
+      "requested_tag": "04WQ"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stack-in-groupoids-stack",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a category over <MATH_0003>.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is a stack in groupoids over <MATH_0005>,\n<STRUCT_0004> <MATH_0006> is a stack over <MATH_0007> and all\nfibre categories are groupoids, and\n<STRUCT_0005> <MATH_0008> is fibred in groupoids over <MATH_0009>\nand is a stack over <MATH_0010>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-lemma-stack-in-groupoids-stack",
+      "requested_tag": "02ZJ"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stackify",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category over <MATH_0003>.\nThere exists a stack <MATH_0004> and a\n<MATH_0005>-morphism <MATH_0006>\nof fibred categories over <MATH_0007> (see\nCategories, Definition <REF_0001>)\nsuch that\n<STRUCT_0002>\n<STRUCT_0003> for every <MATH_0008>, and any\n<MATH_0009> the map\n<MATH_0010>\ninduced by <MATH_0011> identifies the right hand side with the sheafification\nof the left hand side, and\n<STRUCT_0004> for every <MATH_0012>, and any\n<MATH_0013> there exists a covering\n<MATH_0014> such that for every <MATH_0015> the\nobject <MATH_0016> is in the essential image of the\nfunctor <MATH_0017>.\n<STRUCT_0005>\nMoreover the stack <MATH_0018> is determined up to unique\n<MATH_0019>-isomorphism by these conditions.\n<STRUCT_0006>",
+      "requested_label": "stacks-lemma-stackify",
+      "requested_tag": "02ZN"
+    }
+  ]
+}

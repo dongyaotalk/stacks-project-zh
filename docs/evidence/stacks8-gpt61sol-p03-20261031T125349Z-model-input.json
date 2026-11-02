@@ -1,0 +1,2319 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a191d5-6c63-7e82-ba38-70cc9c5de0ad",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/stacks8-gpt61sol-p03-20261031T125349Z.json",
+    "hash": "sha256:f8d53d495dadb1ef90940d3f54ca2f3017b2edc0258f88e022ffb1e2e3d49fde"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:026E:statement",
+      "source_text": "Let <MATH_0001> be a category.\nLet <MATH_0002> be a fibred category.\nMake a choice of pullbacks as in Categories,\nDefinition <REF_0001>.\nLet <MATH_0003> be a family of morphisms\nwith target <MATH_0004>. Assume all the fibre products\n<MATH_0005> and <MATH_0006> exist.\n<STRUCT_0001>\n<STRUCT_0002> Given an object <MATH_0007> of <MATH_0008> the <TEXTITOPEN_0001>trivial descent datum<TEXTITCLOSE_0001>\nis the descent datum <MATH_0009> with respect to the family\n<MATH_0010>.\n<STRUCT_0003> Given an object <MATH_0011> of <MATH_0012>\nwe have a <TEXTITOPEN_0002>canonical descent datum<TEXTITCLOSE_0002> on the family of\nobjects <MATH_0013> by pulling back the trivial\ndescent datum <MATH_0014> via the\nobvious map <MATH_0015>.\nWe denote this descent datum <MATH_0016>.\n<STRUCT_0004> A descent datum <MATH_0017>\nrelative to <MATH_0018> is called <TEXTITOPEN_0003>effective<TEXTITCLOSE_0003>\nif there exists an object <MATH_0019> of <MATH_0020> such that\n<MATH_0021> is isomorphic to <MATH_0022>.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 52,
+          "projection_end": 67,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullbacks",
+          "projection_start": 86,
+          "projection_end": 95,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 102,
+          "projection_end": 112,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 158,
+          "projection_end": 177,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 218,
+          "projection_end": 232,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 305,
+          "projection_end": 311,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivial descent datum",
+          "projection_start": 343,
+          "projection_end": 364,
+          "concept": "trivial descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 372,
+          "projection_end": 379,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 461,
+          "projection_end": 467,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical descent datum",
+          "projection_start": 505,
+          "projection_end": 528,
+          "concept": "canonical descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 546,
+          "projection_end": 553,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivial descent datum",
+          "projection_start": 586,
+          "projection_end": 607,
+          "concept": "trivial descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 636,
+          "projection_end": 639,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 668,
+          "projection_end": 675,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 711,
+          "projection_end": 718,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "effective",
+          "projection_start": 771,
+          "projection_end": 780,
+          "concept": "effective",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 800,
+          "projection_end": 806,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 859,
+          "projection_end": 869,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZC:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nNote that the rule that associates to <MATH_0001> its\ncanonical descent datum relative to <MATH_0002> defines a\nfunctor\n<MATH_0003>\nA descent datum is effective if and only if it is in the essential\nimage of this functor.\nLet us make explicit the canonical descent datum as follows.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "canonical",
+          "projection_start": 68,
+          "projection_end": 77,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 78,
+          "projection_end": 85,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 126,
+          "projection_end": 133,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 148,
+          "projection_end": 155,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 213,
+          "projection_end": 218,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 227,
+          "projection_end": 234,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 261,
+          "projection_end": 270,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 271,
+          "projection_end": 278,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:026D:statement",
+      "source_text": "In the situation of\nDefinition <REF_0001> part (2) the maps\n<MATH_0001> are equal to\n<MATH_0002>\nwhere <MATH_0003> is as in\nCategories, Lemma <REF_0002>\nand where we\nuse the equality <MATH_0004>\nas maps <MATH_0005>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "maps",
+          "projection_start": 55,
+          "projection_end": 59,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 124,
+          "projection_end": 134,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 198,
+          "projection_end": 202,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:026D:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0GEA:statement",
+      "source_text": "Let <MATH_0001> be a category. Let\n<MATH_0002>\nbe a morphism of families of maps with fixed target of\n<MATH_0003> given by <MATH_0004>,\n<MATH_0005> and <MATH_0006>. Let\n<MATH_0007> be a fibred category. If\n<STRUCT_0001>\n<STRUCT_0002> for <MATH_0008> and <MATH_0009> with <MATH_0010>\nand <MATH_0011> and <MATH_0012>\nthe fibre products <MATH_0013> exist,\n<STRUCT_0003> the functor <MATH_0014>\nis an equivalence,\n<STRUCT_0004> for every <MATH_0015> the functor\n<MATH_0016>\nis fully faithful, and\n<STRUCT_0005> for every <MATH_0017> the functor\n<MATH_0018>\nis faithful.\n<STRUCT_0006>\nHere <MATH_0019> and\n<MATH_0020>.\nThen <MATH_0021> is an equivalence.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 52,
+          "projection_end": 60,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 76,
+          "projection_end": 80,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 186,
+          "projection_end": 201,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 319,
+          "projection_end": 333,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 371,
+          "projection_end": 378,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 397,
+          "projection_end": 408,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 450,
+          "projection_end": 457,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 473,
+          "projection_end": 487,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 533,
+          "projection_end": 540,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithful",
+          "projection_start": 556,
+          "projection_end": 564,
+          "concept": "faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 637,
+          "projection_end": 648,
+          "concept": "equivalence",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0GEA:proof",
+      "source_text": "Condition (1) guarantees we have enough fibre products so that\nthe statement makes sense.\nWe will show that the functor <MATH_0001> is\nessentially surjective. Suppose given a descent datum\n<MATH_0002> relative to <MATH_0003>.\nBy Lemma <REF_0001> we can pull this back to a descent datum\n<MATH_0004> for <MATH_0005>.\nBy assumption (2) this descent datum is effective, hence we\nget an object <MATH_0006> of <MATH_0007> such that the\npullback of the trivial descent datum <MATH_0008>\nby the morphism <MATH_0009> is isomorphic to\n<MATH_0010>. Next, observe that we have a diagram\n<MATH_0011>\nof morphisms of families of maps with fixed target of <MATH_0012>.\nThis diagram does not commute, but by Lemma <REF_0002>\nthe pullback functors on descent data one gets are canonically\nisomorphic. Hence <MATH_0013> and <MATH_0014>\npull back to isomorphic objects in <MATH_0015>.\nHence by assumption (3) we obtain an isomorphism\n<MATH_0016> in the category <MATH_0017>.\nWe omit the verification that these arrows are compatible\nwith the morphisms <MATH_0018>; hint: use the faithfulness\nof the functors in condition (4).\nWe also omit the verification that the functor\n<MATH_0019> is\nfully faithful.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibre products",
+          "projection_start": 40,
+          "projection_end": 54,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 112,
+          "projection_end": 119,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "essentially surjective",
+          "projection_start": 135,
+          "projection_end": 157,
+          "concept": "essentially-surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 175,
+          "projection_end": 182,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 273,
+          "projection_end": 280,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 339,
+          "projection_end": 346,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 383,
+          "projection_end": 389,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 431,
+          "projection_end": 439,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 455,
+          "projection_end": 462,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 488,
+          "projection_end": 496,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 512,
+          "projection_end": 522,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 568,
+          "projection_end": 575,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 591,
+          "projection_end": 600,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 616,
+          "projection_end": 620,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 660,
+          "projection_end": 667,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commute",
+          "projection_start": 677,
+          "projection_end": 684,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback functors",
+          "projection_start": 714,
+          "projection_end": 731,
+          "concept": "source-phrase-pullback-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 735,
+          "projection_end": 742,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonically isomorphic",
+          "projection_start": 761,
+          "projection_end": 783,
+          "concept": "source-phrase-canonically-isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 832,
+          "projection_end": 842,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 843,
+          "projection_end": 850,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 904,
+          "projection_end": 915,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 935,
+          "projection_end": 943,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1024,
+          "projection_end": 1033,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 1081,
+          "projection_end": 1089,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1147,
+          "projection_end": 1154,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 1170,
+          "projection_end": 1184,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0268:title",
+      "source_text": "Stacks",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "Stacks",
+          "projection_start": 0,
+          "projection_end": 6,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0268:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nHere is the definition of a stack. It mixes the notion of a fibred\ncategory with the notion of descent.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 42,
+          "projection_end": 47,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 74,
+          "projection_end": 89,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 109,
+          "projection_end": 116,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:026F:statement",
+      "source_text": "Let <MATH_0001> be a site. A <TEXTITOPEN_0001>stack<TEXTITCLOSE_0001> over <MATH_0002>\nis a category <MATH_0003> over <MATH_0004> which\nsatisfies the following conditions:\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0005> is a fibred category, see\nCategories, Definition <REF_0001>,\n<STRUCT_0003> for any <MATH_0006> and any <MATH_0007>\nthe presheaf <MATH_0008> (see\nDefinition <REF_0002>) is a sheaf on\nthe site <MATH_0009>, and\n<STRUCT_0004> for any covering <MATH_0010>\nof the site <MATH_0011>, any descent datum in <MATH_0012>\nrelative to <MATH_0013> is effective.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 29,
+          "projection_end": 34,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 57,
+          "projection_end": 65,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 182,
+          "projection_end": 197,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 203,
+          "projection_end": 213,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 296,
+          "projection_end": 304,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 350,
+          "projection_end": 355,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 363,
+          "projection_end": 367,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 407,
+          "projection_end": 415,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 435,
+          "projection_end": 439,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 457,
+          "projection_end": 464,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0268:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nWe find the formulation above the most convenient way to think about\na stack. Namely, given a category over <MATH_0001> in order to verify\nthat it is a stack you proceed to check properties (1), (2) and\n(3) in that order. Certainly properties (2) and (3) do not make sense\nif the category isn't fibred. Without (2) we cannot prove that the\ndescent in (3) is unique up to unique isomorphism and functorial.\n\n<STRUCT_0002><STRUCT_0003>\nThe following lemma provides an alternative definition.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 85,
+          "projection_end": 90,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 108,
+          "projection_end": 116,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 166,
+          "projection_end": 171,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 294,
+          "projection_end": 302,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 354,
+          "projection_end": 361,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 392,
+          "projection_end": 403,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZF:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category\nover <MATH_0003>. The following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0004> is a stack over <MATH_0005>, and\n<STRUCT_0003> for any covering <MATH_0006>\nof the site <MATH_0007> the functor\n<MATH_0008>\nwhich associates to an\nobject its canonical descent datum is an equivalence.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 48,
+          "projection_end": 63,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 100,
+          "projection_end": 110,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 156,
+          "projection_end": 161,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 206,
+          "projection_end": 214,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 234,
+          "projection_end": 238,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 255,
+          "projection_end": 262,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 298,
+          "projection_end": 304,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 309,
+          "projection_end": 318,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 319,
+          "projection_end": 326,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 339,
+          "projection_end": 350,
+          "concept": "equivalence",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZF:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:04TU:statement",
+      "source_text": "Let <MATH_0001> be a stack over the site <MATH_0002>.\nLet <MATH_0003> be a subcategory of <MATH_0004>.\nAssume\n<STRUCT_0001>\n<STRUCT_0002> if <MATH_0005> is a strongly cartesian\nmorphism of <MATH_0006> and\n<MATH_0007> is an object of <MATH_0008>, then <MATH_0009> is isomorphic to an\nobject of <MATH_0010>,\n<STRUCT_0003> <MATH_0011> is a full subcategory of <MATH_0012>, and\n<STRUCT_0004> if <MATH_0013> is a covering of <MATH_0014>,\nand <MATH_0015> an object of <MATH_0016> over <MATH_0017> such that <MATH_0018>\nis isomorphic to an object of <MATH_0019> for each <MATH_0020>,\nthen <MATH_0021> is isomorphic to an object of <MATH_0022>.\n<STRUCT_0005>\nThen <MATH_0023> is a stack.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 21,
+          "projection_end": 26,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 36,
+          "projection_end": 40,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "subcategory",
+          "projection_start": 75,
+          "projection_end": 86,
+          "concept": "subcategories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 158,
+          "projection_end": 176,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 177,
+          "projection_end": 185,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 223,
+          "projection_end": 229,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 266,
+          "projection_end": 276,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 283,
+          "projection_end": 289,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 337,
+          "projection_end": 353,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 408,
+          "projection_end": 416,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 452,
+          "projection_end": 458,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 516,
+          "projection_end": 526,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 533,
+          "projection_end": 539,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 597,
+          "projection_end": 607,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 614,
+          "projection_end": 620,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 673,
+          "projection_end": 678,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04TU:proof",
+      "source_text": "Omitted. Hints:\nThe first condition guarantees that <MATH_0001> is a fibred category.\nThe second condition guarantees that the <MATH_0002>-presheaves\nof <MATH_0003> are sheaves (as they are identical to their counter parts\nin <MATH_0004>). The third condition guarantees that the descent condition\nholds in <MATH_0005> as we can first descend in <MATH_0006> and\nthen (3) implies the resulting object is isomorphic to an object of\n<MATH_0007>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibred category",
+          "projection_start": 69,
+          "projection_end": 84,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 139,
+          "projection_end": 149,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 169,
+          "projection_end": 176,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 280,
+          "projection_end": 287,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 393,
+          "projection_end": 399,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 403,
+          "projection_end": 413,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 420,
+          "projection_end": 426,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:042W:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be categories over <MATH_0004>.\nSuppose that <MATH_0005> and <MATH_0006> are equivalent\nas categories over <MATH_0007>.\nThen <MATH_0008> is a stack over <MATH_0009> if and only if\n<MATH_0010> is a stack over <MATH_0011>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 59,
+          "projection_end": 69,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 133,
+          "projection_end": 143,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 147,
+          "projection_end": 157,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 198,
+          "projection_end": 203,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 253,
+          "projection_end": 258,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:042W:proof",
+      "source_text": "Let <MATH_0001>,\n<MATH_0002> be functors over <MATH_0003>, and let\n<MATH_0004>,\n<MATH_0005> be isomorphisms of\nfunctors over <MATH_0006>. By\nCategories, Lemma <REF_0001>\nwe see that <MATH_0007> is fibred if and only if <MATH_0008>\nis fibred over <MATH_0009>. Hence we may assume that both\n<MATH_0010> and <MATH_0011> are fibred. Moreover, the proof of\nCategories, Lemma <REF_0002>\nshows that <MATH_0012> and <MATH_0013> map strongly cartesian morphisms to strongly\ncartesian morphisms, i.e., <MATH_0014> and <MATH_0015> are <MATH_0016>-morphisms of fibred\ncategories over <MATH_0017>. This means that given\n<MATH_0018>, and <MATH_0019> then\nthe presheaves\n<MATH_0020>\nare identified, see\nLemma <REF_0003>. Hence\nthe first is a sheaf if and only if the second is a sheaf.\nFinally, we have to show that if every descent datum in <MATH_0021>\nis effective, then so is every descent datum in <MATH_0022>.\nTo do this, let <MATH_0023> be a descent datum\nin <MATH_0024> relative the covering <MATH_0025> of the site\n<MATH_0026>. Then <MATH_0027> is a descent datum\nin <MATH_0028> relative the covering <MATH_0029>.\nLet <MATH_0030> be an object of <MATH_0031> such that the\ndescent datum <MATH_0032> is isomorphic to\n<MATH_0033>. Then <MATH_0034> is an object of <MATH_0035>\nsuch that the descent datum <MATH_0036> is isomorphic to\n<MATH_0037> which in turn is isomorphic to\nthe original descent datum <MATH_0038> using <MATH_0039>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "functors",
+          "projection_start": 32,
+          "projection_end": 40,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 95,
+          "projection_end": 107,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 111,
+          "projection_end": 119,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 141,
+          "projection_end": 151,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 352,
+          "projection_end": 362,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 420,
+          "projection_end": 423,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 424,
+          "projection_end": 442,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 443,
+          "projection_end": 452,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 456,
+          "projection_end": 474,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 475,
+          "projection_end": 484,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 536,
+          "projection_end": 545,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 549,
+          "projection_end": 566,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 645,
+          "projection_end": 655,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 727,
+          "projection_end": 732,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 764,
+          "projection_end": 769,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 810,
+          "projection_end": 817,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 870,
+          "projection_end": 877,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 933,
+          "projection_end": 940,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 975,
+          "projection_end": 983,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1003,
+          "projection_end": 1007,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1043,
+          "projection_end": 1050,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1085,
+          "projection_end": 1093,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1129,
+          "projection_end": 1135,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1165,
+          "projection_end": 1172,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1194,
+          "projection_end": 1204,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1244,
+          "projection_end": 1250,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1280,
+          "projection_end": 1287,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1309,
+          "projection_end": 1319,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1352,
+          "projection_end": 1362,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1379,
+          "projection_end": 1386,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0268:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nThe <MATH_0001>-category of stacks over <MATH_0002>\nis defined as follows.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 30,
+          "projection_end": 38,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 42,
+          "projection_end": 48,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02ZG:statement",
+      "source_text": "Let <MATH_0001> be a site.\nThe <TEXTITOPEN_0001><MATH_0002>-category of stacks over <MATH_0003><TEXTITCLOSE_0001>\nis the sub <MATH_0004>-category of the <MATH_0005>-category of fibred categories\nover <MATH_0006> (see\nCategories, Definition <REF_0001>)\ndefined as follows:\n<STRUCT_0001>\n<STRUCT_0002> Its objects will be stacks <MATH_0007>.\n<STRUCT_0003> Its <MATH_0008>-morphisms <MATH_0009>\nwill be functors <MATH_0010> such that\n<MATH_0011> and such that <MATH_0012> maps strongly cartesian\nmorphisms to strongly cartesian morphisms.\n<STRUCT_0004> Its <MATH_0013>-morphisms <MATH_0014> for\n<MATH_0015>\nwill be morphisms of functors\nsuch that <MATH_0016>\nfor all <MATH_0017>.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category of stacks",
+          "projection_start": 43,
+          "projection_end": 61,
+          "concept": "category of stacks",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 102,
+          "projection_end": 110,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 130,
+          "projection_end": 138,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred categories",
+          "projection_start": 142,
+          "projection_end": 159,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 182,
+          "projection_end": 192,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 269,
+          "projection_end": 276,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 285,
+          "projection_end": 291,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 335,
+          "projection_end": 344,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 365,
+          "projection_end": 373,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 434,
+          "projection_end": 438,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 439,
+          "projection_end": 457,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 458,
+          "projection_end": 467,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 471,
+          "projection_end": 489,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 490,
+          "projection_end": 499,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 531,
+          "projection_end": 540,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 577,
+          "projection_end": 586,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 590,
+          "projection_end": 598,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:026G:statement",
+      "source_text": "Let <MATH_0001> be a site.\nThe <MATH_0002>-category of stacks over <MATH_0003>\nhas 2-fibre products, and they are described as in\nCategories, Lemma <REF_0001>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 43,
+          "projection_end": 51,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 55,
+          "projection_end": 61,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "2-fibre products",
+          "projection_start": 83,
+          "projection_end": 99,
+          "concept": "2-fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 130,
+          "projection_end": 140,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:026G:proof",
+      "source_text": "Let <MATH_0001> and\n<MATH_0002> be\n<MATH_0003>-morphisms of stacks over <MATH_0004>\nas defined above. The category\n<MATH_0005>\ndescribed in\nCategories, Lemma <REF_0001> is a\nfibred category according to\nCategories, Lemma <REF_0002>.\n(This is where we use that <MATH_0006> and <MATH_0007> preserve strongly cartesian\nmorphisms.) It remains to show that the morphism presheaves are sheaves\nand that descent relative to coverings of <MATH_0008> is effective.\n\n<STRUCT_0001><STRUCT_0002>\nRecall that an object of <MATH_0009>\nis given by a quadruple <MATH_0010>.\nIt lies over the object\n<MATH_0011> of <MATH_0012>. Next, let <MATH_0013> be second\nobject lying over <MATH_0014>.\nRecall that <MATH_0015>, and <MATH_0016>\nare isomorphisms in the category <MATH_0017>. Let us\nuse these isomorphisms to identify <MATH_0018> and\n<MATH_0019>. With this identifications\nit is clear that\n<MATH_0020>\nas presheaves. However, as the fibred product in the category of\npresheaves preserves sheaves (Sites, Lemma <REF_0003>)\nwe see that this is a sheaf.\n\n<STRUCT_0003><STRUCT_0004>\nLet <MATH_0021> be a covering of the site\n<MATH_0022>. Let <MATH_0023> be a descent datum\nin <MATH_0024> relative to <MATH_0025>.\nWrite <MATH_0026> as above. Write\n<MATH_0027> as in the definition of\nthe category <MATH_0028> (see\nCategories, Lemma <REF_0004>).\nIt is clear that <MATH_0029> is a descent datum in\n<MATH_0030> and that <MATH_0031> is a descent datum in\n<MATH_0032>. Since <MATH_0033> and <MATH_0034> are stacks these\ndescent data are effective. Thus we get\n<MATH_0035>, and <MATH_0036>\nwith <MATH_0037>, and <MATH_0038> compatibly with descent data.\nSet <MATH_0039> and <MATH_0040> which are both objects of <MATH_0041>.\nThe morphisms <MATH_0042> are elements of\n<MATH_0043> with the property that\n<MATH_0044>.\nHence by the sheaf property of <MATH_0045>\nwe obtain an isomorphism <MATH_0046>.\nWe omit the verification that the canonical descent datum associated to\nthe object <MATH_0047> of\n<MATH_0048> is isomorphic\nto the descent datum we started with.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 47,
+          "projection_end": 56,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 60,
+          "projection_end": 66,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 106,
+          "projection_end": 114,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 140,
+          "projection_end": 150,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 174,
+          "projection_end": 189,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 203,
+          "projection_end": 213,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly cartesian",
+          "projection_start": 297,
+          "projection_end": 315,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 316,
+          "projection_end": 325,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 356,
+          "projection_end": 364,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 365,
+          "projection_end": 375,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 380,
+          "projection_end": 387,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 397,
+          "projection_end": 404,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 417,
+          "projection_end": 426,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 498,
+          "projection_end": 504,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 574,
+          "projection_end": 580,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 641,
+          "projection_end": 647,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 717,
+          "projection_end": 729,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 737,
+          "projection_end": 745,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 776,
+          "projection_end": 788,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 888,
+          "projection_end": 898,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "product",
+          "projection_start": 923,
+          "projection_end": 930,
+          "concept": "product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 938,
+          "projection_end": 946,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 950,
+          "projection_end": 960,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 971,
+          "projection_end": 978,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 980,
+          "projection_end": 985,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 1027,
+          "projection_end": 1032,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1082,
+          "projection_end": 1090,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1098,
+          "projection_end": 1102,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1137,
+          "projection_end": 1144,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1265,
+          "projection_end": 1273,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 1291,
+          "projection_end": 1301,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1356,
+          "projection_end": 1363,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1411,
+          "projection_end": 1418,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 1479,
+          "projection_end": 1485,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1492,
+          "projection_end": 1499,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1611,
+          "projection_end": 1618,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 1672,
+          "projection_end": 1679,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1700,
+          "projection_end": 1709,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 1726,
+          "projection_end": 1734,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 1799,
+          "projection_end": 1813,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1842,
+          "projection_end": 1853,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1901,
+          "projection_end": 1910,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1911,
+          "projection_end": 1918,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1943,
+          "projection_end": 1949,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1980,
+          "projection_end": 1990,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1998,
+          "projection_end": 2005,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WQ:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism.\nThen the following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0007> is fully faithful,\n<STRUCT_0003> for every <MATH_0008> and for every\n<MATH_0009> the map\n<MATH_0010>\nis an isomorphism of sheaves on <MATH_0011>.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 59,
+          "projection_end": 65,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 117,
+          "projection_end": 125,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 150,
+          "projection_end": 160,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 204,
+          "projection_end": 218,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 286,
+          "projection_end": 289,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 308,
+          "projection_end": 319,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 323,
+          "projection_end": 330,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04WQ:proof",
+      "source_text": "Assume (1). For <MATH_0001> as in (2) the displayed map <MATH_0002> evaluates to the map\n<MATH_0003>\non an object <MATH_0004> of <MATH_0005> lying over <MATH_0006>.\nNow, since <MATH_0007> is fully faithful, the corresponding map\n<MATH_0008>\nis a bijection. Morphisms in the fibre category <MATH_0009> are\nexactly those morphisms between <MATH_0010> and <MATH_0011> in <MATH_0012> lying\nover <MATH_0013>. Similarly, morphisms in the fibre category\n<MATH_0014> are exactly those morphisms between <MATH_0015> and\n<MATH_0016> in <MATH_0017> lying over <MATH_0018>. Thus we find that <MATH_0019>\ninduces a bijection between these also. Hence (2) holds.\n\n<STRUCT_0001><STRUCT_0002>\nAssume (2). Suppose given objects <MATH_0020>, <MATH_0021> of <MATH_0022> and\n<MATH_0023> and\n<MATH_0024>. To show that <MATH_0025> is fully faithful,\nit suffices to prove it induces a bijection on\nmorphisms lying over a fixed <MATH_0026>. Choose a strongly Cartesian\n<MATH_0027> in <MATH_0028> lying above <MATH_0029>. This results in a\nbijection between the set of morphisms <MATH_0030> in <MATH_0031> lying\nover <MATH_0032> and <MATH_0033>. Since <MATH_0034> preserves\nstrongly Cartesian morphisms as a <MATH_0035>-morphism in the <MATH_0036>-category\nof stacks over <MATH_0037>, we also get a bijection\nbetween the set of morphisms <MATH_0038> in <MATH_0039> lying\nover <MATH_0040> and <MATH_0041>.\nSince <MATH_0042> induces a bijection\n<MATH_0043>\nwe conclude (1) holds.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "map",
+          "projection_start": 52,
+          "projection_end": 55,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 85,
+          "projection_end": 88,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 107,
+          "projection_end": 113,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 191,
+          "projection_end": 205,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 225,
+          "projection_end": 228,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 246,
+          "projection_end": 255,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 257,
+          "projection_end": 266,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 280,
+          "projection_end": 288,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 319,
+          "projection_end": 328,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 415,
+          "projection_end": 424,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 438,
+          "projection_end": 446,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 477,
+          "projection_end": 486,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 602,
+          "projection_end": 611,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 702,
+          "projection_end": 709,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 811,
+          "projection_end": 825,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 861,
+          "projection_end": 870,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 874,
+          "projection_end": 883,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly Cartesian",
+          "projection_start": 925,
+          "projection_end": 943,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 1014,
+          "projection_end": 1023,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1036,
+          "projection_end": 1039,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1043,
+          "projection_end": 1052,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "strongly Cartesian",
+          "projection_start": 1148,
+          "projection_end": 1166,
+          "concept": "strongly-cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1167,
+          "projection_end": 1176,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1194,
+          "projection_end": 1202,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1222,
+          "projection_end": 1230,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 1234,
+          "projection_end": 1240,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 1273,
+          "projection_end": 1282,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1295,
+          "projection_end": 1298,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1302,
+          "projection_end": 1311,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 1407,
+          "projection_end": 1416,
+          "concept": "bijection",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:stacks:02ZC:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGiven <MATH_0001>, if there exists a morphism\n<MATH_0002> covering <MATH_0003>\nthen <MATH_0004> is independent of the choice of\n<MATH_0005> as we saw in Lemma <REF_0001>.\nHence we will sometimes simply write <MATH_0006> to indicate\nthe pullback functor.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZC:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote that the rule that associates to <MATH_0001> its\ncanonical descent datum relative to <MATH_0002> defines a\nfunctor\n<MATH_0003>\nA descent datum is effective if and only if it is in the essential\nimage of this functor.\nLet us make explicit the canonical descent datum as follows.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:026E:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a fibred category.\nMake a choice of pullbacks as in Categories,\nDefinition <REF_0001>.\nLet <MATH_0003> be a family of morphisms\nwith target <MATH_0004>. Assume all the fibre products\n<MATH_0005> and <MATH_0006> exist.\n<STRUCT_0002>\n<STRUCT_0003> Given an object <MATH_0007> of <MATH_0008> the <TEXTITOPEN_0001>trivial descent datum<TEXTITCLOSE_0001>\nis the descent datum <MATH_0009> with respect to the family\n<MATH_0010>.\n<STRUCT_0004> Given an object <MATH_0011> of <MATH_0012>\nwe have a <TEXTITOPEN_0002>canonical descent datum<TEXTITCLOSE_0002> on the family of\nobjects <MATH_0013> by pulling back the trivial\ndescent datum <MATH_0014> via the\nobvious map <MATH_0015>.\nWe denote this descent datum <MATH_0016>.\n<STRUCT_0005> A descent datum <MATH_0017>\nrelative to <MATH_0018> is called <TEXTITOPEN_0003>effective<TEXTITCLOSE_0003>\nif there exists an object <MATH_0019> of <MATH_0020> such that\n<MATH_0021> is isomorphic to <MATH_0022>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:026D:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation of\nDefinition <REF_0001> part (2) the maps\n<MATH_0001> are equal to\n<MATH_0002>\nwhere <MATH_0003> is as in\nCategories, Lemma <REF_0002>\nand where we\nuse the equality <MATH_0004>\nas maps <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:026D:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0GEA:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. Let\n<MATH_0002>\nbe a morphism of families of maps with fixed target of\n<MATH_0003> given by <MATH_0004>,\n<MATH_0005> and <MATH_0006>. Let\n<MATH_0007> be a fibred category. If\n<STRUCT_0002>\n<STRUCT_0003> for <MATH_0008> and <MATH_0009> with <MATH_0010>\nand <MATH_0011> and <MATH_0012>\nthe fibre products <MATH_0013> exist,\n<STRUCT_0004> the functor <MATH_0014>\nis an equivalence,\n<STRUCT_0005> for every <MATH_0015> the functor\n<MATH_0016>\nis fully faithful, and\n<STRUCT_0006> for every <MATH_0017> the functor\n<MATH_0018>\nis faithful.\n<STRUCT_0007>\nHere <MATH_0019> and\n<MATH_0020>.\nThen <MATH_0021> is an equivalence.\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0GEA:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nCondition (1) guarantees we have enough fibre products so that\nthe statement makes sense.\nWe will show that the functor <MATH_0001> is\nessentially surjective. Suppose given a descent datum\n<MATH_0002> relative to <MATH_0003>.\nBy Lemma <REF_0001> we can pull this back to a descent datum\n<MATH_0004> for <MATH_0005>.\nBy assumption (2) this descent datum is effective, hence we\nget an object <MATH_0006> of <MATH_0007> such that the\npullback of the trivial descent datum <MATH_0008>\nby the morphism <MATH_0009> is isomorphic to\n<MATH_0010>. Next, observe that we have a diagram\n<MATH_0011>\nof morphisms of families of maps with fixed target of <MATH_0012>.\nThis diagram does not commute, but by Lemma <REF_0002>\nthe pullback functors on descent data one gets are canonically\nisomorphic. Hence <MATH_0013> and <MATH_0014>\npull back to isomorphic objects in <MATH_0015>.\nHence by assumption (3) we obtain an isomorphism\n<MATH_0016> in the category <MATH_0017>.\nWe omit the verification that these arrows are compatible\nwith the morphisms <MATH_0018>; hint: use the faithfulness\nof the functors in condition (4).\nWe also omit the verification that the functor\n<MATH_0019> is\nfully faithful.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0268:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Stacks<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0268:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere is the definition of a stack. It mixes the notion of a fibred\ncategory with the notion of descent.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:026F:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. A <TEXTITOPEN_0001>stack<TEXTITCLOSE_0001> over <MATH_0002>\nis a category <MATH_0003> over <MATH_0004> which\nsatisfies the following conditions:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a fibred category, see\nCategories, Definition <REF_0001>,\n<STRUCT_0004> for any <MATH_0006> and any <MATH_0007>\nthe presheaf <MATH_0008> (see\nDefinition <REF_0002>) is a sheaf on\nthe site <MATH_0009>, and\n<STRUCT_0005> for any covering <MATH_0010>\nof the site <MATH_0011>, any descent datum in <MATH_0012>\nrelative to <MATH_0013> is effective.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0268:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe find the formulation above the most convenient way to think about\na stack. Namely, given a category over <MATH_0001> in order to verify\nthat it is a stack you proceed to check properties (1), (2) and\n(3) in that order. Certainly properties (2) and (3) do not make sense\nif the category isn't fibred. Without (2) we cannot prove that the\ndescent in (3) is unique up to unique isomorphism and functorial.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZF:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002> be a fibred category\nover <MATH_0003>. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is a stack over <MATH_0005>, and\n<STRUCT_0004> for any covering <MATH_0006>\nof the site <MATH_0007> the functor\n<MATH_0008>\nwhich associates to an\nobject its canonical descent datum is an equivalence.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0268:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nThe following lemma provides an alternative definition.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZF:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04TU:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a stack over the site <MATH_0002>.\nLet <MATH_0003> be a subcategory of <MATH_0004>.\nAssume\n<STRUCT_0002>\n<STRUCT_0003> if <MATH_0005> is a strongly cartesian\nmorphism of <MATH_0006> and\n<MATH_0007> is an object of <MATH_0008>, then <MATH_0009> is isomorphic to an\nobject of <MATH_0010>,\n<STRUCT_0004> <MATH_0011> is a full subcategory of <MATH_0012>, and\n<STRUCT_0005> if <MATH_0013> is a covering of <MATH_0014>,\nand <MATH_0015> an object of <MATH_0016> over <MATH_0017> such that <MATH_0018>\nis isomorphic to an object of <MATH_0019> for each <MATH_0020>,\nthen <MATH_0021> is isomorphic to an object of <MATH_0022>.\n<STRUCT_0006>\nThen <MATH_0023> is a stack.\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04TU:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hints:\nThe first condition guarantees that <MATH_0001> is a fibred category.\nThe second condition guarantees that the <MATH_0002>-presheaves\nof <MATH_0003> are sheaves (as they are identical to their counter parts\nin <MATH_0004>). The third condition guarantees that the descent condition\nholds in <MATH_0005> as we can first descend in <MATH_0006> and\nthen (3) implies the resulting object is isomorphic to an object of\n<MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:042W:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be categories over <MATH_0004>.\nSuppose that <MATH_0005> and <MATH_0006> are equivalent\nas categories over <MATH_0007>.\nThen <MATH_0008> is a stack over <MATH_0009> if and only if\n<MATH_0010> is a stack over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:042W:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001>,\n<MATH_0002> be functors over <MATH_0003>, and let\n<MATH_0004>,\n<MATH_0005> be isomorphisms of\nfunctors over <MATH_0006>. By\nCategories, Lemma <REF_0001>\nwe see that <MATH_0007> is fibred if and only if <MATH_0008>\nis fibred over <MATH_0009>. Hence we may assume that both\n<MATH_0010> and <MATH_0011> are fibred. Moreover, the proof of\nCategories, Lemma <REF_0002>\nshows that <MATH_0012> and <MATH_0013> map strongly cartesian morphisms to strongly\ncartesian morphisms, i.e., <MATH_0014> and <MATH_0015> are <MATH_0016>-morphisms of fibred\ncategories over <MATH_0017>. This means that given\n<MATH_0018>, and <MATH_0019> then\nthe presheaves\n<MATH_0020>\nare identified, see\nLemma <REF_0003>. Hence\nthe first is a sheaf if and only if the second is a sheaf.\nFinally, we have to show that if every descent datum in <MATH_0021>\nis effective, then so is every descent datum in <MATH_0022>.\nTo do this, let <MATH_0023> be a descent datum\nin <MATH_0024> relative the covering <MATH_0025> of the site\n<MATH_0026>. Then <MATH_0027> is a descent datum\nin <MATH_0028> relative the covering <MATH_0029>.\nLet <MATH_0030> be an object of <MATH_0031> such that the\ndescent datum <MATH_0032> is isomorphic to\n<MATH_0033>. Then <MATH_0034> is an object of <MATH_0035>\nsuch that the descent datum <MATH_0036> is isomorphic to\n<MATH_0037> which in turn is isomorphic to\nthe original descent datum <MATH_0038> using <MATH_0039>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:0268:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe <MATH_0001>-category of stacks over <MATH_0002>\nis defined as follows.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:02ZG:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nThe <TEXTITOPEN_0001><MATH_0002>-category of stacks over <MATH_0003><TEXTITCLOSE_0001>\nis the sub <MATH_0004>-category of the <MATH_0005>-category of fibred categories\nover <MATH_0006> (see\nCategories, Definition <REF_0001>)\ndefined as follows:\n<STRUCT_0002>\n<STRUCT_0003> Its objects will be stacks <MATH_0007>.\n<STRUCT_0004> Its <MATH_0008>-morphisms <MATH_0009>\nwill be functors <MATH_0010> such that\n<MATH_0011> and such that <MATH_0012> maps strongly cartesian\nmorphisms to strongly cartesian morphisms.\n<STRUCT_0005> Its <MATH_0013>-morphisms <MATH_0014> for\n<MATH_0015>\nwill be morphisms of functors\nsuch that <MATH_0016>\nfor all <MATH_0017>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:026G:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nThe <MATH_0002>-category of stacks over <MATH_0003>\nhas 2-fibre products, and they are described as in\nCategories, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:026G:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> and\n<MATH_0002> be\n<MATH_0003>-morphisms of stacks over <MATH_0004>\nas defined above. The category\n<MATH_0005>\ndescribed in\nCategories, Lemma <REF_0001> is a\nfibred category according to\nCategories, Lemma <REF_0002>.\n(This is where we use that <MATH_0006> and <MATH_0007> preserve strongly cartesian\nmorphisms.) It remains to show that the morphism presheaves are sheaves\nand that descent relative to coverings of <MATH_0008> is effective.\n\n<STRUCT_0002><STRUCT_0003>\nRecall that an object of <MATH_0009>\nis given by a quadruple <MATH_0010>.\nIt lies over the object\n<MATH_0011> of <MATH_0012>. Next, let <MATH_0013> be second\nobject lying over <MATH_0014>.\nRecall that <MATH_0015>, and <MATH_0016>\nare isomorphisms in the category <MATH_0017>. Let us\nuse these isomorphisms to identify <MATH_0018> and\n<MATH_0019>. With this identifications\nit is clear that\n<MATH_0020>\nas presheaves. However, as the fibred product in the category of\npresheaves preserves sheaves (Sites, Lemma <REF_0003>)\nwe see that this is a sheaf.\n\n<STRUCT_0004><STRUCT_0005>\nLet <MATH_0021> be a covering of the site\n<MATH_0022>. Let <MATH_0023> be a descent datum\nin <MATH_0024> relative to <MATH_0025>.\nWrite <MATH_0026> as above. Write\n<MATH_0027> as in the definition of\nthe category <MATH_0028> (see\nCategories, Lemma <REF_0004>).\nIt is clear that <MATH_0029> is a descent datum in\n<MATH_0030> and that <MATH_0031> is a descent datum in\n<MATH_0032>. Since <MATH_0033> and <MATH_0034> are stacks these\ndescent data are effective. Thus we get\n<MATH_0035>, and <MATH_0036>\nwith <MATH_0037>, and <MATH_0038> compatibly with descent data.\nSet <MATH_0039> and <MATH_0040> which are both objects of <MATH_0041>.\nThe morphisms <MATH_0042> are elements of\n<MATH_0043> with the property that\n<MATH_0044>.\nHence by the sheaf property of <MATH_0045>\nwe obtain an isomorphism <MATH_0046>.\nWe omit the verification that the canonical descent datum associated to\nthe object <MATH_0047> of\n<MATH_0048> is isomorphic\nto the descent datum we started with.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WQ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism.\nThen the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is fully faithful,\n<STRUCT_0004> for every <MATH_0008> and for every\n<MATH_0009> the map\n<MATH_0010>\nis an isomorphism of sheaves on <MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:04WQ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssume (1). For <MATH_0001> as in (2) the displayed map <MATH_0002> evaluates to the map\n<MATH_0003>\non an object <MATH_0004> of <MATH_0005> lying over <MATH_0006>.\nNow, since <MATH_0007> is fully faithful, the corresponding map\n<MATH_0008>\nis a bijection. Morphisms in the fibre category <MATH_0009> are\nexactly those morphisms between <MATH_0010> and <MATH_0011> in <MATH_0012> lying\nover <MATH_0013>. Similarly, morphisms in the fibre category\n<MATH_0014> are exactly those morphisms between <MATH_0015> and\n<MATH_0016> in <MATH_0017> lying over <MATH_0018>. Thus we find that <MATH_0019>\ninduces a bijection between these also. Hence (2) holds.\n\n<STRUCT_0002><STRUCT_0003>\nAssume (2). Suppose given objects <MATH_0020>, <MATH_0021> of <MATH_0022> and\n<MATH_0023> and\n<MATH_0024>. To show that <MATH_0025> is fully faithful,\nit suffices to prove it induces a bijection on\nmorphisms lying over a fixed <MATH_0026>. Choose a strongly Cartesian\n<MATH_0027> in <MATH_0028> lying above <MATH_0029>. This results in a\nbijection between the set of morphisms <MATH_0030> in <MATH_0031> lying\nover <MATH_0032> and <MATH_0033>. Since <MATH_0034> preserves\nstrongly Cartesian morphisms as a <MATH_0035>-morphism in the <MATH_0036>-category\nof stacks over <MATH_0037>, we also get a bijection\nbetween the set of morphisms <MATH_0038> in <MATH_0039> lying\nover <MATH_0040> and <MATH_0041>.\nSince <MATH_0042> induces a bijection\n<MATH_0043>\nwe conclude (1) holds.\n<STRUCT_0004>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:046N:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be stacks over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism which is\nfully faithful. Then the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is an equivalence,\n<STRUCT_0004> for every <MATH_0008> and for every\n<MATH_0009> there exists a covering\n<MATH_0010> such that <MATH_0011> is in the essential image\nof the functor <MATH_0012>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:categories-definition-fibred-categories-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nThe <TEXTITOPEN_0001><MATH_0002>-category of fibred categories over <MATH_0003><TEXTITCLOSE_0001>\nis the sub <MATH_0004>-category of the <MATH_0005>-category of categories\nover <MATH_0006> (see Definition <REF_0001>)\ndefined as follows:\n<STRUCT_0002>\n<STRUCT_0003> Its objects will be fibred categories\n<MATH_0007>.\n<STRUCT_0004> Its <MATH_0008>-morphisms <MATH_0009>\nwill be functors <MATH_0010> such that\n<MATH_0011> and such that <MATH_0012> maps strongly cartesian\nmorphisms to strongly cartesian morphisms.\n<STRUCT_0005> Its <MATH_0013>-morphisms <MATH_0014> for\n<MATH_0015>\nwill be morphisms of functors\nsuch that <MATH_0016>\nfor all <MATH_0017>.\n<STRUCT_0006>\nIn this situation we will denote\n<MATH_0018>\nthe category of <MATH_0019>-morphisms between\n<MATH_0020> and <MATH_0021>\n<STRUCT_0007>",
+      "requested_label": "categories-definition-fibred-categories-over-C",
+      "requested_tag": "02XP"
+    },
+    {
+      "context_id": "reference:categories-definition-fibred-category",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a category over <MATH_0003>.\nWe say <MATH_0004> is a <TEXTITOPEN_0001>fibred category over <MATH_0005><TEXTITCLOSE_0001>\nif given any <MATH_0006> lying over\n<MATH_0007> and any morphism <MATH_0008> of\n<MATH_0009>, there exists a strongly cartesian morphism <MATH_0010>\nlying over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": "categories-definition-fibred-category",
+      "requested_tag": "02XM"
+    },
+    {
+      "context_id": "reference:categories-definition-pullback-functor-fibred-category",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAssume <MATH_0001> is a fibred category.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>choice of pullbacks<TEXTITCLOSE_0001><FOOTNOTEOPEN_0001>This is probably nonstandard\nterminology. In some texts this is called a ``cleavage'' but it conjures up\nthe wrong image. Maybe a ``cleaving'' would be a better word.\nA related notion is that of a ``splitting'', but in many texts a ``splitting''\nmeans a choice of pullbacks such that <MATH_0002>\nfor any composable pair of morphisms. Compare\nalso with Definition <REF_0001>.<FOOTNOTECLOSE_0001>\nfor <MATH_0003>\nis given by a choice of a strongly cartesian morphism\n<MATH_0004> lying over <MATH_0005> for any morphism\n<MATH_0006> of <MATH_0007> and any <MATH_0008>.\n<STRUCT_0004> Given a choice of pullbacks,\nfor any morphism <MATH_0009> of <MATH_0010>\nthe functor <MATH_0011> described\nabove is called a <TEXTITOPEN_0002>pullback functor<TEXTITCLOSE_0002> (associated to the choices\n<MATH_0012> made above).\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "categories-definition-pullback-functor-fibred-category",
+      "requested_tag": "02XN"
+    },
+    {
+      "context_id": "reference:categories-lemma-2-product-categories-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nThe <MATH_0002>-category of categories\nover <MATH_0003> has 2-fibre products.\nSuppose that\n<MATH_0004> and\n<MATH_0005> are morphisms of categories over\n<MATH_0006>.\nAn explicit 2-fibre product\n<MATH_0007> is given by the following\ndescription\n<STRUCT_0002>\n<STRUCT_0003> an object of <MATH_0008> is a quadruple\n<MATH_0009>, where <MATH_0010>,\n<MATH_0011>, <MATH_0012>,\nand <MATH_0013> is an isomorphism in <MATH_0014>,\n<STRUCT_0004> a morphism <MATH_0015> is given by a pair\n<MATH_0016>, where <MATH_0017> is a morphism in <MATH_0018>, and\n<MATH_0019> is a\nmorphism in <MATH_0020> such that\n<STRUCT_0005>\n<STRUCT_0006> <MATH_0021> and <MATH_0022> induce the same morphism <MATH_0023>, and\n<STRUCT_0007> the diagram\n<MATH_0024>\nis commutative.\n<STRUCT_0008>\n<STRUCT_0009>\nThe functors <MATH_0025>\nand <MATH_0026> are the\nforgetful functors in this case. The transformation <MATH_0027> is given on the object <MATH_0028> by\n<MATH_0029>.\n<STRUCT_0010>",
+      "requested_label": "categories-lemma-2-product-categories-over-C",
+      "requested_tag": "0040"
+    },
+    {
+      "context_id": "reference:categories-lemma-2-product-fibred-categories-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nThe <MATH_0002>-category of fibred categories\nover <MATH_0003> has 2-fibre products, and\nthey are described as in\nLemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-2-product-fibred-categories-over-C",
+      "requested_tag": "02XQ"
+    },
+    {
+      "context_id": "reference:categories-lemma-fibred",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAssume <MATH_0001> is a fibred category.\nAssume given a choice of pullbacks for <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> For any pair of composable morphisms <MATH_0003>,\n<MATH_0004> there is a unique isomorphism\n<MATH_0005>\nas functors <MATH_0006>\nsuch that for every <MATH_0007> the following\ndiagram commutes\n<MATH_0008>\n<STRUCT_0004> If <MATH_0009>, then there is a canonical isomorphism\n<MATH_0010> as functors\n<MATH_0011>.\n<STRUCT_0005> The quadruple\n<MATH_0012>\ndefines a pseudo functor from <MATH_0013> to\nthe <MATH_0014>-category of categories, see\nDefinition <REF_0001>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "categories-lemma-fibred",
+      "requested_tag": "02XO"
+    },
+    {
+      "context_id": "reference:categories-lemma-fibred-equivalent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002>, <MATH_0003> be categories over <MATH_0004>.\nSuppose that <MATH_0005> and <MATH_0006> are equivalent\nas categories over <MATH_0007>.\nThen <MATH_0008> is fibred over <MATH_0009> if and only if\n<MATH_0010> is fibred over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-fibred-equivalent",
+      "requested_tag": "042G"
+    },
+    {
+      "context_id": "reference:sites-lemma-limit-sheaf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001>\nbe a diagram. Then <MATH_0002> exists\nand is equal to the limit in the category of presheaves.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-limit-sheaf",
+      "requested_tag": "00W2"
+    },
+    {
+      "context_id": "reference:stacks-definition-mor-presheaf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a fibred category,\nsee Categories, Section <REF_0001>.\nGiven an object <MATH_0003> of <MATH_0004> and objects\n<MATH_0005>, <MATH_0006> of the fibre category, the <TEXTITOPEN_0001>presheaf\nof morphisms from <MATH_0007> to <MATH_0008><TEXTITCLOSE_0001> is the presheaf\n<MATH_0009>\ndescribed above. It is denoted <MATH_0010>.\nThe subpresheaf <MATH_0011> whose value\nover <MATH_0012> is the set of isomorphisms\n<MATH_0013> in the fibre category <MATH_0014>\nis called the <TEXTITOPEN_0002>presheaf of isomorphisms from <MATH_0015> to <MATH_0016><TEXTITCLOSE_0002>.\n<STRUCT_0002>",
+      "requested_label": "stacks-definition-mor-presheaf",
+      "requested_tag": "02ZB"
+    },
+    {
+      "context_id": "reference:stacks-lemma-presheaf-mor-map-fibred-categories",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a <MATH_0002>-morphism of fibred\ncategories over the category <MATH_0003>. Let <MATH_0004>\nand <MATH_0005>. Then <MATH_0006> defines a canonical\nmorphism of presheaves\n<MATH_0007>\non <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-presheaf-mor-map-fibred-categories",
+      "requested_tag": "042V"
+    },
+    {
+      "context_id": "reference:stacks-lemma-pullback",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n(Pullback of descent data.)\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a fibred category.\nMake a choice pullbacks as in Categories,\nDefinition <REF_0001>.\nLet <MATH_0003>, and\n<MATH_0004>\nbe a families of morphisms of <MATH_0005> with fixed target.\nAssume all the fibre products\n<MATH_0006>, <MATH_0007>,\n<MATH_0008>, and <MATH_0009> exist.\nLet <MATH_0010>, <MATH_0011> and\n<MATH_0012> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0002>.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0013> be a descent datum relative to the\nfamily <MATH_0014>. The system\n<MATH_0015>\nis a descent datum relative to <MATH_0016>.\n<STRUCT_0004> This construction defines a functor between descent data relative\nto <MATH_0017> and descent data relative to <MATH_0018>.\n<STRUCT_0005> Given a second <MATH_0019>, <MATH_0020> and\n<MATH_0021> morphism of families\nof maps with fixed target, then if <MATH_0022> the two resulting functors\nbetween descent data are canonically isomorphic.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-lemma-pullback",
+      "requested_tag": "02ZD"
+    }
+  ]
+}

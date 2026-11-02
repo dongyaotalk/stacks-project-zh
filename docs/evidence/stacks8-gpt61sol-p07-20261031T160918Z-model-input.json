@@ -1,0 +1,1823 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a192b1-73e3-71e0-b877-efe73579bbd0",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/stacks8-gpt61sol-p07-20261031T160918Z.json",
+    "hash": "sha256:d3bd84691854a34659cc8a594fa9d8fe719513a9009b88b1d67fb98b1ec4b98a"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:09WX:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nbe a stack. Endow <MATH_0003> with the topology inherited from\n<MATH_0004> and let <MATH_0005> be a stack.\nThen <MATH_0006> is a stack over <MATH_0007>.\nIf <MATH_0008> and <MATH_0009> define stacks in groupoids, then\n<MATH_0010> is a stack in groupoids over <MATH_0011>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 48,
+          "projection_end": 53,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 82,
+          "projection_end": 90,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 143,
+          "projection_end": 148,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 172,
+          "projection_end": 177,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 234,
+          "projection_end": 240,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 244,
+          "projection_end": 253,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 277,
+          "projection_end": 282,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 286,
+          "projection_end": 295,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:09WX:proof",
+      "source_text": "We check the three conditions in Definition <REF_0001>\nto prove that <MATH_0001> is a stack over <MATH_0002>.\nBy Categories, Lemma <REF_0002>\nwe find that <MATH_0003> is a fibred category over <MATH_0004>.\nThus condition (1) holds.\n\n<STRUCT_0001><STRUCT_0002>\nLet <MATH_0005> be an object of <MATH_0006> and let <MATH_0007> be objects\nof <MATH_0008> over <MATH_0009>. Denote <MATH_0010> in <MATH_0011>.\nConsider the map of presheaves\n<MATH_0012>\non <MATH_0013>, see Lemma <REF_0003>.\nLet <MATH_0014> be a covering and let <MATH_0015> be a section\nof the presheaf on the left over <MATH_0016> such that <MATH_0017> and\n<MATH_0018> restrict to the same section over <MATH_0019>.\nWe have to find a morphism <MATH_0020> restricting to <MATH_0021>.\nNote that <MATH_0022> for some morphism\n<MATH_0023> over <MATH_0024> because the second presheaf is a sheaf\n(by assumption). Let <MATH_0025> be the strongly <MATH_0026>-cartesian\nmorphism of <MATH_0027> lying over <MATH_0028>. Then <MATH_0029> corresponds\nto a morphism <MATH_0030> over <MATH_0031>.\nIn other words, <MATH_0032> now define local sections of the presheaf\n<MATH_0033>\nover the members of the covering <MATH_0034>. By assumption these\nglue to a unique morphism <MATH_0035> which composed with the given\nmorphism <MATH_0036> produces the desired morphism <MATH_0037>.\n\n<STRUCT_0003><STRUCT_0004>\nFinally, we show that descent data are effective. Let <MATH_0038>\nbe a covering of <MATH_0039> and let <MATH_0040> be a descent\ndatum relative to this covering (Definition <REF_0004>).\nSetting <MATH_0041> and <MATH_0042>\nwe obtain a descent datum <MATH_0043> for the covering in <MATH_0044>.\nBy assumption on <MATH_0045> we may assume <MATH_0046>\nand the <MATH_0047> equal to the canonical descent datum\n(Definition <REF_0005>).\nIn this case <MATH_0048> is a covering and we can view\n<MATH_0049> as a descent datum relative to this covering.\nBy our assumption that <MATH_0050> is a stack over <MATH_0051>\nwe see that it is effective which finishes the proof of condition (3).\n\n<STRUCT_0005><STRUCT_0006>\nThe final assertion follows because <MATH_0052> is a stack over\n<MATH_0053> and is fibred in groupoids by\nCategories, Lemma\n<REF_0006>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 86,
+          "projection_end": 91,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 113,
+          "projection_end": 123,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibred category",
+          "projection_start": 172,
+          "projection_end": 187,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 281,
+          "projection_end": 287,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 326,
+          "projection_end": 333,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 415,
+          "projection_end": 418,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 422,
+          "projection_end": 432,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 504,
+          "projection_end": 512,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 553,
+          "projection_end": 561,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 694,
+          "projection_end": 702,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 774,
+          "projection_end": 782,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 831,
+          "projection_end": 839,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 845,
+          "projection_end": 850,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 912,
+          "projection_end": 921,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 922,
+          "projection_end": 930,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1004,
+          "projection_end": 1012,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 1104,
+          "projection_end": 1112,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1149,
+          "projection_end": 1157,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1208,
+          "projection_end": 1216,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1259,
+          "projection_end": 1267,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1301,
+          "projection_end": 1309,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1372,
+          "projection_end": 1379,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1421,
+          "projection_end": 1429,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1470,
+          "projection_end": 1477,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1501,
+          "projection_end": 1509,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1583,
+          "projection_end": 1590,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1617,
+          "projection_end": 1625,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1730,
+          "projection_end": 1739,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1740,
+          "projection_end": 1747,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1809,
+          "projection_end": 1817,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1851,
+          "projection_end": 1858,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1882,
+          "projection_end": 1890,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 1932,
+          "projection_end": 1937,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 2106,
+          "projection_end": 2111,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 2146,
+          "projection_end": 2155,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 2159,
+          "projection_end": 2169,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NY:title",
+      "source_text": "Gerbes",
+      "node_kind": "section_title",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:06NY:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nGerbes are a special kind of stacks in groupoids.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "stacks",
+          "projection_start": 43,
+          "projection_end": 49,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 53,
+          "projection_end": 62,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NZ:statement",
+      "source_text": "A <TEXTITOPEN_0001>gerbe<TEXTITCLOSE_0001> over a site <MATH_0001> is a category\n<MATH_0002> over <MATH_0003> such that\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0004> is a stack\nin groupoids over <MATH_0005> (see\nDefinition <REF_0001>),\n<STRUCT_0003> for <MATH_0006> there exists\na covering <MATH_0007> in <MATH_0008> such that\n<MATH_0009> is nonempty, and\n<STRUCT_0004> for <MATH_0010> and\n<MATH_0011> there exists\na covering <MATH_0012> in <MATH_0013> such that\n<MATH_0014> in <MATH_0015>.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "gerbe",
+          "projection_start": 2,
+          "projection_end": 7,
+          "concept": "gerbe",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 15,
+          "projection_end": 19,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 37,
+          "projection_end": 45,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 130,
+          "projection_end": 135,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 139,
+          "projection_end": 148,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 240,
+          "projection_end": 248,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "nonempty",
+          "projection_start": 301,
+          "projection_end": 309,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 376,
+          "projection_end": 384,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NY:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nIn other words, a gerbe is a stack in groupoids such that any two objects\nare locally isomorphic and such that objects exist locally.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 43,
+          "projection_end": 48,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 52,
+          "projection_end": 61,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 80,
+          "projection_end": 87,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 100,
+          "projection_end": 110,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 125,
+          "projection_end": 132,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P0:statement",
+      "source_text": "Let <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be categories over <MATH_0004>.\nSuppose that <MATH_0005> and <MATH_0006> are equivalent\nas categories over <MATH_0007>.\nThen <MATH_0008> is a gerbe over <MATH_0009> if and only if\n<MATH_0010> is a gerbe over <MATH_0011>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 59,
+          "projection_end": 69,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 133,
+          "projection_end": 143,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 147,
+          "projection_end": 157,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P0:proof",
+      "source_text": "Assume <MATH_0001> is a gerbe over <MATH_0002>. By\nLemma <REF_0001>\nwe see <MATH_0003> is a stack in groupoids over <MATH_0004>.\nLet <MATH_0005>,\n<MATH_0006> be equivalences of categories over\n<MATH_0007>. Given <MATH_0008> we see that there exists\na covering <MATH_0009> such that <MATH_0010> is\nnonempty. Applying <MATH_0011> we see that <MATH_0012> is nonempty.\nGiven <MATH_0013> and\n<MATH_0014> there exists\na covering <MATH_0015> in <MATH_0016> such that\n<MATH_0017> in <MATH_0018>. By\nCategories, Lemma <REF_0002>\nthis implies <MATH_0019> in <MATH_0020>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "stack",
+          "projection_start": 92,
+          "projection_end": 97,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 101,
+          "projection_end": 110,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalences",
+          "projection_start": 161,
+          "projection_end": 173,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 177,
+          "projection_end": 187,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 251,
+          "projection_end": 259,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "nonempty",
+          "projection_start": 297,
+          "projection_end": 305,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "nonempty",
+          "projection_start": 355,
+          "projection_end": 363,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 414,
+          "projection_end": 422,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 491,
+          "projection_end": 501,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NY:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nWe want to generalize the definition of gerbes a bit. Namely, let\n<MATH_0001> be a <MATH_0002>-morphism of stacks in groupoids\nover a site <MATH_0003>. We want to say what it\nmeans for <MATH_0004> to be a gerbe over <MATH_0005>. By\nSection <REF_0001>\nthe category <MATH_0006> inherits the structure of a site from\n<MATH_0007>. A naive guess is: Just require that\n<MATH_0008> <TEXTITOPEN_0001>is<TEXTITCLOSE_0001> a gerbe in the sense above. Except\nthe notion so obtained is not invariant under replacing <MATH_0009>\nby an equivalent stack in groupoids over <MATH_0010>; this is even the\ncase for the property of being fibred in groupoids over <MATH_0011>.\nHowever, it turns out that we can replace <MATH_0012> by an equivalent\nstack in groupoids over <MATH_0013> which is fibred in groupoids over\n<MATH_0014>, and then the property of being a gerbe over <MATH_0015>\nis independent of this choice. Here is the precise formulation.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 109,
+          "projection_end": 117,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 121,
+          "projection_end": 127,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 131,
+          "projection_end": 140,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 148,
+          "projection_end": 152,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 269,
+          "projection_end": 277,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 318,
+          "projection_end": 322,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 501,
+          "projection_end": 511,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 512,
+          "projection_end": 517,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 521,
+          "projection_end": 530,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 607,
+          "projection_end": 616,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 695,
+          "projection_end": 705,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 706,
+          "projection_end": 711,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 715,
+          "projection_end": 724,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 761,
+          "projection_end": 770,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P1:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003> be stacks in groupoids.\nLet <MATH_0004> be a <MATH_0005>-morphism of categories\nover <MATH_0006>. The following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> For some (equivalently any) factorization <MATH_0007> where\n<MATH_0008> is an equivalence of categories over\n<MATH_0009> and <MATH_0010> is fibred in groupoids, the map\n<MATH_0011> is a gerbe (with the topology\non <MATH_0012> inherited from <MATH_0013>).\n<STRUCT_0003> The following two conditions are satisfied\n<STRUCT_0004>\n<STRUCT_0005> for <MATH_0014> lying over\n<MATH_0015> there exists a covering\n<MATH_0016> in <MATH_0017> and objects <MATH_0018> of <MATH_0019>\nover <MATH_0020> such that <MATH_0021> in <MATH_0022>, and\n<STRUCT_0006> for <MATH_0023>,\n<MATH_0024>, and <MATH_0025> in\n<MATH_0026> there exists\na covering <MATH_0027> in <MATH_0028> and morphisms\n<MATH_0029> in <MATH_0030> with\n<MATH_0031>.\n<STRUCT_0007>\n<STRUCT_0008>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 62,
+          "projection_end": 68,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 72,
+          "projection_end": 81,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 116,
+          "projection_end": 124,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 128,
+          "projection_end": 138,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 175,
+          "projection_end": 185,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 292,
+          "projection_end": 317,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 364,
+          "projection_end": 373,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 379,
+          "projection_end": 382,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 416,
+          "projection_end": 424,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 608,
+          "projection_end": 616,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 648,
+          "projection_end": 655,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 832,
+          "projection_end": 840,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 872,
+          "projection_end": 881,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P1:proof",
+      "source_text": "By\nCategories, Lemma\n<REF_0001>\nthere exists a factorization <MATH_0001> where\n<MATH_0002> is an equivalence of categories over\n<MATH_0003> and <MATH_0004> is fibred in groupoids. By\nCategories, Lemma <REF_0002>\ngiven any two such factorizations <MATH_0005>\nwe have that <MATH_0006> is equivalent to <MATH_0007> as\ncategories over <MATH_0008>. Hence\nLemma <REF_0003>\nguarantees that the condition (1) is independent of the choice of the\nfactorization. Moreover, this means that we may assume\n<MATH_0009>\nas in the proof of\nCategories, Lemma\n<REF_0004>\n\n<STRUCT_0001><STRUCT_0002>\nLet us prove that (a) and (b) imply that <MATH_0010>\nis a gerbe. First of all, by\nLemma <REF_0005>\nwe see that <MATH_0011> is a stack in groupoids.\nNext, let <MATH_0012> be an object of <MATH_0013> lying over\n<MATH_0014>. By (a) we can find a covering\n<MATH_0015> in <MATH_0016> and objects <MATH_0017> of <MATH_0018>\nover <MATH_0019> and isomorphisms <MATH_0020> in\n<MATH_0021>. Then <MATH_0022> are objects\nof <MATH_0023>, i.e., the second condition of\nDefinition <REF_0006>\nholds. Finally, let <MATH_0024> and <MATH_0025> be objects\nof <MATH_0026> lying over the same object <MATH_0027>.\nSet <MATH_0028>. By condition (b) we can find a covering\n<MATH_0029> and isomorphisms <MATH_0030>\nin <MATH_0031> with <MATH_0032>. Then\n<MATH_0033>\nis a morphism in <MATH_0034> as desired. This proves that\n(2) implies (1).\n\n<STRUCT_0003><STRUCT_0004>\nTo prove that (1) implies (2) one reads the arguments\nin the preceding paragraph backwards. Details omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Categories",
+          "projection_start": 3,
+          "projection_end": 13,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 97,
+          "projection_end": 122,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 169,
+          "projection_end": 178,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 183,
+          "projection_end": 193,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 286,
+          "projection_end": 296,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 315,
+          "projection_end": 325,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 523,
+          "projection_end": 533,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 707,
+          "projection_end": 712,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 716,
+          "projection_end": 725,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 755,
+          "projection_end": 761,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 822,
+          "projection_end": 830,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 862,
+          "projection_end": 869,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 918,
+          "projection_end": 930,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 980,
+          "projection_end": 987,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 1107,
+          "projection_end": 1114,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1150,
+          "projection_end": 1156,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1218,
+          "projection_end": 1226,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 1243,
+          "projection_end": 1255,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1323,
+          "projection_end": 1331,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P2:statement",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003> be stacks in groupoids over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism of categories\nover <MATH_0007>. We say <MATH_0008> is a <TEXTITOPEN_0001>gerbe over<TEXTITCLOSE_0001> <MATH_0009>\nif the equivalent conditions of\nLemma <REF_0001>\nare satisfied.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 62,
+          "projection_end": 68,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 72,
+          "projection_end": 81,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 133,
+          "projection_end": 141,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 145,
+          "projection_end": 155,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "gerbe over",
+          "projection_start": 198,
+          "projection_end": 208,
+          "concept": "gerbe over",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 228,
+          "projection_end": 238,
+          "concept": "equivalent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NY:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nThis definition does not conflict with\nDefinition <REF_0001>\nwhen <MATH_0001> because in this case we may take\n<MATH_0002> in part (1) of\nLemma <REF_0002>.\nNote that conditions (2)(a) and (2)(b) of\nLemma <REF_0003>\nare quite close in spirit to conditions (2) and (3) of\nDefinition <REF_0004>.\nNamely, (2)(a) says that the map of presheaves of isomorphism\nclasses of objects becomes a surjection after sheafification.\nMoreover, (2)(b) says that\n<MATH_0003>\nis a surjection of sheaves on <MATH_0004> for any <MATH_0005> and\n<MATH_0006>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "map",
+          "projection_start": 336,
+          "projection_end": 339,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 343,
+          "projection_end": 353,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism classes",
+          "projection_start": 357,
+          "projection_end": 376,
+          "concept": "source-phrase-isomorphism-classes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 380,
+          "projection_end": 387,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 398,
+          "projection_end": 408,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 475,
+          "projection_end": 485,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 489,
+          "projection_end": 496,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P3:statement",
+      "source_text": "Let <MATH_0001> be a site. Let\n<MATH_0002>\nbe a <MATH_0003>-fibre product of stacks in groupoids over <MATH_0004>.\nIf <MATH_0005> is a gerbe over <MATH_0006>, then\n<MATH_0007> is a gerbe over <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 60,
+          "projection_end": 73,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 87,
+          "projection_end": 96,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P3:proof",
+      "source_text": "By the uniqueness property of a <MATH_0001>-fibre product may assume that\n<MATH_0002>\nas in\nCategories, Lemma <REF_0001>.\nLet us prove properties (2)(a) and (2)(b) of\nLemma <REF_0002>\nfor <MATH_0003>.\n\n<STRUCT_0001><STRUCT_0002>\nLet <MATH_0004> be an object of <MATH_0005> lying over the object <MATH_0006>\nof <MATH_0007>. By assumption there exists\na covering <MATH_0008> of <MATH_0009> and objects\n<MATH_0010> with isomorphisms\n<MATH_0011>.\nThen <MATH_0012> is an object of\n<MATH_0013> over <MATH_0014>\nwhose image in <MATH_0015> is <MATH_0016>. Thus (2)(a) holds.\n\n<STRUCT_0003><STRUCT_0004>\nLet <MATH_0017>, let <MATH_0018> be objects of\n<MATH_0019> over <MATH_0020>, and let\n<MATH_0021> be a morphism in <MATH_0022>.\nWrite <MATH_0023>. Note that <MATH_0024>\nand <MATH_0025>. By assumption there exists\na covering <MATH_0026> in <MATH_0027> and morphisms\n<MATH_0028> in <MATH_0029> with\n<MATH_0030>. Then <MATH_0031> is a morphism\n<MATH_0032> as required in (2)(b).\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibre product",
+          "projection_start": 44,
+          "projection_end": 57,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 92,
+          "projection_end": 102,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 250,
+          "projection_end": 256,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 287,
+          "projection_end": 293,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 351,
+          "projection_end": 359,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 391,
+          "projection_end": 398,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 416,
+          "projection_end": 428,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 465,
+          "projection_end": 471,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 510,
+          "projection_end": 515,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 629,
+          "projection_end": 636,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 695,
+          "projection_end": 703,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 807,
+          "projection_end": 815,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 847,
+          "projection_end": 856,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 924,
+          "projection_end": 932,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06R3:statement",
+      "source_text": "Let <MATH_0001> be a site. Let\n<MATH_0002> and <MATH_0003>\nbe <MATH_0004>-morphisms of stacks in groupoids over <MATH_0005>.\nIf <MATH_0006> is a gerbe over <MATH_0007> and\n<MATH_0008> is a gerbe over <MATH_0009>, then\n<MATH_0010> is a gerbe over <MATH_0011>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 74,
+          "projection_end": 83,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 87,
+          "projection_end": 93,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 97,
+          "projection_end": 106,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06R3:proof",
+      "source_text": "Let us prove properties (2)(a) and (2)(b) of\nLemma <REF_0001>\nfor <MATH_0001>.\n\n<STRUCT_0001><STRUCT_0002>\nLet <MATH_0002> be an object of <MATH_0003> lying over the object <MATH_0004>\nof <MATH_0005>. By assumption on <MATH_0006> there exists\na covering <MATH_0007> of <MATH_0008> and objects\n<MATH_0009> such that <MATH_0010>.\nBy assumption on <MATH_0011> there exist coverings <MATH_0012>\nand objects <MATH_0013> such that\n<MATH_0014>.\nThen <MATH_0015> is a covering of <MATH_0016>\nand <MATH_0017>. Thus (2)(a) holds.\n\n<STRUCT_0003><STRUCT_0004>\nLet <MATH_0018>, let <MATH_0019> be objects of\n<MATH_0020> over <MATH_0021>, and let\n<MATH_0022> be a morphism in\n<MATH_0023>. By assumption on <MATH_0024> there exists\na covering <MATH_0025> of <MATH_0026> and morphisms\n<MATH_0027> in <MATH_0028>\nsuch that <MATH_0029>.\nBy assumption on <MATH_0030> there exist coverings <MATH_0031>\nand morphisms <MATH_0032> in\n<MATH_0033> such that <MATH_0034>.\nThen <MATH_0035> is a covering of <MATH_0036>\nand <MATH_0037> as required in (2)(b).\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "object",
+          "projection_start": 128,
+          "projection_end": 134,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 165,
+          "projection_end": 171,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 244,
+          "projection_end": 252,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 284,
+          "projection_end": 291,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 368,
+          "projection_end": 377,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 394,
+          "projection_end": 401,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 459,
+          "projection_end": 467,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 582,
+          "projection_end": 589,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 648,
+          "projection_end": 656,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 717,
+          "projection_end": 725,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 757,
+          "projection_end": 766,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 858,
+          "projection_end": 867,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 884,
+          "projection_end": 893,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 966,
+          "projection_end": 974,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P4:statement",
+      "source_text": "Let <MATH_0001> be a site. Let\n<MATH_0002>\nbe a <MATH_0003>-cartesian diagram of stacks in groupoids over <MATH_0004>.\nIf for every <MATH_0005> and\n<MATH_0006> there exists a covering\n<MATH_0007> such that <MATH_0008> is in the essential\nimage of <MATH_0009> and\n<MATH_0010> is a gerbe over <MATH_0011>, then\n<MATH_0012> is a gerbe over <MATH_0013>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 60,
+          "projection_end": 69,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 70,
+          "projection_end": 77,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 81,
+          "projection_end": 87,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 91,
+          "projection_end": 100,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 175,
+          "projection_end": 183,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 238,
+          "projection_end": 243,
+          "concept": "image",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06P4:proof",
+      "source_text": "By the uniqueness property of a <MATH_0001>-fibre product may assume that\n<MATH_0002>\nas in\nCategories, Lemma <REF_0001>.\nLet us prove properties (2)(a) and (2)(b) of\nLemma <REF_0002>\nfor <MATH_0003>.\n\n<STRUCT_0001><STRUCT_0002>\nLet <MATH_0004> be an object of <MATH_0005> lying over the object <MATH_0006>\nof <MATH_0007>. By assumption there exists\na covering <MATH_0008> of <MATH_0009> and objects\n<MATH_0010> with <MATH_0011>.\nBy (2)(a) for <MATH_0012> there exist\ncoverings <MATH_0013> and objects <MATH_0014> of\n<MATH_0015> over <MATH_0016> with <MATH_0017> isomorphic\nto the restriction of <MATH_0018> to <MATH_0019>. Then\n<MATH_0020> is a covering of <MATH_0021> and\n<MATH_0022> are objects of <MATH_0023> over <MATH_0024>\nwhose images in <MATH_0025> are isomorphic to the restrictions\n<MATH_0026>. This proves (2)(a) for <MATH_0027>.\n\n<STRUCT_0003><STRUCT_0004>\nLet <MATH_0028>, let <MATH_0029> be objects of\n<MATH_0030> over <MATH_0031>, and let <MATH_0032> be a morphism\nin <MATH_0033>. By assumption we may choose a covering\n<MATH_0034> and objects <MATH_0035> of <MATH_0036>\nover <MATH_0037> such that there exist isomorphisms\n<MATH_0038>.\nThen we get objects\n<MATHSEG_0001>and<MATHSEG_0002>\nof <MATH_0039> over <MATH_0040>. The identity morphism on <MATH_0041> is a\nmorphism <MATH_0042>. By (2)(b) for\n<MATH_0043> there exist coverings\n<MATH_0044> and morphisms\n<MATH_0045>\nsuch that <MATH_0046>. Unwinding the definition\nof morphisms in <MATH_0047>\nwe see that <MATH_0048> are\nthe morphisms we're looking for, i.e., (2)(b) holds for\n<MATH_0049>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "fibre product",
+          "projection_start": 44,
+          "projection_end": 57,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 92,
+          "projection_end": 102,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 250,
+          "projection_end": 256,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 287,
+          "projection_end": 293,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 351,
+          "projection_end": 359,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 391,
+          "projection_end": 398,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 467,
+          "projection_end": 476,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 493,
+          "projection_end": 500,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 562,
+          "projection_end": 572,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 645,
+          "projection_end": 653,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 689,
+          "projection_end": 696,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "images",
+          "projection_start": 735,
+          "projection_end": 741,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 761,
+          "projection_end": 771,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 904,
+          "projection_end": 911,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 970,
+          "projection_end": 978,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1025,
+          "projection_end": 1033,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 1050,
+          "projection_end": 1057,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 1124,
+          "projection_end": 1136,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 1162,
+          "projection_end": 1169,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "identity morphism",
+          "projection_start": 1239,
+          "projection_end": 1256,
+          "concept": "identity-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1277,
+          "projection_end": 1285,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 1337,
+          "projection_end": 1346,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1363,
+          "projection_end": 1372,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1436,
+          "projection_end": 1445,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1493,
+          "projection_end": 1502,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:stacks:06NX:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us prove descent for objects. Let <MATH_0001> be a covering\nof <MATH_0002>. Let <MATH_0003> be a descent datum in <MATH_0004>\nwith respect to this covering. Then <MATH_0005> is also a descent\ndatum with respect to the covering <MATH_0006> of\n<MATH_0007>. As <MATH_0008> is a stack in groupoids we obtain an\nobject <MATH_0009> over <MATH_0010> and isomorphisms <MATH_0011>\nover <MATH_0012> compatible with the <MATH_0013>, i.e., such that\n<MATH_0014>\nConsider the sheaf <MATH_0015>\non <MATH_0016>. Note that <MATH_0017>\nbecause <MATH_0018>. Because <MATH_0019> (as we started\nwith a descent datum over <MATH_0020>) the displayed formula shows\nthat <MATH_0021>.\nHence the local sections <MATH_0022> glue to <MATH_0023>. As <MATH_0024> is fibred in\ngroupoids we see that <MATH_0025> is isomorphic to an object <MATH_0026> with <MATH_0027>.\nWe omit the verification that <MATH_0028> in the fibre category of <MATH_0029>\nover <MATH_0030> is a solution to the problem of descent posed by the descent datum\n<MATH_0031>. We also omit the proof of the sheaf property\nof the <MATH_0032>-presheaves of <MATH_0033>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:09WX:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe check the three conditions in Definition <REF_0001>\nto prove that <MATH_0001> is a stack over <MATH_0002>.\nBy Categories, Lemma <REF_0002>\nwe find that <MATH_0003> is a fibred category over <MATH_0004>.\nThus condition (1) holds.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0005> be an object of <MATH_0006> and let <MATH_0007> be objects\nof <MATH_0008> over <MATH_0009>. Denote <MATH_0010> in <MATH_0011>.\nConsider the map of presheaves\n<MATH_0012>\non <MATH_0013>, see Lemma <REF_0003>.\nLet <MATH_0014> be a covering and let <MATH_0015> be a section\nof the presheaf on the left over <MATH_0016> such that <MATH_0017> and\n<MATH_0018> restrict to the same section over <MATH_0019>.\nWe have to find a morphism <MATH_0020> restricting to <MATH_0021>.\nNote that <MATH_0022> for some morphism\n<MATH_0023> over <MATH_0024> because the second presheaf is a sheaf\n(by assumption). Let <MATH_0025> be the strongly <MATH_0026>-cartesian\nmorphism of <MATH_0027> lying over <MATH_0028>. Then <MATH_0029> corresponds\nto a morphism <MATH_0030> over <MATH_0031>.\nIn other words, <MATH_0032> now define local sections of the presheaf\n<MATH_0033>\nover the members of the covering <MATH_0034>. By assumption these\nglue to a unique morphism <MATH_0035> which composed with the given\nmorphism <MATH_0036> produces the desired morphism <MATH_0037>.\n\n<STRUCT_0004><STRUCT_0005>\nFinally, we show that descent data are effective. Let <MATH_0038>\nbe a covering of <MATH_0039> and let <MATH_0040> be a descent\ndatum relative to this covering (Definition <REF_0004>).\nSetting <MATH_0041> and <MATH_0042>\nwe obtain a descent datum <MATH_0043> for the covering in <MATH_0044>.\nBy assumption on <MATH_0045> we may assume <MATH_0046>\nand the <MATH_0047> equal to the canonical descent datum\n(Definition <REF_0005>).\nIn this case <MATH_0048> is a covering and we can view\n<MATH_0049> as a descent datum relative to this covering.\nBy our assumption that <MATH_0050> is a stack over <MATH_0051>\nwe see that it is effective which finishes the proof of condition (3).\n\n<STRUCT_0006><STRUCT_0007>\nThe final assertion follows because <MATH_0052> is a stack over\n<MATH_0053> and is fibred in groupoids by\nCategories, Lemma\n<REF_0006>.\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:09WX:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nbe a stack. Endow <MATH_0003> with the topology inherited from\n<MATH_0004> and let <MATH_0005> be a stack.\nThen <MATH_0006> is a stack over <MATH_0007>.\nIf <MATH_0008> and <MATH_0009> define stacks in groupoids, then\n<MATH_0010> is a stack in groupoids over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NY:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Gerbes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NY:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGerbes are a special kind of stacks in groupoids.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NZ:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>gerbe<TEXTITCLOSE_0001> over a site <MATH_0001> is a category\n<MATH_0002> over <MATH_0003> such that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is a stack\nin groupoids over <MATH_0005> (see\nDefinition <REF_0001>),\n<STRUCT_0004> for <MATH_0006> there exists\na covering <MATH_0007> in <MATH_0008> such that\n<MATH_0009> is nonempty, and\n<STRUCT_0005> for <MATH_0010> and\n<MATH_0011> there exists\na covering <MATH_0012> in <MATH_0013> such that\n<MATH_0014> in <MATH_0015>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NY:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn other words, a gerbe is a stack in groupoids such that any two objects\nare locally isomorphic and such that objects exist locally.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be categories over <MATH_0004>.\nSuppose that <MATH_0005> and <MATH_0006> are equivalent\nas categories over <MATH_0007>.\nThen <MATH_0008> is a gerbe over <MATH_0009> if and only if\n<MATH_0010> is a gerbe over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssume <MATH_0001> is a gerbe over <MATH_0002>. By\nLemma <REF_0001>\nwe see <MATH_0003> is a stack in groupoids over <MATH_0004>.\nLet <MATH_0005>,\n<MATH_0006> be equivalences of categories over\n<MATH_0007>. Given <MATH_0008> we see that there exists\na covering <MATH_0009> such that <MATH_0010> is\nnonempty. Applying <MATH_0011> we see that <MATH_0012> is nonempty.\nGiven <MATH_0013> and\n<MATH_0014> there exists\na covering <MATH_0015> in <MATH_0016> such that\n<MATH_0017> in <MATH_0018>. By\nCategories, Lemma <REF_0002>\nthis implies <MATH_0019> in <MATH_0020>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NY:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe want to generalize the definition of gerbes a bit. Namely, let\n<MATH_0001> be a <MATH_0002>-morphism of stacks in groupoids\nover a site <MATH_0003>. We want to say what it\nmeans for <MATH_0004> to be a gerbe over <MATH_0005>. By\nSection <REF_0001>\nthe category <MATH_0006> inherits the structure of a site from\n<MATH_0007>. A naive guess is: Just require that\n<MATH_0008> <TEXTITOPEN_0001>is<TEXTITCLOSE_0001> a gerbe in the sense above. Except\nthe notion so obtained is not invariant under replacing <MATH_0009>\nby an equivalent stack in groupoids over <MATH_0010>; this is even the\ncase for the property of being fibred in groupoids over <MATH_0011>.\nHowever, it turns out that we can replace <MATH_0012> by an equivalent\nstack in groupoids over <MATH_0013> which is fibred in groupoids over\n<MATH_0014>, and then the property of being a gerbe over <MATH_0015>\nis independent of this choice. Here is the precise formulation.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P1:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003> be stacks in groupoids.\nLet <MATH_0004> be a <MATH_0005>-morphism of categories\nover <MATH_0006>. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> For some (equivalently any) factorization <MATH_0007> where\n<MATH_0008> is an equivalence of categories over\n<MATH_0009> and <MATH_0010> is fibred in groupoids, the map\n<MATH_0011> is a gerbe (with the topology\non <MATH_0012> inherited from <MATH_0013>).\n<STRUCT_0004> The following two conditions are satisfied\n<STRUCT_0005>\n<STRUCT_0006> for <MATH_0014> lying over\n<MATH_0015> there exists a covering\n<MATH_0016> in <MATH_0017> and objects <MATH_0018> of <MATH_0019>\nover <MATH_0020> such that <MATH_0021> in <MATH_0022>, and\n<STRUCT_0007> for <MATH_0023>,\n<MATH_0024>, and <MATH_0025> in\n<MATH_0026> there exists\na covering <MATH_0027> in <MATH_0028> and morphisms\n<MATH_0029> in <MATH_0030> with\n<MATH_0031>.\n<STRUCT_0008>\n<STRUCT_0009>\n<STRUCT_0010>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P1:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy\nCategories, Lemma\n<REF_0001>\nthere exists a factorization <MATH_0001> where\n<MATH_0002> is an equivalence of categories over\n<MATH_0003> and <MATH_0004> is fibred in groupoids. By\nCategories, Lemma <REF_0002>\ngiven any two such factorizations <MATH_0005>\nwe have that <MATH_0006> is equivalent to <MATH_0007> as\ncategories over <MATH_0008>. Hence\nLemma <REF_0003>\nguarantees that the condition (1) is independent of the choice of the\nfactorization. Moreover, this means that we may assume\n<MATH_0009>\nas in the proof of\nCategories, Lemma\n<REF_0004>\n\n<STRUCT_0002><STRUCT_0003>\nLet us prove that (a) and (b) imply that <MATH_0010>\nis a gerbe. First of all, by\nLemma <REF_0005>\nwe see that <MATH_0011> is a stack in groupoids.\nNext, let <MATH_0012> be an object of <MATH_0013> lying over\n<MATH_0014>. By (a) we can find a covering\n<MATH_0015> in <MATH_0016> and objects <MATH_0017> of <MATH_0018>\nover <MATH_0019> and isomorphisms <MATH_0020> in\n<MATH_0021>. Then <MATH_0022> are objects\nof <MATH_0023>, i.e., the second condition of\nDefinition <REF_0006>\nholds. Finally, let <MATH_0024> and <MATH_0025> be objects\nof <MATH_0026> lying over the same object <MATH_0027>.\nSet <MATH_0028>. By condition (b) we can find a covering\n<MATH_0029> and isomorphisms <MATH_0030>\nin <MATH_0031> with <MATH_0032>. Then\n<MATH_0033>\nis a morphism in <MATH_0034> as desired. This proves that\n(2) implies (1).\n\n<STRUCT_0004><STRUCT_0005>\nTo prove that (1) implies (2) one reads the arguments\nin the preceding paragraph backwards. Details omitted.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P2:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003> be stacks in groupoids over <MATH_0004>.\nLet <MATH_0005> be a <MATH_0006>-morphism of categories\nover <MATH_0007>. We say <MATH_0008> is a <TEXTITOPEN_0001>gerbe over<TEXTITCLOSE_0001> <MATH_0009>\nif the equivalent conditions of\nLemma <REF_0001>\nare satisfied.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NY:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis definition does not conflict with\nDefinition <REF_0001>\nwhen <MATH_0001> because in this case we may take\n<MATH_0002> in part (1) of\nLemma <REF_0002>.\nNote that conditions (2)(a) and (2)(b) of\nLemma <REF_0003>\nare quite close in spirit to conditions (2) and (3) of\nDefinition <REF_0004>.\nNamely, (2)(a) says that the map of presheaves of isomorphism\nclasses of objects becomes a surjection after sheafification.\nMoreover, (2)(b) says that\n<MATH_0003>\nis a surjection of sheaves on <MATH_0004> for any <MATH_0005> and\n<MATH_0006>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P3:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let\n<MATH_0002>\nbe a <MATH_0003>-fibre product of stacks in groupoids over <MATH_0004>.\nIf <MATH_0005> is a gerbe over <MATH_0006>, then\n<MATH_0007> is a gerbe over <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P3:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy the uniqueness property of a <MATH_0001>-fibre product may assume that\n<MATH_0002>\nas in\nCategories, Lemma <REF_0001>.\nLet us prove properties (2)(a) and (2)(b) of\nLemma <REF_0002>\nfor <MATH_0003>.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0004> be an object of <MATH_0005> lying over the object <MATH_0006>\nof <MATH_0007>. By assumption there exists\na covering <MATH_0008> of <MATH_0009> and objects\n<MATH_0010> with isomorphisms\n<MATH_0011>.\nThen <MATH_0012> is an object of\n<MATH_0013> over <MATH_0014>\nwhose image in <MATH_0015> is <MATH_0016>. Thus (2)(a) holds.\n\n<STRUCT_0004><STRUCT_0005>\nLet <MATH_0017>, let <MATH_0018> be objects of\n<MATH_0019> over <MATH_0020>, and let\n<MATH_0021> be a morphism in <MATH_0022>.\nWrite <MATH_0023>. Note that <MATH_0024>\nand <MATH_0025>. By assumption there exists\na covering <MATH_0026> in <MATH_0027> and morphisms\n<MATH_0028> in <MATH_0029> with\n<MATH_0030>. Then <MATH_0031> is a morphism\n<MATH_0032> as required in (2)(b).\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06R3:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let\n<MATH_0002> and <MATH_0003>\nbe <MATH_0004>-morphisms of stacks in groupoids over <MATH_0005>.\nIf <MATH_0006> is a gerbe over <MATH_0007> and\n<MATH_0008> is a gerbe over <MATH_0009>, then\n<MATH_0010> is a gerbe over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06R3:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us prove properties (2)(a) and (2)(b) of\nLemma <REF_0001>\nfor <MATH_0001>.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0002> be an object of <MATH_0003> lying over the object <MATH_0004>\nof <MATH_0005>. By assumption on <MATH_0006> there exists\na covering <MATH_0007> of <MATH_0008> and objects\n<MATH_0009> such that <MATH_0010>.\nBy assumption on <MATH_0011> there exist coverings <MATH_0012>\nand objects <MATH_0013> such that\n<MATH_0014>.\nThen <MATH_0015> is a covering of <MATH_0016>\nand <MATH_0017>. Thus (2)(a) holds.\n\n<STRUCT_0004><STRUCT_0005>\nLet <MATH_0018>, let <MATH_0019> be objects of\n<MATH_0020> over <MATH_0021>, and let\n<MATH_0022> be a morphism in\n<MATH_0023>. By assumption on <MATH_0024> there exists\na covering <MATH_0025> of <MATH_0026> and morphisms\n<MATH_0027> in <MATH_0028>\nsuch that <MATH_0029>.\nBy assumption on <MATH_0030> there exist coverings <MATH_0031>\nand morphisms <MATH_0032> in\n<MATH_0033> such that <MATH_0034>.\nThen <MATH_0035> is a covering of <MATH_0036>\nand <MATH_0037> as required in (2)(b).\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P4:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let\n<MATH_0002>\nbe a <MATH_0003>-cartesian diagram of stacks in groupoids over <MATH_0004>.\nIf for every <MATH_0005> and\n<MATH_0006> there exists a covering\n<MATH_0007> such that <MATH_0008> is in the essential\nimage of <MATH_0009> and\n<MATH_0010> is a gerbe over <MATH_0011>, then\n<MATH_0012> is a gerbe over <MATH_0013>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06P4:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy the uniqueness property of a <MATH_0001>-fibre product may assume that\n<MATH_0002>\nas in\nCategories, Lemma <REF_0001>.\nLet us prove properties (2)(a) and (2)(b) of\nLemma <REF_0002>\nfor <MATH_0003>.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0004> be an object of <MATH_0005> lying over the object <MATH_0006>\nof <MATH_0007>. By assumption there exists\na covering <MATH_0008> of <MATH_0009> and objects\n<MATH_0010> with <MATH_0011>.\nBy (2)(a) for <MATH_0012> there exist\ncoverings <MATH_0013> and objects <MATH_0014> of\n<MATH_0015> over <MATH_0016> with <MATH_0017> isomorphic\nto the restriction of <MATH_0018> to <MATH_0019>. Then\n<MATH_0020> is a covering of <MATH_0021> and\n<MATH_0022> are objects of <MATH_0023> over <MATH_0024>\nwhose images in <MATH_0025> are isomorphic to the restrictions\n<MATH_0026>. This proves (2)(a) for <MATH_0027>.\n\n<STRUCT_0004><STRUCT_0005>\nLet <MATH_0028>, let <MATH_0029> be objects of\n<MATH_0030> over <MATH_0031>, and let <MATH_0032> be a morphism\nin <MATH_0033>. By assumption we may choose a covering\n<MATH_0034> and objects <MATH_0035> of <MATH_0036>\nover <MATH_0037> such that there exist isomorphisms\n<MATH_0038>.\nThen we get objects\n<MATHSEG_0001>and<MATHSEG_0002>\nof <MATH_0039> over <MATH_0040>. The identity morphism on <MATH_0041> is a\nmorphism <MATH_0042>. By (2)(b) for\n<MATH_0043> there exist coverings\n<MATH_0044> and morphisms\n<MATH_0045>\nsuch that <MATH_0046>. Unwinding the definition\nof morphisms in <MATH_0047>\nwe see that <MATH_0048> are\nthe morphisms we're looking for, i.e., (2)(b) holds for\n<MATH_0049>.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:stacks:06NY:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGerbes all of whose automorphism sheaves are abelian play an important\nrole in algebraic geometry.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:categories-lemma-2-product-categories-over-C",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nThe <MATH_0002>-category of categories\nover <MATH_0003> has 2-fibre products.\nSuppose that\n<MATH_0004> and\n<MATH_0005> are morphisms of categories over\n<MATH_0006>.\nAn explicit 2-fibre product\n<MATH_0007> is given by the following\ndescription\n<STRUCT_0002>\n<STRUCT_0003> an object of <MATH_0008> is a quadruple\n<MATH_0009>, where <MATH_0010>,\n<MATH_0011>, <MATH_0012>,\nand <MATH_0013> is an isomorphism in <MATH_0014>,\n<STRUCT_0004> a morphism <MATH_0015> is given by a pair\n<MATH_0016>, where <MATH_0017> is a morphism in <MATH_0018>, and\n<MATH_0019> is a\nmorphism in <MATH_0020> such that\n<STRUCT_0005>\n<STRUCT_0006> <MATH_0021> and <MATH_0022> induce the same morphism <MATH_0023>, and\n<STRUCT_0007> the diagram\n<MATH_0024>\nis commutative.\n<STRUCT_0008>\n<STRUCT_0009>\nThe functors <MATH_0025>\nand <MATH_0026> are the\nforgetful functors in this case. The transformation <MATH_0027> is given on the object <MATH_0028> by\n<MATH_0029>.\n<STRUCT_0010>",
+      "requested_label": "categories-lemma-2-product-categories-over-C",
+      "requested_tag": "0040"
+    },
+    {
+      "context_id": "reference:categories-lemma-ameliorate-morphism-categories-fibred-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. Let <MATH_0002>\nbe a <MATH_0003>-morphism of categories fibred in groupoids over <MATH_0004>.\nThere exists a factorization <MATH_0005>\nby <MATH_0006>-morphisms of categories fibred in groupoids over <MATH_0007> such\nthat <MATH_0008> is an equivalence over <MATH_0009>\nand such that <MATH_0010> is a category fibred in groupoids over\n<MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-ameliorate-morphism-categories-fibred-groupoids",
+      "requested_tag": "06N7"
+    },
+    {
+      "context_id": "reference:categories-lemma-amelioration-unique",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. Let <MATH_0002>\nbe a <MATH_0003>-morphism of categories fibred in groupoids over <MATH_0004>.\nAssume we have a <MATH_0005>-commutative diagram\n<MATH_0006>\nwhere <MATH_0007> and <MATH_0008> are equivalences of categories over <MATH_0009>\nand <MATH_0010> and <MATH_0011> are categories fibred in groupoids. Then there exists\nan equivalence <MATH_0012> of categories over\n<MATH_0013> such that <MATH_0014> is <MATH_0015>-isomorphic to <MATH_0016> as <MATH_0017>-morphisms\nof categories over <MATH_0018>. If the diagram above actually commutes, then\nwe can arrange it so that <MATH_0019> is <MATH_0020>-isomorphic to <MATH_0021> as\n<MATH_0022>-morphisms of categories over <MATH_0023>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-amelioration-unique",
+      "requested_tag": "06N8"
+    },
+    {
+      "context_id": "reference:categories-lemma-equivalence-fibred-categories",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and\n<MATH_0002> be categories fibred in groupoids, and\nsuppose that <MATH_0003> is a functor over\n<MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> Then <MATH_0005> is faithful (resp.<SPACE_0001>fully faithful, resp.<SPACE_0002>an equivalence)\nif and only if for each <MATH_0006> the induced functor\n<MATH_0007> is faithful\n(resp.<SPACE_0003>fully faithful, resp.<SPACE_0004>an equivalence).\n<STRUCT_0004> If <MATH_0008> is an equivalence, then <MATH_0009> is an equivalence in the\n<MATH_0010>-category of categories fibred in groupoids over <MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "categories-lemma-equivalence-fibred-categories",
+      "requested_tag": "003Z"
+    },
+    {
+      "context_id": "reference:categories-lemma-fibred-in-groupoids-over-fibred-in-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be functors between\ncategories. If <MATH_0002> is fibred in groupoids over <MATH_0003>\nand <MATH_0004> is fibred in groupoids over <MATH_0005>, then\n<MATH_0006> is fibred in groupoids over <MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-fibred-in-groupoids-over-fibred-in-groupoids",
+      "requested_tag": "09WW"
+    },
+    {
+      "context_id": "reference:categories-lemma-fibred-over-fibred",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be functors between\ncategories. If <MATH_0002> is fibred over <MATH_0003> and\n<MATH_0004> is fibred over <MATH_0005>, then <MATH_0006>\nis fibred over <MATH_0007>.\n<STRUCT_0002>",
+      "requested_label": "categories-lemma-fibred-over-fibred",
+      "requested_tag": "09WV"
+    },
+    {
+      "context_id": "reference:stacks-definition-descent-data",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a fibred category.\nMake a choice of pullbacks as in Categories,\nDefinition <REF_0001>.\nLet <MATH_0003>\nbe a family of morphisms of <MATH_0004>. Assume all the fibre products\n<MATH_0005>, and <MATH_0006> exist.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0007> in <MATH_0008>\nrelative to the family <MATH_0009><TEXTITCLOSE_0001> is given by an object <MATH_0010>\nof <MATH_0011> for each <MATH_0012>, an isomorphism\n<MATH_0013>\nin <MATH_0014> for each pair <MATH_0015>\nsuch that for every triple of indices <MATH_0016> the\ndiagram\n<MATH_0017>\nin the category <MATH_0018>\ncommutes. This is called the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>.\n<STRUCT_0004> A <TEXTITOPEN_0003>morphism <MATH_0019> of descent data<TEXTITCLOSE_0003> is given\nby a family <MATH_0020> of morphisms\n<MATH_0021> in <MATH_0022>\nsuch that all the diagrams\n<MATH_0023>\nin the categories <MATH_0024> commute.\n<STRUCT_0005> The category of descent data relative to\n<MATH_0025> is denoted <MATH_0026>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-definition-descent-data",
+      "requested_tag": "026B"
+    },
+    {
+      "context_id": "reference:stacks-definition-effective-descent-datum",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a fibred category.\nMake a choice of pullbacks as in Categories,\nDefinition <REF_0001>.\nLet <MATH_0003> be a family of morphisms\nwith target <MATH_0004>. Assume all the fibre products\n<MATH_0005> and <MATH_0006> exist.\n<STRUCT_0002>\n<STRUCT_0003> Given an object <MATH_0007> of <MATH_0008> the <TEXTITOPEN_0001>trivial descent datum<TEXTITCLOSE_0001>\nis the descent datum <MATH_0009> with respect to the family\n<MATH_0010>.\n<STRUCT_0004> Given an object <MATH_0011> of <MATH_0012>\nwe have a <TEXTITOPEN_0002>canonical descent datum<TEXTITCLOSE_0002> on the family of\nobjects <MATH_0013> by pulling back the trivial\ndescent datum <MATH_0014> via the\nobvious map <MATH_0015>.\nWe denote this descent datum <MATH_0016>.\n<STRUCT_0005> A descent datum <MATH_0017>\nrelative to <MATH_0018> is called <TEXTITOPEN_0003>effective<TEXTITCLOSE_0003>\nif there exists an object <MATH_0019> of <MATH_0020> such that\n<MATH_0021> is isomorphic to <MATH_0022>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-definition-effective-descent-datum",
+      "requested_tag": "026E"
+    },
+    {
+      "context_id": "reference:stacks-definition-stack",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. A <TEXTITOPEN_0001>stack<TEXTITCLOSE_0001> over <MATH_0002>\nis a category <MATH_0003> over <MATH_0004> which\nsatisfies the following conditions:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a fibred category, see\nCategories, Definition <REF_0001>,\n<STRUCT_0004> for any <MATH_0006> and any <MATH_0007>\nthe presheaf <MATH_0008> (see\nDefinition <REF_0002>) is a sheaf on\nthe site <MATH_0009>, and\n<STRUCT_0005> for any covering <MATH_0010>\nof the site <MATH_0011>, any descent datum in <MATH_0012>\nrelative to <MATH_0013> is effective.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-definition-stack",
+      "requested_tag": "026F"
+    },
+    {
+      "context_id": "reference:stacks-definition-stack-in-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>stack in groupoids<TEXTITCLOSE_0001> over a site <MATH_0001> is a\ncategory <MATH_0002> over <MATH_0003>\nsuch that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is fibred\nin groupoids over <MATH_0005> (see\nCategories, Definition <REF_0001>),\n<STRUCT_0004> for all <MATH_0006>,\nfor all <MATH_0007> the presheaf\n<MATH_0008> is a sheaf on the site <MATH_0009>, and\n<STRUCT_0005> for all coverings <MATH_0010> in <MATH_0011>,\nall descent data <MATH_0012> for <MATH_0013> are effective.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "stacks-definition-stack-in-groupoids",
+      "requested_tag": "02ZI"
+    },
+    {
+      "context_id": "reference:stacks-lemma-presheaf-mor-map-fibred-categories",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a <MATH_0002>-morphism of fibred\ncategories over the category <MATH_0003>. Let <MATH_0004>\nand <MATH_0005>. Then <MATH_0006> defines a canonical\nmorphism of presheaves\n<MATH_0007>\non <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-presheaf-mor-map-fibred-categories",
+      "requested_tag": "042V"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stack-in-groupoids-equivalent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site.\nLet <MATH_0002>, <MATH_0003> be categories over <MATH_0004>.\nSuppose that <MATH_0005> and <MATH_0006> are equivalent\nas categories over <MATH_0007>.\nThen <MATH_0008> is a stack in groupoids over <MATH_0009> if and only if\n<MATH_0010> is a stack in groupoids over <MATH_0011>.\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-stack-in-groupoids-equivalent",
+      "requested_tag": "042X"
+    },
+    {
+      "context_id": "reference:stacks-lemma-stack-in-groupoids-over-stack-in-groupoids",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a site. Let <MATH_0002>\nand <MATH_0003>\nbe stacks in groupoids. Let <MATH_0004>\nbe a <MATH_0005>-morphism of categories over <MATH_0006>. If <MATH_0007> turns\n<MATH_0008> into a category fibred in groupoids over <MATH_0009>,\nthen <MATH_0010> is a stack in groupoids over <MATH_0011> (with\ntopology inherited from <MATH_0012>).\n<STRUCT_0002>",
+      "requested_label": "stacks-lemma-stack-in-groupoids-over-stack-in-groupoids",
+      "requested_tag": "06NX"
+    },
+    {
+      "context_id": "reference:stacks-section-topology",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Inherited topologies<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "stacks-section-topology",
+      "requested_tag": "06NT"
+    }
+  ]
+}

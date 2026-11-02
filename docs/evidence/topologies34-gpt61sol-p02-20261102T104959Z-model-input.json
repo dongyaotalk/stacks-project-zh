@@ -1,0 +1,2325 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19b97-ed2d-7f63-8dd4-38426ff657ce",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/topologies34-gpt61sol-p02-20261102T104959Z.json",
+    "hash": "sha256:6cb6e655132583cd8a069d75cfa815ba6e8a0508681e2f0f71a225e2985846d9"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:020L:title",
+      "source_text": "Introduction",
+      "node_kind": "section_title",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:020L:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this document we explain what the different topologies on the\ncategory of schemes are. Some references are <REF_0001> and <REF_0002>.\nBefore doing so we would like to point out that there are many\ndifferent choices of sites (as defined in\nSites, Definition <REF_0003>) which give rise to\nthe same notion of sheaf on the underlying category. Hence\nour choices may be slightly different from those in the references\nbut ultimately lead to the same cohomology groups, etc.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "topologies",
+          "projection_start": 61,
+          "projection_end": 71,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 79,
+          "projection_end": 87,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 91,
+          "projection_end": 98,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 235,
+          "projection_end": 240,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 256,
+          "projection_end": 261,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 324,
+          "projection_end": 329,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "underlying category",
+          "projection_start": 337,
+          "projection_end": 356,
+          "concept": "source-phrase-underlying-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology groups",
+          "projection_start": 463,
+          "projection_end": 480,
+          "concept": "source-phrase-cohomology-groups",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020M:title",
+      "source_text": "The general procedure",
+      "node_kind": "section_title",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:020M:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we explain a general procedure for producing the\nsites we will be working with. Suppose we want to study sheaves\nover schemes with respect to some topology <MATH_0001>. In order to\nget a site, as in Sites, Definition <REF_0001>,\nof schemes with that topology we have to do some work. Namely,\nwe cannot simply say ``consider all schemes with the Zariski topology''\nsince that would give a ``big'' category. Instead, in each section of\nthis chapter we will proceed as follows:\n<STRUCT_0002>\n<STRUCT_0003> We define a class <MATH_0002> of coverings of schemes\nsatisfying the axioms of Sites, Definition <REF_0002>.\nIt will always be the case that a Zariski open covering of\na scheme is a covering for <MATH_0003>.\n<STRUCT_0004> We single out a notion of standard\n<MATH_0004>-covering within the category of affine schemes.\n<STRUCT_0005> We define what is an ``absolute'' big <MATH_0005>-site <MATH_0006>.\nThese are the sites one gets by appropriately choosing a set of schemes\nand a set of coverings.\n<STRUCT_0006> For any object <MATH_0007> of <MATH_0008>\nwe define the big <MATH_0009>-site <MATH_0010> and for suitable\n<MATH_0011> the small<FOOTNOTEOPEN_0001>The words big and\nsmall here do not relate to bigness/smallness of the corresponding\ncategories.<FOOTNOTECLOSE_0001> <MATH_0012>-site <MATH_0013>.\n<STRUCT_0007> In addition there is a site <MATH_0014> using the\nnotion of standard <MATH_0015>-covering of affines<FOOTNOTEOPEN_0002>In the case\nof the ph topology we deviate very slightly from this approach, see\nDefinition <REF_0003> and the surrounding discussion.<FOOTNOTECLOSE_0002>\nwhose category of sheaves\nis equivalent to the category of sheaves on <MATH_0016>.\n<STRUCT_0008>\nThe above is a little clumsy in that we do not end up with a canonical\nchoice for the big <MATH_0017>-site of a scheme, or even the small\n<MATH_0018>-site of a scheme. If you are willing to ignore set theoretic\ndifficulties, then you can work with classes and end up with\ncanonical big and small sites...\n\n\n\n\n\n\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "sites",
+          "projection_start": 79,
+          "projection_end": 84,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 135,
+          "projection_end": 142,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 148,
+          "projection_end": 155,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 177,
+          "projection_end": 185,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 217,
+          "projection_end": 221,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 229,
+          "projection_end": 234,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 262,
+          "projection_end": 269,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 280,
+          "projection_end": 288,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 358,
+          "projection_end": 365,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 383,
+          "projection_end": 391,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 426,
+          "projection_end": 434,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 545,
+          "projection_end": 550,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 566,
+          "projection_end": 575,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 579,
+          "projection_end": 586,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 612,
+          "projection_end": 617,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski open covering",
+          "projection_start": 676,
+          "projection_end": 697,
+          "concept": "source-phrase-zariski-open-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 703,
+          "projection_end": 709,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 715,
+          "projection_end": 723,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 802,
+          "projection_end": 810,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 822,
+          "projection_end": 830,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 834,
+          "projection_end": 848,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 914,
+          "projection_end": 918,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 946,
+          "projection_end": 951,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 989,
+          "projection_end": 992,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 996,
+          "projection_end": 1003,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1010,
+          "projection_end": 1013,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 1017,
+          "projection_end": 1026,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1050,
+          "projection_end": 1056,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1114,
+          "projection_end": 1118,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 1164,
+          "projection_end": 1169,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 1206,
+          "projection_end": 1211,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 1273,
+          "projection_end": 1283,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1317,
+          "projection_end": 1321,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1372,
+          "projection_end": 1376,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1430,
+          "projection_end": 1438,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 1442,
+          "projection_end": 1449,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 1490,
+          "projection_end": 1498,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1628,
+          "projection_end": 1636,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1640,
+          "projection_end": 1647,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 1651,
+          "projection_end": 1661,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1669,
+          "projection_end": 1677,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1681,
+          "projection_end": 1688,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1780,
+          "projection_end": 1789,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1821,
+          "projection_end": 1825,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 1831,
+          "projection_end": 1837,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 1851,
+          "projection_end": 1856,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1869,
+          "projection_end": 1873,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 1879,
+          "projection_end": 1885,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1916,
+          "projection_end": 1919,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "classes",
+          "projection_start": 1967,
+          "projection_end": 1974,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1991,
+          "projection_end": 2000,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 2009,
+          "projection_end": 2014,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 2015,
+          "projection_end": 2020,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020N:title",
+      "source_text": "The Zariski topology",
+      "node_kind": "section_title",
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 12,
+          "projection_end": 20,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020O:statement",
+      "source_text": "Let <MATH_0001> be a scheme. A <TEXTITOPEN_0001>Zariski covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is an open immersion and such\nthat <MATH_0005>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 31,
+          "projection_end": 47,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 68,
+          "projection_end": 87,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 103,
+          "projection_end": 110,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 144,
+          "projection_end": 158,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020N:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nThis defines a (proper) class of coverings.\nNext, we show that this notion satisfies the conditions of\nSites, Definition <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "proper",
+          "projection_start": 30,
+          "projection_end": 36,
+          "concept": "proper",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 38,
+          "projection_end": 43,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 47,
+          "projection_end": 56,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 117,
+          "projection_end": 122,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020P:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a Zariski covering of <MATH_0004>.\n<STRUCT_0003> If <MATH_0005> is a Zariski covering and for each\n<MATH_0006> we have a Zariski covering <MATH_0007>, then\n<MATH_0008> is a Zariski covering.\n<STRUCT_0004> If <MATH_0009> is a Zariski covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a Zariski covering.\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 78,
+          "projection_end": 89,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 112,
+          "projection_end": 128,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 179,
+          "projection_end": 195,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 231,
+          "projection_end": 247,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 283,
+          "projection_end": 299,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 335,
+          "projection_end": 351,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 373,
+          "projection_end": 381,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 385,
+          "projection_end": 392,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 415,
+          "projection_end": 431,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020P:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:020Q:statement",
+      "source_text": "Let <MATH_0001> be an affine scheme. Let <MATH_0002> be a\nZariski covering of <MATH_0003>. Then there exists a Zariski covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is a standard\nopen of <MATH_0007>, see\nSchemes, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be an open of one of the <MATH_0009>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "affine scheme",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 58,
+          "projection_end": 74,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 111,
+          "projection_end": 127,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 243,
+          "projection_end": 250,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020Q:proof",
+      "source_text": "Follows as <MATH_0001> is quasi-compact and standard opens form a basis\nfor its topology. This is also proved in\nSchemes, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 26,
+          "projection_end": 39,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 80,
+          "projection_end": 88,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 113,
+          "projection_end": 120,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020N:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nThus we define the corresponding standard coverings of affines as follows.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "coverings",
+          "projection_start": 56,
+          "projection_end": 65,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 69,
+          "projection_end": 76,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020R:statement",
+      "source_text": "Compare Schemes, Definition <REF_0001>.\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard Zariski covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a Zariski covering <MATH_0003>\nwith each <MATH_0004> inducing an isomorphism with a standard affine open\nof <MATH_0005>.\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "Schemes",
+          "projection_start": 8,
+          "projection_end": 15,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 62,
+          "projection_end": 75,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "standard Zariski covering",
+          "projection_start": 79,
+          "projection_end": 104,
+          "concept": "standard Zariski covering",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 125,
+          "projection_end": 141,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 188,
+          "projection_end": 199,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 216,
+          "projection_end": 227,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020S:statement",
+      "source_text": "A <TEXTITOPEN_0001>big Zariski site<TEXTITCLOSE_0001> is any site <MATH_0001> as in\nSites, Definition <REF_0001> constructed as follows:\n<STRUCT_0001>\n<STRUCT_0002> Choose any set of schemes <MATH_0002>, and any set of Zariski coverings\n<MATH_0003> among these schemes.\n<STRUCT_0003> As underlying category of <MATH_0004>\ntake any category <MATH_0005> constructed as in\nSets, Lemma <REF_0002> starting with the set <MATH_0006>.\n<STRUCT_0004> As coverings of <MATH_0007> choose any set of coverings as in\nSets, Lemma <REF_0003> starting with the\ncategory <MATH_0008> and the class of Zariski coverings,\nand the set <MATH_0009> chosen above.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "big Zariski site",
+          "projection_start": 2,
+          "projection_end": 18,
+          "concept": "big Zariski site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 26,
+          "projection_end": 30,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 49,
+          "projection_end": 54,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 141,
+          "projection_end": 144,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 148,
+          "projection_end": 155,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 177,
+          "projection_end": 180,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 192,
+          "projection_end": 201,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 226,
+          "projection_end": 233,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "underlying category",
+          "projection_start": 252,
+          "projection_end": 271,
+          "concept": "source-phrase-underlying-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 296,
+          "projection_end": 304,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 335,
+          "projection_end": 339,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 376,
+          "projection_end": 379,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 410,
+          "projection_end": 419,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 446,
+          "projection_end": 449,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 453,
+          "projection_end": 462,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 469,
+          "projection_end": 473,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 510,
+          "projection_end": 518,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 539,
+          "projection_end": 544,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 556,
+          "projection_end": 565,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 575,
+          "projection_end": 578,
+          "concept": "set",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020N:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nIt is shown in Sites, Lemma <REF_0001>\nthat, after having chosen the category <MATH_0001>, the\ncategory of sheaves on <MATH_0002> does not depend on the\nchoice of coverings chosen in (3) above. In other words, the topos\n<MATH_0003> only depends on the choice of\nthe category <MATH_0004>. It is shown in\nSets, Lemma <REF_0002> that these categories\nare closed under many constructions of algebraic geometry, e.g.,\nfibre products and taking open and closed subschemes. We can also show\nthat the exact choice of <MATH_0005> does not matter\ntoo much, see Section <REF_0003>.\n\n<STRUCT_0002><STRUCT_0003>\nAnother approach would be to assume the existence of a\nstrongly inaccessible cardinal and to define <MATH_0006>\nto be the category of schemes contained in a chosen universe with\nset of coverings the Zariski coverings contained in that same\nuniverse.\n\n<STRUCT_0004><STRUCT_0005>\nBefore we continue with the introduction of the big Zariski site of\na scheme <MATH_0007>, let us point out that the topology on a big Zariski site\n<MATH_0008> is in some sense induced from the Zariski topology\non the category of all schemes.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "Sites",
+          "projection_start": 29,
+          "projection_end": 34,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 83,
+          "projection_end": 91,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 109,
+          "projection_end": 117,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 121,
+          "projection_end": 128,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 177,
+          "projection_end": 186,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 280,
+          "projection_end": 288,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 317,
+          "projection_end": 321,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 351,
+          "projection_end": 361,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 427,
+          "projection_end": 441,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subschemes",
+          "projection_start": 462,
+          "projection_end": 479,
+          "concept": "closed-subscheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cardinal",
+          "projection_start": 689,
+          "projection_end": 697,
+          "concept": "cardinal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 734,
+          "projection_end": 742,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 746,
+          "projection_end": 753,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 790,
+          "projection_end": 793,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 797,
+          "projection_end": 806,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 819,
+          "projection_end": 828,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 949,
+          "projection_end": 953,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 959,
+          "projection_end": 965,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 1005,
+          "projection_end": 1013,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1031,
+          "projection_end": 1035,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 1090,
+          "projection_end": 1098,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1106,
+          "projection_end": 1114,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 1122,
+          "projection_end": 1129,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03WV:statement",
+      "source_text": "Let <MATH_0001> be a big Zariski site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary Zariski covering of <MATH_0004>.\nThere exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which is tautologically equivalent (see\nSites, Definition <REF_0002>)\nto <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 33,
+          "projection_end": 37,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 116,
+          "projection_end": 132,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 164,
+          "projection_end": 172,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 207,
+          "projection_end": 211,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 248,
+          "projection_end": 258,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 264,
+          "projection_end": 269,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03WV:proof",
+      "source_text": "Since each <MATH_0001> is an open immersion, we see by\nSets, Lemma <REF_0001>\nthat each <MATH_0002> is isomorphic to an object <MATH_0003> of <MATH_0004>.\nThe covering <MATH_0005> is tautologically equivalent\nto <MATH_0006> (using the identity map on <MATH_0007> both ways).\nMoreover, <MATH_0008> is combinatorially equivalent to a\ncovering <MATH_0009> of <MATH_0010> in the site <MATH_0011> by\nSets, Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "open immersion",
+          "projection_start": 29,
+          "projection_end": 43,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 55,
+          "projection_end": 59,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 103,
+          "projection_end": 113,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 120,
+          "projection_end": 126,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 159,
+          "projection_end": 167,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 198,
+          "projection_end": 208,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "identity map",
+          "projection_start": 235,
+          "projection_end": 247,
+          "concept": "source-phrase-identity-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "combinatorially equivalent",
+          "projection_start": 300,
+          "projection_end": 326,
+          "concept": "combinatorially-equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 332,
+          "projection_end": 340,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 375,
+          "projection_end": 379,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 395,
+          "projection_end": 399,
+          "concept": "set",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020T:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>.\n<STRUCT_0001>\n<STRUCT_0002> The <TEXTITOPEN_0001>big Zariski site of <MATH_0004><TEXTITCLOSE_0001>, denoted\n<MATH_0005>, is the site <MATH_0006>\nintroduced in Sites, Section <REF_0001>.\n<STRUCT_0003> The <TEXTITOPEN_0002>small Zariski site of <MATH_0007><TEXTITCLOSE_0002>, which we denote\n<MATH_0008>, is the full subcategory of <MATH_0009>\nwhose objects are those <MATH_0010> such that <MATH_0011> is an open immersion.\nA covering of <MATH_0012> is any covering <MATH_0013> of\n<MATH_0014> with <MATH_0015>.\n<STRUCT_0004> The <TEXTITOPEN_0003>big affine Zariski site of <MATH_0016><TEXTITCLOSE_0003>, denoted\n<MATH_0017>, is the full subcategory of\n<MATH_0018> consisting of objects <MATH_0019> such that <MATH_0020> is an\naffine scheme. A covering of <MATH_0021> is any covering\n<MATH_0022> of <MATH_0023> with <MATH_0024>\nwhich is a standard Zariski covering.\n<STRUCT_0005> The <TEXTITOPEN_0004>small affine Zariski site of <MATH_0025><TEXTITCLOSE_0004>, denoted\n<MATH_0026>, is the full subcategory of <MATH_0027>\nwhose objects are those <MATH_0028> such that <MATH_0029> is an affine scheme.\nA covering of <MATH_0030> is any covering <MATH_0031> of\n<MATH_0032> with <MATH_0033>\nwhich is a standard Zariski covering.\n<STRUCT_0006>\n",
+      "node_kind": "definition",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "big Zariski site",
+          "projection_start": 50,
+          "projection_end": 66,
+          "concept": "big Zariski site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "big Zariski site",
+          "projection_start": 123,
+          "projection_end": 139,
+          "concept": "big Zariski site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 184,
+          "projection_end": 188,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 215,
+          "projection_end": 220,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small Zariski site",
+          "projection_start": 260,
+          "projection_end": 278,
+          "concept": "source-phrase-small-zariski-site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 331,
+          "projection_end": 347,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 369,
+          "projection_end": 376,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 427,
+          "projection_end": 441,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 445,
+          "projection_end": 453,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 476,
+          "projection_end": 484,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "big affine Zariski site",
+          "projection_start": 548,
+          "projection_end": 571,
+          "concept": "big affine Zariski site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 616,
+          "projection_end": 632,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 662,
+          "projection_end": 669,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 710,
+          "projection_end": 723,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 727,
+          "projection_end": 735,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 758,
+          "projection_end": 766,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 831,
+          "projection_end": 847,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small affine Zariski site",
+          "projection_start": 867,
+          "projection_end": 892,
+          "concept": "small affine Zariski site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 937,
+          "projection_end": 953,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 975,
+          "projection_end": 982,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 1033,
+          "projection_end": 1046,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1050,
+          "projection_end": 1058,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1081,
+          "projection_end": 1089,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 1154,
+          "projection_end": 1170,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020N:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nIt is not completely clear that the small Zariski site,\nthe big affine Zariski site, and the small affine Zariski site\nare sites. We check this now.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "small Zariski site",
+          "projection_start": 50,
+          "projection_end": 68,
+          "concept": "source-phrase-small-zariski-site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 78,
+          "projection_end": 84,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 93,
+          "projection_end": 97,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 107,
+          "projection_end": 112,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 113,
+          "projection_end": 119,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 128,
+          "projection_end": 132,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 137,
+          "projection_end": 142,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020U:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>. The structures <MATH_0004>, <MATH_0005>,\nand <MATH_0006> defined above are sites.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 62,
+          "projection_end": 66,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 166,
+          "projection_end": 171,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020U:proof",
+      "source_text": "Let us show that <MATH_0001> is a site. It is a category with a\ngiven set of families of morphisms with fixed target. Thus we\nhave to show properties (1), (2) and (3) of\nSites, Definition <REF_0001>.\nSince <MATH_0002> is a site, it suffices to prove\nthat given any covering <MATH_0003> of <MATH_0004>\nwith <MATH_0005> we also have <MATH_0006>.\nThis follows from the definitions\nas the composition of open immersions is an open immersion.\n\n<STRUCT_0001><STRUCT_0002>\nLet us show that <MATH_0007> is a site.\nReasoning as above, it suffices to show that the collection\nof standard Zariski coverings of affines satisfies properties\n(1), (2) and (3) of\nSites, Definition <REF_0002>.\nLet <MATH_0008> be a ring. Let <MATH_0009> generate the unit ideal.\nFor each <MATH_0010> let <MATH_0011>\nbe elements generating the unit ideal of <MATH_0012>. Write\n<MATH_0013> which is possible. After replacing\n<MATH_0014> by <MATH_0015> if necessary, we have that\n<MATH_0016> is\nequal to <MATH_0017>. Hence we see that\nthe family of morphisms <MATH_0018>\nis a standard Zariski covering. From these considerations\nit follows that (2) holds for standard Zariski coverings.\nWe omit the verification of (1) and (3).\n\n<STRUCT_0003><STRUCT_0004>\nWe omit the proof that <MATH_0019> is a site.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "site",
+          "projection_start": 34,
+          "projection_end": 38,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 48,
+          "projection_end": 56,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 70,
+          "projection_end": 73,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "families of morphisms",
+          "projection_start": 77,
+          "projection_end": 98,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 170,
+          "projection_end": 175,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 223,
+          "projection_end": 227,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 265,
+          "projection_end": 273,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 385,
+          "projection_end": 396,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersions",
+          "projection_start": 400,
+          "projection_end": 415,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 422,
+          "projection_end": 436,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 499,
+          "projection_end": 503,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 585,
+          "projection_end": 594,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 598,
+          "projection_end": 605,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 647,
+          "projection_end": 652,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 698,
+          "projection_end": 702,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 738,
+          "projection_end": 743,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 785,
+          "projection_end": 793,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 814,
+          "projection_end": 819,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 1002,
+          "projection_end": 1021,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 1048,
+          "projection_end": 1064,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 1139,
+          "projection_end": 1148,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1258,
+          "projection_end": 1262,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020V:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>. The underlying categories of the sites\n<MATH_0004>, <MATH_0005>,\n<MATH_0006>, <MATH_0007>, and <MATH_0008> have fibre products.\nIn each case the obvious functor into the category <MATH_0009> of\nall schemes commutes with taking fibre products. The categories\n<MATH_0010>, and <MATH_0011> both have a final object,\nnamely <MATH_0012>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 62,
+          "projection_end": 66,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 106,
+          "projection_end": 116,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 124,
+          "projection_end": 129,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 203,
+          "projection_end": 217,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 244,
+          "projection_end": 251,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 261,
+          "projection_end": 269,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 289,
+          "projection_end": 296,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 297,
+          "projection_end": 305,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 318,
+          "projection_end": 332,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 338,
+          "projection_end": 348,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "final object",
+          "projection_start": 390,
+          "projection_end": 402,
+          "concept": "final-object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020V:proof",
+      "source_text": "For <MATH_0001> it is true by construction, see\nSets, Lemma <REF_0001>.\nSuppose we have <MATH_0002>, <MATH_0003>, <MATH_0004> morphisms\nof schemes with <MATH_0005>.\nThe fibre product <MATH_0006> in <MATH_0007>\nis a fibre product in <MATH_0008> and\nis the fibre product of <MATH_0009> with <MATH_0010> over <MATH_0011> in\nthe category of all schemes over <MATH_0012>, and hence also a\nfibre product in <MATH_0013>.\nThis proves the result for <MATH_0014>.\nIf <MATH_0015>, <MATH_0016> and <MATH_0017> are open immersions then so is\n<MATH_0018> and hence we get the result for <MATH_0019>.\nIf <MATH_0020> are affine, so is <MATH_0021> and hence the\nresult for <MATH_0022> and <MATH_0023>.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "Sets",
+          "projection_start": 48,
+          "projection_end": 52,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 126,
+          "projection_end": 135,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 139,
+          "projection_end": 146,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 169,
+          "projection_end": 182,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 215,
+          "projection_end": 228,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 255,
+          "projection_end": 268,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 325,
+          "projection_end": 333,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 341,
+          "projection_end": 348,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 384,
+          "projection_end": 397,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersions",
+          "projection_start": 502,
+          "projection_end": 517,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 605,
+          "projection_end": 611,
+          "concept": "affine",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020N:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nNext, we check that the big, resp.<SPACE_0001>small affine site defines the same\ntopos as the big, resp.<SPACE_0002>small site.\n\n",
+      "node_kind": "paragraph",
+      "required_source_terms": [
+        {
+          "source_term": "small",
+          "projection_start": 60,
+          "projection_end": 65,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 66,
+          "projection_end": 72,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 73,
+          "projection_end": 77,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 130,
+          "projection_end": 135,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 136,
+          "projection_end": 140,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020W:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>.\nThe functor <MATH_0004>\nis a special cocontinuous functor. Hence it induces an equivalence\nof topoi from <MATH_0005> to\n<MATH_0006>.\n",
+      "node_kind": "lemma",
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 62,
+          "projection_end": 66,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 95,
+          "projection_end": 102,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 141,
+          "projection_end": 148,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 170,
+          "projection_end": 181,
+          "concept": "equivalence",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:020W:proof",
+      "source_text": "The notion of a special cocontinuous functor is introduced in\nSites, Definition <REF_0001>.\nThus we have to verify assumptions (1) -- (5) of\nSites, Lemma <REF_0002>.\nDenote the inclusion functor\n<MATH_0001>.\nBeing cocontinuous just means that any Zariski covering of\n<MATH_0002>, <MATH_0003> affine, can be refined by a standard Zariski covering of <MATH_0004>.\nThis is the content of\nLemma <REF_0003>.\nHence (1) holds. We see <MATH_0005> is continuous simply because a standard\nZariski covering is a Zariski covering. Hence (2) holds.\nParts (3) and (4) follow immediately from the fact that <MATH_0006> is\nfully faithful. And finally condition (5) follows from the\nfact that every scheme has an affine open covering.\n",
+      "node_kind": "proof",
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 37,
+          "projection_end": 44,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 62,
+          "projection_end": 67,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 141,
+          "projection_end": 146,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inclusion functor",
+          "projection_start": 177,
+          "projection_end": 194,
+          "concept": "source-phrase-inclusion-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 247,
+          "projection_end": 263,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 292,
+          "projection_end": 298,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 329,
+          "projection_end": 345,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 479,
+          "projection_end": 495,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 501,
+          "projection_end": 517,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 607,
+          "projection_end": 621,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 682,
+          "projection_end": 688,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 696,
+          "projection_end": 707,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 708,
+          "projection_end": 716,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:topologies:020K:title_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Topologies on Schemes<TEXTCLOSE_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020L:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this document we explain what the different topologies on the\ncategory of schemes are. Some references are <REF_0001> and <REF_0002>.\nBefore doing so we would like to point out that there are many\ndifferent choices of sites (as defined in\nSites, Definition <REF_0003>) which give rise to\nthe same notion of sheaf on the underlying category. Hence\nour choices may be slightly different from those in the references\nbut ultimately lead to the same cohomology groups, etc.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020L:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Introduction<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020M:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>The general procedure<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020M:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we explain a general procedure for producing the\nsites we will be working with. Suppose we want to study sheaves\nover schemes with respect to some topology <MATH_0001>. In order to\nget a site, as in Sites, Definition <REF_0001>,\nof schemes with that topology we have to do some work. Namely,\nwe cannot simply say ``consider all schemes with the Zariski topology''\nsince that would give a ``big'' category. Instead, in each section of\nthis chapter we will proceed as follows:\n",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>The Zariski topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020M:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "The above is a little clumsy in that we do not end up with a canonical\nchoice for the big <MATH_0001>-site of a scheme, or even the small\n<MATH_0002>-site of a scheme. If you are willing to ignore set theoretic\ndifficulties, then you can work with classes and end up with\ncanonical big and small sites...",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020O:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. A <TEXTITOPEN_0001>Zariski covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is an open immersion and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis defines a (proper) class of coverings.\nNext, we show that this notion satisfies the conditions of\nSites, Definition <REF_0001>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020P:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is an isomorphism then <MATH_0003>\nis a Zariski covering of <MATH_0004>.\n<STRUCT_0004> If <MATH_0005> is a Zariski covering and for each\n<MATH_0006> we have a Zariski covering <MATH_0007>, then\n<MATH_0008> is a Zariski covering.\n<STRUCT_0005> If <MATH_0009> is a Zariski covering\nand <MATH_0010> is a morphism of schemes then\n<MATH_0011> is a Zariski covering.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020P:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020Q:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. Let <MATH_0002> be a\nZariski covering of <MATH_0003>. Then there exists a Zariski covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is a standard\nopen of <MATH_0007>, see\nSchemes, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be an open of one of the <MATH_0009>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020Q:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFollows as <MATH_0001> is quasi-compact and standard opens form a basis\nfor its topology. This is also proved in\nSchemes, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThus we define the corresponding standard coverings of affines as follows.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020R:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nCompare Schemes, Definition <REF_0001>.\nLet <MATH_0001> be an affine scheme. A <TEXTITOPEN_0001>standard Zariski covering<TEXTITCLOSE_0001>\nof <MATH_0002> is a Zariski covering <MATH_0003>\nwith each <MATH_0004> inducing an isomorphism with a standard affine open\nof <MATH_0005>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020S:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>big Zariski site<TEXTITCLOSE_0001> is any site <MATH_0001> as in\nSites, Definition <REF_0001> constructed as follows:\n<STRUCT_0002>\n<STRUCT_0003> Choose any set of schemes <MATH_0002>, and any set of Zariski coverings\n<MATH_0003> among these schemes.\n<STRUCT_0004> As underlying category of <MATH_0004>\ntake any category <MATH_0005> constructed as in\nSets, Lemma <REF_0002> starting with the set <MATH_0006>.\n<STRUCT_0005> As coverings of <MATH_0007> choose any set of coverings as in\nSets, Lemma <REF_0003> starting with the\ncategory <MATH_0008> and the class of Zariski coverings,\nand the set <MATH_0009> chosen above.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt is shown in Sites, Lemma <REF_0001>\nthat, after having chosen the category <MATH_0001>, the\ncategory of sheaves on <MATH_0002> does not depend on the\nchoice of coverings chosen in (3) above. In other words, the topos\n<MATH_0003> only depends on the choice of\nthe category <MATH_0004>. It is shown in\nSets, Lemma <REF_0002> that these categories\nare closed under many constructions of algebraic geometry, e.g.,\nfibre products and taking open and closed subschemes. We can also show\nthat the exact choice of <MATH_0005> does not matter\ntoo much, see Section <REF_0003>.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:03WV:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big Zariski site as in\nDefinition <REF_0001>.\nLet <MATH_0002>.\nLet <MATH_0003> be an arbitrary Zariski covering of <MATH_0004>.\nThere exists a covering <MATH_0005> of <MATH_0006> in the site\n<MATH_0007> which is tautologically equivalent (see\nSites, Definition <REF_0002>)\nto <MATH_0008>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nBefore we continue with the introduction of the big Zariski site of\na scheme <MATH_0001>, let us point out that the topology on a big Zariski site\n<MATH_0002> is in some sense induced from the Zariski topology\non the category of all schemes.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:03WV:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nSince each <MATH_0001> is an open immersion, we see by\nSets, Lemma <REF_0001>\nthat each <MATH_0002> is isomorphic to an object <MATH_0003> of <MATH_0004>.\nThe covering <MATH_0005> is tautologically equivalent\nto <MATH_0006> (using the identity map on <MATH_0007> both ways).\nMoreover, <MATH_0008> is combinatorially equivalent to a\ncovering <MATH_0009> of <MATH_0010> in the site <MATH_0011> by\nSets, Lemma <REF_0002>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020T:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> The <TEXTITOPEN_0001>big Zariski site of <MATH_0004><TEXTITCLOSE_0001>, denoted\n<MATH_0005>, is the site <MATH_0006>\nintroduced in Sites, Section <REF_0001>.\n<STRUCT_0004> The <TEXTITOPEN_0002>small Zariski site of <MATH_0007><TEXTITCLOSE_0002>, which we denote\n<MATH_0008>, is the full subcategory of <MATH_0009>\nwhose objects are those <MATH_0010> such that <MATH_0011> is an open immersion.\nA covering of <MATH_0012> is any covering <MATH_0013> of\n<MATH_0014> with <MATH_0015>.\n<STRUCT_0005> The <TEXTITOPEN_0003>big affine Zariski site of <MATH_0016><TEXTITCLOSE_0003>, denoted\n<MATH_0017>, is the full subcategory of\n<MATH_0018> consisting of objects <MATH_0019> such that <MATH_0020> is an\naffine scheme. A covering of <MATH_0021> is any covering\n<MATH_0022> of <MATH_0023> with <MATH_0024>\nwhich is a standard Zariski covering.\n<STRUCT_0006> The <TEXTITOPEN_0004>small affine Zariski site of <MATH_0025><TEXTITCLOSE_0004>, denoted\n<MATH_0026>, is the full subcategory of <MATH_0027>\nwhose objects are those <MATH_0028> such that <MATH_0029> is an affine scheme.\nA covering of <MATH_0030> is any covering <MATH_0031> of\n<MATH_0032> with <MATH_0033>\nwhich is a standard Zariski covering.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:paragraph/0006",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt is not completely clear that the small Zariski site,\nthe big affine Zariski site, and the small affine Zariski site\nare sites. We check this now.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020U:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>. The structures <MATH_0004>, <MATH_0005>,\nand <MATH_0006> defined above are sites.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020U:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us show that <MATH_0001> is a site. It is a category with a\ngiven set of families of morphisms with fixed target. Thus we\nhave to show properties (1), (2) and (3) of\nSites, Definition <REF_0001>.\nSince <MATH_0002> is a site, it suffices to prove\nthat given any covering <MATH_0003> of <MATH_0004>\nwith <MATH_0005> we also have <MATH_0006>.\nThis follows from the definitions\nas the composition of open immersions is an open immersion.\n\n<STRUCT_0002><STRUCT_0003>\nLet us show that <MATH_0007> is a site.\nReasoning as above, it suffices to show that the collection\nof standard Zariski coverings of affines satisfies properties\n(1), (2) and (3) of\nSites, Definition <REF_0002>.\nLet <MATH_0008> be a ring. Let <MATH_0009> generate the unit ideal.\nFor each <MATH_0010> let <MATH_0011>\nbe elements generating the unit ideal of <MATH_0012>. Write\n<MATH_0013> which is possible. After replacing\n<MATH_0014> by <MATH_0015> if necessary, we have that\n<MATH_0016> is\nequal to <MATH_0017>. Hence we see that\nthe family of morphisms <MATH_0018>\nis a standard Zariski covering. From these considerations\nit follows that (2) holds for standard Zariski coverings.\nWe omit the verification of (1) and (3).\n\n<STRUCT_0004><STRUCT_0005>\nWe omit the proof that <MATH_0019> is a site.\n<STRUCT_0006>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020V:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>. The underlying categories of the sites\n<MATH_0004>, <MATH_0005>,\n<MATH_0006>, <MATH_0007>, and <MATH_0008> have fibre products.\nIn each case the obvious functor into the category <MATH_0009> of\nall schemes commutes with taking fibre products. The categories\n<MATH_0010>, and <MATH_0011> both have a final object,\nnamely <MATH_0012>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020V:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFor <MATH_0001> it is true by construction, see\nSets, Lemma <REF_0001>.\nSuppose we have <MATH_0002>, <MATH_0003>, <MATH_0004> morphisms\nof schemes with <MATH_0005>.\nThe fibre product <MATH_0006> in <MATH_0007>\nis a fibre product in <MATH_0008> and\nis the fibre product of <MATH_0009> with <MATH_0010> over <MATH_0011> in\nthe category of all schemes over <MATH_0012>, and hence also a\nfibre product in <MATH_0013>.\nThis proves the result for <MATH_0014>.\nIf <MATH_0015>, <MATH_0016> and <MATH_0017> are open immersions then so is\n<MATH_0018> and hence we get the result for <MATH_0019>.\nIf <MATH_0020> are affine, so is <MATH_0021> and hence the\nresult for <MATH_0022> and <MATH_0023>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020N:paragraph/0007",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNext, we check that the big, resp.<SPACE_0001>small affine site defines the same\ntopos as the big, resp.<SPACE_0002>small site.",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020W:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>.\nThe functor <MATH_0004>\nis a special cocontinuous functor. Hence it induces an equivalence\nof topoi from <MATH_0005> to\n<MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:020W:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe notion of a special cocontinuous functor is introduced in\nSites, Definition <REF_0001>.\nThus we have to verify assumptions (1) -- (5) of\nSites, Lemma <REF_0002>.\nDenote the inclusion functor\n<MATH_0001>.\nBeing cocontinuous just means that any Zariski covering of\n<MATH_0002>, <MATH_0003> affine, can be refined by a standard Zariski covering of <MATH_0004>.\nThis is the content of\nLemma <REF_0003>.\nHence (1) holds. We see <MATH_0005> is continuous simply because a standard\nZariski covering is a Zariski covering. Hence (2) holds.\nParts (3) and (4) follow immediately from the fact that <MATH_0006> is\nfully faithful. And finally condition (5) follows from the\nfact that every scheme has an affine open covering.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:topologies:0F1B:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.  Let <MATH_0002> be a big Zariski\nsite containing <MATH_0003>. The functor <MATH_0004>\nis a special cocontinuous functor. Hence it induces an equivalence\nof topoi from <MATH_0005> to <MATH_0006>.\n<STRUCT_0002>",
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:schemes-definition-standard-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>standard open covering<TEXTITCLOSE_0001> of <MATH_0002>\nis a covering <MATH_0003>,\nwhere <MATH_0004>.\n<STRUCT_0004> Suppose that <MATH_0005> is a standard\nopen. A <TEXTITOPEN_0002>standard open covering<TEXTITCLOSE_0002> of <MATH_0006>\nis a covering <MATH_0007>,\nwhere <MATH_0008>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "schemes-definition-standard-covering",
+      "requested_tag": "01HT"
+    },
+    {
+      "context_id": "reference:schemes-lemma-standard-open",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0003> and <MATH_0004>, then\n<STRUCT_0004>\n<STRUCT_0005> <MATH_0005> is invertible in <MATH_0006>,\n<STRUCT_0006> <MATH_0007> for some <MATH_0008> and <MATH_0009>,\n<STRUCT_0007> there is a canonical ring map <MATH_0010>, and\n<STRUCT_0008> there is a canonical <MATH_0011>-module map\n<MATH_0012> for any <MATH_0013>-module <MATH_0014>.\n<STRUCT_0009>\n<STRUCT_0010> Any open covering of <MATH_0015> can be refined to a finite\nopen covering of the form <MATH_0016>.\n<STRUCT_0011> If <MATH_0017>, then <MATH_0018>\nif and only if <MATH_0019> generate the unit ideal in <MATH_0020>.\n<STRUCT_0012>\n<STRUCT_0013>",
+      "requested_label": "schemes-lemma-standard-open",
+      "requested_tag": "01HS"
+    },
+    {
+      "context_id": "reference:sets-lemma-construct-category",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notations <MATH_0001>, <MATH_0002> and <MATH_0003> as above.\nLet <MATH_0004> be a set of schemes. There exists a limit ordinal\n<MATH_0005> with the following properties:\n<STRUCT_0002>\n<STRUCT_0003>\n<LOCKED_0002>\nWe have <MATH_0006>; in other words,\n<MATH_0007>.\n<STRUCT_0004>\n<LOCKED_0003>\nFor any <MATH_0008> and any\nscheme <MATH_0009> with <MATH_0010>,\nthere exists a scheme <MATH_0011>\nsuch that <MATH_0012>.\n<STRUCT_0005>\n<LOCKED_0004>\nFor any countable<FOOTNOTEOPEN_0001>Both the set of objects and\nthe morphism sets are countable. In fact you can prove the lemma with\n<MATH_0013> replaced by any cardinal whatsoever in (3) and (4).<FOOTNOTECLOSE_0001> diagram\ncategory <MATH_0014> and\nany functor <MATH_0015>, the limit\n<MATH_0016> exists in <MATH_0017> if and\nonly if it exists in <MATH_0018> and moreover, in this case,\nthe natural morphism between them is an isomorphism.\n<STRUCT_0006>\n<LOCKED_0005>\nFor any countable index category <MATH_0019> and\nany functor <MATH_0020>, the colimit\n<MATH_0021> exists in <MATH_0022> if and\nonly if it exists in <MATH_0023> and moreover, in this case,\nthe natural morphism between them is an isomorphism.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "requested_label": "sets-lemma-construct-category",
+      "requested_tag": "000J"
+    },
+    {
+      "context_id": "reference:sets-lemma-coverings-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notations as above.\nLet <MATH_0001>\nbe a set contained in <MATH_0002>.\nThere exist a cardinal <MATH_0003> and a limit ordinal <MATH_0004>\nwith the following properties:\n<STRUCT_0002>\n<STRUCT_0003> We have <MATH_0005>.\n<STRUCT_0004> The set of coverings\n<MATH_0006> satisfies\n(1), (2), and (3) of Sites, Definition <REF_0001> (see above).\nIn other words <MATH_0007>\nis a site.\n<STRUCT_0005> Every covering in <MATH_0008>\nis combinatorially equivalent\nto a covering in <MATH_0009>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "sets-lemma-coverings-site",
+      "requested_tag": "000X"
+    },
+    {
+      "context_id": "reference:sets-lemma-what-is-in-it",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an ordinal as in Lemma <REF_0001> above.\nThe category <MATH_0002> satisfies the following\nproperties:\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0003>, then\nfor any morphisms <MATH_0004>, <MATH_0005> the fibre\nproduct <MATH_0006> in <MATH_0007> exists\nand is a fibre product in the category of schemes.\n<STRUCT_0004> Given any at most countable collection <MATH_0008>\nof elements of <MATH_0009>, the coproduct\n<MATH_0010> exists in <MATH_0011> and\nis a coproduct in the category of schemes.\n<STRUCT_0005> For any <MATH_0012> and\nany open immersion <MATH_0013>, there exists a\n<MATH_0014> with <MATH_0015>.\n<STRUCT_0006> For any <MATH_0016> and\nany closed immersion <MATH_0017>, there exists an\n<MATH_0018> with <MATH_0019>.\n<STRUCT_0007> For any <MATH_0020> and\nany finite type morphism <MATH_0021>, there exists an\n<MATH_0022> with <MATH_0023>.\n<STRUCT_0008> Suppose <MATH_0024> is a scheme which has an open covering\n<MATH_0025> such that there exists\na <MATH_0026> with\n(a) <MATH_0027> for all\n<MATH_0028>, and (b) <MATH_0029>.\nThen <MATH_0030> is isomorphic to an object of <MATH_0031>.\n<STRUCT_0009> For any <MATH_0032> and\nany morphism <MATH_0033> locally of finite type such\nthat <MATH_0034> can be covered by at most\n<MATH_0035> open affines, there exists an\n<MATH_0036> with <MATH_0037>.\nFor example this holds if <MATH_0038> can be covered by at most\n<MATH_0039> open affines.\n<STRUCT_0010> For any <MATH_0040> and\nany monomorphism <MATH_0041> which is either locally of finite presentation\nor quasi-compact, there exists an\n<MATH_0042> with <MATH_0043>.\n<STRUCT_0011> Suppose that <MATH_0044> is\naffine. Write <MATH_0045>.\nThen any of the following schemes is isomorphic to a scheme\nin <MATH_0046>:\n<STRUCT_0012>\n<STRUCT_0013> For any ideal <MATH_0047> with completion\n<MATH_0048>, the scheme <MATH_0049>.\n<STRUCT_0014> For any finite type <MATH_0050>-algebra <MATH_0051>, the\nscheme <MATH_0052>.\n<STRUCT_0015> For any localization <MATH_0053>, the scheme <MATH_0054>.\n<STRUCT_0016> For any prime <MATH_0055>, the scheme\n<MATH_0056>.\n<STRUCT_0017> For any subring <MATH_0057>, the scheme\n<MATH_0058>.\n<STRUCT_0018> Any scheme of finite type over a ring of cardinality at most\n<MATH_0059>.\n<STRUCT_0019> And so on.\n<STRUCT_0020>\n<STRUCT_0021>\n<STRUCT_0022>",
+      "requested_label": "sets-lemma-what-is-in-it",
+      "requested_tag": "000R"
+    },
+    {
+      "context_id": "reference:sites-definition-combinatorial-tautological",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002>, and\n<MATH_0003> be two families of morphisms\nwith fixed target.\n<STRUCT_0002>\n<STRUCT_0003>  We say <MATH_0004> and <MATH_0005> are\n<TEXTITOPEN_0001>combinatorially equivalent<TEXTITCLOSE_0001>\nif there exist maps\n<MATH_0006> and <MATH_0007> such that\n<MATH_0008> and <MATH_0009>.\n<STRUCT_0004> We say <MATH_0010> and <MATH_0011> are\n<TEXTITOPEN_0002>tautologically equivalent<TEXTITCLOSE_0002> if there exist maps\n<MATH_0012> and <MATH_0013> and\nfor all <MATH_0014> and <MATH_0015> commutative diagrams\n<MATH_0016>\nwith isomorphisms as horizontal arrows.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "sites-definition-combinatorial-tautological",
+      "requested_tag": "00VU"
+    },
+    {
+      "context_id": "reference:sites-definition-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>site<TEXTITCLOSE_0001><FOOTNOTEOPEN_0001>This notation differs from that of <REF_0001>, as\nexplained in the introduction.<FOOTNOTECLOSE_0001> is given by a category <MATH_0001> and a set\n<MATH_0002> of families of morphisms with fixed target\n<MATH_0003>, called <TEXTITOPEN_0002>coverings of <MATH_0004><TEXTITCLOSE_0002>,\nsatisfying the following axioms\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0005> is an isomorphism then <MATH_0006>.\n<STRUCT_0004> If <MATH_0007> and for each\n<MATH_0008> we have <MATH_0009>, then\n<MATH_0010>.\n<STRUCT_0005> If <MATH_0011>\nand <MATH_0012> is a morphism of <MATH_0013> then <MATH_0014>\nexists for all <MATH_0015> and\n<MATH_0016>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "requested_label": "sites-definition-site",
+      "requested_tag": "00VH"
+    },
+    {
+      "context_id": "reference:sites-definition-special-cocontinuous-functor",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002> be sites.\nA <TEXTITOPEN_0001>special cocontinuous functor <MATH_0003> from <MATH_0004> to <MATH_0005><TEXTITCLOSE_0001>\nis a cocontinuous functor <MATH_0006> satisfying\nthe assumptions and conclusions of Lemma <REF_0001>.\n<STRUCT_0002>",
+      "requested_label": "sites-definition-special-cocontinuous-functor",
+      "requested_tag": "03CG"
+    },
+    {
+      "context_id": "reference:sites-lemma-choice-set-coverings-immaterial",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a proper class of coverings\nsatisfying conditions (1), (2) and (3) of Definition <REF_0001>.\nLet <MATH_0003>\nbe two subsets of <MATH_0004> which endow\n<MATH_0005> with the structure of a site. If\nevery covering <MATH_0006>\nis combinatorially equivalent to a covering in\n<MATH_0007> and combinatorially equivalent to a\ncovering in <MATH_0008>, then\n<MATH_0009>.\n<STRUCT_0002>",
+      "requested_label": "sites-lemma-choice-set-coverings-immaterial",
+      "requested_tag": "00VY"
+    },
+    {
+      "context_id": "reference:sites-lemma-equivalence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is cocontinuous,\n<STRUCT_0004> <MATH_0005> is continuous,\n<STRUCT_0005> given <MATH_0006> in <MATH_0007> such that\n<MATH_0008>, then there exists a covering <MATH_0009>\nin <MATH_0010> such that <MATH_0011>,\n<STRUCT_0006> given <MATH_0012> and\na morphism <MATH_0013> in <MATH_0014> there exists\na covering <MATH_0015> in <MATH_0016>\nand morphisms <MATH_0017> such that <MATH_0018>, and\n<STRUCT_0007> given <MATH_0019> there exists a covering\nof <MATH_0020> in <MATH_0021> of the form <MATH_0022>.\n<STRUCT_0008>\nThen the morphism of topoi\n<MATH_0023>\nassociated to the cocontinuous functor <MATH_0024> by\nLemma <REF_0001>\nis an equivalence.\n<STRUCT_0009>",
+      "requested_label": "sites-lemma-equivalence",
+      "requested_tag": "03A0"
+    },
+    {
+      "context_id": "reference:sites-section-localize",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Localization<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "sites-section-localize",
+      "requested_tag": "00XZ"
+    },
+    {
+      "context_id": "reference:topologies-definition-big-small-ph",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a big ph site containing <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> The <TEXTITOPEN_0001>big ph site of <MATH_0004><TEXTITCLOSE_0001>, denoted\n<MATH_0005>, is the site <MATH_0006>\nintroduced in Sites, Section <REF_0001>.\n<STRUCT_0004> The <TEXTITOPEN_0002>big affine ph site of <MATH_0007><TEXTITCLOSE_0002>, denoted\n<MATH_0008>, is the full subcategory of\n<MATH_0009> whose objects are affine <MATH_0010>.\nA covering of <MATH_0011> is any finite covering\n<MATH_0012> of <MATH_0013> with <MATH_0014> and <MATH_0015> affine.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "requested_label": "topologies-definition-big-small-ph",
+      "requested_tag": "0DBL"
+    },
+    {
+      "context_id": "reference:topologies-section-change-alpha",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Change of big sites<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "requested_label": "topologies-section-change-alpha",
+      "requested_tag": "022I"
+    }
+  ]
+}

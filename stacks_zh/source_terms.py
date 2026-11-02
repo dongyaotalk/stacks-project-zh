@@ -74,7 +74,7 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
                     # An italic imperative with mathematical arguments quotes
                     # wording to use, rather than naming a lexical concept.
                     # Its prose remains visible to the ordinary catalog scan.
-                    visible_body = term_display_text(body, unit["placeholders"])
+                    visible_body = term_display_text(body, unit["placeholders"], unit=unit)
                     usage_clause = (re.match(r"^(?:let|assume|suppose)\b", _space(visible_body), re.IGNORECASE)
                                     and PLACEHOLDER_TOKEN_RE.search(visible_body))
                     # Math-qualified declarations still expose their prose parts.
@@ -94,7 +94,7 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
             pieces.append(match.group(0))
         cursor = match.end()
     pieces.append(source[cursor:])
-    text = _space(term_display_text("".join(pieces), unit["placeholders"]))
+    text = _space(term_display_text("".join(pieces), unit["placeholders"], unit=unit))
     # Articles and trailing connectors belong to the surrounding sentence;
     # protected formulas supply qualifiers outside the exposed lexical core.
     declarations = [re.sub(r"^(?:a|an|the)\s+", "", phrase, flags=re.IGNORECASE) for phrase in declarations]
@@ -242,13 +242,13 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
         if (english, chinese) not in (approved or set()):
             if (english, chinese) not in pending or candidate.get("term_status") != "DECISION_REQUIRED":
                 errors.append(f"{uid}: unapproved term lacks pending contextual evidence: {english}")
-        literal = term_display_text(f"{chinese}（{english}）", unit["placeholders"])
-        position = term_display_text(translation, unit["placeholders"]).find(literal, target_cursor)
+        literal = term_display_text(f"{chinese}（{english}）", unit["placeholders"], unit=unit)
+        position = term_display_text(translation, unit["placeholders"], unit=unit).find(literal, target_cursor)
         if position < 0:
             errors.append(f"{uid}: missing or repeated bilingual display: {literal}")
         else:
             target_cursor = position + len(literal)
-        valid.append((index, _space(term_display_text(english, unit["placeholders"]))))
+        valid.append((index, _space(term_display_text(english, unit["placeholders"], unit=unit))))
     # Longer phrases receive source spans first, so a later short word cannot
     # consume the source of an earlier compound. Counts and case stay exact.
     assigned: list[tuple[int, int, str]] = []

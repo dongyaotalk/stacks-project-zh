@@ -250,7 +250,7 @@ def is_font_wrapper(token: str, placeholders: Mapping[str, str]) -> bool:
     return payload == "}" if "CLOSE_" in name else bool(FONT_OPEN_RE.fullmatch(payload))
 
 
-def term_display_text(text: str, placeholders: Mapping[str, str]) -> str:
+def term_display_text(text: str, placeholders: Mapping[str, str], *, unit=None) -> str:
     """Visible prose only; preserve raw values and all semantic math nodes."""
     def accent(match: re.Match[str]) -> str:
         payload = placeholders.get(match.group(0)[1:-1], "")
@@ -259,6 +259,9 @@ def term_display_text(text: str, placeholders: Mapping[str, str]) -> str:
             return match.group(0)
         combining = {"'": "\u0301", "`": "\u0300", '"': "\u0308"}[parsed[1]]
         return unicodedata.normalize("NFC", (parsed[2] or parsed[3]) + combining)
+    if unit is not None:
+        from .math_text_descent import term_projection
+        text = term_projection(unit, text)
     text = TEXT_ACCENT_TOKEN_RE.sub(accent, text)
     return FONT_WRAPPER_RE.sub(lambda match: "" if is_font_wrapper(match.group(0), placeholders) else match.group(0), text)
 
@@ -479,9 +482,9 @@ def _validate_candidate(
         without_tokens = PLACEHOLDER_TOKEN_RE.sub("", translation)
         if re.search(r"\\[A-Za-z@]+|\$", without_tokens):
             errors.append(f"{location}: translation contains raw protected TeX")
-        display_text = term_display_text(translation, unit["placeholders"])
+        display_text = term_display_text(translation, unit["placeholders"], unit=unit)
         term_literals = [
-            term_display_text(f"{occurrence['target_term']}（{occurrence['source_term']}）", unit["placeholders"])
+            term_display_text(f"{occurrence['target_term']}（{occurrence['source_term']}）", unit["placeholders"], unit=unit)
             for occurrence in valid_term_occurrences
         ]
         cursor = 0

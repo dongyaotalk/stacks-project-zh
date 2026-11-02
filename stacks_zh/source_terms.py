@@ -111,6 +111,38 @@ def _matches(text: str, phrase: str, *, ignore_case: bool = False):
     return list(_term_pattern(phrase, ignore_case).finditer(text))
 
 
+def _literal_mailto_spans(unit: dict[str, Any], projected_text: str) -> list[tuple[int, int]]:
+    """Locate exact protected address labels without changing source projection."""
+    source = unit["source_text"]
+    placeholders = unit["placeholders"]
+    labels: dict[str, set[tuple[int, int]]] = {}
+    email = (r"[A-Za-z0-9_%+-]+(?:\.[A-Za-z0-9_%+-]+)*@"
+             r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
+             r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+")
+    for match in re.finditer(r"<TEXTOPEN_([0-9]{4})>([^<>]+)<TEXTCLOSE_\1>", source):
+        number, address = match.groups()
+        left, right = f"TEXTOPEN_{number}", f"TEXTCLOSE_{number}"
+        if (placeholders.get(left) != "\\href{mailto:" + address + "}{"
+                or placeholders.get(right) != "}"
+                or not re.fullmatch(email, address, flags=re.ASCII)
+                or source.count("<" + left + ">") != 1
+                or source.count("<" + right + ">") != 1):
+            continue
+        labels.setdefault(address, set()).add(match.span(2))
+    spans = []
+    for address, protected in labels.items():
+        original = list(re.finditer(re.escape(address), source))
+        projected = list(re.finditer(re.escape(address), projected_text))
+        # Projection may remove formatting or expose typed lexical qualifiers.
+        # Only an unchanged ordered occurrence set gives an unambiguous map;
+        # bare repetitions elsewhere cannot borrow a protected label's span.
+        if len(original) != len(projected):
+            continue
+        spans.extend(after.span() for before, after in zip(original, projected)
+                     if before.span() in protected)
+    return spans
+
+
 def _assignment_set(text: str, match: re.Match[str]) -> bool:
     if match.group(0).casefold() != "set":
         return False
@@ -174,6 +206,7 @@ def source_inventory(unit: dict[str, Any], catalog: dict[str, Any]) -> dict[str,
     if any(unit.get(key) != expected for key, expected in expected_unit_hashes(unit).items()):
         raise RecordError(f"{unit['unit_id']}: source inventory refuses stale unit hashes")
     text, declarations = source_projection(unit)
+    literal_spans = _literal_mailto_spans(unit, text)
     matches = []
     nonmathematical = unit["chapter"] in {scope["chapter"] for scope in catalog.get("nonmathematical_chapters", [])}
     excluded_spans = set()
@@ -190,7 +223,9 @@ def source_inventory(unit: dict[str, Any], catalog: dict[str, Any]) -> dict[str,
             continue
         for form in entry["forms"]:
             for match in _matches(text, form, ignore_case=True):
-                if match.span() in excluded_spans or _assignment_set(text, match):
+                if (match.span() in excluded_spans or _assignment_set(text, match)
+                        or any(start <= match.start() and match.end() <= stop
+                               for start, stop in literal_spans)):
                     continue
                 matches.append((match.start(), match.end(), entry["id"], "catalog"))
     exclusions = {phrase.casefold() for phrase in catalog["nonmathematical_declarations"]}
@@ -198,7 +233,9 @@ def source_inventory(unit: dict[str, Any], catalog: dict[str, Any]) -> dict[str,
         if declaration.casefold() in exclusions:
             continue
         for match in _matches(text, declaration):
-            if match.span() in excluded_spans:
+            if (match.span() in excluded_spans
+                    or any(start <= match.start() and match.end() <= stop
+                           for start, stop in literal_spans)):
                 continue
             matches.append((match.start(), match.end(), declaration, "source-declaration"))
     # Longest phrases win; nested generic words are not double-counted.

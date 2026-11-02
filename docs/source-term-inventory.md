@@ -1,5 +1,27 @@
 # 来源侧术语出现清单
 
+## 完整字面 mailto 标签（Issue #888）
+
+来源库存仅对完整受保护的 `TEXTOPEN_####` / `TEXTCLOSE_####` 地址标签
+识别非术语跨度。打开 payload 必须精确为 `\href{mailto:address}{`，闭合
+payload 为 `}`；两边编号唯一配对，显示标签与地址原字节完全相等，并符合
+有限 ASCII 点原子邮箱格式。只排除完整地址内部的目录与声明词形。
+原 source_text、source_projection、TeX、URL、hash 和投影坐标保持。
+
+按原文与显示投影中地址的完整有序出现集合对应跨度；出现数量有歧义时不豁免。
+正文中的同名数学词和裸地址仍照常盘点，不能借用另一个受保护地址的豁免。
+未知包装、非 mailto、不同或部分显示标签、尾空白、错误闭合 payload、错配
+或重复编号均不豁免。通用词形边界、术语目录、宏政策和 Schema 不改变。
+
+锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的完整见证是
+descent / 05VF / Section05AY / remark1，label 为
+`descent-remark-locally-free-descends`；完整容器 hash 为
+`sha256:72fac058b61a65f4878bb4f446d961daf5485fc8d02dfd6300036ff41b5aac7d`。
+独立 select/lower 保留全部原字节；2208个现有单元的18952次要求逐项不变。
+使用未采用的第35章政策草案，从锁定 Git 重建并核对579个拟议单元，4913次
+要求仅减少该地址内的一次 stacks 误报为4912，其余出现与投影逐项相等。
+该草案来源比较不是生产政策、候选生成、事实采用、术语或人审批准。
+
 ## Topologies 中带 for 参数的 pullback 赋值
 
 独立工具 [Issue #875](https://github.com/dongyaotalk/stacks-project-zh/issues/875)

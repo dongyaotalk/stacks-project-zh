@@ -18,6 +18,7 @@ from stacks_zh.source_reextractions import source_tex
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTION = (ROOT / 'config/macro-policy.yml').read_text()
 LEGACY = (ROOT / 'tests/fixtures/macro-policy-before-projection-declaration.yml').read_text()
+BEFORE_DESCENT = (ROOT / 'tests/fixtures/macro-policy-before-descent.yml').read_text()
 PRODUCTION_ENTRY = '''  stacks-projection-declaration:
     base_notation: "pr"
     commands: ["text"]
@@ -70,19 +71,30 @@ def git_fixture(base, *, typed=False, component=False, tail=''):
 
 
 class ProjectionDeclarationTests(unittest.TestCase):
-    def test_production_registration_is_exact_and_preserves_primary_rules(self):
-        self.assertEqual(PRODUCTION.count(PRODUCTION_ENTRY), 1)
+    def test_historical_projection_and_aff_delta_is_exact(self):
+        self.assertEqual(BEFORE_DESCENT.count(PRODUCTION_ENTRY), 1)
         # The historical pre-projection fixture stays byte-for-byte frozen.
         # Only the independently declared projection and Aff additions differ.
-        self.assertEqual(PRODUCTION.count(AFF_ENTRY), 1)
-        self.assertEqual(PRODUCTION.replace(PRODUCTION_ENTRY, '', 1).replace(AFF_ENTRY, '', 1), LEGACY)
-        old, new = Policy(LEGACY), Policy(PRODUCTION)
+        self.assertEqual(BEFORE_DESCENT.count(AFF_ENTRY), 1)
+        self.assertEqual(BEFORE_DESCENT.replace(PRODUCTION_ENTRY, '', 1).replace(AFF_ENTRY, '', 1), LEGACY)
+        old, new = Policy(LEGACY), Policy(BEFORE_DESCENT)
         self.assertEqual(new.math_text_notations, {
             **old.math_text_notations,
             'Aff': {'commands': ['textit'], 'usages': ['symbol'],
                     'source_label': 'topologies-section-procedure'},
         })
         self.assertEqual(old.math_text_rules, new.math_text_rules)
+
+    def test_current_registration_preserves_projection_aff_and_existing_contexts(self):
+        self.assertEqual(PRODUCTION.count(PRODUCTION_ENTRY), 1)
+        self.assertEqual(PRODUCTION.count(AFF_ENTRY), 1)
+        old, new = Policy(BEFORE_DESCENT), Policy(PRODUCTION)
+        for name in ['pr', 'Aff']:
+            self.assertEqual(new.math_text_notations[name], old.math_text_notations[name])
+        for name, rule in old.math_text_rules.items():
+            self.assertEqual(new.math_text_rules[name], rule, name)
+        for name, contexts in old.math_text_notation_contexts.items():
+            self.assertEqual(new.math_text_notation_contexts[name][:len(contexts)], contexts, name)
         (text, protected, errors), classified, regions = scan(DECLARATION, PRODUCTION)
         self.assertEqual((text, protected, errors), ('<MATH_0001>', {'MATH_0001': DECLARATION}, []))
         self.assertEqual(regions, [])

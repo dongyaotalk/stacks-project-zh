@@ -1,5 +1,24 @@
 # 来源侧术语出现清单
 
+## Descent 中完整拟凝聚模词形（Issue #884）
+
+在独立工具 #887、#888 接受后，本政策仅在 descent 章登记同一概念的精确
+`quasi-coherent module` 与 `quasi-coherent modules`，使用既有最长词形规则。
+原 coherent module/modules 条目、其他章节要求、Schema及匹配算法保持。
+目录只登记英文来源词形，不批准中文；译文仍须逐次双语显示并保存待决上下文。
+
+单数完整锁定 Git 见证为0CDR / Section0CDQ / lemma1，label
+`descent-lemma-galois-descent`，容器hash
+`sha256:673912a51ce74ab6aa8863607af2c7fdbada2484a3f96ae0a9a6c01e9e771007`。
+复数见证为0GNB / Section0GN9 / lemma1，label
+`descent-lemma-properties-quasi-coherent`，容器hash
+`sha256:3367477a859ad551b29c4177ddb84f7bf787a00fbf35204aff2e19abe410eabc`。
+两者均绑定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14`。
+
+完整来源草案比较覆盖579个拟议单元，23个单元中的9次单数、25次复数从内部
+coherent词形改为完整quasi-coherent词形，其余出现及2208个现有单元要求保持。
+这是来源政策验证，不能计入候选、事实采用、术语批准或人工审校。
+
 ## 完整字面 mailto 标签（Issue #888）
 
 来源库存仅对完整受保护的 `TEXTOPEN_####` / `TEXTCLOSE_####` 地址标签
@@ -580,3 +599,18 @@ DATA合并后独立progress/plan；全部S4完成后才独立S5默认强门禁�
 并重新冻结六新单元、全部23旧输入/候选/有序组/ancestry和新目录context后实际完整
 生成五字段。原输入/run/raw与历史不变，DATA后独立progress/plan；全部S4之后才
 独立S5默认强门禁、S7及F1–F8最终验收。
+
+## Descent 中两处确切普通措辞（Issue #884）
+
+完整02W3／02W1／proof1中的 proof proper 指正式开始证明；完整02YJ／02YJ／
+prose_block1中的 a large number of properties 表示本节列出大量性质。这里的
+proper 和 large 分别不是固有态射性质或范畴／集合的大小概念。
+
+使用既有 nonmathematical_occurrences 合同逐次登记，绑定完整锁定英文 source
+TeX hash、原词形和零起始序数。proper 的完整 proof inventory 与 canonical
+unit 的 source TeX hash 相等；large 使用完整 prose_block 的 canonical hash，
+原短段落 inventory 不具有同一 hash，不能替代完整来源见证。两者均从锁定 Git
+真实 select/lower 验证，不依赖未来候选或手工生成数据。独立工具 #897 核验
+尚未采用事实的完整容器证据，按精确 ID 和出现序号限定普通例外。其他同词
+数学出现、来源、保护结构与 Schema 保持；本登记不批准中文术语，不改旧
+raw/run/freeze。

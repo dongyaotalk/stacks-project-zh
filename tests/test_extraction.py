@@ -356,7 +356,7 @@ class ExtractionTests(unittest.TestCase):
                 self.assertTrue(any(e['kind'] == 'math-text' for e in errors))
         original = POLICY_RAW
         original, removed = re.subn(
-            r'(?m)^  (?:Ob|Ab|Groups|Mod|Top|PAb|Aut):\n(?:    [^\n]*\n){3}', '', original)
+            r'(?m)^  (?:Ob|Ab|Groups|Mod|Top|PAb|Aut):\n(?:    [^\n]*\n)+', '', original)
         self.assertEqual(removed, 7)
         original = original.replace('  Arrows:\n    commands: ["text"]\n'
                                     '    usages: ["applied", "symbol"]\n',

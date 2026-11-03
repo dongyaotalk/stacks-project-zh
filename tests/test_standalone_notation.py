@@ -7,7 +7,10 @@ from stacks_zh.records import RecordError
 from stacks_zh.source_reextractions import source_tex
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = (ROOT / 'config/macro-policy.yml').read_text().split('\ntranslatable_math_text:')[0]
+# Keep the pre-registration tool permission guards independent of later policy.
+BEFORE_DESCENT = ROOT / 'tests/fixtures/macro-policy-before-descent.yml'
+BASELINE = BEFORE_DESCENT if BEFORE_DESCENT.exists() else ROOT / 'config/macro-policy.yml'
+RAW = BASELINE.read_text().split('\ntranslatable_math_text:')[0]
 COV = '    usages: ["applied", "subscripted", "primed-applied"]\n'
 NEW = COV.replace('"primed-applied"]', '"primed-applied", "bare-symbol"]')
 assert RAW.count(COV) == 1

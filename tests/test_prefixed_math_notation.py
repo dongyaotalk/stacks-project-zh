@@ -8,7 +8,11 @@ from stacks_zh.records import RecordError
 from stacks_zh.source_reextractions import source_tex
 
 
-RAW = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text().split('\ntranslatable_math_text:')[0]
+ROOT = Path(__file__).resolve().parents[1]
+# Keep the exact historical rejection contract; the independent descent policy
+# registration suite verifies the newly registered bare Cov uses and negatives.
+BASELINE = ROOT / 'tests/fixtures/macro-policy-before-descent.yml'
+RAW = (BASELINE if BASELINE.exists() else ROOT / 'config/macro-policy.yml').read_text().split('\ntranslatable_math_text:')[0]
 POLICY = Policy(RAW)
 ENTRY = ('  -Sets:\n    commands: ["textit"]\n    usages: ["prefixed-symbol"]\n'
          '    prefix: "G"\n    source_label: sets-section-sets-with-group-action\n')

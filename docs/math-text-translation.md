@@ -689,3 +689,37 @@ UTF-8原字节回放、完整数学骨架、两种组件兼容、逐次术语、
 历史完整batch回放、首次source-adoption、严格QA和renderer。synthetic文本
 只为测试，不冒称真实模型输出。最终工具测试、全量候选QA、实际集成lane
 render/pdf、最终日志和精确PR head必需CI仍须通过；不授予critic、人审或发布。
+
+## 第35章下降英文政策的独立登记（Issue #884）
+
+本次登记采用已合并的独立工具 #883，只改变英文宏政策及其生产回归，
+不改变 Schema、解析器、来源锁、词表、候选或历史生成证据。
+
+- 24个普通自然文字 literal 分别登记完整原参数、字体、有限用法和真实
+  锁定英文 label/kind/ordinal；其中完整下降数据箭头使用独立有限框架，
+  不借 root-phrase 开放 display 起点。
+- 0GNE 的平展拓扑描述登记为两叶组件，完整原重音 `\'e` 保持数学保护；
+  逐次术语检查使用工具已验证的只读重音投影，不改写来源或生成 TeX。
+- `each ` 保持普通 root-phrase 登记，另有02W5完整集合框架的独立上下文。
+- `Proj` 仅允许0D2P完整相对Proj框架；`pr` 在04R2有限投影框架中另行
+  登记上下文，不新增通用 symbol，不混入旧投影声明或 starred 用法。
+- `Rings` 仅登记 textit/symbol，`trdeg` 仅登记 text/subscripted。
+  `Mod` 保留旧见证与 text/subscripted，只增加 textit/applied 的精确
+  字体/用法组合；`Cov` 保留旧见证与三个既有用法，只增加 #887 的
+  bare-symbol。裸记号不授予空应用、缺下标、prime或未知后继命令权限；
+  原应用、下标和primed-applied分类及其见证保持。
+
+`tests/fixtures/macro-policy-before-descent.yml` 保存登记前完整已接受政策
+原字节。生产回归移除全部新增项并恢复 Mod/Cov 后，必须逐字节得到该快照；
+其他既有规则和上下文分别保持。历史 pre-projection fixture 不回写，其
+投影/Aff精确增量仍独立检查；当前政策兼容检查另核验原投影、Aff及所有旧
+自然文字和上下文。原11项其他投影测试方法，包括完整负例，原字节保持。
+
+新登记还检查旧记号形状、字体/用法交叉负例、完整有限框架、改对象/箭头/
+ref后的拒绝与未登记文字的阻断。真实来源见证由生产库存和整章预检重新
+核验，不以 synthetic 或草案通过代替生产验收。
+
+政策采用后保存旧库存，再按实际新输入完成 extract-all/extract-all-check、
+来源对应和整章预检；完整39节来源能力与候选覆盖分别报告。此前草案的
+579/579 READY 是 lowering 单元数，不能与550个完整容器混用，也不表示
+来源已采用、中文候选已生成或独立 critic、人审、术语、发布已批准。

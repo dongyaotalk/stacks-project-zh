@@ -92,6 +92,10 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
     from .source_adoptions import load_repository_source_adoptions
     source_adoptions, adoption_errors = load_repository_source_adoptions(root, harvest)
     errors.extend(adoption_errors)
+    if adoption_errors:
+        # Failed replay returns an unvalidated mapping, not an adoption receipt.
+        # Preserve its primary errors before consumers require the live receipt.
+        return source_adoptions, errors
     origins, derivation_errors = load_repository_derivations(root, corrections, harvest,
         _source_adoptions=source_adoptions)
     errors.extend(derivation_errors)

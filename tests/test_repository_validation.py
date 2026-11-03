@@ -9,6 +9,7 @@ from stacks_zh.current_qa import InputSnapshot
 from stacks_zh.decisions import validate_repository_decisions
 from stacks_zh.source_adoptions import load_repository_source_adoptions
 from stacks_zh.records import RecordError
+from stacks_zh.provenance import _validate_repository_provenance
 from stacks_zh.repository_validation import _ProvenancePass, _require_live_provenance, validate_repository
 
 
@@ -44,6 +45,36 @@ class RepositoryValidationTests(unittest.TestCase):
                  mock.patch('stacks_zh.decisions.validate_repository_decisions') as decision, \
                  mock.patch('stacks_zh.repository_validation.CurrentSourceQA', autospec=True) as current:
                 self.assertEqual(validate_repository(root),(0,['bad immutable raw']));decision.assert_not_called();current.assert_not_called()
+
+    def test_failed_adoption_preserves_primary_errors_before_derivations(self):
+        root = Path('synthetic-root')
+        partial = {('synthetic-candidate', 'synthetic-unit'): {}}
+        with mock.patch('stacks_zh.provenance.load_repository_corrections',
+                        return_value=({}, ['bad correction'])), \
+             mock.patch('stacks_zh.source_adoptions.load_repository_source_adoptions',
+                        return_value=(partial, ['bad adoption replay'])), \
+             mock.patch('stacks_zh.provenance.load_repository_derivations',
+                        side_effect=AssertionError('unvalidated adoption consumer')) as derivations:
+            adoptions, errors = _validate_repository_provenance(root)
+            self.assertIs(adoptions, partial)
+            self.assertEqual(errors, ['bad correction', 'bad adoption replay'])
+            derivations.assert_not_called()
+
+    def test_failed_adoption_cannot_issue_repository_acceptance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); self.repository(root)
+            partial = {('synthetic-candidate', 'synthetic-unit'): {}}
+            with mock.patch('stacks_zh.repository_validation.validate_repository_schemas', return_value=[]), \
+                 mock.patch('stacks_zh.provenance.load_repository_corrections', return_value=({}, [])), \
+                 mock.patch('stacks_zh.source_adoptions.load_repository_source_adoptions',
+                            return_value=(partial, ['bad adoption replay'])), \
+                 mock.patch('stacks_zh.provenance.load_repository_derivations') as derivations, \
+                 mock.patch('stacks_zh.repository_validation._issue') as issue, \
+                 mock.patch('stacks_zh.decisions.validate_repository_decisions') as decision, \
+                 mock.patch('stacks_zh.repository_validation.CurrentSourceQA', autospec=True) as current:
+                self.assertEqual(validate_repository(root), (0, ['bad adoption replay']))
+                derivations.assert_not_called(); issue.assert_not_called()
+                decision.assert_not_called(); current.assert_not_called()
 
     def test_fact_change_during_validation_is_not_certified(self):
         with tempfile.TemporaryDirectory() as temp:

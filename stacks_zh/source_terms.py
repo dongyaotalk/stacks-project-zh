@@ -210,7 +210,8 @@ def source_inventory(unit: dict[str, Any], catalog: dict[str, Any]) -> dict[str,
     matches = []
     nonmathematical = unit["chapter"] in {scope["chapter"] for scope in catalog.get("nonmathematical_chapters", [])}
     excluded_spans = set()
-    uses = [use for use in catalog.get("nonmathematical_occurrences", []) if use["chapter"] == unit["chapter"]]
+    uses = [use for use in catalog.get("nonmathematical_occurrences", [])
+            if use["chapter"] == unit["chapter"] and use["unit_id"] == unit["unit_id"]]
     tex_hash = source_tex_hash(unit) if uses else None
     for use in uses:
         if use["source_tex_hash"] == tex_hash:
@@ -312,6 +313,34 @@ def validate_source_terms(unit: dict[str, Any], candidate: dict[str, Any], catal
     return errors
 
 
+def _ordinary_container_selector(containers, chapter: str, unit_id: str) -> dict[str, Any]:
+    """Resolve only a unique canonical unit in a complete native container."""
+    from .chapter_preflight import _selectors
+    from .source_integrity import STATEMENTS
+
+    if not re.fullmatch(r'[A-Za-z0-9_-]+', chapter):
+        raise RecordError('ordinary evidence has an invalid chapter')
+    coordinates = []
+    for entry in _selectors(containers.document(chapter)[1], chapter, containers.english.tags):
+        coordinate = entry['selector']
+        kind, ordinal = coordinate['kind'], coordinate['ordinal']
+        if kind == 'proof':
+            suffix = 'proof' + (f'-{ordinal:03d}' if ordinal != 1 else '')
+        elif kind in STATEMENTS:
+            suffix = 'statement'
+        elif kind.endswith('_title'):
+            suffix = 'title'
+        elif kind == 'prose_block':
+            suffix = f'prose-{ordinal:04d}'
+        else:
+            continue
+        if unit_id == f"tag:{coordinate['owner_tag']}:{suffix}":
+            coordinates.append(coordinate)
+    if len(coordinates) != 1:
+        raise RecordError('ordinary evidence has no unique complete canonical coordinate')
+    return coordinates[0]
+
+
 def validate_catalog_evidence(root: Path, catalog: dict[str, Any],
                               units: list[dict[str, Any]], harvest: Path | None = None,
                               *, containers=None) -> tuple[list[dict[str, Any]], list[str]]:
@@ -364,9 +393,42 @@ def validate_catalog_evidence(root: Path, catalog: dict[str, Any],
         if not any(row["node_kind"] == "chapter_title" and source_projection(row)[0] == evidence["source_title"] for row in rows):
             errors.append(f"{scope['chapter']}: nonmathematical chapter lacks its locked English title evidence")
     for use in catalog.get("nonmathematical_occurrences", []):
-        rows = by_tex.get((use["chapter"], use["source_tex_hash"]), [])
-        if not any(len(_matches(source_projection(row)[0], use["source_term"])) > use["occurrence_index"] for row in rows):
-            errors.append(f"{use['chapter']}: nonmathematical occurrence lacks its locked English source evidence")
+        current = [row for row in units if row['chapter'] == use['chapter'] and row['unit_id'] == use['unit_id']]
+        check = {"kind": "locked-nonmathematical-occurrence", **use, "status": "FAIL"}
+        try:
+            index = use['occurrence_index']
+            if not isinstance(index, int) or isinstance(index, bool) or index < 0:
+                raise RecordError('ordinary evidence occurrence index must be nonnegative')
+            if current:
+                if len(current) != 1:
+                    raise RecordError('ordinary evidence current unit is not unique')
+                row = current[0]
+            else:
+                from .source_containers import Containers, lower_container
+                if containers is None:
+                    containers = Containers(root, harvest)
+                if containers.english.commit != source_commit:
+                    raise RecordError('ordinary evidence containers use a different locked commit')
+                coordinate = _ordinary_container_selector(containers, use['chapter'], use['unit_id'])
+                key = json.dumps(coordinate, sort_keys=True)
+                if key not in selections:
+                    selections[key] = containers.select(coordinate)
+                selected = selections[key]
+                rows = lower_container(selected, containers.policy)
+                if len(rows) != 1 or rows[0]['unit_id'] != use['unit_id']:
+                    raise RecordError('ordinary evidence lacks its complete canonical unit')
+                row = rows[0]
+                check.update(selector=coordinate, blob_oid=selected['blob_oid'],
+                             blob_hash=selected['blob_hash'], location=selected['location'])
+            if row['source_commit'] != source_commit or source_tex_hash(row) != use['source_tex_hash']:
+                raise RecordError('ordinary evidence source commit or complete TeX hash differs')
+            if len(_matches(source_projection(row)[0], use['source_term'])) <= index:
+                raise RecordError('ordinary evidence word/index is absent from exposed source prose')
+            check.update(status='PASS', path='current-unit' if current else 'locked-source-container')
+        except (RecordError, OSError) as exc:
+            check['error'] = str(exc)
+            errors.append(f"{use['chapter']}: nonmathematical occurrence lacks its locked English source evidence: {exc}")
+        locked_evidence.append(check)
     if containers is not None:
         containers.assert_unchanged()
     return locked_evidence, errors

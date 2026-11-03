@@ -9,6 +9,7 @@ from .validation_io import isolated_inputs, current_inputs
 
 from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
 
+import copy
 import io
 import json
 import os
@@ -23,7 +24,7 @@ from weakref import WeakValueDictionary, finalize
 from .current_qa import InputSnapshot
 from .derivations import _git_origin_bytes
 from .model_corrections import _first_addition_is_immutable
-from .records import RecordError, sha256_value, validate_records
+from .records import RecordError, sha256_value, stamp_unit_hashes, validate_records
 from .schema_validation import validate_named_schema
 from .source_alignment import Corpus, align_batches, canonical_tokens
 from .source_containers import Containers, clean, lower_container, safe_path
@@ -626,15 +627,17 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
         policy_bytes[entry['path']] = payload
         if current and reads.snapshot.read(root / entry['path']) != payload:
             raise RecordError('generation policy drifted since its frozen origin')
-    if frozen['tool_version'] == 'source-adoption-input-v4':
-        for name, version in [('schema/source-adoption-input.schema.json', 'source-adoption-input-v4'),
-                              ('schema/source-adoption.schema.json', 'source-adoption-v4')]:
+    if frozen['tool_version'] in {'source-adoption-input-v4', 'source-adoption-input-v5'}:
+        version = frozen['tool_version']
+        for name, allowed_version in [('schema/source-adoption-input.schema.json', version),
+                                     ('schema/source-adoption.schema.json', version.replace('-input', ''))]:
             try:
                 allowed = json.loads(policy_bytes[name])['properties']['tool_version']['enum']
             except (ValueError, KeyError, TypeError) as exc:
                 raise RecordError('accepted origin lacks the chapter-header contract') from exc
-            if version not in allowed:
-                raise RecordError('accepted origin does not permit chapter-header adoption')
+            if allowed_version not in allowed:
+                raise RecordError('accepted origin does not permit chapter-header adoption' if version == 'source-adoption-input-v4'
+                                  else 'accepted origin does not permit ' + version)
     if source not in policy_bytes['upstream.lock'].decode():
         raise RecordError('first adoption does not use the accepted English lock')
     seen_contexts = set()
@@ -684,7 +687,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
             if old:
                 if reads.snapshot.read(cp) != reads.read(batch['prior_attempts'][-1]['candidates']):
                     raise RecordError('provisional active candidate changed before its complete replacement')
-            elif cp.exists() and frozen['tool_version'] != 'source-adoption-input-v2':
+            elif cp.exists() and frozen['tool_version'] not in {'source-adoption-input-v2', 'source-adoption-input-v5'}:
                 raise RecordError('first generation cannot overwrite an existing candidate')
         for relative in (batch['units_path'], batch['candidates_path']):
             found = subprocess.run(['git', '-C', str(root), 'ls-tree', origin, '--', relative], capture_output=True)
@@ -785,7 +788,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
         shared = _shared_run_histories(root, frozen, reads, harvest, current, visiting or set(), histories)
         complete_histories.update(shared)
     _complete_prior_runs(reads, complete_histories)
-    if frozen['tool_version'] == 'source-adoption-input-v2':
+    if frozen['tool_version'] in {'source-adoption-input-v2', 'source-adoption-input-v5'}:
         prior_histories = _prior_adoptions(root, frozen, reads, harvest, current, visiting or set())
         for path, groups in prior_histories.items():
             histories[path].extend(groups)
@@ -859,6 +862,26 @@ def _first_commit(root, relative):
     return commits[0] if commits else None
 
 
+def _policy_rebound_units(old_units, new_units, old_policy_hash, new_policy_hash):
+    """v5 only: predict exact witness hashes from two independently replayed policies.
+
+    This validates the new complete canonical inputs; it never writes source or
+    model output. Every other region, slot, byte, coordinate and field stays exact.
+    """
+    rebound = copy.deepcopy(old_units)
+    for unit in rebound:
+        for region in unit.get('math_text_regions', []):
+            for slot in region['slots']:
+                witness = slot['classification_witness']
+                if witness['policy_hash'] != old_policy_hash:
+                    raise RecordError('v5 old math witness differs from its replayed complete policy')
+                witness['policy_hash'] = new_policy_hash
+    rebound = [stamp_unit_hashes(unit) for unit in rebound]
+    if rebound != new_units:
+        raise RecordError('v5 permits only unchanged math witness policy hashes and their structure hashes')
+    return old_policy_hash != new_policy_hash and old_units != new_units
+
+
 def _prior_adoptions(root, frozen, reads, harvest, current, visiting):
     """Replay complete pre-Git adoptions through their untouched output snapshots."""
     identifier = frozen['adoption_id']
@@ -871,6 +894,7 @@ def _prior_adoptions(root, frozen, reads, harvest, current, visiting):
     if any(b['prior_attempts'] for b in batches.values()):
         raise RecordError('v2 prior adoption already owns all ordinary generation ancestry')
     covered, histories = set(), {}
+    witness_rebound = False
     current_commit = _first_commit(root, f'translation-data/source-adoption-inputs/{identifier}.json')
     for prior in frozen['prior_adoptions']:
         record = reads.json(prior['record'], r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
@@ -906,7 +930,14 @@ def _prior_adoptions(root, frozen, reads, harvest, current, visiting):
         expected, manifest = _replay_record(record, old_frozen, old_reads, native)
         for path, rows in expected.items():
             old_batch = next(b for b in old_frozen['batches'] if b['candidates_path'] == path)
-            if old_batch['units'] != batches[path]['units'] or old_batch['units_path'] != batches[path]['units_path']:
+            if old_batch['units_path'] != batches[path]['units_path']:
+                raise RecordError('pre-Git adoption revision changes source or complete segmentation')
+            if frozen['tool_version'] == 'source-adoption-input-v5':
+                old_policy_hash = next(p['hash'] for p in old_frozen['policies'] if p['path'] == 'config/macro-policy.yml')
+                new_policy_hash = next(p['hash'] for p in frozen['policies'] if p['path'] == 'config/macro-policy.yml')
+                witness_rebound |= _policy_rebound_units(old_batch['units'], batches[path]['units'],
+                                                        old_policy_hash, new_policy_hash)
+            elif old_batch['units'] != batches[path]['units']:
                 raise RecordError('pre-Git adoption revision changes source or complete segmentation')
             if current and reads.snapshot.read(root / path) != reads.read(overrides[path]):
                 raise RecordError('prior adoption active bytes drifted before complete replacement')
@@ -917,6 +948,8 @@ def _prior_adoptions(root, frozen, reads, harvest, current, visiting):
             reads.snapshot.read(path)
     if covered != set(batches):
         raise RecordError('v2 must regenerate every unit of every complete previous adoption')
+    if frozen['tool_version'] == 'source-adoption-input-v5' and not witness_rebound:
+        raise RecordError('v5 requires an actual unchanged math witness policy rebinding')
     return histories
 
 
@@ -944,7 +977,7 @@ def _generated(frozen, raw, input_entry):
                 input_freeze=input_entry, turn_id=identity['turn_id'],
                 generation_contexts=frozen['contexts'], prior_generations=batch['prior_attempts'],
                 model_output=dict(path=entry['path'], hash=entry['hash'], record_hash=sha256_value(row)))
-            if frozen['tool_version'] == 'source-adoption-input-v2':
+            if frozen['tool_version'] in {'source-adoption-input-v2', 'source-adoption-input-v5'}:
                 candidate['context']['prior_source_adoptions'] = frozen['prior_adoptions']
             if frozen['tool_version'] == 'source-adoption-input-v3':
                 candidate['context']['shared_run_histories'] = frozen['shared_run_histories']

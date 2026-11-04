@@ -1,0 +1,1676 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e7e-cc3b-7733-8332-45075e9a740d",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p18-20261102T231452Z.json",
+    "hash": "sha256:b32cb321b98be0bcdff8c13ec0d82318beca1367ac6d8f77c78e40f0f54e78d1"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02LB:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nWe can use this lemma to show the following important result; we also\ngive a proof avoiding fpqc descent.\nWe will discuss this and related results in more detail in\n<ACCENT_0001>tale Morphisms, Section <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'E",
+        "REF_0001": "\\ref{etale-section-topological-etale}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 111,
+          "projection_end": 118,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Étale",
+          "projection_start": 179,
+          "projection_end": 184,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 185,
+          "projection_end": 194,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LC:statement",
+      "source_text": "A universally injective <ACCENT_0001>tale morphism is an open immersion.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 14,
+          "projection_end": 23,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 24,
+          "projection_end": 29,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 30,
+          "projection_end": 38,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 45,
+          "projection_end": 59,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LC:proof",
+      "source_text": "First proof<PROOFARGEND_0001>Let <MATH_0001> be an <ACCENT_0001>tale morphism which is universally injective.\nThen <MATH_0002> is open\n(Morphisms, Lemma <REF_0001>)\nhence we can replace <MATH_0003> by <MATH_0004> and we may assume that <MATH_0005> is surjective.\nThen <MATH_0006> is bijective and open hence a homeomorphism. Hence <MATH_0007> is\nquasi-compact. Thus by\nLemma <REF_0002>\nit suffices to show that <MATH_0008> is a monomorphism. As <MATH_0009> is <ACCENT_0002>tale\nthe morphism <MATH_0010> is an open immersion by\nMorphisms, Lemma <REF_0003>\n(and\nMorphisms, Lemma <REF_0004>).\nAs <MATH_0011> is universally injective <MATH_0012> is also surjective, see\nMorphisms, Lemma <REF_0005>.\nHence <MATH_0013> is an isomorphism, i.e., <MATH_0014> is a monomorphism.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f$",
+        "REF_0001": "\\ref{morphisms-lemma-etale-open}",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$f(X)$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{lemma-flat-surjective-quasi-compact-monomorphism-isomorphism}",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$X \\to Y$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0010": "$\\Delta_{X/Y} : X \\to X \\times_Y X$",
+        "REF_0003": "\\ref{morphisms-lemma-diagonal-unramified-morphism}",
+        "REF_0004": "\\ref{morphisms-lemma-flat-unramified-etale}",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$\\Delta_{X/Y}$",
+        "REF_0005": "\\ref{morphisms-lemma-universally-injective}",
+        "MATH_0013": "$\\Delta_{X/Y}$",
+        "MATH_0014": "$X \\to Y$",
+        "PROOFARGEND_0001": "]\n"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 51,
+          "projection_end": 56,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 57,
+          "projection_end": 65,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 87,
+          "projection_end": 96,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 124,
+          "projection_end": 133,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 239,
+          "projection_end": 249,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijective",
+          "projection_start": 271,
+          "projection_end": 280,
+          "concept": "bijective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 334,
+          "projection_end": 347,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphism",
+          "projection_start": 416,
+          "projection_end": 428,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 448,
+          "projection_end": 453,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 458,
+          "projection_end": 466,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 485,
+          "projection_end": 499,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 503,
+          "projection_end": 512,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 536,
+          "projection_end": 545,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 596,
+          "projection_end": 605,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 626,
+          "projection_end": 636,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 642,
+          "projection_end": 651,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 695,
+          "projection_end": 706,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphism",
+          "projection_start": 731,
+          "projection_end": 743,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LC:proof-002",
+      "source_text": "Second proof<PROOFARGEND_0001>Let <MATH_0001> be an <ACCENT_0001>tale morphism which is universally injective.\nThen <MATH_0002> is open (Morphisms, Lemma <REF_0001>)\nhence we can replace <MATH_0003> by <MATH_0004> and we may assume that <MATH_0005> is surjective.\nSince the hypotheses remain satisfied after any base change, we conclude\nthat <MATH_0006> is a universal homeomorphism. Therefore <MATH_0007> is integral, see\nMorphisms, Lemma <REF_0002>.\nIt follows that <MATH_0008> is finite by\nMorphisms, Lemma <REF_0003>.\nIt follows that <MATH_0009> is finite locally free by\nMorphisms, Lemma <REF_0004>.\nTo finish the proof, it suffices that <MATH_0010> is finite locally\nfree of degree <MATH_0011> (a finite locally free morphism of degree <MATH_0012>\nis an isomorphism).\nThere is decomposition of <MATH_0013> into open and closed subschemes\n<MATH_0014> such that <MATH_0015> is finite locally free of\ndegree <MATH_0016>, see Morphisms, Lemma <REF_0005>.\nIf <MATH_0017> is not empty, we can pick a morphism <MATH_0018>\nwhere <MATH_0019> is an algebraically closed field (just take the algebraic\nclosure of the residue field of some point of <MATH_0020>).\nThen <MATH_0021> is a disjoint union of\ncopies of <MATH_0022>, by\nMorphisms, Lemma <REF_0006>\nand the fact that <MATH_0023> is algebraically closed.\nHowever, since <MATH_0024> is universally injective, there can only be\none copy and hence <MATH_0025> as desired.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f$",
+        "REF_0001": "\\ref{morphisms-lemma-etale-open}",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$f(X)$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{morphisms-lemma-universal-homeomorphism}",
+        "MATH_0008": "$f$",
+        "REF_0003": "\\ref{morphisms-lemma-finite-integral}",
+        "MATH_0009": "$f$",
+        "REF_0004": "\\ref{morphisms-lemma-finite-flat}",
+        "MATH_0010": "$f$",
+        "MATH_0011": "$1$",
+        "MATH_0012": "$1$",
+        "MATH_0013": "$Y$",
+        "MATH_0014": "$V_d$",
+        "MATH_0015": "$f^{-1}(V_d) \\to V_d$",
+        "MATH_0016": "$d$",
+        "REF_0005": "\\ref{morphisms-lemma-finite-locally-free}",
+        "MATH_0017": "$V_d$",
+        "MATH_0018": "$\\Spec(k) \\to V_d \\subset Y$",
+        "MATH_0019": "$k$",
+        "MATH_0020": "$V_d$",
+        "MATH_0021": "$\\Spec(k) \\times_Y X \\to \\Spec(k)$",
+        "MATH_0022": "$\\Spec(k)$",
+        "REF_0006": "\\ref{morphisms-lemma-etale-over-field}",
+        "MATH_0023": "$k$",
+        "MATH_0024": "$f$",
+        "MATH_0025": "$d = 1$",
+        "PROOFARGEND_0001": "]\n"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 52,
+          "projection_end": 57,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 58,
+          "projection_end": 66,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 88,
+          "projection_end": 97,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 125,
+          "projection_end": 134,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 240,
+          "projection_end": 250,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 300,
+          "projection_end": 311,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "integral",
+          "projection_start": 397,
+          "projection_end": 405,
+          "concept": "integral",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 411,
+          "projection_end": 420,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 471,
+          "projection_end": 477,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 481,
+          "projection_end": 490,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 541,
+          "projection_end": 560,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 564,
+          "projection_end": 573,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 646,
+          "projection_end": 665,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 669,
+          "projection_end": 675,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 691,
+          "projection_end": 710,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 711,
+          "projection_end": 719,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 723,
+          "projection_end": 729,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 748,
+          "projection_end": 759,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subschemes",
+          "projection_start": 814,
+          "projection_end": 831,
+          "concept": "closed-subscheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 869,
+          "projection_end": 888,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 892,
+          "projection_end": 898,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 916,
+          "projection_end": 925,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "not empty",
+          "projection_start": 963,
+          "projection_end": 972,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 988,
+          "projection_end": 996,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 1054,
+          "projection_end": 1059,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "residue field",
+          "projection_start": 1100,
+          "projection_end": 1113,
+          "concept": "residue-field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1211,
+          "projection_end": 1220,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 1336,
+          "projection_end": 1345,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LB:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nWe can reformulate the hypotheses in the lemma above a bit by using the\nfollowing characterization of flat universally injective morphisms.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "flat",
+          "projection_start": 116,
+          "projection_end": 120,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 133,
+          "projection_end": 142,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 143,
+          "projection_end": 152,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:09NP:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes. Let <MATH_0002> denote the set\nof generic points of irreducible components of <MATH_0003>. If\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0004> is flat and separated,\n<STRUCT_0003> for <MATH_0005> we have <MATH_0006>, and\n<STRUCT_0004> if <MATH_0007>, <MATH_0008>, then <MATH_0009>,\n<STRUCT_0005>\nthen <MATH_0010> is universally injective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$X^0$",
+        "MATH_0003": "$X$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0004": "$f$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\xi \\in X^0$",
+        "MATH_0006": "$\\kappa(f(\\xi)) = \\kappa(\\xi)$",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$\\xi, \\xi' \\in X^0$",
+        "MATH_0008": "$\\xi \\not = \\xi'$",
+        "MATH_0009": "$f(\\xi) \\not = f(\\xi')$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0010": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 69,
+          "projection_end": 72,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible components",
+          "projection_start": 94,
+          "projection_end": 116,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 179,
+          "projection_end": 183,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "separated",
+          "projection_start": 188,
+          "projection_end": 197,
+          "concept": "separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 361,
+          "projection_end": 370,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:09NP:proof",
+      "source_text": "We have to show that <MATH_0001> is surjective, see\nMorphisms, Lemma <REF_0001>.\nAs <MATH_0002> is separated, the image of <MATH_0003> is closed.\nThus if <MATH_0004> is not surjective, we can find a generic point\n<MATH_0005> of an irreducible component of <MATH_0006>\nwhich is not in the image of <MATH_0007>. The projection\n<MATH_0008>\nis flat as a base change of the flat morphism <MATH_0009>, see\nMorphisms, Lemma <REF_0002>.\nHence generalizations lift along <MATH_0010>, see\nMorphisms, Lemma <REF_0003>.\nWe conclude that <MATH_0011>.\nHowever, assumptions (2) and (3) guarantee that the scheme\n<MATH_0012> has at most one point for every <MATH_0013>.\nIn other words, we have <MATH_0014> a contradiction.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\Delta : X \\to X \\times_Y X$",
+        "REF_0001": "\\ref{morphisms-lemma-universally-injective}",
+        "MATH_0002": "$X \\to Y$",
+        "MATH_0003": "$\\Delta$",
+        "MATH_0004": "$\\Delta$",
+        "MATH_0005": "$\\eta \\in X \\times_S X$",
+        "MATH_0006": "$X \\times_S X$",
+        "MATH_0007": "$\\Delta$",
+        "MATH_0008": "$\\text{pr}_1 : X \\times_Y X \\to X$",
+        "MATH_0009": "$X \\to Y$",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-flat}",
+        "MATH_0010": "$\\text{pr}_1$",
+        "REF_0003": "\\ref{morphisms-lemma-generalizations-lift-flat}",
+        "MATH_0011": "$\\xi = \\text{pr}_1(\\eta) \\in X^0$",
+        "MATH_0012": "$(X \\times_Y X)_{f(\\xi)}$",
+        "MATH_0013": "$\\xi \\in X^0$",
+        "MATH_0014": "$\\Delta(\\xi) = \\eta$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "surjective",
+          "projection_start": 36,
+          "projection_end": 46,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 52,
+          "projection_end": 61,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "separated",
+          "projection_start": 99,
+          "projection_end": 108,
+          "concept": "separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 114,
+          "projection_end": 119,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 173,
+          "projection_end": 183,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible component",
+          "projection_start": 231,
+          "projection_end": 252,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 288,
+          "projection_end": 293,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 340,
+          "projection_end": 344,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 350,
+          "projection_end": 361,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 369,
+          "projection_end": 373,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 374,
+          "projection_end": 382,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 400,
+          "projection_end": 409,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 479,
+          "projection_end": 488,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 590,
+          "projection_end": 596,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LB:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nThus we can reformulate\nLemma <REF_0001> as follows.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-universally-injective-etale-open-immersion}"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:09NQ:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes. Let <MATH_0002> denote the set\nof generic points of irreducible components of <MATH_0003>. If\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0004> is <ACCENT_0001>tale and separated,\n<STRUCT_0003> for <MATH_0005> we have <MATH_0006>, and\n<STRUCT_0004> if <MATH_0007>, <MATH_0008>, then <MATH_0009>,\n<STRUCT_0005>\nthen <MATH_0010> is an open immersion.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$X^0$",
+        "MATH_0003": "$X$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0004": "$f$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\xi \\in X^0$",
+        "MATH_0006": "$\\kappa(f(\\xi)) = \\kappa(\\xi)$",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$\\xi, \\xi' \\in X^0$",
+        "MATH_0008": "$\\xi \\not = \\xi'$",
+        "MATH_0009": "$f(\\xi) \\not = f(\\xi')$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0010": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 69,
+          "projection_end": 72,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible components",
+          "projection_start": 94,
+          "projection_end": 116,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 179,
+          "projection_end": 184,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "separated",
+          "projection_start": 189,
+          "projection_end": 198,
+          "concept": "separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 353,
+          "projection_end": 367,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:09NQ:proof",
+      "source_text": "Immediate from Lemmas <REF_0001> and\n<REF_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-flat-universally-injective}",
+        "REF_0002": "\\ref{lemma-universally-injective-etale-open-immersion}"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0F4J:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes which is locally of finite type.\nLet <MATH_0002> be a closed subset of <MATH_0003>. If there exists an fpqc covering\n<MATH_0004> such that the inverse image <MATH_0005>\nis proper over <MATH_0006>\n(Cohomology of Schemes, Definition <REF_0001>)\nthen <MATH_0007> is proper over <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$Z$",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$\\{Y_i \\to Y\\}$",
+        "MATH_0005": "$Z_i \\subset Y_i \\times_Y X$",
+        "MATH_0006": "$Y_i$",
+        "REF_0001": "\\ref{coherent-definition-proper-over-base}",
+        "MATH_0007": "$Z$",
+        "MATH_0008": "$Y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 50,
+          "projection_end": 72,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subset",
+          "projection_start": 95,
+          "projection_end": 108,
+          "concept": "closed-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 144,
+          "projection_end": 157,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 184,
+          "projection_end": 191,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 192,
+          "projection_end": 197,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 213,
+          "projection_end": 219,
+          "concept": "proper",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 238,
+          "projection_end": 259,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 304,
+          "projection_end": 310,
+          "concept": "proper",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0F4J:proof",
+      "source_text": "Endow <MATH_0001> with the reduced induced closed subscheme structure, see\nSchemes, Definition <REF_0001>.\nFor every <MATH_0002> the base change <MATH_0003> is a closed subscheme\nof <MATH_0004> whose underlying closed subset is <MATH_0005>.\nBy definition (via\nCohomology of Schemes, Lemma <REF_0002>)\nwe conclude that the projections <MATH_0006> are proper\nmorphisms. Hence <MATH_0007> is a proper morphism by\nLemma <REF_0003>.\nThus <MATH_0008> is proper over <MATH_0009> by definition.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$Z$",
+        "REF_0001": "\\ref{schemes-definition-reduced-induced-scheme}",
+        "MATH_0002": "$i$",
+        "MATH_0003": "$Y_i \\times_Y Z$",
+        "MATH_0004": "$Y_i \\times_Y X$",
+        "MATH_0005": "$Z_i$",
+        "REF_0002": "\\ref{coherent-lemma-closed-proper-over-base}",
+        "MATH_0006": "$Y_i \\times_Y Z \\to Y_i$",
+        "MATH_0007": "$Z \\to Y$",
+        "REF_0003": "\\ref{lemma-descending-property-proper}",
+        "MATH_0008": "$Z$",
+        "MATH_0009": "$Y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "reduced",
+          "projection_start": 27,
+          "projection_end": 34,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subscheme",
+          "projection_start": 43,
+          "projection_end": 59,
+          "concept": "closed-subscheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 75,
+          "projection_end": 82,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 133,
+          "projection_end": 144,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subscheme",
+          "projection_start": 162,
+          "projection_end": 178,
+          "concept": "closed-subscheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subset",
+          "projection_start": 211,
+          "projection_end": 224,
+          "concept": "closed-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 260,
+          "projection_end": 281,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 350,
+          "projection_end": 356,
+          "concept": "proper",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 357,
+          "projection_end": 366,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper morphism",
+          "projection_start": 391,
+          "projection_end": 406,
+          "concept": "source-phrase-proper-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 448,
+          "projection_end": 454,
+          "concept": "proper",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:06NC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAs <MATH_0001> is a flat, quasi-compact, surjective morphism\nwe see <MATH_0002> is an fpqc covering of <MATH_0003>.\nThe diagonal <MATH_0004> is an isomorphism\n(Schemes, Lemma <REF_0001>).\nThis implies that the base change of <MATH_0005> by <MATH_0006> is an\nisomorphism. Hence we see <MATH_0007> is an isomorphism by\nLemma <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\{X \\to Y\\}$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$\\Delta : X \\to X \\times_Y X$",
+        "REF_0001": "\\ref{schemes-lemma-monomorphism}",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{lemma-descending-property-isomorphism}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA universally injective <ACCENT_0001>tale morphism is an open immersion.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-universally-injective-etale-open-immersion}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LB:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe can use this lemma to show the following important result; we also\ngive a proof avoiding fpqc descent.\nWe will discuss this and related results in more detail in\n<ACCENT_0001>tale Morphisms, Section <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'E",
+        "REF_0001": "\\ref{etale-section-topological-etale}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>First proof<ENVARGEND_0001>\nLet <MATH_0001> be an <ACCENT_0001>tale morphism which is universally injective.\nThen <MATH_0002> is open\n(Morphisms, Lemma <REF_0001>)\nhence we can replace <MATH_0003> by <MATH_0004> and we may assume that <MATH_0005> is surjective.\nThen <MATH_0006> is bijective and open hence a homeomorphism. Hence <MATH_0007> is\nquasi-compact. Thus by\nLemma <REF_0002>\nit suffices to show that <MATH_0008> is a monomorphism. As <MATH_0009> is <ACCENT_0002>tale\nthe morphism <MATH_0010> is an open immersion by\nMorphisms, Lemma <REF_0003>\n(and\nMorphisms, Lemma <REF_0004>).\nAs <MATH_0011> is universally injective <MATH_0012> is also surjective, see\nMorphisms, Lemma <REF_0005>.\nHence <MATH_0013> is an isomorphism, i.e., <MATH_0014> is a monomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "MATH_0001": "$f : X \\to Y$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f$",
+        "REF_0001": "\\ref{morphisms-lemma-etale-open}",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$f(X)$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{lemma-flat-surjective-quasi-compact-monomorphism-isomorphism}",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$X \\to Y$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0010": "$\\Delta_{X/Y} : X \\to X \\times_Y X$",
+        "REF_0003": "\\ref{morphisms-lemma-diagonal-unramified-morphism}",
+        "REF_0004": "\\ref{morphisms-lemma-flat-unramified-etale}",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$\\Delta_{X/Y}$",
+        "REF_0005": "\\ref{morphisms-lemma-universally-injective}",
+        "MATH_0013": "$\\Delta_{X/Y}$",
+        "MATH_0014": "$X \\to Y$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LC:proof/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Second proof<ENVARGEND_0001>\nLet <MATH_0001> be an <ACCENT_0001>tale morphism which is universally injective.\nThen <MATH_0002> is open (Morphisms, Lemma <REF_0001>)\nhence we can replace <MATH_0003> by <MATH_0004> and we may assume that <MATH_0005> is surjective.\nSince the hypotheses remain satisfied after any base change, we conclude\nthat <MATH_0006> is a universal homeomorphism. Therefore <MATH_0007> is integral, see\nMorphisms, Lemma <REF_0002>.\nIt follows that <MATH_0008> is finite by\nMorphisms, Lemma <REF_0003>.\nIt follows that <MATH_0009> is finite locally free by\nMorphisms, Lemma <REF_0004>.\nTo finish the proof, it suffices that <MATH_0010> is finite locally\nfree of degree <MATH_0011> (a finite locally free morphism of degree <MATH_0012>\nis an isomorphism).\nThere is decomposition of <MATH_0013> into open and closed subschemes\n<MATH_0014> such that <MATH_0015> is finite locally free of\ndegree <MATH_0016>, see Morphisms, Lemma <REF_0005>.\nIf <MATH_0017> is not empty, we can pick a morphism <MATH_0018>\nwhere <MATH_0019> is an algebraically closed field (just take the algebraic\nclosure of the residue field of some point of <MATH_0020>).\nThen <MATH_0021> is a disjoint union of\ncopies of <MATH_0022>, by\nMorphisms, Lemma <REF_0006>\nand the fact that <MATH_0023> is algebraically closed.\nHowever, since <MATH_0024> is universally injective, there can only be\none copy and hence <MATH_0025> as desired.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "MATH_0001": "$f : X \\to Y$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f$",
+        "REF_0001": "\\ref{morphisms-lemma-etale-open}",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$f(X)$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{morphisms-lemma-universal-homeomorphism}",
+        "MATH_0008": "$f$",
+        "REF_0003": "\\ref{morphisms-lemma-finite-integral}",
+        "MATH_0009": "$f$",
+        "REF_0004": "\\ref{morphisms-lemma-finite-flat}",
+        "MATH_0010": "$f$",
+        "MATH_0011": "$1$",
+        "MATH_0012": "$1$",
+        "MATH_0013": "$Y$",
+        "MATH_0014": "$V_d$",
+        "MATH_0015": "$f^{-1}(V_d) \\to V_d$",
+        "MATH_0016": "$d$",
+        "REF_0005": "\\ref{morphisms-lemma-finite-locally-free}",
+        "MATH_0017": "$V_d$",
+        "MATH_0018": "$\\Spec(k) \\to V_d \\subset Y$",
+        "MATH_0019": "$k$",
+        "MATH_0020": "$V_d$",
+        "MATH_0021": "$\\Spec(k) \\times_Y X \\to \\Spec(k)$",
+        "MATH_0022": "$\\Spec(k)$",
+        "REF_0006": "\\ref{morphisms-lemma-etale-over-field}",
+        "MATH_0023": "$k$",
+        "MATH_0024": "$f$",
+        "MATH_0025": "$d = 1$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LB:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe can reformulate the hypotheses in the lemma above a bit by using the\nfollowing characterization of flat universally injective morphisms.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:09NP:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes. Let <MATH_0002> denote the set\nof generic points of irreducible components of <MATH_0003>. If\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is flat and separated,\n<STRUCT_0004> for <MATH_0005> we have <MATH_0006>, and\n<STRUCT_0005> if <MATH_0007>, <MATH_0008>, then <MATH_0009>,\n<STRUCT_0006>\nthen <MATH_0010> is universally injective.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-universally-injective}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$X^0$",
+        "MATH_0003": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$\\xi \\in X^0$",
+        "MATH_0006": "$\\kappa(f(\\xi)) = \\kappa(\\xi)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$\\xi, \\xi' \\in X^0$",
+        "MATH_0008": "$\\xi \\not = \\xi'$",
+        "MATH_0009": "$f(\\xi) \\not = f(\\xi')$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0010": "$f$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:09NP:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe have to show that <MATH_0001> is surjective, see\nMorphisms, Lemma <REF_0001>.\nAs <MATH_0002> is separated, the image of <MATH_0003> is closed.\nThus if <MATH_0004> is not surjective, we can find a generic point\n<MATH_0005> of an irreducible component of <MATH_0006>\nwhich is not in the image of <MATH_0007>. The projection\n<MATH_0008>\nis flat as a base change of the flat morphism <MATH_0009>, see\nMorphisms, Lemma <REF_0002>.\nHence generalizations lift along <MATH_0010>, see\nMorphisms, Lemma <REF_0003>.\nWe conclude that <MATH_0011>.\nHowever, assumptions (2) and (3) guarantee that the scheme\n<MATH_0012> has at most one point for every <MATH_0013>.\nIn other words, we have <MATH_0014> a contradiction.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\Delta : X \\to X \\times_Y X$",
+        "REF_0001": "\\ref{morphisms-lemma-universally-injective}",
+        "MATH_0002": "$X \\to Y$",
+        "MATH_0003": "$\\Delta$",
+        "MATH_0004": "$\\Delta$",
+        "MATH_0005": "$\\eta \\in X \\times_S X$",
+        "MATH_0006": "$X \\times_S X$",
+        "MATH_0007": "$\\Delta$",
+        "MATH_0008": "$\\text{pr}_1 : X \\times_Y X \\to X$",
+        "MATH_0009": "$X \\to Y$",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-flat}",
+        "MATH_0010": "$\\text{pr}_1$",
+        "REF_0003": "\\ref{morphisms-lemma-generalizations-lift-flat}",
+        "MATH_0011": "$\\xi = \\text{pr}_1(\\eta) \\in X^0$",
+        "MATH_0012": "$(X \\times_Y X)_{f(\\xi)}$",
+        "MATH_0013": "$\\xi \\in X^0$",
+        "MATH_0014": "$\\Delta(\\xi) = \\eta$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LB:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThus we can reformulate\nLemma <REF_0001> as follows.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-universally-injective-etale-open-immersion}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:09NQ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes. Let <MATH_0002> denote the set\nof generic points of irreducible components of <MATH_0003>. If\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is <ACCENT_0001>tale and separated,\n<STRUCT_0004> for <MATH_0005> we have <MATH_0006>, and\n<STRUCT_0005> if <MATH_0007>, <MATH_0008>, then <MATH_0009>,\n<STRUCT_0006>\nthen <MATH_0010> is an open immersion.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-open-immersion}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$X^0$",
+        "MATH_0003": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$f$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$\\xi \\in X^0$",
+        "MATH_0006": "$\\kappa(f(\\xi)) = \\kappa(\\xi)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$\\xi, \\xi' \\in X^0$",
+        "MATH_0008": "$\\xi \\not = \\xi'$",
+        "MATH_0009": "$f(\\xi) \\not = f(\\xi')$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0010": "$f$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:09NQ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nImmediate from Lemmas <REF_0001> and\n<REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-flat-universally-injective}",
+        "REF_0002": "\\ref{lemma-universally-injective-etale-open-immersion}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0F4J:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes which is locally of finite type.\nLet <MATH_0002> be a closed subset of <MATH_0003>. If there exists an fpqc covering\n<MATH_0004> such that the inverse image <MATH_0005>\nis proper over <MATH_0006>\n(Cohomology of Schemes, Definition <REF_0001>)\nthen <MATH_0007> is proper over <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-proper-over-base}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$Z$",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$\\{Y_i \\to Y\\}$",
+        "MATH_0005": "$Z_i \\subset Y_i \\times_Y X$",
+        "MATH_0006": "$Y_i$",
+        "REF_0001": "\\ref{coherent-definition-proper-over-base}",
+        "MATH_0007": "$Z$",
+        "MATH_0008": "$Y$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0F4J:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nEndow <MATH_0001> with the reduced induced closed subscheme structure, see\nSchemes, Definition <REF_0001>.\nFor every <MATH_0002> the base change <MATH_0003> is a closed subscheme\nof <MATH_0004> whose underlying closed subset is <MATH_0005>.\nBy definition (via\nCohomology of Schemes, Lemma <REF_0002>)\nwe conclude that the projections <MATH_0006> are proper\nmorphisms. Hence <MATH_0007> is a proper morphism by\nLemma <REF_0003>.\nThus <MATH_0008> is proper over <MATH_0009> by definition.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$Z$",
+        "REF_0001": "\\ref{schemes-definition-reduced-induced-scheme}",
+        "MATH_0002": "$i$",
+        "MATH_0003": "$Y_i \\times_Y Z$",
+        "MATH_0004": "$Y_i \\times_Y X$",
+        "MATH_0005": "$Z_i$",
+        "REF_0002": "\\ref{coherent-lemma-closed-proper-over-base}",
+        "MATH_0006": "$Y_i \\times_Y Z \\to Y_i$",
+        "MATH_0007": "$Z \\to Y$",
+        "REF_0003": "\\ref{lemma-descending-property-proper}",
+        "MATH_0008": "$Z$",
+        "MATH_0009": "$Y$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0D2P:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an invertible <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering.\nLet <MATH_0005> be the base change of <MATH_0006> and let <MATH_0007>\nbe the pullback of <MATH_0008> to <MATH_0009>.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0010> is ample on <MATH_0011>, and\n<STRUCT_0004> <MATH_0012> is ample on <MATH_0013>\nfor every <MATH_0014>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-ample}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{L}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{g_i : S_i \\to S\\}_{i \\in I}$",
+        "MATH_0005": "$f_i : X_i \\to S_i$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$\\mathcal{L}_i$",
+        "MATH_0008": "$\\mathcal{L}$",
+        "MATH_0009": "$X_i$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0010": "$\\mathcal{L}$",
+        "MATH_0011": "$X/S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0012": "$\\mathcal{L}_i$",
+        "MATH_0013": "$X_i/S_i$",
+        "MATH_0014": "$i \\in I$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:coherent-definition-proper-over-base",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes which is locally of finite type.\nLet <MATH_0002> be a closed subset.\nWe say <TEXTITOPEN_0001><MATH_0003> is proper over <MATH_0004><TEXTITCLOSE_0001>\nif the equivalent conditions of Lemma <REF_0001>\nare satisfied.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-proper-over-base}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$Z \\subset X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0003": "$Z$",
+        "MATH_0004": "$S$",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{lemma-closed-proper-over-base}",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-definition-proper-over-base",
+      "requested_tag": "0CYM"
+    },
+    {
+      "context_id": "reference:coherent-lemma-closed-proper-over-base",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes which is locally of finite type.\nLet <MATH_0002> be a closed subset. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> the morphism <MATH_0003> is proper if <MATH_0004> is endowed with the reduced\ninduced closed subscheme structure\n(Schemes, Definition <REF_0001>),\n<STRUCT_0004> for some closed subscheme structure on <MATH_0005> the morphism <MATH_0006>\nis proper,\n<STRUCT_0005> for any closed subscheme structure on <MATH_0007> the morphism\n<MATH_0008> is proper.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-closed-proper-over-base}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$Z \\subset X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$Z \\to S$",
+        "MATH_0004": "$Z$",
+        "REF_0001": "\\ref{schemes-definition-reduced-induced-scheme}",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$Z$",
+        "MATH_0006": "$Z \\to S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$Z$",
+        "MATH_0008": "$Z \\to S$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-closed-proper-over-base",
+      "requested_tag": "0CYL"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-proper",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is proper''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-proper}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-proper",
+      "requested_tag": "02L1"
+    },
+    {
+      "context_id": "reference:descent-lemma-flat-surjective-quasi-compact-monomorphism-isomorphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat, quasi-compact, surjective monomorphism.\nThen f is an isomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-surjective-quasi-compact-monomorphism-isomorphism}",
+        "MATH_0001": "$f : X \\to Y$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-flat-surjective-quasi-compact-monomorphism-isomorphism",
+      "requested_tag": "06NC"
+    },
+    {
+      "context_id": "reference:etale-section-topological-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Topological properties of <ACCENT_0001>tale morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "ACCENT_0001": "\\'e",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-topological-etale}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "etale-section-topological-etale",
+      "requested_tag": "025F"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-base-change-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe base change of a flat morphism is flat.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-flat}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-base-change-flat",
+      "requested_tag": "01U9"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-diagonal-unramified-morphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is unramified, then the diagonal morphism\n<MATH_0003> is an open immersion.\n<STRUCT_0004> If <MATH_0004> is locally of finite type\nand <MATH_0005> is an open immersion, then <MATH_0006> is unramified.\n<STRUCT_0005> If <MATH_0007> is locally of finite presentation and <MATH_0008> is an open\nimmersion, then <MATH_0009> is G-unramified.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-diagonal-unramified-morphism}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\Delta : X \\to X \\times_S X$",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\Delta$",
+        "MATH_0006": "$f$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$f$",
+        "MATH_0008": "$\\Delta$",
+        "MATH_0009": "$f$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-diagonal-unramified-morphism",
+      "requested_tag": "02GE"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-etale-open",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAn <ACCENT_0001>tale morphism is open.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-open}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-etale-open",
+      "requested_tag": "03WT"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-etale-over-field",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nFibres of <ACCENT_0001>tale morphisms.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme over a field <MATH_0002>.\nThe structure morphism <MATH_0003> is <ACCENT_0002>tale if\nand only if <MATH_0004> is a disjoint union of spectra of finite separable\nfield extensions of <MATH_0005>.\n<STRUCT_0004> If <MATH_0006> is an <ACCENT_0003>tale morphism, then for every <MATH_0007> the\nfibre <MATH_0008> is a disjoint union of spectra of finite separable field\nextensions of <MATH_0009>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-over-field}",
+        "LOCKED_0002": "\\begin{slogan}\nDescription of the \\'etale schemes over fields and fibres\nof \\'etale morphisms.\n\\end{slogan}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$k$",
+        "MATH_0003": "$X \\to \\Spec(k)$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0004": "$X$",
+        "MATH_0005": "$k$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$f : X \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0007": "$s \\in S$",
+        "MATH_0008": "$X_s$",
+        "MATH_0009": "$\\kappa(s)$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-etale-over-field",
+      "requested_tag": "02GL"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is finite locally free,\n<STRUCT_0004> <MATH_0003> is finite, flat, and locally of finite presentation.\n<STRUCT_0005>\nIf <MATH_0004> is locally Noetherian these are also equivalent to\n<STRUCT_0006>\n<ITEMOPEN_0001>(3)<ITEMCLOSE_0001> <MATH_0005> is finite and flat.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-flat}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$f$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$S$",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0005": "$f$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-flat",
+      "requested_tag": "02KB"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-integral",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA finite morphism is integral.\nAn integral morphism which is locally of finite type is finite.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-integral}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-integral",
+      "requested_tag": "01WJ"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-locally-free",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a finite locally free morphism of schemes.\nThere exists a disjoint union decomposition\n<MATH_0002> by open and closed subschemes\nsuch that setting <MATH_0003> the restrictions\n<MATH_0004> are finite locally free morphisms <MATH_0005>\nof degree <MATH_0006>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-locally-free}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$S = \\coprod_{d \\geq 0} S_d$",
+        "MATH_0003": "$X_d = f^{-1}(S_d)$",
+        "MATH_0004": "$f|_{X_d}$",
+        "MATH_0005": "$X_d \\to S_d$",
+        "MATH_0006": "$d$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-locally-free",
+      "requested_tag": "04MH"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-flat-unramified-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA morphism is <ACCENT_0001>tale at a point if and only if it is flat and G-unramified\nat that point.\nA morphism is <ACCENT_0002>tale if and only if it is flat and G-unramified.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-unramified-etale}",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-flat-unramified-etale",
+      "requested_tag": "02GV"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-generalizations-lift-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat morphism of schemes.\nThen generalizations lift along <MATH_0002>, see\nTopology, Definition <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-generalizations-lift-flat}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "REF_0001": "\\ref{topology-definition-lift-specializations}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-generalizations-lift-flat",
+      "requested_tag": "03HV"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-universal-homeomorphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes. The following are\nequivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is a universal homeomorphism, and\n<STRUCT_0004> <MATH_0003> is integral, universally injective and surjective.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-universal-homeomorphism}",
+        "MATH_0001": "$f : X \\to Y$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$f$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-universal-homeomorphism",
+      "requested_tag": "04DF"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-universally-injective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> For every field <MATH_0002> the induced map\n<MATH_0003>\nis injective.\n<STRUCT_0004> The morphism <MATH_0004> is universally injective.\n<STRUCT_0005> The morphism <MATH_0005> is radicial.\n<STRUCT_0006> The diagonal morphism <MATH_0006>\nis surjective.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-universally-injective}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[Proposition 3.7.1]{EGA1-second}\n\\end{reference}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$K$",
+        "MATH_0003": "$\\Mor(\\Spec(K), X) \\to \\Mor(\\Spec(K), S)$",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$f$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$f$",
+        "STRUCT_0006": "\\item",
+        "MATH_0006": "$\\Delta_{X/S} : X \\longrightarrow X \\times_S X$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-universally-injective",
+      "requested_tag": "01S4"
+    },
+    {
+      "context_id": "reference:schemes-definition-reduced-induced-scheme",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a closed subset.\nA <TEXTITOPEN_0001>scheme structure on <MATH_0003><TEXTITCLOSE_0001> is given by a closed subscheme <MATH_0004> of\n<MATH_0005> whose underlying set is equal to <MATH_0006>. We often say\n``let <MATH_0007> be a scheme structure on <MATH_0008>'' to\nindicate this. The <TEXTITOPEN_0002>reduced induced scheme structure<TEXTITCLOSE_0002>\non <MATH_0009> is the one constructed in Lemma <REF_0001>.\nThe <TEXTITOPEN_0003>reduction <MATH_0010> of <MATH_0011><TEXTITCLOSE_0003> is the reduced induced scheme\nstructure on <MATH_0012> itself.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-reduced-induced-scheme}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$Z \\subset X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0003": "$Z$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$Z'$",
+        "MATH_0005": "$X$",
+        "MATH_0006": "$Z$",
+        "MATH_0007": "$(Z, \\mathcal{O}_Z)$",
+        "MATH_0008": "$Z$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0009": "$Z$",
+        "REF_0001": "\\ref{lemma-reduced-closed-subscheme}",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0010": "$X_{red}$",
+        "MATH_0011": "$X$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0012": "$X$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-definition-reduced-induced-scheme",
+      "requested_tag": "01J4"
+    }
+  ]
+}

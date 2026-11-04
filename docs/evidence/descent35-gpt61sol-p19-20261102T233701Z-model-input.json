@@ -1,0 +1,1091 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e97-7f22-7ae2-8f76-fb72df8523db",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p19-20261102T233701Z.json",
+    "hash": "sha256:4dae188e0f3ea07882898668104d9452c6f9f747c4d0824e6834ba82b42796ab"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:08WE:title",
+      "source_text": "Descent for universally injective morphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 24,
+          "projection_end": 33,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 34,
+          "projection_end": 43,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WE:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nNumerous constructions in algebraic geometry are made using techniques of \n<TEXTITOPEN_0001>descent<TEXTITCLOSE_0001>, such as constructing objects over a given space by first\nworking over a somewhat larger space which projects down to the given space,\nor verifying a property of a space or a morphism by pulling back along a\ncovering map. The utility of such techniques is of course  dependent on\nidentification of a wide class of <TEXTITOPEN_0002>effective descent morphisms<TEXTITCLOSE_0002>.\nEarly in the Grothendieckian development of modern algebraic geometry,\nthe class of morphisms which are <TEXTITOPEN_0003>quasi-compact<TEXTITCLOSE_0003> and <TEXTITOPEN_0004>faithfully flat<TEXTITCLOSE_0004> \nwas shown to be effective for descending objects, morphisms, and many\nproperties thereof. \n\n<STRUCT_0002><STRUCT_0003>\nAs usual, this statement comes down to a property of rings and modules.\nFor a homomorphism <MATH_0001> to be an effective descent morphism for\nmodules, Grothendieck showed that it is sufficient for <MATH_0002> to be\nfaithfully flat. However, this excludes many natural examples: for instance,\nany split ring homomorphism is an effective descent morphism. One natural\nexample of this even arises in the proof of faithfully flat descent: for\n<MATH_0003> any ring homomorphism, <MATH_0004>\nis split by the multiplication map whether or not it is flat.\n\n<STRUCT_0004><STRUCT_0005>\nOne may then ask whether there is a natural ring-theoretic condition \nimplying effective descent for modules which includes both the case of a\nfaithfully flat morphism and that of a split ring homomorphism. It may\nsurprise the reader (at least it surprised this author) to learn that a\ncomplete answer to this question has been known since around 1970! Namely,\nit is not hard to check that a necessary condition for <MATH_0005> to be\nan effective descent morphism for modules is that <MATH_0006> must be\n<TEXTITOPEN_0005>universally injective<TEXTITCLOSE_0005> in the category of <MATH_0007>-modules, that is, for\nany <MATH_0008>-module <MATH_0009>, the map <MATH_0010>\nmust be injective. This then turns out to be a sufficient condition as well.\nFor example, if <MATH_0011> is split in the category of <MATH_0012>-modules (but not\nnecessarily in the category of rings), then <MATH_0013> is an effective descent\nmorphism for modules.\n \n<STRUCT_0006><STRUCT_0007>\nThe history of this result is a bit involved: it was originally asserted\nby Olivier <REF_0001>, who  called universally injective morphisms\n<TEXTITOPEN_0006>pure<TEXTITCLOSE_0006>, but without a clear indication of proof. One can extract the\nresult from the work of Joyal and Tierney <REF_0002>, but to the\nbest of our knowledge, the first free-standing proof to appear in the\nliterature is that of Mesablishvili <REF_0003>. The first purpose\nof this section is to expose Mesablishvili's proof; this requires little\nmodification of his original presentation aside from correcting typos, with\nthe one exception that we make explicit the relationship between the\ncustomary definition of a descent datum in algebraic geometry and the one\nused in <REF_0004>. The proof turns out to be entirely\ncategory-theoretic, and consequently can be put in the language of monads\n(and thus applied in other contexts); see <REF_0005>.\n\n<STRUCT_0008><STRUCT_0009>\nThe second purpose of this section is to collect some information about which \nproperties of modules, algebras, and morphisms can be descended along \nuniversally injective ring homomorphisms. The cases of finite modules\nand flat modules were treated by Mesablishvili <REF_0006>.\n\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "TEXTITOPEN_0004": "{\\it ",
+        "TEXTITCLOSE_0004": "}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0001": "$f: R \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$f: R \\to S$",
+        "MATH_0004": "$1_S \\otimes f: S \\to S \\otimes_R S$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0005": "$f: R \\to S$",
+        "MATH_0006": "$f$",
+        "TEXTITOPEN_0005": "{\\it ",
+        "TEXTITCLOSE_0005": "}",
+        "MATH_0007": "$R$",
+        "MATH_0008": "$R$",
+        "MATH_0009": "$M$",
+        "MATH_0010": "$1_M  \\otimes f: M \\to M \\otimes_R S$",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$f$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "REF_0001": "\\cite{olivier}",
+        "TEXTITOPEN_0006": "{\\it ",
+        "TEXTITCLOSE_0006": "}",
+        "REF_0002": "\\cite{joyal-tierney}",
+        "REF_0003": "\\cite{mesablishvili1}",
+        "REF_0004": "\\cite{mesablishvili1}",
+        "REF_0005": "\\cite{janelidze-tholen}",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "REF_0006": "\\cite{mesablishvili2}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 88,
+          "projection_end": 95,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 118,
+          "projection_end": 125,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 271,
+          "projection_end": 279,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 304,
+          "projection_end": 312,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 313,
+          "projection_end": 316,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 400,
+          "projection_end": 405,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 419,
+          "projection_end": 426,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 427,
+          "projection_end": 436,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 513,
+          "projection_end": 518,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 522,
+          "projection_end": 531,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 542,
+          "projection_end": 555,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 560,
+          "projection_end": 575,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 617,
+          "projection_end": 624,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 626,
+          "projection_end": 635,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 746,
+          "projection_end": 751,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 756,
+          "projection_end": 763,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 771,
+          "projection_end": 783,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 815,
+          "projection_end": 822,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 823,
+          "projection_end": 831,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 836,
+          "projection_end": 843,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 909,
+          "projection_end": 924,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 996,
+          "projection_end": 1000,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 1001,
+          "projection_end": 1013,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1030,
+          "projection_end": 1037,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1038,
+          "projection_end": 1046,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1104,
+          "projection_end": 1119,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1120,
+          "projection_end": 1127,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 1149,
+          "projection_end": 1153,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 1154,
+          "projection_end": 1166,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "multiplication map",
+          "projection_start": 1196,
+          "projection_end": 1214,
+          "concept": "source-phrase-multiplication-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1236,
+          "projection_end": 1240,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 1313,
+          "projection_end": 1317,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1357,
+          "projection_end": 1364,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1369,
+          "projection_end": 1376,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1411,
+          "projection_end": 1426,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1427,
+          "projection_end": 1435,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 1456,
+          "projection_end": 1460,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 1461,
+          "projection_end": 1473,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1715,
+          "projection_end": 1722,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1723,
+          "projection_end": 1731,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1736,
+          "projection_end": 1743,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 1784,
+          "projection_end": 1793,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1801,
+          "projection_end": 1809,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1825,
+          "projection_end": 1832,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1863,
+          "projection_end": 1869,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1887,
+          "projection_end": 1890,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 1911,
+          "projection_end": 1920,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 2024,
+          "projection_end": 2032,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 2048,
+          "projection_end": 2055,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 2084,
+          "projection_end": 2092,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 2096,
+          "projection_end": 2101,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 2137,
+          "projection_end": 2144,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2145,
+          "projection_end": 2153,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 2158,
+          "projection_end": 2165,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 2313,
+          "projection_end": 2322,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 2323,
+          "projection_end": 2332,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pure",
+          "projection_start": 2333,
+          "projection_end": 2337,
+          "concept": "pure",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 2845,
+          "projection_end": 2852,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 2948,
+          "projection_end": 2956,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 3195,
+          "projection_end": 3202,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 3204,
+          "projection_end": 3212,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 3218,
+          "projection_end": 3227,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 3263,
+          "projection_end": 3272,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 3273,
+          "projection_end": 3277,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 3278,
+          "projection_end": 3291,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 3306,
+          "projection_end": 3312,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 3313,
+          "projection_end": 3320,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat modules",
+          "projection_start": 3325,
+          "projection_end": 3337,
+          "concept": "source-phrase-flat-modules",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WF:title",
+      "source_text": "Category-theoretic preliminaries",
+      "node_kind": "subsection_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Category",
+          "projection_start": 0,
+          "projection_end": 8,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WF:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nWe start by recalling a few basic notions from category theory which will \nsimplify the exposition. In this subsection, fix an ambient category.\n\n<STRUCT_0002><STRUCT_0003>\nFor two morphisms <MATH_0001>, recall that an <TEXTITOPEN_0001>equalizer<TEXTITCLOSE_0001>\nof <MATH_0002> and <MATH_0003>  is a morphism <MATH_0004> which satisfies\n<MATH_0005> and is universal for this property.\nThis second statement means that any commutative diagram \n<MATH_0006>\nwithout the dashed arrow can be uniquely completed. We also say in this \nsituation that the diagram\n<MATH_0007>\nis an equalizer. Reversing arrows gives the definition of a <TEXTITOPEN_0002>coequalizer<TEXTITCLOSE_0002>.\nSee Categories, Sections <REF_0001> and\n<REF_0002>.\n\n<STRUCT_0004><STRUCT_0005>\nSince it involves a universal property, the property of being an equalizer is \ntypically not stable under applying a covariant functor. Just as for\nmonomorphisms and epimorphisms, one can get around this in some\ncases by exhibiting splittings.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0001": "$g_1, g_2: B \\to C$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$g_1$",
+        "MATH_0003": "$g_2$",
+        "MATH_0004": "$f: A \\to B$",
+        "MATH_0005": "$g_1 \\circ f = g_2 \\circ f$",
+        "MATH_0006": "$$\n\\xymatrix{A' \\ar[rd]^e \\ar@/^1.5pc/[rrd] \\ar@{-->}[d] & & \\\\\nA \\ar[r]^f & B \\ar@<1ex>[r]^{g_1} \\ar@<-1ex>[r]_{g_2} & \nC\n}\n$$",
+        "MATH_0007": "\\begin{equation}\n\\label{equation-equalizer}\n\\xymatrix{\nA \\ar[r]^f  & B \\ar@<1ex>[r]^{g_1} \\ar@<-1ex>[r]_{g_2} & C\n}\n\\end{equation}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "REF_0001": "\\ref{categories-section-equalizers}",
+        "REF_0002": "\\ref{categories-section-coequalizers}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 61,
+          "projection_end": 69,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 148,
+          "projection_end": 156,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 193,
+          "projection_end": 202,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 231,
+          "projection_end": 240,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 277,
+          "projection_end": 285,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 399,
+          "projection_end": 418,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 522,
+          "projection_end": 529,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 548,
+          "projection_end": 557,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 602,
+          "projection_end": 613,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Categories",
+          "projection_start": 619,
+          "projection_end": 629,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "universal property",
+          "projection_start": 714,
+          "projection_end": 732,
+          "concept": "universal-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 759,
+          "projection_end": 768,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 820,
+          "projection_end": 827,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphisms",
+          "projection_start": 841,
+          "projection_end": 854,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphisms",
+          "projection_start": 859,
+          "projection_end": 871,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "splittings",
+          "projection_start": 925,
+          "projection_end": 935,
+          "concept": "splitting",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WH:statement",
+      "source_text": "A <TEXTITOPEN_0001>split equalizer<TEXTITCLOSE_0001> is a diagram (<REF_0001>) with\n<MATH_0001> for which there exist auxiliary morphisms\n<MATH_0002> and <MATH_0003> such that\n<MATH_0004>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{equation-equalizer}",
+        "MATH_0001": "$g_1 \\circ f = g_2 \\circ f$",
+        "MATH_0002": "$h : B \\to A$",
+        "MATH_0003": "$i : C \\to B$",
+        "MATH_0004": "\\begin{equation}\n\\label{equation-split-equalizer-conditions}\nh \\circ f = 1_A, \\quad f \\circ h = i \\circ g_1, \\quad i \\circ g_2 = 1_B.\n\\end{equation}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "split equalizer",
+          "projection_start": 2,
+          "projection_end": 17,
+          "concept": "split equalizer",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 23,
+          "projection_end": 30,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 93,
+          "projection_end": 102,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WF:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nThe point is that the equalities among arrows force (<REF_0001>) \nto be an equalizer: the map <MATH_0001> factors uniquely through <MATH_0002> by writing\n<MATH_0003>. Consequently, applying a covariant functor\nto a split equalizer gives a split equalizer; applying a contravariant functor \ngives a <TEXTITOPEN_0001>split coequalizer<TEXTITCLOSE_0001>, whose definition is apparent.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{equation-equalizer}",
+        "MATH_0001": "$e$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$e = f \\circ (h \\circ e)$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "equalizer",
+          "projection_start": 88,
+          "projection_end": 97,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 103,
+          "projection_end": 106,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 215,
+          "projection_end": 222,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 234,
+          "projection_end": 243,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 258,
+          "projection_end": 267,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "contravariant functor",
+          "projection_start": 280,
+          "projection_end": 301,
+          "concept": "contravariant-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 316,
+          "projection_end": 327,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WJ:title",
+      "source_text": "Universally injective morphisms",
+      "node_kind": "subsection_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 12,
+          "projection_end": 21,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 22,
+          "projection_end": 31,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:039Y:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002> be a cosimplicial <MATH_0003>-algebra.\nIn this setting a descent datum corresponds to an cosimplicial\n<MATH_0004>-module <MATH_0005> with the property that for\nevery <MATH_0006> and every <MATH_0007> the\nmap <MATH_0008> induces an isomorphism\n<MATH_0009>\nLet us call such a cosimplicial module a <TEXTITOPEN_0001>cartesian module<TEXTITCLOSE_0001>.\nIn this setting, the proof of Proposition <REF_0001>\ncan be split in the following steps\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0010> and <MATH_0011> are faithfully flat,\nthen descent data for <MATH_0012> are effective if\ndescent data for <MATH_0013> are effective.\n<STRUCT_0004> Let <MATH_0014> be an <MATH_0015>-algebra. Descent data for <MATH_0016> correspond\nto cartesian <MATH_0017>-modules.\n<STRUCT_0005> If <MATH_0018> has a section then <MATH_0019> is homotopy\nequivalent to <MATH_0020>, the constant cosimplicial\n<MATH_0021>-algebra with value <MATH_0022>.\n<STRUCT_0006> If <MATH_0023> is a homotopy equivalence of\ncosimplicial <MATH_0024>-algebras then the functor\n<MATH_0025>\ninduces an equivalence of categories between cartesian\n<MATH_0026>-modules and cartesian <MATH_0027>-modules.\n<STRUCT_0007>\nFor (1) see Lemma <REF_0002>.\nPart (2) uses Lemma <REF_0003>.\nPart (3) we have seen in the proof of Lemma <REF_0004>\n(it relies on Simplicial,\nLemma <REF_0005>).\nMoreover, part (4) is a triviality if you think about it right!\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-homotopy-equivalent-cosimplicial-algebras}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$A_\\bullet$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$A_\\bullet$",
+        "MATH_0005": "$M_\\bullet$",
+        "MATH_0006": "$n, m \\geq 0$",
+        "MATH_0007": "$\\varphi : [n] \\to [m]$",
+        "MATH_0008": "$M(\\varphi) : M_n \\to M_m$",
+        "MATH_0009": "$$\nM_n \\otimes_{A_n, A(\\varphi)} A_m \\longrightarrow M_m.\n$$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{proposition-descent-module}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0010": "$R \\to R'$",
+        "MATH_0011": "$R \\to A$",
+        "MATH_0012": "$A/R$",
+        "MATH_0013": "$(R' \\otimes_R A)/R'$",
+        "STRUCT_0004": "\\item",
+        "MATH_0014": "$A$",
+        "MATH_0015": "$R$",
+        "MATH_0016": "$A/R$",
+        "MATH_0017": "$(A/R)_\\bullet$",
+        "STRUCT_0005": "\\item",
+        "MATH_0018": "$R \\to A$",
+        "MATH_0019": "$(A/R)_\\bullet$",
+        "MATH_0020": "$R$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$R$",
+        "STRUCT_0006": "\\item",
+        "MATH_0023": "$A_\\bullet \\to B_\\bullet$",
+        "MATH_0024": "$R$",
+        "MATH_0025": "$M_\\bullet \\mapsto M_\\bullet \\otimes_{A_\\bullet} B_\\bullet$",
+        "MATH_0026": "$A_\\bullet$",
+        "MATH_0027": "$B_\\bullet$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "REF_0002": "\\ref{lemma-descent-descends}",
+        "REF_0003": "\\ref{lemma-descent-datum-cosimplicial}",
+        "REF_0004": "\\ref{lemma-with-section-exact}",
+        "REF_0005": "\\ref{simplicial-lemma-push-outs-simplicial-object-w-section}",
+        "STRUCT_0008": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WE:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNumerous constructions in algebraic geometry are made using techniques of \n<TEXTITOPEN_0001>descent<TEXTITCLOSE_0001>, such as constructing objects over a given space by first\nworking over a somewhat larger space which projects down to the given space,\nor verifying a property of a space or a morphism by pulling back along a\ncovering map. The utility of such techniques is of course  dependent on\nidentification of a wide class of <TEXTITOPEN_0002>effective descent morphisms<TEXTITCLOSE_0002>.\nEarly in the Grothendieckian development of modern algebraic geometry,\nthe class of morphisms which are <TEXTITOPEN_0003>quasi-compact<TEXTITCLOSE_0003> and <TEXTITOPEN_0004>faithfully flat<TEXTITCLOSE_0004> \nwas shown to be effective for descending objects, morphisms, and many\nproperties thereof. ",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "TEXTITOPEN_0004": "{\\it ",
+        "TEXTITCLOSE_0004": "}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WE:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for universally injective morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-universally-injective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WF:subsection_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Category-theoretic preliminaries<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\subsection{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{subsection-category-prelims}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WE:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nThe second purpose of this section is to collect some information about which \nproperties of modules, algebras, and morphisms can be descended along \nuniversally injective ring homomorphisms. The cases of finite modules\nand flat modules were treated by Mesablishvili <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0001": "\\cite{mesablishvili2}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WF:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe start by recalling a few basic notions from category theory which will \nsimplify the exposition. In this subsection, fix an ambient category.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WH:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>split equalizer<TEXTITCLOSE_0001> is a diagram (<REF_0001>) with\n<MATH_0001> for which there exist auxiliary morphisms\n<MATH_0002> and <MATH_0003> such that\n<MATH_0004>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-split-equalizer}",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{equation-equalizer}",
+        "MATH_0001": "$g_1 \\circ f = g_2 \\circ f$",
+        "MATH_0002": "$h : B \\to A$",
+        "MATH_0003": "$i : C \\to B$",
+        "MATH_0004": "\\begin{equation}\n\\label{equation-split-equalizer-conditions}\nh \\circ f = 1_A, \\quad f \\circ h = i \\circ g_1, \\quad i \\circ g_2 = 1_B.\n\\end{equation}",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WF:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nSince it involves a universal property, the property of being an equalizer is \ntypically not stable under applying a covariant functor. Just as for\nmonomorphisms and epimorphisms, one can get around this in some\ncases by exhibiting splittings.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WF:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe point is that the equalities among arrows force (<REF_0001>) \nto be an equalizer: the map <MATH_0001> factors uniquely through <MATH_0002> by writing\n<MATH_0003>. Consequently, applying a covariant functor\nto a split equalizer gives a split equalizer; applying a contravariant functor \ngives a <TEXTITOPEN_0001>split coequalizer<TEXTITCLOSE_0001>, whose definition is apparent.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{equation-equalizer}",
+        "MATH_0001": "$e$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$e = f \\circ (h \\circ e)$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:subsection_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Universally injective morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\subsection{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{subsection-universally-injective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nRecall that <MATH_0001> denotes the category of commutative rings\nwith <MATH_0002>. For an object <MATH_0003> of <MATH_0004> we denote <MATH_0005>\nthe category of <MATH_0006>-modules.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\textit{Rings}$",
+        "MATH_0002": "$1$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$\\textit{Rings}$",
+        "MATH_0005": "$\\text{Mod}_R$",
+        "MATH_0006": "$R$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:categories-section-coequalizers",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Coequalizers<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-coequalizers}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "categories-section-coequalizers",
+      "requested_tag": "0029"
+    },
+    {
+      "context_id": "reference:categories-section-equalizers",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Equalizers<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-equalizers}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "categories-section-equalizers",
+      "requested_tag": "0027"
+    }
+  ]
+}

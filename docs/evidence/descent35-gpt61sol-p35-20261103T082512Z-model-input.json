@@ -1,0 +1,384 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p35-20261103T082512Z.json",
+    "hash": "sha256:1d4c579ab6e3fb0ed473a41f5741a0cb21688b2dc071754937454c7eeadaf2d9"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:07AF:title",
+      "source_text": "Parasitic modules",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "modules",
+          "projection_start": 10,
+          "projection_end": 17,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:07AF:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nParasitic modules are those which are zero when restricted\nto schemes flat over the base scheme. Here is the formal definition.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "modules",
+          "projection_start": 24,
+          "projection_end": 31,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 76,
+          "projection_end": 83,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 84,
+          "projection_end": 88,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base scheme",
+          "projection_start": 98,
+          "projection_end": 109,
+          "concept": "base-scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06ZL:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002>. Let <MATH_0003> be a presheaf\nof <MATH_0004>-modules on <MATH_0005>.\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0006> is called\n<TEXTITOPEN_0001>parasitic<TEXTITCLOSE_0001><FOOTNOTEOPEN_0001>This may be nonstandard notation.<FOOTNOTECLOSE_0001>\nif for every flat morphism <MATH_0007> we have <MATH_0008>.\n<STRUCT_0003> <MATH_0009> is called <TEXTITOPEN_0002>parasitic for the <MATH_0010>-topology<TEXTITCLOSE_0002>\nif for every <MATH_0011>-covering <MATH_0012> we have\n<MATH_0013> for all <MATH_0014>.\n<STRUCT_0004>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\tau \\in \\{Zar, \\etale,\nsmooth, syntomic, fppf\\}$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\mathcal{O}$",
+        "MATH_0005": "$(\\Sch/S)_\\tau$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0006": "$\\mathcal{F}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0007": "$U \\to S$",
+        "MATH_0008": "$\\mathcal{F}(U) = 0$",
+        "STRUCT_0003": "\\item",
+        "MATH_0009": "$\\mathcal{F}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0010": "$\\tau$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0011": "$\\tau$",
+        "MATH_0012": "$\\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0013": "$\\mathcal{F}(U_i) = 0$",
+        "MATH_0014": "$i$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 67,
+          "projection_end": 75,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 91,
+          "projection_end": 98,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "parasitic",
+          "projection_start": 165,
+          "projection_end": 174,
+          "concept": "parasitic",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 260,
+          "projection_end": 264,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 265,
+          "projection_end": 273,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "parasitic for the",
+          "projection_start": 343,
+          "projection_end": 360,
+          "concept": "parasitic for the",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 373,
+          "projection_end": 381,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 407,
+          "projection_end": 415,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:07AF:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nIf <MATH_0001> this means that <MATH_0002> whenever\n<MATH_0003> is flat and locally of finite presentation; similar for\nthe other cases.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\tau = fppf$",
+        "MATH_0002": "$\\mathcal{F}|_{U_{Zar}} = 0$",
+        "MATH_0003": "$U \\to S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "flat",
+          "projection_start": 81,
+          "projection_end": 85,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 90,
+          "projection_end": 120,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0GZX:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet us prove this in the case of the <ACCENT_0001>tale topology.\n\n<STRUCT_0002><STRUCT_0003>\nAssume (1) holds. To show that <MATH_0001> is a sheaf, let\n<MATH_0002> be a covering\nof <MATH_0003>. The sheaf condition for <MATH_0004>\nand <MATH_0005>, by our assumption on <MATH_0006>.\nreduces to showing that\n<MATH_0007>\nis exact. This is true because <MATH_0008>\nis faithfully flat (by Lemma <REF_0001> and\nthe fact that coverings in <MATH_0009> are standard <ACCENT_0002>tale\ncoverings) and we may apply Lemma <REF_0002>.\nNext, we show that <MATH_0010> is quasi-coherent on <MATH_0011>.\nNamely, for <MATH_0012> in <MATH_0013>, set <MATH_0014>\nand choose a presentation\n<MATH_0015>\nby free <MATH_0016>-modules. By property (1) and the right exactness of tensor product\nwe see that for every morphism <MATH_0017> in <MATH_0018>\nwe obtain a presentation\n<MATH_0019>\nIn other words, we see that the restriction of <MATH_0020>\nto the localized category <MATH_0021> has a presentation\n<MATH_0022>\nas required to show that <MATH_0023> is quasi-coherent.\nWith apologies for the horrible notation, this finishes the proof\nthat (1) implies (2).\n\n<STRUCT_0004><STRUCT_0005>\nSince the notion of a quasi-coherent module is intrinsic\n(Modules on Sites, Lemma <REF_0003>)\nwe see that the equivalence (<REF_0004>)\ninduces an equivalence between categories of quasi-coherent modules.\nThus we have the equivalence of (2) and (3).\n\n<STRUCT_0006><STRUCT_0007>\nThe equivalence of (3) and (4) follows from\nProposition <REF_0005>.\n\n<STRUCT_0008><STRUCT_0009>\nLet us assume (4) and prove (1). Namely, let\n<MATH_0024> be as in (4). Let <MATH_0025> be a morphism\nof <MATH_0026>. Denote <MATH_0027> and <MATH_0028> the\nstructure morphisms, so that <MATH_0029>.\nWe have <MATH_0030> and\n<MATH_0031>.\nHence (1) holds by Schemes, Lemma <REF_0006>.\n\n<STRUCT_0010><STRUCT_0011>\nWe omit the proof in the case of the Zariski topology.\n<STRUCT_0012>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to U\\}_{i = 1, \\ldots, n}$",
+        "MATH_0003": "$S_{affine, \\etale}$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "MATH_0006": "$\\mathcal{F}$",
+        "MATH_0007": "$$\n0 \\to \\mathcal{F}(U) \\to\n\\prod \\mathcal{F}(U) \\otimes_{\\mathcal{O}(U)} \\mathcal{O}(U_i) \\to\n\\prod \\mathcal{F}(U) \\otimes_{\\mathcal{O}(U)} \\mathcal{O}(U_i \\times_U U_j)\n$$",
+        "MATH_0008": "$\\mathcal{O}(U) \\to \\prod \\mathcal{O}(U_i)$",
+        "REF_0001": "\\ref{lemma-standard-covering-Cech}",
+        "MATH_0009": "$S_{affine, \\etale}$",
+        "ACCENT_0002": "\\'e",
+        "REF_0002": "\\ref{lemma-ff-exact}",
+        "MATH_0010": "$\\mathcal{F}$",
+        "MATH_0011": "$S_{affine, \\etale}$",
+        "MATH_0012": "$U$",
+        "MATH_0013": "$S_{affine, \\etale}$",
+        "MATH_0014": "$R = \\mathcal{O}(U)$",
+        "MATH_0015": "$$\n\\bigoplus\\nolimits_{k \\in K} R\n\\longrightarrow\n\\bigoplus\\nolimits_{l \\in L} R\n\\longrightarrow\n\\mathcal{F}(U)\n\\longrightarrow 0\n$$",
+        "MATH_0016": "$R$",
+        "MATH_0017": "$U' \\to U$",
+        "MATH_0018": "$S_{affine, \\etale}$",
+        "MATH_0019": "$$\n\\bigoplus\\nolimits_{k \\in K} \\mathcal{O}(U')\n\\longrightarrow\n\\bigoplus\\nolimits_{l \\in L} \\mathcal{O}(U')\n\\longrightarrow\n\\mathcal{F}(U')\n\\longrightarrow 0\n$$",
+        "MATH_0020": "$\\mathcal{F}$",
+        "MATH_0021": "$S_{affine, etale}/U$",
+        "MATH_0022": "$$\n\\bigoplus\\nolimits_{k \\in K} \\mathcal{O}_{affine}|_{S_{affine, \\etale}/U}\n\\longrightarrow\n\\bigoplus\\nolimits_{l \\in L} \\mathcal{O}_{affine}|_{S_{affine, \\etale}/U}\n\\longrightarrow\n\\mathcal{F}|_{S_{affine, \\etale}/U}\n\\longrightarrow 0\n$$",
+        "MATH_0023": "$\\mathcal{F}$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "REF_0003": "\\ref{sites-modules-lemma-special-locally-free}",
+        "REF_0004": "\\ref{equation-alternative-small-ringed}",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "REF_0005": "\\ref{proposition-equivalence-quasi-coherent}",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "MATH_0024": "$\\mathcal{G}$",
+        "MATH_0025": "$h : U \\to U' \\to S$",
+        "MATH_0026": "$S_{affine, \\etale}$",
+        "MATH_0027": "$f : U \\to S$",
+        "MATH_0028": "$f' : U' \\to S$",
+        "MATH_0029": "$f = f' \\circ h$",
+        "MATH_0030": "$\\mathcal{F}(U') = \\Gamma(U', (f')^*\\mathcal{G})$",
+        "MATH_0031": "$\\mathcal{F}(U) = \\Gamma(U, f^*\\mathcal{G}) = \\Gamma(U, h^*(f')^*\\mathcal{G})$",
+        "REF_0006": "\\ref{schemes-lemma-widetilde-pullback}",
+        "STRUCT_0010": "\\medskip",
+        "STRUCT_0011": "\\noindent",
+        "STRUCT_0012": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:07AF:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nParasitic modules are those which are zero when restricted\nto schemes flat over the base scheme. Here is the formal definition.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:07AF:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Parasitic modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-parasitic}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:06ZL:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002>. Let <MATH_0003> be a presheaf\nof <MATH_0004>-modules on <MATH_0005>.\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0006> is called\n<TEXTITOPEN_0001>parasitic<TEXTITCLOSE_0001><FOOTNOTEOPEN_0001>This may be nonstandard notation.<FOOTNOTECLOSE_0001>\nif for every flat morphism <MATH_0007> we have <MATH_0008>.\n<STRUCT_0004> <MATH_0009> is called <TEXTITOPEN_0002>parasitic for the <MATH_0010>-topology<TEXTITCLOSE_0002>\nif for every <MATH_0011>-covering <MATH_0012> we have\n<MATH_0013> for all <MATH_0014>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-parasitic}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\tau \\in \\{Zar, \\etale,\nsmooth, syntomic, fppf\\}$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\mathcal{O}$",
+        "MATH_0005": "$(\\Sch/S)_\\tau$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$\\mathcal{F}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0007": "$U \\to S$",
+        "MATH_0008": "$\\mathcal{F}(U) = 0$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$\\mathcal{F}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0010": "$\\tau$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0011": "$\\tau$",
+        "MATH_0012": "$\\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0013": "$\\mathcal{F}(U_i) = 0$",
+        "MATH_0014": "$i$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:07AF:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIf <MATH_0001> this means that <MATH_0002> whenever\n<MATH_0003> is flat and locally of finite presentation; similar for\nthe other cases.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\tau = fppf$",
+        "MATH_0002": "$\\mathcal{F}|_{U_{Zar}} = 0$",
+        "MATH_0003": "$U \\to S$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0755:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002>. Let <MATH_0003> be a presheaf of\n<MATH_0004>-modules on <MATH_0005>.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0006> is parasitic for the <MATH_0007>-topology, then\n<MATH_0008> for every <MATH_0009> open in <MATH_0010>,\nresp.<SPACE_0001><ACCENT_0001>tale over <MATH_0011>,\nresp.<SPACE_0002>smooth over <MATH_0012>,\nresp.<SPACE_0003>syntomic over <MATH_0013>,\nresp.<SPACE_0004>flat and locally of finite presentation over <MATH_0014>.\n<STRUCT_0004> If <MATH_0015> is parasitic then <MATH_0016>\nfor every <MATH_0017> flat over <MATH_0018>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-cohomology-parasitic}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\tau \\in \\{Zar, \\etale, smooth,\nsyntomic, fppf\\}$",
+        "MATH_0003": "$\\mathcal{G}$",
+        "MATH_0004": "$\\mathcal{O}$",
+        "MATH_0005": "$(\\Sch/S)_\\tau$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$\\mathcal{G}$",
+        "MATH_0007": "$\\tau$",
+        "MATH_0008": "$H^p_\\tau(U, \\mathcal{G}) = 0$",
+        "MATH_0009": "$U$",
+        "MATH_0010": "$S$",
+        "SPACE_0001": "\\ ",
+        "ACCENT_0001": "\\'e",
+        "MATH_0011": "$S$",
+        "SPACE_0002": "\\ ",
+        "MATH_0012": "$S$",
+        "SPACE_0003": "\\ ",
+        "MATH_0013": "$S$",
+        "SPACE_0004": "\\ ",
+        "MATH_0014": "$S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0015": "$\\mathcal{G}$",
+        "MATH_0016": "$H^p_\\tau(U, \\mathcal{G}) = 0$",
+        "MATH_0017": "$U$",
+        "MATH_0018": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    }
+  ]
+}

@@ -1,0 +1,3377 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e23-65f4-76c1-bdcd-32e165d151f8",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p08-20261102T213317Z.json",
+    "hash": "sha256:5268ada0ac18c576abe8ca088609fab7a419b6f3c01216eb015962ecf09c9fa5"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:034B:title",
+      "source_text": "Properties of schemes local in the fppf topology",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 14,
+          "projection_end": 21,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 40,
+          "projection_end": 48,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034B:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we find some properties of schemes which are local on the base\nin the fppf topology.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 105,
+          "projection_end": 113,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034C:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is locally Noetherian'' is local\nin the fppf topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 41,
+          "projection_end": 59,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 83,
+          "projection_end": 91,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034C:proof",
+      "source_text": "We will use Lemma <REF_0001>.\nFirst we note that ``being locally Noetherian'' is local\nin the Zariski topology. This is clear from the definition,\nsee Properties, Definition <REF_0002>.\nNext, we show that if <MATH_0001> is a flat, finitely presented\nmorphism of affines and <MATH_0002> is locally Noetherian, then <MATH_0003> is\nlocally Noetherian. This is\nMorphisms, Lemma <REF_0003>.\nFinally, we have to show that if <MATH_0004> is a surjective\nflat, finitely presented morphism of affines and <MATH_0005> is\nlocally Noetherian, then <MATH_0006> is locally Noetherian. This follows from\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-definition-noetherian}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{morphisms-lemma-finite-type-noetherian}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-Noetherian}",
+        "REF_0005": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 57,
+          "projection_end": 75,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 102,
+          "projection_end": 110,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 225,
+          "projection_end": 229,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 231,
+          "projection_end": 249,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 250,
+          "projection_end": 258,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 262,
+          "projection_end": 269,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 289,
+          "projection_end": 307,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 329,
+          "projection_end": 347,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 357,
+          "projection_end": 366,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 436,
+          "projection_end": 446,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 447,
+          "projection_end": 451,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 453,
+          "projection_end": 471,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 472,
+          "projection_end": 480,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 484,
+          "projection_end": 491,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 511,
+          "projection_end": 529,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 551,
+          "projection_end": 569,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 589,
+          "projection_end": 596,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0368:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is Jacobson'' is local\nin the fppf topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 73,
+          "projection_end": 81,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0368:proof",
+      "source_text": "We will use Lemma <REF_0001>.\nFirst we note that ``being Jacobson'' is local\nin the Zariski topology. This is\nProperties, Lemma <REF_0002>.\nNext, we show that if <MATH_0001> is a flat, finitely presented\nmorphism of affines and <MATH_0002> is Jacobson, then <MATH_0003> is\nJacobson. This is\nMorphisms, Lemma <REF_0003>.\nFinally, we have to show that if <MATH_0004> is a surjective\nflat, finitely presented morphism of affines and <MATH_0005> is\nJacobson, then <MATH_0006> is Jacobson. Say <MATH_0007> and\n<MATH_0008> and <MATH_0009> given by <MATH_0010>.\nThen <MATH_0011> is finitely presented and faithfully flat.\nMoreover, the ring <MATH_0012> is Jacobson, see\nProperties, Lemma <REF_0004>.\n\n<STRUCT_0001><STRUCT_0002>\nBy Algebra, Lemma <REF_0005> there exists a diagram\n<MATH_0013>\nwith <MATH_0014> finitely presented, faithfully flat and quasi-finite.\nIn particular, <MATH_0015> is finite type, and we see from\nAlgebra, Proposition <REF_0006>\nthat <MATH_0016> is Jacobson. Hence we may assume that <MATH_0017> is quasi-finite\nas well as faithfully flat and of finite presentation.\n\n<STRUCT_0003><STRUCT_0004>\nAssume <MATH_0018> is not Jacobson to get a contradiction.\nAccording to Algebra, Lemma <REF_0007>\nthere exists a nonmaximal prime <MATH_0019> and\nan element <MATH_0020>, <MATH_0021> such that\n<MATH_0022>.\n\n<STRUCT_0005><STRUCT_0006>\nThis leads to a contradiction as follows. First let\n<MATH_0023> be a maximal ideal of <MATH_0024>.\nPick a prime <MATH_0025> lying over <MATH_0026>\n(exists because <MATH_0027> is faithfully flat, see\nAlgebra, Lemma <REF_0008>).\nAs <MATH_0028> is flat, by going down see\nAlgebra, Lemma <REF_0009>,\nwe can find a prime <MATH_0029> lying over\n<MATH_0030>. In particular we see that <MATH_0031> is not\nmaximal. Hence according to\nAlgebra, Lemma <REF_0010> again\nthe set <MATH_0032> is infinite\n(here we finally use that <MATH_0033> is Jacobson).\nAll points of <MATH_0034> map to\n<MATH_0035>. Hence the\nfibre over <MATH_0036> is infinite. This contradicts the\nfact that <MATH_0037> is quasi-finite (see\nAlgebra, Lemma <REF_0011>\nor more explicitly\nMorphisms, Lemma <REF_0012>).\nThus the lemma is proved.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-lemma-locally-jacobson}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{morphisms-lemma-Jacobson-universally-Jacobson}",
+        "MATH_0004": "$f : S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "MATH_0007": "$S = \\Spec(A)$",
+        "MATH_0008": "$S' = \\Spec(B)$",
+        "MATH_0009": "$S' \\to S$",
+        "MATH_0010": "$A \\to B$",
+        "MATH_0011": "$A \\to B$",
+        "MATH_0012": "$B$",
+        "REF_0004": "\\ref{properties-lemma-locally-jacobson}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0005": "\\ref{algebra-lemma-fppf-fpqf}",
+        "MATH_0013": "$$\n\\xymatrix{\nB \\ar[rr] & & B' \\\\\n& A \\ar[ru] \\ar[lu] &\n}\n$$",
+        "MATH_0014": "$A \\to B'$",
+        "MATH_0015": "$B \\to B'$",
+        "REF_0006": "\\ref{algebra-proposition-Jacobson-permanence}",
+        "MATH_0016": "$B'$",
+        "MATH_0017": "$A \\to B$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0018": "$A$",
+        "REF_0007": "\\ref{algebra-lemma-characterize-jacobson}",
+        "MATH_0019": "$\\mathfrak p \\subset A$",
+        "MATH_0020": "$f \\in A$",
+        "MATH_0021": "$f \\not \\in \\mathfrak p$",
+        "MATH_0022": "$V(\\mathfrak p) \\cap D(f) = \\{\\mathfrak p\\}$",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0023": "$\\mathfrak p \\subset \\mathfrak m$",
+        "MATH_0024": "$A$",
+        "MATH_0025": "$\\mathfrak m' \\subset B$",
+        "MATH_0026": "$\\mathfrak m$",
+        "MATH_0027": "$A \\to B$",
+        "REF_0008": "\\ref{algebra-lemma-ff-rings}",
+        "MATH_0028": "$A \\to B$",
+        "REF_0009": "\\ref{algebra-lemma-flat-going-down}",
+        "MATH_0029": "$\\mathfrak q \\subset \\mathfrak m'$",
+        "MATH_0030": "$\\mathfrak p$",
+        "MATH_0031": "$\\mathfrak q$",
+        "REF_0010": "\\ref{algebra-lemma-characterize-jacobson}",
+        "MATH_0032": "$V(\\mathfrak q) \\cap D(f)$",
+        "MATH_0033": "$B$",
+        "MATH_0034": "$V(\\mathfrak q) \\cap D(f)$",
+        "MATH_0035": "$V(\\mathfrak p) \\cap D(f) = \\{\\mathfrak p\\}$",
+        "MATH_0036": "$\\mathfrak p$",
+        "MATH_0037": "$A \\to B$",
+        "REF_0011": "\\ref{algebra-lemma-quasi-finite}",
+        "REF_0012": "\\ref{morphisms-lemma-quasi-finite}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 92,
+          "projection_end": 100,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 179,
+          "projection_end": 183,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 185,
+          "projection_end": 203,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 204,
+          "projection_end": 212,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 216,
+          "projection_end": 223,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 291,
+          "projection_end": 300,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 370,
+          "projection_end": 380,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 381,
+          "projection_end": 385,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 387,
+          "projection_end": 405,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 406,
+          "projection_end": 414,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 418,
+          "projection_end": 425,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 575,
+          "projection_end": 593,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 598,
+          "projection_end": 613,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 629,
+          "projection_end": 633,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 723,
+          "projection_end": 730,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 764,
+          "projection_end": 771,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 801,
+          "projection_end": 819,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 821,
+          "projection_end": 836,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-finite",
+          "projection_start": 841,
+          "projection_end": 853,
+          "concept": "hyphen-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 885,
+          "projection_end": 896,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 914,
+          "projection_end": 921,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-finite",
+          "projection_start": 1016,
+          "projection_end": 1028,
+          "concept": "hyphen-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1040,
+          "projection_end": 1055,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 1063,
+          "projection_end": 1082,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1183,
+          "projection_end": 1190,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1260,
+          "projection_end": 1267,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1420,
+          "projection_end": 1425,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1521,
+          "projection_end": 1536,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1542,
+          "projection_end": 1549,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1588,
+          "projection_end": 1592,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1612,
+          "projection_end": 1619,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1768,
+          "projection_end": 1775,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1804,
+          "projection_end": 1807,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "infinite",
+          "projection_start": 1823,
+          "projection_end": 1831,
+          "concept": "infinite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1910,
+          "projection_end": 1913,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "infinite",
+          "projection_start": 1966,
+          "projection_end": 1974,
+          "concept": "infinite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-finite",
+          "projection_start": 2022,
+          "projection_end": 2034,
+          "concept": "hyphen-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 2040,
+          "projection_end": 2047,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 2085,
+          "projection_end": 2094,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0BAL:statement",
+      "source_text": "The property <MATH_0001>``every quasi-compact open of <MATH_0002>\nhas a finite number of irreducible components'' is local\nin the fppf topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-compact open",
+          "projection_start": 32,
+          "projection_end": 50,
+          "concept": "source-phrase-quasi-compact-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 72,
+          "projection_end": 78,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible components",
+          "projection_start": 89,
+          "projection_end": 111,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 135,
+          "projection_end": 143,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0BAL:proof",
+      "source_text": "We will use Lemma <REF_0001>. First we note that\n<MATH_0001> is local in the Zariski topology.\nNext, we show that if <MATH_0002> is a flat, finitely presented\nmorphism of affines and <MATH_0003> has a finite number of irreducible\ncomponents, then so does <MATH_0004>. Namely, since <MATH_0005> is flat,\nthe generic points of <MATH_0006> map to the generic points of <MATH_0007>, see\nMorphisms, Lemma <REF_0002>.\nHence it suffices to show that for <MATH_0008> the fibre <MATH_0009>\nhas a finite number of generic points. Note that <MATH_0010> is an\naffine scheme of finite type over <MATH_0011>, see\nMorphisms, Lemma <REF_0003>.\nHence <MATH_0012> is Noetherian and has a finite number of irreducible components\n(Morphisms, Lemma <REF_0004> and\nProperties, Lemma <REF_0005>).\nFinally, we have to show that if <MATH_0013> is a surjective flat,\nfinitely presented morphism of affines and <MATH_0014> has a finite number of\nirreducible components, then so does <MATH_0015>. This follows from Topology, Lemma\n<REF_0006>.\nThus (1), (2) and (3) of Lemma <REF_0007> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$T \\to S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$T$",
+        "MATH_0005": "$T \\to S$",
+        "MATH_0006": "$T$",
+        "MATH_0007": "$S$",
+        "REF_0002": "\\ref{morphisms-lemma-generalizations-lift-flat}",
+        "MATH_0008": "$s \\in S$",
+        "MATH_0009": "$T_s$",
+        "MATH_0010": "$T_s$",
+        "MATH_0011": "$\\kappa(s)$",
+        "REF_0003": "\\ref{morphisms-lemma-base-change-finite-type}",
+        "MATH_0012": "$T_s$",
+        "REF_0004": "\\ref{morphisms-lemma-finite-type-noetherian}",
+        "REF_0005": "\\ref{properties-lemma-Noetherian-irreducible-components}",
+        "MATH_0013": "$T \\to S$",
+        "MATH_0014": "$T$",
+        "MATH_0015": "$S$",
+        "REF_0006": "\\ref{topology-lemma-surjective-continuous-irreducible-components}",
+        "REF_0007": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 85,
+          "projection_end": 93,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 134,
+          "projection_end": 138,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 140,
+          "projection_end": 158,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 159,
+          "projection_end": 167,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 171,
+          "projection_end": 178,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 201,
+          "projection_end": 207,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible components",
+          "projection_start": 218,
+          "projection_end": 240,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 297,
+          "projection_end": 301,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 337,
+          "projection_end": 340,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 383,
+          "projection_end": 392,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 487,
+          "projection_end": 493,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 548,
+          "projection_end": 561,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 565,
+          "projection_end": 576,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 599,
+          "projection_end": 608,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 649,
+          "projection_end": 659,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 670,
+          "projection_end": 676,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible components",
+          "projection_start": 687,
+          "projection_end": 709,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 711,
+          "projection_end": 720,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 824,
+          "projection_end": 834,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 835,
+          "projection_end": 839,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 841,
+          "projection_end": 859,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 860,
+          "projection_end": 868,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 872,
+          "projection_end": 879,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 902,
+          "projection_end": 908,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible components",
+          "projection_start": 919,
+          "projection_end": 941,
+          "concept": "source-phrase-irreducible-component",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topology",
+          "projection_start": 987,
+          "projection_end": 995,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0369:title",
+      "source_text": "Properties of schemes local in the syntomic topology",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 14,
+          "projection_end": 21,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 44,
+          "projection_end": 52,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0369:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we find some properties of schemes which are local on the base\nin the syntomic topology.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 109,
+          "projection_end": 117,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036A:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is locally Noetherian and <MATH_0003>''\nis local in the syntomic topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$(S_k)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 41,
+          "projection_end": 59,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 103,
+          "projection_end": 111,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036A:proof",
+      "source_text": "We will check (1), (2) and (3) of Lemma <REF_0001>.\nAs a syntomic morphism is flat of finite presentation\n(Morphisms, Lemmas <REF_0002>\nand <REF_0003>)\nwe have already checked this for ``being locally Noetherian'' in the proof\nof Lemma <REF_0004>.\nWe will use this without further mention in the proof.\nFirst we note that <MATH_0001> is local in the Zariski topology.\nThis is clear from the definition,\nsee Cohomology of Schemes, Definition <REF_0005>.\nNext, we show that if <MATH_0002> is a syntomic morphism of affines\nand <MATH_0003> has <MATH_0004>, then <MATH_0005> has <MATH_0006>. This\nis Algebra, Lemma <REF_0006>\n(use\nMorphisms, Lemma <REF_0007>\nand\nAlgebra, Definition <REF_0008> and\nLemma <REF_0009>).\nFinally, we show that if <MATH_0007> is a surjective\nsyntomic morphism of affines and <MATH_0008> has <MATH_0009>,\nthen <MATH_0010> has <MATH_0011>. This is\nAlgebra, Lemma <REF_0010>.\nThus (1), (2) and (3) of Lemma <REF_0011> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{morphisms-lemma-syntomic-flat}",
+        "REF_0003": "\\ref{morphisms-lemma-syntomic-locally-finite-presentation}",
+        "REF_0004": "\\ref{lemma-Noetherian-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "REF_0005": "\\ref{coherent-definition-depth}",
+        "MATH_0002": "$S' \\to S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{algebra-lemma-Sk-goes-up}",
+        "REF_0007": "\\ref{morphisms-lemma-syntomic-characterize}",
+        "REF_0008": "\\ref{algebra-definition-lci}",
+        "REF_0009": "\\ref{algebra-lemma-lci-CM}",
+        "MATH_0007": "$S' \\to S$",
+        "MATH_0008": "$S'$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "REF_0010": "\\ref{algebra-lemma-descent-Sk}",
+        "REF_0011": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 66,
+          "projection_end": 74,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 78,
+          "projection_end": 82,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 86,
+          "projection_end": 105,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 107,
+          "projection_end": 116,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 193,
+          "projection_end": 211,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 358,
+          "projection_end": 366,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 407,
+          "projection_end": 428,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 501,
+          "projection_end": 509,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 513,
+          "projection_end": 520,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 596,
+          "projection_end": 603,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 627,
+          "projection_end": 636,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 659,
+          "projection_end": 666,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 755,
+          "projection_end": 765,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 775,
+          "projection_end": 783,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 787,
+          "projection_end": 794,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 870,
+          "projection_end": 877,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036B:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is Cohen-Macaulay''\nis local in the syntomic topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 83,
+          "projection_end": 91,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036B:proof",
+      "source_text": "This is clear from Lemma <REF_0001>\nabove since a scheme is Cohen-Macaulay if and only if\nit is locally Noetherian and <MATH_0001> for all <MATH_0002>, see\nProperties, Lemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-Sk-local-syntomic}",
+        "MATH_0001": "$(S_k)$",
+        "MATH_0002": "$k \\geq 0$",
+        "REF_0002": "\\ref{properties-lemma-scheme-CM-iff-all-Sk}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 50,
+          "projection_end": 56,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 96,
+          "projection_end": 114,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034D:title",
+      "source_text": "Properties of schemes local in the smooth topology",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 14,
+          "projection_end": 21,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 35,
+          "projection_end": 41,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 42,
+          "projection_end": 50,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034D:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we find some properties of schemes which are local on the base\nin the smooth topology.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 100,
+          "projection_end": 106,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 107,
+          "projection_end": 115,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034E:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is reduced'' is local in the smooth\ntopology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "reduced",
+          "projection_start": 41,
+          "projection_end": 48,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 67,
+          "projection_end": 73,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 74,
+          "projection_end": 82,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034E:proof",
+      "source_text": "We will use Lemma <REF_0001>.\nFirst we note that ``being reduced'' is local\nin the Zariski topology. This is clear from the definition,\nsee Schemes, Definition <REF_0002>.\nNext, we show that if <MATH_0001> is a smooth morphism of affines\nand <MATH_0002> is reduced, then <MATH_0003> is reduced. This is\nAlgebra, Lemma <REF_0003>.\nFinally, we show that if <MATH_0004> is a surjective\nsmooth morphism of affines\nand <MATH_0005> is reduced, then <MATH_0006> is reduced. This is\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{schemes-definition-reduced}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{algebra-lemma-reduced-goes-up}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-reduced}",
+        "REF_0005": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "reduced",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 91,
+          "projection_end": 99,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 140,
+          "projection_end": 147,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 211,
+          "projection_end": 217,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 218,
+          "projection_end": 226,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 230,
+          "projection_end": 237,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "reduced",
+          "projection_start": 257,
+          "projection_end": 264,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "reduced",
+          "projection_start": 286,
+          "projection_end": 293,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 303,
+          "projection_end": 310,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 372,
+          "projection_end": 382,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 383,
+          "projection_end": 389,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 390,
+          "projection_end": 398,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 402,
+          "projection_end": 409,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "reduced",
+          "projection_start": 429,
+          "projection_end": 436,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "reduced",
+          "projection_start": 458,
+          "projection_end": 465,
+          "concept": "reduced",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 475,
+          "projection_end": 482,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034F:statement",
+      "source_text": "<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is normal'' is local in the smooth\ntopology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "LOCKED_0001": "\\begin{slogan}\nNormality is local in the smooth topology.\n\\end{slogan}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "normal",
+          "projection_start": 55,
+          "projection_end": 61,
+          "concept": "normal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 80,
+          "projection_end": 86,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 87,
+          "projection_end": 95,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034F:proof",
+      "source_text": "We will use Lemma <REF_0001>.\nFirst we show ``being normal'' is local\nin the Zariski topology. This is clear from the definition,\nsee Properties, Definition <REF_0002>.\nNext, we show that if <MATH_0001> is a smooth morphism of affines\nand <MATH_0002> is normal, then <MATH_0003> is normal. This is\nAlgebra, Lemma <REF_0003>.\nFinally, we show that if <MATH_0004> is a surjective\nsmooth morphism of affines\nand <MATH_0005> is normal, then <MATH_0006> is normal. This is\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-definition-normal}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{algebra-lemma-normal-goes-up}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-normal}",
+        "REF_0005": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "normal",
+          "projection_start": 52,
+          "projection_end": 58,
+          "concept": "normal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 85,
+          "projection_end": 93,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 208,
+          "projection_end": 214,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 215,
+          "projection_end": 223,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 227,
+          "projection_end": 234,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "normal",
+          "projection_start": 254,
+          "projection_end": 260,
+          "concept": "normal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "normal",
+          "projection_start": 282,
+          "projection_end": 288,
+          "concept": "normal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 298,
+          "projection_end": 305,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 367,
+          "projection_end": 377,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 378,
+          "projection_end": 384,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 385,
+          "projection_end": 393,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 397,
+          "projection_end": 404,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "normal",
+          "projection_start": 424,
+          "projection_end": 430,
+          "concept": "normal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "normal",
+          "projection_start": 452,
+          "projection_end": 458,
+          "concept": "normal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 468,
+          "projection_end": 475,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036C:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is locally Noetherian and <MATH_0003>''\nis local in the smooth topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$(R_k)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 41,
+          "projection_end": 59,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 94,
+          "projection_end": 100,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 101,
+          "projection_end": 109,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036C:proof",
+      "source_text": "We will check (1), (2) and (3) of Lemma <REF_0001>.\nAs a smooth morphism is flat of finite presentation\n(Morphisms, Lemmas <REF_0002>\nand <REF_0003>)\nwe have already checked this for ``being locally Noetherian'' in the proof\nof Lemma <REF_0004>.\nWe will use this without further mention in the proof.\nFirst we note that <MATH_0001> is local in the Zariski topology.\nThis is clear from the definition,\nsee Properties, Definition <REF_0005>.\nNext, we show that if <MATH_0002> is a smooth morphism of affines\nand <MATH_0003> has <MATH_0004>, then <MATH_0005> has <MATH_0006>. This\nis Algebra, Lemmas <REF_0006>\n(use Morphisms, Lemma <REF_0007>,\nAlgebra, Lemmas <REF_0008>\nand <REF_0009>).\nFinally, we show that if <MATH_0007> is a surjective\nsmooth morphism of affines and <MATH_0008> has <MATH_0009>,\nthen <MATH_0010> has <MATH_0011>. This is\nAlgebra, Lemma <REF_0010>.\nThus (1), (2) and (3) of Lemma <REF_0011> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{morphisms-lemma-smooth-flat}",
+        "REF_0003": "\\ref{morphisms-lemma-smooth-locally-finite-presentation}",
+        "REF_0004": "\\ref{lemma-Noetherian-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "REF_0005": "\\ref{properties-definition-Rk}",
+        "MATH_0002": "$S' \\to S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{algebra-lemma-Rk-goes-up}",
+        "REF_0007": "\\ref{morphisms-lemma-smooth-characterize}",
+        "REF_0008": "\\ref{algebra-lemma-base-change-smooth}",
+        "REF_0009": "\\ref{algebra-lemma-characterize-smooth-over-field}",
+        "MATH_0007": "$S' \\to S$",
+        "MATH_0008": "$S'$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "REF_0010": "\\ref{algebra-lemma-descent-Rk}",
+        "REF_0011": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 57,
+          "projection_end": 63,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 64,
+          "projection_end": 72,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 76,
+          "projection_end": 80,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 84,
+          "projection_end": 103,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 105,
+          "projection_end": 114,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 191,
+          "projection_end": 209,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 356,
+          "projection_end": 364,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 479,
+          "projection_end": 485,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 486,
+          "projection_end": 494,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 498,
+          "projection_end": 505,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 581,
+          "projection_end": 588,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 613,
+          "projection_end": 622,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 642,
+          "projection_end": 649,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 728,
+          "projection_end": 738,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 739,
+          "projection_end": 745,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 746,
+          "projection_end": 754,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 758,
+          "projection_end": 765,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 841,
+          "projection_end": 848,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036D:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is regular''\nis local in the smooth topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 67,
+          "projection_end": 73,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 74,
+          "projection_end": 82,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036D:proof",
+      "source_text": "This is clear from Lemma <REF_0001>\nabove since a locally Noetherian scheme is regular if and only if\nit is locally Noetherian and <MATH_0001> for all <MATH_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-Rk-local-smooth}",
+        "MATH_0001": "$(R_k)$",
+        "MATH_0002": "$k \\geq 0$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 50,
+          "projection_end": 68,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 69,
+          "projection_end": 75,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 108,
+          "projection_end": 126,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036E:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is Nagata''\nis local in the smooth topology.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 66,
+          "projection_end": 72,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 73,
+          "projection_end": 81,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036E:proof",
+      "source_text": "We will check (1), (2) and (3) of Lemma <REF_0001>.\nFirst we note that being Nagata is local in the Zariski topology.\nThis is Properties, Lemma <REF_0002>.\nNext, we show that if <MATH_0001> is a smooth morphism of affines\nand <MATH_0002> is Nagata, then <MATH_0003> is Nagata. This\nis Morphisms, Lemma <REF_0003>.\nFinally, we show that if <MATH_0004> is a surjective\nsmooth morphism of affines and <MATH_0005> is Nagata,\nthen <MATH_0006> is Nagata. This is\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-lemma-locally-nagata}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{morphisms-lemma-finite-type-nagata}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-nagata}",
+        "REF_0005": "\\ref{lemma-descending-properties}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "topology",
+          "projection_start": 108,
+          "projection_end": 116,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 195,
+          "projection_end": 201,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 202,
+          "projection_end": 210,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 214,
+          "projection_end": 221,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 285,
+          "projection_end": 294,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 356,
+          "projection_end": 366,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 367,
+          "projection_end": 373,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 374,
+          "projection_end": 382,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 386,
+          "projection_end": 393,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 457,
+          "projection_end": 464,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:034A:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn Lemma <REF_0001> above if\n<MATH_0001> then in condition (3) we may assume that\nthe morphism is a (surjective) standard smooth morphism.\nSimilarly, when <MATH_0002> or <MATH_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-descending-properties-standard}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "MATH_0001": "$\\tau = smooth$",
+        "MATH_0002": "$\\tau = syntomic$",
+        "MATH_0003": "$\\tau = \\etale$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034B:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we find some properties of schemes which are local on the base\nin the fppf topology.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034B:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of schemes local in the fppf topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties-fppf}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034C:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally Noetherian'' is local\nin the fppf topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Noetherian-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034C:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use Lemma <REF_0001>.\nFirst we note that ``being locally Noetherian'' is local\nin the Zariski topology. This is clear from the definition,\nsee Properties, Definition <REF_0002>.\nNext, we show that if <MATH_0001> is a flat, finitely presented\nmorphism of affines and <MATH_0002> is locally Noetherian, then <MATH_0003> is\nlocally Noetherian. This is\nMorphisms, Lemma <REF_0003>.\nFinally, we have to show that if <MATH_0004> is a surjective\nflat, finitely presented morphism of affines and <MATH_0005> is\nlocally Noetherian, then <MATH_0006> is locally Noetherian. This follows from\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-definition-noetherian}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{morphisms-lemma-finite-type-noetherian}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-Noetherian}",
+        "REF_0005": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0368:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is Jacobson'' is local\nin the fppf topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Jacobson-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0368:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use Lemma <REF_0001>.\nFirst we note that ``being Jacobson'' is local\nin the Zariski topology. This is\nProperties, Lemma <REF_0002>.\nNext, we show that if <MATH_0001> is a flat, finitely presented\nmorphism of affines and <MATH_0002> is Jacobson, then <MATH_0003> is\nJacobson. This is\nMorphisms, Lemma <REF_0003>.\nFinally, we have to show that if <MATH_0004> is a surjective\nflat, finitely presented morphism of affines and <MATH_0005> is\nJacobson, then <MATH_0006> is Jacobson. Say <MATH_0007> and\n<MATH_0008> and <MATH_0009> given by <MATH_0010>.\nThen <MATH_0011> is finitely presented and faithfully flat.\nMoreover, the ring <MATH_0012> is Jacobson, see\nProperties, Lemma <REF_0004>.\n\n<STRUCT_0002><STRUCT_0003>\nBy Algebra, Lemma <REF_0005> there exists a diagram\n<MATH_0013>\nwith <MATH_0014> finitely presented, faithfully flat and quasi-finite.\nIn particular, <MATH_0015> is finite type, and we see from\nAlgebra, Proposition <REF_0006>\nthat <MATH_0016> is Jacobson. Hence we may assume that <MATH_0017> is quasi-finite\nas well as faithfully flat and of finite presentation.\n\n<STRUCT_0004><STRUCT_0005>\nAssume <MATH_0018> is not Jacobson to get a contradiction.\nAccording to Algebra, Lemma <REF_0007>\nthere exists a nonmaximal prime <MATH_0019> and\nan element <MATH_0020>, <MATH_0021> such that\n<MATH_0022>.\n\n<STRUCT_0006><STRUCT_0007>\nThis leads to a contradiction as follows. First let\n<MATH_0023> be a maximal ideal of <MATH_0024>.\nPick a prime <MATH_0025> lying over <MATH_0026>\n(exists because <MATH_0027> is faithfully flat, see\nAlgebra, Lemma <REF_0008>).\nAs <MATH_0028> is flat, by going down see\nAlgebra, Lemma <REF_0009>,\nwe can find a prime <MATH_0029> lying over\n<MATH_0030>. In particular we see that <MATH_0031> is not\nmaximal. Hence according to\nAlgebra, Lemma <REF_0010> again\nthe set <MATH_0032> is infinite\n(here we finally use that <MATH_0033> is Jacobson).\nAll points of <MATH_0034> map to\n<MATH_0035>. Hence the\nfibre over <MATH_0036> is infinite. This contradicts the\nfact that <MATH_0037> is quasi-finite (see\nAlgebra, Lemma <REF_0011>\nor more explicitly\nMorphisms, Lemma <REF_0012>).\nThus the lemma is proved.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-lemma-locally-jacobson}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{morphisms-lemma-Jacobson-universally-Jacobson}",
+        "MATH_0004": "$f : S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "MATH_0007": "$S = \\Spec(A)$",
+        "MATH_0008": "$S' = \\Spec(B)$",
+        "MATH_0009": "$S' \\to S$",
+        "MATH_0010": "$A \\to B$",
+        "MATH_0011": "$A \\to B$",
+        "MATH_0012": "$B$",
+        "REF_0004": "\\ref{properties-lemma-locally-jacobson}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0005": "\\ref{algebra-lemma-fppf-fpqf}",
+        "MATH_0013": "$$\n\\xymatrix{\nB \\ar[rr] & & B' \\\\\n& A \\ar[ru] \\ar[lu] &\n}\n$$",
+        "MATH_0014": "$A \\to B'$",
+        "MATH_0015": "$B \\to B'$",
+        "REF_0006": "\\ref{algebra-proposition-Jacobson-permanence}",
+        "MATH_0016": "$B'$",
+        "MATH_0017": "$A \\to B$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0018": "$A$",
+        "REF_0007": "\\ref{algebra-lemma-characterize-jacobson}",
+        "MATH_0019": "$\\mathfrak p \\subset A$",
+        "MATH_0020": "$f \\in A$",
+        "MATH_0021": "$f \\not \\in \\mathfrak p$",
+        "MATH_0022": "$V(\\mathfrak p) \\cap D(f) = \\{\\mathfrak p\\}$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0023": "$\\mathfrak p \\subset \\mathfrak m$",
+        "MATH_0024": "$A$",
+        "MATH_0025": "$\\mathfrak m' \\subset B$",
+        "MATH_0026": "$\\mathfrak m$",
+        "MATH_0027": "$A \\to B$",
+        "REF_0008": "\\ref{algebra-lemma-ff-rings}",
+        "MATH_0028": "$A \\to B$",
+        "REF_0009": "\\ref{algebra-lemma-flat-going-down}",
+        "MATH_0029": "$\\mathfrak q \\subset \\mathfrak m'$",
+        "MATH_0030": "$\\mathfrak p$",
+        "MATH_0031": "$\\mathfrak q$",
+        "REF_0010": "\\ref{algebra-lemma-characterize-jacobson}",
+        "MATH_0032": "$V(\\mathfrak q) \\cap D(f)$",
+        "MATH_0033": "$B$",
+        "MATH_0034": "$V(\\mathfrak q) \\cap D(f)$",
+        "MATH_0035": "$V(\\mathfrak p) \\cap D(f) = \\{\\mathfrak p\\}$",
+        "MATH_0036": "$\\mathfrak p$",
+        "MATH_0037": "$A \\to B$",
+        "REF_0011": "\\ref{algebra-lemma-quasi-finite}",
+        "REF_0012": "\\ref{morphisms-lemma-quasi-finite}",
+        "STRUCT_0008": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0BAL:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``every quasi-compact open of <MATH_0002>\nhas a finite number of irreducible components'' is local\nin the fppf topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-finite-nr-irred-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0BAL:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use Lemma <REF_0001>. First we note that\n<MATH_0001> is local in the Zariski topology.\nNext, we show that if <MATH_0002> is a flat, finitely presented\nmorphism of affines and <MATH_0003> has a finite number of irreducible\ncomponents, then so does <MATH_0004>. Namely, since <MATH_0005> is flat,\nthe generic points of <MATH_0006> map to the generic points of <MATH_0007>, see\nMorphisms, Lemma <REF_0002>.\nHence it suffices to show that for <MATH_0008> the fibre <MATH_0009>\nhas a finite number of generic points. Note that <MATH_0010> is an\naffine scheme of finite type over <MATH_0011>, see\nMorphisms, Lemma <REF_0003>.\nHence <MATH_0012> is Noetherian and has a finite number of irreducible components\n(Morphisms, Lemma <REF_0004> and\nProperties, Lemma <REF_0005>).\nFinally, we have to show that if <MATH_0013> is a surjective flat,\nfinitely presented morphism of affines and <MATH_0014> has a finite number of\nirreducible components, then so does <MATH_0015>. This follows from Topology, Lemma\n<REF_0006>.\nThus (1), (2) and (3) of Lemma <REF_0007> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$T \\to S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$T$",
+        "MATH_0005": "$T \\to S$",
+        "MATH_0006": "$T$",
+        "MATH_0007": "$S$",
+        "REF_0002": "\\ref{morphisms-lemma-generalizations-lift-flat}",
+        "MATH_0008": "$s \\in S$",
+        "MATH_0009": "$T_s$",
+        "MATH_0010": "$T_s$",
+        "MATH_0011": "$\\kappa(s)$",
+        "REF_0003": "\\ref{morphisms-lemma-base-change-finite-type}",
+        "MATH_0012": "$T_s$",
+        "REF_0004": "\\ref{morphisms-lemma-finite-type-noetherian}",
+        "REF_0005": "\\ref{properties-lemma-Noetherian-irreducible-components}",
+        "MATH_0013": "$T \\to S$",
+        "MATH_0014": "$T$",
+        "MATH_0015": "$S$",
+        "REF_0006": "\\ref{topology-lemma-surjective-continuous-irreducible-components}",
+        "REF_0007": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0369:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of schemes local in the syntomic topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties-syntomic}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0369:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we find some properties of schemes which are local on the base\nin the syntomic topology.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036A:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally Noetherian and <MATH_0003>''\nis local in the syntomic topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Sk-local-syntomic}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$(S_k)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036A:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will check (1), (2) and (3) of Lemma <REF_0001>.\nAs a syntomic morphism is flat of finite presentation\n(Morphisms, Lemmas <REF_0002>\nand <REF_0003>)\nwe have already checked this for ``being locally Noetherian'' in the proof\nof Lemma <REF_0004>.\nWe will use this without further mention in the proof.\nFirst we note that <MATH_0001> is local in the Zariski topology.\nThis is clear from the definition,\nsee Cohomology of Schemes, Definition <REF_0005>.\nNext, we show that if <MATH_0002> is a syntomic morphism of affines\nand <MATH_0003> has <MATH_0004>, then <MATH_0005> has <MATH_0006>. This\nis Algebra, Lemma <REF_0006>\n(use\nMorphisms, Lemma <REF_0007>\nand\nAlgebra, Definition <REF_0008> and\nLemma <REF_0009>).\nFinally, we show that if <MATH_0007> is a surjective\nsyntomic morphism of affines and <MATH_0008> has <MATH_0009>,\nthen <MATH_0010> has <MATH_0011>. This is\nAlgebra, Lemma <REF_0010>.\nThus (1), (2) and (3) of Lemma <REF_0011> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{morphisms-lemma-syntomic-flat}",
+        "REF_0003": "\\ref{morphisms-lemma-syntomic-locally-finite-presentation}",
+        "REF_0004": "\\ref{lemma-Noetherian-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "REF_0005": "\\ref{coherent-definition-depth}",
+        "MATH_0002": "$S' \\to S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{algebra-lemma-Sk-goes-up}",
+        "REF_0007": "\\ref{morphisms-lemma-syntomic-characterize}",
+        "REF_0008": "\\ref{algebra-definition-lci}",
+        "REF_0009": "\\ref{algebra-lemma-lci-CM}",
+        "MATH_0007": "$S' \\to S$",
+        "MATH_0008": "$S'$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "REF_0010": "\\ref{algebra-lemma-descent-Sk}",
+        "REF_0011": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036B:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is Cohen-Macaulay''\nis local in the syntomic topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-CM-local-syntomic}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036B:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is clear from Lemma <REF_0001>\nabove since a scheme is Cohen-Macaulay if and only if\nit is locally Noetherian and <MATH_0001> for all <MATH_0002>, see\nProperties, Lemma <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-Sk-local-syntomic}",
+        "MATH_0001": "$(S_k)$",
+        "MATH_0002": "$k \\geq 0$",
+        "REF_0002": "\\ref{properties-lemma-scheme-CM-iff-all-Sk}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034D:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of schemes local in the smooth topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties-smooth}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034D:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we find some properties of schemes which are local on the base\nin the smooth topology.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034E:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is reduced'' is local in the smooth\ntopology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-reduced-local-smooth}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034E:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use Lemma <REF_0001>.\nFirst we note that ``being reduced'' is local\nin the Zariski topology. This is clear from the definition,\nsee Schemes, Definition <REF_0002>.\nNext, we show that if <MATH_0001> is a smooth morphism of affines\nand <MATH_0002> is reduced, then <MATH_0003> is reduced. This is\nAlgebra, Lemma <REF_0003>.\nFinally, we show that if <MATH_0004> is a surjective\nsmooth morphism of affines\nand <MATH_0005> is reduced, then <MATH_0006> is reduced. This is\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{schemes-definition-reduced}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{algebra-lemma-reduced-goes-up}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-reduced}",
+        "REF_0005": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034F:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nThe property <MATH_0001>``<MATH_0002> is normal'' is local in the smooth\ntopology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-normal-local-smooth}",
+        "LOCKED_0002": "\\begin{slogan}\nNormality is local in the smooth topology.\n\\end{slogan}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034F:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use Lemma <REF_0001>.\nFirst we show ``being normal'' is local\nin the Zariski topology. This is clear from the definition,\nsee Properties, Definition <REF_0002>.\nNext, we show that if <MATH_0001> is a smooth morphism of affines\nand <MATH_0002> is normal, then <MATH_0003> is normal. This is\nAlgebra, Lemma <REF_0003>.\nFinally, we show that if <MATH_0004> is a surjective\nsmooth morphism of affines\nand <MATH_0005> is normal, then <MATH_0006> is normal. This is\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-definition-normal}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{algebra-lemma-normal-goes-up}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-normal}",
+        "REF_0005": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036C:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally Noetherian and <MATH_0003>''\nis local in the smooth topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Rk-local-smooth}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$(R_k)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036C:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will check (1), (2) and (3) of Lemma <REF_0001>.\nAs a smooth morphism is flat of finite presentation\n(Morphisms, Lemmas <REF_0002>\nand <REF_0003>)\nwe have already checked this for ``being locally Noetherian'' in the proof\nof Lemma <REF_0004>.\nWe will use this without further mention in the proof.\nFirst we note that <MATH_0001> is local in the Zariski topology.\nThis is clear from the definition,\nsee Properties, Definition <REF_0005>.\nNext, we show that if <MATH_0002> is a smooth morphism of affines\nand <MATH_0003> has <MATH_0004>, then <MATH_0005> has <MATH_0006>. This\nis Algebra, Lemmas <REF_0006>\n(use Morphisms, Lemma <REF_0007>,\nAlgebra, Lemmas <REF_0008>\nand <REF_0009>).\nFinally, we show that if <MATH_0007> is a surjective\nsmooth morphism of affines and <MATH_0008> has <MATH_0009>,\nthen <MATH_0010> has <MATH_0011>. This is\nAlgebra, Lemma <REF_0010>.\nThus (1), (2) and (3) of Lemma <REF_0011> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{morphisms-lemma-smooth-flat}",
+        "REF_0003": "\\ref{morphisms-lemma-smooth-locally-finite-presentation}",
+        "REF_0004": "\\ref{lemma-Noetherian-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "REF_0005": "\\ref{properties-definition-Rk}",
+        "MATH_0002": "$S' \\to S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{algebra-lemma-Rk-goes-up}",
+        "REF_0007": "\\ref{morphisms-lemma-smooth-characterize}",
+        "REF_0008": "\\ref{algebra-lemma-base-change-smooth}",
+        "REF_0009": "\\ref{algebra-lemma-characterize-smooth-over-field}",
+        "MATH_0007": "$S' \\to S$",
+        "MATH_0008": "$S'$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "REF_0010": "\\ref{algebra-lemma-descent-Rk}",
+        "REF_0011": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036D:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is regular''\nis local in the smooth topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-regular-local-smooth}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036D:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is clear from Lemma <REF_0001>\nabove since a locally Noetherian scheme is regular if and only if\nit is locally Noetherian and <MATH_0001> for all <MATH_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-Rk-local-smooth}",
+        "MATH_0001": "$(R_k)$",
+        "MATH_0002": "$k \\geq 0$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036E:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is Nagata''\nis local in the smooth topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Nagata-local-smooth}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036E:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will check (1), (2) and (3) of Lemma <REF_0001>.\nFirst we note that being Nagata is local in the Zariski topology.\nThis is Properties, Lemma <REF_0002>.\nNext, we show that if <MATH_0001> is a smooth morphism of affines\nand <MATH_0002> is Nagata, then <MATH_0003> is Nagata. This\nis Morphisms, Lemma <REF_0003>.\nFinally, we show that if <MATH_0004> is a surjective\nsmooth morphism of affines and <MATH_0005> is Nagata,\nthen <MATH_0006> is Nagata. This is\nAlgebra, Lemma <REF_0004>.\nThus (1), (2) and (3) of Lemma <REF_0005> hold\nand we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "REF_0002": "\\ref{properties-lemma-locally-nagata}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "REF_0003": "\\ref{morphisms-lemma-finite-type-nagata}",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$S'$",
+        "MATH_0006": "$S$",
+        "REF_0004": "\\ref{algebra-lemma-descent-nagata}",
+        "REF_0005": "\\ref{lemma-descending-properties}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:06QL:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Variants on descending properties<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-variants}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-definition-lci",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA ring map <MATH_0001> is called <TEXTITOPEN_0001>syntomic<TEXTITCLOSE_0001>, or we say <MATH_0002> is a\n<TEXTITOPEN_0002>flat local complete intersection over <MATH_0003><TEXTITCLOSE_0002>\nif it is flat, of finite presentation, and if all of its fibre rings\n<MATH_0004> are local complete intersections,\nsee Definition <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-lci}",
+        "MATH_0001": "$R \\to S$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$S$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0003": "$R$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0004": "$S \\otimes_R \\kappa(\\mathfrak p)$",
+        "REF_0001": "\\ref{definition-lci-field}",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-definition-lci",
+      "requested_tag": "00SL"
+    },
+    {
+      "context_id": "reference:algebra-lemma-Rk-goes-up",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Assume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is Noetherian,\n<STRUCT_0004> <MATH_0003> is Noetherian\n<STRUCT_0005> <MATH_0004> is flat,\n<STRUCT_0006> the fibre rings <MATH_0005>\nhave property <MATH_0006>, and\n<STRUCT_0007> <MATH_0007> has property <MATH_0008>.\n<STRUCT_0008>\nThen <MATH_0009> has property <MATH_0010>.\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Rk-goes-up}",
+        "MATH_0001": "$\\varphi : R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$\\varphi$",
+        "STRUCT_0006": "\\item",
+        "MATH_0005": "$S \\otimes_R \\kappa(\\mathfrak p)$",
+        "MATH_0006": "$(R_k)$",
+        "STRUCT_0007": "\\item",
+        "MATH_0007": "$R$",
+        "MATH_0008": "$(R_k)$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "MATH_0009": "$S$",
+        "MATH_0010": "$(R_k)$",
+        "STRUCT_0009": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-Rk-goes-up",
+      "requested_tag": "033A"
+    },
+    {
+      "context_id": "reference:algebra-lemma-Sk-goes-up",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Assume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is Noetherian,\n<STRUCT_0004> <MATH_0003> is Noetherian,\n<STRUCT_0005> <MATH_0004> is flat,\n<STRUCT_0006> the fibre rings <MATH_0005> are <MATH_0006>, and\n<STRUCT_0007> <MATH_0007> has property <MATH_0008>.\n<STRUCT_0008>\nThen <MATH_0009> has property <MATH_0010>.\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Sk-goes-up}",
+        "MATH_0001": "$\\varphi : R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$\\varphi$",
+        "STRUCT_0006": "\\item",
+        "MATH_0005": "$S \\otimes_R \\kappa(\\mathfrak p)$",
+        "MATH_0006": "$(S_k)$",
+        "STRUCT_0007": "\\item",
+        "MATH_0007": "$R$",
+        "MATH_0008": "$(S_k)$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "MATH_0009": "$S$",
+        "MATH_0010": "$(S_k)$",
+        "STRUCT_0009": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-Sk-goes-up",
+      "requested_tag": "0339"
+    },
+    {
+      "context_id": "reference:algebra-lemma-base-change-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a smooth ring map.\nLet <MATH_0002> be any ring map.\nThen the base change <MATH_0003> is smooth.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-smooth}",
+        "LOCKED_0002": "\\begin{slogan}\nSmoothness is preserved under base change\n\\end{slogan}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$R \\to R'$",
+        "MATH_0003": "$R' \\to S' = R' \\otimes_R S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-base-change-smooth",
+      "requested_tag": "00T4"
+    },
+    {
+      "context_id": "reference:algebra-lemma-characterize-jacobson",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. If <MATH_0002> is not Jacobson there exist\na prime <MATH_0003>, an element <MATH_0004>\nsuch that the following hold\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is not a maximal ideal,\n<STRUCT_0004> <MATH_0006>,\n<STRUCT_0005> <MATH_0007>, and\n<STRUCT_0006> <MATH_0008> is a field.\n<STRUCT_0007>\nOn the other hand, if <MATH_0009> is Jacobson, then for any pair <MATH_0010>\nsuch that (1) and (2) hold the set <MATH_0011> is\ninfinite.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-jacobson}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$\\mathfrak p \\subset R$",
+        "MATH_0004": "$f \\in R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\mathfrak p$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$f \\not \\in \\mathfrak p$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$V(\\mathfrak p) \\cap D(f) = \\{\\mathfrak p\\}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0008": "$(R/\\mathfrak p)_f$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0009": "$R$",
+        "MATH_0010": "$(\\mathfrak p, f)$",
+        "MATH_0011": "$V(\\mathfrak p) \\cap D(f)$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-characterize-jacobson",
+      "requested_tag": "034J"
+    },
+    {
+      "context_id": "reference:algebra-lemma-characterize-smooth-over-field",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be any field.\nLet <MATH_0002> be a finite type <MATH_0003>-algebra.\nLet <MATH_0004>.\nLet <MATH_0005> be a prime\ncorresponding to <MATH_0006>.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The <MATH_0007>-algebra <MATH_0008> is smooth at <MATH_0009> over <MATH_0010>.\n<STRUCT_0004> We have\n<MATH_0011>.\n<STRUCT_0005> We have\n<MATH_0012>.\n<STRUCT_0006>\nMoreover, in this case the local ring <MATH_0013> is regular.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-smooth-over-field}",
+        "MATH_0001": "$k$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$k$",
+        "MATH_0004": "$X = \\Spec(S)$",
+        "MATH_0005": "$\\mathfrak q \\subset S$",
+        "MATH_0006": "$x \\in X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0007": "$k$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$\\mathfrak q$",
+        "MATH_0010": "$k$",
+        "STRUCT_0004": "\\item",
+        "MATH_0011": "$\\dim_{\\kappa(\\mathfrak q)} \\Omega_{S/k} \\otimes_S \\kappa(\\mathfrak q)\n\\leq \\dim_x X$",
+        "STRUCT_0005": "\\item",
+        "MATH_0012": "$\\dim_{\\kappa(\\mathfrak q)} \\Omega_{S/k} \\otimes_S \\kappa(\\mathfrak q)\n= \\dim_x X$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0013": "$S_{\\mathfrak q}$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-characterize-smooth-over-field",
+      "requested_tag": "00TT"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-Noetherian",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat, and\n<STRUCT_0004> <MATH_0003> is Noetherian.\n<STRUCT_0005>\nThen <MATH_0004> is Noetherian.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-Noetherian}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$R$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-Noetherian",
+      "requested_tag": "033E"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-Rk",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat, and\n<STRUCT_0004> <MATH_0003> is Noetherian and has property <MATH_0004>.\n<STRUCT_0005>\nThen <MATH_0005> is Noetherian and has property <MATH_0006>.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-Rk}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$(R_k)$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$(R_k)$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-Rk",
+      "requested_tag": "0353"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-Sk",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat, and\n<STRUCT_0004> <MATH_0003> is Noetherian and has property <MATH_0004>.\n<STRUCT_0005>\nThen <MATH_0005> is Noetherian and has property <MATH_0006>.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-Sk}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$(S_k)$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$(S_k)$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-Sk",
+      "requested_tag": "0352"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-nagata",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is smooth and surjective on spectra, and\n<STRUCT_0004> <MATH_0003> is a Nagata ring.\n<STRUCT_0005>\nThen <MATH_0004> is a Nagata ring.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-nagata}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$R$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-nagata",
+      "requested_tag": "0354"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-normal",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat, and\n<STRUCT_0004> <MATH_0003> is a normal ring.\n<STRUCT_0005>\nThen <MATH_0004> is a normal ring.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-normal}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$R$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-normal",
+      "requested_tag": "033G"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-reduced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat, and\n<STRUCT_0004> <MATH_0003> is reduced.\n<STRUCT_0005>\nThen <MATH_0004> is reduced.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-reduced}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$R$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-reduced",
+      "requested_tag": "033F"
+    },
+    {
+      "context_id": "reference:algebra-lemma-ff-rings",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat ring map.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat,\n<STRUCT_0004> the induced map on <MATH_0003> is surjective, and\n<STRUCT_0005> any closed point <MATH_0004> is\nin the image of the map <MATH_0005>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-ff-rings}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$\\Spec$",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$x \\in \\Spec(R)$",
+        "MATH_0005": "$\\Spec(S) \\to \\Spec(R)$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-ff-rings",
+      "requested_tag": "00HQ"
+    },
+    {
+      "context_id": "reference:algebra-lemma-flat-going-down",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be flat. Let <MATH_0002>\nbe primes of <MATH_0003>. Let <MATH_0004> be a prime of <MATH_0005>\nmapping to <MATH_0006>. Then there exists a prime\n<MATH_0007> mapping to <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-going-down}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$\\mathfrak p \\subset \\mathfrak p'$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$\\mathfrak q' \\subset S$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$\\mathfrak p'$",
+        "MATH_0007": "$\\mathfrak q \\subset \\mathfrak q'$",
+        "MATH_0008": "$\\mathfrak p$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-flat-going-down",
+      "requested_tag": "00HS"
+    },
+    {
+      "context_id": "reference:algebra-lemma-fppf-fpqf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map of finite presentation.\nThen there exists a commutative diagram\n<MATH_0002>\nwhere <MATH_0003> is quasi-finite, faithfully flat and of finite presentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fppf-fpqf}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$$\n\\xymatrix{\nS \\ar[rr] & & S' \\\\\n& R \\ar[lu] \\ar[ru]\n}\n$$",
+        "MATH_0003": "$R \\to S'$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-fppf-fpqf",
+      "requested_tag": "034Z"
+    },
+    {
+      "context_id": "reference:algebra-lemma-lci-CM",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a field. Let <MATH_0002> be a finite type <MATH_0003>-algebra.\nIf <MATH_0004> is a local complete intersection, then\n<MATH_0005> is a Cohen-Macaulay ring.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-lci-CM}",
+        "MATH_0001": "$k$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$k$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-lci-CM",
+      "requested_tag": "00SB"
+    },
+    {
+      "context_id": "reference:algebra-lemma-normal-goes-up",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Assume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is smooth,\n<STRUCT_0004> <MATH_0003> is normal.\n<STRUCT_0005>\nThen <MATH_0004> is normal.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-normal-goes-up}",
+        "MATH_0001": "$\\varphi : R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\varphi$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$R$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$S$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-normal-goes-up",
+      "requested_tag": "033C"
+    },
+    {
+      "context_id": "reference:algebra-lemma-quasi-finite",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a finite type ring map. Then <MATH_0002> is quasi-finite\nif and only if for all primes <MATH_0003> the ring\n<MATH_0004> is finite over <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-quasi-finite}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$R \\to S$",
+        "MATH_0003": "$\\mathfrak p \\subset R$",
+        "MATH_0004": "$S \\otimes_R \\kappa(\\mathfrak p)$",
+        "MATH_0005": "$\\kappa(\\mathfrak p)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-quasi-finite",
+      "requested_tag": "00PM"
+    },
+    {
+      "context_id": "reference:algebra-lemma-reduced-goes-up",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Assume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is smooth,\n<STRUCT_0004> <MATH_0003> is reduced.\n<STRUCT_0005>\nThen <MATH_0004> is reduced.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-reduced-goes-up}",
+        "MATH_0001": "$\\varphi : R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\varphi$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$R$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$S$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-reduced-goes-up",
+      "requested_tag": "033B"
+    },
+    {
+      "context_id": "reference:algebra-proposition-Jacobson-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a Jacobson ring. Let <MATH_0002> be a\nring map of finite type. Then\n<STRUCT_0002>\n<STRUCT_0003> The ring <MATH_0003> is Jacobson.\n<STRUCT_0004> The map <MATH_0004> transforms\nclosed points to closed points.\n<STRUCT_0005> For <MATH_0005> maximal lying over <MATH_0006>\nthe field extension <MATH_0007>\nis finite.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-Jacobson-permanence}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$\\Spec(S) \\to \\Spec(R)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$\\mathfrak m' \\subset S$",
+        "MATH_0006": "$\\mathfrak m \\subset R$",
+        "MATH_0007": "$\\kappa(\\mathfrak m')/\\kappa(\\mathfrak m)$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-proposition-Jacobson-permanence",
+      "requested_tag": "00GB"
+    },
+    {
+      "context_id": "reference:coherent-definition-depth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a locally Noetherian scheme.\nLet <MATH_0002> be a coherent <MATH_0003>-module.\nLet <MATH_0004> be an integer.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0005> has <TEXTITOPEN_0001>depth <MATH_0006> at a point<TEXTITCLOSE_0001>\n<MATH_0007> of <MATH_0008> if <MATH_0009>.\n<STRUCT_0004> We say <MATH_0010> has <TEXTITOPEN_0002>depth <MATH_0011> at a point<TEXTITCLOSE_0002> <MATH_0012> of <MATH_0013> if\n<MATH_0014>.\n<STRUCT_0005> We say <MATH_0015> has property <TEXTITOPEN_0003><MATH_0016><TEXTITCLOSE_0003> if\n<MATH_0017>\nfor all <MATH_0018>.\n<STRUCT_0006> We say <MATH_0019> has property <TEXTITOPEN_0004><MATH_0020><TEXTITCLOSE_0004> if <MATH_0021> has\nproperty <MATH_0022>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-depth}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$k \\geq 0$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\mathcal{F}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0006": "$k$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0007": "$x$",
+        "MATH_0008": "$X$",
+        "MATH_0009": "$\\text{depth}_{\\mathcal{O}_{X, x}}(\\mathcal{F}_x) = k$",
+        "STRUCT_0004": "\\item",
+        "MATH_0010": "$X$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0011": "$k$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0012": "$x$",
+        "MATH_0013": "$X$",
+        "MATH_0014": "$\\text{depth}(\\mathcal{O}_{X, x}) = k$",
+        "STRUCT_0005": "\\item",
+        "MATH_0015": "$\\mathcal{F}$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0016": "$(S_k)$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0017": "$$\n\\text{depth}_{\\mathcal{O}_{X, x}}(\\mathcal{F}_x)\n\\geq \\min(k, \\dim(\\text{Supp}(\\mathcal{F}_x)))\n$$",
+        "MATH_0018": "$x \\in X$",
+        "STRUCT_0006": "\\item",
+        "MATH_0019": "$X$",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0020": "$(S_k)$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0021": "$\\mathcal{O}_X$",
+        "MATH_0022": "$(S_k)$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-definition-depth",
+      "requested_tag": "0341"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-properties",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of schemes.\nLet <MATH_0002>.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> the property is local in the Zariski topology,\n<STRUCT_0004> for any morphism of affine schemes <MATH_0003>\nwhich is flat, flat of finite presentation,\n<ACCENT_0001>tale, smooth or syntomic depending on whether <MATH_0004> is\nfpqc, fppf, <ACCENT_0002>tale, smooth, or syntomic,\nproperty <MATH_0005> holds for <MATH_0006> if property <MATH_0007>\nholds for <MATH_0008>, and\n<STRUCT_0005> for any surjective morphism of affine schemes <MATH_0009>\nwhich is flat, flat of finite presentation,\n<ACCENT_0003>tale, smooth or syntomic depending on whether <MATH_0010> is\nfpqc, fppf, <ACCENT_0004>tale, smooth, or syntomic,\nproperty <MATH_0011> holds for <MATH_0012> if property <MATH_0013>\nholds for <MATH_0014>.\n<STRUCT_0006>\nThen <MATH_0015> is <MATH_0016> local on the base.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-properties}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, \\linebreak[0] fppf, \\linebreak[0]\n\\etale, \\linebreak[0] smooth, \\linebreak[0] syntomic\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S' \\to S$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0004": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$S'$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$S' \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0010": "$\\tau$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$\\mathcal{P}$",
+        "MATH_0014": "$S'$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0015": "$\\mathcal{P}$",
+        "MATH_0016": "$\\tau$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-properties",
+      "requested_tag": "0349"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-Jacobson-universally-Jacobson",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a Jacobson scheme.\nAny scheme locally of finite type over <MATH_0002> is Jacobson.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Jacobson-universally-Jacobson}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-Jacobson-universally-Jacobson",
+      "requested_tag": "02J5"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-base-change-finite-type",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe base change of a morphism which is locally of finite type\nis locally of finite type. The same is true for morphisms of\nfinite type.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-finite-type}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-base-change-finite-type",
+      "requested_tag": "01T4"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-type-nagata",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism.\nIf <MATH_0002> is Nagata and <MATH_0003> locally of finite type then <MATH_0004> is Nagata.\nIf <MATH_0005> is universally Japanese\nand <MATH_0006> locally of finite type then <MATH_0007> is universally Japanese.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-type-nagata}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$X$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-type-nagata",
+      "requested_tag": "035A"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-type-noetherian",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism.\nIf <MATH_0002> is (locally) Noetherian and <MATH_0003> (locally) of finite type\nthen <MATH_0004> is (locally) Noetherian.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-type-noetherian}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-type-noetherian",
+      "requested_tag": "01T6"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-generalizations-lift-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat morphism of schemes.\nThen generalizations lift along <MATH_0002>, see\nTopology, Definition <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-generalizations-lift-flat}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "REF_0001": "\\ref{topology-definition-lift-specializations}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-generalizations-lift-flat",
+      "requested_tag": "03HV"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-quasi-finite",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is quasi-finite, and\n<STRUCT_0004> <MATH_0003> is locally of finite type, quasi-compact, and has finite fibres.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-quasi-finite}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$f$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-quasi-finite",
+      "requested_tag": "02NH"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-smooth-characterize",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0002> is smooth.\n<STRUCT_0004> For every affine opens <MATH_0003>, <MATH_0004>\nwith <MATH_0005> the ring map\n<MATH_0006> is smooth.\n<STRUCT_0005> There exists an open covering <MATH_0007>\nand open coverings <MATH_0008> such\nthat each of the morphisms <MATH_0009>, <MATH_0010>\nis smooth.\n<STRUCT_0006> There exists an affine open covering <MATH_0011>\nand affine open coverings <MATH_0012> such\nthat the ring map <MATH_0013> is\nsmooth, for all <MATH_0014>.\n<STRUCT_0007>\nMoreover, if <MATH_0015> is smooth then for\nany open subschemes <MATH_0016>, <MATH_0017> with <MATH_0018>\nthe restriction <MATH_0019> is smooth.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-characterize}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$U \\subset X$",
+        "MATH_0004": "$V \\subset S$",
+        "MATH_0005": "$f(U) \\subset V$",
+        "MATH_0006": "$\\mathcal{O}_S(V) \\to \\mathcal{O}_X(U)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$S = \\bigcup_{j \\in J} V_j$",
+        "MATH_0008": "$f^{-1}(V_j) = \\bigcup_{i \\in I_j} U_i$",
+        "MATH_0009": "$U_i \\to V_j$",
+        "MATH_0010": "$j\\in J, i\\in I_j$",
+        "STRUCT_0006": "\\item",
+        "MATH_0011": "$S = \\bigcup_{j \\in J} V_j$",
+        "MATH_0012": "$f^{-1}(V_j) = \\bigcup_{i \\in I_j} U_i$",
+        "MATH_0013": "$\\mathcal{O}_S(V_j) \\to \\mathcal{O}_X(U_i)$",
+        "MATH_0014": "$j\\in J, i\\in I_j$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$U \\subset X$",
+        "MATH_0017": "$V \\subset S$",
+        "MATH_0018": "$f(U) \\subset V$",
+        "MATH_0019": "$f|_U : U \\to V$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-smooth-characterize",
+      "requested_tag": "01V6"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-smooth-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA smooth morphism is flat.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-flat}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-smooth-flat",
+      "requested_tag": "01VF"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-smooth-locally-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA smooth morphism is locally of finite presentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-locally-finite-presentation}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-smooth-locally-finite-presentation",
+      "requested_tag": "01VE"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-syntomic-characterize",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0002> is syntomic.\n<STRUCT_0004> For every affine opens <MATH_0003>, <MATH_0004>\nwith <MATH_0005> the ring map\n<MATH_0006> is syntomic.\n<STRUCT_0005> There exists an open covering <MATH_0007>\nand open coverings <MATH_0008> such\nthat each of the morphisms <MATH_0009>, <MATH_0010>\nis syntomic.\n<STRUCT_0006> There exists an affine open covering <MATH_0011>\nand affine open coverings <MATH_0012> such\nthat the ring map <MATH_0013> is\nsyntomic, for all <MATH_0014>.\n<STRUCT_0007>\nMoreover, if <MATH_0015> is syntomic then for\nany open subschemes <MATH_0016>, <MATH_0017> with <MATH_0018>\nthe restriction <MATH_0019> is syntomic.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-characterize}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$U \\subset X$",
+        "MATH_0004": "$V \\subset S$",
+        "MATH_0005": "$f(U) \\subset V$",
+        "MATH_0006": "$\\mathcal{O}_S(V) \\to \\mathcal{O}_X(U)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$S = \\bigcup_{j \\in J} V_j$",
+        "MATH_0008": "$f^{-1}(V_j) = \\bigcup_{i \\in I_j} U_i$",
+        "MATH_0009": "$U_i \\to V_j$",
+        "MATH_0010": "$j\\in J, i\\in I_j$",
+        "STRUCT_0006": "\\item",
+        "MATH_0011": "$S = \\bigcup_{j \\in J} V_j$",
+        "MATH_0012": "$f^{-1}(V_j) = \\bigcup_{i \\in I_j} U_i$",
+        "MATH_0013": "$\\mathcal{O}_S(V_j) \\to \\mathcal{O}_X(U_i)$",
+        "MATH_0014": "$j\\in J, i\\in I_j$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$U \\subset X$",
+        "MATH_0017": "$V \\subset S$",
+        "MATH_0018": "$f(U) \\subset V$",
+        "MATH_0019": "$f|_U : U \\to V$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-syntomic-characterize",
+      "requested_tag": "01UD"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-syntomic-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA syntomic morphism is flat.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-flat}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-syntomic-flat",
+      "requested_tag": "01UL"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-syntomic-locally-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA syntomic morphism is locally of finite presentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-locally-finite-presentation}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-syntomic-locally-finite-presentation",
+      "requested_tag": "01UK"
+    },
+    {
+      "context_id": "reference:properties-definition-Rk",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a locally Noetherian scheme. Let <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0003> is <TEXTITOPEN_0001>regular in codimension <MATH_0004><TEXTITCLOSE_0001>,\nor we say <MATH_0005> has property <TEXTITOPEN_0002><MATH_0006><TEXTITCLOSE_0002> if for every <MATH_0007>\nwe have\n<MATH_0008>\n<STRUCT_0004> We say <MATH_0009> has property <TEXTITOPEN_0003><MATH_0010><TEXTITCLOSE_0003> if for every <MATH_0011> we have\n<MATH_0012>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-Rk}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$k \\geq 0$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$k$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$X$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0006": "$(R_k)$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0007": "$x \\in X$",
+        "MATH_0008": "$$\n\\dim(\\mathcal{O}_{X, x}) \\leq k\n\\Rightarrow\n\\mathcal{O}_{X, x}\\text{ is regular}\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$X$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0010": "$(S_k)$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$x \\in X$",
+        "MATH_0012": "$\\text{depth}(\\mathcal{O}_{X, x}) \\geq \\min(k, \\dim(\\mathcal{O}_{X, x}))$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-definition-Rk",
+      "requested_tag": "033Q"
+    },
+    {
+      "context_id": "reference:properties-definition-noetherian",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0002> is <TEXTITOPEN_0001>locally Noetherian<TEXTITCLOSE_0001> if every\n<MATH_0003> has an affine open neighbourhood\n<MATH_0004> such that the ring <MATH_0005> is Noetherian.\n<STRUCT_0004> We say <MATH_0006> is <TEXTITOPEN_0002>Noetherian<TEXTITCLOSE_0002> if <MATH_0007> is locally Noetherian\nand quasi-compact.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-noetherian}",
+        "MATH_0001": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$x \\in X$",
+        "MATH_0004": "$\\Spec(R) = U \\subset X$",
+        "MATH_0005": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$X$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0007": "$X$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-definition-noetherian",
+      "requested_tag": "01OV"
+    },
+    {
+      "context_id": "reference:properties-definition-normal",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA scheme <MATH_0001> is <TEXTITOPEN_0001>normal<TEXTITCLOSE_0001> if and only if for all <MATH_0002> the local ring\n<MATH_0003> is a normal domain.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-normal}",
+        "MATH_0001": "$X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$x \\in X$",
+        "MATH_0003": "$\\mathcal{O}_{X, x}$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-definition-normal",
+      "requested_tag": "033I"
+    },
+    {
+      "context_id": "reference:properties-lemma-Noetherian-irreducible-components",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA Noetherian scheme has a finite number of irreducible components.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Noetherian-irreducible-components}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-Noetherian-irreducible-components",
+      "requested_tag": "0BA8"
+    },
+    {
+      "context_id": "reference:properties-lemma-locally-jacobson",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. The following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The scheme <MATH_0002> is Jacobson.\n<STRUCT_0004> The scheme <MATH_0003> is ``locally Jacobson'' in the sense of\nDefinition <REF_0001>.\n<STRUCT_0005> For every affine open <MATH_0004> the ring <MATH_0005>\nis Jacobson.\n<STRUCT_0006> There exists an affine open covering <MATH_0006> such that\neach <MATH_0007> is Jacobson.\n<STRUCT_0007> There exists an open covering <MATH_0008>\nsuch that each open subscheme <MATH_0009> is Jacobson.\n<STRUCT_0008>\nMoreover, if <MATH_0010> is Jacobson then every open subscheme\nis Jacobson.\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-jacobson}",
+        "MATH_0001": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$X$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$X$",
+        "REF_0001": "\\ref{definition-locally-P}",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$U \\subset X$",
+        "MATH_0005": "$\\mathcal{O}_X(U)$",
+        "STRUCT_0006": "\\item",
+        "MATH_0006": "$X = \\bigcup U_i$",
+        "MATH_0007": "$\\mathcal{O}_X(U_i)$",
+        "STRUCT_0007": "\\item",
+        "MATH_0008": "$X = \\bigcup X_j$",
+        "MATH_0009": "$X_j$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "MATH_0010": "$X$",
+        "STRUCT_0009": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-locally-jacobson",
+      "requested_tag": "01P4"
+    },
+    {
+      "context_id": "reference:properties-lemma-locally-nagata",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. The following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The scheme <MATH_0002> is Nagata.\n<STRUCT_0004> For every affine open <MATH_0003> the ring <MATH_0004>\nis Nagata.\n<STRUCT_0005> There exists an affine open covering <MATH_0005>\nsuch that each <MATH_0006> is Nagata.\n<STRUCT_0006> There exists an open covering <MATH_0007>\nsuch that each open subscheme <MATH_0008> is Nagata.\n<STRUCT_0007>\nMoreover, if <MATH_0009> is Nagata then every open subscheme is Nagata.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-nagata}",
+        "MATH_0001": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$X$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$U \\subset X$",
+        "MATH_0004": "$\\mathcal{O}_X(U)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$X = \\bigcup U_i$",
+        "MATH_0006": "$\\mathcal{O}_X(U_i)$",
+        "STRUCT_0006": "\\item",
+        "MATH_0007": "$X = \\bigcup X_j$",
+        "MATH_0008": "$X_j$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0009": "$X$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-locally-nagata",
+      "requested_tag": "033X"
+    },
+    {
+      "context_id": "reference:properties-lemma-scheme-CM-iff-all-Sk",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a locally Noetherian scheme.\nThen <MATH_0002> is Cohen-Macaulay if and only if <MATH_0003> has <MATH_0004> for all <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-scheme-CM-iff-all-Sk}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$(S_k)$",
+        "MATH_0005": "$k \\geq 0$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-scheme-CM-iff-all-Sk",
+      "requested_tag": "0342"
+    },
+    {
+      "context_id": "reference:schemes-definition-reduced",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. We say <MATH_0002> is <TEXTITOPEN_0001>reduced<TEXTITCLOSE_0001> if every local ring\n<MATH_0003> is reduced.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-reduced}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\mathcal{O}_{X, x}$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-definition-reduced",
+      "requested_tag": "01J0"
+    },
+    {
+      "context_id": "reference:topology-lemma-surjective-continuous-irreducible-components",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a surjective, continuous map of topological spaces.\nIf <MATH_0002> has a finite number, say <MATH_0003>, of irreducible components, then\n<MATH_0004> has <MATH_0005> irreducible components.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-surjective-continuous-irreducible-components}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$n$",
+        "MATH_0004": "$Y$",
+        "MATH_0005": "$\\leq n$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topology-lemma-surjective-continuous-irreducible-components",
+      "requested_tag": "0GM2"
+    }
+  ]
+}

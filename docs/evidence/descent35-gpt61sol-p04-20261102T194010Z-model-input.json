@@ -1,0 +1,1383 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19dbc-3353-7803-8ac3-4d1f47235347",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p04-20261102T194010Z.json",
+    "hash": "sha256:9e9b4493716e7259b12db165ee5478b54434c52d2b599aa6f6df45f7f39b3314"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:023F:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nHere is how the complex relates to the question of effectivity.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "complex",
+          "projection_start": 30,
+          "projection_end": 37,
+          "concept": "complex",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:039W:statement",
+      "source_text": "Let <MATH_0001> be a faithfully flat ring map.\nLet <MATH_0002> be a descent datum.\nThen <MATH_0003> is effective if and only if the canonical\nmap\n<MATH_0004>\nis an isomorphism.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$(N, \\varphi)$",
+        "MATH_0004": "$$\nA \\otimes_R H^0(s(N_\\bullet)) \\longrightarrow N\n$$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 21,
+          "projection_end": 36,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 37,
+          "projection_end": 45,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 68,
+          "projection_end": 75,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical map",
+          "projection_start": 132,
+          "projection_end": 145,
+          "concept": "source-phrase-canonical-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 164,
+          "projection_end": 175,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:039W:proof",
+      "source_text": "If <MATH_0001> is effective, then we may write <MATH_0002>\nwith <MATH_0003>. It follows that <MATH_0004> by\nLemmas <REF_0001>\nand <REF_0002>. Conversely, suppose the map of the lemma\nis an isomorphism. In this case set <MATH_0005>.\nThis is an <MATH_0006>-submodule of <MATH_0007>,\nnamely <MATH_0008>.\nThe only thing to check is that via the isomorphism\n<MATH_0009>\nthe canonical descent data agrees with <MATH_0010>.\nWe omit the verification.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$(N, \\varphi)$",
+        "MATH_0002": "$N = A \\otimes_R M$",
+        "MATH_0003": "$\\varphi = can$",
+        "MATH_0004": "$H^0(s(N_\\bullet)) = M$",
+        "REF_0001": "\\ref{lemma-canonical-descent-datum-cosimplicial}",
+        "REF_0002": "\\ref{lemma-ff-exact}",
+        "MATH_0005": "$M = H^0(s(N_\\bullet))$",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$N$",
+        "MATH_0008": "$M = \\{n \\in N \\mid 1 \\otimes n = \\varphi(n \\otimes 1)\\}$",
+        "MATH_0009": "$A \\otimes_R M \\to N$",
+        "MATH_0010": "$\\varphi$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "map",
+          "projection_start": 166,
+          "projection_end": 169,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 189,
+          "projection_end": 200,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 215,
+          "projection_end": 218,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 341,
+          "projection_end": 352,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 369,
+          "projection_end": 378,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 379,
+          "projection_end": 386,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:039X:statement",
+      "source_text": "Let <MATH_0001> be a faithfully flat ring map, and let <MATH_0002>\nbe faithfully flat. Set <MATH_0003>. If all descent data\nfor <MATH_0004> are effective, then so are all descent data for <MATH_0005>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$R \\to R'$",
+        "MATH_0003": "$A' = R' \\otimes_R A$",
+        "MATH_0004": "$R' \\to A'$",
+        "MATH_0005": "$R \\to A$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 21,
+          "projection_end": 36,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 37,
+          "projection_end": 45,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 70,
+          "projection_end": 85,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 111,
+          "projection_end": 118,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 171,
+          "projection_end": 178,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:039X:proof",
+      "source_text": "Let <MATH_0001> be a descent datum for <MATH_0002>.\nSet <MATH_0003>, and denote\n<MATH_0004> the base change\nof the descent datum <MATH_0005>. Then <MATH_0006> is\na descent datum for <MATH_0007> and\n<MATH_0008>.\nMoreover, the map\n<MATH_0009> is identified\nwith the base change of the <MATH_0010>-module map\n<MATH_0011> via the faithfully flat map\n<MATH_0012>. Hence we conclude by Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$(N, \\varphi)$",
+        "MATH_0002": "$R \\to A$",
+        "MATH_0003": "$N' = R' \\otimes_R N = A' \\otimes_A N$",
+        "MATH_0004": "$\\varphi' = \\text{id}_{R'} \\otimes \\varphi$",
+        "MATH_0005": "$\\varphi$",
+        "MATH_0006": "$(N', \\varphi')$",
+        "MATH_0007": "$R' \\to A'$",
+        "MATH_0008": "$H^0(s(N'_\\bullet)) = R' \\otimes_R H^0(s(N_\\bullet))$",
+        "MATH_0009": "$A' \\otimes_{R'} H^0(s(N'_\\bullet)) \\to N'$",
+        "MATH_0010": "$A$",
+        "MATH_0011": "$A \\otimes_R H^0(s(N)) \\to N$",
+        "MATH_0012": "$A \\to A'$",
+        "REF_0001": "\\ref{lemma-recognize-effective}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 96,
+          "projection_end": 107,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 115,
+          "projection_end": 122,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 164,
+          "projection_end": 171,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 225,
+          "projection_end": 228,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 264,
+          "projection_end": 275,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module map",
+          "projection_start": 295,
+          "projection_end": 305,
+          "concept": "source-phrase-module-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 326,
+          "projection_end": 341,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 342,
+          "projection_end": 345,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023F:prose-0006",
+      "source_text": "\n\n<STRUCT_0001>\nHere is the main result of this section.\nIts proof may seem a little clumsy; for a more highbrow approach see\nRemark <REF_0001> below.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{remark-homotopy-equivalent-cosimplicial-algebras}"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:023N:statement",
+      "source_text": "<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map.\nThen\n<STRUCT_0001>\n<STRUCT_0002> any descent datum on modules with respect to <MATH_0002>\nis effective,\n<STRUCT_0003> the functor <MATH_0003> from <MATH_0004>-modules\nto the category of descent data is an equivalence, and\n<STRUCT_0004> the inverse functor is given by <MATH_0005>.\n<STRUCT_0005>\n",
+      "node_kind": "proposition",
+      "protected_nodes": {
+        "LOCKED_0001": "\\begin{slogan}\nEffective descent for modules along faithfully flat ring maps.\n\\end{slogan}",
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$R \\to A$",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$M \\mapsto (A \\otimes_R M, can)$",
+        "MATH_0004": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$(N, \\varphi) \\mapsto H^0(s(N_\\bullet))$",
+        "STRUCT_0005": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 35,
+          "projection_end": 50,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 51,
+          "projection_end": 59,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 98,
+          "projection_end": 105,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 115,
+          "projection_end": 122,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 183,
+          "projection_end": 190,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 220,
+          "projection_end": 227,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 235,
+          "projection_end": 243,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 247,
+          "projection_end": 254,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 266,
+          "projection_end": 277,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 301,
+          "projection_end": 308,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 309,
+          "projection_end": 316,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023N:proof",
+      "source_text": "We only prove (1) and omit the proofs of (2) and (3).\nAs <MATH_0001> is faithfully flat, there exists a faithfully flat\nbase change <MATH_0002> such that <MATH_0003> has\na section (namely take <MATH_0004> as in the proof of\nLemma <REF_0001>). Hence, using\nLemma <REF_0002>\nwe may assume that <MATH_0005> has a section, say <MATH_0006>.\nLet <MATH_0007> be a descent datum relative to <MATH_0008>.\nSet\n<MATH_0009>\nBy Lemma <REF_0003> it suffices to show that\n<MATH_0010> is an isomorphism.\n\n<STRUCT_0001><STRUCT_0002>\nTake an element <MATH_0011>. Write\n<MATH_0012> for certain\n<MATH_0013> and <MATH_0014>. By Lemma <REF_0004>\nwe have <MATH_0015> in <MATH_0016> (because\n<MATH_0017> in any cosimplicial object).\nNext, write <MATH_0018> for\ncertain <MATH_0019> and <MATH_0020>.\nThe cocycle condition means that\n<MATH_0021>\nin <MATH_0022>. We conclude two things from this:\n<STRUCT_0003>\n<STRUCT_0004> applying <MATH_0023> to the first <MATH_0024> we get\n<MATH_0025>,\n<STRUCT_0005> applying <MATH_0026> to the middle <MATH_0027> we get\n<MATH_0028>.\n<STRUCT_0006>\nPart (1) shows that <MATH_0029>. Applying this to\n<MATH_0030> we see that <MATH_0031> for all <MATH_0032>.\nMultiplying out the equation in (2) we conclude that\n<MATH_0033>.\nHence <MATH_0034> is surjective.\nFinally, suppose that <MATH_0035> and <MATH_0036>.\nThen we see by applying <MATH_0037> to\n<MATH_0038> that <MATH_0039>.\nIn other words <MATH_0040> is injective and we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$R \\to R'$",
+        "MATH_0003": "$R' \\to A' = R' \\otimes_R A$",
+        "MATH_0004": "$R' = A$",
+        "REF_0001": "\\ref{lemma-ff-exact}",
+        "REF_0002": "\\ref{lemma-descent-descends}",
+        "MATH_0005": "$R \\to A$",
+        "MATH_0006": "$\\sigma : A \\to R$",
+        "MATH_0007": "$(N, \\varphi)$",
+        "MATH_0008": "$R \\to A$",
+        "MATH_0009": "$$\nM = H^0(s(N_\\bullet)) = \\{n \\in N \\mid 1 \\otimes n = \\varphi(n \\otimes 1)\\}\n\\subset\nN\n$$",
+        "REF_0003": "\\ref{lemma-recognize-effective}",
+        "MATH_0010": "$A \\otimes_R M \\to N$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0011": "$n \\in N$",
+        "MATH_0012": "$\\varphi(n \\otimes 1) = \\sum a_i \\otimes x_i$",
+        "MATH_0013": "$a_i \\in A$",
+        "MATH_0014": "$x_i \\in N$",
+        "REF_0004": "\\ref{lemma-descent-datum-cosimplicial}",
+        "MATH_0015": "$n = \\sum a_i x_i$",
+        "MATH_0016": "$N$",
+        "MATH_0017": "$\\sigma^0_0 \\circ \\delta^1_1 = \\text{id}$",
+        "MATH_0018": "$\\varphi(x_i \\otimes 1) = \\sum a_{ij} \\otimes y_j$",
+        "MATH_0019": "$a_{ij} \\in A$",
+        "MATH_0020": "$y_j \\in N$",
+        "MATH_0021": "$$\n\\sum a_i \\otimes a_{ij} \\otimes y_j = \\sum a_i \\otimes 1 \\otimes x_i\n$$",
+        "MATH_0022": "$A \\otimes_R A \\otimes_R N$",
+        "STRUCT_0003": "\\begin{enumerate}",
+        "STRUCT_0004": "\\item",
+        "MATH_0023": "$\\sigma$",
+        "MATH_0024": "$A$",
+        "MATH_0025": "$\\sum \\sigma(a_i) \\varphi(x_i \\otimes 1) = \\sum \\sigma(a_i) \\otimes x_i$",
+        "STRUCT_0005": "\\item",
+        "MATH_0026": "$\\sigma$",
+        "MATH_0027": "$A$",
+        "MATH_0028": "$\\sum_i a_i \\otimes \\sum_j \\sigma(a_{ij}) y_j = \\sum a_i \\otimes x_i$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0029": "$\\sum \\sigma(a_i) x_i \\in M$",
+        "MATH_0030": "$x_i$",
+        "MATH_0031": "$\\sum \\sigma(a_{ij})y_i \\in M$",
+        "MATH_0032": "$i$",
+        "MATH_0033": "$\\sum_i a_i (\\sum_j \\sigma(a_{ij}) y_j) = \\sum a_i x_i = n$",
+        "MATH_0034": "$A \\otimes_R M \\to N$",
+        "MATH_0035": "$m_i \\in M$",
+        "MATH_0036": "$\\sum a_i m_i = 0$",
+        "MATH_0037": "$\\varphi$",
+        "MATH_0038": "$\\sum a_im_i \\otimes 1$",
+        "MATH_0039": "$\\sum a_i \\otimes m_i = 0$",
+        "MATH_0040": "$A \\otimes_R M \\to N$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 72,
+          "projection_end": 87,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 104,
+          "projection_end": 119,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 120,
+          "projection_end": 131,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 357,
+          "projection_end": 364,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 475,
+          "projection_end": 486,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 523,
+          "projection_end": 530,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 699,
+          "projection_end": 705,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1251,
+          "projection_end": 1261,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 1413,
+          "projection_end": 1422,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023O:statement",
+      "source_text": "Let <MATH_0001> be a ring. Let <MATH_0002> generate the\nunit ideal. The ring <MATH_0003> is a faithfully flat\n<MATH_0004>-algebra. We remark that the cosimplicial ring <MATH_0005>\nhas the following ring in degree <MATH_0006>:\n<MATH_0007>\nHence the results above recover\nAlgebra, Lemmas <REF_0001>,\n<REF_0002> and <REF_0003>.\nBut the results above actually say more because of exactness\nin higher degrees. Namely, it implies that <GROUPOPEN_0001><ACCENT_0001><GROUPCLOSE_0001>ech cohomology of\nquasi-coherent sheaves on affines is trivial. Thus we get a second\nproof of Cohomology of Schemes, Lemma\n<REF_0004>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n\\in R$",
+        "MATH_0003": "$A = \\prod_i R_{f_i}$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$(A/R)_\\bullet$",
+        "MATH_0006": "$n$",
+        "MATH_0007": "$$\n\\prod\\nolimits_{i_0, \\ldots, i_n} R_{f_{i_0}\\ldots f_{i_n}}\n$$",
+        "REF_0001": "\\ref{algebra-lemma-standard-covering}",
+        "REF_0002": "\\ref{algebra-lemma-cover-module}",
+        "REF_0003": "\\ref{algebra-lemma-glue-modules}",
+        "GROUPOPEN_0001": "{",
+        "ACCENT_0001": "\\v C",
+        "GROUPCLOSE_0001": "}",
+        "REF_0004": "\\ref{coherent-lemma-cech-cohomology-quasi-coherent-trivial}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 61,
+          "projection_end": 66,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 72,
+          "projection_end": 76,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 94,
+          "projection_end": 109,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 122,
+          "projection_end": 129,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 163,
+          "projection_end": 167,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 198,
+          "projection_end": 202,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 206,
+          "projection_end": 212,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 270,
+          "projection_end": 277,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degrees",
+          "projection_start": 396,
+          "projection_end": 403,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology",
+          "projection_start": 479,
+          "projection_end": 489,
+          "concept": "cohomology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 493,
+          "projection_end": 515,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 519,
+          "projection_end": 526,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 569,
+          "projection_end": 590,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:039Y:statement",
+      "source_text": "Let <MATH_0001> be a ring. Let <MATH_0002> be a cosimplicial <MATH_0003>-algebra.\nIn this setting a descent datum corresponds to an cosimplicial\n<MATH_0004>-module <MATH_0005> with the property that for\nevery <MATH_0006> and every <MATH_0007> the\nmap <MATH_0008> induces an isomorphism\n<MATH_0009>\nLet us call such a cosimplicial module a <TEXTITOPEN_0001>cartesian module<TEXTITCLOSE_0001>.\nIn this setting, the proof of Proposition <REF_0001>\ncan be split in the following steps\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0010> and <MATH_0011> are faithfully flat,\nthen descent data for <MATH_0012> are effective if\ndescent data for <MATH_0013> are effective.\n<STRUCT_0003> Let <MATH_0014> be an <MATH_0015>-algebra. Descent data for <MATH_0016> correspond\nto cartesian <MATH_0017>-modules.\n<STRUCT_0004> If <MATH_0018> has a section then <MATH_0019> is homotopy\nequivalent to <MATH_0020>, the constant cosimplicial\n<MATH_0021>-algebra with value <MATH_0022>.\n<STRUCT_0005> If <MATH_0023> is a homotopy equivalence of\ncosimplicial <MATH_0024>-algebras then the functor\n<MATH_0025>\ninduces an equivalence of categories between cartesian\n<MATH_0026>-modules and cartesian <MATH_0027>-modules.\n<STRUCT_0006>\nFor (1) see Lemma <REF_0002>.\nPart (2) uses Lemma <REF_0003>.\nPart (3) we have seen in the proof of Lemma <REF_0004>\n(it relies on Simplicial,\nLemma <REF_0005>).\nMoreover, part (4) is a triviality if you think about it right!\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "MATH_0002": "$A_\\bullet$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$A_\\bullet$",
+        "MATH_0005": "$M_\\bullet$",
+        "MATH_0006": "$n, m \\geq 0$",
+        "MATH_0007": "$\\varphi : [n] \\to [m]$",
+        "MATH_0008": "$M(\\varphi) : M_n \\to M_m$",
+        "MATH_0009": "$$\nM_n \\otimes_{A_n, A(\\varphi)} A_m \\longrightarrow M_m.\n$$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{proposition-descent-module}",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0010": "$R \\to R'$",
+        "MATH_0011": "$R \\to A$",
+        "MATH_0012": "$A/R$",
+        "MATH_0013": "$(R' \\otimes_R A)/R'$",
+        "STRUCT_0003": "\\item",
+        "MATH_0014": "$A$",
+        "MATH_0015": "$R$",
+        "MATH_0016": "$A/R$",
+        "MATH_0017": "$(A/R)_\\bullet$",
+        "STRUCT_0004": "\\item",
+        "MATH_0018": "$R \\to A$",
+        "MATH_0019": "$(A/R)_\\bullet$",
+        "MATH_0020": "$R$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$R$",
+        "STRUCT_0005": "\\item",
+        "MATH_0023": "$A_\\bullet \\to B_\\bullet$",
+        "MATH_0024": "$R$",
+        "MATH_0025": "$M_\\bullet \\mapsto M_\\bullet \\otimes_{A_\\bullet} B_\\bullet$",
+        "MATH_0026": "$A_\\bullet$",
+        "MATH_0027": "$B_\\bullet$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "REF_0002": "\\ref{lemma-descent-descends}",
+        "REF_0003": "\\ref{lemma-descent-datum-cosimplicial}",
+        "REF_0004": "\\ref{lemma-with-section-exact}",
+        "REF_0005": "\\ref{simplicial-lemma-push-outs-simplicial-object-w-section}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 73,
+          "projection_end": 80,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 100,
+          "projection_end": 107,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 157,
+          "projection_end": 163,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 247,
+          "projection_end": 250,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 274,
+          "projection_end": 285,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 330,
+          "projection_end": 336,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian module",
+          "projection_start": 339,
+          "projection_end": 355,
+          "concept": "cartesian module",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 509,
+          "projection_end": 524,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 531,
+          "projection_end": 538,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 577,
+          "projection_end": 584,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 669,
+          "projection_end": 676,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Descent",
+          "projection_start": 678,
+          "projection_end": 685,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 721,
+          "projection_end": 730,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 743,
+          "projection_end": 750,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homotopy equivalent",
+          "projection_start": 815,
+          "projection_end": 834,
+          "concept": "source-phrase-homotopy-equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 889,
+          "projection_end": 896,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homotopy equivalence",
+          "projection_start": 955,
+          "projection_end": 975,
+          "concept": "source-phrase-homotopy-equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 1004,
+          "projection_end": 1012,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1022,
+          "projection_end": 1029,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 1053,
+          "projection_end": 1078,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 1087,
+          "projection_end": 1096,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1109,
+          "projection_end": 1116,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 1121,
+          "projection_end": 1130,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1143,
+          "projection_end": 1150,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:023M:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nSuppose we can show there exists a faithfully flat ring map\n<MATH_0001> such that the result holds for the ring map\n<MATH_0002>. Then the result follows for\n<MATH_0003>. Namely, for any <MATH_0004>-module <MATH_0005> the cosimplicial\nmodule <MATH_0006> is\njust the cosimplicial module <MATH_0007>.\nHence the vanishing of cohomology of the complex associated to\n<MATH_0008> implies the\nvanishing of the cohomology of the complex associated to\n<MATH_0009> by faithful flatness of <MATH_0010>.\nSimilarly for the vanishing of cohomology groups in degrees\n<MATH_0011> and <MATH_0012> of the extended complex (proof omitted).\n\n<STRUCT_0002><STRUCT_0003>\nBut we have such a faithful flat extension. Namely <MATH_0013> works\nbecause the ring map <MATH_0014> has a section\n<MATH_0015> and\nLemma <REF_0001>\napplies.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$R \\to R'$",
+        "MATH_0002": "$R' \\to A' = R' \\otimes_R A$",
+        "MATH_0003": "$R \\to A$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$M$",
+        "MATH_0006": "$(M \\otimes_R R') \\otimes_{R'} (A'/R')_\\bullet$",
+        "MATH_0007": "$R' \\otimes_R (M \\otimes_R (A/R)_\\bullet)$",
+        "MATH_0008": "$(M \\otimes_R R') \\otimes_{R'} (A'/R')_\\bullet$",
+        "MATH_0009": "$M \\otimes_R (A/R)_\\bullet$",
+        "MATH_0010": "$R \\to R'$",
+        "MATH_0011": "$-1$",
+        "MATH_0012": "$0$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0013": "$R' = A$",
+        "MATH_0014": "$R' = A \\to A' = A \\otimes_R A$",
+        "MATH_0015": "$a \\otimes a' \\mapsto aa'$",
+        "REF_0001": "\\ref{lemma-with-section-exact}",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:039W:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map.\nLet <MATH_0002> be a descent datum.\nThen <MATH_0003> is effective if and only if the canonical\nmap\n<MATH_0004>\nis an isomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-recognize-effective}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$(N, \\varphi)$",
+        "MATH_0004": "$$\nA \\otimes_R H^0(s(N_\\bullet)) \\longrightarrow N\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0010",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere is how the complex relates to the question of effectivity.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:039W:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIf <MATH_0001> is effective, then we may write <MATH_0002>\nwith <MATH_0003>. It follows that <MATH_0004> by\nLemmas <REF_0001>\nand <REF_0002>. Conversely, suppose the map of the lemma\nis an isomorphism. In this case set <MATH_0005>.\nThis is an <MATH_0006>-submodule of <MATH_0007>,\nnamely <MATH_0008>.\nThe only thing to check is that via the isomorphism\n<MATH_0009>\nthe canonical descent data agrees with <MATH_0010>.\nWe omit the verification.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$(N, \\varphi)$",
+        "MATH_0002": "$N = A \\otimes_R M$",
+        "MATH_0003": "$\\varphi = can$",
+        "MATH_0004": "$H^0(s(N_\\bullet)) = M$",
+        "REF_0001": "\\ref{lemma-canonical-descent-datum-cosimplicial}",
+        "REF_0002": "\\ref{lemma-ff-exact}",
+        "MATH_0005": "$M = H^0(s(N_\\bullet))$",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$N$",
+        "MATH_0008": "$M = \\{n \\in N \\mid 1 \\otimes n = \\varphi(n \\otimes 1)\\}$",
+        "MATH_0009": "$A \\otimes_R M \\to N$",
+        "MATH_0010": "$\\varphi$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:039X:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map, and let <MATH_0002>\nbe faithfully flat. Set <MATH_0003>. If all descent data\nfor <MATH_0004> are effective, then so are all descent data for <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-descends}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$R \\to R'$",
+        "MATH_0003": "$A' = R' \\otimes_R A$",
+        "MATH_0004": "$R' \\to A'$",
+        "MATH_0005": "$R \\to A$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:039X:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a descent datum for <MATH_0002>.\nSet <MATH_0003>, and denote\n<MATH_0004> the base change\nof the descent datum <MATH_0005>. Then <MATH_0006> is\na descent datum for <MATH_0007> and\n<MATH_0008>.\nMoreover, the map\n<MATH_0009> is identified\nwith the base change of the <MATH_0010>-module map\n<MATH_0011> via the faithfully flat map\n<MATH_0012>. Hence we conclude by Lemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$(N, \\varphi)$",
+        "MATH_0002": "$R \\to A$",
+        "MATH_0003": "$N' = R' \\otimes_R N = A' \\otimes_A N$",
+        "MATH_0004": "$\\varphi' = \\text{id}_{R'} \\otimes \\varphi$",
+        "MATH_0005": "$\\varphi$",
+        "MATH_0006": "$(N', \\varphi')$",
+        "MATH_0007": "$R' \\to A'$",
+        "MATH_0008": "$H^0(s(N'_\\bullet)) = R' \\otimes_R H^0(s(N_\\bullet))$",
+        "MATH_0009": "$A' \\otimes_{R'} H^0(s(N'_\\bullet)) \\to N'$",
+        "MATH_0010": "$A$",
+        "MATH_0011": "$A \\otimes_R H^0(s(N)) \\to N$",
+        "MATH_0012": "$A \\to A'$",
+        "REF_0001": "\\ref{lemma-recognize-effective}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0011",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere is the main result of this section.\nIts proof may seem a little clumsy; for a more highbrow approach see\nRemark <REF_0001> below.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{remark-homotopy-equivalent-cosimplicial-algebras}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023N:proposition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a faithfully flat ring map.\nThen\n<STRUCT_0002>\n<STRUCT_0003> any descent datum on modules with respect to <MATH_0002>\nis effective,\n<STRUCT_0004> the functor <MATH_0003> from <MATH_0004>-modules\nto the category of descent data is an equivalence, and\n<STRUCT_0005> the inverse functor is given by <MATH_0005>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-descent-module}",
+        "LOCKED_0002": "\\begin{slogan}\nEffective descent for modules along faithfully flat ring maps.\n\\end{slogan}",
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to A$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$M \\mapsto (A \\otimes_R M, can)$",
+        "MATH_0004": "$R$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$(N, \\varphi) \\mapsto H^0(s(N_\\bullet))$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023N:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe only prove (1) and omit the proofs of (2) and (3).\nAs <MATH_0001> is faithfully flat, there exists a faithfully flat\nbase change <MATH_0002> such that <MATH_0003> has\na section (namely take <MATH_0004> as in the proof of\nLemma <REF_0001>). Hence, using\nLemma <REF_0002>\nwe may assume that <MATH_0005> has a section, say <MATH_0006>.\nLet <MATH_0007> be a descent datum relative to <MATH_0008>.\nSet\n<MATH_0009>\nBy Lemma <REF_0003> it suffices to show that\n<MATH_0010> is an isomorphism.\n\n<STRUCT_0002><STRUCT_0003>\nTake an element <MATH_0011>. Write\n<MATH_0012> for certain\n<MATH_0013> and <MATH_0014>. By Lemma <REF_0004>\nwe have <MATH_0015> in <MATH_0016> (because\n<MATH_0017> in any cosimplicial object).\nNext, write <MATH_0018> for\ncertain <MATH_0019> and <MATH_0020>.\nThe cocycle condition means that\n<MATH_0021>\nin <MATH_0022>. We conclude two things from this:\n<STRUCT_0004>\n<STRUCT_0005> applying <MATH_0023> to the first <MATH_0024> we get\n<MATH_0025>,\n<STRUCT_0006> applying <MATH_0026> to the middle <MATH_0027> we get\n<MATH_0028>.\n<STRUCT_0007>\nPart (1) shows that <MATH_0029>. Applying this to\n<MATH_0030> we see that <MATH_0031> for all <MATH_0032>.\nMultiplying out the equation in (2) we conclude that\n<MATH_0033>.\nHence <MATH_0034> is surjective.\nFinally, suppose that <MATH_0035> and <MATH_0036>.\nThen we see by applying <MATH_0037> to\n<MATH_0038> that <MATH_0039>.\nIn other words <MATH_0040> is injective and we win.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$R \\to R'$",
+        "MATH_0003": "$R' \\to A' = R' \\otimes_R A$",
+        "MATH_0004": "$R' = A$",
+        "REF_0001": "\\ref{lemma-ff-exact}",
+        "REF_0002": "\\ref{lemma-descent-descends}",
+        "MATH_0005": "$R \\to A$",
+        "MATH_0006": "$\\sigma : A \\to R$",
+        "MATH_0007": "$(N, \\varphi)$",
+        "MATH_0008": "$R \\to A$",
+        "MATH_0009": "$$\nM = H^0(s(N_\\bullet)) = \\{n \\in N \\mid 1 \\otimes n = \\varphi(n \\otimes 1)\\}\n\\subset\nN\n$$",
+        "REF_0003": "\\ref{lemma-recognize-effective}",
+        "MATH_0010": "$A \\otimes_R M \\to N$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0011": "$n \\in N$",
+        "MATH_0012": "$\\varphi(n \\otimes 1) = \\sum a_i \\otimes x_i$",
+        "MATH_0013": "$a_i \\in A$",
+        "MATH_0014": "$x_i \\in N$",
+        "REF_0004": "\\ref{lemma-descent-datum-cosimplicial}",
+        "MATH_0015": "$n = \\sum a_i x_i$",
+        "MATH_0016": "$N$",
+        "MATH_0017": "$\\sigma^0_0 \\circ \\delta^1_1 = \\text{id}$",
+        "MATH_0018": "$\\varphi(x_i \\otimes 1) = \\sum a_{ij} \\otimes y_j$",
+        "MATH_0019": "$a_{ij} \\in A$",
+        "MATH_0020": "$y_j \\in N$",
+        "MATH_0021": "$$\n\\sum a_i \\otimes a_{ij} \\otimes y_j = \\sum a_i \\otimes 1 \\otimes x_i\n$$",
+        "MATH_0022": "$A \\otimes_R A \\otimes_R N$",
+        "STRUCT_0004": "\\begin{enumerate}",
+        "STRUCT_0005": "\\item",
+        "MATH_0023": "$\\sigma$",
+        "MATH_0024": "$A$",
+        "MATH_0025": "$\\sum \\sigma(a_i) \\varphi(x_i \\otimes 1) = \\sum \\sigma(a_i) \\otimes x_i$",
+        "STRUCT_0006": "\\item",
+        "MATH_0026": "$\\sigma$",
+        "MATH_0027": "$A$",
+        "MATH_0028": "$\\sum_i a_i \\otimes \\sum_j \\sigma(a_{ij}) y_j = \\sum a_i \\otimes x_i$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0029": "$\\sum \\sigma(a_i) x_i \\in M$",
+        "MATH_0030": "$x_i$",
+        "MATH_0031": "$\\sum \\sigma(a_{ij})y_i \\in M$",
+        "MATH_0032": "$i$",
+        "MATH_0033": "$\\sum_i a_i (\\sum_j \\sigma(a_{ij}) y_j) = \\sum a_i x_i = n$",
+        "MATH_0034": "$A \\otimes_R M \\to N$",
+        "MATH_0035": "$m_i \\in M$",
+        "MATH_0036": "$\\sum a_i m_i = 0$",
+        "MATH_0037": "$\\varphi$",
+        "MATH_0038": "$\\sum a_im_i \\otimes 1$",
+        "MATH_0039": "$\\sum a_i \\otimes m_i = 0$",
+        "MATH_0040": "$A \\otimes_R M \\to N$",
+        "STRUCT_0008": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023O:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002> generate the\nunit ideal. The ring <MATH_0003> is a faithfully flat\n<MATH_0004>-algebra. We remark that the cosimplicial ring <MATH_0005>\nhas the following ring in degree <MATH_0006>:\n<MATH_0007>\nHence the results above recover\nAlgebra, Lemmas <REF_0001>,\n<REF_0002> and <REF_0003>.\nBut the results above actually say more because of exactness\nin higher degrees. Namely, it implies that <GROUPOPEN_0001><ACCENT_0001><GROUPCLOSE_0001>ech cohomology of\nquasi-coherent sheaves on affines is trivial. Thus we get a second\nproof of Cohomology of Schemes, Lemma\n<REF_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-standard-covering}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n\\in R$",
+        "MATH_0003": "$A = \\prod_i R_{f_i}$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$(A/R)_\\bullet$",
+        "MATH_0006": "$n$",
+        "MATH_0007": "$$\n\\prod\\nolimits_{i_0, \\ldots, i_n} R_{f_{i_0}\\ldots f_{i_n}}\n$$",
+        "REF_0001": "\\ref{algebra-lemma-standard-covering}",
+        "REF_0002": "\\ref{algebra-lemma-cover-module}",
+        "REF_0003": "\\ref{algebra-lemma-glue-modules}",
+        "GROUPOPEN_0001": "{",
+        "ACCENT_0001": "\\v C",
+        "GROUPCLOSE_0001": "}",
+        "REF_0004": "\\ref{coherent-lemma-cech-cohomology-quasi-coherent-trivial}",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:039Y:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002> be a cosimplicial <MATH_0003>-algebra.\nIn this setting a descent datum corresponds to an cosimplicial\n<MATH_0004>-module <MATH_0005> with the property that for\nevery <MATH_0006> and every <MATH_0007> the\nmap <MATH_0008> induces an isomorphism\n<MATH_0009>\nLet us call such a cosimplicial module a <TEXTITOPEN_0001>cartesian module<TEXTITCLOSE_0001>.\nIn this setting, the proof of Proposition <REF_0001>\ncan be split in the following steps\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0010> and <MATH_0011> are faithfully flat,\nthen descent data for <MATH_0012> are effective if\ndescent data for <MATH_0013> are effective.\n<STRUCT_0004> Let <MATH_0014> be an <MATH_0015>-algebra. Descent data for <MATH_0016> correspond\nto cartesian <MATH_0017>-modules.\n<STRUCT_0005> If <MATH_0018> has a section then <MATH_0019> is homotopy\nequivalent to <MATH_0020>, the constant cosimplicial\n<MATH_0021>-algebra with value <MATH_0022>.\n<STRUCT_0006> If <MATH_0023> is a homotopy equivalence of\ncosimplicial <MATH_0024>-algebras then the functor\n<MATH_0025>\ninduces an equivalence of categories between cartesian\n<MATH_0026>-modules and cartesian <MATH_0027>-modules.\n<STRUCT_0007>\nFor (1) see Lemma <REF_0002>.\nPart (2) uses Lemma <REF_0003>.\nPart (3) we have seen in the proof of Lemma <REF_0004>\n(it relies on Simplicial,\nLemma <REF_0005>).\nMoreover, part (4) is a triviality if you think about it right!\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-homotopy-equivalent-cosimplicial-algebras}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$A_\\bullet$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$A_\\bullet$",
+        "MATH_0005": "$M_\\bullet$",
+        "MATH_0006": "$n, m \\geq 0$",
+        "MATH_0007": "$\\varphi : [n] \\to [m]$",
+        "MATH_0008": "$M(\\varphi) : M_n \\to M_m$",
+        "MATH_0009": "$$\nM_n \\otimes_{A_n, A(\\varphi)} A_m \\longrightarrow M_m.\n$$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{proposition-descent-module}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0010": "$R \\to R'$",
+        "MATH_0011": "$R \\to A$",
+        "MATH_0012": "$A/R$",
+        "MATH_0013": "$(R' \\otimes_R A)/R'$",
+        "STRUCT_0004": "\\item",
+        "MATH_0014": "$A$",
+        "MATH_0015": "$R$",
+        "MATH_0016": "$A/R$",
+        "MATH_0017": "$(A/R)_\\bullet$",
+        "STRUCT_0005": "\\item",
+        "MATH_0018": "$R \\to A$",
+        "MATH_0019": "$(A/R)_\\bullet$",
+        "MATH_0020": "$R$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$R$",
+        "STRUCT_0006": "\\item",
+        "MATH_0023": "$A_\\bullet \\to B_\\bullet$",
+        "MATH_0024": "$R$",
+        "MATH_0025": "$M_\\bullet \\mapsto M_\\bullet \\otimes_{A_\\bullet} B_\\bullet$",
+        "MATH_0026": "$A_\\bullet$",
+        "MATH_0027": "$B_\\bullet$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "REF_0002": "\\ref{lemma-descent-descends}",
+        "REF_0003": "\\ref{lemma-descent-datum-cosimplicial}",
+        "REF_0004": "\\ref{lemma-with-section-exact}",
+        "REF_0005": "\\ref{simplicial-lemma-push-outs-simplicial-object-w-section}",
+        "STRUCT_0008": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WE:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for universally injective morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-universally-injective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-cover-module",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002> be elements of <MATH_0003>\ngenerating the unit ideal. Let <MATH_0004> be an <MATH_0005>-module.\nThe sequence\n<MATH_0006>\nis exact, where <MATH_0007>\nand <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-cover-module}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$$\n0 \\to\nM \\xrightarrow{\\alpha}\n\\bigoplus\\nolimits_{i = 1}^n M_{f_i} \\xrightarrow{\\beta}\n\\bigoplus\\nolimits_{i, j = 1}^n M_{f_i f_j}\n$$",
+        "MATH_0007": "$\\alpha(m) = (m/1, \\ldots, m/1)$",
+        "MATH_0008": "$\\beta(m_1/f_1^{e_1}, \\ldots, m_n/f_n^{e_n})\n= (m_i/f_i^{e_i} - m_j/f_j^{e_j})_{(i, j)}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-cover-module",
+      "requested_tag": "00EK"
+    },
+    {
+      "context_id": "reference:algebra-lemma-glue-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002>. Suppose we are given\nthe following data:\n<STRUCT_0002>\n<STRUCT_0003> For each <MATH_0003> an <MATH_0004>-module <MATH_0005>.\n<STRUCT_0004> For each pair <MATH_0006> an <MATH_0007>-module isomorphism\n<MATH_0008>.\n<STRUCT_0005>\nwhich satisfy the ``cocycle condition'' that all the diagrams\n<MATH_0009>\ncommute (for all triples <MATH_0010>). Given this data define\n<MATH_0011>\nwhere <MATH_0012> maps to the element whose\n<MATH_0013>th entry is <MATH_0014>.\nThen the natural map <MATH_0015> induces an isomorphism\n<MATH_0016>. Moreover <MATH_0017>\nfor all <MATH_0018> (with obvious notation).\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-glue-modules}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n \\in R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$i$",
+        "MATH_0004": "$R_{f_i}$",
+        "MATH_0005": "$M_i$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$i, j$",
+        "MATH_0007": "$R_{f_if_j}$",
+        "MATH_0008": "$\\psi_{ij} : (M_i)_{f_j} \\to (M_j)_{f_i}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0009": "$$\n\\xymatrix{\n(M_i)_{f_jf_k}\n\\ar[rd]_{\\psi_{ij}}\n\\ar[rr]^{\\psi_{ik}}\n& &\n(M_k)_{f_if_j} \\\\\n&\n(M_j)_{f_if_k} \\ar[ru]_{\\psi_{jk}}\n}\n$$",
+        "MATH_0010": "$i, j, k$",
+        "MATH_0011": "$$\nM = \\Ker\\left(\n\\bigoplus\\nolimits_{1 \\leq i \\leq n} M_i\n\\longrightarrow\n\\bigoplus\\nolimits_{1 \\leq i, j \\leq n} (M_i)_{f_j}\n\\right)\n$$",
+        "MATH_0012": "$(m_1, \\ldots, m_n)$",
+        "MATH_0013": "$(i, j)$",
+        "MATH_0014": "$m_i/1 - \\psi_{ji}(m_j/1)$",
+        "MATH_0015": "$M \\to M_i$",
+        "MATH_0016": "$M_{f_i} \\to M_i$",
+        "MATH_0017": "$\\psi_{ij}(m/1) = m/1$",
+        "MATH_0018": "$m \\in M$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-glue-modules",
+      "requested_tag": "00EQ"
+    },
+    {
+      "context_id": "reference:algebra-lemma-standard-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring, and let <MATH_0002> generate\nthe unit ideal in <MATH_0003>.\nThen the following sequence is exact:\n<MATH_0004>\nwhere the maps <MATH_0005>\nand <MATH_0006>\nare defined as\n<MATHSEG_0001> and <MATHSEG_0002>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-standard-covering}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, f_2, \\ldots f_n\\in R$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$$\n0 \\longrightarrow\nR \\longrightarrow\n\\bigoplus\\nolimits_i R_{f_i} \\longrightarrow\n\\bigoplus\\nolimits_{i, j}R_{f_if_j}\n$$",
+        "MATH_0005": "$\\alpha : R \\longrightarrow \\bigoplus_i R_{f_i}$",
+        "MATH_0006": "$\\beta : \\bigoplus_i R_{f_i} \\longrightarrow \\bigoplus_{i, j} R_{f_if_j}$",
+        "MATHSEG_0001": "$$\n\\alpha(x) = \\left(\\frac{x}{1}, \\ldots, \\frac{x}{1}\\right)\n\\text{",
+        "MATHSEG_0002": "}\n\\beta\\left(\\frac{x_1}{f_1^{r_1}}, \\ldots, \\frac{x_n}{f_n^{r_n}}\\right)\n=\n\\left(\\frac{x_i}{f_i^{r_i}}-\\frac{x_j}{f_j^{r_j}}~\\text{in}~R_{f_if_j}\\right).\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-standard-covering",
+      "requested_tag": "00EJ"
+    },
+    {
+      "context_id": "reference:coherent-lemma-cech-cohomology-quasi-coherent-trivial",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be a standard\nopen covering of an affine open of <MATH_0005>.\nThen <MATH_0006> for\nall <MATH_0007>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-cech-cohomology-quasi-coherent-trivial}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{U} : U = \\bigcup_{i = 1}^n D(f_i)$",
+        "MATH_0005": "$X$",
+        "MATH_0006": "$\\check{H}^p(\\mathcal{U}, \\mathcal{F}) = 0$",
+        "MATH_0007": "$p > 0$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-cech-cohomology-quasi-coherent-trivial",
+      "requested_tag": "01X9"
+    },
+    {
+      "context_id": "reference:descent-lemma-canonical-descent-datum-cosimplicial",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nLet <MATH_0002> be an <MATH_0003>-module. The cosimplicial\n<MATH_0004>-module associated to the canonical descent\ndatum is isomorphic to the cosimplicial module <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-canonical-descent-datum-cosimplicial}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$(A/R)_\\bullet$",
+        "MATH_0005": "$(A/R)_\\bullet \\otimes_R M$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-canonical-descent-datum-cosimplicial",
+      "requested_tag": "023I"
+    },
+    {
+      "context_id": "reference:descent-lemma-descent-datum-cosimplicial",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nGiven a descent datum <MATH_0002> we can associate to it a\ncosimplicial <MATH_0003>-module <MATH_0004><FOOTNOTEOPEN_0001>We should really\nwrite <MATH_0005>.<FOOTNOTECLOSE_0001> by the\nrules <MATH_0006> and given <MATH_0007>\nsetting we define\n<MATH_0008>\nThis procedure is functorial in the descent datum.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-datum-cosimplicial}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$(A/R)_\\bullet$",
+        "MATH_0004": "$N_\\bullet$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0005": "$(N, \\varphi)_\\bullet$",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0006": "$N_n = N_{n, n}$",
+        "MATH_0007": "$\\beta : [n] \\to [m]$",
+        "MATH_0008": "$$\nN_\\bullet(\\beta) = (\\varphi^m_{\\beta(n)m}) \\circ N_{\\beta, n} :\nN_{n, n} \\longrightarrow N_{m, m}.\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descent-datum-cosimplicial",
+      "requested_tag": "023H"
+    },
+    {
+      "context_id": "reference:descent-lemma-ff-exact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> is faithfully flat, see\nAlgebra, Definition <REF_0001>.\nThen for any <MATH_0002>-module <MATH_0003> the extended cochain complex\n(<REF_0002>) is exact.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-ff-exact}",
+        "MATH_0001": "$R \\to A$",
+        "REF_0001": "\\ref{algebra-definition-flat}",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$M$",
+        "REF_0002": "\\ref{equation-extended-complex}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-ff-exact",
+      "requested_tag": "023M"
+    },
+    {
+      "context_id": "reference:descent-lemma-with-section-exact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> has a section.\nThen for any <MATH_0002>-module <MATH_0003> the extended cochain complex\n(<REF_0001>) is exact.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-with-section-exact}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$M$",
+        "REF_0001": "\\ref{equation-extended-complex}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-with-section-exact",
+      "requested_tag": "023L"
+    },
+    {
+      "context_id": "reference:simplicial-lemma-push-outs-simplicial-object-w-section",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of a category <MATH_0002> with\npushouts. Assume there is a morphism <MATH_0003> with\n<MATH_0004>. Consider the cosimplicial object <MATH_0005> constructed in\nExample <REF_0001>\nstarting with <MATH_0006>. The morphism <MATH_0007> which in each degree\nis the self map of <MATH_0008>\ngiven by <MATH_0009> on each factor is homotopic to the identity on <MATH_0010>.\nIn particular, <MATH_0011> is homotopy equivalent to the constant\ncosimplicial object <MATH_0012>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-push-outs-simplicial-object-w-section}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\mathcal{C}$",
+        "MATH_0003": "$s : Y \\to X$",
+        "MATH_0004": "$s \\circ f = \\text{id}_X$",
+        "MATH_0005": "$U$",
+        "REF_0001": "\\ref{example-push-outs-simplicial-object}",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$U \\to U$",
+        "MATH_0008": "$Y \\amalg_X \\ldots \\amalg_X Y$",
+        "MATH_0009": "$f \\circ s$",
+        "MATH_0010": "$U$",
+        "MATH_0011": "$U$",
+        "MATH_0012": "$X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "simplicial-lemma-push-outs-simplicial-object-w-section",
+      "requested_tag": "019Z"
+    }
+  ]
+}

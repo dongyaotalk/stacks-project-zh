@@ -1,0 +1,2274 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a178-bc42-74a1-b4b8-1c1a23ee01fa",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p06r02-20261103T130051Z.json",
+    "hash": "sha256:d8db5a2a61671d2248744075cd66f9d9dc5f7415c117a2d7d1dbd8d8a116015d"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:05AY:title",
+      "source_text": "Descent of finiteness properties of modules",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 36,
+          "projection_end": 43,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05AY:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we prove that one can check quasi-coherent module\nhas a certain finiteness conditions by checking on the members of\na covering.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "coherent module",
+          "projection_start": 64,
+          "projection_end": 79,
+          "concept": "source-phrase-coherent-module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 148,
+          "projection_end": 156,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05AZ:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a finite type <MATH_0006>-module.\nThen <MATH_0007> is a finite type <MATH_0008>-module.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 107,
+          "projection_end": 120,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 153,
+          "projection_end": 164,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 177,
+          "projection_end": 183,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 207,
+          "projection_end": 218,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 231,
+          "projection_end": 237,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05AZ:proof",
+      "source_text": "Omitted. For the affine case, see\nAlgebra, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{algebra-lemma-descend-properties-modules}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 17,
+          "projection_end": 23,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 34,
+          "projection_end": 41,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:09UB:statement",
+      "source_text": "Let <MATH_0001> be a morphism of\nlocally ringed spaces. Let <MATH_0002> be a sheaf of <MATH_0003>-modules.\nIf\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0004> is open as a map of topological spaces,\n<STRUCT_0003> <MATH_0005> is surjective and flat, and\n<STRUCT_0004> <MATH_0006> is of finite type,\n<STRUCT_0005>\nthen <MATH_0007> is of finite type.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (Y, \\mathcal{O}_Y)$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_Y$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0004": "$f$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$f^*\\mathcal{F}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0007": "$\\mathcal{F}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 77,
+          "projection_end": 82,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 98,
+          "projection_end": 105,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 163,
+          "projection_end": 166,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological spaces",
+          "projection_start": 170,
+          "projection_end": 188,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 219,
+          "projection_end": 229,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 234,
+          "projection_end": 238,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 276,
+          "projection_end": 287,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 326,
+          "projection_end": 337,
+          "concept": "finite-type",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:09UB:proof",
+      "source_text": "Let <MATH_0001> be a point. Choose a point <MATH_0002> mapping to <MATH_0003>.\nChoose an open <MATH_0004> and elements <MATH_0005>\nof <MATH_0006> which generate <MATH_0007> over <MATH_0008>.\nSince <MATH_0009>\nwe can after shrinking <MATH_0010> assume <MATH_0011>\nwith <MATH_0012> and <MATH_0013>.\nAfter shrinking <MATH_0014> further we may assume that <MATH_0015> comes from\na section <MATH_0016> for some <MATH_0017> open\nwith <MATH_0018>. Let <MATH_0019> be the number of sections <MATH_0020> and\nconsider the map\n<MATH_0021>\nBy our choice of the sections we see that <MATH_0022> is surjective.\nHence for every <MATH_0023> the map\n<MATH_0024>\nis surjective. As <MATH_0025> is flat, the local ring map\n<MATH_0026> is flat, hence\nfaithfully flat (Algebra, Lemma <REF_0001>).\nHence <MATH_0027> is surjective. Since <MATH_0028> is open, <MATH_0029> is\nan open neighbourhood of <MATH_0030> and the proof is done.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$y \\in Y$",
+        "MATH_0002": "$x \\in X$",
+        "MATH_0003": "$y$",
+        "MATH_0004": "$x \\in U \\subset X$",
+        "MATH_0005": "$s_1, \\ldots, s_n$",
+        "MATH_0006": "$f^*\\mathcal{F}(U)$",
+        "MATH_0007": "$f^*\\mathcal{F}$",
+        "MATH_0008": "$U$",
+        "MATH_0009": "$f^*\\mathcal{F} =\nf^{-1}\\mathcal{F} \\otimes_{f^{-1}\\mathcal{O}_Y} \\mathcal{O}_X$",
+        "MATH_0010": "$U$",
+        "MATH_0011": "$s_i = \\sum t_{ij} \\otimes a_{ij}$",
+        "MATH_0012": "$t_{ij} \\in f^{-1}\\mathcal{F}(U)$",
+        "MATH_0013": "$a_{ij} \\in \\mathcal{O}_X(U)$",
+        "MATH_0014": "$U$",
+        "MATH_0015": "$t_{ij}$",
+        "MATH_0016": "$s_{ij} \\in \\mathcal{F}(V)$",
+        "MATH_0017": "$V \\subset Y$",
+        "MATH_0018": "$f(U) \\subset V$",
+        "MATH_0019": "$N$",
+        "MATH_0020": "$s_{ij}$",
+        "MATH_0021": "$$\n\\sigma = (s_{ij}) : \\mathcal{O}_V^{\\oplus N} \\to \\mathcal{F}|_V\n$$",
+        "MATH_0022": "$f^*\\sigma|_U$",
+        "MATH_0023": "$u \\in U$",
+        "MATH_0024": "$$\n\\sigma_{f(u)} \\otimes_{\\mathcal{O}_{Y, f(u)}} \\mathcal{O}_{X, u} :\n\\mathcal{O}_{X, u}^{\\oplus N}\n\\longrightarrow\n\\mathcal{F}_{f(u)} \\otimes_{\\mathcal{O}_{Y, f(u)}} \\mathcal{O}_{X, u}\n$$",
+        "MATH_0025": "$f$",
+        "MATH_0026": "$\\mathcal{O}_{Y, f(u)} \\to \\mathcal{O}_{X, u}$",
+        "REF_0001": "\\ref{algebra-lemma-local-flat-ff}",
+        "MATH_0027": "$\\sigma_{f(u)}$",
+        "MATH_0028": "$f$",
+        "MATH_0029": "$f(U)$",
+        "MATH_0030": "$y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "elements",
+          "projection_start": 110,
+          "projection_end": 118,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 512,
+          "projection_end": 515,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 585,
+          "projection_end": 595,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 629,
+          "projection_end": 632,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 648,
+          "projection_end": 658,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 678,
+          "projection_end": 682,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local ring",
+          "projection_start": 688,
+          "projection_end": 698,
+          "concept": "local-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 699,
+          "projection_end": 702,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 718,
+          "projection_end": 722,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 730,
+          "projection_end": 745,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 747,
+          "projection_end": 754,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 796,
+          "projection_end": 806,
+          "concept": "surjective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B0:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is an <MATH_0006>-module of finite\npresentation. Then <MATH_0007> is an <MATH_0008>-module\nof finite presentation.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 107,
+          "projection_end": 120,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 166,
+          "projection_end": 172,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 176,
+          "projection_end": 195,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 232,
+          "projection_end": 238,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 242,
+          "projection_end": 261,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B0:proof",
+      "source_text": "Omitted. For the affine case, see\nAlgebra, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{algebra-lemma-descend-properties-modules}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 17,
+          "projection_end": 23,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 34,
+          "projection_end": 41,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:082U:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is locally generated by <MATH_0006> sections as an\n<MATH_0007>-module. Then <MATH_0008> is locally generated by\n<MATH_0009> sections as an <MATH_0010>-module.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$r$",
+        "MATH_0007": "$\\mathcal{O}_{X_i}$",
+        "MATH_0008": "$\\mathcal{F}$",
+        "MATH_0009": "$r$",
+        "MATH_0010": "$\\mathcal{O}_X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 107,
+          "projection_end": 120,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 211,
+          "projection_end": 217,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 299,
+          "projection_end": 305,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:082U:proof",
+      "source_text": "By Lemma <REF_0001> we see that <MATH_0001>\nis of finite type. Hence Nakayama's lemma\n(Algebra, Lemma <REF_0002>) implies that <MATH_0002>\nis generated by <MATH_0003> sections in the neighbourhood of a point <MATH_0004>\nif and only if <MATH_0005>.\nChoose an <MATH_0006> and a point <MATH_0007> mapping to <MATH_0008>. Then\n<MATH_0009>\nwhich is <MATH_0010> as <MATH_0011> is locally generated by <MATH_0012>\nsections.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-finite-type-descends}",
+        "MATH_0001": "$\\mathcal{F}$",
+        "REF_0002": "\\ref{algebra-lemma-NAK}",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$r$",
+        "MATH_0004": "$x \\in X$",
+        "MATH_0005": "$\\dim_{\\kappa(x)} \\mathcal{F}_x \\otimes \\kappa(x) \\leq r$",
+        "MATH_0006": "$i$",
+        "MATH_0007": "$x_i \\in X_i$",
+        "MATH_0008": "$x$",
+        "MATH_0009": "$\\dim_{\\kappa(x)} \\mathcal{F}_x \\otimes \\kappa(x) = \n\\dim_{\\kappa(x_i)} (f_i^*\\mathcal{F})_{x_i} \\otimes \\kappa(x_i)$",
+        "MATH_0010": "$\\leq r$",
+        "MATH_0011": "$f_i^*\\mathcal{F}$",
+        "MATH_0012": "$r$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite type",
+          "projection_start": 50,
+          "projection_end": 61,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 87,
+          "projection_end": 94,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B1:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a flat <MATH_0006>-module.\nThen <MATH_0007> is a flat <MATH_0008>-module.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 107,
+          "projection_end": 120,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 153,
+          "projection_end": 157,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 170,
+          "projection_end": 176,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 200,
+          "projection_end": 204,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 217,
+          "projection_end": 223,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B1:proof",
+      "source_text": "Omitted. For the affine case, see\nAlgebra, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{algebra-lemma-descend-properties-modules}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 17,
+          "projection_end": 23,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 34,
+          "projection_end": 41,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B2:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a finite locally free <MATH_0006>-module.\nThen <MATH_0007> is a finite locally free <MATH_0008>-module.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 107,
+          "projection_end": 120,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 153,
+          "projection_end": 172,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 185,
+          "projection_end": 191,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 215,
+          "projection_end": 234,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 247,
+          "projection_end": 253,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B2:proof",
+      "source_text": "This follows from the fact that a quasi-coherent sheaf is finite locally\nfree if and only if it is of finite presentation and flat, see\nAlgebra, Lemma <REF_0001>.\nNamely, if each <MATH_0001> is flat and of finite presentation,\nthen so is <MATH_0002> by\nLemmas <REF_0002> and\n<REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{algebra-lemma-finite-projective}",
+        "MATH_0001": "$f_i^*\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "REF_0002": "\\ref{lemma-flat-descends}",
+        "REF_0003": "\\ref{lemma-finite-presentation-descends}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 34,
+          "projection_end": 54,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 58,
+          "projection_end": 77,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 102,
+          "projection_end": 121,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 126,
+          "projection_end": 130,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 136,
+          "projection_end": 143,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 194,
+          "projection_end": 198,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 206,
+          "projection_end": 225,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05AY:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nThe definition of a locally projective quasi-coherent sheaf can be found in\nProperties, Section <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{properties-section-locally-projective}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "projective",
+          "projection_start": 42,
+          "projection_end": 52,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 53,
+          "projection_end": 73,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05JZ:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a locally projective <MATH_0006>-module.\nThen <MATH_0007> is a locally projective <MATH_0008>-module.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 107,
+          "projection_end": 120,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "projective",
+          "projection_start": 161,
+          "projection_end": 171,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 184,
+          "projection_end": 190,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "projective",
+          "projection_start": 222,
+          "projection_end": 232,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 245,
+          "projection_end": 251,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05JZ:proof",
+      "source_text": "Omitted. For Zariski coverings this is\nProperties, Lemma <REF_0001>.\nFor the affine case this is\nAlgebra, Theorem <REF_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{properties-lemma-locally-projective}",
+        "REF_0002": "\\ref{algebra-theorem-ffdescent-projectivity}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "coverings",
+          "projection_start": 21,
+          "projection_end": 30,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 97,
+          "projection_end": 104,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05VF:statement",
+      "source_text": "Being locally free is a property of quasi-coherent modules which\ndoes not descend in the fpqc topology. Namely, suppose that\n<MATH_0001> is a ring and that <MATH_0002> is a projective <MATH_0003>-module which is\na countable direct sum <MATH_0004> of rank 1 locally\nfree modules, but not locally free, see\nExamples, Lemma <REF_0001>.\nThen <MATH_0005> becomes free on making the faithfully flat base change\n<MATH_0006>\nBut we don't know what happens for fppf coverings. In other words,\nwe don't know the answer to the following question:\nSuppose <MATH_0007> is a faithfully\nflat ring map of finite presentation. Let <MATH_0008> be an <MATH_0009>-module\nsuch that <MATH_0010> is free. Is <MATH_0011> a locally free\n<MATH_0012>-module? It turns out that if <MATH_0013> is Noetherian, then the answer\nis yes. This follows from the results of <REF_0002>. But in general\nwe don't know the answer. If you know the answer, or have a reference,\nplease email\n<TEXTOPEN_0001>stacks.project@gmail.com<TEXTCLOSE_0001>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$M = \\bigoplus L_n$",
+        "REF_0001": "\\ref{examples-lemma-projective-not-locally-free}",
+        "MATH_0005": "$M$",
+        "MATH_0006": "$$\nR \\longrightarrow\n\\bigoplus\\nolimits_{m \\geq 1}\n\\bigoplus\\nolimits_{(i_1, \\ldots, i_m) \\in \\mathbf{Z}^{\\oplus m}}\nL_1^{\\otimes i_1} \\otimes_R \\ldots \\otimes_R L_m^{\\otimes i_m}\n$$",
+        "MATH_0007": "$A \\to B$",
+        "MATH_0008": "$M$",
+        "MATH_0009": "$A$",
+        "MATH_0010": "$M \\otimes_A B$",
+        "MATH_0011": "$M$",
+        "MATH_0012": "$A$",
+        "MATH_0013": "$A$",
+        "REF_0002": "\\cite{Bass}",
+        "TEXTOPEN_0001": "\\href{mailto:stacks.project@gmail.com}{",
+        "TEXTCLOSE_0001": "}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "coherent modules",
+          "projection_start": 42,
+          "projection_end": 58,
+          "concept": "source-phrase-coherent-modules",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 89,
+          "projection_end": 102,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 142,
+          "projection_end": 146,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "projective",
+          "projection_start": 173,
+          "projection_end": 183,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 196,
+          "projection_end": 202,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "countable",
+          "projection_start": 214,
+          "projection_end": 223,
+          "concept": "countable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 270,
+          "projection_end": 277,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 377,
+          "projection_end": 392,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 393,
+          "projection_end": 404,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 457,
+          "projection_end": 466,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 561,
+          "projection_end": 576,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 577,
+          "projection_end": 585,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 589,
+          "projection_end": 608,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 644,
+          "projection_end": 650,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 724,
+          "projection_end": 730,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 768,
+          "projection_end": 778,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 963,
+          "projection_end": 969,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05AY:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nWe also add here two results which are related to the results above, but\nare of a slightly different nature.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:05B3:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nAssume <MATH_0004> is a finite morphism.\nThen <MATH_0005> is an <MATH_0006>-module of finite type\nif and only if <MATH_0007> is an <MATH_0008>-module of finite\ntype.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_X$",
+        "MATH_0007": "$f_*\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_Y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 90,
+          "projection_end": 96,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 122,
+          "projection_end": 128,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 129,
+          "projection_end": 137,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 174,
+          "projection_end": 180,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 184,
+          "projection_end": 195,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 241,
+          "projection_end": 247,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 251,
+          "projection_end": 262,
+          "concept": "finite-type",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B3:proof",
+      "source_text": "As <MATH_0001> is finite it is affine. This reduces us to the case where\n<MATH_0002> is the morphism <MATH_0003> given\nby a finite ring map <MATH_0004>.\nMoreover, then <MATH_0005> is the sheaf of modules\nassociated to the <MATH_0006>-module <MATH_0007>.\nNote that <MATH_0008> is finite as a <MATH_0009>-module if and only if\n<MATH_0010> is finite as an <MATH_0011>-module, see\nAlgebra, Lemma <REF_0001>.\nCombined with\nProperties, Lemma <REF_0002>\nthis proves the lemma.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\Spec(B) \\to \\Spec(A)$",
+        "MATH_0004": "$A \\to B$",
+        "MATH_0005": "$\\mathcal{F} = \\widetilde{M}$",
+        "MATH_0006": "$B$",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$M$",
+        "MATH_0009": "$B$",
+        "MATH_0010": "$M$",
+        "MATH_0011": "$A$",
+        "REF_0001": "\\ref{algebra-lemma-finite-module-over-finite-extension}",
+        "REF_0002": "\\ref{properties-lemma-finite-type-module}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite",
+          "projection_start": 18,
+          "projection_end": 24,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 31,
+          "projection_end": 37,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 92,
+          "projection_end": 100,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite ring map",
+          "projection_start": 124,
+          "projection_end": 139,
+          "concept": "source-phrase-finite-ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 187,
+          "projection_end": 192,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 196,
+          "projection_end": 203,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 234,
+          "projection_end": 240,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 279,
+          "projection_end": 285,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 303,
+          "projection_end": 309,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 340,
+          "projection_end": 346,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 365,
+          "projection_end": 371,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 377,
+          "projection_end": 384,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B4:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nAssume <MATH_0004> is finite and of finite presentation.\nThen <MATH_0005> is an <MATH_0006>-module of finite presentation\nif and only if <MATH_0007> is an <MATH_0008>-module of finite\npresentation.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_X$",
+        "MATH_0007": "$f_*\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_Y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 90,
+          "projection_end": 96,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 120,
+          "projection_end": 126,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 134,
+          "projection_end": 153,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 190,
+          "projection_end": 196,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 200,
+          "projection_end": 219,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 265,
+          "projection_end": 271,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 275,
+          "projection_end": 294,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B4:proof",
+      "source_text": "As <MATH_0001> is finite it is affine. This reduces us to the case where\n<MATH_0002> is the morphism <MATH_0003> given\nby a finite and finitely presented ring map <MATH_0004>.\nMoreover, then <MATH_0005> is the sheaf of modules\nassociated to the <MATH_0006>-module <MATH_0007>.\nNote that <MATH_0008> is finitely presented as a <MATH_0009>-module if and only if\n<MATH_0010> is finitely presented as an <MATH_0011>-module, see\nAlgebra, Lemma <REF_0001>.\nCombined with\nProperties, Lemma <REF_0002>\nthis proves the lemma.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\Spec(B) \\to \\Spec(A)$",
+        "MATH_0004": "$A \\to B$",
+        "MATH_0005": "$\\mathcal{F} = \\widetilde{M}$",
+        "MATH_0006": "$B$",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$M$",
+        "MATH_0009": "$B$",
+        "MATH_0010": "$M$",
+        "MATH_0011": "$A$",
+        "REF_0001": "\\ref{algebra-lemma-finite-finitely-presented-extension}",
+        "REF_0002": "\\ref{properties-lemma-finite-presentation-module}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite",
+          "projection_start": 18,
+          "projection_end": 24,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 31,
+          "projection_end": 37,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 92,
+          "projection_end": 100,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 124,
+          "projection_end": 130,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 135,
+          "projection_end": 153,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 154,
+          "projection_end": 162,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 210,
+          "projection_end": 215,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 219,
+          "projection_end": 226,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 257,
+          "projection_end": 263,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 302,
+          "projection_end": 320,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 338,
+          "projection_end": 344,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 375,
+          "projection_end": 393,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 412,
+          "projection_end": 418,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 424,
+          "projection_end": 431,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0D1V:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nSince <MATH_0001> is surjective finite <ACCENT_0001>tale <MATH_0002> is\nan fpqc covering. Since\n<MATH_0003>, <MATH_0004>\nis an isomorphism, we see that\n<MATH_0005>,\n<MATH_0006>\nis an isomorphism too. Using these identifications, the category of\ndata as in the lemma is the same as the category of descent data\nfor quasi-coherent sheaves for the covering <MATH_0007>.\nThus the lemma follows from\nProposition <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$X \\to Y$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$\\{X \\to Y\\}$",
+        "MATH_0003": "$G \\times X \\to X \\times_Y X$",
+        "MATH_0004": "$(\\sigma, x) \\mapsto (x, f_\\sigma(x))$",
+        "MATH_0005": "$G \\times G \\times X \\to X \\times_Y X \\times_Y X$",
+        "MATH_0006": "$(\\sigma, \\tau, x) \\mapsto (x, f_\\sigma(x), f_{\\sigma\\tau}(x))$",
+        "MATH_0007": "$\\{x \\to Y\\}$",
+        "REF_0001": "\\ref{proposition-fpqc-descent-quasi-coherent}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05AY:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we prove that one can check quasi-coherent module\nhas a certain finiteness conditions by checking on the members of\na covering.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05AY:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent of finiteness properties of modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-finiteness}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05AZ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a finite type <MATH_0006>-module.\nThen <MATH_0007> is a finite type <MATH_0008>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-type-descends}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05AZ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. For the affine case, see\nAlgebra, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{algebra-lemma-descend-properties-modules}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:09UB:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of\nlocally ringed spaces. Let <MATH_0002> be a sheaf of <MATH_0003>-modules.\nIf\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is open as a map of topological spaces,\n<STRUCT_0004> <MATH_0005> is surjective and flat, and\n<STRUCT_0005> <MATH_0006> is of finite type,\n<STRUCT_0006>\nthen <MATH_0007> is of finite type.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-type-descends-fppf}",
+        "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (Y, \\mathcal{O}_Y)$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_Y$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$f$",
+        "STRUCT_0005": "\\item",
+        "MATH_0006": "$f^*\\mathcal{F}$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0007": "$\\mathcal{F}$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:09UB:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a point. Choose a point <MATH_0002> mapping to <MATH_0003>.\nChoose an open <MATH_0004> and elements <MATH_0005>\nof <MATH_0006> which generate <MATH_0007> over <MATH_0008>.\nSince <MATH_0009>\nwe can after shrinking <MATH_0010> assume <MATH_0011>\nwith <MATH_0012> and <MATH_0013>.\nAfter shrinking <MATH_0014> further we may assume that <MATH_0015> comes from\na section <MATH_0016> for some <MATH_0017> open\nwith <MATH_0018>. Let <MATH_0019> be the number of sections <MATH_0020> and\nconsider the map\n<MATH_0021>\nBy our choice of the sections we see that <MATH_0022> is surjective.\nHence for every <MATH_0023> the map\n<MATH_0024>\nis surjective. As <MATH_0025> is flat, the local ring map\n<MATH_0026> is flat, hence\nfaithfully flat (Algebra, Lemma <REF_0001>).\nHence <MATH_0027> is surjective. Since <MATH_0028> is open, <MATH_0029> is\nan open neighbourhood of <MATH_0030> and the proof is done.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$y \\in Y$",
+        "MATH_0002": "$x \\in X$",
+        "MATH_0003": "$y$",
+        "MATH_0004": "$x \\in U \\subset X$",
+        "MATH_0005": "$s_1, \\ldots, s_n$",
+        "MATH_0006": "$f^*\\mathcal{F}(U)$",
+        "MATH_0007": "$f^*\\mathcal{F}$",
+        "MATH_0008": "$U$",
+        "MATH_0009": "$f^*\\mathcal{F} =\nf^{-1}\\mathcal{F} \\otimes_{f^{-1}\\mathcal{O}_Y} \\mathcal{O}_X$",
+        "MATH_0010": "$U$",
+        "MATH_0011": "$s_i = \\sum t_{ij} \\otimes a_{ij}$",
+        "MATH_0012": "$t_{ij} \\in f^{-1}\\mathcal{F}(U)$",
+        "MATH_0013": "$a_{ij} \\in \\mathcal{O}_X(U)$",
+        "MATH_0014": "$U$",
+        "MATH_0015": "$t_{ij}$",
+        "MATH_0016": "$s_{ij} \\in \\mathcal{F}(V)$",
+        "MATH_0017": "$V \\subset Y$",
+        "MATH_0018": "$f(U) \\subset V$",
+        "MATH_0019": "$N$",
+        "MATH_0020": "$s_{ij}$",
+        "MATH_0021": "$$\n\\sigma = (s_{ij}) : \\mathcal{O}_V^{\\oplus N} \\to \\mathcal{F}|_V\n$$",
+        "MATH_0022": "$f^*\\sigma|_U$",
+        "MATH_0023": "$u \\in U$",
+        "MATH_0024": "$$\n\\sigma_{f(u)} \\otimes_{\\mathcal{O}_{Y, f(u)}} \\mathcal{O}_{X, u} :\n\\mathcal{O}_{X, u}^{\\oplus N}\n\\longrightarrow\n\\mathcal{F}_{f(u)} \\otimes_{\\mathcal{O}_{Y, f(u)}} \\mathcal{O}_{X, u}\n$$",
+        "MATH_0025": "$f$",
+        "MATH_0026": "$\\mathcal{O}_{Y, f(u)} \\to \\mathcal{O}_{X, u}$",
+        "REF_0001": "\\ref{algebra-lemma-local-flat-ff}",
+        "MATH_0027": "$\\sigma_{f(u)}$",
+        "MATH_0028": "$f$",
+        "MATH_0029": "$f(U)$",
+        "MATH_0030": "$y$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is an <MATH_0006>-module of finite\npresentation. Then <MATH_0007> is an <MATH_0008>-module\nof finite presentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-presentation-descends}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. For the affine case, see\nAlgebra, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{algebra-lemma-descend-properties-modules}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:082U:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is locally generated by <MATH_0006> sections as an\n<MATH_0007>-module. Then <MATH_0008> is locally generated by\n<MATH_0009> sections as an <MATH_0010>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-generated-by-r-sections-descends}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$r$",
+        "MATH_0007": "$\\mathcal{O}_{X_i}$",
+        "MATH_0008": "$\\mathcal{F}$",
+        "MATH_0009": "$r$",
+        "MATH_0010": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:082U:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy Lemma <REF_0001> we see that <MATH_0001>\nis of finite type. Hence Nakayama's lemma\n(Algebra, Lemma <REF_0002>) implies that <MATH_0002>\nis generated by <MATH_0003> sections in the neighbourhood of a point <MATH_0004>\nif and only if <MATH_0005>.\nChoose an <MATH_0006> and a point <MATH_0007> mapping to <MATH_0008>. Then\n<MATH_0009>\nwhich is <MATH_0010> as <MATH_0011> is locally generated by <MATH_0012>\nsections.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-finite-type-descends}",
+        "MATH_0001": "$\\mathcal{F}$",
+        "REF_0002": "\\ref{algebra-lemma-NAK}",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$r$",
+        "MATH_0004": "$x \\in X$",
+        "MATH_0005": "$\\dim_{\\kappa(x)} \\mathcal{F}_x \\otimes \\kappa(x) \\leq r$",
+        "MATH_0006": "$i$",
+        "MATH_0007": "$x_i \\in X_i$",
+        "MATH_0008": "$x$",
+        "MATH_0009": "$\\dim_{\\kappa(x)} \\mathcal{F}_x \\otimes \\kappa(x) = \n\\dim_{\\kappa(x_i)} (f_i^*\\mathcal{F})_{x_i} \\otimes \\kappa(x_i)$",
+        "MATH_0010": "$\\leq r$",
+        "MATH_0011": "$f_i^*\\mathcal{F}$",
+        "MATH_0012": "$r$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B1:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a flat <MATH_0006>-module.\nThen <MATH_0007> is a flat <MATH_0008>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-descends}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B1:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. For the affine case, see\nAlgebra, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{algebra-lemma-descend-properties-modules}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B2:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a finite locally free <MATH_0006>-module.\nThen <MATH_0007> is a finite locally free <MATH_0008>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-locally-free-descends}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B2:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows from the fact that a quasi-coherent sheaf is finite locally\nfree if and only if it is of finite presentation and flat, see\nAlgebra, Lemma <REF_0001>.\nNamely, if each <MATH_0001> is flat and of finite presentation,\nthen so is <MATH_0002> by\nLemmas <REF_0002> and\n<REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{algebra-lemma-finite-projective}",
+        "MATH_0001": "$f_i^*\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "REF_0002": "\\ref{lemma-flat-descends}",
+        "REF_0003": "\\ref{lemma-finite-presentation-descends}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05AY:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe definition of a locally projective quasi-coherent sheaf can be found in\nProperties, Section <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{properties-section-locally-projective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05JZ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering such that\neach <MATH_0005> is a locally projective <MATH_0006>-module.\nThen <MATH_0007> is a locally projective <MATH_0008>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-projective-descends}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0005": "$f_i^*\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_{X_i}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05JZ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. For Zariski coverings this is\nProperties, Lemma <REF_0001>.\nFor the affine case this is\nAlgebra, Theorem <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{properties-lemma-locally-projective}",
+        "REF_0002": "\\ref{algebra-theorem-ffdescent-projectivity}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05VF:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nBeing locally free is a property of quasi-coherent modules which\ndoes not descend in the fpqc topology. Namely, suppose that\n<MATH_0001> is a ring and that <MATH_0002> is a projective <MATH_0003>-module which is\na countable direct sum <MATH_0004> of rank 1 locally\nfree modules, but not locally free, see\nExamples, Lemma <REF_0001>.\nThen <MATH_0005> becomes free on making the faithfully flat base change\n<MATH_0006>\nBut we don't know what happens for fppf coverings. In other words,\nwe don't know the answer to the following question:\nSuppose <MATH_0007> is a faithfully\nflat ring map of finite presentation. Let <MATH_0008> be an <MATH_0009>-module\nsuch that <MATH_0010> is free. Is <MATH_0011> a locally free\n<MATH_0012>-module? It turns out that if <MATH_0013> is Noetherian, then the answer\nis yes. This follows from the results of <REF_0002>. But in general\nwe don't know the answer. If you know the answer, or have a reference,\nplease email\n<TEXTOPEN_0001>stacks.project@gmail.com<TEXTCLOSE_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-locally-free-descends}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$M = \\bigoplus L_n$",
+        "REF_0001": "\\ref{examples-lemma-projective-not-locally-free}",
+        "MATH_0005": "$M$",
+        "MATH_0006": "$$\nR \\longrightarrow\n\\bigoplus\\nolimits_{m \\geq 1}\n\\bigoplus\\nolimits_{(i_1, \\ldots, i_m) \\in \\mathbf{Z}^{\\oplus m}}\nL_1^{\\otimes i_1} \\otimes_R \\ldots \\otimes_R L_m^{\\otimes i_m}\n$$",
+        "MATH_0007": "$A \\to B$",
+        "MATH_0008": "$M$",
+        "MATH_0009": "$A$",
+        "MATH_0010": "$M \\otimes_A B$",
+        "MATH_0011": "$M$",
+        "MATH_0012": "$A$",
+        "MATH_0013": "$A$",
+        "REF_0002": "\\cite{Bass}",
+        "TEXTOPEN_0001": "\\href{mailto:stacks.project@gmail.com}{",
+        "TEXTCLOSE_0001": "}",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05AY:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe also add here two results which are related to the results above, but\nare of a slightly different nature.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B3:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nAssume <MATH_0004> is a finite morphism.\nThen <MATH_0005> is an <MATH_0006>-module of finite type\nif and only if <MATH_0007> is an <MATH_0008>-module of finite\ntype.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-over-finite-module}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_X$",
+        "MATH_0007": "$f_*\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_Y$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B3:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAs <MATH_0001> is finite it is affine. This reduces us to the case where\n<MATH_0002> is the morphism <MATH_0003> given\nby a finite ring map <MATH_0004>.\nMoreover, then <MATH_0005> is the sheaf of modules\nassociated to the <MATH_0006>-module <MATH_0007>.\nNote that <MATH_0008> is finite as a <MATH_0009>-module if and only if\n<MATH_0010> is finite as an <MATH_0011>-module, see\nAlgebra, Lemma <REF_0001>.\nCombined with\nProperties, Lemma <REF_0002>\nthis proves the lemma.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\Spec(B) \\to \\Spec(A)$",
+        "MATH_0004": "$A \\to B$",
+        "MATH_0005": "$\\mathcal{F} = \\widetilde{M}$",
+        "MATH_0006": "$B$",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$M$",
+        "MATH_0009": "$B$",
+        "MATH_0010": "$M$",
+        "MATH_0011": "$A$",
+        "REF_0001": "\\ref{algebra-lemma-finite-module-over-finite-extension}",
+        "REF_0002": "\\ref{properties-lemma-finite-type-module}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B4:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nAssume <MATH_0004> is finite and of finite presentation.\nThen <MATH_0005> is an <MATH_0006>-module of finite presentation\nif and only if <MATH_0007> is an <MATH_0008>-module of finite\npresentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-finitely-presented-module}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_X$",
+        "MATH_0007": "$f_*\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_Y$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B4:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAs <MATH_0001> is finite it is affine. This reduces us to the case where\n<MATH_0002> is the morphism <MATH_0003> given\nby a finite and finitely presented ring map <MATH_0004>.\nMoreover, then <MATH_0005> is the sheaf of modules\nassociated to the <MATH_0006>-module <MATH_0007>.\nNote that <MATH_0008> is finitely presented as a <MATH_0009>-module if and only if\n<MATH_0010> is finitely presented as an <MATH_0011>-module, see\nAlgebra, Lemma <REF_0001>.\nCombined with\nProperties, Lemma <REF_0002>\nthis proves the lemma.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\Spec(B) \\to \\Spec(A)$",
+        "MATH_0004": "$A \\to B$",
+        "MATH_0005": "$\\mathcal{F} = \\widetilde{M}$",
+        "MATH_0006": "$B$",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$M$",
+        "MATH_0009": "$B$",
+        "MATH_0010": "$M$",
+        "MATH_0011": "$A$",
+        "REF_0001": "\\ref{algebra-lemma-finite-finitely-presented-extension}",
+        "REF_0002": "\\ref{properties-lemma-finite-presentation-module}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DR:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Quasi-coherent sheaves and topologies, I<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-quasi-coherent-sheaves}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-NAK",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Nakayama's lemma<ENVARGEND_0001>\n<LOCKED_0001>\n<LOCKED_0002>\n<LOCKED_0003>\nLet <MATH_0001> be a ring with Jacobson radical <MATH_0002>.\nLet <MATH_0003> be an <MATH_0004>-module. Let <MATH_0005>\nbe an ideal.\n<STRUCT_0002>\n<STRUCT_0003>\n<LOCKED_0004>\nIf <MATH_0006> and <MATH_0007> is finite, then there exists an <MATH_0008> such that\n<MATH_0009>.\n<STRUCT_0004> If <MATH_0010>, <MATH_0011> is finite, and <MATH_0012>, then <MATH_0013>.\n<STRUCT_0005> If <MATH_0014>, <MATH_0015>, and <MATH_0016> is finite,\nthen there exists an <MATH_0017> such that <MATH_0018> and <MATH_0019>.\n<STRUCT_0006> If <MATH_0020>, <MATH_0021>, <MATH_0022> is finite, and\n<MATH_0023>, then <MATH_0024>.\n<STRUCT_0007> If <MATH_0025> is a module map, <MATH_0026> is\nsurjective, and <MATH_0027> is finite, then there exists an <MATH_0028>\nsuch that <MATH_0029> is surjective.\n<STRUCT_0008> If <MATH_0030> is a module map, <MATH_0031> is\nsurjective, <MATH_0032> is finite, and <MATH_0033>,\nthen <MATH_0034> is surjective.\n<STRUCT_0009> If <MATH_0035> generate <MATH_0036> and <MATH_0037> is finite,\nthen there exists an <MATH_0038> such that <MATH_0039>\ngenerate <MATH_0040> over <MATH_0041>.\n<STRUCT_0010> If <MATH_0042> generate <MATH_0043>, <MATH_0044> is finite, and\n<MATH_0045>, then <MATH_0046> is generated by <MATH_0047>.\n<STRUCT_0011> If <MATH_0048>, <MATH_0049> is nilpotent, then <MATH_0050>.\n<STRUCT_0012> If <MATH_0051>, <MATH_0052>, and <MATH_0053> is nilpotent then <MATH_0054>.\n<STRUCT_0013> If <MATH_0055> is a module map, <MATH_0056> is nilpotent, and <MATH_0057>\nis surjective, then <MATH_0058> is surjective.\n<STRUCT_0014> If <MATH_0059> is a set of elements of <MATH_0060>\nwhich generate <MATH_0061> and <MATH_0062> is nilpotent, then <MATH_0063> is generated\nby the <MATH_0064>.\n<STRUCT_0015>\n<STRUCT_0016>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "LOCKED_0001": "\\label{lemma-NAK}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[1.M Lemma (NAK) page 11]{MatCA}\n\\end{reference}",
+        "LOCKED_0003": "\\begin{history}\nWe quote from \\cite{MatCA}: ``This simple but\nimportant lemma is due to T.~Nakayama, G.~Azumaya and W.~Krull. Priority\nis obscure, and although it is usually called the Lemma of Nakayama, late\nProf.~Nakayama did not like the name.''\n\\end{history}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$\\text{rad}(R)$",
+        "MATH_0003": "$M$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$I \\subset R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "LOCKED_0004": "\\label{item-nakayama}",
+        "MATH_0006": "$IM = M$",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$f \\in 1 + I$",
+        "MATH_0009": "$fM = 0$",
+        "STRUCT_0004": "\\item",
+        "MATH_0010": "$IM = M$",
+        "MATH_0011": "$M$",
+        "MATH_0012": "$I \\subset \\text{rad}(R)$",
+        "MATH_0013": "$M = 0$",
+        "STRUCT_0005": "\\item",
+        "MATH_0014": "$N, N' \\subset M$",
+        "MATH_0015": "$M = N + IN'$",
+        "MATH_0016": "$N'$",
+        "MATH_0017": "$f \\in 1 + I$",
+        "MATH_0018": "$fM \\subset N$",
+        "MATH_0019": "$M_f = N_f$",
+        "STRUCT_0006": "\\item",
+        "MATH_0020": "$N, N' \\subset M$",
+        "MATH_0021": "$M = N + IN'$",
+        "MATH_0022": "$N'$",
+        "MATH_0023": "$I \\subset \\text{rad}(R)$",
+        "MATH_0024": "$M = N$",
+        "STRUCT_0007": "\\item",
+        "MATH_0025": "$N \\to M$",
+        "MATH_0026": "$N/IN \\to M/IM$",
+        "MATH_0027": "$M$",
+        "MATH_0028": "$f \\in 1 + I$",
+        "MATH_0029": "$N_f \\to M_f$",
+        "STRUCT_0008": "\\item",
+        "MATH_0030": "$N \\to M$",
+        "MATH_0031": "$N/IN \\to M/IM$",
+        "MATH_0032": "$M$",
+        "MATH_0033": "$I \\subset \\text{rad}(R)$",
+        "MATH_0034": "$N \\to M$",
+        "STRUCT_0009": "\\item",
+        "MATH_0035": "$x_1, \\ldots, x_n \\in M$",
+        "MATH_0036": "$M/IM$",
+        "MATH_0037": "$M$",
+        "MATH_0038": "$f \\in 1 + I$",
+        "MATH_0039": "$x_1, \\ldots, x_n$",
+        "MATH_0040": "$M_f$",
+        "MATH_0041": "$R_f$",
+        "STRUCT_0010": "\\item",
+        "MATH_0042": "$x_1, \\ldots, x_n \\in M$",
+        "MATH_0043": "$M/IM$",
+        "MATH_0044": "$M$",
+        "MATH_0045": "$I \\subset \\text{rad}(R)$",
+        "MATH_0046": "$M$",
+        "MATH_0047": "$x_1, \\ldots, x_n$",
+        "STRUCT_0011": "\\item",
+        "MATH_0048": "$IM = M$",
+        "MATH_0049": "$I$",
+        "MATH_0050": "$M = 0$",
+        "STRUCT_0012": "\\item",
+        "MATH_0051": "$N, N' \\subset M$",
+        "MATH_0052": "$M = N + IN'$",
+        "MATH_0053": "$I$",
+        "MATH_0054": "$M = N$",
+        "STRUCT_0013": "\\item",
+        "MATH_0055": "$N \\to M$",
+        "MATH_0056": "$I$",
+        "MATH_0057": "$N/IN \\to M/IM$",
+        "MATH_0058": "$N \\to M$",
+        "STRUCT_0014": "\\item",
+        "MATH_0059": "$\\{x_\\alpha\\}_{\\alpha \\in A}$",
+        "MATH_0060": "$M$",
+        "MATH_0061": "$M/IM$",
+        "MATH_0062": "$I$",
+        "MATH_0063": "$M$",
+        "MATH_0064": "$x_\\alpha$",
+        "STRUCT_0015": "\\end{enumerate}",
+        "STRUCT_0016": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-NAK",
+      "requested_tag": "00DV"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descend-properties-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map.\nLet <MATH_0002> be an <MATH_0003>-module. Then\n<STRUCT_0002>\n<STRUCT_0003> if the <MATH_0004>-module <MATH_0005> is of finite type, then\n<MATH_0006> is of finite type,\n<STRUCT_0004> if the <MATH_0007>-module <MATH_0008> is of finite presentation, then\n<MATH_0009> is of finite presentation,\n<STRUCT_0005> if the <MATH_0010>-module <MATH_0011> is flat, then\n<MATH_0012> is flat, and\n<STRUCT_0006> add more here as needed.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descend-properties-modules}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$M \\otimes_R S$",
+        "MATH_0006": "$M$",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$M \\otimes_R S$",
+        "MATH_0009": "$M$",
+        "STRUCT_0005": "\\item",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$M \\otimes_R S$",
+        "MATH_0012": "$M$",
+        "STRUCT_0006": "\\item",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descend-properties-modules",
+      "requested_tag": "03C4"
+    },
+    {
+      "context_id": "reference:algebra-lemma-finite-finitely-presented-extension",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a finite and finitely presented ring map.\nLet <MATH_0002> be an <MATH_0003>-module.\nThen <MATH_0004> is finitely presented as an <MATH_0005>-module if and only if\n<MATH_0006> is finitely presented as an <MATH_0007>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-finitely-presented-extension}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$M$",
+        "MATH_0007": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-finite-finitely-presented-extension",
+      "requested_tag": "0564"
+    },
+    {
+      "context_id": "reference:algebra-lemma-finite-module-over-finite-extension",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a finite ring map.\nLet <MATH_0002> be an <MATH_0003>-module.\nThen <MATH_0004> is finite as an <MATH_0005>-module if and only if <MATH_0006> is finite\nas an <MATH_0007>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-module-over-finite-extension}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$M$",
+        "MATH_0007": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-finite-module-over-finite-extension",
+      "requested_tag": "00GJ"
+    },
+    {
+      "context_id": "reference:algebra-lemma-finite-projective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring and let <MATH_0002> be an <MATH_0003>-module.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is finitely presented and <MATH_0005>-flat,\n<STRUCT_0004> <MATH_0006> is finite projective,\n<STRUCT_0005> <MATH_0007> is a direct summand of a finite free <MATH_0008>-module,\n<STRUCT_0006> <MATH_0009> is finitely presented and\nfor all <MATH_0010> the\nlocalization <MATH_0011> is free,\n<STRUCT_0007> <MATH_0012> is finitely presented and\nfor all maximal ideals <MATH_0013> the\nlocalization <MATH_0014> is free,\n<STRUCT_0008> <MATH_0015> is finite and locally free,\n<STRUCT_0009> <MATH_0016> is finite locally free, and\n<STRUCT_0010> <MATH_0017> is finite, for every prime <MATH_0018> the module\n<MATH_0019> is free, and the function\n<MATH_0020>\nis locally constant in the Zariski topology.\n<STRUCT_0011>\n<STRUCT_0012>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-projective}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$M$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$R$",
+        "STRUCT_0006": "\\item",
+        "MATH_0009": "$M$",
+        "MATH_0010": "$\\mathfrak p \\in \\Spec(R)$",
+        "MATH_0011": "$M_{\\mathfrak p}$",
+        "STRUCT_0007": "\\item",
+        "MATH_0012": "$M$",
+        "MATH_0013": "$\\mathfrak m \\subset R$",
+        "MATH_0014": "$M_{\\mathfrak m}$",
+        "STRUCT_0008": "\\item",
+        "MATH_0015": "$M$",
+        "STRUCT_0009": "\\item",
+        "MATH_0016": "$M$",
+        "STRUCT_0010": "\\item",
+        "MATH_0017": "$M$",
+        "MATH_0018": "$\\mathfrak p$",
+        "MATH_0019": "$M_{\\mathfrak p}$",
+        "MATH_0020": "$$\n\\rho_M : \\Spec(R) \\to \\mathbf{Z}, \\quad\n\\mathfrak p\n\\longmapsto\n\\dim_{\\kappa(\\mathfrak p)} M \\otimes_R \\kappa(\\mathfrak p)\n$$",
+        "STRUCT_0011": "\\end{enumerate}",
+        "STRUCT_0012": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-finite-projective",
+      "requested_tag": "00NX"
+    },
+    {
+      "context_id": "reference:algebra-lemma-local-flat-ff",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA flat local ring homomorphism of local rings is faithfully flat.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-flat-ff}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-local-flat-ff",
+      "requested_tag": "00HR"
+    },
+    {
+      "context_id": "reference:algebra-theorem-ffdescent-projectivity",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map.  Let <MATH_0002> be an <MATH_0003>-module.\n If the <MATH_0004>-module <MATH_0005> is projective, then <MATH_0006> is projective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{theorem}",
+        "LOCKED_0001": "\\label{theorem-ffdescent-projectivity}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$M \\otimes_R S$",
+        "MATH_0006": "$M$",
+        "STRUCT_0002": "\\end{theorem}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-theorem-ffdescent-projectivity",
+      "requested_tag": "05A9"
+    },
+    {
+      "context_id": "reference:examples-lemma-projective-not-locally-free",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThere exists a countable ring <MATH_0001> and a projective module <MATH_0002>\nwhich is a direct sum of countably many locally free rank <MATH_0003>\nmodules such that <MATH_0004> is not locally free.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-projective-not-locally-free}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$1$",
+        "MATH_0004": "$M$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "examples-lemma-projective-not-locally-free",
+      "requested_tag": "05WL"
+    },
+    {
+      "context_id": "reference:properties-lemma-finite-presentation-module",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme. The quasi-coherent sheaf\nof <MATH_0002>-modules <MATH_0003> is an <MATH_0004>-module of\nfinite presentation if and only if <MATH_0005> is an <MATH_0006>-module of finite presentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-presentation-module}",
+        "MATH_0001": "$X = \\Spec(R)$",
+        "MATH_0002": "$\\mathcal{O}_X$",
+        "MATH_0003": "$\\widetilde M$",
+        "MATH_0004": "$\\mathcal{O}_X$",
+        "MATH_0005": "$M$",
+        "MATH_0006": "$R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-finite-presentation-module",
+      "requested_tag": "01PC"
+    },
+    {
+      "context_id": "reference:properties-lemma-finite-type-module",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nThe quasi-coherent sheaf of <MATH_0002>-modules\n<MATH_0003> is a finite type <MATH_0004>-module\nif and only if <MATH_0005> is a finite <MATH_0006>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-type-module}",
+        "MATH_0001": "$X = \\Spec(R)$",
+        "MATH_0002": "$\\mathcal{O}_X$",
+        "MATH_0003": "$\\widetilde M$",
+        "MATH_0004": "$\\mathcal{O}_X$",
+        "MATH_0005": "$M$",
+        "MATH_0006": "$R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-finite-type-module",
+      "requested_tag": "01PB"
+    },
+    {
+      "context_id": "reference:properties-lemma-locally-projective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is locally projective, and\n<STRUCT_0004> there exists an affine open covering <MATH_0005>\nsuch that the <MATH_0006>-module\n<MATH_0007> is projective for every <MATH_0008>.\n<STRUCT_0005>\nIn particular, if <MATH_0009> and <MATH_0010>\nthen <MATH_0011> is locally projective if and only if <MATH_0012> is a projective\n<MATH_0013>-module.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-projective}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$\\mathcal{F}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$X = \\bigcup U_i$",
+        "MATH_0006": "$\\mathcal{O}_X(U_i)$",
+        "MATH_0007": "$\\mathcal{F}(U_i)$",
+        "MATH_0008": "$i$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0009": "$X = \\Spec(A)$",
+        "MATH_0010": "$\\mathcal{F} = \\widetilde{M}$",
+        "MATH_0011": "$\\mathcal{F}$",
+        "MATH_0012": "$M$",
+        "MATH_0013": "$A$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-lemma-locally-projective",
+      "requested_tag": "05JQ"
+    },
+    {
+      "context_id": "reference:properties-section-locally-projective",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Locally projective modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-locally-projective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "properties-section-locally-projective",
+      "requested_tag": "05JN"
+    }
+  ]
+}

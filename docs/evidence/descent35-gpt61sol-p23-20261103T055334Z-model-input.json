@@ -1,0 +1,909 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19f9d-a472-7af0-b64c-88e5a839ff35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p23-20261103T055334Z.json",
+    "hash": "sha256:14027e96566ced97dd64c81472f290d61cf35b872ea074dc47a41d426a51b9b2"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:0347:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nTo be sure, since isomorphisms are always coverings\nwe see (or require) that property <MATH_0001> holds for <MATH_0002>\nif and only if it holds for any scheme <MATH_0003> isomorphic to <MATH_0004>.\nIn fact, if <MATH_0005>, or <MATH_0006>, then\nif <MATH_0007> has <MATH_0008> and <MATH_0009> is\nflat, flat and locally of finite presentation, syntomic, smooth, <ACCENT_0001>tale, or\nan open immersion, then <MATH_0010> has <MATH_0011>. This is true because\nwe can always extend <MATH_0012> to a <MATH_0013>-covering.\n\n<STRUCT_0002><STRUCT_0003>\nWe have the following implications:\n<MATH_0014> is local in the fpqc topology\n<MATH_0015>\n<MATH_0016> is local in the fppf topology\n<MATH_0017>\n<MATH_0018> is local in the syntomic topology\n<MATH_0019>\n<MATH_0020> is local in the smooth topology\n<MATH_0021>\n<MATH_0022> is local in the <ACCENT_0002>tale topology\n<MATH_0023>\n<MATH_0024> is local in the Zariski topology.\nThis follows from\nTopologies, Lemmas\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S'$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\tau = fpqc, \\linebreak[0] fppf, \\linebreak[0] syntomic,\n\\linebreak[0] smooth, \\linebreak[0] \\etale$",
+        "MATH_0006": "$Zariski$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$\\mathcal{P}$",
+        "MATH_0009": "$S' \\to S$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0010": "$S'$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$\\{S' \\to S\\}$",
+        "MATH_0013": "$\\tau$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0014": "$\\mathcal{P}$",
+        "MATH_0015": "$\\Rightarrow$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "MATH_0017": "$\\Rightarrow$",
+        "MATH_0018": "$\\mathcal{P}$",
+        "MATH_0019": "$\\Rightarrow$",
+        "MATH_0020": "$\\mathcal{P}$",
+        "MATH_0021": "$\\Rightarrow$",
+        "MATH_0022": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0023": "$\\Rightarrow$",
+        "MATH_0024": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{topologies-lemma-zariski-etale}",
+        "REF_0002": "\\ref{topologies-lemma-zariski-etale-smooth}",
+        "REF_0003": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic}",
+        "REF_0004": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf}",
+        "REF_0005": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 32,
+          "projection_end": 44,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 56,
+          "projection_end": 65,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 166,
+          "projection_end": 172,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 185,
+          "projection_end": 195,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 308,
+          "projection_end": 312,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 314,
+          "projection_end": 318,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 323,
+          "projection_end": 353,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 365,
+          "projection_end": 371,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 373,
+          "projection_end": 378,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 386,
+          "projection_end": 400,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 507,
+          "projection_end": 515,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 608,
+          "projection_end": 621,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 667,
+          "projection_end": 675,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 725,
+          "projection_end": 733,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 774,
+          "projection_end": 780,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 781,
+          "projection_end": 789,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 830,
+          "projection_end": 835,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 836,
+          "projection_end": 844,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 893,
+          "projection_end": 901,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 921,
+          "projection_end": 931,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0349:statement",
+      "source_text": "Let <MATH_0001> be a property of schemes.\nLet <MATH_0002>.\nAssume that\n<STRUCT_0001>\n<STRUCT_0002> the property is local in the Zariski topology,\n<STRUCT_0003> for any morphism of affine schemes <MATH_0003>\nwhich is flat, flat of finite presentation,\n<ACCENT_0001>tale, smooth or syntomic depending on whether <MATH_0004> is\nfpqc, fppf, <ACCENT_0002>tale, smooth, or syntomic,\nproperty <MATH_0005> holds for <MATH_0006> if property <MATH_0007>\nholds for <MATH_0008>, and\n<STRUCT_0004> for any surjective morphism of affine schemes <MATH_0009>\nwhich is flat, flat of finite presentation,\n<ACCENT_0003>tale, smooth or syntomic depending on whether <MATH_0010> is\nfpqc, fppf, <ACCENT_0004>tale, smooth, or syntomic,\nproperty <MATH_0011> holds for <MATH_0012> if property <MATH_0013>\nholds for <MATH_0014>.\n<STRUCT_0005>\nThen <MATH_0015> is <MATH_0016> local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, \\linebreak[0] fppf, \\linebreak[0]\n\\etale, \\linebreak[0] smooth, \\linebreak[0] syntomic\\}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$S' \\to S$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0004": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$S'$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$S' \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0010": "$\\tau$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$\\mathcal{P}$",
+        "MATH_0014": "$S'$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0015": "$\\mathcal{P}$",
+        "MATH_0016": "$\\tau$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 136,
+          "projection_end": 144,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 168,
+          "projection_end": 176,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 180,
+          "projection_end": 194,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 216,
+          "projection_end": 220,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 222,
+          "projection_end": 226,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 230,
+          "projection_end": 249,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 251,
+          "projection_end": 256,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 258,
+          "projection_end": 264,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 325,
+          "projection_end": 330,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 332,
+          "projection_end": 338,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 469,
+          "projection_end": 479,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 480,
+          "projection_end": 488,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 492,
+          "projection_end": 506,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 528,
+          "projection_end": 532,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 534,
+          "projection_end": 538,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 542,
+          "projection_end": 561,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 563,
+          "projection_end": 568,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 570,
+          "projection_end": 576,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 637,
+          "projection_end": 642,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 644,
+          "projection_end": 650,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0349:proof",
+      "source_text": "This follows almost immediately from the definition of\na <MATH_0001>-covering, see\nTopologies, Definition\n<REF_0001>\n<REF_0002>\n<REF_0003>\n<REF_0004>, or\n<REF_0005>\nand Topologies, Lemma\n<REF_0006>,\n<REF_0007>,\n<REF_0008>,\n<REF_0009>, or\n<REF_0010>.\nDetails omitted.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\tau$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "REF_0002": "\\ref{topologies-definition-fppf-covering}",
+        "REF_0003": "\\ref{topologies-definition-etale-covering}",
+        "REF_0004": "\\ref{topologies-definition-smooth-covering}",
+        "REF_0005": "\\ref{topologies-definition-syntomic-covering}",
+        "REF_0006": "\\ref{topologies-lemma-fpqc-affine}",
+        "REF_0007": "\\ref{topologies-lemma-fppf-affine}",
+        "REF_0008": "\\ref{topologies-lemma-etale-affine}",
+        "REF_0009": "\\ref{topologies-lemma-smooth-affine}",
+        "REF_0010": "\\ref{topologies-lemma-syntomic-affine}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 69,
+          "projection_end": 77,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 83,
+          "projection_end": 93,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 169,
+          "projection_end": 179,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:034A:statement",
+      "source_text": "In Lemma <REF_0001> above if\n<MATH_0001> then in condition (3) we may assume that\nthe morphism is a (surjective) standard smooth morphism.\nSimilarly, when <MATH_0002> or <MATH_0003>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "MATH_0001": "$\\tau = smooth$",
+        "MATH_0002": "$\\tau = syntomic$",
+        "MATH_0003": "$\\tau = \\etale$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 86,
+          "projection_end": 94,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 101,
+          "projection_end": 111,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 122,
+          "projection_end": 128,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 129,
+          "projection_end": 137,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0348:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of schemes. Let\n<MATH_0002>.\nWe say <MATH_0003> is <TEXTITOPEN_0001>local in the <MATH_0004>-topology<TEXTITCLOSE_0001> if for any\n<MATH_0005>-covering <MATH_0006> (see\nTopologies, Section <REF_0001>)\nwe have\n<MATH_0007>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-property-local}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, \\linebreak[0] fppf, \\linebreak[0] syntomic, \\linebreak[0]\nsmooth, \\linebreak[0] \\etale, \\linebreak[0] Zariski\\}$",
+        "MATH_0003": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\{S_i \\to S\\}_{i \\in I}$",
+        "REF_0001": "\\ref{topologies-section-procedure}",
+        "MATH_0007": "$$\nS \\text{ has }\\mathcal{P}\n\\Leftrightarrow\n\\text{each }S_i \\text{ has }\\mathcal{P}.\n$$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0349:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of schemes.\nLet <MATH_0002>.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> the property is local in the Zariski topology,\n<STRUCT_0004> for any morphism of affine schemes <MATH_0003>\nwhich is flat, flat of finite presentation,\n<ACCENT_0001>tale, smooth or syntomic depending on whether <MATH_0004> is\nfpqc, fppf, <ACCENT_0002>tale, smooth, or syntomic,\nproperty <MATH_0005> holds for <MATH_0006> if property <MATH_0007>\nholds for <MATH_0008>, and\n<STRUCT_0005> for any surjective morphism of affine schemes <MATH_0009>\nwhich is flat, flat of finite presentation,\n<ACCENT_0003>tale, smooth or syntomic depending on whether <MATH_0010> is\nfpqc, fppf, <ACCENT_0004>tale, smooth, or syntomic,\nproperty <MATH_0011> holds for <MATH_0012> if property <MATH_0013>\nholds for <MATH_0014>.\n<STRUCT_0006>\nThen <MATH_0015> is <MATH_0016> local on the base.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-properties}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, \\linebreak[0] fppf, \\linebreak[0]\n\\etale, \\linebreak[0] smooth, \\linebreak[0] syntomic\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S' \\to S$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0004": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$S'$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$S' \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0010": "$\\tau$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$\\mathcal{P}$",
+        "MATH_0014": "$S'$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0015": "$\\mathcal{P}$",
+        "MATH_0016": "$\\tau$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0347:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nWe have the following implications:\n<MATH_0001> is local in the fpqc topology\n<MATH_0002>\n<MATH_0003> is local in the fppf topology\n<MATH_0004>\n<MATH_0005> is local in the syntomic topology\n<MATH_0006>\n<MATH_0007> is local in the smooth topology\n<MATH_0008>\n<MATH_0009> is local in the <ACCENT_0001>tale topology\n<MATH_0010>\n<MATH_0011> is local in the Zariski topology.\nThis follows from\nTopologies, Lemmas\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\Rightarrow$",
+        "MATH_0003": "$\\mathcal{P}$",
+        "MATH_0004": "$\\Rightarrow$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$\\Rightarrow$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$\\Rightarrow$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0010": "$\\Rightarrow$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{topologies-lemma-zariski-etale}",
+        "REF_0002": "\\ref{topologies-lemma-zariski-etale-smooth}",
+        "REF_0003": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic}",
+        "REF_0004": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf}",
+        "REF_0005": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0349:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows almost immediately from the definition of\na <MATH_0001>-covering, see\nTopologies, Definition\n<REF_0001>\n<REF_0002>\n<REF_0003>\n<REF_0004>, or\n<REF_0005>\nand Topologies, Lemma\n<REF_0006>,\n<REF_0007>,\n<REF_0008>,\n<REF_0009>, or\n<REF_0010>.\nDetails omitted.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\tau$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "REF_0002": "\\ref{topologies-definition-fppf-covering}",
+        "REF_0003": "\\ref{topologies-definition-etale-covering}",
+        "REF_0004": "\\ref{topologies-definition-smooth-covering}",
+        "REF_0005": "\\ref{topologies-definition-syntomic-covering}",
+        "REF_0006": "\\ref{topologies-lemma-fpqc-affine}",
+        "REF_0007": "\\ref{topologies-lemma-fppf-affine}",
+        "REF_0008": "\\ref{topologies-lemma-etale-affine}",
+        "REF_0009": "\\ref{topologies-lemma-smooth-affine}",
+        "REF_0010": "\\ref{topologies-lemma-syntomic-affine}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034A:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn Lemma <REF_0001> above if\n<MATH_0001> then in condition (3) we may assume that\nthe morphism is a (surjective) standard smooth morphism.\nSimilarly, when <MATH_0002> or <MATH_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-descending-properties-standard}",
+        "REF_0001": "\\ref{lemma-descending-properties}",
+        "MATH_0001": "$\\tau = smooth$",
+        "MATH_0002": "$\\tau = syntomic$",
+        "MATH_0003": "$\\tau = \\etale$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:034B:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of schemes local in the fppf topology<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties-fppf}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:topologies-definition-etale-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001><ACCENT_0001>tale covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is <ACCENT_0002>tale and such that <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-etale-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0005": "$T = \\bigcup f_i(T_i)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-etale-covering",
+      "requested_tag": "0215"
+    },
+    {
+      "context_id": "reference:topologies-definition-fppf-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001>fppf covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is flat, locally of finite presentation and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-fppf-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$T = \\bigcup f_i(T_i)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-fppf-covering",
+      "requested_tag": "021M"
+    },
+    {
+      "context_id": "reference:topologies-definition-fpqc-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001>fpqc covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is flat and such that for every affine open\n<MATH_0005> there exists <MATH_0006>, a map\n<MATH_0007> and affine opens\n<MATH_0008>, <MATH_0009>\nwith <MATH_0010>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-fpqc-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$U \\subset T$",
+        "MATH_0006": "$n \\geq 0$",
+        "MATH_0007": "$a : \\{1, \\ldots, n\\} \\to I$",
+        "MATH_0008": "$V_j \\subset T_{a(j)}$",
+        "MATH_0009": "$j = 1, \\ldots, n$",
+        "MATH_0010": "$\\bigcup_{j = 1}^n f_{a(j)}(V_j) = U$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-fpqc-covering",
+      "requested_tag": "022B"
+    },
+    {
+      "context_id": "reference:topologies-definition-smooth-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. A <TEXTITOPEN_0001>smooth covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is smooth and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-smooth-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$T = \\bigcup f_i(T_i)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-smooth-covering",
+      "requested_tag": "021Z"
+    },
+    {
+      "context_id": "reference:topologies-definition-syntomic-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001>syntomic covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is syntomic and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-syntomic-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$T = \\bigcup f_i(T_i)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-syntomic-covering",
+      "requested_tag": "0225"
+    },
+    {
+      "context_id": "reference:topologies-lemma-etale-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an <ACCENT_0001>tale covering of <MATH_0003>.\nThen there exists an <ACCENT_0002>tale covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$T$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j$",
+        "MATH_0008": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-etale-affine",
+      "requested_tag": "0218"
+    },
+    {
+      "context_id": "reference:topologies-lemma-fppf-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an fppf covering of <MATH_0003>.\nThen there exists an fppf covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fppf-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j$",
+        "MATH_0008": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-fppf-affine",
+      "requested_tag": "021P"
+    },
+    {
+      "context_id": "reference:topologies-lemma-fpqc-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an fpqc covering of <MATH_0003>.\nThen there exists an fpqc covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, n}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j$",
+        "MATH_0008": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-fpqc-affine",
+      "requested_tag": "022E"
+    },
+    {
+      "context_id": "reference:topologies-lemma-smooth-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a smooth covering of <MATH_0003>.\nThen there exists a smooth covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsmooth, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j \\to T$",
+        "REF_0001": "\\ref{morphisms-definition-smooth}",
+        "MATH_0008": "$U_j$",
+        "MATH_0009": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-smooth-affine",
+      "requested_tag": "0222"
+    },
+    {
+      "context_id": "reference:topologies-lemma-syntomic-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a syntomic covering of <MATH_0003>.\nThen there exists a syntomic covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsyntomic, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j \\to T$",
+        "REF_0001": "\\ref{morphisms-definition-syntomic}",
+        "MATH_0008": "$U_j$",
+        "MATH_0009": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-syntomic-affine",
+      "requested_tag": "0228"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny Zariski covering is an <ACCENT_0001>tale covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale",
+      "requested_tag": "0216"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny <ACCENT_0001>tale covering is a smooth covering, and a fortiori,\nany Zariski covering is a smooth covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth",
+      "requested_tag": "0220"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny smooth covering is a syntomic covering, and a fortiori,\nany <ACCENT_0001>tale or Zariski covering is a syntomic covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth-syntomic}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth-syntomic",
+      "requested_tag": "0226"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth-syntomic-fppf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny syntomic covering is an fppf covering, and a fortiori,\nany smooth, <ACCENT_0001>tale, or Zariski covering is an fppf covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth-syntomic-fppf}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth-syntomic-fppf",
+      "requested_tag": "021N"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny fppf covering is an fpqc covering, and a fortiori,\nany syntomic, smooth, <ACCENT_0001>tale or Zariski covering is an fpqc covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth-syntomic-fppf-fpqc}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc",
+      "requested_tag": "022C"
+    }
+  ]
+}

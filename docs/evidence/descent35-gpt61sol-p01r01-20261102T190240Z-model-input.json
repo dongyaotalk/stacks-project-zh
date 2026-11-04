@@ -1,0 +1,1446 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19da3-0c20-7b02-b760-b6dc594e9835",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p01r01-20261102T190240Z.json",
+    "hash": "sha256:0c86ea5fd23c12baeb50ea19225f054479108a3c14d69140990234b300d57a61"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:0239:title",
+      "source_text": "Introduction",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0239:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn the chapter on topologies on schemes\n(see Topologies, Section <REF_0001>) we introduced\nZariski, <ACCENT_0001>tale, fppf, smooth, syntomic and fpqc coverings of schemes.\nIn this chapter we discuss what kind of structures over schemes\ncan be descended through such coverings.\nSee for example <REF_0002>, <REF_0003>, <REF_0004>,\n<REF_0005>, <REF_0006>, and <REF_0007>.\nThis is also meant to introduce the notions of\ndescent, descent data, effective descent data, in the less formal\nsetting of descent questions for quasi-coherent sheaves, schemes, etc.\nThe formal notion, that of a stack over a site, is discussed in\nthe chapter on stacks (see Stacks, Section <REF_0008>).\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{topologies-section-introduction}",
+        "ACCENT_0001": "\\'e",
+        "REF_0002": "\\cite{Gr-I}",
+        "REF_0003": "\\cite{Gr-II}",
+        "REF_0004": "\\cite{Gr-III}",
+        "REF_0005": "\\cite{Gr-IV}",
+        "REF_0006": "\\cite{Gr-V}",
+        "REF_0007": "\\cite{Gr-VI}",
+        "REF_0008": "\\ref{stacks-section-introduction}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "topologies",
+          "projection_start": 32,
+          "projection_end": 42,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 59,
+          "projection_end": 69,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 114,
+          "projection_end": 119,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 127,
+          "projection_end": 133,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc coverings",
+          "projection_start": 148,
+          "projection_end": 162,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 166,
+          "projection_end": 173,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 231,
+          "projection_end": 238,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 269,
+          "projection_end": 278,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 419,
+          "projection_end": 426,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 428,
+          "projection_end": 435,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 452,
+          "projection_end": 459,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 496,
+          "projection_end": 503,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 518,
+          "projection_end": 540,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 542,
+          "projection_end": 549,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 585,
+          "projection_end": 590,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 598,
+          "projection_end": 602,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stacks",
+          "projection_start": 635,
+          "projection_end": 641,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Stacks",
+          "projection_start": 647,
+          "projection_end": 653,
+          "concept": "stack",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023A:title",
+      "source_text": "Descent data for quasi-coherent sheaves",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 17,
+          "projection_end": 39,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023A:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this chapter we will use the convention where\nthe projection maps <MATH_0001>\nare labeled starting with <MATH_0002>. Hence we have\n<MATH_0003>,\n<MATH_0004>,\netc.\n\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\text{pr}_i : X \\times \\ldots \\times X \\to X$",
+        "MATH_0002": "$i = 0$",
+        "MATH_0003": "$\\text{pr}_0, \\text{pr}_1 : X \\times X  \\to X$",
+        "MATH_0004": "$\\text{pr}_0, \\text{pr}_1, \\text{pr}_2 : X \\times X \\times X  \\to X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "maps",
+          "projection_start": 78,
+          "projection_end": 82,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023B:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Let <MATH_0002> be a family\nof morphisms with target <MATH_0003>.\n<STRUCT_0001>\n<STRUCT_0002> A <TEXTITOPEN_0001>descent datum <MATH_0004>\nfor quasi-coherent sheaves<TEXTITCLOSE_0001> with respect to the given family\nis given by a quasi-coherent sheaf <MATH_0005> on <MATH_0006> for\neach <MATH_0007>, an isomorphism of quasi-coherent\n<MATH_0008>-modules\n<MATH_0009>\nfor each pair <MATH_0010>\nsuch that for every triple of indices <MATH_0011> the\ndiagram\n<MATH_0012>\nof <MATH_0013>-modules\ncommutes. This is called the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>.\n<STRUCT_0003> A <TEXTITOPEN_0003>morphism <MATH_0014> of descent data<TEXTITCLOSE_0003> is given\nby a family <MATH_0015> of morphisms of\n<MATH_0016>-modules <MATH_0017>\nsuch that all the diagrams\n<MATH_0018>\ncommute.\n<STRUCT_0004>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{f_i : S_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\mathcal{F}_i$",
+        "MATH_0006": "$S_i$",
+        "MATH_0007": "$i \\in I$",
+        "MATH_0008": "$\\mathcal{O}_{S_i \\times_S S_j}$",
+        "MATH_0009": "$\\varphi_{ij} : \\text{pr}_0^*\\mathcal{F}_i \\to \\text{pr}_1^*\\mathcal{F}_j$",
+        "MATH_0010": "$(i, j) \\in I^2$",
+        "MATH_0011": "$(i, j, k) \\in I^3$",
+        "MATH_0012": "$$\n\\xymatrix{\n\\text{pr}_0^*\\mathcal{F}_i \\ar[rd]_{\\text{pr}_{01}^*\\varphi_{ij}}\n\\ar[rr]_{\\text{pr}_{02}^*\\varphi_{ik}} & &\n\\text{pr}_2^*\\mathcal{F}_k \\\\\n& \\text{pr}_1^*\\mathcal{F}_j \\ar[ru]_{\\text{pr}_{12}^*\\varphi_{jk}} &\n}\n$$",
+        "MATH_0013": "$\\mathcal{O}_{S_i \\times_S S_j \\times_S S_k}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0014": "$\\psi : (\\mathcal{F}_i, \\varphi_{ij}) \\to\n(\\mathcal{F}'_i, \\varphi'_{ij})$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0015": "$\\psi = (\\psi_i)_{i\\in I}$",
+        "MATH_0016": "$\\mathcal{O}_{S_i}$",
+        "MATH_0017": "$\\psi_i : \\mathcal{F}_i \\to \\mathcal{F}'_i$",
+        "MATH_0018": "$$\n\\xymatrix{\n\\text{pr}_0^*\\mathcal{F}_i \\ar[r]_{\\varphi_{ij}} \\ar[d]_{\\text{pr}_0^*\\psi_i}\n& \\text{pr}_1^*\\mathcal{F}_j \\ar[d]^{\\text{pr}_1^*\\psi_j} \\\\\n\\text{pr}_0^*\\mathcal{F}'_i \\ar[r]^{\\varphi'_{ij}} &\n\\text{pr}_1^*\\mathcal{F}'_j \\\\\n}\n$$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent datum",
+          "projection_start": 125,
+          "projection_end": 138,
+          "concept": "descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "for quasi-coherent sheaves",
+          "projection_start": 151,
+          "projection_end": 177,
+          "concept": "for quasi-coherent sheaves",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 225,
+          "projection_end": 245,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 298,
+          "projection_end": 309,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 340,
+          "projection_end": 347,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 440,
+          "projection_end": 447,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 475,
+          "projection_end": 482,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 483,
+          "projection_end": 491,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cocycle condition",
+          "projection_start": 512,
+          "projection_end": 529,
+          "concept": "cocycle condition",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 547,
+          "projection_end": 555,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "of descent data",
+          "projection_start": 568,
+          "projection_end": 583,
+          "concept": "of descent data",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 620,
+          "projection_end": 629,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 645,
+          "projection_end": 652,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagrams",
+          "projection_start": 683,
+          "projection_end": 691,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commute",
+          "projection_start": 704,
+          "projection_end": 711,
+          "concept": "commutes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023A:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nA good example to keep in mind is the following.\nSuppose that <MATH_0001> is an open covering.\nIn that case we have seen descent data for sheaves of sets in\nSheaves, Section <REF_0001>\nwhere we called them ``glueing data for sheaves of sets\nwith respect to the given covering''. Moreover, we proved\nthat the category of glueing data is equivalent to the category\nof sheaves on <MATH_0002>. We will show the analogue in the setting above when\n<MATH_0003> is an fpqc covering.\n\n<STRUCT_0002><STRUCT_0003>\nIn the extreme case where the covering <MATH_0004>\nis given by <MATH_0005> a descent datum is necessarily\nof the form <MATH_0006>. The cocycle\ncondition guarantees that the identity on <MATH_0007> is the\nonly permitted map in this case. The following lemma shows\nin particular that to every quasi-coherent sheaf of\n<MATH_0008>-modules there is associated a unique\ndescent datum with respect to any given family.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S = \\bigcup S_i$",
+        "REF_0001": "\\ref{sheaves-section-glueing-sheaves}",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\{S_i \\to S\\}_{i\\in I}$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0004": "$\\{S \\to S\\}$",
+        "MATH_0005": "$\\text{id}_S$",
+        "MATH_0006": "$(\\mathcal{F}, \\text{id}_\\mathcal{F})$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{O}_S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 99,
+          "projection_end": 107,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 135,
+          "projection_end": 142,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 152,
+          "projection_end": 159,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 163,
+          "projection_end": 167,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sheaves",
+          "projection_start": 171,
+          "projection_end": 178,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "glueing",
+          "projection_start": 222,
+          "projection_end": 229,
+          "concept": "gluing",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 239,
+          "projection_end": 246,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 250,
+          "projection_end": 254,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 281,
+          "projection_end": 289,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 322,
+          "projection_end": 330,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "glueing",
+          "projection_start": 334,
+          "projection_end": 341,
+          "concept": "gluing",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 350,
+          "projection_end": 360,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 368,
+          "projection_end": 376,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 380,
+          "projection_end": 387,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 474,
+          "projection_end": 487,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 546,
+          "projection_end": 554,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 593,
+          "projection_end": 600,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 735,
+          "projection_end": 738,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 807,
+          "projection_end": 827,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 843,
+          "projection_end": 850,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 880,
+          "projection_end": 887,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023C:statement",
+      "source_text": "Let <MATH_0001> and\n<MATH_0002>\nbe families of morphisms of schemes with fixed target.\nLet <MATH_0003>\nbe a morphism of families of maps with fixed target, see\nSites, Definition <REF_0001>.\nLet <MATH_0004> be a descent\ndatum for quasi-coherent sheaves with respect to the\nfamily <MATH_0005>. Then\n<STRUCT_0001>\n<STRUCT_0002> The system\n<MATH_0006>\nis a descent datum with respect to the family <MATH_0007>.\n<STRUCT_0003> This construction is functorial in the descent datum\n<MATH_0008>.\n<STRUCT_0004> Given a second morphism <MATH_0009>\nof families of maps with fixed target with <MATH_0010>\nthere exists a functorial isomorphism of descent data\n<MATH_0011>\n<STRUCT_0005>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{U} = \\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0002": "$\\mathcal{V} = \\{V_j \\to V\\}_{j \\in J}$",
+        "MATH_0003": "$(g, \\alpha : I \\to J, (g_i)) : \\mathcal{U} \\to \\mathcal{V}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0004": "$(\\mathcal{F}_j, \\varphi_{jj'})$",
+        "MATH_0005": "$\\{V_j \\to V\\}_{j \\in J}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0006": "$$\n\\left(g_i^*\\mathcal{F}_{\\alpha(i)},\n(g_i \\times g_{i'})^*\\varphi_{\\alpha(i)\\alpha(i')}\\right)\n$$",
+        "MATH_0007": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "STRUCT_0003": "\\item",
+        "MATH_0008": "$(\\mathcal{F}_j, \\varphi_{jj'})$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$(g', \\alpha' : I \\to J, (g'_i))$",
+        "MATH_0010": "$g = g'$",
+        "MATH_0011": "$$\n(g_i^*\\mathcal{F}_{\\alpha(i)},\n(g_i \\times g_{i'})^*\\varphi_{\\alpha(i)\\alpha(i')})\n\\cong\n((g'_i)^*\\mathcal{F}_{\\alpha'(i)},\n(g'_i \\times g'_{i'})^*\\varphi_{\\alpha'(i)\\alpha'(i')}).\n$$",
+        "STRUCT_0005": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "families of morphisms",
+          "projection_start": 35,
+          "projection_end": 56,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 60,
+          "projection_end": 67,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 108,
+          "projection_end": 116,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 132,
+          "projection_end": 136,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 160,
+          "projection_end": 165,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 211,
+          "projection_end": 218,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 229,
+          "projection_end": 251,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 353,
+          "projection_end": 360,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 460,
+          "projection_end": 467,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 516,
+          "projection_end": 524,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 552,
+          "projection_end": 556,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 618,
+          "projection_end": 629,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 633,
+          "projection_end": 640,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023C:proof",
+      "source_text": "Omitted. Hint: The maps\n<MATH_0001>\nwhich give the isomorphism of descent data in part (3)\nare the pullbacks of the maps <MATH_0002> by the\nmorphisms <MATH_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$g_i^*\\mathcal{F}_{\\alpha(i)} \\to (g'_i)^*\\mathcal{F}_{\\alpha'(i)}$",
+        "MATH_0002": "$\\varphi_{\\alpha(i)\\alpha'(i)}$",
+        "MATH_0003": "$(g_i, g'_i) : U_i \\to V_{\\alpha(i)} \\times_V V_{\\alpha'(i)}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "maps",
+          "projection_start": 19,
+          "projection_end": 23,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 51,
+          "projection_end": 62,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 66,
+          "projection_end": 73,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullbacks",
+          "projection_start": 99,
+          "projection_end": 108,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 116,
+          "projection_end": 120,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 140,
+          "projection_end": 149,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023A:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nAny family <MATH_0001> is a refinement of\nthe trivial covering <MATH_0002> in a unique way. For\na quasi-coherent sheaf <MATH_0003> on <MATH_0004> we denote simply\n<MATH_0005> the descent datum with respect to\n<MATH_0006> obtained by the procedure above.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{U} = \\{S_i \\to S\\}_{i \\in I}$",
+        "MATH_0002": "$\\{S \\to S\\}$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$(\\mathcal{F}|_{S_i}, can)$",
+        "MATH_0006": "$\\mathcal{U}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 68,
+          "projection_end": 76,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 112,
+          "projection_end": 132,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 193,
+          "projection_end": 200,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023D:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms\nwith target <MATH_0003>.\n<STRUCT_0001>\n<STRUCT_0002> Let <MATH_0004> be a quasi-coherent <MATH_0005>-module.\nWe call the unique descent on <MATH_0006> datum with respect to the covering\n<MATH_0007> the <TEXTITOPEN_0001>trivial descent datum<TEXTITCLOSE_0001>.\n<STRUCT_0003> The pullback of the trivial descent datum to\n<MATH_0008> is called the <TEXTITOPEN_0002>canonical descent datum<TEXTITCLOSE_0002>.\nNotation: <MATH_0009>.\n<STRUCT_0004> A descent datum <MATH_0010>\nfor quasi-coherent sheaves with respect to the given covering\nis said to be <TEXTITOPEN_0003>effective<TEXTITCLOSE_0003> if there exists a quasi-coherent\nsheaf <MATH_0011> on <MATH_0012> such that <MATH_0013>\nis isomorphic to <MATH_0014>.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{S_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{O}_S$",
+        "MATH_0006": "$\\mathcal{F}$",
+        "MATH_0007": "$\\{S \\to S\\}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0003": "\\item",
+        "MATH_0008": "$\\{S_i \\to S\\}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0009": "$(\\mathcal{F}|_{S_i}, can)$",
+        "STRUCT_0004": "\\item",
+        "MATH_0010": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$\\mathcal{F}$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "MATH_0014": "$(\\mathcal{F}|_{S_i}, can)$",
+        "STRUCT_0005": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 171,
+          "projection_end": 177,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 198,
+          "projection_end": 205,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 247,
+          "projection_end": 255,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivial descent datum",
+          "projection_start": 272,
+          "projection_end": 293,
+          "concept": "trivial descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 313,
+          "projection_end": 321,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivial descent datum",
+          "projection_start": 329,
+          "projection_end": 350,
+          "concept": "trivial descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "canonical descent datum",
+          "projection_start": 380,
+          "projection_end": 403,
+          "concept": "canonical descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 444,
+          "projection_end": 451,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 474,
+          "projection_end": 496,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 523,
+          "projection_end": 531,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "effective",
+          "projection_start": 546,
+          "projection_end": 555,
+          "concept": "effective",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 574,
+          "projection_end": 594,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 647,
+          "projection_end": 657,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023E:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be an open covering.\nAny descent datum on quasi-coherent sheaves\nfor the family <MATH_0003> is\neffective. Moreover, the functor from the category of\nquasi-coherent <MATH_0004>-modules to the category\nof descent data with respect to <MATH_0005> is fully faithful.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$S = \\bigcup U_i$",
+        "MATH_0003": "$\\mathcal{U} = \\{U_i \\to S\\}$",
+        "MATH_0004": "$\\mathcal{O}_S$",
+        "MATH_0005": "$\\mathcal{U}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 56,
+          "projection_end": 64,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 70,
+          "projection_end": 77,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 87,
+          "projection_end": 109,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 165,
+          "projection_end": 172,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 182,
+          "projection_end": 190,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 221,
+          "projection_end": 228,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 236,
+          "projection_end": 244,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 248,
+          "projection_end": 255,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 292,
+          "projection_end": 306,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023E:proof",
+      "source_text": "This follows immediately from\nSheaves, Section <REF_0001>\nand the fact that being quasi-coherent is a local property, see\nModules, Definition <REF_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{sheaves-section-glueing-sheaves}",
+        "REF_0002": "\\ref{modules-definition-quasi-coherent}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Sheaves",
+          "projection_start": 30,
+          "projection_end": 37,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 122,
+          "projection_end": 129,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023A:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nTo prove more we first need to study the case of modules over rings.\n\n\n\n\n\n\n\n\n\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "modules",
+          "projection_start": 63,
+          "projection_end": 70,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 76,
+          "projection_end": 81,
+          "concept": "ring",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0238:title_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent<TEXTCLOSE_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\title{",
+        "TEXTCLOSE_0001": "}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0239:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn the chapter on topologies on schemes\n(see Topologies, Section <REF_0001>) we introduced\nZariski, <ACCENT_0001>tale, fppf, smooth, syntomic and fpqc coverings of schemes.\nIn this chapter we discuss what kind of structures over schemes\ncan be descended through such coverings.\nSee for example <REF_0002>, <REF_0003>, <REF_0004>,\n<REF_0005>, <REF_0006>, and <REF_0007>.\nThis is also meant to introduce the notions of\ndescent, descent data, effective descent data, in the less formal\nsetting of descent questions for quasi-coherent sheaves, schemes, etc.\nThe formal notion, that of a stack over a site, is discussed in\nthe chapter on stacks (see Stacks, Section <REF_0008>).",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{topologies-section-introduction}",
+        "ACCENT_0001": "\\'e",
+        "REF_0002": "\\cite{Gr-I}",
+        "REF_0003": "\\cite{Gr-II}",
+        "REF_0004": "\\cite{Gr-III}",
+        "REF_0005": "\\cite{Gr-IV}",
+        "REF_0006": "\\cite{Gr-V}",
+        "REF_0007": "\\cite{Gr-VI}",
+        "REF_0008": "\\ref{stacks-section-introduction}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0239:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Introduction<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-introduction}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023A:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent data for quasi-coherent sheaves<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-equivalence}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023A:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this chapter we will use the convention where\nthe projection maps <MATH_0001>\nare labeled starting with <MATH_0002>. Hence we have\n<MATH_0003>,\n<MATH_0004>,\netc.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\text{pr}_i : X \\times \\ldots \\times X \\to X$",
+        "MATH_0002": "$i = 0$",
+        "MATH_0003": "$\\text{pr}_0, \\text{pr}_1 : X \\times X  \\to X$",
+        "MATH_0004": "$\\text{pr}_0, \\text{pr}_1, \\text{pr}_2 : X \\times X \\times X  \\to X$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023B:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a family\nof morphisms with target <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0004>\nfor quasi-coherent sheaves<TEXTITCLOSE_0001> with respect to the given family\nis given by a quasi-coherent sheaf <MATH_0005> on <MATH_0006> for\neach <MATH_0007>, an isomorphism of quasi-coherent\n<MATH_0008>-modules\n<MATH_0009>\nfor each pair <MATH_0010>\nsuch that for every triple of indices <MATH_0011> the\ndiagram\n<MATH_0012>\nof <MATH_0013>-modules\ncommutes. This is called the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>.\n<STRUCT_0004> A <TEXTITOPEN_0003>morphism <MATH_0014> of descent data<TEXTITCLOSE_0003> is given\nby a family <MATH_0015> of morphisms of\n<MATH_0016>-modules <MATH_0017>\nsuch that all the diagrams\n<MATH_0018>\ncommute.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-quasi-coherent}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{f_i : S_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\mathcal{F}_i$",
+        "MATH_0006": "$S_i$",
+        "MATH_0007": "$i \\in I$",
+        "MATH_0008": "$\\mathcal{O}_{S_i \\times_S S_j}$",
+        "MATH_0009": "$\\varphi_{ij} : \\text{pr}_0^*\\mathcal{F}_i \\to \\text{pr}_1^*\\mathcal{F}_j$",
+        "MATH_0010": "$(i, j) \\in I^2$",
+        "MATH_0011": "$(i, j, k) \\in I^3$",
+        "MATH_0012": "$$\n\\xymatrix{\n\\text{pr}_0^*\\mathcal{F}_i \\ar[rd]_{\\text{pr}_{01}^*\\varphi_{ij}}\n\\ar[rr]_{\\text{pr}_{02}^*\\varphi_{ik}} & &\n\\text{pr}_2^*\\mathcal{F}_k \\\\\n& \\text{pr}_1^*\\mathcal{F}_j \\ar[ru]_{\\text{pr}_{12}^*\\varphi_{jk}} &\n}\n$$",
+        "MATH_0013": "$\\mathcal{O}_{S_i \\times_S S_j \\times_S S_k}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0014": "$\\psi : (\\mathcal{F}_i, \\varphi_{ij}) \\to\n(\\mathcal{F}'_i, \\varphi'_{ij})$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0015": "$\\psi = (\\psi_i)_{i\\in I}$",
+        "MATH_0016": "$\\mathcal{O}_{S_i}$",
+        "MATH_0017": "$\\psi_i : \\mathcal{F}_i \\to \\mathcal{F}'_i$",
+        "MATH_0018": "$$\n\\xymatrix{\n\\text{pr}_0^*\\mathcal{F}_i \\ar[r]_{\\varphi_{ij}} \\ar[d]_{\\text{pr}_0^*\\psi_i}\n& \\text{pr}_1^*\\mathcal{F}_j \\ar[d]^{\\text{pr}_1^*\\psi_j} \\\\\n\\text{pr}_0^*\\mathcal{F}'_i \\ar[r]^{\\varphi'_{ij}} &\n\\text{pr}_1^*\\mathcal{F}'_j \\\\\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023A:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA good example to keep in mind is the following.\nSuppose that <MATH_0001> is an open covering.\nIn that case we have seen descent data for sheaves of sets in\nSheaves, Section <REF_0001>\nwhere we called them ``glueing data for sheaves of sets\nwith respect to the given covering''. Moreover, we proved\nthat the category of glueing data is equivalent to the category\nof sheaves on <MATH_0002>. We will show the analogue in the setting above when\n<MATH_0003> is an fpqc covering.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S = \\bigcup S_i$",
+        "REF_0001": "\\ref{sheaves-section-glueing-sheaves}",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\{S_i \\to S\\}_{i\\in I}$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023C:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and\n<MATH_0002>\nbe families of morphisms of schemes with fixed target.\nLet <MATH_0003>\nbe a morphism of families of maps with fixed target, see\nSites, Definition <REF_0001>.\nLet <MATH_0004> be a descent\ndatum for quasi-coherent sheaves with respect to the\nfamily <MATH_0005>. Then\n<STRUCT_0002>\n<STRUCT_0003> The system\n<MATH_0006>\nis a descent datum with respect to the family <MATH_0007>.\n<STRUCT_0004> This construction is functorial in the descent datum\n<MATH_0008>.\n<STRUCT_0005> Given a second morphism <MATH_0009>\nof families of maps with fixed target with <MATH_0010>\nthere exists a functorial isomorphism of descent data\n<MATH_0011>\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-refine-descent-datum}",
+        "MATH_0001": "$\\mathcal{U} = \\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0002": "$\\mathcal{V} = \\{V_j \\to V\\}_{j \\in J}$",
+        "MATH_0003": "$(g, \\alpha : I \\to J, (g_i)) : \\mathcal{U} \\to \\mathcal{V}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0004": "$(\\mathcal{F}_j, \\varphi_{jj'})$",
+        "MATH_0005": "$\\{V_j \\to V\\}_{j \\in J}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$$\n\\left(g_i^*\\mathcal{F}_{\\alpha(i)},\n(g_i \\times g_{i'})^*\\varphi_{\\alpha(i)\\alpha(i')}\\right)\n$$",
+        "MATH_0007": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$(\\mathcal{F}_j, \\varphi_{jj'})$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$(g', \\alpha' : I \\to J, (g'_i))$",
+        "MATH_0010": "$g = g'$",
+        "MATH_0011": "$$\n(g_i^*\\mathcal{F}_{\\alpha(i)},\n(g_i \\times g_{i'})^*\\varphi_{\\alpha(i)\\alpha(i')})\n\\cong\n((g'_i)^*\\mathcal{F}_{\\alpha'(i)},\n(g'_i \\times g'_{i'})^*\\varphi_{\\alpha'(i)\\alpha'(i')}).\n$$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023A:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nIn the extreme case where the covering <MATH_0001>\nis given by <MATH_0002> a descent datum is necessarily\nof the form <MATH_0003>. The cocycle\ncondition guarantees that the identity on <MATH_0004> is the\nonly permitted map in this case. The following lemma shows\nin particular that to every quasi-coherent sheaf of\n<MATH_0005>-modules there is associated a unique\ndescent datum with respect to any given family.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$\\{S \\to S\\}$",
+        "MATH_0002": "$\\text{id}_S$",
+        "MATH_0003": "$(\\mathcal{F}, \\text{id}_\\mathcal{F})$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{O}_S$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023C:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hint: The maps\n<MATH_0001>\nwhich give the isomorphism of descent data in part (3)\nare the pullbacks of the maps <MATH_0002> by the\nmorphisms <MATH_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$g_i^*\\mathcal{F}_{\\alpha(i)} \\to (g'_i)^*\\mathcal{F}_{\\alpha'(i)}$",
+        "MATH_0002": "$\\varphi_{\\alpha(i)\\alpha'(i)}$",
+        "MATH_0003": "$(g_i, g'_i) : U_i \\to V_{\\alpha(i)} \\times_V V_{\\alpha'(i)}$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023A:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAny family <MATH_0001> is a refinement of\nthe trivial covering <MATH_0002> in a unique way. For\na quasi-coherent sheaf <MATH_0003> on <MATH_0004> we denote simply\n<MATH_0005> the descent datum with respect to\n<MATH_0006> obtained by the procedure above.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{U} = \\{S_i \\to S\\}_{i \\in I}$",
+        "MATH_0002": "$\\{S \\to S\\}$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$(\\mathcal{F}|_{S_i}, can)$",
+        "MATH_0006": "$\\mathcal{U}$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023D:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms\nwith target <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0004> be a quasi-coherent <MATH_0005>-module.\nWe call the unique descent on <MATH_0006> datum with respect to the covering\n<MATH_0007> the <TEXTITOPEN_0001>trivial descent datum<TEXTITCLOSE_0001>.\n<STRUCT_0004> The pullback of the trivial descent datum to\n<MATH_0008> is called the <TEXTITOPEN_0002>canonical descent datum<TEXTITCLOSE_0002>.\nNotation: <MATH_0009>.\n<STRUCT_0005> A descent datum <MATH_0010>\nfor quasi-coherent sheaves with respect to the given covering\nis said to be <TEXTITOPEN_0003>effective<TEXTITCLOSE_0003> if there exists a quasi-coherent\nsheaf <MATH_0011> on <MATH_0012> such that <MATH_0013>\nis isomorphic to <MATH_0014>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-effective-quasi-coherent}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{S_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{O}_S$",
+        "MATH_0006": "$\\mathcal{F}$",
+        "MATH_0007": "$\\{S \\to S\\}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$\\{S_i \\to S\\}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0009": "$(\\mathcal{F}|_{S_i}, can)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0010": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$\\mathcal{F}$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "MATH_0014": "$(\\mathcal{F}|_{S_i}, can)$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023E:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be an open covering.\nAny descent datum on quasi-coherent sheaves\nfor the family <MATH_0003> is\neffective. Moreover, the functor from the category of\nquasi-coherent <MATH_0004>-modules to the category\nof descent data with respect to <MATH_0005> is fully faithful.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-descent-effective}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$S = \\bigcup U_i$",
+        "MATH_0003": "$\\mathcal{U} = \\{U_i \\to S\\}$",
+        "MATH_0004": "$\\mathcal{O}_S$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023E:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows immediately from\nSheaves, Section <REF_0001>\nand the fact that being quasi-coherent is a local property, see\nModules, Definition <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{sheaves-section-glueing-sheaves}",
+        "REF_0002": "\\ref{modules-definition-quasi-coherent}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023A:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo prove more we first need to study the case of modules over rings.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:modules-definition-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed space.\nLet <MATH_0002> be a sheaf of <MATH_0003>-modules.\nWe say that <MATH_0004> is a <TEXTITOPEN_0001>quasi-coherent\nsheaf of <MATH_0005>-modules<TEXTITCLOSE_0001> if for every\npoint <MATH_0006> there exists an open neighbourhood\n<MATH_0007> such that <MATH_0008>\nis isomorphic to the cokernel of a map\n<MATH_0009>\nThe category of quasi-coherent <MATH_0010>-modules\nis denoted <MATH_0011>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-quasi-coherent}",
+        "MATH_0001": "$(X, \\mathcal{O}_X)$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0005": "$\\mathcal{O}_X$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$x\\in U \\subset X$",
+        "MATH_0008": "$\\mathcal{F}|_U$",
+        "MATH_0009": "$$\n\\bigoplus\\nolimits_{j \\in J}\n\\mathcal{O}_U\n\\longrightarrow\n\\bigoplus\\nolimits_{i \\in I}\n\\mathcal{O}_U\n$$",
+        "MATH_0010": "$\\mathcal{O}_X$",
+        "MATH_0011": "$\\QCoh(\\mathcal{O}_X)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "modules-definition-quasi-coherent",
+      "requested_tag": "01BE"
+    },
+    {
+      "context_id": "reference:sheaves-section-glueing-sheaves",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Glueing sheaves<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-glueing-sheaves}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sheaves-section-glueing-sheaves",
+      "requested_tag": "00AK"
+    },
+    {
+      "context_id": "reference:sites-definition-morphism-coverings",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a family\nof morphisms of <MATH_0003> with fixed target.\nLet <MATH_0004> be another.\n<STRUCT_0002>\n<STRUCT_0003>\nA <TEXTITOPEN_0001>morphism of families of maps with fixed target\nof <MATH_0005> from  <MATH_0006> to <MATH_0007><TEXTITCLOSE_0001>,\nor simply a <TEXTITOPEN_0002>morphism from <MATH_0008> to <MATH_0009><TEXTITCLOSE_0002>\nis given by a morphism <MATH_0010>, a map of sets\n<MATH_0011> and for each <MATH_0012>\na morphism <MATH_0013> such that the diagram\n<MATH_0014>\nis commutative.\n<STRUCT_0004> In the special case that <MATH_0015> and <MATH_0016> is the identity\nwe call <MATH_0017> a <TEXTITOPEN_0003>refinement<TEXTITCLOSE_0003> of the family <MATH_0018>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-morphism-coverings}",
+        "MATH_0001": "$\\mathcal{C}$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to U\\}_{i\\in I}$",
+        "MATH_0003": "$\\mathcal{C}$",
+        "MATH_0004": "$\\mathcal{V} = \\{V_j \\to V\\}_{j\\in J}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0005": "$\\mathcal{C}$",
+        "MATH_0006": "$\\mathcal{U}$",
+        "MATH_0007": "$\\mathcal{V}$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0008": "$\\mathcal{U}$",
+        "MATH_0009": "$\\mathcal{V}$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0010": "$U \\to V$",
+        "MATH_0011": "$\\alpha : I \\to J$",
+        "MATH_0012": "$i\\in I$",
+        "MATH_0013": "$U_i \\to V_{\\alpha(i)}$",
+        "MATH_0014": "$$\n\\xymatrix{\nU_i \\ar[r] \\ar[d]\n&\nV_{\\alpha(i)} \\ar[d]\n\\\\\nU \\ar[r]\n&\nV\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0015": "$U = V$",
+        "MATH_0016": "$U \\to V$",
+        "MATH_0017": "$\\mathcal{U}$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0018": "$\\mathcal{V}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-definition-morphism-coverings",
+      "requested_tag": "00VT"
+    },
+    {
+      "context_id": "reference:stacks-section-introduction",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Introduction<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-introduction}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "stacks-section-introduction",
+      "requested_tag": "0267"
+    },
+    {
+      "context_id": "reference:topologies-section-introduction",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Introduction<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-introduction}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-section-introduction",
+      "requested_tag": "020L"
+    }
+  ]
+}

@@ -1,0 +1,800 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p53-20261103T150048Z.json",
+    "hash": "sha256:298c2a79f2eccd69b05b6f731450fd0cc047e85b02ab453e833ef1992f9076e0"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:0D2P:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an invertible <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering.\nLet <MATH_0005> be the base change of <MATH_0006> and let <MATH_0007>\nbe the pullback of <MATH_0008> to <MATH_0009>.\nThe following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0010> is ample on <MATH_0011>, and\n<STRUCT_0003> <MATH_0012> is ample on <MATH_0013>\nfor every <MATH_0014>.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{L}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{g_i : S_i \\to S\\}_{i \\in I}$",
+        "MATH_0005": "$f_i : X_i \\to S_i$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$\\mathcal{L}_i$",
+        "MATH_0008": "$\\mathcal{L}$",
+        "MATH_0009": "$X_i$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0010": "$\\mathcal{L}$",
+        "MATH_0011": "$X/S$",
+        "STRUCT_0003": "\\item",
+        "MATH_0012": "$\\mathcal{L}_i$",
+        "MATH_0013": "$X_i/S_i$",
+        "MATH_0014": "$i \\in I$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "invertible",
+          "projection_start": 64,
+          "projection_end": 74,
+          "concept": "invertible",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 87,
+          "projection_end": 93,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 117,
+          "projection_end": 130,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 155,
+          "projection_end": 166,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 209,
+          "projection_end": 217,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 267,
+          "projection_end": 277,
+          "concept": "equivalent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0D2P:proof",
+      "source_text": "The implication (1) <MATH_0001> (2) follows from\nMorphisms, Lemma <REF_0001>.\nAssume <MATH_0002> is ample on <MATH_0003> for every <MATH_0004>.\nBy Morphisms, Definition <REF_0002>\nthis implies that <MATH_0005> is quasi-compact and by\nMorphisms, Lemma <REF_0003>\nthis implies <MATH_0006> is separated.\nHence <MATH_0007> is quasi-compact and separated by\nLemmas <REF_0004> and\n<REF_0005>.\n\n<STRUCT_0001><STRUCT_0002>\nThis means that\n<MATH_0008>\nis a quasi-coherent graded <MATH_0009>-algebra\n(Schemes, Lemma <REF_0006>).\nMoreover, the formation of <MATH_0010> commutes with flat\nbase change by\nCohomology of Schemes, Lemma <REF_0007>.\nIn particular, if we set\n<MATH_0011>\nthen we have <MATH_0012>.\nIt follows that the natural maps\n<MATH_0013>\nof <MATH_0014>\npullback to give the natural maps\n<MATH_0015>\nof <MATH_0016>-modules. Since <MATH_0017> is ample on <MATH_0018>\nwe see that for any point <MATH_0019>, there exists a <MATH_0020>\nsuch that <MATH_0021>\nis surjective on stalks at <MATH_0022>. This follows either directly\nfrom the definition of a relatively ample module or from\nMorphisms, Lemma <REF_0008>.\nIf <MATH_0023>, then we can choose an <MATH_0024> and an <MATH_0025>\nmapping to <MATH_0026>. Since <MATH_0027>\nis flat hence faithfully flat, we conclude that for every <MATH_0028>\nthere exists a <MATH_0029> such that\n<MATH_0030>\nis surjective on stalks at <MATH_0031>.\nThis implies that the open subset <MATH_0032> of\nConstructions, Lemma\n<REF_0009>\ncorresponding to the map\n<MATH_0033>\nof graded <MATH_0034>-algebras\nis equal to <MATH_0035>. Consider the corresponding morphism\n<MATH_0036>\nIt is clear from the above that the base change of\n<MATH_0037> to <MATH_0038> is the morphism\n<MATH_0039> which is an open immersion by\nMorphisms, Lemma <REF_0010>.\nHence <MATH_0040> is an open immersion\nby Lemma <REF_0011>\nand we conclude <MATH_0041> is ample on <MATH_0042> by\nMorphisms, Lemma <REF_0012>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\Rightarrow$",
+        "REF_0001": "\\ref{morphisms-lemma-ample-base-change}",
+        "MATH_0002": "$\\mathcal{L}_i$",
+        "MATH_0003": "$X_i/S_i$",
+        "MATH_0004": "$i \\in I$",
+        "REF_0002": "\\ref{morphisms-definition-relatively-ample}",
+        "MATH_0005": "$X_i \\to S_i$",
+        "REF_0003": "\\ref{morphisms-lemma-relatively-ample-separated}",
+        "MATH_0006": "$X_i \\to S$",
+        "MATH_0007": "$f$",
+        "REF_0004": "\\ref{lemma-descending-property-quasi-compact}",
+        "REF_0005": "\\ref{lemma-descending-property-separated}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0008": "$\\mathcal{A} = \\bigoplus_{d \\geq 0} f_*\\mathcal{L}^{\\otimes d}$",
+        "MATH_0009": "$\\mathcal{O}_S$",
+        "REF_0006": "\\ref{schemes-lemma-push-forward-quasi-coherent}",
+        "MATH_0010": "$\\mathcal{A}$",
+        "REF_0007": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0011": "$\\mathcal{A}_i = \\bigoplus_{d \\geq 0} f_{i, *}\\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0012": "$\\mathcal{A}_i = g_i^*\\mathcal{A}$",
+        "MATH_0013": "$\\psi_d : f^*\\mathcal{A}_d \\to \\mathcal{L}^{\\otimes d}$",
+        "MATH_0014": "$\\mathcal{O}_X$",
+        "MATH_0015": "$\\psi_{i, d} : f_i^*(\\mathcal{A}_i)_d \\to \\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0016": "$\\mathcal{O}_{X_i}$",
+        "MATH_0017": "$\\mathcal{L}_i$",
+        "MATH_0018": "$X_i/S_i$",
+        "MATH_0019": "$x_i \\in X_i$",
+        "MATH_0020": "$d \\geq 1$",
+        "MATH_0021": "$f_i^*(\\mathcal{A}_i)_d \\to \\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0022": "$x_i$",
+        "REF_0008": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "MATH_0023": "$x \\in X$",
+        "MATH_0024": "$i$",
+        "MATH_0025": "$x_i \\in X_i$",
+        "MATH_0026": "$x$",
+        "MATH_0027": "$\\mathcal{O}_{X, x} \\to \\mathcal{O}_{X_i, x_i}$",
+        "MATH_0028": "$x \\in X$",
+        "MATH_0029": "$d \\geq 1$",
+        "MATH_0030": "$f^*\\mathcal{A}_d \\to \\mathcal{L}^{\\otimes d}$",
+        "MATH_0031": "$x$",
+        "MATH_0032": "$U(\\psi) \\subset X$",
+        "REF_0009": "\\ref{constructions-lemma-invertible-map-into-relative-proj}",
+        "MATH_0033": "$\\psi : f^*\\mathcal{A} \\to \\bigoplus_{d \\geq 0} \\mathcal{L}^{\\otimes d}$",
+        "MATH_0034": "$\\mathcal{O}_X$",
+        "MATH_0035": "$X$",
+        "MATH_0036": "$$\nr_{\\mathcal{L}, \\psi} : X \\longrightarrow \\underline{\\text{Proj}}_S(\\mathcal{A})\n$$",
+        "MATH_0037": "$r_{\\mathcal{L}, \\psi}$",
+        "MATH_0038": "$S_i$",
+        "MATH_0039": "$r_{\\mathcal{L}_i, \\psi_i}$",
+        "REF_0010": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "MATH_0040": "$r_{\\mathcal{L}, \\psi}$",
+        "REF_0011": "\\ref{lemma-descending-property-open-immersion}",
+        "MATH_0041": "$\\mathcal{L}$",
+        "MATH_0042": "$X/S$",
+        "REF_0012": "\\ref{morphisms-lemma-characterize-relatively-ample}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Morphisms",
+          "projection_start": 49,
+          "projection_end": 58,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 147,
+          "projection_end": 156,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 213,
+          "projection_end": 226,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 234,
+          "projection_end": 243,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "separated",
+          "projection_start": 290,
+          "projection_end": 299,
+          "concept": "separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 322,
+          "projection_end": 335,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "separated",
+          "projection_start": 340,
+          "projection_end": 349,
+          "concept": "separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 481,
+          "projection_end": 488,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 490,
+          "projection_end": 497,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 557,
+          "projection_end": 565,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 571,
+          "projection_end": 575,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 576,
+          "projection_end": 587,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 591,
+          "projection_end": 612,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 723,
+          "projection_end": 727,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 755,
+          "projection_end": 763,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 784,
+          "projection_end": 788,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 816,
+          "projection_end": 823,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 958,
+          "projection_end": 968,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1066,
+          "projection_end": 1072,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1081,
+          "projection_end": 1090,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1224,
+          "projection_end": 1228,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1235,
+          "projection_end": 1250,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1343,
+          "projection_end": 1353,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open subset",
+          "projection_start": 1402,
+          "projection_end": 1413,
+          "concept": "open-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1482,
+          "projection_end": 1485,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 1520,
+          "projection_end": 1528,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1581,
+          "projection_end": 1589,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 1638,
+          "projection_end": 1649,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1687,
+          "projection_end": 1695,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 1720,
+          "projection_end": 1734,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1738,
+          "projection_end": 1747,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 1791,
+          "projection_end": 1805,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1881,
+          "projection_end": 1890,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0F4J:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nEndow <MATH_0001> with the reduced induced closed subscheme structure, see\nSchemes, Definition <REF_0001>.\nFor every <MATH_0002> the base change <MATH_0003> is a closed subscheme\nof <MATH_0004> whose underlying closed subset is <MATH_0005>.\nBy definition (via\nCohomology of Schemes, Lemma <REF_0002>)\nwe conclude that the projections <MATH_0006> are proper\nmorphisms. Hence <MATH_0007> is a proper morphism by\nLemma <REF_0003>.\nThus <MATH_0008> is proper over <MATH_0009> by definition.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$Z$",
+        "REF_0001": "\\ref{schemes-definition-reduced-induced-scheme}",
+        "MATH_0002": "$i$",
+        "MATH_0003": "$Y_i \\times_Y Z$",
+        "MATH_0004": "$Y_i \\times_Y X$",
+        "MATH_0005": "$Z_i$",
+        "REF_0002": "\\ref{coherent-lemma-closed-proper-over-base}",
+        "MATH_0006": "$Y_i \\times_Y Z \\to Y_i$",
+        "MATH_0007": "$Z \\to Y$",
+        "REF_0003": "\\ref{lemma-descending-property-proper}",
+        "MATH_0008": "$Z$",
+        "MATH_0009": "$Y$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0D2P:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe implication (1) <MATH_0001> (2) follows from\nMorphisms, Lemma <REF_0001>.\nAssume <MATH_0002> is ample on <MATH_0003> for every <MATH_0004>.\nBy Morphisms, Definition <REF_0002>\nthis implies that <MATH_0005> is quasi-compact and by\nMorphisms, Lemma <REF_0003>\nthis implies <MATH_0006> is separated.\nHence <MATH_0007> is quasi-compact and separated by\nLemmas <REF_0004> and\n<REF_0005>.\n\n<STRUCT_0002><STRUCT_0003>\nThis means that\n<MATH_0008>\nis a quasi-coherent graded <MATH_0009>-algebra\n(Schemes, Lemma <REF_0006>).\nMoreover, the formation of <MATH_0010> commutes with flat\nbase change by\nCohomology of Schemes, Lemma <REF_0007>.\nIn particular, if we set\n<MATH_0011>\nthen we have <MATH_0012>.\nIt follows that the natural maps\n<MATH_0013>\nof <MATH_0014>\npullback to give the natural maps\n<MATH_0015>\nof <MATH_0016>-modules. Since <MATH_0017> is ample on <MATH_0018>\nwe see that for any point <MATH_0019>, there exists a <MATH_0020>\nsuch that <MATH_0021>\nis surjective on stalks at <MATH_0022>. This follows either directly\nfrom the definition of a relatively ample module or from\nMorphisms, Lemma <REF_0008>.\nIf <MATH_0023>, then we can choose an <MATH_0024> and an <MATH_0025>\nmapping to <MATH_0026>. Since <MATH_0027>\nis flat hence faithfully flat, we conclude that for every <MATH_0028>\nthere exists a <MATH_0029> such that\n<MATH_0030>\nis surjective on stalks at <MATH_0031>.\nThis implies that the open subset <MATH_0032> of\nConstructions, Lemma\n<REF_0009>\ncorresponding to the map\n<MATH_0033>\nof graded <MATH_0034>-algebras\nis equal to <MATH_0035>. Consider the corresponding morphism\n<MATH_0036>\nIt is clear from the above that the base change of\n<MATH_0037> to <MATH_0038> is the morphism\n<MATH_0039> which is an open immersion by\nMorphisms, Lemma <REF_0010>.\nHence <MATH_0040> is an open immersion\nby Lemma <REF_0011>\nand we conclude <MATH_0041> is ample on <MATH_0042> by\nMorphisms, Lemma <REF_0012>.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\Rightarrow$",
+        "REF_0001": "\\ref{morphisms-lemma-ample-base-change}",
+        "MATH_0002": "$\\mathcal{L}_i$",
+        "MATH_0003": "$X_i/S_i$",
+        "MATH_0004": "$i \\in I$",
+        "REF_0002": "\\ref{morphisms-definition-relatively-ample}",
+        "MATH_0005": "$X_i \\to S_i$",
+        "REF_0003": "\\ref{morphisms-lemma-relatively-ample-separated}",
+        "MATH_0006": "$X_i \\to S$",
+        "MATH_0007": "$f$",
+        "REF_0004": "\\ref{lemma-descending-property-quasi-compact}",
+        "REF_0005": "\\ref{lemma-descending-property-separated}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0008": "$\\mathcal{A} = \\bigoplus_{d \\geq 0} f_*\\mathcal{L}^{\\otimes d}$",
+        "MATH_0009": "$\\mathcal{O}_S$",
+        "REF_0006": "\\ref{schemes-lemma-push-forward-quasi-coherent}",
+        "MATH_0010": "$\\mathcal{A}$",
+        "REF_0007": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0011": "$\\mathcal{A}_i = \\bigoplus_{d \\geq 0} f_{i, *}\\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0012": "$\\mathcal{A}_i = g_i^*\\mathcal{A}$",
+        "MATH_0013": "$\\psi_d : f^*\\mathcal{A}_d \\to \\mathcal{L}^{\\otimes d}$",
+        "MATH_0014": "$\\mathcal{O}_X$",
+        "MATH_0015": "$\\psi_{i, d} : f_i^*(\\mathcal{A}_i)_d \\to \\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0016": "$\\mathcal{O}_{X_i}$",
+        "MATH_0017": "$\\mathcal{L}_i$",
+        "MATH_0018": "$X_i/S_i$",
+        "MATH_0019": "$x_i \\in X_i$",
+        "MATH_0020": "$d \\geq 1$",
+        "MATH_0021": "$f_i^*(\\mathcal{A}_i)_d \\to \\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0022": "$x_i$",
+        "REF_0008": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "MATH_0023": "$x \\in X$",
+        "MATH_0024": "$i$",
+        "MATH_0025": "$x_i \\in X_i$",
+        "MATH_0026": "$x$",
+        "MATH_0027": "$\\mathcal{O}_{X, x} \\to \\mathcal{O}_{X_i, x_i}$",
+        "MATH_0028": "$x \\in X$",
+        "MATH_0029": "$d \\geq 1$",
+        "MATH_0030": "$f^*\\mathcal{A}_d \\to \\mathcal{L}^{\\otimes d}$",
+        "MATH_0031": "$x$",
+        "MATH_0032": "$U(\\psi) \\subset X$",
+        "REF_0009": "\\ref{constructions-lemma-invertible-map-into-relative-proj}",
+        "MATH_0033": "$\\psi : f^*\\mathcal{A} \\to \\bigoplus_{d \\geq 0} \\mathcal{L}^{\\otimes d}$",
+        "MATH_0034": "$\\mathcal{O}_X$",
+        "MATH_0035": "$X$",
+        "MATH_0036": "$$\nr_{\\mathcal{L}, \\psi} : X \\longrightarrow \\underline{\\text{Proj}}_S(\\mathcal{A})\n$$",
+        "MATH_0037": "$r_{\\mathcal{L}, \\psi}$",
+        "MATH_0038": "$S_i$",
+        "MATH_0039": "$r_{\\mathcal{L}_i, \\psi_i}$",
+        "REF_0010": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "MATH_0040": "$r_{\\mathcal{L}, \\psi}$",
+        "REF_0011": "\\ref{lemma-descending-property-open-immersion}",
+        "MATH_0041": "$\\mathcal{L}$",
+        "MATH_0042": "$X/S$",
+        "REF_0012": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0D2P:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an invertible <MATH_0003>-module.\nLet <MATH_0004> be an fpqc covering.\nLet <MATH_0005> be the base change of <MATH_0006> and let <MATH_0007>\nbe the pullback of <MATH_0008> to <MATH_0009>.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0010> is ample on <MATH_0011>, and\n<STRUCT_0004> <MATH_0012> is ample on <MATH_0013>\nfor every <MATH_0014>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-ample}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{L}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\{g_i : S_i \\to S\\}_{i \\in I}$",
+        "MATH_0005": "$f_i : X_i \\to S_i$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$\\mathcal{L}_i$",
+        "MATH_0008": "$\\mathcal{L}$",
+        "MATH_0009": "$X_i$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0010": "$\\mathcal{L}$",
+        "MATH_0011": "$X/S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0012": "$\\mathcal{L}_i$",
+        "MATH_0013": "$X_i/S_i$",
+        "MATH_0014": "$i \\in I$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036F:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of morphisms local on the source<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-properties-morphisms-local-source}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:coherent-lemma-flat-base-change-cohomology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Flat base change<ENVARGEND_0001>\n<LOCKED_0001>\nConsider a cartesian diagram of schemes\n<MATH_0001>\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module\nwith pullback <MATH_0004>.\nAssume that <MATH_0005> is flat and that <MATH_0006> is quasi-compact and quasi-separated.\nFor any <MATH_0007>\n<STRUCT_0002>\n<STRUCT_0003> the base change map of\nCohomology, Lemma <REF_0001>\nis an isomorphism\n<MATH_0008>\n<STRUCT_0004> if <MATH_0009> and <MATH_0010>, then\n<MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "LOCKED_0001": "\\label{lemma-flat-base-change-cohomology}",
+        "MATH_0001": "$$\n\\xymatrix{\nX' \\ar[d]_{f'} \\ar[r]_{g'} & X \\ar[d]^f \\\\\nS' \\ar[r]^g & S\n}\n$$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{F}' = (g')^*\\mathcal{F}$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$i \\geq 0$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "REF_0001": "\\ref{cohomology-lemma-base-change-map-flat-case}",
+        "MATH_0008": "$$\ng^*R^if_*\\mathcal{F} \\longrightarrow R^if'_*\\mathcal{F}',\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$S = \\Spec(A)$",
+        "MATH_0010": "$S' = \\Spec(B)$",
+        "MATH_0011": "$H^i(X, \\mathcal{F}) \\otimes_A B = H^i(X', \\mathcal{F}')$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-flat-base-change-cohomology",
+      "requested_tag": "02KH"
+    },
+    {
+      "context_id": "reference:constructions-lemma-invertible-map-into-relative-proj",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith assumptions and notation as above. The morphism\n<MATH_0001> induces a canonical morphism of schemes over <MATH_0002>\n<MATH_0003>\ntogether with a map of graded <MATH_0004>-algebras\n<MATH_0005>\ncharacterized by the following properties:\n<STRUCT_0002>\n<STRUCT_0003> For every open <MATH_0006> and every <MATH_0007> the diagram\n<MATH_0008>\nis commutative.\n<STRUCT_0004> For any <MATH_0009> and any open subscheme <MATH_0010>\nsuch that <MATH_0011>\nis surjective the restriction of the morphism <MATH_0012>\nagrees with the morphism <MATH_0013>\nwhich exists by the construction of the relative homogeneous spectrum,\nsee Definition <REF_0001>.\n<STRUCT_0005> For any affine open <MATH_0014>, the restriction\n<MATH_0015>\nagrees via <MATH_0016> (see Lemma <REF_0002>) with the triple\n<MATH_0017>\nof Lemma <REF_0003> associated to the map\n<MATH_0018>\ninduced by <MATH_0019>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-invertible-map-into-relative-proj}",
+        "MATH_0001": "$\\psi$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$$\nr_{\\mathcal{L}, \\psi} :\nU(\\psi) \\longrightarrow \\underline{\\text{Proj}}_S(\\mathcal{A})\n$$",
+        "MATH_0004": "$\\mathcal{O}_{U(\\psi)}$",
+        "MATH_0005": "$$\n\\theta :\nr_{\\mathcal{L}, \\psi}^*\\left(\n\\bigoplus\\nolimits_{d \\geq 0}\n\\mathcal{O}_{\\underline{\\text{Proj}}_S(\\mathcal{A})}(d)\n\\right)\n\\longrightarrow\n\\bigoplus\\nolimits_{d \\geq 0} \\mathcal{L}^{\\otimes d}|_{U(\\psi)}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$V \\subset S$",
+        "MATH_0007": "$d \\geq 0$",
+        "MATH_0008": "$$\n\\xymatrix{\n\\mathcal{A}_d(V) \\ar[d]_{\\psi} \\ar[r]_{\\psi} &\n\\Gamma(f^{-1}(V), \\mathcal{L}^{\\otimes d}) \\ar[d]^{restrict} \\\\\n\\Gamma(\\pi^{-1}(V),\n\\mathcal{O}_{\\underline{\\text{Proj}}_S(\\mathcal{A})}(d)) \\ar[r]^{\\theta} &\n\\Gamma(f^{-1}(V) \\cap U(\\psi), \\mathcal{L}^{\\otimes d})\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$d \\geq 1$",
+        "MATH_0010": "$W \\subset X$",
+        "MATH_0011": "$\\psi|_W : f^*\\mathcal{A}_d|_W \\to \\mathcal{L}^{\\otimes d}|_W$",
+        "MATH_0012": "$r_{\\mathcal{L}, \\psi}$",
+        "MATH_0013": "$W \\to \\underline{\\text{Proj}}_S(\\mathcal{A})$",
+        "REF_0001": "\\ref{definition-relative-proj}",
+        "STRUCT_0005": "\\item",
+        "MATH_0014": "$V \\subset S$",
+        "MATH_0015": "$$\n(U(\\psi) \\cap f^{-1}(V), r_{\\mathcal{L}, \\psi}|_{U(\\psi) \\cap f^{-1}(V)},\n\\theta|_{U(\\psi) \\cap f^{-1}(V)})\n$$",
+        "MATH_0016": "$i_V$",
+        "REF_0002": "\\ref{lemma-glue-relative-proj}",
+        "MATH_0017": "$(U(\\psi'), r_{\\mathcal{L}, \\psi'}, \\theta')$",
+        "REF_0003": "\\ref{lemma-invertible-map-into-proj}",
+        "MATH_0018": "$\\psi' : A = \\mathcal{A}(V) \\to \\Gamma_*(f^{-1}(V), \\mathcal{L}|_{f^{-1}(V)})$",
+        "MATH_0019": "$\\psi$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "constructions-lemma-invertible-map-into-relative-proj",
+      "requested_tag": "01O9"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-open-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is an open immersion''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-open-immersion}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-open-immersion",
+      "requested_tag": "02L3"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-quasi-compact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is quasi-compact''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-quasi-compact}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-quasi-compact",
+      "requested_tag": "02KQ"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-separated",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is separated''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-separated}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-separated",
+      "requested_tag": "02KU"
+    },
+    {
+      "context_id": "reference:morphisms-definition-relatively-ample",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an invertible <MATH_0003>-module.\nWe say <MATH_0004> is <TEXTITOPEN_0001>relatively ample<TEXTITCLOSE_0001>, or <TEXTITOPEN_0002><MATH_0005>-relatively ample<TEXTITCLOSE_0002>,\nor <TEXTITOPEN_0003>ample on <MATH_0006><TEXTITCLOSE_0003>, or <TEXTITOPEN_0004><MATH_0007>-ample<TEXTITCLOSE_0004> if <MATH_0008>\nis quasi-compact, and if for every affine open <MATH_0009>\nthe restriction of <MATH_0010> to the open subscheme\n<MATH_0011> of <MATH_0012> is ample.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-relatively-ample}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[II Definition 4.6.1]{EGA}\n\\end{reference}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{L}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{L}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0005": "$f$",
+        "TEXTITCLOSE_0002": "}",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0006": "$X/S$",
+        "TEXTITCLOSE_0003": "}",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0007": "$f$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0008": "$f : X \\to S$",
+        "MATH_0009": "$V \\subset S$",
+        "MATH_0010": "$\\mathcal{L}$",
+        "MATH_0011": "$f^{-1}(V)$",
+        "MATH_0012": "$X$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-definition-relatively-ample",
+      "requested_tag": "01VH"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-ample-base-change",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an invertible <MATH_0003>-module.\nLet <MATH_0004> be a morphism of schemes.\nLet <MATH_0005> be the base change of <MATH_0006> and denote\n<MATH_0007> the pullback of <MATH_0008> to <MATH_0009>.\nIf <MATH_0010> is <MATH_0011>-ample, then <MATH_0012> is <MATH_0013>-ample.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-ample-base-change}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{L}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$S' \\to S$",
+        "MATH_0005": "$f' : X' \\to S'$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$\\mathcal{L}'$",
+        "MATH_0008": "$\\mathcal{L}$",
+        "MATH_0009": "$X'$",
+        "MATH_0010": "$\\mathcal{L}$",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$\\mathcal{L}'$",
+        "MATH_0013": "$f'$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-ample-base-change",
+      "requested_tag": "0893"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-characterize-relatively-ample",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a quasi-compact morphism of schemes.\nLet <MATH_0002> be an invertible sheaf on <MATH_0003>.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The invertible sheaf <MATH_0004> is <MATH_0005>-ample.\n<STRUCT_0004> There exists an open covering <MATH_0006>\nsuch that each <MATH_0007> is ample\nrelative to <MATH_0008>.\n<STRUCT_0005> There exists an affine open covering <MATH_0009>\nsuch that each <MATH_0010> is ample.\n<STRUCT_0006> There exists a quasi-coherent graded <MATH_0011>-algebra\n<MATH_0012> and a map of graded <MATH_0013>-algebras\n<MATH_0014>\nsuch that <MATH_0015> and\n<MATH_0016>\nis an open immersion (see Constructions, Lemma\n<REF_0001> for notation).\n<STRUCT_0007> The morphism <MATH_0017> is quasi-separated and\npart (4) above holds with\n<MATH_0018>\nand <MATH_0019> the adjunction mapping.\n<STRUCT_0008> Same as (4) but just requiring <MATH_0020>\nto be an immersion.\n<STRUCT_0009>\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-relatively-ample}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[II, Proposition 4.6.3]{EGA}\n\\end{reference}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{L}$",
+        "MATH_0003": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$\\mathcal{L}$",
+        "MATH_0005": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$S = \\bigcup V_i$",
+        "MATH_0007": "$\\mathcal{L}|_{f^{-1}(V_i)}$",
+        "MATH_0008": "$f^{-1}(V_i) \\to V_i$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$S = \\bigcup V_i$",
+        "MATH_0010": "$\\mathcal{L}|_{f^{-1}(V_i)}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0011": "$\\mathcal{O}_S$",
+        "MATH_0012": "$\\mathcal{A}$",
+        "MATH_0013": "$\\mathcal{O}_X$",
+        "MATH_0014": "$\\psi : f^*\\mathcal{A} \\to \\bigoplus_{d \\geq 0} \\mathcal{L}^{\\otimes d}$",
+        "MATH_0015": "$U(\\psi) = X$",
+        "MATH_0016": "$$\nr_{\\mathcal{L}, \\psi} :\nX\n\\longrightarrow\n\\underline{\\text{Proj}}_S(\\mathcal{A})\n$$",
+        "REF_0001": "\\ref{constructions-lemma-invertible-map-into-relative-proj}",
+        "STRUCT_0007": "\\item",
+        "MATH_0017": "$f$",
+        "MATH_0018": "$\\mathcal{A} = f_*(\\bigoplus_{d \\geq 0} \\mathcal{L}^{\\otimes d})$",
+        "MATH_0019": "$\\psi$",
+        "STRUCT_0008": "\\item",
+        "MATH_0020": "$r_{\\mathcal{L}, \\psi}$",
+        "STRUCT_0009": "\\end{enumerate}",
+        "STRUCT_0010": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-characterize-relatively-ample",
+      "requested_tag": "01VJ"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-relatively-ample-separated",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nIf there exists an <MATH_0002>-ample invertible sheaf, then\n<MATH_0003> is separated.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-relatively-ample-separated}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-relatively-ample-separated",
+      "requested_tag": "01VI"
+    },
+    {
+      "context_id": "reference:schemes-lemma-push-forward-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nIf <MATH_0002> is quasi-compact and quasi-separated then\n<MATH_0003> transforms quasi-coherent <MATH_0004>-modules\ninto quasi-coherent <MATH_0005>-modules.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-push-forward-quasi-coherent}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$f_*$",
+        "MATH_0004": "$\\mathcal{O}_X$",
+        "MATH_0005": "$\\mathcal{O}_S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-push-forward-quasi-coherent",
+      "requested_tag": "01LC"
+    }
+  ]
+}

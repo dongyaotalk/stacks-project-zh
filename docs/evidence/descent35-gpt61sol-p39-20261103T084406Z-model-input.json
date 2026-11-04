@@ -1,0 +1,197 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p39-20261103T084406Z.json",
+    "hash": "sha256:87711a5717d11e5e00a34f8d19473d04734f75f642ccb6b3904e1097fa08c864"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:036F:title",
+      "source_text": "Properties of morphisms local on the source",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 14,
+          "projection_end": 23,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:036F:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIt often happens one can prove a morphism has a certain property\nafter precomposing with some other morphism. In many cases this\nimplies the morphism has the property too. We formalize\nthis in the following definition.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 47,
+          "projection_end": 55,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 114,
+          "projection_end": 122,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 155,
+          "projection_end": 163,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0D2P:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe implication (1) <MATH_0001> (2) follows from\nMorphisms, Lemma <REF_0001>.\nAssume <MATH_0002> is ample on <MATH_0003> for every <MATH_0004>.\nBy Morphisms, Definition <REF_0002>\nthis implies that <MATH_0005> is quasi-compact and by\nMorphisms, Lemma <REF_0003>\nthis implies <MATH_0006> is separated.\nHence <MATH_0007> is quasi-compact and separated by\nLemmas <REF_0004> and\n<REF_0005>.\n\n<STRUCT_0002><STRUCT_0003>\nThis means that\n<MATH_0008>\nis a quasi-coherent graded <MATH_0009>-algebra\n(Schemes, Lemma <REF_0006>).\nMoreover, the formation of <MATH_0010> commutes with flat\nbase change by\nCohomology of Schemes, Lemma <REF_0007>.\nIn particular, if we set\n<MATH_0011>\nthen we have <MATH_0012>.\nIt follows that the natural maps\n<MATH_0013>\nof <MATH_0014>\npullback to give the natural maps\n<MATH_0015>\nof <MATH_0016>-modules. Since <MATH_0017> is ample on <MATH_0018>\nwe see that for any point <MATH_0019>, there exists a <MATH_0020>\nsuch that <MATH_0021>\nis surjective on stalks at <MATH_0022>. This follows either directly\nfrom the definition of a relatively ample module or from\nMorphisms, Lemma <REF_0008>.\nIf <MATH_0023>, then we can choose an <MATH_0024> and an <MATH_0025>\nmapping to <MATH_0026>. Since <MATH_0027>\nis flat hence faithfully flat, we conclude that for every <MATH_0028>\nthere exists a <MATH_0029> such that\n<MATH_0030>\nis surjective on stalks at <MATH_0031>.\nThis implies that the open subset <MATH_0032> of\nConstructions, Lemma\n<REF_0009>\ncorresponding to the map\n<MATH_0033>\nof graded <MATH_0034>-algebras\nis equal to <MATH_0035>. Consider the corresponding morphism\n<MATH_0036>\nIt is clear from the above that the base change of\n<MATH_0037> to <MATH_0038> is the morphism\n<MATH_0039> which is an open immersion by\nMorphisms, Lemma <REF_0010>.\nHence <MATH_0040> is an open immersion\nby Lemma <REF_0011>\nand we conclude <MATH_0041> is ample on <MATH_0042> by\nMorphisms, Lemma <REF_0012>.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\Rightarrow$",
+        "REF_0001": "\\ref{morphisms-lemma-ample-base-change}",
+        "MATH_0002": "$\\mathcal{L}_i$",
+        "MATH_0003": "$X_i/S_i$",
+        "MATH_0004": "$i \\in I$",
+        "REF_0002": "\\ref{morphisms-definition-relatively-ample}",
+        "MATH_0005": "$X_i \\to S_i$",
+        "REF_0003": "\\ref{morphisms-lemma-relatively-ample-separated}",
+        "MATH_0006": "$X_i \\to S$",
+        "MATH_0007": "$f$",
+        "REF_0004": "\\ref{lemma-descending-property-quasi-compact}",
+        "REF_0005": "\\ref{lemma-descending-property-separated}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0008": "$\\mathcal{A} = \\bigoplus_{d \\geq 0} f_*\\mathcal{L}^{\\otimes d}$",
+        "MATH_0009": "$\\mathcal{O}_S$",
+        "REF_0006": "\\ref{schemes-lemma-push-forward-quasi-coherent}",
+        "MATH_0010": "$\\mathcal{A}$",
+        "REF_0007": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0011": "$\\mathcal{A}_i = \\bigoplus_{d \\geq 0} f_{i, *}\\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0012": "$\\mathcal{A}_i = g_i^*\\mathcal{A}$",
+        "MATH_0013": "$\\psi_d : f^*\\mathcal{A}_d \\to \\mathcal{L}^{\\otimes d}$",
+        "MATH_0014": "$\\mathcal{O}_X$",
+        "MATH_0015": "$\\psi_{i, d} : f_i^*(\\mathcal{A}_i)_d \\to \\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0016": "$\\mathcal{O}_{X_i}$",
+        "MATH_0017": "$\\mathcal{L}_i$",
+        "MATH_0018": "$X_i/S_i$",
+        "MATH_0019": "$x_i \\in X_i$",
+        "MATH_0020": "$d \\geq 1$",
+        "MATH_0021": "$f_i^*(\\mathcal{A}_i)_d \\to \\mathcal{L}_i^{\\otimes d}$",
+        "MATH_0022": "$x_i$",
+        "REF_0008": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "MATH_0023": "$x \\in X$",
+        "MATH_0024": "$i$",
+        "MATH_0025": "$x_i \\in X_i$",
+        "MATH_0026": "$x$",
+        "MATH_0027": "$\\mathcal{O}_{X, x} \\to \\mathcal{O}_{X_i, x_i}$",
+        "MATH_0028": "$x \\in X$",
+        "MATH_0029": "$d \\geq 1$",
+        "MATH_0030": "$f^*\\mathcal{A}_d \\to \\mathcal{L}^{\\otimes d}$",
+        "MATH_0031": "$x$",
+        "MATH_0032": "$U(\\psi) \\subset X$",
+        "REF_0009": "\\ref{constructions-lemma-invertible-map-into-relative-proj}",
+        "MATH_0033": "$\\psi : f^*\\mathcal{A} \\to \\bigoplus_{d \\geq 0} \\mathcal{L}^{\\otimes d}$",
+        "MATH_0034": "$\\mathcal{O}_X$",
+        "MATH_0035": "$X$",
+        "MATH_0036": "$$\nr_{\\mathcal{L}, \\psi} : X \\longrightarrow \\underline{\\text{Proj}}_S(\\mathcal{A})\n$$",
+        "MATH_0037": "$r_{\\mathcal{L}, \\psi}$",
+        "MATH_0038": "$S_i$",
+        "MATH_0039": "$r_{\\mathcal{L}_i, \\psi_i}$",
+        "REF_0010": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "MATH_0040": "$r_{\\mathcal{L}, \\psi}$",
+        "REF_0011": "\\ref{lemma-descending-property-open-immersion}",
+        "MATH_0041": "$\\mathcal{L}$",
+        "MATH_0042": "$X/S$",
+        "REF_0012": "\\ref{morphisms-lemma-characterize-relatively-ample}",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036F:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt often happens one can prove a morphism has a certain property\nafter precomposing with some other morphism. In many cases this\nimplies the morphism has the property too. We formalize\nthis in the following definition.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036F:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of morphisms local on the source<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-properties-morphisms-local-source}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:036G:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes.\nLet <MATH_0002>.\nWe say <MATH_0003> is\n<TEXTITOPEN_0001><MATH_0004> local on the source<TEXTITCLOSE_0001>, or\n<TEXTITOPEN_0002>local on the source for the <MATH_0005>-topology<TEXTITCLOSE_0002> if for\nany morphism of schemes <MATH_0006> over <MATH_0007>, and any\n<MATH_0008>-covering <MATH_0009> we\nhave\n<MATH_0010>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-property-morphisms-local-source}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, \\linebreak[0] fpqc, \\linebreak[0] fppf, \\linebreak[0]\n\\etale, \\linebreak[0] smooth, \\linebreak[0] syntomic\\}$",
+        "MATH_0003": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0005": "$\\tau$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0006": "$f : X \\to Y$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$\\tau$",
+        "MATH_0009": "$\\{X_i \\to X\\}_{i \\in I}$",
+        "MATH_0010": "$$\nf \\text{ has }\\mathcal{P}\n\\Leftrightarrow\n\\text{each }X_i \\to Y\\text{ has }\\mathcal{P}.\n$$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    }
+  ]
+}

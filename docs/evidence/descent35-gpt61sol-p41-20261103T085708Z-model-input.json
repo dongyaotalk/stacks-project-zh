@@ -1,0 +1,339 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p41-20261103T085708Z.json",
+    "hash": "sha256:f41125b962b95c1f836a45226b251b332d4dcf634c9e85b6db0f77b8922b56ef"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:04R7:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes which is\n<ACCENT_0001>tale local on source-and-target. Let <MATH_0002> be the associated property\nof morphisms of germs, see\nLemma <REF_0001>.\nLet <MATH_0003> be a morphism\nof schemes. The following are equivalent:\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0004> has property <MATH_0005>, and\n<STRUCT_0003> for every <MATH_0006> the morphism of germs <MATH_0007>\nhas property <MATH_0008>.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$Q$",
+        "REF_0001": "\\ref{lemma-local-source-target-global-implies-local}",
+        "MATH_0003": "$f : X \\to Y$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$(X, x) \\to (Y, f(x))$",
+        "MATH_0008": "$\\mathcal{Q}$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 63,
+          "projection_end": 68,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 143,
+          "projection_end": 152,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 206,
+          "projection_end": 214,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 218,
+          "projection_end": 225,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 245,
+          "projection_end": 255,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 367,
+          "projection_end": 375,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04R7:proof",
+      "source_text": "The implication (1) <MATH_0001> (2) is direct from the definitions.\nThe implication (2) <MATH_0002> (1) also follows from part (3) of\nDefinition <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\Rightarrow$",
+        "MATH_0002": "$\\Rightarrow$",
+        "REF_0001": "\\ref{definition-local-source-target}"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:04R5:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nA morphism of germs <MATH_0001> determines a well defined\nmap of local rings. Hence the following lemma makes sense.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x) \\to (S, s)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 16,
+          "projection_end": 24,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 72,
+          "projection_end": 75,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local rings",
+          "projection_start": 79,
+          "projection_end": 90,
+          "concept": "local-ring",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:04R6:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIf a morphism of germs <MATH_0001> has <MATH_0002>,\nthen there are arbitrarily small neighbourhoods\n<MATH_0003> of <MATH_0004> and <MATH_0005> of <MATH_0006>\nsuch that a representative <MATH_0007> of <MATH_0008> has <MATH_0009>.\nThis follows from Lemma <REF_0001>. Let\n<MATH_0010>\nbe as in Definition <REF_0002>.\nChoose <MATH_0011> and a representative <MATH_0012> of <MATH_0013>.\nChoose <MATH_0014> and an <ACCENT_0001>tale representative <MATH_0015>\nof <MATH_0016> (Definition <REF_0003>).\nChoose <MATH_0017> and representatives <MATH_0018>\nand <MATH_0019> of <MATH_0020> and <MATH_0021> with <MATH_0022> <ACCENT_0002>tale.\nAfter shrinking <MATH_0023> we may assume <MATH_0024>.\nBy the initial remark of the proof, we are trying to show\n<MATH_0025> where <MATH_0026> is as\nin Lemma <REF_0004>.\nThus the lemma follows from Lemma <REF_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$(X, x) \\to (S, s)$",
+        "MATH_0002": "$\\mathcal{Q}$",
+        "MATH_0003": "$U \\subset X$",
+        "MATH_0004": "$x$",
+        "MATH_0005": "$V \\subset S$",
+        "MATH_0006": "$s$",
+        "MATH_0007": "$U \\to V$",
+        "MATH_0008": "$(X, x) \\to (S, s)$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{lemma-local-source-target-implies}",
+        "MATH_0010": "$$\n\\xymatrix{\n(U', u') \\ar[r]_{h'} \\ar[d]_a & (V', v') \\ar[d]^b \\\\\n(U, u) \\ar[r]^h & (V, v)\n}\n$$",
+        "REF_0002": "\\ref{definition-local-source-target-at-point}",
+        "MATH_0011": "$U_1 \\subset U$",
+        "MATH_0012": "$h_1 : U_1 \\to V$",
+        "MATH_0013": "$h$",
+        "MATH_0014": "$V'_1 \\subset V'$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0015": "$b_1 : V'_1 \\to V$",
+        "MATH_0016": "$b$",
+        "REF_0003": "\\ref{definition-etale-morphism-germs}",
+        "MATH_0017": "$U'_1 \\subset U'$",
+        "MATH_0018": "$a_1 : U'_1 \\to U_1$",
+        "MATH_0019": "$h'_1 : U'_1 \\to V'_1$",
+        "MATH_0020": "$a$",
+        "MATH_0021": "$h'$",
+        "MATH_0022": "$a_1$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0023": "$U'_1$",
+        "MATH_0024": "$h_1 \\circ a_1 = b_1 \\circ h'_1$",
+        "MATH_0025": "$u' \\in W(h'_1) \\Leftrightarrow u \\in W(h_1)$",
+        "MATH_0026": "$W(-)$",
+        "REF_0004": "\\ref{lemma-largest-open-of-the-source}",
+        "REF_0005": "\\ref{lemma-etale-etale-local-source-target}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R7:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe implication (1) <MATH_0001> (2) is direct from the definitions.\nThe implication (2) <MATH_0002> (1) also follows from part (3) of\nDefinition <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\Rightarrow$",
+        "MATH_0002": "$\\Rightarrow$",
+        "REF_0001": "\\ref{definition-local-source-target}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R7:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes which is\n<ACCENT_0001>tale local on source-and-target. Let <MATH_0002> be the associated property\nof morphisms of germs, see\nLemma <REF_0001>.\nLet <MATH_0003> be a morphism\nof schemes. The following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> has property <MATH_0005>, and\n<STRUCT_0004> for every <MATH_0006> the morphism of germs <MATH_0007>\nhas property <MATH_0008>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-source-target-local-implies-global}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$Q$",
+        "REF_0001": "\\ref{lemma-local-source-target-global-implies-local}",
+        "MATH_0003": "$f : X \\to Y$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$(X, x) \\to (Y, f(x))$",
+        "MATH_0008": "$\\mathcal{Q}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R5:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA morphism of germs <MATH_0001> determines a well defined\nmap of local rings. Hence the following lemma makes sense.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x) \\to (S, s)$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04ND:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property of morphisms of germs\n<MATH_0001>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-at-point}",
+        "MATH_0001": "$$\n\\mathcal{P}((X, x) \\to (S, s)) =\n\\mathcal{O}_{S, s} \\to \\mathcal{O}_{X, x}\\text{ is flat}\n$$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-definition-local-source-target",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes.\nWe say <MATH_0002> is <TEXTITOPEN_0001><ACCENT_0001>tale local on source-and-target<TEXTITCLOSE_0001> if\n<STRUCT_0002>\n<STRUCT_0003> (stable under precomposing with <ACCENT_0002>tale maps)\nif <MATH_0003> is <ACCENT_0003>tale and <MATH_0004> has <MATH_0005>,\nthen <MATH_0006> has <MATH_0007>,\n<STRUCT_0004> (stable under <ACCENT_0004>tale base change)\nif <MATH_0008> has <MATH_0009> and <MATH_0010> is <ACCENT_0005>tale, then\nthe base change <MATH_0011> has <MATH_0012>, and\n<STRUCT_0005> (locality) given a morphism <MATH_0013> the following are equivalent\n<STRUCT_0006>\n<STRUCT_0007> <MATH_0014> has <MATH_0015>,\n<STRUCT_0008> for every <MATH_0016> there exists a commutative diagram\n<MATH_0017>\nwith <ACCENT_0006>tale vertical arrows and <MATH_0018> with <MATH_0019> such that\n<MATH_0020> has <MATH_0021>.\n<STRUCT_0009>\n<STRUCT_0010>\n<STRUCT_0011>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-local-source-target}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "ACCENT_0001": "\\'e",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "ACCENT_0002": "\\'e",
+        "MATH_0003": "$f : X \\to Y$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0004": "$g : Y \\to Z$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$g \\circ f$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "STRUCT_0004": "\\item",
+        "ACCENT_0004": "\\'e",
+        "MATH_0008": "$f : X \\to Y$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$Y' \\to Y$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0011": "$f' : Y' \\times_Y X \\to Y'$",
+        "MATH_0012": "$\\mathcal{P}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0013": "$f : X \\to Y$",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "STRUCT_0007": "\\item",
+        "MATH_0014": "$f$",
+        "MATH_0015": "$\\mathcal{P}$",
+        "STRUCT_0008": "\\item",
+        "MATH_0016": "$x \\in X$",
+        "MATH_0017": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0018": "$u \\in U$",
+        "MATH_0019": "$a(u) = x$",
+        "MATH_0020": "$h$",
+        "MATH_0021": "$\\mathcal{P}$",
+        "STRUCT_0009": "\\end{enumerate}",
+        "STRUCT_0010": "\\end{enumerate}",
+        "STRUCT_0011": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-local-source-target",
+      "requested_tag": "04QZ"
+    },
+    {
+      "context_id": "reference:descent-lemma-local-source-target-global-implies-local",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes\nwhich is <ACCENT_0001>tale local on the source-and-target.\nConsider the property <MATH_0002> of\nmorphisms of germs defined by the rule\n<MATH_0003>\nThen <MATH_0004> is <ACCENT_0002>tale local on the source-and-target as in\nDefinition <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-source-target-global-implies-local}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$\\mathcal{Q}$",
+        "MATH_0003": "$$\n\\mathcal{Q}((X, x) \\to (S, s))\n\\Leftrightarrow\n\\text{there exists a representative }U \\to S\n\\text{ which has }\\mathcal{P}\n$$",
+        "MATH_0004": "$\\mathcal{Q}$",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-local-source-target-global-implies-local",
+      "requested_tag": "04R6"
+    }
+  ]
+}

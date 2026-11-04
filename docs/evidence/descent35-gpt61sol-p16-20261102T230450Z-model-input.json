@@ -1,0 +1,2776 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e7e-cc3b-7733-8332-45075e9a740d",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p16-20261102T230450Z.json",
+    "hash": "sha256:21e58e35eccf15cdc9b0903ff447bb6fcb765239123e8475fb6fbf87feeebd2e"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:023P:title",
+      "source_text": "Fpqc coverings are universal effective epimorphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Fpqc coverings",
+          "projection_start": 0,
+          "projection_end": 14,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphisms",
+          "projection_start": 39,
+          "projection_end": 51,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023P:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nWe apply the material above to prove an interesting result, namely\nLemma <REF_0001>.\nBy Sites, Section <REF_0002>\nthis lemma implies that the representable\npresheaves on any of the sites <MATH_0001> are sheaves for\n<MATH_0002>. First\nwe prove a helper lemma.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "REF_0002": "\\ref{sites-section-representable-sheaves}",
+        "MATH_0001": "$(\\Sch/S)_\\tau$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, fppf, \\etale, smooth, syntomic\\}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Sites",
+          "projection_start": 102,
+          "projection_end": 107,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 156,
+          "projection_end": 169,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaves",
+          "projection_start": 170,
+          "projection_end": 180,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 195,
+          "projection_end": 200,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 217,
+          "projection_end": 224,
+          "concept": "sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KI:statement",
+      "source_text": "For a scheme <MATH_0001> denote <MATH_0002> the underlying set.\nLet <MATH_0003> be a morphism of schemes.\nThen\n<MATH_0004>\nis surjective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$|X|$",
+        "MATH_0003": "$f : X \\to S$",
+        "MATH_0004": "$$\n|X \\times_S X| \\to |X| \\times_{|S|} |X|\n$$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 6,
+          "projection_end": 12,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 59,
+          "projection_end": 62,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 85,
+          "projection_end": 93,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 97,
+          "projection_end": 104,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 126,
+          "projection_end": 136,
+          "concept": "surjective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KI:proof",
+      "source_text": "Follows immediately from the description of points on the\nfibre product in Schemes, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{schemes-lemma-points-fibre-product}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "fibre product",
+          "projection_start": 58,
+          "projection_end": 71,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 75,
+          "projection_end": 82,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUA:statement",
+      "source_text": "Let <MATH_0001> be a family of morphisms of affine schemes.\nThe following are equivalent\n<STRUCT_0001>\n<STRUCT_0002> for any quasi-coherent <MATH_0002>-module <MATH_0003> we have\n<MATH_0004>\n<STRUCT_0003> <MATH_0005> is a universal effective epimorphism\n(Sites, Definition <REF_0001>)\nin the category of affine schemes.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$\\mathcal{O}_X$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$$\n\\Gamma(X, \\mathcal{F}) =\n\\text{Equalizer}\\left(\n\\xymatrix{\n\\prod\\nolimits_{i \\in I} \\Gamma(X_i, f_i^*\\mathcal{F})\n\\ar@<1ex>[r] \\ar@<-1ex>[r] &\n\\prod\\nolimits_{i, j \\in I}\n\\Gamma(X_i \\times_X X_j, (f_i \\times f_j)^*\\mathcal{F})\n}\n\\right)\n$$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "REF_0001": "\\ref{sites-definition-universal-effective-epimorphisms}",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 44,
+          "projection_end": 58,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 78,
+          "projection_end": 88,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 152,
+          "projection_end": 158,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 242,
+          "projection_end": 253,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 255,
+          "projection_end": 260,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 292,
+          "projection_end": 300,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 304,
+          "projection_end": 318,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUA:proof",
+      "source_text": "Assume (2) holds and let <MATH_0001> be a quasi-coherent\n<MATH_0002>-module. Consider the scheme\n(Constructions, Section <REF_0001>)\n<MATH_0003>\nwhere <MATH_0004> is an\n<MATH_0005>-algebra with multiplication\n<MATH_0006>.\nIf <MATH_0007> is a section,\nthen <MATH_0008> determines a unique element of\n<MATH_0009>\nProof of equality omitted.\nIf <MATH_0010> is in the equalizer of (1), then, using the equality\n<MATH_0011>\nwhich holds for any scheme <MATH_0012>, we see that these sections define\na family of morphisms <MATH_0013> with\n<MATH_0014> as morphisms\n<MATH_0015>.\nSince we've assume (2) we obtain a morphism\n<MATH_0016> compatible with the morphisms <MATH_0017>\nwhich in turn determines\nan element <MATH_0018>.\nWe omit the verification that <MATH_0019> maps to <MATH_0020> in\n<MATH_0021>.\n\n<STRUCT_0001><STRUCT_0002>\nAssume (1). Let <MATH_0022> be an affine scheme and let <MATH_0023>\nbe a family of morphisms such that\n<MATH_0024> on\n<MATH_0025> for all <MATH_0026>. Then\n<MATH_0027>\nmaps into the equalizer and we find that we get a ring map\n<MATH_0028>\nby the assumption of the lemma for <MATH_0029>.\nThis ring map corresponds to a morphism <MATH_0030> such\nthat <MATH_0031>. Hence our family is an effective\nepimorphism.\n\n<STRUCT_0003><STRUCT_0004>\nLet <MATH_0032> be a morphism of affines. We will show\nthe base changes <MATH_0033> of <MATH_0034> form an effective epimorphism\nby applying the result of the previous paragraph.\nNamely, if <MATH_0035> is a quasi-coherent <MATH_0036>-module, then\n<MATH_0037>\nand\n<MATH_0038>\nby the trivial base change formula\n(Cohomology of Schemes, Lemma <REF_0002>).\nThus we see property (1) lemma holds for the family <MATH_0039>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{O}_X$",
+        "REF_0001": "\\ref{constructions-section-spec}",
+        "MATH_0003": "$$\nX' = \\underline{\\Spec}_X(\\mathcal{O}_X \\oplus \\mathcal{F})\n$$",
+        "MATH_0004": "$\\mathcal{O}_X \\oplus \\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{O}_X$",
+        "MATH_0006": "$(f, s)(f', s') = (ff', fs' + f's)$",
+        "MATH_0007": "$s_i \\in \\Gamma(X_i, f_i^*\\mathcal{F})$",
+        "MATH_0008": "$s_i$",
+        "MATH_0009": "$$\n\\Gamma(X' \\times_X X_i, \\mathcal{O}_{X' \\times_X X_i}) =\n\\Gamma(X_i, \\mathcal{O}_{X_i}) \\oplus \\Gamma(X_i, f_i^*\\mathcal{F})\n$$",
+        "MATH_0010": "$(s_i)_{i \\in I}$",
+        "MATH_0011": "$$\n\\Mor(T, \\mathbf{A}^1_\\mathbf{Z}) = \\Gamma(T, \\mathcal{O}_T)\n$$",
+        "MATH_0012": "$T$",
+        "MATH_0013": "$h_i : X' \\times_X X_i \\to \\mathbf{A}^1_\\mathbf{Z}$",
+        "MATH_0014": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0015": "$(X' \\times_X X_i) \\times_{X'} (X' \\times_X X_j) \\to \\mathbf{A}^1_\\mathbf{Z}$",
+        "MATH_0016": "$h : X' \\to \\mathbf{A}^1_\\mathbf{Z}$",
+        "MATH_0017": "$h_i$",
+        "MATH_0018": "$s \\in \\Gamma(X, \\mathcal{F})$",
+        "MATH_0019": "$s$",
+        "MATH_0020": "$s_i$",
+        "MATH_0021": "$\\Gamma(X_i, f_i^*\\mathcal{F})$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0022": "$T$",
+        "MATH_0023": "$h_i : X_i \\to T$",
+        "MATH_0024": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0025": "$X_i \\times_X X_j$",
+        "MATH_0026": "$i, j \\in I$",
+        "MATH_0027": "$$\n\\prod h_i^\\sharp :\n\\Gamma(T, \\mathcal{O}_T)\n\\to\n\\prod \\Gamma(X_i, \\mathcal{O}_{X_i})\n$$",
+        "MATH_0028": "$\\Gamma(T, \\mathcal{O}_T) \\to \\Gamma(X, \\mathcal{O}_X)$",
+        "MATH_0029": "$\\mathcal{F} = \\mathcal{O}_X$",
+        "MATH_0030": "$h : X \\to T$",
+        "MATH_0031": "$h_i = h \\circ f_i$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0032": "$p : Y \\to X$",
+        "MATH_0033": "$g_i : Y_i \\to Y$",
+        "MATH_0034": "$f_i$",
+        "MATH_0035": "$\\mathcal{G}$",
+        "MATH_0036": "$\\mathcal{O}_Y$",
+        "MATH_0037": "$$\n\\Gamma(Y, \\mathcal{G}) = \\Gamma(X, p_*\\mathcal{G}),\\quad\n\\Gamma(Y_i, g_i^*\\mathcal{G}) = \\Gamma(X, f_i^*p_*\\mathcal{G}),\n$$",
+        "MATH_0038": "$$\n\\Gamma(Y_i \\times_Y Y_j, (g_i \\times g_j)^*\\mathcal{G}) =\n\\Gamma(X, (f_i \\times f_j)^*p_*\\mathcal{G})\n$$",
+        "REF_0002": "\\ref{coherent-lemma-affine-base-change}",
+        "MATH_0039": "$g_i$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "module",
+          "projection_start": 69,
+          "projection_end": 75,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 90,
+          "projection_end": 96,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 181,
+          "projection_end": 188,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 288,
+          "projection_end": 295,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 363,
+          "projection_end": 372,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 438,
+          "projection_end": 444,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 494,
+          "projection_end": 513,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 546,
+          "projection_end": 555,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 604,
+          "projection_end": 612,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 645,
+          "projection_end": 654,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 695,
+          "projection_end": 702,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 758,
+          "projection_end": 762,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 855,
+          "projection_end": 868,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 894,
+          "projection_end": 913,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 989,
+          "projection_end": 993,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 1003,
+          "projection_end": 1012,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 1039,
+          "projection_end": 1047,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 1113,
+          "projection_end": 1121,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1139,
+          "projection_end": 1147,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 1216,
+          "projection_end": 1227,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1277,
+          "projection_end": 1285,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 1289,
+          "projection_end": 1296,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base changes",
+          "projection_start": 1315,
+          "projection_end": 1327,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 1373,
+          "projection_end": 1384,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1490,
+          "projection_end": 1496,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 1546,
+          "projection_end": 1557,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 1567,
+          "projection_end": 1588,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUB:statement",
+      "source_text": "Let <MATH_0001> be a family of morphisms of schemes.\n<STRUCT_0001>\n<STRUCT_0002> If the family is universal effective\nepimorphism in the category of schemes, then <MATH_0002> is surjective.\n<STRUCT_0003> If <MATH_0003> and <MATH_0004> are affine and the family is a universal effective\nepimorphism in the category of affine schemes, then\n<MATH_0005> is surjective.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$\\coprod f_i$",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$X_i$",
+        "MATH_0005": "$\\coprod f_i$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 44,
+          "projection_end": 51,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 118,
+          "projection_end": 129,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 137,
+          "projection_end": 145,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 149,
+          "projection_end": 156,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 178,
+          "projection_end": 188,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 239,
+          "projection_end": 245,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 286,
+          "projection_end": 297,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 305,
+          "projection_end": 313,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 317,
+          "projection_end": 331,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 353,
+          "projection_end": 363,
+          "concept": "surjective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUB:proof",
+      "source_text": "Omitted. Hint: perform base change by <MATH_0001>\nto see that any <MATH_0002> has to be in the image.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\Spec(\\kappa(x)) \\to X$",
+        "MATH_0002": "$x \\in X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "base change",
+          "projection_start": 23,
+          "projection_end": 34,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 95,
+          "projection_end": 100,
+          "concept": "image",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUC:statement",
+      "source_text": "Let <MATH_0001> be a family of morphisms of schemes.\nIf for every morphism <MATH_0002> with <MATH_0003> affine the family of base changes\n<MATH_0004> forms an effective epimorphism, then\nthe family of <MATH_0005> forms a universal effective epimorphism\nin the category of schemes.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0002": "$Y \\to X$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$g_i : Y_i \\to Y$",
+        "MATH_0005": "$f_i$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 44,
+          "projection_end": 51,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 66,
+          "projection_end": 74,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 104,
+          "projection_end": 110,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base changes",
+          "projection_start": 125,
+          "projection_end": 137,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 169,
+          "projection_end": 180,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 241,
+          "projection_end": 252,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 260,
+          "projection_end": 268,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 272,
+          "projection_end": 279,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUC:proof",
+      "source_text": "Let <MATH_0001> be a morphism of schemes. We have to show that\nthe base changes <MATH_0002> form an effective epimorphism.\nTo do this, assume given a scheme <MATH_0003> and morphisms <MATH_0004>\nwith <MATH_0005> on\n<MATH_0006>.\nChoose an affine open covering <MATH_0007>.\nSet <MATH_0008> equal to the inverse image of\n<MATH_0009> in <MATH_0010>. Then we see that\n<MATH_0011> is the base change of\n<MATH_0012> by <MATH_0013>. Thus by assumption\nthe family of restrictions <MATH_0014>\ncome from a morphism of schemes <MATH_0015>.\nWe leave it to the reader to show that these agree\non overlaps and define the desired morphism <MATH_0016>.\nSee discussion in Schemes, Section <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$Y \\to X$",
+        "MATH_0002": "$g_i : Y_i \\to Y$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$h_i : Y_i \\to T$",
+        "MATH_0005": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0006": "$Y_i \\times_Y Y_j$",
+        "MATH_0007": "$Y = \\bigcup V_\\alpha$",
+        "MATH_0008": "$V_{\\alpha, i}$",
+        "MATH_0009": "$V_\\alpha$",
+        "MATH_0010": "$Y_i$",
+        "MATH_0011": "$V_{\\alpha, i}  \\to V_\\alpha$",
+        "MATH_0012": "$f_i$",
+        "MATH_0013": "$V_\\alpha \\to X$",
+        "MATH_0014": "$h_i|_{V_{\\alpha, i}}$",
+        "MATH_0015": "$h_\\alpha : V_\\alpha \\to T$",
+        "MATH_0016": "$Y \\to T$",
+        "REF_0001": "\\ref{schemes-section-glueing-schemes}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base changes",
+          "projection_start": 67,
+          "projection_end": 79,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 110,
+          "projection_end": 121,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 150,
+          "projection_end": 156,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 173,
+          "projection_end": 182,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 238,
+          "projection_end": 249,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 250,
+          "projection_end": 258,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 301,
+          "projection_end": 308,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 309,
+          "projection_end": 314,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 382,
+          "projection_end": 393,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 495,
+          "projection_end": 503,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 507,
+          "projection_end": 514,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 614,
+          "projection_end": 622,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 654,
+          "projection_end": 661,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUD:statement",
+      "source_text": "Let <MATH_0001> be a family of morphisms of affine\nschemes. Assume the equivalent assumption of\nLemma <REF_0001> hold\nand that moreover for any morphism of affines <MATH_0002> the map\n<MATH_0003>\nis a submersive map of topological spaces\n(Topology, Definition <REF_0002>).\nThen our family of morphisms is a universal effective epimorphism\nin the category of schemes.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "REF_0001": "\\ref{lemma-universal-effective-epimorphism-affine}",
+        "MATH_0002": "$Y \\to X$",
+        "MATH_0003": "$$\n\\coprod X_i \\times_X Y \\longrightarrow Y\n$$",
+        "REF_0002": "\\ref{topology-definition-submersive}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 44,
+          "projection_end": 58,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 71,
+          "projection_end": 81,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 144,
+          "projection_end": 152,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 156,
+          "projection_end": 163,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 180,
+          "projection_end": 183,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 212,
+          "projection_end": 215,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological spaces",
+          "projection_start": 219,
+          "projection_end": 237,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topology",
+          "projection_start": 239,
+          "projection_end": 247,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 282,
+          "projection_end": 301,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 327,
+          "projection_end": 338,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 346,
+          "projection_end": 354,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 358,
+          "projection_end": 365,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0EUD:proof",
+      "source_text": "By Lemma <REF_0001>\nit suffices to base change our family of morphisms\nby <MATH_0001> with <MATH_0002> affine. Set <MATH_0003>.\nLet <MATH_0004> be a scheme and let <MATH_0005> be a family of morphisms\nsuch that <MATH_0006>\non <MATH_0007>. Note that <MATH_0008> as a set is the coequalizer\nof the two maps from <MATH_0009> to <MATH_0010>.\nNamely, surjectivity by the affine case of\nLemma <REF_0002>\nand injectivity by Lemma <REF_0003>.\nHence there is a set map of underlying sets <MATH_0011>\ncompatible with the maps <MATH_0012>. By the second condition of\nthe lemma we see that <MATH_0013> is continuous!\nThus if <MATH_0014> and <MATH_0015> is an affine open\nneighbourhood of <MATH_0016>, then we can find an affine open\n<MATH_0017> such that <MATH_0018>.\nSetting <MATH_0019>\nwe can use the result proved in\nLemma <REF_0004>\nto see that <MATH_0020> comes from a unique\nmorphism of affine schemes <MATH_0021> agreeing with <MATH_0022>\nas morphisms of schemes for all <MATH_0023>. Glueing these <MATH_0024>\n(see Schemes, Section <REF_0005>)\ngives a morphism <MATH_0025> as desired.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-check-universal-effective-epimorphism-affine}",
+        "MATH_0001": "$Y \\to X$",
+        "MATH_0002": "$Y$",
+        "MATH_0003": "$Y_i = X_i \\times_X Y$",
+        "MATH_0004": "$T$",
+        "MATH_0005": "$h_i : Y_i \\to T$",
+        "MATH_0006": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0007": "$Y_i \\times_Y Y_j$",
+        "MATH_0008": "$Y$",
+        "MATH_0009": "$\\coprod Y_i \\times_Y Y_j$",
+        "MATH_0010": "$\\coprod Y_i$",
+        "REF_0002": "\\ref{lemma-universal-effective-epimorphism-surjective}",
+        "REF_0003": "\\ref{lemma-equiv-fibre-product}",
+        "MATH_0011": "$h : Y \\to T$",
+        "MATH_0012": "$h_i$",
+        "MATH_0013": "$h$",
+        "MATH_0014": "$y \\in Y$",
+        "MATH_0015": "$U \\subset T$",
+        "MATH_0016": "$h(y)$",
+        "MATH_0017": "$V \\subset Y$",
+        "MATH_0018": "$h(V) \\subset U$",
+        "MATH_0019": "$V_i = Y_i \\times_Y V = X_i \\times_X V$",
+        "REF_0004": "\\ref{lemma-universal-effective-epimorphism-affine}",
+        "MATH_0020": "$h|_V : V \\to U \\subset T$",
+        "MATH_0021": "$h_V : V \\to U$",
+        "MATH_0022": "$h_i|_{V_i}$",
+        "MATH_0023": "$i$",
+        "MATH_0024": "$h_V$",
+        "REF_0005": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0025": "$Y \\to T$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "base change",
+          "projection_start": 35,
+          "projection_end": 46,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 51,
+          "projection_end": 70,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 103,
+          "projection_end": 109,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 149,
+          "projection_end": 155,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 181,
+          "projection_end": 200,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 266,
+          "projection_end": 269,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 277,
+          "projection_end": 288,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 300,
+          "projection_end": 304,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 366,
+          "projection_end": 372,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 452,
+          "projection_end": 455,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 456,
+          "projection_end": 459,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "underlying sets",
+          "projection_start": 463,
+          "projection_end": 478,
+          "concept": "source-phrase-underlying-sets",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 511,
+          "projection_end": 515,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 647,
+          "projection_end": 658,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 709,
+          "projection_end": 720,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 869,
+          "projection_end": 877,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 881,
+          "projection_end": 895,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 937,
+          "projection_end": 946,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 950,
+          "projection_end": 957,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Glueing",
+          "projection_start": 979,
+          "projection_end": 986,
+          "concept": "gluing",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 1010,
+          "projection_end": 1017,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1047,
+          "projection_end": 1055,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03N0:statement",
+      "source_text": "Let <MATH_0001> be a fpqc covering.\nSuppose that for each <MATH_0002> we have an open subset <MATH_0003>\nsuch that for all <MATH_0004> we have\n<MATH_0005> as open\nsubsets of <MATH_0006>. Then there exists a unique open subset\n<MATH_0007> such that <MATH_0008> for each <MATH_0009>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0002": "$i$",
+        "MATH_0003": "$W_i \\subset T_i$",
+        "MATH_0004": "$i, j \\in I$",
+        "MATH_0005": "$\\text{pr}_0^{-1}(W_i) = \\text{pr}_1^{-1}(W_j)$",
+        "MATH_0006": "$T_i \\times_T T_j$",
+        "MATH_0007": "$W \\subset T$",
+        "MATH_0008": "$W_i = f_i^{-1}(W)$",
+        "MATH_0009": "$i$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 21,
+          "projection_end": 34,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open subset",
+          "projection_start": 81,
+          "projection_end": 92,
+          "concept": "open-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open subsets",
+          "projection_start": 158,
+          "projection_end": 170,
+          "concept": "open-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open subset",
+          "projection_start": 214,
+          "projection_end": 225,
+          "concept": "open-subset",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03N0:proof",
+      "source_text": "Apply\nLemma <REF_0001>\nto the map <MATH_0001>.\nIt implies there exists a subset <MATH_0002> such that\n<MATH_0003> for each <MATH_0004>, namely <MATH_0005>.\nTo see that <MATH_0006> is open we may work Zariski locally on <MATH_0007>.\nHence we may assume that <MATH_0008> is affine. Using Topologies, Definition\n<REF_0002> we may choose\na standard fpqc covering <MATH_0009> which refines\n<MATH_0010>. Let <MATH_0011> and\n<MATH_0012> be as in\nSites, Definition <REF_0003>.\nThen <MATH_0013>.\nThus we may assume <MATH_0014> is a standard fpqc covering.\nIn this case we may apply\nMorphisms, Lemma <REF_0004>\nto the morphism <MATH_0015> to conclude that <MATH_0016> is open.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-equiv-fibre-product}",
+        "MATH_0001": "$\\coprod_{i \\in I} T_i \\to T$",
+        "MATH_0002": "$W \\subset T$",
+        "MATH_0003": "$W_i = f_i^{-1}(W)$",
+        "MATH_0004": "$i$",
+        "MATH_0005": "$W = \\bigcup f_i(W_i)$",
+        "MATH_0006": "$W$",
+        "MATH_0007": "$T$",
+        "MATH_0008": "$T$",
+        "REF_0002": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0009": "$\\{g_j : V_j \\to T\\}_{j \\in J}$",
+        "MATH_0010": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0011": "$\\alpha : J \\to I$",
+        "MATH_0012": "$h_j : V_j \\to T_{\\alpha(j)}$",
+        "REF_0003": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0013": "$g_j^{-1}(W) = h_j^{-1}(W_{\\alpha(j)})$",
+        "MATH_0014": "$\\{f_i : T_i \\to T\\}$",
+        "REF_0004": "\\ref{morphisms-lemma-fpqc-quotient-topology}",
+        "MATH_0015": "$\\coprod T_i \\to T$",
+        "MATH_0016": "$W$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "map",
+          "projection_start": 30,
+          "projection_end": 33,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "subset",
+          "projection_start": 73,
+          "projection_end": 79,
+          "concept": "subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 272,
+          "projection_end": 278,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 286,
+          "projection_end": 296,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 345,
+          "projection_end": 358,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 439,
+          "projection_end": 444,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 532,
+          "projection_end": 545,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 573,
+          "projection_end": 582,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 608,
+          "projection_end": 616,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023Q:statement",
+      "source_text": "Let <MATH_0001> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nThen <MATH_0002> is a universal effective epimorphism\nin the category of schemes, see\nSites, Definition <REF_0002>.\nIn other words, every representable functor on the category of schemes\nsatisfies the sheaf condition for the fpqc topology, see\nTopologies, Definition <REF_0003>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\{T_i \\to T\\}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0002": "$\\{T_i \\to T\\}$",
+        "REF_0002": "\\ref{sites-definition-universal-effective-epimorphisms}",
+        "REF_0003": "\\ref{topologies-definition-sheaf-property-fpqc}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 22,
+          "projection_end": 35,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 41,
+          "projection_end": 51,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 118,
+          "projection_end": 129,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 137,
+          "projection_end": 145,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 149,
+          "projection_end": 156,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 162,
+          "projection_end": 167,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 214,
+          "projection_end": 227,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 228,
+          "projection_end": 235,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 243,
+          "projection_end": 251,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 255,
+          "projection_end": 262,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 277,
+          "projection_end": 292,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 301,
+          "projection_end": 314,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 320,
+          "projection_end": 330,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023Q:proof",
+      "source_text": "Let <MATH_0001> be a scheme. We have to show the following:\nGiven morphisms <MATH_0002>\nsuch that <MATH_0003>\nthere exists a unique morphism <MATH_0004> which restricts\nto <MATH_0005> on each <MATH_0006>.\nIn other words, we have to show that the functor\n<MATH_0007> satisfies\nthe sheaf property for the fpqc topology.\n\n<STRUCT_0001><STRUCT_0002>\nIf <MATH_0008> is a Zariski covering, then this follows from\nSchemes, Lemma <REF_0001>.\nThus Topologies, Lemma <REF_0002>\nreduces us to the case of a covering <MATH_0009>\ngiven by a single surjective flat morphism of affines.\n\n<STRUCT_0003><STRUCT_0004>\nFirst proof. By Lemma <REF_0003>\nwe have the sheaf condition for quasi-coherent modules\nfor <MATH_0010>. By Lemma <REF_0004>\nthe morphism <MATH_0011> is universally submersive.\nHence we may apply Lemma <REF_0005>\nto see that <MATH_0012> is a universal effective epimorphism.\n\n<STRUCT_0005><STRUCT_0006>\nSecond proof. Let <MATH_0013> be the faithfully flat ring map\ncorresponding to our surjective flat morphism <MATH_0014>.\nLet <MATH_0015> be a morphism\nsuch that <MATH_0016>\nas morphisms <MATH_0017>.\nBy Lemma <REF_0006> we see that\nas a map on the underlying\nsets <MATH_0018> is of the form <MATH_0019> for some\n(set theoretic) map <MATH_0020>.\nBy Morphisms, Lemma <REF_0007>\nand the fact that <MATH_0021> is continuous we see that <MATH_0022>\nis continuous.\n\n<STRUCT_0007><STRUCT_0008>\nPick <MATH_0023>.\nChoose <MATH_0024> affine open containing <MATH_0025>.\nSay <MATH_0026>.\nBy the above we may choose an <MATH_0027> such that\n<MATH_0028>.\nThe restriction of <MATH_0029> to <MATH_0030> into <MATH_0031>\ncorresponds to a ring map <MATH_0032>. The two induced\nring maps <MATH_0033> are equal\nby assumption on <MATH_0034>.\nNote that <MATH_0035> is faithfully flat.\nBy Lemma <REF_0008> the equalizer of\nthe two arrows <MATH_0036> is <MATH_0037>.\nWe conclude that <MATH_0038> factors uniquely through a map <MATH_0039>.\nThis map in turn gives a morphism of schemes <MATH_0040>,\nsee Schemes, Lemma <REF_0009>.\n\n<STRUCT_0009><STRUCT_0010>\nWhat have we proved so far? We have shown that for any prime\n<MATH_0041>, there exists a standard affine open\n<MATH_0042> such that the morphism\n<MATH_0043> factors uniquely\nthrough some morphism of schemes <MATH_0044>. We omit the\nverification that these morphisms glue to the desired\nmorphism <MATH_0045>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\varphi_i : T_i \\to S$",
+        "MATH_0003": "$\\varphi_i|_{T_i \\times_T T_j} = \\varphi_j|_{T_i \\times_T T_j}$",
+        "MATH_0004": "$T \\to S$",
+        "MATH_0005": "$\\varphi_i$",
+        "MATH_0006": "$T_i$",
+        "MATH_0007": "$h_S = \\Mor_{\\Sch}( - , S)$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0008": "$\\{T_i \\to T\\}$",
+        "REF_0001": "\\ref{schemes-lemma-glue}",
+        "REF_0002": "\\ref{topologies-lemma-sheaf-property-fpqc}",
+        "MATH_0009": "$\\{X \\to Y\\}$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "REF_0003": "\\ref{lemma-sheaf-condition-holds}",
+        "MATH_0010": "$\\{X \\to Y\\}$",
+        "REF_0004": "\\ref{lemma-open-fpqc-covering}",
+        "MATH_0011": "$X \\to Y$",
+        "REF_0005": "\\ref{lemma-universal-effective-epimorphism}",
+        "MATH_0012": "$\\{X \\to Y\\}$",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0013": "$R \\to A$",
+        "MATH_0014": "$\\pi : X \\to Y$",
+        "MATH_0015": "$f : X \\to S$",
+        "MATH_0016": "$f \\circ \\text{pr}_1 = f \\circ \\text{pr}_2$",
+        "MATH_0017": "$X \\times_Y X = \\Spec(A \\otimes_R A) \\to S$",
+        "REF_0006": "\\ref{lemma-equiv-fibre-product}",
+        "MATH_0018": "$f$",
+        "MATH_0019": "$f = g \\circ \\pi$",
+        "MATH_0020": "$g : \\Spec(R) \\to S$",
+        "REF_0007": "\\ref{morphisms-lemma-fpqc-quotient-topology}",
+        "MATH_0021": "$f$",
+        "MATH_0022": "$g$",
+        "STRUCT_0007": "\\medskip",
+        "STRUCT_0008": "\\noindent",
+        "MATH_0023": "$y \\in Y = \\Spec(R)$",
+        "MATH_0024": "$U \\subset S$",
+        "MATH_0025": "$g(y)$",
+        "MATH_0026": "$U = \\Spec(B)$",
+        "MATH_0027": "$r \\in R$",
+        "MATH_0028": "$y \\in D(r) \\subset g^{-1}(U)$",
+        "MATH_0029": "$f$",
+        "MATH_0030": "$\\pi^{-1}(D(r))$",
+        "MATH_0031": "$U$",
+        "MATH_0032": "$B \\to A_r$",
+        "MATH_0033": "$B \\to A_r \\otimes_{R_r} A_r = (A \\otimes_R A)_r$",
+        "MATH_0034": "$f$",
+        "MATH_0035": "$R_r \\to A_r$",
+        "REF_0008": "\\ref{lemma-ff-exact}",
+        "MATH_0036": "$A_r \\to A_r \\otimes_{R_r} A_r$",
+        "MATH_0037": "$R_r$",
+        "MATH_0038": "$B \\to A_r$",
+        "MATH_0039": "$B \\to R_r$",
+        "MATH_0040": "$D(r) \\to U \\to S$",
+        "REF_0009": "\\ref{schemes-lemma-morphism-into-affine}",
+        "STRUCT_0009": "\\medskip",
+        "STRUCT_0010": "\\noindent",
+        "MATH_0041": "$\\mathfrak p \\subset R$",
+        "MATH_0042": "$D(r) \\subset \\Spec(R)$",
+        "MATH_0043": "$f|_{\\pi^{-1}(D(r))} : \\pi^{-1}(D(r)) \\to S$",
+        "MATH_0044": "$D(r) \\to S$",
+        "MATH_0045": "$\\Spec(R) \\to S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 66,
+          "projection_end": 75,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 132,
+          "projection_end": 140,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 246,
+          "projection_end": 253,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf property",
+          "projection_start": 280,
+          "projection_end": 294,
+          "concept": "source-phrase-sheaf-property",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 303,
+          "projection_end": 316,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 365,
+          "projection_end": 381,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 406,
+          "projection_end": 413,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 438,
+          "projection_end": 448,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 495,
+          "projection_end": 503,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 534,
+          "projection_end": 544,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 545,
+          "projection_end": 549,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 550,
+          "projection_end": 558,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 562,
+          "projection_end": 569,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 643,
+          "projection_end": 658,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coherent modules",
+          "projection_start": 669,
+          "projection_end": 685,
+          "concept": "source-phrase-coherent-modules",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 727,
+          "projection_end": 735,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 860,
+          "projection_end": 871,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 937,
+          "projection_end": 952,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 953,
+          "projection_end": 961,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 983,
+          "projection_end": 993,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 994,
+          "projection_end": 998,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 999,
+          "projection_end": 1007,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1042,
+          "projection_end": 1050,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1076,
+          "projection_end": 1085,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1136,
+          "projection_end": 1139,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "underlying sets",
+          "projection_start": 1147,
+          "projection_end": 1162,
+          "concept": "source-phrase-underlying-sets",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1212,
+          "projection_end": 1215,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1227,
+          "projection_end": 1230,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1247,
+          "projection_end": 1256,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1422,
+          "projection_end": 1433,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 1620,
+          "projection_end": 1628,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring maps",
+          "projection_start": 1658,
+          "projection_end": 1667,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1745,
+          "projection_end": 1760,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 1786,
+          "projection_end": 1795,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1898,
+          "projection_end": 1901,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1920,
+          "projection_end": 1923,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1940,
+          "projection_end": 1948,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 1952,
+          "projection_end": 1959,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 1977,
+          "projection_end": 1984,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 2129,
+          "projection_end": 2140,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2167,
+          "projection_end": 2175,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2218,
+          "projection_end": 2226,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 2230,
+          "projection_end": 2237,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 2287,
+          "projection_end": 2296,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 2317,
+          "projection_end": 2325,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0BMN:statement",
+      "source_text": "Consider schemes <MATH_0001> and morphisms <MATH_0002> and\na morphism <MATH_0003> with <MATH_0004>. Set\n<MATH_0005>. If there exists an\nfpqc covering <MATH_0006> such that\n<STRUCT_0001>\n<STRUCT_0002> for all <MATH_0007> the morphism <MATH_0008>\nis the coequalizer of <MATH_0009>\nand <MATH_0010>, and\n<STRUCT_0003> for all <MATH_0011> and <MATH_0012> the morphism\n<MATH_0013>\nis the coequalizer of\n<MATH_0014> and\n<MATH_0015>\n<STRUCT_0004>\nthen <MATH_0016> is the coequalizer of <MATH_0017> and <MATH_0018>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X, Y, Z$",
+        "MATH_0002": "$a, b : X \\to Y$",
+        "MATH_0003": "$c : Y \\to Z$",
+        "MATH_0004": "$c \\circ a = c \\circ b$",
+        "MATH_0005": "$d = c \\circ a = c \\circ b$",
+        "MATH_0006": "$\\{Z_i \\to Z\\}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0007": "$i$",
+        "MATH_0008": "$Y \\times_{c, Z} Z_i \\to Z_i$",
+        "MATH_0009": "$(a, 1) : X \\times_{d, Z} Z_i \\to Y \\times_{c, Z} Z_i$",
+        "MATH_0010": "$(b, 1) : X \\times_{d, Z} Z_i \\to Y \\times_{c, Z} Z_i$",
+        "STRUCT_0003": "\\item",
+        "MATH_0011": "$i$",
+        "MATH_0012": "$i'$",
+        "MATH_0013": "$Y \\times_{c, Z} (Z_i \\times_Z Z_{i'}) \\to (Z_i \\times_Z Z_{i'})$",
+        "MATH_0014": "$(a, 1) : X \\times_{d, Z} (Z_i \\times_Z Z_{i'}) \\to\nY \\times_{c, Z} (Z_i \\times_Z Z_{i'})$",
+        "MATH_0015": "$(b, 1) : X \\times_{d, Z} (Z_i \\times_Z Z_{i'}) \\to\nY \\times_{c, Z} (Z_i \\times_Z Z_{i'})$",
+        "STRUCT_0004": "\\end{enumerate}",
+        "MATH_0016": "$c$",
+        "MATH_0017": "$a$",
+        "MATH_0018": "$b$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "schemes",
+          "projection_start": 9,
+          "projection_end": 16,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 61,
+          "projection_end": 69,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 136,
+          "projection_end": 149,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 224,
+          "projection_end": 232,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 252,
+          "projection_end": 263,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 354,
+          "projection_end": 362,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 382,
+          "projection_end": 393,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 463,
+          "projection_end": 474,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0BMN:proof",
+      "source_text": "Namely, for a scheme <MATH_0001> a morphism <MATH_0002> is the same thing as\na collection of morphism <MATH_0003> which agree on overlaps by\nLemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$T$",
+        "MATH_0002": "$Z \\to T$",
+        "MATH_0003": "$Z_i \\to T$",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 14,
+          "projection_end": 20,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 35,
+          "projection_end": 43,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 93,
+          "projection_end": 101,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0756:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be the pullback of <MATH_0002>\nto the big fppf site <MATH_0003>. Note that <MATH_0004>\nis quasi-coherent. There is a canonical\ncomparison map <MATH_0005> which by\nassumptions (1) and (2) induces an isomorphism\n<MATH_0006>\nfor all <MATH_0007> flat and locally of finite presentation.\nHence in the short exact sequences\n<MATH_0008>\nand\n<MATH_0009>\nthe sheaves <MATH_0010> and <MATH_0011> are\nparasitic for the fppf topology. By\nLemma <REF_0001>\nwe conclude that <MATH_0012>\nis an isomorphism for <MATH_0013> flat and locally of finite presentation.\nSince the result holds for <MATH_0014> by\nProposition <REF_0002>\nwe win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{G}|_{S_\\tau}$",
+        "MATH_0003": "$(\\Sch/S)_{fppf}$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\varphi : \\mathcal{F} \\to \\mathcal{G}$",
+        "MATH_0006": "$\\mathcal{F}|_{U_\\tau} \\to \\mathcal{G}|_{U_\\tau}$",
+        "MATH_0007": "$g : U \\to S$",
+        "MATH_0008": "$$\n0 \\to \\Ker(\\varphi) \\to \\mathcal{F} \\to \\Im(\\varphi) \\to 0\n$$",
+        "MATH_0009": "$$\n0 \\to \\Im(\\varphi) \\to \\mathcal{G} \\to \\Coker(\\varphi) \\to 0\n$$",
+        "MATH_0010": "$\\Ker(\\varphi)$",
+        "MATH_0011": "$\\Coker(\\varphi)$",
+        "REF_0001": "\\ref{lemma-cohomology-parasitic}",
+        "MATH_0012": "$H^p(U, \\mathcal{F}) \\to H^p(U, \\mathcal{G})$",
+        "MATH_0013": "$g : U \\to S$",
+        "MATH_0014": "$\\mathcal{F}$",
+        "REF_0002": "\\ref{proposition-same-cohomology-quasi-coherent}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023P:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe apply the material above to prove an interesting result, namely\nLemma <REF_0001>.\nBy Sites, Section <REF_0002>\nthis lemma implies that the representable\npresheaves on any of the sites <MATH_0001> are sheaves for\n<MATH_0002>. First\nwe prove a helper lemma.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "REF_0002": "\\ref{sites-section-representable-sheaves}",
+        "MATH_0001": "$(\\Sch/S)_\\tau$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, fppf, \\etale, smooth, syntomic\\}$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023P:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Fpqc coverings are universal effective epimorphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-fpqc-universal-effective-epimorphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KI:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor a scheme <MATH_0001> denote <MATH_0002> the underlying set.\nLet <MATH_0003> be a morphism of schemes.\nThen\n<MATH_0004>\nis surjective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-equiv-fibre-product}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$|X|$",
+        "MATH_0003": "$f : X \\to S$",
+        "MATH_0004": "$$\n|X \\times_S X| \\to |X| \\times_{|S|} |X|\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KI:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFollows immediately from the description of points on the\nfibre product in Schemes, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{schemes-lemma-points-fibre-product}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUA:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a family of morphisms of affine schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> for any quasi-coherent <MATH_0002>-module <MATH_0003> we have\n<MATH_0004>\n<STRUCT_0004> <MATH_0005> is a universal effective epimorphism\n(Sites, Definition <REF_0001>)\nin the category of affine schemes.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-universal-effective-epimorphism-affine}",
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\mathcal{O}_X$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$$\n\\Gamma(X, \\mathcal{F}) =\n\\text{Equalizer}\\left(\n\\xymatrix{\n\\prod\\nolimits_{i \\in I} \\Gamma(X_i, f_i^*\\mathcal{F})\n\\ar@<1ex>[r] \\ar@<-1ex>[r] &\n\\prod\\nolimits_{i, j \\in I}\n\\Gamma(X_i \\times_X X_j, (f_i \\times f_j)^*\\mathcal{F})\n}\n\\right)\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "REF_0001": "\\ref{sites-definition-universal-effective-epimorphisms}",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUA:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssume (2) holds and let <MATH_0001> be a quasi-coherent\n<MATH_0002>-module. Consider the scheme\n(Constructions, Section <REF_0001>)\n<MATH_0003>\nwhere <MATH_0004> is an\n<MATH_0005>-algebra with multiplication\n<MATH_0006>.\nIf <MATH_0007> is a section,\nthen <MATH_0008> determines a unique element of\n<MATH_0009>\nProof of equality omitted.\nIf <MATH_0010> is in the equalizer of (1), then, using the equality\n<MATH_0011>\nwhich holds for any scheme <MATH_0012>, we see that these sections define\na family of morphisms <MATH_0013> with\n<MATH_0014> as morphisms\n<MATH_0015>.\nSince we've assume (2) we obtain a morphism\n<MATH_0016> compatible with the morphisms <MATH_0017>\nwhich in turn determines\nan element <MATH_0018>.\nWe omit the verification that <MATH_0019> maps to <MATH_0020> in\n<MATH_0021>.\n\n<STRUCT_0002><STRUCT_0003>\nAssume (1). Let <MATH_0022> be an affine scheme and let <MATH_0023>\nbe a family of morphisms such that\n<MATH_0024> on\n<MATH_0025> for all <MATH_0026>. Then\n<MATH_0027>\nmaps into the equalizer and we find that we get a ring map\n<MATH_0028>\nby the assumption of the lemma for <MATH_0029>.\nThis ring map corresponds to a morphism <MATH_0030> such\nthat <MATH_0031>. Hence our family is an effective\nepimorphism.\n\n<STRUCT_0004><STRUCT_0005>\nLet <MATH_0032> be a morphism of affines. We will show\nthe base changes <MATH_0033> of <MATH_0034> form an effective epimorphism\nby applying the result of the previous paragraph.\nNamely, if <MATH_0035> is a quasi-coherent <MATH_0036>-module, then\n<MATH_0037>\nand\n<MATH_0038>\nby the trivial base change formula\n(Cohomology of Schemes, Lemma <REF_0002>).\nThus we see property (1) lemma holds for the family <MATH_0039>.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{O}_X$",
+        "REF_0001": "\\ref{constructions-section-spec}",
+        "MATH_0003": "$$\nX' = \\underline{\\Spec}_X(\\mathcal{O}_X \\oplus \\mathcal{F})\n$$",
+        "MATH_0004": "$\\mathcal{O}_X \\oplus \\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{O}_X$",
+        "MATH_0006": "$(f, s)(f', s') = (ff', fs' + f's)$",
+        "MATH_0007": "$s_i \\in \\Gamma(X_i, f_i^*\\mathcal{F})$",
+        "MATH_0008": "$s_i$",
+        "MATH_0009": "$$\n\\Gamma(X' \\times_X X_i, \\mathcal{O}_{X' \\times_X X_i}) =\n\\Gamma(X_i, \\mathcal{O}_{X_i}) \\oplus \\Gamma(X_i, f_i^*\\mathcal{F})\n$$",
+        "MATH_0010": "$(s_i)_{i \\in I}$",
+        "MATH_0011": "$$\n\\Mor(T, \\mathbf{A}^1_\\mathbf{Z}) = \\Gamma(T, \\mathcal{O}_T)\n$$",
+        "MATH_0012": "$T$",
+        "MATH_0013": "$h_i : X' \\times_X X_i \\to \\mathbf{A}^1_\\mathbf{Z}$",
+        "MATH_0014": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0015": "$(X' \\times_X X_i) \\times_{X'} (X' \\times_X X_j) \\to \\mathbf{A}^1_\\mathbf{Z}$",
+        "MATH_0016": "$h : X' \\to \\mathbf{A}^1_\\mathbf{Z}$",
+        "MATH_0017": "$h_i$",
+        "MATH_0018": "$s \\in \\Gamma(X, \\mathcal{F})$",
+        "MATH_0019": "$s$",
+        "MATH_0020": "$s_i$",
+        "MATH_0021": "$\\Gamma(X_i, f_i^*\\mathcal{F})$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0022": "$T$",
+        "MATH_0023": "$h_i : X_i \\to T$",
+        "MATH_0024": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0025": "$X_i \\times_X X_j$",
+        "MATH_0026": "$i, j \\in I$",
+        "MATH_0027": "$$\n\\prod h_i^\\sharp :\n\\Gamma(T, \\mathcal{O}_T)\n\\to\n\\prod \\Gamma(X_i, \\mathcal{O}_{X_i})\n$$",
+        "MATH_0028": "$\\Gamma(T, \\mathcal{O}_T) \\to \\Gamma(X, \\mathcal{O}_X)$",
+        "MATH_0029": "$\\mathcal{F} = \\mathcal{O}_X$",
+        "MATH_0030": "$h : X \\to T$",
+        "MATH_0031": "$h_i = h \\circ f_i$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0032": "$p : Y \\to X$",
+        "MATH_0033": "$g_i : Y_i \\to Y$",
+        "MATH_0034": "$f_i$",
+        "MATH_0035": "$\\mathcal{G}$",
+        "MATH_0036": "$\\mathcal{O}_Y$",
+        "MATH_0037": "$$\n\\Gamma(Y, \\mathcal{G}) = \\Gamma(X, p_*\\mathcal{G}),\\quad\n\\Gamma(Y_i, g_i^*\\mathcal{G}) = \\Gamma(X, f_i^*p_*\\mathcal{G}),\n$$",
+        "MATH_0038": "$$\n\\Gamma(Y_i \\times_Y Y_j, (g_i \\times g_j)^*\\mathcal{G}) =\n\\Gamma(X, (f_i \\times f_j)^*p_*\\mathcal{G})\n$$",
+        "REF_0002": "\\ref{coherent-lemma-affine-base-change}",
+        "MATH_0039": "$g_i$",
+        "STRUCT_0006": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUB:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a family of morphisms of schemes.\n<STRUCT_0002>\n<STRUCT_0003> If the family is universal effective\nepimorphism in the category of schemes, then <MATH_0002> is surjective.\n<STRUCT_0004> If <MATH_0003> and <MATH_0004> are affine and the family is a universal effective\nepimorphism in the category of affine schemes, then\n<MATH_0005> is surjective.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-universal-effective-epimorphism-surjective}",
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\coprod f_i$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$X_i$",
+        "MATH_0005": "$\\coprod f_i$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUB:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted. Hint: perform base change by <MATH_0001>\nto see that any <MATH_0002> has to be in the image.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\Spec(\\kappa(x)) \\to X$",
+        "MATH_0002": "$x \\in X$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a family of morphisms of schemes.\nIf for every morphism <MATH_0002> with <MATH_0003> affine the family of base changes\n<MATH_0004> forms an effective epimorphism, then\nthe family of <MATH_0005> forms a universal effective epimorphism\nin the category of schemes.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-check-universal-effective-epimorphism-affine}",
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "MATH_0002": "$Y \\to X$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$g_i : Y_i \\to Y$",
+        "MATH_0005": "$f_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a morphism of schemes. We have to show that\nthe base changes <MATH_0002> form an effective epimorphism.\nTo do this, assume given a scheme <MATH_0003> and morphisms <MATH_0004>\nwith <MATH_0005> on\n<MATH_0006>.\nChoose an affine open covering <MATH_0007>.\nSet <MATH_0008> equal to the inverse image of\n<MATH_0009> in <MATH_0010>. Then we see that\n<MATH_0011> is the base change of\n<MATH_0012> by <MATH_0013>. Thus by assumption\nthe family of restrictions <MATH_0014>\ncome from a morphism of schemes <MATH_0015>.\nWe leave it to the reader to show that these agree\non overlaps and define the desired morphism <MATH_0016>.\nSee discussion in Schemes, Section <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$Y \\to X$",
+        "MATH_0002": "$g_i : Y_i \\to Y$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$h_i : Y_i \\to T$",
+        "MATH_0005": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0006": "$Y_i \\times_Y Y_j$",
+        "MATH_0007": "$Y = \\bigcup V_\\alpha$",
+        "MATH_0008": "$V_{\\alpha, i}$",
+        "MATH_0009": "$V_\\alpha$",
+        "MATH_0010": "$Y_i$",
+        "MATH_0011": "$V_{\\alpha, i}  \\to V_\\alpha$",
+        "MATH_0012": "$f_i$",
+        "MATH_0013": "$V_\\alpha \\to X$",
+        "MATH_0014": "$h_i|_{V_{\\alpha, i}}$",
+        "MATH_0015": "$h_\\alpha : V_\\alpha \\to T$",
+        "MATH_0016": "$Y \\to T$",
+        "REF_0001": "\\ref{schemes-section-glueing-schemes}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUD:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a family of morphisms of affine\nschemes. Assume the equivalent assumption of\nLemma <REF_0001> hold\nand that moreover for any morphism of affines <MATH_0002> the map\n<MATH_0003>\nis a submersive map of topological spaces\n(Topology, Definition <REF_0002>).\nThen our family of morphisms is a universal effective epimorphism\nin the category of schemes.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-universal-effective-epimorphism}",
+        "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+        "REF_0001": "\\ref{lemma-universal-effective-epimorphism-affine}",
+        "MATH_0002": "$Y \\to X$",
+        "MATH_0003": "$$\n\\coprod X_i \\times_X Y \\longrightarrow Y\n$$",
+        "REF_0002": "\\ref{topology-definition-submersive}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0EUD:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy Lemma <REF_0001>\nit suffices to base change our family of morphisms\nby <MATH_0001> with <MATH_0002> affine. Set <MATH_0003>.\nLet <MATH_0004> be a scheme and let <MATH_0005> be a family of morphisms\nsuch that <MATH_0006>\non <MATH_0007>. Note that <MATH_0008> as a set is the coequalizer\nof the two maps from <MATH_0009> to <MATH_0010>.\nNamely, surjectivity by the affine case of\nLemma <REF_0002>\nand injectivity by Lemma <REF_0003>.\nHence there is a set map of underlying sets <MATH_0011>\ncompatible with the maps <MATH_0012>. By the second condition of\nthe lemma we see that <MATH_0013> is continuous!\nThus if <MATH_0014> and <MATH_0015> is an affine open\nneighbourhood of <MATH_0016>, then we can find an affine open\n<MATH_0017> such that <MATH_0018>.\nSetting <MATH_0019>\nwe can use the result proved in\nLemma <REF_0004>\nto see that <MATH_0020> comes from a unique\nmorphism of affine schemes <MATH_0021> agreeing with <MATH_0022>\nas morphisms of schemes for all <MATH_0023>. Glueing these <MATH_0024>\n(see Schemes, Section <REF_0005>)\ngives a morphism <MATH_0025> as desired.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-check-universal-effective-epimorphism-affine}",
+        "MATH_0001": "$Y \\to X$",
+        "MATH_0002": "$Y$",
+        "MATH_0003": "$Y_i = X_i \\times_X Y$",
+        "MATH_0004": "$T$",
+        "MATH_0005": "$h_i : Y_i \\to T$",
+        "MATH_0006": "$h_i \\circ \\text{pr}_1 = h_j \\circ \\text{pr}_2$",
+        "MATH_0007": "$Y_i \\times_Y Y_j$",
+        "MATH_0008": "$Y$",
+        "MATH_0009": "$\\coprod Y_i \\times_Y Y_j$",
+        "MATH_0010": "$\\coprod Y_i$",
+        "REF_0002": "\\ref{lemma-universal-effective-epimorphism-surjective}",
+        "REF_0003": "\\ref{lemma-equiv-fibre-product}",
+        "MATH_0011": "$h : Y \\to T$",
+        "MATH_0012": "$h_i$",
+        "MATH_0013": "$h$",
+        "MATH_0014": "$y \\in Y$",
+        "MATH_0015": "$U \\subset T$",
+        "MATH_0016": "$h(y)$",
+        "MATH_0017": "$V \\subset Y$",
+        "MATH_0018": "$h(V) \\subset U$",
+        "MATH_0019": "$V_i = Y_i \\times_Y V = X_i \\times_X V$",
+        "REF_0004": "\\ref{lemma-universal-effective-epimorphism-affine}",
+        "MATH_0020": "$h|_V : V \\to U \\subset T$",
+        "MATH_0021": "$h_V : V \\to U$",
+        "MATH_0022": "$h_i|_{V_i}$",
+        "MATH_0023": "$i$",
+        "MATH_0024": "$h_V$",
+        "REF_0005": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0025": "$Y \\to T$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03N0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a fpqc covering.\nSuppose that for each <MATH_0002> we have an open subset <MATH_0003>\nsuch that for all <MATH_0004> we have\n<MATH_0005> as open\nsubsets of <MATH_0006>. Then there exists a unique open subset\n<MATH_0007> such that <MATH_0008> for each <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-open-fpqc-covering}",
+        "MATH_0001": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0002": "$i$",
+        "MATH_0003": "$W_i \\subset T_i$",
+        "MATH_0004": "$i, j \\in I$",
+        "MATH_0005": "$\\text{pr}_0^{-1}(W_i) = \\text{pr}_1^{-1}(W_j)$",
+        "MATH_0006": "$T_i \\times_T T_j$",
+        "MATH_0007": "$W \\subset T$",
+        "MATH_0008": "$W_i = f_i^{-1}(W)$",
+        "MATH_0009": "$i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03N0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nApply\nLemma <REF_0001>\nto the map <MATH_0001>.\nIt implies there exists a subset <MATH_0002> such that\n<MATH_0003> for each <MATH_0004>, namely <MATH_0005>.\nTo see that <MATH_0006> is open we may work Zariski locally on <MATH_0007>.\nHence we may assume that <MATH_0008> is affine. Using Topologies, Definition\n<REF_0002> we may choose\na standard fpqc covering <MATH_0009> which refines\n<MATH_0010>. Let <MATH_0011> and\n<MATH_0012> be as in\nSites, Definition <REF_0003>.\nThen <MATH_0013>.\nThus we may assume <MATH_0014> is a standard fpqc covering.\nIn this case we may apply\nMorphisms, Lemma <REF_0004>\nto the morphism <MATH_0015> to conclude that <MATH_0016> is open.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-equiv-fibre-product}",
+        "MATH_0001": "$\\coprod_{i \\in I} T_i \\to T$",
+        "MATH_0002": "$W \\subset T$",
+        "MATH_0003": "$W_i = f_i^{-1}(W)$",
+        "MATH_0004": "$i$",
+        "MATH_0005": "$W = \\bigcup f_i(W_i)$",
+        "MATH_0006": "$W$",
+        "MATH_0007": "$T$",
+        "MATH_0008": "$T$",
+        "REF_0002": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0009": "$\\{g_j : V_j \\to T\\}_{j \\in J}$",
+        "MATH_0010": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0011": "$\\alpha : J \\to I$",
+        "MATH_0012": "$h_j : V_j \\to T_{\\alpha(j)}$",
+        "REF_0003": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0013": "$g_j^{-1}(W) = h_j^{-1}(W_{\\alpha(j)})$",
+        "MATH_0014": "$\\{f_i : T_i \\to T\\}$",
+        "REF_0004": "\\ref{morphisms-lemma-fpqc-quotient-topology}",
+        "MATH_0015": "$\\coprod T_i \\to T$",
+        "MATH_0016": "$W$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023Q:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nThen <MATH_0002> is a universal effective epimorphism\nin the category of schemes, see\nSites, Definition <REF_0002>.\nIn other words, every representable functor on the category of schemes\nsatisfies the sheaf condition for the fpqc topology, see\nTopologies, Definition <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-universal-effective-epimorphisms}",
+        "MATH_0001": "$\\{T_i \\to T\\}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0002": "$\\{T_i \\to T\\}$",
+        "REF_0002": "\\ref{sites-definition-universal-effective-epimorphisms}",
+        "REF_0003": "\\ref{topologies-definition-sheaf-property-fpqc}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023Q:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a scheme. We have to show the following:\nGiven morphisms <MATH_0002>\nsuch that <MATH_0003>\nthere exists a unique morphism <MATH_0004> which restricts\nto <MATH_0005> on each <MATH_0006>.\nIn other words, we have to show that the functor\n<MATH_0007> satisfies\nthe sheaf property for the fpqc topology.\n\n<STRUCT_0002><STRUCT_0003>\nIf <MATH_0008> is a Zariski covering, then this follows from\nSchemes, Lemma <REF_0001>.\nThus Topologies, Lemma <REF_0002>\nreduces us to the case of a covering <MATH_0009>\ngiven by a single surjective flat morphism of affines.\n\n<STRUCT_0004><STRUCT_0005>\nFirst proof. By Lemma <REF_0003>\nwe have the sheaf condition for quasi-coherent modules\nfor <MATH_0010>. By Lemma <REF_0004>\nthe morphism <MATH_0011> is universally submersive.\nHence we may apply Lemma <REF_0005>\nto see that <MATH_0012> is a universal effective epimorphism.\n\n<STRUCT_0006><STRUCT_0007>\nSecond proof. Let <MATH_0013> be the faithfully flat ring map\ncorresponding to our surjective flat morphism <MATH_0014>.\nLet <MATH_0015> be a morphism\nsuch that <MATH_0016>\nas morphisms <MATH_0017>.\nBy Lemma <REF_0006> we see that\nas a map on the underlying\nsets <MATH_0018> is of the form <MATH_0019> for some\n(set theoretic) map <MATH_0020>.\nBy Morphisms, Lemma <REF_0007>\nand the fact that <MATH_0021> is continuous we see that <MATH_0022>\nis continuous.\n\n<STRUCT_0008><STRUCT_0009>\nPick <MATH_0023>.\nChoose <MATH_0024> affine open containing <MATH_0025>.\nSay <MATH_0026>.\nBy the above we may choose an <MATH_0027> such that\n<MATH_0028>.\nThe restriction of <MATH_0029> to <MATH_0030> into <MATH_0031>\ncorresponds to a ring map <MATH_0032>. The two induced\nring maps <MATH_0033> are equal\nby assumption on <MATH_0034>.\nNote that <MATH_0035> is faithfully flat.\nBy Lemma <REF_0008> the equalizer of\nthe two arrows <MATH_0036> is <MATH_0037>.\nWe conclude that <MATH_0038> factors uniquely through a map <MATH_0039>.\nThis map in turn gives a morphism of schemes <MATH_0040>,\nsee Schemes, Lemma <REF_0009>.\n\n<STRUCT_0010><STRUCT_0011>\nWhat have we proved so far? We have shown that for any prime\n<MATH_0041>, there exists a standard affine open\n<MATH_0042> such that the morphism\n<MATH_0043> factors uniquely\nthrough some morphism of schemes <MATH_0044>. We omit the\nverification that these morphisms glue to the desired\nmorphism <MATH_0045>.\n<STRUCT_0012>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\varphi_i : T_i \\to S$",
+        "MATH_0003": "$\\varphi_i|_{T_i \\times_T T_j} = \\varphi_j|_{T_i \\times_T T_j}$",
+        "MATH_0004": "$T \\to S$",
+        "MATH_0005": "$\\varphi_i$",
+        "MATH_0006": "$T_i$",
+        "MATH_0007": "$h_S = \\Mor_{\\Sch}( - , S)$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0008": "$\\{T_i \\to T\\}$",
+        "REF_0001": "\\ref{schemes-lemma-glue}",
+        "REF_0002": "\\ref{topologies-lemma-sheaf-property-fpqc}",
+        "MATH_0009": "$\\{X \\to Y\\}$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "REF_0003": "\\ref{lemma-sheaf-condition-holds}",
+        "MATH_0010": "$\\{X \\to Y\\}$",
+        "REF_0004": "\\ref{lemma-open-fpqc-covering}",
+        "MATH_0011": "$X \\to Y$",
+        "REF_0005": "\\ref{lemma-universal-effective-epimorphism}",
+        "MATH_0012": "$\\{X \\to Y\\}$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0013": "$R \\to A$",
+        "MATH_0014": "$\\pi : X \\to Y$",
+        "MATH_0015": "$f : X \\to S$",
+        "MATH_0016": "$f \\circ \\text{pr}_1 = f \\circ \\text{pr}_2$",
+        "MATH_0017": "$X \\times_Y X = \\Spec(A \\otimes_R A) \\to S$",
+        "REF_0006": "\\ref{lemma-equiv-fibre-product}",
+        "MATH_0018": "$f$",
+        "MATH_0019": "$f = g \\circ \\pi$",
+        "MATH_0020": "$g : \\Spec(R) \\to S$",
+        "REF_0007": "\\ref{morphisms-lemma-fpqc-quotient-topology}",
+        "MATH_0021": "$f$",
+        "MATH_0022": "$g$",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "MATH_0023": "$y \\in Y = \\Spec(R)$",
+        "MATH_0024": "$U \\subset S$",
+        "MATH_0025": "$g(y)$",
+        "MATH_0026": "$U = \\Spec(B)$",
+        "MATH_0027": "$r \\in R$",
+        "MATH_0028": "$y \\in D(r) \\subset g^{-1}(U)$",
+        "MATH_0029": "$f$",
+        "MATH_0030": "$\\pi^{-1}(D(r))$",
+        "MATH_0031": "$U$",
+        "MATH_0032": "$B \\to A_r$",
+        "MATH_0033": "$B \\to A_r \\otimes_{R_r} A_r = (A \\otimes_R A)_r$",
+        "MATH_0034": "$f$",
+        "MATH_0035": "$R_r \\to A_r$",
+        "REF_0008": "\\ref{lemma-ff-exact}",
+        "MATH_0036": "$A_r \\to A_r \\otimes_{R_r} A_r$",
+        "MATH_0037": "$R_r$",
+        "MATH_0038": "$B \\to A_r$",
+        "MATH_0039": "$B \\to R_r$",
+        "MATH_0040": "$D(r) \\to U \\to S$",
+        "REF_0009": "\\ref{schemes-lemma-morphism-into-affine}",
+        "STRUCT_0010": "\\medskip",
+        "STRUCT_0011": "\\noindent",
+        "MATH_0041": "$\\mathfrak p \\subset R$",
+        "MATH_0042": "$D(r) \\subset \\Spec(R)$",
+        "MATH_0043": "$f|_{\\pi^{-1}(D(r))} : \\pi^{-1}(D(r)) \\to S$",
+        "MATH_0044": "$D(r) \\to S$",
+        "MATH_0045": "$\\Spec(R) \\to S$",
+        "STRUCT_0012": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0BMN:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider schemes <MATH_0001> and morphisms <MATH_0002> and\na morphism <MATH_0003> with <MATH_0004>. Set\n<MATH_0005>. If there exists an\nfpqc covering <MATH_0006> such that\n<STRUCT_0002>\n<STRUCT_0003> for all <MATH_0007> the morphism <MATH_0008>\nis the coequalizer of <MATH_0009>\nand <MATH_0010>, and\n<STRUCT_0004> for all <MATH_0011> and <MATH_0012> the morphism\n<MATH_0013>\nis the coequalizer of\n<MATH_0014> and\n<MATH_0015>\n<STRUCT_0005>\nthen <MATH_0016> is the coequalizer of <MATH_0017> and <MATH_0018>.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-coequalizer-fpqc-local}",
+        "MATH_0001": "$X, Y, Z$",
+        "MATH_0002": "$a, b : X \\to Y$",
+        "MATH_0003": "$c : Y \\to Z$",
+        "MATH_0004": "$c \\circ a = c \\circ b$",
+        "MATH_0005": "$d = c \\circ a = c \\circ b$",
+        "MATH_0006": "$\\{Z_i \\to Z\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0007": "$i$",
+        "MATH_0008": "$Y \\times_{c, Z} Z_i \\to Z_i$",
+        "MATH_0009": "$(a, 1) : X \\times_{d, Z} Z_i \\to Y \\times_{c, Z} Z_i$",
+        "MATH_0010": "$(b, 1) : X \\times_{d, Z} Z_i \\to Y \\times_{c, Z} Z_i$",
+        "STRUCT_0004": "\\item",
+        "MATH_0011": "$i$",
+        "MATH_0012": "$i'$",
+        "MATH_0013": "$Y \\times_{c, Z} (Z_i \\times_Z Z_{i'}) \\to (Z_i \\times_Z Z_{i'})$",
+        "MATH_0014": "$(a, 1) : X \\times_{d, Z} (Z_i \\times_Z Z_{i'}) \\to\nY \\times_{c, Z} (Z_i \\times_Z Z_{i'})$",
+        "MATH_0015": "$(b, 1) : X \\times_{d, Z} (Z_i \\times_Z Z_{i'}) \\to\nY \\times_{c, Z} (Z_i \\times_Z Z_{i'})$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0016": "$c$",
+        "MATH_0017": "$a$",
+        "MATH_0018": "$b$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0BMN:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNamely, for a scheme <MATH_0001> a morphism <MATH_0002> is the same thing as\na collection of morphism <MATH_0003> which agree on overlaps by\nLemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$Z \\to T$",
+        "MATH_0003": "$Z_i \\to T$",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent of finiteness and smoothness properties of morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-finiteness-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:coherent-lemma-affine-base-change",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nAssume <MATH_0004> is affine.\nIn this case <MATH_0005> is\na quasi-coherent sheaf, and for every base change diagram\n(<REF_0001>)\nwe have\n<MATH_0006>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-affine-base-change}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$f_*\\mathcal{F} \\cong Rf_*\\mathcal{F}$",
+        "REF_0001": "\\ref{equation-base-change-diagram}",
+        "MATH_0006": "$$\ng^*f_*\\mathcal{F} = f'_*(g')^*\\mathcal{F}.\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-affine-base-change",
+      "requested_tag": "02KG"
+    },
+    {
+      "context_id": "reference:constructions-section-spec",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Relative spectrum as a functor<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-spec}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "constructions-section-spec",
+      "requested_tag": "01LQ"
+    },
+    {
+      "context_id": "reference:descent-lemma-ff-exact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> is faithfully flat, see\nAlgebra, Definition <REF_0001>.\nThen for any <MATH_0002>-module <MATH_0003> the extended cochain complex\n(<REF_0002>) is exact.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-ff-exact}",
+        "MATH_0001": "$R \\to A$",
+        "REF_0001": "\\ref{algebra-definition-flat}",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$M$",
+        "REF_0002": "\\ref{equation-extended-complex}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-ff-exact",
+      "requested_tag": "023M"
+    },
+    {
+      "context_id": "reference:descent-lemma-sheaf-condition-holds",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004>.\nThe functor defined in (<REF_0001>)\nsatisfies the sheaf condition with respect to any <MATH_0005>-covering\n<MATH_0006> of any scheme <MATH_0007> over <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-sheaf-condition-holds}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_S$",
+        "MATH_0004": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0] smooth,\n\\linebreak[0] syntomic, \\linebreak[0] fppf, \\linebreak[0] fpqc\\}$",
+        "REF_0001": "\\ref{equation-quasi-coherent-presheaf}",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0007": "$T$",
+        "MATH_0008": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-sheaf-condition-holds",
+      "requested_tag": "03DT"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-fpqc-quotient-topology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a quasi-compact, surjective, flat morphism.\nA subset <MATH_0002> is open (resp.<SPACE_0001>closed) if and only\n<MATH_0003> is open (resp.<SPACE_0002>closed). In other words, <MATH_0004> is\na submersive morphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-quotient-topology}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[Expose VIII, Corollaire 4.3]{SGA1} and\n\\cite[IV, Corollaire 2.3.12]{EGA}\n\\end{reference}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$T \\subset Y$",
+        "SPACE_0001": "\\ ",
+        "MATH_0003": "$f^{-1}(T)$",
+        "SPACE_0002": "\\ ",
+        "MATH_0004": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-fpqc-quotient-topology",
+      "requested_tag": "02JY"
+    },
+    {
+      "context_id": "reference:schemes-lemma-glue",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nGiven any glueing data of locally ringed spaces there\nexists a locally ringed space <MATH_0001> and open subspaces\n<MATH_0002> together with isomorphisms\n<MATH_0003> of locally ringed spaces such that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004>,\n<STRUCT_0004> <MATH_0005>, and\n<STRUCT_0005> <MATH_0006>.\n<STRUCT_0006>\nThe locally ringed space <MATH_0007> is characterized by the following\nmapping properties: Given a locally ringed space <MATH_0008> we have\n<MATH_0009>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-glue}",
+        "LOCKED_0002": "\\begin{slogan}\nIf you have two locally ringed spaces, and a subspace of the first one\nis isomorphic to a subspace of the other, then you can glue them together\ninto one big locally ringed space.\n\\end{slogan}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$U_i \\subset X$",
+        "MATH_0003": "$\\varphi_i : X_i \\to U_i$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$X=\\bigcup_{i\\in I} U_i$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$\\varphi_i(U_{ij}) = U_i \\cap U_j$",
+        "STRUCT_0005": "\\item",
+        "MATH_0006": "$\\varphi_{ij} =\n\\varphi_j^{-1}|_{U_i \\cap U_j} \\circ \\varphi_i|_{U_{ij}}$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0007": "$X$",
+        "MATH_0008": "$Y$",
+        "MATH_0009": "\\begin{eqnarray*}\n\\Mor(X, Y) & = & \\{ (f_i)_{i\\in I} \\mid\nf_i : X_i \\to Y, \\ f_j \\circ \\varphi_{ij} = f_i|_{U_{ij}}\\} \\\\\nf & \\mapsto & (f|_{U_i} \\circ \\varphi_i)_{i \\in I} \\\\\n\\Mor(Y, X) & = &\n\\left\\{\n\\begin{matrix}\n\\text{open covering }Y = \\bigcup\\nolimits_{i \\in I} V_i\\text{ and }\n(g_i : V_i \\to X_i)_{i \\in I}\n\\text{ such that}\\\\\ng_i^{-1}(U_{ij}) = V_i \\cap V_j\n\\text{ and }\ng_j|_{V_i \\cap V_j} = \\varphi_{ij} \\circ g_i|_{V_i \\cap V_j}\n\\end{matrix}\n\\right\\} \\\\\ng & \\mapsto &\nV_i = g^{-1}(U_i), \\ g_i = \\varphi_i^{-1} \\circ g|_{V_i}\n\\end{eqnarray*}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-glue",
+      "requested_tag": "01JB"
+    },
+    {
+      "context_id": "reference:schemes-lemma-morphism-into-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a locally ringed space.\nLet <MATH_0002> be an affine scheme.\nThe map\n<MATH_0003>\nwhich maps <MATH_0004> to <MATH_0005> (on global sections) is bijective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-morphism-into-affine}",
+        "LOCKED_0002": "\\begin{reference}\nA reference for this fact is \\cite[II, Err 1, Prop. 1.8.1]{EGA}\nwhere it is attributed to J. Tate.\n\\end{reference}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$Y$",
+        "MATH_0003": "$$\n\\Mor(X, Y)\n\\longrightarrow\n\\Hom(\\Gamma(Y, \\mathcal{O}_Y), \\Gamma(X, \\mathcal{O}_X))\n$$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$f^\\sharp$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-morphism-into-affine",
+      "requested_tag": "01I1"
+    },
+    {
+      "context_id": "reference:schemes-lemma-points-fibre-product",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be morphisms of schemes\nwith the same target. Points <MATH_0003> of <MATH_0004> are in bijective\ncorrespondence to quadruples\n<MATH_0005>\nwhere <MATH_0006>, <MATH_0007>, <MATH_0008> are points with\n<MATH_0009>, <MATH_0010> and <MATH_0011> is a prime ideal\nof the ring <MATH_0012>.\nThe residue field of <MATH_0013> corresponds to\nthe residue field of the prime <MATH_0014>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-points-fibre-product}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$g : Y \\to S$",
+        "MATH_0003": "$z$",
+        "MATH_0004": "$X \\times_S Y$",
+        "MATH_0005": "$$\n(x, y, s, \\mathfrak p)\n$$",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$y \\in Y$",
+        "MATH_0008": "$s \\in S$",
+        "MATH_0009": "$f(x) = s$",
+        "MATH_0010": "$g(y) = s$",
+        "MATH_0011": "$\\mathfrak p$",
+        "MATH_0012": "$\\kappa(x) \\otimes_{\\kappa(s)} \\kappa(y)$",
+        "MATH_0013": "$z$",
+        "MATH_0014": "$\\mathfrak p$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-points-fibre-product",
+      "requested_tag": "01JT"
+    },
+    {
+      "context_id": "reference:schemes-section-glueing-schemes",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Glueing schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-glueing-schemes}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-section-glueing-schemes",
+      "requested_tag": "01JA"
+    },
+    {
+      "context_id": "reference:sites-definition-morphism-coverings",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a family\nof morphisms of <MATH_0003> with fixed target.\nLet <MATH_0004> be another.\n<STRUCT_0002>\n<STRUCT_0003>\nA <TEXTITOPEN_0001>morphism of families of maps with fixed target\nof <MATH_0005> from  <MATH_0006> to <MATH_0007><TEXTITCLOSE_0001>,\nor simply a <TEXTITOPEN_0002>morphism from <MATH_0008> to <MATH_0009><TEXTITCLOSE_0002>\nis given by a morphism <MATH_0010>, a map of sets\n<MATH_0011> and for each <MATH_0012>\na morphism <MATH_0013> such that the diagram\n<MATH_0014>\nis commutative.\n<STRUCT_0004> In the special case that <MATH_0015> and <MATH_0016> is the identity\nwe call <MATH_0017> a <TEXTITOPEN_0003>refinement<TEXTITCLOSE_0003> of the family <MATH_0018>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-morphism-coverings}",
+        "MATH_0001": "$\\mathcal{C}$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to U\\}_{i\\in I}$",
+        "MATH_0003": "$\\mathcal{C}$",
+        "MATH_0004": "$\\mathcal{V} = \\{V_j \\to V\\}_{j\\in J}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0005": "$\\mathcal{C}$",
+        "MATH_0006": "$\\mathcal{U}$",
+        "MATH_0007": "$\\mathcal{V}$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0008": "$\\mathcal{U}$",
+        "MATH_0009": "$\\mathcal{V}$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0010": "$U \\to V$",
+        "MATH_0011": "$\\alpha : I \\to J$",
+        "MATH_0012": "$i\\in I$",
+        "MATH_0013": "$U_i \\to V_{\\alpha(i)}$",
+        "MATH_0014": "$$\n\\xymatrix{\nU_i \\ar[r] \\ar[d]\n&\nV_{\\alpha(i)} \\ar[d]\n\\\\\nU \\ar[r]\n&\nV\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0015": "$U = V$",
+        "MATH_0016": "$U \\to V$",
+        "MATH_0017": "$\\mathcal{U}$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0018": "$\\mathcal{V}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-definition-morphism-coverings",
+      "requested_tag": "00VT"
+    },
+    {
+      "context_id": "reference:sites-definition-universal-effective-epimorphisms",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category. We say that a family <MATH_0002>\nis an <TEXTITOPEN_0001>effective epimorphism<TEXTITCLOSE_0001> if all the morphisms <MATH_0003> are\nrepresentable (see\nCategories, Definition <REF_0001>),\nand for any <MATH_0004> the sequence\n<MATH_0005>\nis an equalizer diagram. We say that a family <MATH_0006> is a\n<TEXTITOPEN_0002>universal effective epimorphism<TEXTITCLOSE_0002> if for any morphism <MATH_0007>\nthe base change <MATH_0008> is an effective epimorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-universal-effective-epimorphisms}",
+        "MATH_0001": "$\\mathcal{C}$",
+        "MATH_0002": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$U_i \\to U$",
+        "REF_0001": "\\ref{categories-definition-representable-morphism}",
+        "MATH_0004": "$X\\in \\Ob(\\mathcal{C})$",
+        "MATH_0005": "$$\n\\xymatrix{\n\\Mor_\\mathcal{C}(U, X) \\ar[r]\n&\n\\prod\\nolimits_{i \\in I} \\Mor_\\mathcal{C}(U_i, X)\n\\ar@<1ex>[r] \\ar@<-1ex>[r]\n&\n\\prod\\nolimits_{(i, j) \\in I^2} \\Mor_\\mathcal{C}(U_i \\times_U U_j, X)\n}\n$$",
+        "MATH_0006": "$\\{U_i \\to U\\}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0007": "$V \\to U$",
+        "MATH_0008": "$\\{U_i \\times_U V \\to V\\}$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-definition-universal-effective-epimorphisms",
+      "requested_tag": "00WP"
+    },
+    {
+      "context_id": "reference:sites-section-representable-sheaves",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Representable sheaves<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-representable-sheaves}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-section-representable-sheaves",
+      "requested_tag": "00WO"
+    },
+    {
+      "context_id": "reference:topologies-definition-fpqc-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001>fpqc covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is flat and such that for every affine open\n<MATH_0005> there exists <MATH_0006>, a map\n<MATH_0007> and affine opens\n<MATH_0008>, <MATH_0009>\nwith <MATH_0010>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-fpqc-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$U \\subset T$",
+        "MATH_0006": "$n \\geq 0$",
+        "MATH_0007": "$a : \\{1, \\ldots, n\\} \\to I$",
+        "MATH_0008": "$V_j \\subset T_{a(j)}$",
+        "MATH_0009": "$j = 1, \\ldots, n$",
+        "MATH_0010": "$\\bigcup_{j = 1}^n f_{a(j)}(V_j) = U$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-fpqc-covering",
+      "requested_tag": "022B"
+    },
+    {
+      "context_id": "reference:topologies-definition-sheaf-property-fpqc",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a contravariant functor on the category\nof schemes with values in sets.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0002> be a family of morphisms\nof schemes with fixed target.\nWe say that <MATH_0003> <TEXTITOPEN_0001>satisfies the sheaf property for the given family<TEXTITCLOSE_0001>\nif for any collection of elements <MATH_0004> such that\n<MATH_0005>\nthere exists a unique element\n<MATH_0006> such that <MATH_0007> in <MATH_0008>.\n<STRUCT_0004> We say that <MATH_0009> <TEXTITOPEN_0002>satisfies the sheaf property for the\nfpqc topology<TEXTITCLOSE_0002> if it satisfies the sheaf property for any\nfpqc covering.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-sheaf-property-fpqc}",
+        "MATH_0001": "$F$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\{U_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$F$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$\\xi_i \\in F(U_i)$",
+        "MATH_0005": "$\\xi_i|_{U_i \\times_T U_j} = \\xi_j|_{U_i \\times_T U_j}$",
+        "MATH_0006": "$\\xi \\in F(T)$",
+        "MATH_0007": "$\\xi_i = \\xi|_{U_i}$",
+        "MATH_0008": "$F(U_i)$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$F$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-sheaf-property-fpqc",
+      "requested_tag": "022G"
+    },
+    {
+      "context_id": "reference:topologies-lemma-sheaf-property-fpqc",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a contravariant functor on the category\nof schemes with values in sets. Then <MATH_0002> satisfies\nthe sheaf property for the fpqc topology if and only\nif it satisfies\n<STRUCT_0002>\n<STRUCT_0003> the sheaf property for every Zariski covering, and\n<STRUCT_0004> the sheaf property for any standard fpqc covering.\n<STRUCT_0005>\nMoreover, in the presence of (1) property (2) is equivalent to\nproperty\n<STRUCT_0006>\n<ITEMOPEN_0001>(2')<ITEMCLOSE_0001> the sheaf property for <MATH_0003>\nwith <MATH_0004>, <MATH_0005> affine and <MATH_0006> faithfully flat.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-sheaf-property-fpqc}",
+        "MATH_0001": "$F$",
+        "MATH_0002": "$F$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0003": "$\\{V \\to U\\}$",
+        "MATH_0004": "$V$",
+        "MATH_0005": "$U$",
+        "MATH_0006": "$V \\to U$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-sheaf-property-fpqc",
+      "requested_tag": "022H"
+    },
+    {
+      "context_id": "reference:topology-definition-submersive",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a continuous map of topological spaces.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0002> is a <TEXTITOPEN_0001>strict map of topological spaces<TEXTITCLOSE_0001>\nif the induced topology and the quotient topology on <MATH_0003> agree\n(see discussion above).\n<STRUCT_0004> We say <MATH_0004> is <TEXTITOPEN_0002>submersive<TEXTITCLOSE_0002><FOOTNOTEOPEN_0001>This is very different from\nthe notion of a submersion between differential manifolds! It is probably\na good idea to use ``strict and surjective'' instead of ``submersive''.<FOOTNOTECLOSE_0001>\nif <MATH_0005> is surjective and strict.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-submersive}",
+        "MATH_0001": "$f : X \\to Y$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$f(X)$",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$f$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0005": "$f$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topology-definition-submersive",
+      "requested_tag": "0406"
+    }
+  ]
+}

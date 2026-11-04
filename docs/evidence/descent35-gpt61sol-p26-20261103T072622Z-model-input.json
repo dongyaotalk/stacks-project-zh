@@ -1,0 +1,2346 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p26-20261103T072622Z.json",
+    "hash": "sha256:14775548b6f18a6d18624e924ca6d62cfce2e4cff3dfaf0306b4954ba68a656e"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:03DT:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004>.\nThe functor defined in (<REF_0001>)\nsatisfies the sheaf condition with respect to any <MATH_0005>-covering\n<MATH_0006> of any scheme <MATH_0007> over <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_S$",
+        "MATH_0004": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0] smooth,\n\\linebreak[0] syntomic, \\linebreak[0] fppf, \\linebreak[0] fpqc\\}$",
+        "REF_0001": "\\ref{equation-quasi-coherent-presheaf}",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0007": "$T$",
+        "MATH_0008": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 106,
+          "projection_end": 113,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 152,
+          "projection_end": 167,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 200,
+          "projection_end": 208,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 228,
+          "projection_end": 234,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03DT:proof",
+      "source_text": "For <MATH_0001> a <MATH_0002>-covering\nis also a fpqc-covering, see the results in\nTopologies, Lemmas\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.\nHence it suffices to prove the theorem\nfor a fpqc covering. Assume that <MATH_0003>\nis an fpqc covering where <MATH_0004> is given. Suppose that\nwe have a family of sections <MATH_0005>\nsuch that <MATH_0006>.\nWe have to find the correspond section <MATH_0007>.\nWe can reinterpret the <MATH_0008> as a family of maps\n<MATH_0009>\ncompatible with the canonical descent data associated to the\nquasi-coherent sheaves <MATH_0010> and <MATH_0011> on <MATH_0012>.\nHence by Proposition <REF_0006>\nwe see that we may (uniquely) descend\nthese to a map <MATH_0013> which gives\nus our section <MATH_0014>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0] smooth,\n\\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "MATH_0002": "$\\tau$",
+        "REF_0001": "\\ref{topologies-lemma-zariski-etale}",
+        "REF_0002": "\\ref{topologies-lemma-zariski-etale-smooth}",
+        "REF_0003": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic}",
+        "REF_0004": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf}",
+        "REF_0005": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f : T \\to S$",
+        "MATH_0005": "$s_i \\in \\Gamma(T_i , f_i^*f^*\\mathcal{F})$",
+        "MATH_0006": "$s_i|_{T_i \\times_T T_j} = s_j|_{T_i \\times_T T_j}$",
+        "MATH_0007": "$s \\in \\Gamma(T, f^*\\mathcal{F})$",
+        "MATH_0008": "$s_i$",
+        "MATH_0009": "$\\varphi_i : f_i^*\\mathcal{O}_T = \\mathcal{O}_{T_i} \\to f_i^*f^*\\mathcal{F}$",
+        "MATH_0010": "$\\mathcal{O}_T$",
+        "MATH_0011": "$f^*\\mathcal{F}$",
+        "MATH_0012": "$T$",
+        "REF_0006": "\\ref{proposition-fpqc-descent-quasi-coherent}",
+        "MATH_0013": "$\\mathcal{O}_T \\to f^*\\mathcal{F}$",
+        "MATH_0014": "$s$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 30,
+          "projection_end": 38,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 54,
+          "projection_end": 62,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 83,
+          "projection_end": 93,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 211,
+          "projection_end": 224,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 256,
+          "projection_end": 269,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 477,
+          "projection_end": 481,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 514,
+          "projection_end": 523,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 524,
+          "projection_end": 531,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 555,
+          "projection_end": 577,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 703,
+          "projection_end": 706,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03DR:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nWe may in particular make the following definition.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:03DU:statement",
+      "source_text": "Let <MATH_0001>.\nLet <MATH_0002> be a scheme.\nLet <MATH_0003> be a big site containing <MATH_0004>.\nLet <MATH_0005> be a quasi-coherent <MATH_0006>-module.\n<STRUCT_0001>\n<STRUCT_0002> The <TEXTITOPEN_0001>structure sheaf of the big site <MATH_0007><TEXTITCLOSE_0001>\nis the sheaf of rings <MATH_0008> which is\ndenoted <MATH_0009> or <MATH_0010>.\n<STRUCT_0003> If <MATH_0011> or <MATH_0012> the\n<TEXTITOPEN_0002>structure sheaf of the small site<TEXTITCLOSE_0002> <MATH_0013> or <MATH_0014>\nis the sheaf of rings <MATH_0015>\nwhich is denoted <MATH_0016> or <MATH_0017>.\n<STRUCT_0004> The <TEXTITOPEN_0003>sheaf of <MATH_0018>-modules associated to\n<MATH_0019><TEXTITCLOSE_0003> on the big site <MATH_0020>\nis the sheaf of <MATH_0021>-modules\n<MATH_0022>\nwhich is denoted <MATH_0023> (and often simply <MATH_0024>).\n<STRUCT_0005> If <MATH_0025> or <MATH_0026> the\n<TEXTITOPEN_0004>sheaf of <MATH_0027>-modules associated to <MATH_0028><TEXTITCLOSE_0004>\non the small site <MATH_0029> or <MATH_0030> is the sheaf of\n<MATH_0031>-modules <MATH_0032>\nwhich is denoted <MATH_0033> (and often simply <MATH_0034>).\n<STRUCT_0006>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\Sch_\\tau$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0007": "$(\\Sch/S)_\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0008": "$T/S \\mapsto \\Gamma(T, \\mathcal{O}_T)$",
+        "MATH_0009": "$\\mathcal{O}$",
+        "MATH_0010": "$\\mathcal{O}_S$",
+        "STRUCT_0003": "\\item",
+        "MATH_0011": "$\\tau = Zariski$",
+        "MATH_0012": "$\\tau = \\etale$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0013": "$S_{Zar}$",
+        "MATH_0014": "$S_\\etale$",
+        "MATH_0015": "$T/S \\mapsto \\Gamma(T, \\mathcal{O}_T)$",
+        "MATH_0016": "$\\mathcal{O}$",
+        "MATH_0017": "$\\mathcal{O}_S$",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0018": "$\\mathcal{O}$",
+        "MATH_0019": "$\\mathcal{F}$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0020": "$(\\Sch/S)_\\tau$",
+        "MATH_0021": "$\\mathcal{O}$",
+        "MATH_0022": "$(f : T \\to S) \\mapsto \\Gamma(T, f^*\\mathcal{F})$",
+        "MATH_0023": "$\\mathcal{F}^a$",
+        "MATH_0024": "$\\mathcal{F}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0025": "$\\tau = Zariski$",
+        "MATH_0026": "$\\tau = \\etale$",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0027": "$\\mathcal{O}$",
+        "MATH_0028": "$\\mathcal{F}$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0029": "$S_{Zar}$",
+        "MATH_0030": "$S_\\etale$",
+        "MATH_0031": "$\\mathcal{O}$",
+        "MATH_0032": "$(f : T \\to S) \\mapsto \\Gamma(T, f^*\\mathcal{F})$",
+        "MATH_0033": "$\\mathcal{F}^a$",
+        "MATH_0034": "$\\mathcal{F}$",
+        "STRUCT_0006": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 38,
+          "projection_end": 44,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 71,
+          "projection_end": 75,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 148,
+          "projection_end": 154,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure sheaf of the big site",
+          "projection_start": 188,
+          "projection_end": 219,
+          "concept": "structure sheaf of the big site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "sheaf of rings",
+          "projection_start": 239,
+          "projection_end": 253,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure sheaf of the small site",
+          "projection_start": 359,
+          "projection_end": 392,
+          "concept": "structure sheaf of the small site",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "sheaf of rings",
+          "projection_start": 427,
+          "projection_end": 441,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 517,
+          "projection_end": 522,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules associated",
+          "projection_start": 538,
+          "projection_end": 556,
+          "concept": "modules associated",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 583,
+          "projection_end": 587,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 607,
+          "projection_end": 612,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 628,
+          "projection_end": 635,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 757,
+          "projection_end": 762,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules associated",
+          "projection_start": 778,
+          "projection_end": 796,
+          "concept": "modules associated",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 819,
+          "projection_end": 824,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 825,
+          "projection_end": 829,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 864,
+          "projection_end": 869,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 885,
+          "projection_end": 892,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03DR:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nNote how we use the same notation <MATH_0001> in each case.\nNo confusion can really arise from this as by definition the rule\nthat defines the sheaf <MATH_0002> is independent of the site\nwe choose to look at.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{F}^a$",
+        "MATH_0002": "$\\mathcal{F}^a$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "sheaf",
+          "projection_start": 157,
+          "projection_end": 162,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 197,
+          "projection_end": 201,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03FG:statement",
+      "source_text": "In Topologies, Lemma <REF_0001>\nwe have seen that the small Zariski site of a scheme <MATH_0001> is\nequivalent to <MATH_0002> as a topological space in the sense that the\ncategories of sheaves are naturally equivalent. Now that <MATH_0003>\nis also endowed with a structure sheaf <MATH_0004> we see\nthat sheaves of modules on the ringed site <MATH_0005>\nagree with sheaves of modules on the ringed space <MATH_0006>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "REF_0001": "\\ref{topologies-lemma-Zariski-usual}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S_{Zar}$",
+        "MATH_0004": "$\\mathcal{O}$",
+        "MATH_0005": "$(S_{Zar}, \\mathcal{O})$",
+        "MATH_0006": "$(S, \\mathcal{O}_S)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Topologies",
+          "projection_start": 3,
+          "projection_end": 13,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small Zariski site",
+          "projection_start": 54,
+          "projection_end": 72,
+          "concept": "source-phrase-small-zariski-site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 78,
+          "projection_end": 84,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 100,
+          "projection_end": 110,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological space",
+          "projection_start": 131,
+          "projection_end": 148,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 171,
+          "projection_end": 181,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 185,
+          "projection_end": 192,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 207,
+          "projection_end": 217,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure sheaf",
+          "projection_start": 263,
+          "projection_end": 278,
+          "concept": "structure-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 303,
+          "projection_end": 310,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 314,
+          "projection_end": 321,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ringed site",
+          "projection_start": 329,
+          "projection_end": 340,
+          "concept": "source-phrase-ringed-site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 364,
+          "projection_end": 371,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 375,
+          "projection_end": 382,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:070R:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\nEach of the morphisms of sites <MATH_0002> listed in\nTopologies, Section <REF_0001>\nbecomes a morphism of ringed sites. Namely, each of these morphisms of sites\n<MATH_0003>, or\n<MATH_0004> is given by the continuous\nfunctor <MATH_0005>. Hence, given <MATH_0006> we let\n<MATH_0007>\nbe the usual map\n<MATH_0008>.\nSimilarly, the morphism\n<MATH_0009>\nfor <MATH_0010>, see\nTopologies, Lemmas <REF_0002> and\n<REF_0003>,\nbecomes a morphism of ringed topoi because <MATH_0011>.\nHere are some special cases:\n<STRUCT_0001>\n<STRUCT_0002> The morphism of big sites\n<MATH_0012>,\nbecomes a morphism of ringed sites\n<MATH_0013>\nas in Modules on Sites, Definition <REF_0004>.\nSimilarly for the big syntomic, smooth, <ACCENT_0001>tale and Zariski sites.\n<STRUCT_0003> The morphism of small sites\n<MATH_0014>\nbecomes a morphism of ringed sites\n<MATH_0015>\nas in Modules on Sites, Definition <REF_0005>.\nSimilarly for the small Zariski site.\n<STRUCT_0004>\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$f : T \\to S$",
+        "MATH_0002": "$f_{sites}$",
+        "REF_0001": "\\ref{topologies-section-change-topologies}",
+        "MATH_0003": "$f_{sites} : (\\Sch/T)_\\tau \\to (\\Sch/S)_{\\tau'}$",
+        "MATH_0004": "$f_{sites} : (\\Sch/S)_\\tau \\to S_{\\tau'}$",
+        "MATH_0005": "$S'/S \\mapsto T \\times_S S'/S$",
+        "MATH_0006": "$S'/S$",
+        "MATH_0007": "$$\nf_{sites}^\\sharp :\n\\mathcal{O}(S'/S)\n\\longrightarrow\nf_{sites, *}\\mathcal{O}(S'/S) =\n\\mathcal{O}(T \\times_S S'/T)\n$$",
+        "MATH_0008": "$\\text{pr}_{S'}^\\sharp : \\mathcal{O}(S') \\to \\mathcal{O}(T \\times_S S')$",
+        "MATH_0009": "$i_f : \\Sh(T_\\tau) \\to \\Sh((\\Sch/S)_\\tau)$",
+        "MATH_0010": "$\\tau \\in \\{Zar, \\etale\\}$",
+        "REF_0002": "\\ref{topologies-lemma-put-in-T}",
+        "REF_0003": "\\ref{topologies-lemma-put-in-T-etale}",
+        "MATH_0011": "$i_f^{-1}\\mathcal{O} = \\mathcal{O}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0012": "$f_{big} : (\\Sch/X)_{fppf} \\to (\\Sch/Y)_{fppf}$",
+        "MATH_0013": "$$\n(f_{big}, f_{big}^\\sharp) :\n((\\Sch/X)_{fppf}, \\mathcal{O}_X)\n\\longrightarrow\n((\\Sch/Y)_{fppf}, \\mathcal{O}_Y)\n$$",
+        "REF_0004": "\\ref{sites-modules-definition-ringed-site}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0003": "\\item",
+        "MATH_0014": "$f_{small} : X_\\etale \\to Y_\\etale$",
+        "MATH_0015": "$$\n(f_{small}, f_{small}^\\sharp) :\n(X_\\etale, \\mathcal{O}_X)\n\\longrightarrow\n(Y_\\etale, \\mathcal{O}_Y)\n$$",
+        "REF_0005": "\\ref{sites-modules-definition-ringed-site}",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 54,
+          "projection_end": 63,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 67,
+          "projection_end": 72,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 95,
+          "projection_end": 105,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 136,
+          "projection_end": 144,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 155,
+          "projection_end": 160,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 184,
+          "projection_end": 193,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 197,
+          "projection_end": 202,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 258,
+          "projection_end": 265,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 336,
+          "projection_end": 339,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 368,
+          "projection_end": 376,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 410,
+          "projection_end": 420,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism of ringed topoi",
+          "projection_start": 466,
+          "projection_end": 490,
+          "concept": "source-phrase-morphism-of-ringed-topoi",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 573,
+          "projection_end": 581,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 589,
+          "projection_end": 594,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 618,
+          "projection_end": 626,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 637,
+          "projection_end": 642,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 661,
+          "projection_end": 677,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 734,
+          "projection_end": 740,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 742,
+          "projection_end": 747,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 760,
+          "projection_end": 765,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 785,
+          "projection_end": 793,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 797,
+          "projection_end": 802,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 803,
+          "projection_end": 808,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 831,
+          "projection_end": 839,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 850,
+          "projection_end": 855,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 874,
+          "projection_end": 890,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small Zariski site",
+          "projection_start": 933,
+          "projection_end": 951,
+          "concept": "source-phrase-small-zariski-site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03DR:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a scheme. It is clear that given an <MATH_0002>-module on (say)\n<MATH_0003> the pullback to (say) <MATH_0004>\nis just the fppf-sheafification. To see what happens when comparing\nbig and small sites we have the following.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{O}$",
+        "MATH_0003": "$(\\Sch/S)_{Zar}$",
+        "MATH_0004": "$(\\Sch/S)_{fppf}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 35,
+          "projection_end": 41,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 81,
+          "projection_end": 87,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 113,
+          "projection_end": 121,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 219,
+          "projection_end": 224,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 225,
+          "projection_end": 230,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:070S:statement",
+      "source_text": "Let <MATH_0001> be a scheme. Denote\n<MATH_0002>\nthe morphisms of ringed sites of\nRemark <REF_0001>.\nLet <MATH_0003> be a sheaf of <MATH_0004>-modules\nwhich we view a sheaf of <MATH_0005>-modules on <MATH_0006>. Then\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0007> is the <MATH_0008>-sheafification\nof the Zariski sheaf\n<MATH_0009>\non <MATH_0010>, and\n<STRUCT_0003> <MATH_0011> is the\n<ACCENT_0001>tale sheafification of the Zariski sheaf\n<MATH_0012>\non <MATH_0013>.\n<STRUCT_0004>\nLet <MATH_0014> be a sheaf of <MATH_0015>-modules\non <MATH_0016>. Then\n<STRUCT_0005>\n<ITEMOPEN_0001>(3)<ITEMCLOSE_0001> <MATH_0017> is the\n<MATH_0018>-sheafification of the <ACCENT_0002>tale sheaf\n<MATH_0019>\nwhere <MATH_0020>\nis the morphism of ringed small <ACCENT_0003>tale sites of\nRemark <REF_0002>.\n<STRUCT_0006>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$$\n\\begin{matrix}\n\\text{id}_{\\tau, Zar} & : & (\\Sch/S)_\\tau \\to S_{Zar}, &\n\\tau \\in \\{Zar, \\etale, smooth, syntomic, fppf\\} \\\\\n\\text{id}_{\\tau, \\etale} & : &\n(\\Sch/S)_\\tau \\to S_\\etale, &\n\\tau \\in \\{\\etale, smooth, syntomic, fppf\\} \\\\\n\\text{id}_{small, \\etale, Zar} & : & S_\\etale \\to S_{Zar},\n\\end{matrix}\n$$",
+        "REF_0001": "\\ref{remark-change-topologies-ringed}",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\mathcal{O}_S$",
+        "MATH_0005": "$\\mathcal{O}$",
+        "MATH_0006": "$S_{Zar}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0007": "$(\\text{id}_{\\tau, Zar})^*\\mathcal{F}$",
+        "MATH_0008": "$\\tau$",
+        "MATH_0009": "$$\n(f : T \\to S) \\longmapsto \\Gamma(T, f^*\\mathcal{F})\n$$",
+        "MATH_0010": "$(\\Sch/S)_\\tau$",
+        "STRUCT_0003": "\\item",
+        "MATH_0011": "$(\\text{id}_{small, \\etale, Zar})^*\\mathcal{F}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0012": "$$\n(f : T \\to S) \\longmapsto \\Gamma(T, f^*\\mathcal{F})\n$$",
+        "MATH_0013": "$S_\\etale$",
+        "STRUCT_0004": "\\end{enumerate}",
+        "MATH_0014": "$\\mathcal{G}$",
+        "MATH_0015": "$\\mathcal{O}$",
+        "MATH_0016": "$S_\\etale$",
+        "STRUCT_0005": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0017": "$(\\text{id}_{\\tau, \\etale})^*\\mathcal{G}$",
+        "MATH_0018": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0019": "$$\n(f : T \\to S) \\longmapsto \\Gamma(T, f_{small}^*\\mathcal{G})\n$$",
+        "MATH_0020": "$f_{small} : T_\\etale \\to S_\\etale$",
+        "ACCENT_0003": "\\'e",
+        "REF_0002": "\\ref{remark-change-topologies-ringed}",
+        "STRUCT_0006": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 52,
+          "projection_end": 61,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 72,
+          "projection_end": 77,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 121,
+          "projection_end": 126,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 142,
+          "projection_end": 149,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 166,
+          "projection_end": 171,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 187,
+          "projection_end": 194,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 305,
+          "projection_end": 310,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 376,
+          "projection_end": 381,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 412,
+          "projection_end": 417,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 481,
+          "projection_end": 486,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 502,
+          "projection_end": 509,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 633,
+          "projection_end": 638,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 639,
+          "projection_end": 644,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 682,
+          "projection_end": 690,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 701,
+          "projection_end": 706,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 707,
+          "projection_end": 712,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 713,
+          "projection_end": 718,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:070S:proof",
+      "source_text": "Proof of (1). We first note that the result is true when <MATH_0001>\nbecause in that case we have the morphism of topoi\n<MATH_0002>\nsuch that <MATH_0003> as morphisms\n<MATH_0004>, see\nTopologies, Lemmas <REF_0001> and\n<REF_0002>.\nSince pullback is transitive (see\nModules on Sites,\nLemma <REF_0003>)\nwe see that\n<MATH_0005>\nas desired. Hence, by the remark preceding this lemma we see that\n<MATH_0006> is the <MATH_0007>-sheafification of\nthe presheaf <MATH_0008>.\n\n<STRUCT_0001><STRUCT_0002>\nThe proof of (3) is exactly the same as the proof of (1), except that it\nuses\nTopologies, Lemmas <REF_0004> and\n<REF_0005>.\nWe omit the proof of (2).\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\tau = Zar$",
+        "MATH_0002": "$i_f : \\Sh(T_{Zar}) \\to \\Sh((\\Sch/S)_{Zar})$",
+        "MATH_0003": "$\\text{id}_{\\tau, Zar} \\circ i_f = f_{small}$",
+        "MATH_0004": "$T_{Zar} \\to S_{Zar}$",
+        "REF_0001": "\\ref{topologies-lemma-put-in-T}",
+        "REF_0002": "\\ref{topologies-lemma-morphism-big-small}",
+        "REF_0003": "\\ref{sites-modules-lemma-push-pull-composition-modules}",
+        "MATH_0005": "$i_f^*(\\text{id}_{\\tau, Zar})^*\\mathcal{F} = f_{small}^*\\mathcal{F}$",
+        "MATH_0006": "$(\\text{id}_{\\tau, Zar})^*\\mathcal{F}$",
+        "MATH_0007": "$\\tau$",
+        "MATH_0008": "$T \\mapsto \\Gamma(T, f^*\\mathcal{F})$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0004": "\\ref{topologies-lemma-put-in-T-etale}",
+        "REF_0005": "\\ref{topologies-lemma-morphism-big-small-etale}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism of topoi",
+          "projection_start": 102,
+          "projection_end": 119,
+          "concept": "source-phrase-morphism-of-topoi",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 157,
+          "projection_end": 166,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 184,
+          "projection_end": 194,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 236,
+          "projection_end": 244,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "transitive",
+          "projection_start": 248,
+          "projection_end": 258,
+          "concept": "transitive",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 264,
+          "projection_end": 280,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 443,
+          "projection_end": 451,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 570,
+          "projection_end": 580,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03FH:statement",
+      "source_text": "Remark <REF_0001>\nand\nLemma <REF_0002>\nhave the following applications:\n<STRUCT_0001>\n<STRUCT_0002> Let <MATH_0001> be a scheme.\nThe construction <MATH_0002> is\nthe pullback under the morphism of ringed sites\n<MATH_0003>\nor the morphism\n<MATH_0004>.\n<STRUCT_0003> Let <MATH_0005> be a morphism of schemes.\nFor any of the morphisms <MATH_0006> of ringed sites of\nRemark <REF_0003>\nwe have\n<MATH_0007>\nThis follows from (1) and the fact that pullbacks are compatible with\ncompositions of morphisms of ringed sites, see\nModules on Sites,\nLemma <REF_0004>.\n<STRUCT_0004>\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "REF_0001": "\\ref{remark-change-topologies-ringed}",
+        "REF_0002": "\\ref{lemma-compare-sites}",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F} \\mapsto \\mathcal{F}^a$",
+        "MATH_0003": "$\\text{id}_{\\tau, Zar} : ((\\Sch/S)_\\tau, \\mathcal{O})\n\\to (S_{Zar}, \\mathcal{O})$",
+        "MATH_0004": "$\\text{id}_{small, \\etale, Zar} :\n(S_\\etale, \\mathcal{O}) \\to (S_{Zar}, \\mathcal{O})$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$f_{sites}$",
+        "REF_0003": "\\ref{remark-change-topologies-ringed}",
+        "MATH_0007": "$$\n(f^*\\mathcal{F})^a = f_{sites}^*\\mathcal{F}^a.\n$$",
+        "REF_0004": "\\ref{sites-modules-lemma-push-pull-composition-modules}",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 121,
+          "projection_end": 127,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 165,
+          "projection_end": 173,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 184,
+          "projection_end": 192,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 203,
+          "projection_end": 208,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 228,
+          "projection_end": 236,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 285,
+          "projection_end": 293,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 297,
+          "projection_end": 304,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 321,
+          "projection_end": 330,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 353,
+          "projection_end": 358,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullbacks",
+          "projection_start": 440,
+          "projection_end": 449,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "compositions",
+          "projection_start": 470,
+          "projection_end": 482,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 486,
+          "projection_end": 495,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 506,
+          "projection_end": 511,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 517,
+          "projection_end": 533,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03DV:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004>.\n<STRUCT_0001>\n<STRUCT_0002> The sheaf <MATH_0005> is a quasi-coherent\n<MATH_0006>-module on <MATH_0007>, as defined in\nModules on Sites, Definition <REF_0001>.\n<STRUCT_0003> If <MATH_0008> or <MATH_0009>, then the sheaf\n<MATH_0010> is a quasi-coherent <MATH_0011>-module on\n<MATH_0012> or <MATH_0013> as defined in\nModules on Sites, Definition <REF_0002>.\n<STRUCT_0004>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_S$",
+        "MATH_0004": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0005": "$\\mathcal{F}^a$",
+        "MATH_0006": "$\\mathcal{O}$",
+        "MATH_0007": "$(\\Sch/S)_\\tau$",
+        "REF_0001": "\\ref{sites-modules-definition-site-local}",
+        "STRUCT_0003": "\\item",
+        "MATH_0008": "$\\tau = Zariski$",
+        "MATH_0009": "$\\tau = \\etale$",
+        "MATH_0010": "$\\mathcal{F}^a$",
+        "MATH_0011": "$\\mathcal{O}$",
+        "MATH_0012": "$S_{Zar}$",
+        "MATH_0013": "$S_\\etale$",
+        "REF_0002": "\\ref{sites-modules-definition-site-local}",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 77,
+          "projection_end": 83,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 134,
+          "projection_end": 139,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 184,
+          "projection_end": 190,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 221,
+          "projection_end": 237,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 316,
+          "projection_end": 321,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 366,
+          "projection_end": 372,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 417,
+          "projection_end": 433,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03DV:proof",
+      "source_text": "Let <MATH_0001> be a Zariski covering such that we have exact sequences\n<MATH_0002>\nfor some index sets <MATH_0003> and <MATH_0004>. This is possible by the definition\nof a quasi-coherent sheaf on a ringed space\n(See Modules, Definition <REF_0001>).\n\n<STRUCT_0001><STRUCT_0002>\nProof of (1). Let <MATH_0005>.\nIt is clear that <MATH_0006> also\nsits in an exact sequence\n<MATH_0007>\nHence <MATH_0008> is quasi-coherent by Modules on Sites,\nLemma <REF_0002>.\n\n<STRUCT_0003><STRUCT_0004>\nProof of (2). Let <MATH_0009>.\nIt is clear that <MATH_0010> also sits\nin an exact sequence\n<MATH_0011>\nHence <MATH_0012> is quasi-coherent by Modules on Sites,\nLemma <REF_0003>.\nThe case <MATH_0013> is similar (actually, it is really\ntautological since the corresponding ringed topoi agree).\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\{S_i \\to S\\}$",
+        "MATH_0002": "$$\n\\bigoplus\\nolimits_{k \\in K_i} \\mathcal{O}_{S_i} \\longrightarrow\n\\bigoplus\\nolimits_{j \\in J_i} \\mathcal{O}_{S_i} \\longrightarrow\n\\mathcal{F}|_{S_i} \\longrightarrow 0\n$$",
+        "MATH_0003": "$K_i$",
+        "MATH_0004": "$J_i$",
+        "REF_0001": "\\ref{modules-definition-quasi-coherent}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0005": "$\\tau \\in \\{Zariski, \\linebreak[0] fppf, \\linebreak[0]\n\\etale, \\linebreak[0] smooth, \\linebreak[0] syntomic\\}$",
+        "MATH_0006": "$\\mathcal{F}^a|_{(\\Sch/S_i)_\\tau}$",
+        "MATH_0007": "$$\n\\bigoplus\\nolimits_{k \\in K_i} \\mathcal{O}|_{(\\Sch/S_i)_\\tau}\n\\longrightarrow\n\\bigoplus\\nolimits_{j \\in J_i} \\mathcal{O}|_{(\\Sch/S_i)_\\tau}\n\\longrightarrow\n\\mathcal{F}^a|_{(\\Sch/S_i)_\\tau} \\longrightarrow 0\n$$",
+        "MATH_0008": "$\\mathcal{F}^a$",
+        "REF_0002": "\\ref{sites-modules-lemma-local-final-object}",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0009": "$\\tau = \\etale$",
+        "MATH_0010": "$\\mathcal{F}^a|_{(S_i)_\\etale}$",
+        "MATH_0011": "$$\n\\bigoplus\\nolimits_{k \\in K_i} \\mathcal{O}|_{(S_i)_\\etale}\n\\longrightarrow\n\\bigoplus\\nolimits_{j \\in J_i} \\mathcal{O}|_{(S_i)_\\etale}\n\\longrightarrow\n\\mathcal{F}^a|_{(S_i)_\\etale} \\longrightarrow 0\n$$",
+        "MATH_0012": "$\\mathcal{F}^a$",
+        "REF_0003": "\\ref{sites-modules-lemma-local-final-object}",
+        "MATH_0013": "$\\tau = Zariski$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 21,
+          "projection_end": 37,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "exact sequences",
+          "projection_start": 56,
+          "projection_end": 71,
+          "concept": "exact-sequence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 99,
+          "projection_end": 103,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 173,
+          "projection_end": 193,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 217,
+          "projection_end": 224,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "exact sequence",
+          "projection_start": 353,
+          "projection_end": 367,
+          "concept": "exact-sequence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 419,
+          "projection_end": 435,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "exact sequence",
+          "projection_start": 558,
+          "projection_end": 572,
+          "concept": "exact-sequence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules on Sites",
+          "projection_start": 624,
+          "projection_end": 640,
+          "concept": "source-phrase-modules-on-sites",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:03DR:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nConsider the functor\n",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_S$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DT:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nFor <MATH_0001> a <MATH_0002>-covering\nis also a fpqc-covering, see the results in\nTopologies, Lemmas\n<REF_0001>,\n<REF_0002>,\n<REF_0003>,\n<REF_0004>, and\n<REF_0005>.\nHence it suffices to prove the theorem\nfor a fpqc covering. Assume that <MATH_0003>\nis an fpqc covering where <MATH_0004> is given. Suppose that\nwe have a family of sections <MATH_0005>\nsuch that <MATH_0006>.\nWe have to find the correspond section <MATH_0007>.\nWe can reinterpret the <MATH_0008> as a family of maps\n<MATH_0009>\ncompatible with the canonical descent data associated to the\nquasi-coherent sheaves <MATH_0010> and <MATH_0011> on <MATH_0012>.\nHence by Proposition <REF_0006>\nwe see that we may (uniquely) descend\nthese to a map <MATH_0013> which gives\nus our section <MATH_0014>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0] smooth,\n\\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "MATH_0002": "$\\tau$",
+        "REF_0001": "\\ref{topologies-lemma-zariski-etale}",
+        "REF_0002": "\\ref{topologies-lemma-zariski-etale-smooth}",
+        "REF_0003": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic}",
+        "REF_0004": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf}",
+        "REF_0005": "\\ref{topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f : T \\to S$",
+        "MATH_0005": "$s_i \\in \\Gamma(T_i , f_i^*f^*\\mathcal{F})$",
+        "MATH_0006": "$s_i|_{T_i \\times_T T_j} = s_j|_{T_i \\times_T T_j}$",
+        "MATH_0007": "$s \\in \\Gamma(T, f^*\\mathcal{F})$",
+        "MATH_0008": "$s_i$",
+        "MATH_0009": "$\\varphi_i : f_i^*\\mathcal{O}_T = \\mathcal{O}_{T_i} \\to f_i^*f^*\\mathcal{F}$",
+        "MATH_0010": "$\\mathcal{O}_T$",
+        "MATH_0011": "$f^*\\mathcal{F}$",
+        "MATH_0012": "$T$",
+        "REF_0006": "\\ref{proposition-fpqc-descent-quasi-coherent}",
+        "MATH_0013": "$\\mathcal{O}_T \\to f^*\\mathcal{F}$",
+        "MATH_0014": "$s$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DT:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004>.\nThe functor defined in (<REF_0001>)\nsatisfies the sheaf condition with respect to any <MATH_0005>-covering\n<MATH_0006> of any scheme <MATH_0007> over <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-sheaf-condition-holds}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_S$",
+        "MATH_0004": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0] smooth,\n\\linebreak[0] syntomic, \\linebreak[0] fppf, \\linebreak[0] fpqc\\}$",
+        "REF_0001": "\\ref{equation-quasi-coherent-presheaf}",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0007": "$T$",
+        "MATH_0008": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DR:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe may in particular make the following definition.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DU:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nLet <MATH_0002> be a scheme.\nLet <MATH_0003> be a big site containing <MATH_0004>.\nLet <MATH_0005> be a quasi-coherent <MATH_0006>-module.\n<STRUCT_0002>\n<STRUCT_0003> The <TEXTITOPEN_0001>structure sheaf of the big site <MATH_0007><TEXTITCLOSE_0001>\nis the sheaf of rings <MATH_0008> which is\ndenoted <MATH_0009> or <MATH_0010>.\n<STRUCT_0004> If <MATH_0011> or <MATH_0012> the\n<TEXTITOPEN_0002>structure sheaf of the small site<TEXTITCLOSE_0002> <MATH_0013> or <MATH_0014>\nis the sheaf of rings <MATH_0015>\nwhich is denoted <MATH_0016> or <MATH_0017>.\n<STRUCT_0005> The <TEXTITOPEN_0003>sheaf of <MATH_0018>-modules associated to\n<MATH_0019><TEXTITCLOSE_0003> on the big site <MATH_0020>\nis the sheaf of <MATH_0021>-modules\n<MATH_0022>\nwhich is denoted <MATH_0023> (and often simply <MATH_0024>).\n<STRUCT_0006> If <MATH_0025> or <MATH_0026> the\n<TEXTITOPEN_0004>sheaf of <MATH_0027>-modules associated to <MATH_0028><TEXTITCLOSE_0004>\non the small site <MATH_0029> or <MATH_0030> is the sheaf of\n<MATH_0031>-modules <MATH_0032>\nwhich is denoted <MATH_0033> (and often simply <MATH_0034>).\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-structure-sheaf}",
+        "MATH_0001": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\Sch_\\tau$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0007": "$(\\Sch/S)_\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0008": "$T/S \\mapsto \\Gamma(T, \\mathcal{O}_T)$",
+        "MATH_0009": "$\\mathcal{O}$",
+        "MATH_0010": "$\\mathcal{O}_S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0011": "$\\tau = Zariski$",
+        "MATH_0012": "$\\tau = \\etale$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0013": "$S_{Zar}$",
+        "MATH_0014": "$S_\\etale$",
+        "MATH_0015": "$T/S \\mapsto \\Gamma(T, \\mathcal{O}_T)$",
+        "MATH_0016": "$\\mathcal{O}$",
+        "MATH_0017": "$\\mathcal{O}_S$",
+        "STRUCT_0005": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0018": "$\\mathcal{O}$",
+        "MATH_0019": "$\\mathcal{F}$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0020": "$(\\Sch/S)_\\tau$",
+        "MATH_0021": "$\\mathcal{O}$",
+        "MATH_0022": "$(f : T \\to S) \\mapsto \\Gamma(T, f^*\\mathcal{F})$",
+        "MATH_0023": "$\\mathcal{F}^a$",
+        "MATH_0024": "$\\mathcal{F}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0025": "$\\tau = Zariski$",
+        "MATH_0026": "$\\tau = \\etale$",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0027": "$\\mathcal{O}$",
+        "MATH_0028": "$\\mathcal{F}$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0029": "$S_{Zar}$",
+        "MATH_0030": "$S_\\etale$",
+        "MATH_0031": "$\\mathcal{O}$",
+        "MATH_0032": "$(f : T \\to S) \\mapsto \\Gamma(T, f^*\\mathcal{F})$",
+        "MATH_0033": "$\\mathcal{F}^a$",
+        "MATH_0034": "$\\mathcal{F}$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DR:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote how we use the same notation <MATH_0001> in each case.\nNo confusion can really arise from this as by definition the rule\nthat defines the sheaf <MATH_0002> is independent of the site\nwe choose to look at.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{F}^a$",
+        "MATH_0002": "$\\mathcal{F}^a$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03FG:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn Topologies, Lemma <REF_0001>\nwe have seen that the small Zariski site of a scheme <MATH_0001> is\nequivalent to <MATH_0002> as a topological space in the sense that the\ncategories of sheaves are naturally equivalent. Now that <MATH_0003>\nis also endowed with a structure sheaf <MATH_0004> we see\nthat sheaves of modules on the ringed site <MATH_0005>\nagree with sheaves of modules on the ringed space <MATH_0006>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-Zariski-site-space}",
+        "REF_0001": "\\ref{topologies-lemma-Zariski-usual}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$S_{Zar}$",
+        "MATH_0004": "$\\mathcal{O}$",
+        "MATH_0005": "$(S_{Zar}, \\mathcal{O})$",
+        "MATH_0006": "$(S, \\mathcal{O}_S)$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:070R:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nEach of the morphisms of sites <MATH_0002> listed in\nTopologies, Section <REF_0001>\nbecomes a morphism of ringed sites. Namely, each of these morphisms of sites\n<MATH_0003>, or\n<MATH_0004> is given by the continuous\nfunctor <MATH_0005>. Hence, given <MATH_0006> we let\n<MATH_0007>\nbe the usual map\n<MATH_0008>.\nSimilarly, the morphism\n<MATH_0009>\nfor <MATH_0010>, see\nTopologies, Lemmas <REF_0002> and\n<REF_0003>,\nbecomes a morphism of ringed topoi because <MATH_0011>.\nHere are some special cases:\n<STRUCT_0002>\n<STRUCT_0003> The morphism of big sites\n<MATH_0012>,\nbecomes a morphism of ringed sites\n<MATH_0013>\nas in Modules on Sites, Definition <REF_0004>.\nSimilarly for the big syntomic, smooth, <ACCENT_0001>tale and Zariski sites.\n<STRUCT_0004> The morphism of small sites\n<MATH_0014>\nbecomes a morphism of ringed sites\n<MATH_0015>\nas in Modules on Sites, Definition <REF_0005>.\nSimilarly for the small Zariski site.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-change-topologies-ringed}",
+        "MATH_0001": "$f : T \\to S$",
+        "MATH_0002": "$f_{sites}$",
+        "REF_0001": "\\ref{topologies-section-change-topologies}",
+        "MATH_0003": "$f_{sites} : (\\Sch/T)_\\tau \\to (\\Sch/S)_{\\tau'}$",
+        "MATH_0004": "$f_{sites} : (\\Sch/S)_\\tau \\to S_{\\tau'}$",
+        "MATH_0005": "$S'/S \\mapsto T \\times_S S'/S$",
+        "MATH_0006": "$S'/S$",
+        "MATH_0007": "$$\nf_{sites}^\\sharp :\n\\mathcal{O}(S'/S)\n\\longrightarrow\nf_{sites, *}\\mathcal{O}(S'/S) =\n\\mathcal{O}(T \\times_S S'/T)\n$$",
+        "MATH_0008": "$\\text{pr}_{S'}^\\sharp : \\mathcal{O}(S') \\to \\mathcal{O}(T \\times_S S')$",
+        "MATH_0009": "$i_f : \\Sh(T_\\tau) \\to \\Sh((\\Sch/S)_\\tau)$",
+        "MATH_0010": "$\\tau \\in \\{Zar, \\etale\\}$",
+        "REF_0002": "\\ref{topologies-lemma-put-in-T}",
+        "REF_0003": "\\ref{topologies-lemma-put-in-T-etale}",
+        "MATH_0011": "$i_f^{-1}\\mathcal{O} = \\mathcal{O}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0012": "$f_{big} : (\\Sch/X)_{fppf} \\to (\\Sch/Y)_{fppf}$",
+        "MATH_0013": "$$\n(f_{big}, f_{big}^\\sharp) :\n((\\Sch/X)_{fppf}, \\mathcal{O}_X)\n\\longrightarrow\n((\\Sch/Y)_{fppf}, \\mathcal{O}_Y)\n$$",
+        "REF_0004": "\\ref{sites-modules-definition-ringed-site}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0014": "$f_{small} : X_\\etale \\to Y_\\etale$",
+        "MATH_0015": "$$\n(f_{small}, f_{small}^\\sharp) :\n(X_\\etale, \\mathcal{O}_X)\n\\longrightarrow\n(Y_\\etale, \\mathcal{O}_Y)\n$$",
+        "REF_0005": "\\ref{sites-modules-definition-ringed-site}",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DR:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a scheme. It is clear that given an <MATH_0002>-module on (say)\n<MATH_0003> the pullback to (say) <MATH_0004>\nis just the fppf-sheafification. To see what happens when comparing\nbig and small sites we have the following.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{O}$",
+        "MATH_0003": "$(\\Sch/S)_{Zar}$",
+        "MATH_0004": "$(\\Sch/S)_{fppf}$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:070S:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Denote\n<MATH_0002>\nthe morphisms of ringed sites of\nRemark <REF_0001>.\nLet <MATH_0003> be a sheaf of <MATH_0004>-modules\nwhich we view a sheaf of <MATH_0005>-modules on <MATH_0006>. Then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is the <MATH_0008>-sheafification\nof the Zariski sheaf\n<MATH_0009>\non <MATH_0010>, and\n<STRUCT_0004> <MATH_0011> is the\n<ACCENT_0001>tale sheafification of the Zariski sheaf\n<MATH_0012>\non <MATH_0013>.\n<STRUCT_0005>\nLet <MATH_0014> be a sheaf of <MATH_0015>-modules\non <MATH_0016>. Then\n<STRUCT_0006>\n<ITEMOPEN_0001>(3)<ITEMCLOSE_0001> <MATH_0017> is the\n<MATH_0018>-sheafification of the <ACCENT_0002>tale sheaf\n<MATH_0019>\nwhere <MATH_0020>\nis the morphism of ringed small <ACCENT_0003>tale sites of\nRemark <REF_0002>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-compare-sites}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$$\n\\begin{matrix}\n\\text{id}_{\\tau, Zar} & : & (\\Sch/S)_\\tau \\to S_{Zar}, &\n\\tau \\in \\{Zar, \\etale, smooth, syntomic, fppf\\} \\\\\n\\text{id}_{\\tau, \\etale} & : &\n(\\Sch/S)_\\tau \\to S_\\etale, &\n\\tau \\in \\{\\etale, smooth, syntomic, fppf\\} \\\\\n\\text{id}_{small, \\etale, Zar} & : & S_\\etale \\to S_{Zar},\n\\end{matrix}\n$$",
+        "REF_0001": "\\ref{remark-change-topologies-ringed}",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\mathcal{O}_S$",
+        "MATH_0005": "$\\mathcal{O}$",
+        "MATH_0006": "$S_{Zar}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0007": "$(\\text{id}_{\\tau, Zar})^*\\mathcal{F}$",
+        "MATH_0008": "$\\tau$",
+        "MATH_0009": "$$\n(f : T \\to S) \\longmapsto \\Gamma(T, f^*\\mathcal{F})\n$$",
+        "MATH_0010": "$(\\Sch/S)_\\tau$",
+        "STRUCT_0004": "\\item",
+        "MATH_0011": "$(\\text{id}_{small, \\etale, Zar})^*\\mathcal{F}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0012": "$$\n(f : T \\to S) \\longmapsto \\Gamma(T, f^*\\mathcal{F})\n$$",
+        "MATH_0013": "$S_\\etale$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0014": "$\\mathcal{G}$",
+        "MATH_0015": "$\\mathcal{O}$",
+        "MATH_0016": "$S_\\etale$",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0017": "$(\\text{id}_{\\tau, \\etale})^*\\mathcal{G}$",
+        "MATH_0018": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0019": "$$\n(f : T \\to S) \\longmapsto \\Gamma(T, f_{small}^*\\mathcal{G})\n$$",
+        "MATH_0020": "$f_{small} : T_\\etale \\to S_\\etale$",
+        "ACCENT_0003": "\\'e",
+        "REF_0002": "\\ref{remark-change-topologies-ringed}",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:070S:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nProof of (1). We first note that the result is true when <MATH_0001>\nbecause in that case we have the morphism of topoi\n<MATH_0002>\nsuch that <MATH_0003> as morphisms\n<MATH_0004>, see\nTopologies, Lemmas <REF_0001> and\n<REF_0002>.\nSince pullback is transitive (see\nModules on Sites,\nLemma <REF_0003>)\nwe see that\n<MATH_0005>\nas desired. Hence, by the remark preceding this lemma we see that\n<MATH_0006> is the <MATH_0007>-sheafification of\nthe presheaf <MATH_0008>.\n\n<STRUCT_0002><STRUCT_0003>\nThe proof of (3) is exactly the same as the proof of (1), except that it\nuses\nTopologies, Lemmas <REF_0004> and\n<REF_0005>.\nWe omit the proof of (2).\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\tau = Zar$",
+        "MATH_0002": "$i_f : \\Sh(T_{Zar}) \\to \\Sh((\\Sch/S)_{Zar})$",
+        "MATH_0003": "$\\text{id}_{\\tau, Zar} \\circ i_f = f_{small}$",
+        "MATH_0004": "$T_{Zar} \\to S_{Zar}$",
+        "REF_0001": "\\ref{topologies-lemma-put-in-T}",
+        "REF_0002": "\\ref{topologies-lemma-morphism-big-small}",
+        "REF_0003": "\\ref{sites-modules-lemma-push-pull-composition-modules}",
+        "MATH_0005": "$i_f^*(\\text{id}_{\\tau, Zar})^*\\mathcal{F} = f_{small}^*\\mathcal{F}$",
+        "MATH_0006": "$(\\text{id}_{\\tau, Zar})^*\\mathcal{F}$",
+        "MATH_0007": "$\\tau$",
+        "MATH_0008": "$T \\mapsto \\Gamma(T, f^*\\mathcal{F})$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0004": "\\ref{topologies-lemma-put-in-T-etale}",
+        "REF_0005": "\\ref{topologies-lemma-morphism-big-small-etale}",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03FH:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nRemark <REF_0001>\nand\nLemma <REF_0002>\nhave the following applications:\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme.\nThe construction <MATH_0002> is\nthe pullback under the morphism of ringed sites\n<MATH_0003>\nor the morphism\n<MATH_0004>.\n<STRUCT_0004> Let <MATH_0005> be a morphism of schemes.\nFor any of the morphisms <MATH_0006> of ringed sites of\nRemark <REF_0003>\nwe have\n<MATH_0007>\nThis follows from (1) and the fact that pullbacks are compatible with\ncompositions of morphisms of ringed sites, see\nModules on Sites,\nLemma <REF_0004>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-change-topologies-ringed-sites}",
+        "REF_0001": "\\ref{remark-change-topologies-ringed}",
+        "REF_0002": "\\ref{lemma-compare-sites}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F} \\mapsto \\mathcal{F}^a$",
+        "MATH_0003": "$\\text{id}_{\\tau, Zar} : ((\\Sch/S)_\\tau, \\mathcal{O})\n\\to (S_{Zar}, \\mathcal{O})$",
+        "MATH_0004": "$\\text{id}_{small, \\etale, Zar} :\n(S_\\etale, \\mathcal{O}) \\to (S_{Zar}, \\mathcal{O})$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$f_{sites}$",
+        "REF_0003": "\\ref{remark-change-topologies-ringed}",
+        "MATH_0007": "$$\n(f^*\\mathcal{F})^a = f_{sites}^*\\mathcal{F}^a.\n$$",
+        "REF_0004": "\\ref{sites-modules-lemma-push-pull-composition-modules}",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DV:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module.\nLet <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> The sheaf <MATH_0005> is a quasi-coherent\n<MATH_0006>-module on <MATH_0007>, as defined in\nModules on Sites, Definition <REF_0001>.\n<STRUCT_0004> If <MATH_0008> or <MATH_0009>, then the sheaf\n<MATH_0010> is a quasi-coherent <MATH_0011>-module on\n<MATH_0012> or <MATH_0013> as defined in\nModules on Sites, Definition <REF_0002>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-quasi-coherent-gives-quasi-coherent}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_S$",
+        "MATH_0004": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\mathcal{F}^a$",
+        "MATH_0006": "$\\mathcal{O}$",
+        "MATH_0007": "$(\\Sch/S)_\\tau$",
+        "REF_0001": "\\ref{sites-modules-definition-site-local}",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$\\tau = Zariski$",
+        "MATH_0009": "$\\tau = \\etale$",
+        "MATH_0010": "$\\mathcal{F}^a$",
+        "MATH_0011": "$\\mathcal{O}$",
+        "MATH_0012": "$S_{Zar}$",
+        "MATH_0013": "$S_\\etale$",
+        "REF_0002": "\\ref{sites-modules-definition-site-local}",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03DV:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a Zariski covering such that we have exact sequences\n<MATH_0002>\nfor some index sets <MATH_0003> and <MATH_0004>. This is possible by the definition\nof a quasi-coherent sheaf on a ringed space\n(See Modules, Definition <REF_0001>).\n\n<STRUCT_0002><STRUCT_0003>\nProof of (1). Let <MATH_0005>.\nIt is clear that <MATH_0006> also\nsits in an exact sequence\n<MATH_0007>\nHence <MATH_0008> is quasi-coherent by Modules on Sites,\nLemma <REF_0002>.\n\n<STRUCT_0004><STRUCT_0005>\nProof of (2). Let <MATH_0009>.\nIt is clear that <MATH_0010> also sits\nin an exact sequence\n<MATH_0011>\nHence <MATH_0012> is quasi-coherent by Modules on Sites,\nLemma <REF_0003>.\nThe case <MATH_0013> is similar (actually, it is really\ntautological since the corresponding ringed topoi agree).\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\{S_i \\to S\\}$",
+        "MATH_0002": "$$\n\\bigoplus\\nolimits_{k \\in K_i} \\mathcal{O}_{S_i} \\longrightarrow\n\\bigoplus\\nolimits_{j \\in J_i} \\mathcal{O}_{S_i} \\longrightarrow\n\\mathcal{F}|_{S_i} \\longrightarrow 0\n$$",
+        "MATH_0003": "$K_i$",
+        "MATH_0004": "$J_i$",
+        "REF_0001": "\\ref{modules-definition-quasi-coherent}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0005": "$\\tau \\in \\{Zariski, \\linebreak[0] fppf, \\linebreak[0]\n\\etale, \\linebreak[0] smooth, \\linebreak[0] syntomic\\}$",
+        "MATH_0006": "$\\mathcal{F}^a|_{(\\Sch/S_i)_\\tau}$",
+        "MATH_0007": "$$\n\\bigoplus\\nolimits_{k \\in K_i} \\mathcal{O}|_{(\\Sch/S_i)_\\tau}\n\\longrightarrow\n\\bigoplus\\nolimits_{j \\in J_i} \\mathcal{O}|_{(\\Sch/S_i)_\\tau}\n\\longrightarrow\n\\mathcal{F}^a|_{(\\Sch/S_i)_\\tau} \\longrightarrow 0\n$$",
+        "MATH_0008": "$\\mathcal{F}^a$",
+        "REF_0002": "\\ref{sites-modules-lemma-local-final-object}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0009": "$\\tau = \\etale$",
+        "MATH_0010": "$\\mathcal{F}^a|_{(S_i)_\\etale}$",
+        "MATH_0011": "$$\n\\bigoplus\\nolimits_{k \\in K_i} \\mathcal{O}|_{(S_i)_\\etale}\n\\longrightarrow\n\\bigoplus\\nolimits_{j \\in J_i} \\mathcal{O}|_{(S_i)_\\etale}\n\\longrightarrow\n\\mathcal{F}^a|_{(S_i)_\\etale} \\longrightarrow 0\n$$",
+        "MATH_0012": "$\\mathcal{F}^a$",
+        "REF_0003": "\\ref{sites-modules-lemma-local-final-object}",
+        "MATH_0013": "$\\tau = Zariski$",
+        "STRUCT_0006": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0GN7:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>.\nEach of the functors <MATH_0003>\nof Definition <REF_0001>\n<MATHSEG_0001>or<MATHSEG_0002>\nis fully faithful.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fully-faithful-associated}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "MATH_0003": "$\\mathcal{F} \\mapsto \\mathcal{F}^a$",
+        "REF_0001": "\\ref{definition-structure-sheaf}",
+        "MATHSEG_0001": "$$\n\\QCoh(\\mathcal{O}_S) \\to \\QCoh((\\Sch/S)_\\tau, \\mathcal{O})\n\\quad\\text{",
+        "MATHSEG_0002": "}\\quad\n\\QCoh(\\mathcal{O}_S) \\to \\QCoh(S_\\tau, \\mathcal{O})\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-equation-quasi-coherent-presheaf",
+      "kind": "locked-English-math-reference",
+      "source_text": null,
+      "protected_nodes": {},
+      "protected_math_reference": "\\begin{equation}\n\\label{equation-quasi-coherent-presheaf}\n(\\Sch/S)^{opp} \\longrightarrow \\textit{Ab},\n\\quad\n(f : T \\to S) \\longmapsto \\Gamma(T, f^*\\mathcal{F}).\n\\end{equation}",
+      "requested_label": "descent-equation-quasi-coherent-presheaf",
+      "requested_tag": "03DS"
+    },
+    {
+      "context_id": "reference:descent-proposition-fpqc-descent-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nAny descent datum on quasi-coherent sheaves\nfor <MATH_0003> is effective.\nMoreover, the functor from the category of\nquasi-coherent <MATH_0004>-modules to the category\nof descent data with respect to <MATH_0005> is fully faithful.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-fpqc-descent-quasi-coherent}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{\\varphi_i : U_i \\to S\\}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$\\mathcal{U} = \\{U_i \\to S\\}$",
+        "MATH_0004": "$\\mathcal{O}_S$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "STRUCT_0002": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-proposition-fpqc-descent-quasi-coherent",
+      "requested_tag": "023T"
+    },
+    {
+      "context_id": "reference:modules-definition-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed space.\nLet <MATH_0002> be a sheaf of <MATH_0003>-modules.\nWe say that <MATH_0004> is a <TEXTITOPEN_0001>quasi-coherent\nsheaf of <MATH_0005>-modules<TEXTITCLOSE_0001> if for every\npoint <MATH_0006> there exists an open neighbourhood\n<MATH_0007> such that <MATH_0008>\nis isomorphic to the cokernel of a map\n<MATH_0009>\nThe category of quasi-coherent <MATH_0010>-modules\nis denoted <MATH_0011>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-quasi-coherent}",
+        "MATH_0001": "$(X, \\mathcal{O}_X)$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0005": "$\\mathcal{O}_X$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$x\\in U \\subset X$",
+        "MATH_0008": "$\\mathcal{F}|_U$",
+        "MATH_0009": "$$\n\\bigoplus\\nolimits_{j \\in J}\n\\mathcal{O}_U\n\\longrightarrow\n\\bigoplus\\nolimits_{i \\in I}\n\\mathcal{O}_U\n$$",
+        "MATH_0010": "$\\mathcal{O}_X$",
+        "MATH_0011": "$\\QCoh(\\mathcal{O}_X)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "modules-definition-quasi-coherent",
+      "requested_tag": "01BE"
+    },
+    {
+      "context_id": "reference:sites-modules-definition-ringed-site",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nRinged sites.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>ringed site<TEXTITCLOSE_0001> is a pair <MATH_0001>\nwhere <MATH_0002> is a site and <MATH_0003> is a sheaf of rings\non <MATH_0004>. The sheaf <MATH_0005> is called the\n<TEXTITOPEN_0002>structure sheaf<TEXTITCLOSE_0002> of the ringed site.\n<STRUCT_0004> Let <MATH_0006>, <MATH_0007> be ringed\nsites. A <TEXTITOPEN_0003>morphism of ringed sites<TEXTITCLOSE_0003>\n<MATH_0008>\nis given by a morphism of sites <MATH_0009>\n(see Sites, Definition <REF_0001>)\ntogether with a map of sheaves of rings\n<MATH_0010>, which by adjunction\nis the same thing as a map of sheaves of rings\n<MATH_0011>.\n<STRUCT_0005> Let\n<MATH_0012> and\n<MATH_0013>\nbe morphisms of ringed sites. Then we define\nthe <TEXTITOPEN_0004>composition of morphisms of ringed sites<TEXTITCLOSE_0004>\nby the rule\n<MATH_0014>\nHere we use composition of morphisms of sites defined in\nSites, Definition <REF_0002>\nand <MATH_0015> indicates the morphism of sheaves of\nrings\n<MATH_0016>\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-ringed-site}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0001": "$(\\mathcal{C}, \\mathcal{O})$",
+        "MATH_0002": "$\\mathcal{C}$",
+        "MATH_0003": "$\\mathcal{O}$",
+        "MATH_0004": "$\\mathcal{C}$",
+        "MATH_0005": "$\\mathcal{O}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$(\\mathcal{C}, \\mathcal{O})$",
+        "MATH_0007": "$(\\mathcal{C}', \\mathcal{O}')$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0008": "$$\n(f, f^\\sharp) :\n(\\mathcal{C}, \\mathcal{O})\n\\longrightarrow\n(\\mathcal{C}', \\mathcal{O}')\n$$",
+        "MATH_0009": "$f : \\mathcal{C} \\to \\mathcal{C}'$",
+        "REF_0001": "\\ref{sites-definition-morphism-sites}",
+        "MATH_0010": "$f^\\sharp : f^{-1}\\mathcal{O}' \\to \\mathcal{O}$",
+        "MATH_0011": "$f^\\sharp : \\mathcal{O}' \\to f_*\\mathcal{O}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0012": "$(f, f^\\sharp) :\n(\\mathcal{C}_1, \\mathcal{O}_1) \\to (\\mathcal{C}_2, \\mathcal{O}_2)$",
+        "MATH_0013": "$(g, g^\\sharp) :\n(\\mathcal{C}_2, \\mathcal{O}_2) \\to (\\mathcal{C}_3, \\mathcal{O}_3)$",
+        "TEXTITOPEN_0004": "{\\it ",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0014": "$$\n(g, g^\\sharp) \\circ (f, f^\\sharp) = (g \\circ f, f^\\sharp \\circ g^\\sharp).\n$$",
+        "REF_0002": "\\ref{sites-definition-composition-morphisms-sites}",
+        "MATH_0015": "$f^\\sharp \\circ g^\\sharp$",
+        "MATH_0016": "$$\n\\mathcal{O}_3 \\xrightarrow{g^\\sharp} g_*\\mathcal{O}_2\n\\xrightarrow{g_*f^\\sharp} g_*f_*\\mathcal{O}_1 = (g \\circ f)_*\\mathcal{O}_1\n$$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-modules-definition-ringed-site",
+      "requested_tag": "03AD"
+    },
+    {
+      "context_id": "reference:sites-modules-definition-site-local",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed site.\nLet <MATH_0002> be a sheaf of <MATH_0003>-modules.\nWe will freely use the notions defined in\nDefinition <REF_0001>.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0004> is <TEXTITOPEN_0001>locally free<TEXTITCLOSE_0001>\nif for every object <MATH_0005> of <MATH_0006> there exists a covering\n<MATH_0007> of <MATH_0008> such that each restriction\n<MATH_0009> is a free\n<MATH_0010>-module.\n<STRUCT_0004> We say <MATH_0011> is <TEXTITOPEN_0002>finite locally free<TEXTITCLOSE_0002>\nif for every object <MATH_0012> of <MATH_0013> there exists a covering\n<MATH_0014> of <MATH_0015> such that each restriction\n<MATH_0016> is a finite free\n<MATH_0017>-module.\n<STRUCT_0005> We say <MATH_0018> is <TEXTITOPEN_0003>locally generated by sections<TEXTITCLOSE_0003>\nif for every object <MATH_0019> of <MATH_0020> there exists a covering\n<MATH_0021> of <MATH_0022> such that each restriction\n<MATH_0023> is an\n<MATH_0024>-module generated by global sections.\n<STRUCT_0006> Given <MATH_0025> we sat <MATH_0026> is <TEXTITOPEN_0004>locally generated\nby <MATH_0027> sections<TEXTITCLOSE_0004> if for every object <MATH_0028> of <MATH_0029> there exists\na covering <MATH_0030> of <MATH_0031> such that each\nrestriction <MATH_0032> is an\n<MATH_0033>-module generated by <MATH_0034> global sections.\n<STRUCT_0007> We say <MATH_0035> is <TEXTITOPEN_0005>of finite type<TEXTITCLOSE_0005>\nif for every object <MATH_0036> of <MATH_0037> there exists a covering\n<MATH_0038> of <MATH_0039> such that each restriction\n<MATH_0040> is an\n<MATH_0041>-module generated by finitely many global sections.\n<STRUCT_0008> We say <MATH_0042> is <TEXTITOPEN_0006>quasi-coherent<TEXTITCLOSE_0006>\nif for every object <MATH_0043> of <MATH_0044> there exists a covering\n<MATH_0045> of <MATH_0046> such that each restriction\n<MATH_0047> is an\n<MATH_0048>-module which has a global presentation.\n<STRUCT_0009> We say <MATH_0049> is <TEXTITOPEN_0007>of finite presentation<TEXTITCLOSE_0007>\nif for every object <MATH_0050> of <MATH_0051> there exists a covering\n<MATH_0052> of <MATH_0053> such that each restriction\n<MATH_0054> is an\n<MATH_0055>-module which has a finite global presentation.\n<STRUCT_0010> We say <MATH_0056> is <TEXTITOPEN_0008>coherent<TEXTITCLOSE_0008> if and only if\n<MATH_0057> is of finite type, and for every object\n<MATH_0058> of <MATH_0059> and any <MATH_0060>\nthe kernel of the map\n<MATH_0061>\nis of finite type on <MATH_0062>.\n<STRUCT_0011>\n<STRUCT_0012>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-site-local}",
+        "MATH_0001": "$(\\mathcal{C}, \\mathcal{O})$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}$",
+        "REF_0001": "\\ref{definition-global}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$\\mathcal{F}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$U$",
+        "MATH_0006": "$\\mathcal{C}$",
+        "MATH_0007": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0008": "$\\mathcal{C}$",
+        "MATH_0009": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0010": "$\\mathcal{O}_{U_i}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0011": "$\\mathcal{F}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0012": "$U$",
+        "MATH_0013": "$\\mathcal{C}$",
+        "MATH_0014": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0015": "$\\mathcal{C}$",
+        "MATH_0016": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0017": "$\\mathcal{O}_{U_i}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0018": "$\\mathcal{F}$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0019": "$U$",
+        "MATH_0020": "$\\mathcal{C}$",
+        "MATH_0021": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0022": "$\\mathcal{C}$",
+        "MATH_0023": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0024": "$\\mathcal{O}_{U_i}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0025": "$r \\geq 0$",
+        "MATH_0026": "$\\mathcal{F}$",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0027": "$r$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0028": "$U$",
+        "MATH_0029": "$\\mathcal{C}$",
+        "MATH_0030": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0031": "$\\mathcal{C}$",
+        "MATH_0032": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0033": "$\\mathcal{O}_{U_i}$",
+        "MATH_0034": "$r$",
+        "STRUCT_0007": "\\item",
+        "MATH_0035": "$\\mathcal{F}$",
+        "TEXTITOPEN_0005": "{\\it ",
+        "TEXTITCLOSE_0005": "}",
+        "MATH_0036": "$U$",
+        "MATH_0037": "$\\mathcal{C}$",
+        "MATH_0038": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0039": "$\\mathcal{C}$",
+        "MATH_0040": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0041": "$\\mathcal{O}_{U_i}$",
+        "STRUCT_0008": "\\item",
+        "MATH_0042": "$\\mathcal{F}$",
+        "TEXTITOPEN_0006": "{\\it ",
+        "TEXTITCLOSE_0006": "}",
+        "MATH_0043": "$U$",
+        "MATH_0044": "$\\mathcal{C}$",
+        "MATH_0045": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0046": "$\\mathcal{C}$",
+        "MATH_0047": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0048": "$\\mathcal{O}_{U_i}$",
+        "STRUCT_0009": "\\item",
+        "MATH_0049": "$\\mathcal{F}$",
+        "TEXTITOPEN_0007": "{\\it ",
+        "TEXTITCLOSE_0007": "}",
+        "MATH_0050": "$U$",
+        "MATH_0051": "$\\mathcal{C}$",
+        "MATH_0052": "$\\{U_i \\to U\\}_{i \\in I}$",
+        "MATH_0053": "$\\mathcal{C}$",
+        "MATH_0054": "$\\mathcal{F}|_{\\mathcal{C}/U_i}$",
+        "MATH_0055": "$\\mathcal{O}_{U_i}$",
+        "STRUCT_0010": "\\item",
+        "MATH_0056": "$\\mathcal{F}$",
+        "TEXTITOPEN_0008": "{\\it ",
+        "TEXTITCLOSE_0008": "}",
+        "MATH_0057": "$\\mathcal{F}$",
+        "MATH_0058": "$U$",
+        "MATH_0059": "$\\mathcal{C}$",
+        "MATH_0060": "$s_1, \\ldots, s_n \\in \\mathcal{F}(U)$",
+        "MATH_0061": "$\\bigoplus_{i = 1, \\ldots, n} \\mathcal{O}_U \\to \\mathcal{F}|_U$",
+        "MATH_0062": "$(\\mathcal{C}/U, \\mathcal{O}_U)$",
+        "STRUCT_0011": "\\end{enumerate}",
+        "STRUCT_0012": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-modules-definition-site-local",
+      "requested_tag": "03DL"
+    },
+    {
+      "context_id": "reference:sites-modules-lemma-local-final-object",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>\nbe a ringed topos. Let <MATH_0002> be an <MATH_0003>-module.\nAssume that the site <MATH_0004> has a final object <MATH_0005>.\nThen\n<STRUCT_0002>\n<STRUCT_0003> The following are equivalent\n<STRUCT_0004>\n<STRUCT_0005> <MATH_0006> is locally free,\n<STRUCT_0006> there exists a covering <MATH_0007> in <MATH_0008> such that\neach restriction <MATH_0009> is a locally free\n<MATH_0010>-module, and\n<STRUCT_0007> there exists a covering <MATH_0011> in <MATH_0012> such that\neach restriction <MATH_0013> is a free\n<MATH_0014>-module.\n<STRUCT_0008>\n<STRUCT_0009> The following are equivalent\n<STRUCT_0010>\n<STRUCT_0011> <MATH_0015> is finite locally free,\n<STRUCT_0012> there exists a covering <MATH_0016> in <MATH_0017>\nsuch that each restriction <MATH_0018>\nis a finite locally free <MATH_0019>-module, and\n<STRUCT_0013> there exists a covering <MATH_0020> in <MATH_0021>\nsuch that each restriction <MATH_0022>\nis a finite free <MATH_0023>-module.\n<STRUCT_0014>\n<STRUCT_0015> The following are equivalent\n<STRUCT_0016>\n<STRUCT_0017> <MATH_0024> is locally generated by sections,\n<STRUCT_0018> there exists a covering <MATH_0025> in <MATH_0026>\nsuch that each restriction <MATH_0027>\nis an <MATH_0028>-module locally generated by sections, and\n<STRUCT_0019> there exists a covering <MATH_0029> in <MATH_0030>\nsuch that each restriction <MATH_0031>\nis an <MATH_0032>-module globally generated by sections.\n<STRUCT_0020>\n<STRUCT_0021> Given <MATH_0033>, the following are equivalent\n<STRUCT_0022>\n<STRUCT_0023> <MATH_0034> is locally generated by <MATH_0035> sections,\n<STRUCT_0024> there exists a covering <MATH_0036> in <MATH_0037>\nsuch that each restriction <MATH_0038>\nis an <MATH_0039>-module locally generated by <MATH_0040> sections, and\n<STRUCT_0025> there exists a covering <MATH_0041> in <MATH_0042>\nsuch that each restriction <MATH_0043>\nis an <MATH_0044>-module globally generated by <MATH_0045> sections.\n<STRUCT_0026>\n<STRUCT_0027> The following are equivalent\n<STRUCT_0028>\n<STRUCT_0029> <MATH_0046> is of finite type,\n<STRUCT_0030> there exists a covering <MATH_0047> in <MATH_0048>\nsuch that each restriction <MATH_0049>\nis an <MATH_0050>-module of finite type, and\n<STRUCT_0031> there exists a covering <MATH_0051> in <MATH_0052>\nsuch that each restriction <MATH_0053>\nis an <MATH_0054>-module globally generated by finitely many sections.\n<STRUCT_0032>\n<STRUCT_0033> The following are equivalent\n<STRUCT_0034>\n<STRUCT_0035> <MATH_0055> is quasi-coherent,\n<STRUCT_0036> there exists a covering <MATH_0056> in <MATH_0057>\nsuch that each restriction <MATH_0058>\nis a quasi-coherent <MATH_0059>-module, and\n<STRUCT_0037> there exists a covering <MATH_0060> in <MATH_0061>\nsuch that each restriction <MATH_0062>\nis an <MATH_0063>-module which has a global presentation.\n<STRUCT_0038>\n<STRUCT_0039> The following are equivalent\n<STRUCT_0040>\n<STRUCT_0041> <MATH_0064> is of finite presentation,\n<STRUCT_0042> there exists a covering <MATH_0065> in <MATH_0066>\nsuch that each restriction <MATH_0067>\nis an <MATH_0068>-module of finite presentation, and\n<STRUCT_0043> there exists a covering <MATH_0069> in <MATH_0070>\nsuch that each restriction <MATH_0071>\nis an <MATH_0072>-module has a finite global presentation.\n<STRUCT_0044>\n<STRUCT_0045> The following are equivalent\n<STRUCT_0046>\n<STRUCT_0047> <MATH_0073> is coherent, and\n<STRUCT_0048> there exists a covering <MATH_0074> in <MATH_0075>\nsuch that each restriction <MATH_0076>\nis a coherent <MATH_0077>-module.\n<STRUCT_0049>\n<STRUCT_0050>\n<STRUCT_0051>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-final-object}",
+        "MATH_0001": "$(\\Sh(\\mathcal{C}), \\mathcal{O})$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}$",
+        "MATH_0004": "$\\mathcal{C}$",
+        "MATH_0005": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\begin{enumerate}",
+        "STRUCT_0005": "\\item",
+        "MATH_0006": "$\\mathcal{F}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0007": "$\\{X_i \\to X\\}$",
+        "MATH_0008": "$\\mathcal{C}$",
+        "MATH_0009": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0010": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0007": "\\item",
+        "MATH_0011": "$\\{X_i \\to X\\}$",
+        "MATH_0012": "$\\mathcal{C}$",
+        "MATH_0013": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0014": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\item",
+        "STRUCT_0010": "\\begin{enumerate}",
+        "STRUCT_0011": "\\item",
+        "MATH_0015": "$\\mathcal{F}$",
+        "STRUCT_0012": "\\item",
+        "MATH_0016": "$\\{X_i \\to X\\}$",
+        "MATH_0017": "$\\mathcal{C}$",
+        "MATH_0018": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0019": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0013": "\\item",
+        "MATH_0020": "$\\{X_i \\to X\\}$",
+        "MATH_0021": "$\\mathcal{C}$",
+        "MATH_0022": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0023": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0014": "\\end{enumerate}",
+        "STRUCT_0015": "\\item",
+        "STRUCT_0016": "\\begin{enumerate}",
+        "STRUCT_0017": "\\item",
+        "MATH_0024": "$\\mathcal{F}$",
+        "STRUCT_0018": "\\item",
+        "MATH_0025": "$\\{X_i \\to X\\}$",
+        "MATH_0026": "$\\mathcal{C}$",
+        "MATH_0027": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0028": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0019": "\\item",
+        "MATH_0029": "$\\{X_i \\to X\\}$",
+        "MATH_0030": "$\\mathcal{C}$",
+        "MATH_0031": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0032": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0020": "\\end{enumerate}",
+        "STRUCT_0021": "\\item",
+        "MATH_0033": "$r \\geq 0$",
+        "STRUCT_0022": "\\begin{enumerate}",
+        "STRUCT_0023": "\\item",
+        "MATH_0034": "$\\mathcal{F}$",
+        "MATH_0035": "$r$",
+        "STRUCT_0024": "\\item",
+        "MATH_0036": "$\\{X_i \\to X\\}$",
+        "MATH_0037": "$\\mathcal{C}$",
+        "MATH_0038": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0039": "$\\mathcal{O}_{X_i}$",
+        "MATH_0040": "$r$",
+        "STRUCT_0025": "\\item",
+        "MATH_0041": "$\\{X_i \\to X\\}$",
+        "MATH_0042": "$\\mathcal{C}$",
+        "MATH_0043": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0044": "$\\mathcal{O}_{X_i}$",
+        "MATH_0045": "$r$",
+        "STRUCT_0026": "\\end{enumerate}",
+        "STRUCT_0027": "\\item",
+        "STRUCT_0028": "\\begin{enumerate}",
+        "STRUCT_0029": "\\item",
+        "MATH_0046": "$\\mathcal{F}$",
+        "STRUCT_0030": "\\item",
+        "MATH_0047": "$\\{X_i \\to X\\}$",
+        "MATH_0048": "$\\mathcal{C}$",
+        "MATH_0049": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0050": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0031": "\\item",
+        "MATH_0051": "$\\{X_i \\to X\\}$",
+        "MATH_0052": "$\\mathcal{C}$",
+        "MATH_0053": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0054": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0032": "\\end{enumerate}",
+        "STRUCT_0033": "\\item",
+        "STRUCT_0034": "\\begin{enumerate}",
+        "STRUCT_0035": "\\item",
+        "MATH_0055": "$\\mathcal{F}$",
+        "STRUCT_0036": "\\item",
+        "MATH_0056": "$\\{X_i \\to X\\}$",
+        "MATH_0057": "$\\mathcal{C}$",
+        "MATH_0058": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0059": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0037": "\\item",
+        "MATH_0060": "$\\{X_i \\to X\\}$",
+        "MATH_0061": "$\\mathcal{C}$",
+        "MATH_0062": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0063": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0038": "\\end{enumerate}",
+        "STRUCT_0039": "\\item",
+        "STRUCT_0040": "\\begin{enumerate}",
+        "STRUCT_0041": "\\item",
+        "MATH_0064": "$\\mathcal{F}$",
+        "STRUCT_0042": "\\item",
+        "MATH_0065": "$\\{X_i \\to X\\}$",
+        "MATH_0066": "$\\mathcal{C}$",
+        "MATH_0067": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0068": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0043": "\\item",
+        "MATH_0069": "$\\{X_i \\to X\\}$",
+        "MATH_0070": "$\\mathcal{C}$",
+        "MATH_0071": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0072": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0044": "\\end{enumerate}",
+        "STRUCT_0045": "\\item",
+        "STRUCT_0046": "\\begin{enumerate}",
+        "STRUCT_0047": "\\item",
+        "MATH_0073": "$\\mathcal{F}$",
+        "STRUCT_0048": "\\item",
+        "MATH_0074": "$\\{X_i \\to X\\}$",
+        "MATH_0075": "$\\mathcal{C}$",
+        "MATH_0076": "$\\mathcal{F}|_{\\mathcal{C}/X_i}$",
+        "MATH_0077": "$\\mathcal{O}_{X_i}$",
+        "STRUCT_0049": "\\end{enumerate}",
+        "STRUCT_0050": "\\end{enumerate}",
+        "STRUCT_0051": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-modules-lemma-local-final-object",
+      "requested_tag": "03DN"
+    },
+    {
+      "context_id": "reference:sites-modules-lemma-push-pull-composition-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<MATH_0001> and\n<MATH_0002>\nbe morphisms of ringed topoi.\nThere are canonical isomorphisms of functors\n<MATH_0003> and\n<MATH_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-push-pull-composition-modules}",
+        "MATH_0001": "$(f, f^\\sharp) :\n(\\Sh(\\mathcal{C}_1), \\mathcal{O}_1)\n\\to (\\Sh(\\mathcal{C}_2), \\mathcal{O}_2)$",
+        "MATH_0002": "$(g, g^\\sharp) :\n(\\Sh(\\mathcal{C}_2), \\mathcal{O}_2) \\to\n(\\Sh(\\mathcal{C}_3), \\mathcal{O}_3)$",
+        "MATH_0003": "$(g \\circ f)_* \\cong g_* \\circ f_*$",
+        "MATH_0004": "$(g \\circ f)^* \\cong f^* \\circ g^*$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-modules-lemma-push-pull-composition-modules",
+      "requested_tag": "03D8"
+    },
+    {
+      "context_id": "reference:topologies-lemma-Zariski-usual",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe category of sheaves on <MATH_0001> is equivalent to the\ncategory of sheaves on the underlying topological space of <MATH_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Zariski-usual}",
+        "MATH_0001": "$S_{Zar}$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-Zariski-usual",
+      "requested_tag": "020X"
+    },
+    {
+      "context_id": "reference:topologies-lemma-morphism-big-small",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big Zariski site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> We have <MATH_0004> with <MATH_0005> as in\nLemma <REF_0001> and <MATH_0006> as in\nLemma <REF_0002>.\n<STRUCT_0004> The functor <MATH_0007>,\n<MATH_0008> is continuous and induces\na morphism of sites\n<MATH_0009>\nThe functors <MATH_0010> and <MATH_0011> agree with\nthe usual notions <MATH_0012> and <MATH_0013> if we identify sheaves\non <MATH_0014>, resp.<SPACE_0001><MATH_0015> with sheaves on <MATH_0016>, resp.<SPACE_0002><MATH_0017>\nvia Lemma <REF_0003>.\n<STRUCT_0005> We have a commutative diagram of morphisms of sites\n<MATH_0018>\nso that <MATH_0019> as morphisms of topoi.\n<STRUCT_0006> We have <MATH_0020>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-morphism-big-small}",
+        "MATH_0001": "$\\Sch_{Zar}$",
+        "MATH_0002": "$f : T \\to S$",
+        "MATH_0003": "$\\Sch_{Zar}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$i_f = f_{big} \\circ i_T$",
+        "MATH_0005": "$i_f$",
+        "REF_0001": "\\ref{lemma-put-in-T}",
+        "MATH_0006": "$i_T$",
+        "REF_0002": "\\ref{lemma-at-the-bottom}",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$S_{Zar} \\to T_{Zar}$",
+        "MATH_0008": "$(U \\to S) \\mapsto (U \\times_S T \\to T)$",
+        "MATH_0009": "$$\nf_{small} :\nT_{Zar}\n\\longrightarrow\nS_{Zar}\n$$",
+        "MATH_0010": "$f_{small}^{-1}$",
+        "MATH_0011": "$f_{small, *}$",
+        "MATH_0012": "$f^{-1}$",
+        "MATH_0013": "$f_*$",
+        "MATH_0014": "$T_{Zar}$",
+        "SPACE_0001": "\\ ",
+        "MATH_0015": "$S_{Zar}$",
+        "MATH_0016": "$T$",
+        "SPACE_0002": "\\ ",
+        "MATH_0017": "$S$",
+        "REF_0003": "\\ref{lemma-Zariski-usual}",
+        "STRUCT_0005": "\\item",
+        "MATH_0018": "$$\n\\xymatrix{\nT_{Zar} \\ar[d]_{f_{small}} &\n(\\Sch/T)_{Zar} \\ar[d]^{f_{big}} \\ar[l]^{\\pi_T} \\\\\nS_{Zar} &\n(\\Sch/S)_{Zar} \\ar[l]_{\\pi_S}\n}\n$$",
+        "MATH_0019": "$f_{small} \\circ \\pi_T = \\pi_S \\circ f_{big}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0020": "$f_{small} = \\pi_S \\circ f_{big} \\circ i_T = \\pi_S \\circ i_f$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-morphism-big-small",
+      "requested_tag": "0211"
+    },
+    {
+      "context_id": "reference:topologies-lemma-morphism-big-small-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> We have <MATH_0004> with <MATH_0005> as in\nLemma <REF_0001> and <MATH_0006> as in\nLemma <REF_0002>.\n<STRUCT_0004> The functor <MATH_0007>,\n<MATH_0008> is continuous and induces\na morphism of sites\n<MATH_0009>\nWe have <MATH_0010>.\n<STRUCT_0005> We have a commutative diagram of morphisms of sites\n<MATH_0011>\nso that <MATH_0012> as morphisms of topoi.\n<STRUCT_0006> We have <MATH_0013>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-morphism-big-small-etale}",
+        "MATH_0001": "$\\Sch_\\etale$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f : T \\to S$",
+        "MATH_0003": "$\\Sch_\\etale$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$i_f = f_{big} \\circ i_T$",
+        "MATH_0005": "$i_f$",
+        "REF_0001": "\\ref{lemma-put-in-T-etale}",
+        "MATH_0006": "$i_T$",
+        "REF_0002": "\\ref{lemma-at-the-bottom-etale}",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$S_\\etale \\to T_\\etale$",
+        "MATH_0008": "$(U \\to S) \\mapsto (U \\times_S T \\to T)$",
+        "MATH_0009": "$$\nf_{small} : T_\\etale \\longrightarrow S_\\etale\n$$",
+        "MATH_0010": "$f_{small, *}(\\mathcal{F})(U/S) = \\mathcal{F}(U \\times_S T/T)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0011": "$$\n\\xymatrix{\nT_\\etale \\ar[d]_{f_{small}} &\n(\\Sch/T)_\\etale \\ar[d]^{f_{big}} \\ar[l]^{\\pi_T}\\\\\nS_\\etale &\n(\\Sch/S)_\\etale \\ar[l]_{\\pi_S}\n}\n$$",
+        "MATH_0012": "$f_{small} \\circ \\pi_T = \\pi_S \\circ f_{big}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0013": "$f_{small} = \\pi_S \\circ f_{big} \\circ i_T = \\pi_S \\circ i_f$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-morphism-big-small-etale",
+      "requested_tag": "021I"
+    },
+    {
+      "context_id": "reference:topologies-lemma-put-in-T",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big Zariski site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\nThe functor <MATH_0004>\nis cocontinuous and induces a morphism of topoi\n<MATH_0005>\nFor a sheaf <MATH_0006> on <MATH_0007>\nwe have the formula <MATH_0008>.\nThe functor <MATH_0009> also has a left adjoint <MATH_0010> which commutes\nwith fibre products and equalizers.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-put-in-T}",
+        "MATH_0001": "$\\Sch_{Zar}$",
+        "MATH_0002": "$f : T \\to S$",
+        "MATH_0003": "$\\Sch_{Zar}$",
+        "MATH_0004": "$T_{Zar} \\to (\\Sch/S)_{Zar}$",
+        "MATH_0005": "$$\ni_f :\n\\Sh(T_{Zar})\n\\longrightarrow\n\\Sh((\\Sch/S)_{Zar})\n$$",
+        "MATH_0006": "$\\mathcal{G}$",
+        "MATH_0007": "$(\\Sch/S)_{Zar}$",
+        "MATH_0008": "$(i_f^{-1}\\mathcal{G})(U/T) = \\mathcal{G}(U/S)$",
+        "MATH_0009": "$i_f^{-1}$",
+        "MATH_0010": "$i_{f, !}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-put-in-T",
+      "requested_tag": "020Y"
+    },
+    {
+      "context_id": "reference:topologies-lemma-put-in-T-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a big <ACCENT_0001>tale site.\nLet <MATH_0002> be a morphism in <MATH_0003>.\nThe functor <MATH_0004>\nis cocontinuous and induces a morphism of topoi\n<MATH_0005>\nFor a sheaf <MATH_0006> on <MATH_0007>\nwe have the formula <MATH_0008>.\nThe functor <MATH_0009> also has a left adjoint <MATH_0010> which commutes\nwith fibre products and equalizers.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-put-in-T-etale}",
+        "MATH_0001": "$\\Sch_\\etale$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f : T \\to S$",
+        "MATH_0003": "$\\Sch_\\etale$",
+        "MATH_0004": "$T_\\etale \\to (\\Sch/S)_\\etale$",
+        "MATH_0005": "$$\ni_f :\n\\Sh(T_\\etale)\n\\longrightarrow\n\\Sh((\\Sch/S)_\\etale)\n$$",
+        "MATH_0006": "$\\mathcal{G}$",
+        "MATH_0007": "$(\\Sch/S)_\\etale$",
+        "MATH_0008": "$(i_f^{-1}\\mathcal{G})(U/T) = \\mathcal{G}(U/S)$",
+        "MATH_0009": "$i_f^{-1}$",
+        "MATH_0010": "$i_{f, !}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-put-in-T-etale",
+      "requested_tag": "021F"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny Zariski covering is an <ACCENT_0001>tale covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale",
+      "requested_tag": "0216"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny <ACCENT_0001>tale covering is a smooth covering, and a fortiori,\nany Zariski covering is a smooth covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth",
+      "requested_tag": "0220"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny smooth covering is a syntomic covering, and a fortiori,\nany <ACCENT_0001>tale or Zariski covering is a syntomic covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth-syntomic}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth-syntomic",
+      "requested_tag": "0226"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth-syntomic-fppf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny syntomic covering is an fppf covering, and a fortiori,\nany smooth, <ACCENT_0001>tale, or Zariski covering is an fppf covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth-syntomic-fppf}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth-syntomic-fppf",
+      "requested_tag": "021N"
+    },
+    {
+      "context_id": "reference:topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny fppf covering is an fpqc covering, and a fortiori,\nany syntomic, smooth, <ACCENT_0001>tale or Zariski covering is an fpqc covering.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-zariski-etale-smooth-syntomic-fppf-fpqc}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-zariski-etale-smooth-syntomic-fppf-fpqc",
+      "requested_tag": "022C"
+    },
+    {
+      "context_id": "reference:topologies-section-change-topologies",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Change of topologies<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-change-topologies}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-section-change-topologies",
+      "requested_tag": "03FE"
+    }
+  ]
+}

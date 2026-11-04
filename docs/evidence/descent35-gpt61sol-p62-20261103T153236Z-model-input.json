@@ -1,0 +1,1310 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p62-20261103T153236Z.json",
+    "hash": "sha256:98ad5efc7fd34b23906dfa20248cca3ad8d4003bad5824018a2d3d07fe7518a9"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02VZ:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe families of morphisms with target <MATH_0004>.\nLet <MATH_0005>, <MATH_0006> and\n<MATH_0007> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0001>.\nAssume that for each <MATH_0008> the family\n<MATH_0009> is an fpqc\ncovering of <MATH_0010>. Then the pullback functor\n<MATHSEG_0001>descent data relative to <MATHSEG_0002>descent data relative to <MATHSEG_0003>\nof Lemma <REF_0002> is fully faithful.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\alpha : I \\to J$",
+        "MATH_0006": "$\\text{id} : S \\to S$",
+        "MATH_0007": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0008": "$j \\in J$",
+        "MATH_0009": "$\\{g_i : U_i \\to V_j\\}_{\\alpha(i) = j}$",
+        "MATH_0010": "$V_j$",
+        "MATHSEG_0001": "$$\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{V}\n\\longrightarrow\n\\text{",
+        "MATHSEG_0003": "}\n\\mathcal{U}\n$$",
+        "REF_0002": "\\ref{lemma-pullback-family}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "families of morphisms",
+          "projection_start": 66,
+          "projection_end": 87,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 163,
+          "projection_end": 171,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 187,
+          "projection_end": 191,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 215,
+          "projection_end": 220,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 307,
+          "projection_end": 320,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 346,
+          "projection_end": 354,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 355,
+          "projection_end": 362,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 377,
+          "projection_end": 384,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 416,
+          "projection_end": 423,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 479,
+          "projection_end": 493,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VZ:proof",
+      "source_text": "Consider the morphism of schemes\n<MATH_0001>\nover <MATH_0002> which on the <MATH_0003>th component maps into the <MATH_0004>th component\nvia the morphism <MATH_0005>. We claim that <MATH_0006>\nis an fpqc covering of schemes. Namely, by\nTopologies, Lemma <REF_0001>\nfor each <MATH_0007> the morphism <MATH_0008> is an\nfpqc covering. Thus for every affine open <MATH_0009>\n(which we may think of as an affine open of <MATH_0010>)\nwe can find finitely many affine opens\n<MATH_0011>\n(which we may think of as affine opens of <MATH_0012>)\nsuch that <MATH_0013>.\nThis provides enough affine opens of <MATH_0014> which can be covered by finitely\nmany affine opens of <MATH_0015> so that\nTopologies, Lemma <REF_0002> part (3)\napplies, and the claim follows. Let us write <MATH_0016>,\nresp.<SPACE_0001><MATH_0017> for the category of descent data with respect\nto <MATH_0018>, resp.<SPACE_0002><MATH_0019>, and similarly for <MATH_0020> and <MATH_0021>.\nConsider the diagram\n<MATHSEG_0001>Lemma <MATHSEG_0002>Lemma <MATHSEG_0003>\nThis diagram is commutative, see the proof of\nLemma <REF_0003>.\nThe vertical arrows are equivalences. Hence the lemma follows from\nLemma <REF_0004> which shows the top horizontal arrow\nof the diagram is fully faithful.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$$\ng :\nX = \\coprod\\nolimits_{i \\in I} U_i\n\\longrightarrow\nY = \\coprod\\nolimits_{j \\in J} V_j\n$$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$i$",
+        "MATH_0004": "$\\alpha(i)$",
+        "MATH_0005": "$g_{\\alpha(i)}$",
+        "MATH_0006": "$\\{g : X \\to Y\\}$",
+        "REF_0001": "\\ref{topologies-lemma-disjoint-union-is-fpqc-covering}",
+        "MATH_0007": "$j$",
+        "MATH_0008": "$\\{\\coprod_{\\alpha(i) = j} U_i \\to V_j\\}$",
+        "MATH_0009": "$V \\subset V_j$",
+        "MATH_0010": "$Y$",
+        "MATH_0011": "$W_1, \\ldots, W_n \\subset \\coprod_{\\alpha(i) = j} U_i$",
+        "MATH_0012": "$X$",
+        "MATH_0013": "$V = \\bigcup_{i = 1, \\ldots, n} g(W_i)$",
+        "MATH_0014": "$Y$",
+        "MATH_0015": "$X$",
+        "REF_0002": "\\ref{topologies-lemma-recognize-fpqc-covering}",
+        "MATH_0016": "$DD(X/S)$",
+        "SPACE_0001": "\\ ",
+        "MATH_0017": "$DD(\\mathcal{U})$",
+        "MATH_0018": "$X/S$",
+        "SPACE_0002": "\\ ",
+        "MATH_0019": "$\\mathcal{U}$",
+        "MATH_0020": "$Y/S$",
+        "MATH_0021": "$\\mathcal{V}$",
+        "MATHSEG_0001": "$$\n\\xymatrix{\nDD(Y/S) \\ar[r] & DD(X/S) \\\\\nDD(\\mathcal{V}) \\ar[u]^{\\text{",
+        "MATHSEG_0002": "}\\ref{lemma-family-is-one}} \\ar[r] &\nDD(\\mathcal{U}) \\ar[u]_{\\text{",
+        "MATHSEG_0003": "}\\ref{lemma-family-is-one}}\n}\n$$",
+        "REF_0003": "\\ref{lemma-pullback-family}",
+        "REF_0004": "\\ref{lemma-fully-faithful}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 13,
+          "projection_end": 21,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 25,
+          "projection_end": 32,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 99,
+          "projection_end": 103,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 145,
+          "projection_end": 153,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 199,
+          "projection_end": 212,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 216,
+          "projection_end": 223,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 236,
+          "projection_end": 246,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 290,
+          "projection_end": 298,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 317,
+          "projection_end": 330,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 347,
+          "projection_end": 358,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 400,
+          "projection_end": 411,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 454,
+          "projection_end": 466,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 505,
+          "projection_end": 517,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 578,
+          "projection_end": 590,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 644,
+          "projection_end": 656,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 680,
+          "projection_end": 690,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 813,
+          "projection_end": 821,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 825,
+          "projection_end": 832,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 957,
+          "projection_end": 964,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1025,
+          "projection_end": 1032,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 1036,
+          "projection_end": 1047,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalences",
+          "projection_start": 1108,
+          "projection_end": 1120,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "horizontal",
+          "projection_start": 1188,
+          "projection_end": 1198,
+          "concept": "horizontal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1212,
+          "projection_end": 1219,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 1223,
+          "projection_end": 1237,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VV:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nThe next lemma shows that, in order to check effectiveness,\nwe may always Zariski refine the given family of morphisms\nwith target <MATH_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 113,
+          "projection_end": 132,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VY:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe families of morphisms with target <MATH_0004>.\nLet <MATH_0005>, <MATH_0006> and\n<MATH_0007> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0001>.\nAssume that for each <MATH_0008> the family\n<MATH_0009> is a Zariski covering (see\nTopologies, Definition <REF_0002>)\nof <MATH_0010>. Then the pullback functor\n<MATHSEG_0001>descent data relative to <MATHSEG_0002>descent data relative to <MATHSEG_0003>\nof Lemma <REF_0003> is an equivalence of categories.\nIn particular, the category of schemes over <MATH_0011>\nis equivalent to the category\nof descent data relative to any Zariski covering of <MATH_0012>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\alpha : I \\to J$",
+        "MATH_0006": "$\\text{id} : S \\to S$",
+        "MATH_0007": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0008": "$j \\in J$",
+        "MATH_0009": "$\\{g_i : U_i \\to V_j\\}_{\\alpha(i) = j}$",
+        "REF_0002": "\\ref{topologies-definition-zariski-covering}",
+        "MATH_0010": "$V_j$",
+        "MATHSEG_0001": "$$\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{V}\n\\longrightarrow\n\\text{",
+        "MATHSEG_0003": "}\n\\mathcal{U}\n$$",
+        "REF_0003": "\\ref{lemma-pullback-family}",
+        "MATH_0011": "$S$",
+        "MATH_0012": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "families of morphisms",
+          "projection_start": 66,
+          "projection_end": 87,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 163,
+          "projection_end": 171,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 187,
+          "projection_end": 191,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 215,
+          "projection_end": 220,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 306,
+          "projection_end": 322,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 328,
+          "projection_end": 338,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 388,
+          "projection_end": 396,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 397,
+          "projection_end": 404,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 419,
+          "projection_end": 426,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 458,
+          "projection_end": 465,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 524,
+          "projection_end": 549,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 570,
+          "projection_end": 578,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 582,
+          "projection_end": 589,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 610,
+          "projection_end": 620,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 628,
+          "projection_end": 636,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 640,
+          "projection_end": 647,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 669,
+          "projection_end": 685,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VY:proof",
+      "source_text": "The functor is faithful and fully faithful by\nLemma <REF_0001>.\nLet us indicate how to prove that it is essentially surjective.\nLet <MATH_0001> be a descent datum relative to <MATH_0002>.\nFix <MATH_0003> and set <MATH_0004>.\nFor <MATH_0005> note that there is a canonical morphism\n<MATH_0006>\nHence we can pullback <MATH_0007> by this morphism\nand set <MATH_0008> for <MATH_0009>.\nIn this way we obtain a descent datum <MATH_0010>\nrelative to the Zariski covering\n<MATH_0011>.\nNote that <MATH_0012> is an isomorphism from the open\n<MATH_0013> of <MATH_0014> to the corresponding\nopen of <MATH_0015>. It follows from\nSchemes, Section <REF_0002>\nthat we may glue <MATH_0016> into a scheme\n<MATH_0017> over <MATH_0018>. Moreover, the morphisms <MATH_0019>\nfor <MATH_0020> and <MATH_0021> glue to a morphism\n<MATH_0022>\nsatisfying the cocycle condition (details omitted).\nHence we obtain the desired descent datum\n<MATH_0023> relative to <MATH_0024>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "MATH_0001": "$(X_i, \\varphi_{ii'})$",
+        "MATH_0002": "$\\mathcal{U}$",
+        "MATH_0003": "$j \\in J$",
+        "MATH_0004": "$I_j = \\{i \\in I \\mid \\alpha(i) = j\\}$",
+        "MATH_0005": "$i, i' \\in I_j$",
+        "MATH_0006": "$$\nc_{ii'} : U_i \\times_{g_i, V_j, g_{i'}} U_{i'} \\to U_i \\times_S U_{i'}.\n$$",
+        "MATH_0007": "$\\varphi_{ii'}$",
+        "MATH_0008": "$\\psi_{ii'} = c_{ii'}^*\\varphi_{ii'}$",
+        "MATH_0009": "$i, i' \\in I_j$",
+        "MATH_0010": "$(X_i, \\psi_{ii'})$",
+        "MATH_0011": "$\\{g_i : U_i \\to V_j\\}_{i \\in I_j}$",
+        "MATH_0012": "$\\psi_{ii'}$",
+        "MATH_0013": "$X_{i, U_i \\times_{V_j} U_{i'}}$",
+        "MATH_0014": "$X_i$",
+        "MATH_0015": "$X_{i'}$",
+        "REF_0002": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0016": "$(X_i, \\psi_{ii'})$",
+        "MATH_0017": "$Y_j$",
+        "MATH_0018": "$V_j$",
+        "MATH_0019": "$\\varphi_{ii'}$",
+        "MATH_0020": "$i \\in I_j$",
+        "MATH_0021": "$i' \\in I_{j'}$",
+        "MATH_0022": "$\\varphi_{jj'} : Y_j \\times_S V_{j'} \\to V_j \\times_S Y_{j'}$",
+        "MATH_0023": "$(Y_j, \\varphi_{jj'})$",
+        "MATH_0024": "$\\mathcal{V}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 4,
+          "projection_end": 11,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithful",
+          "projection_start": 15,
+          "projection_end": 23,
+          "concept": "faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 28,
+          "projection_end": 42,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "essentially surjective",
+          "projection_start": 104,
+          "projection_end": 126,
+          "concept": "essentially-surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 149,
+          "projection_end": 156,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical morphism",
+          "projection_start": 262,
+          "projection_end": 280,
+          "concept": "source-phrase-canonical-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 306,
+          "projection_end": 314,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 335,
+          "projection_end": 343,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 405,
+          "projection_end": 412,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Zariski covering",
+          "projection_start": 447,
+          "projection_end": 463,
+          "concept": "source-phrase-zariski-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 505,
+          "projection_end": 516,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 616,
+          "projection_end": 623,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 680,
+          "projection_end": 686,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 731,
+          "projection_end": 740,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 795,
+          "projection_end": 803,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 896,
+          "projection_end": 903,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W0:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe fpqc-coverings of <MATH_0004>.\nIf <MATH_0005> is a refinement of <MATH_0006>,\nthen the pullback functor\n<MATHSEG_0001>descent data relative to <MATHSEG_0002>descent data relative to <MATHSEG_0003>\nis fully faithful.\nIn particular, the category of schemes over <MATH_0007>\nis identified with a full subcategory of the category\nof descent data relative to any fpqc-covering of <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "MATH_0006": "$\\mathcal{V}$",
+        "MATHSEG_0001": "$$\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{V}\n\\longrightarrow\n\\text{",
+        "MATHSEG_0003": "}\n\\mathcal{U}\n$$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 71,
+          "projection_end": 80,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 153,
+          "projection_end": 161,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 162,
+          "projection_end": 169,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 184,
+          "projection_end": 191,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 223,
+          "projection_end": 230,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 266,
+          "projection_end": 280,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 301,
+          "projection_end": 309,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 313,
+          "projection_end": 320,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "full subcategory",
+          "projection_start": 359,
+          "projection_end": 375,
+          "concept": "full-subcategory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 383,
+          "projection_end": 391,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 395,
+          "projection_end": 402,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 429,
+          "projection_end": 437,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W0:proof",
+      "source_text": "Consider the fpqc-covering\n<MATH_0001> of <MATH_0002>.\nIt is a refinement of both <MATH_0003> and <MATH_0004>.\nHence we have a <MATH_0005>-commutative diagram of functors and categories\n<MATH_0006>\nNotation as in the proof of\nLemma <REF_0001> and\ncommutativity by Lemma <REF_0002> part (3).\nHence clearly it suffices to prove the functors\n<MATH_0007> and\n<MATH_0008> are fully faithful.\nThis follows from\nLemma <REF_0003>\nas desired.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{W} = \\{U_i \\times_S V_j \\to S\\}_{(i, j) \\in I \\times J}$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\mathcal{U}$",
+        "MATH_0004": "$\\mathcal{V}$",
+        "MATH_0005": "$2$",
+        "MATH_0006": "$$\n\\xymatrix{\nDD(\\mathcal{V}) \\ar[rd] \\ar[rr] & & DD(\\mathcal{U}) \\ar[ld] \\\\\n& DD(\\mathcal{W}) &\n}\n$$",
+        "REF_0001": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "REF_0002": "\\ref{lemma-pullback-family}",
+        "MATH_0007": "$DD(\\mathcal{V}) \\to DD(\\mathcal{W})$",
+        "MATH_0008": "$DD(\\mathcal{U}) \\to DD(\\mathcal{W})$",
+        "REF_0003": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 18,
+          "projection_end": 26,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 139,
+          "projection_end": 158,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 162,
+          "projection_end": 170,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 175,
+          "projection_end": 185,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 330,
+          "projection_end": 338,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 371,
+          "projection_end": 385,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:040K:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe may factor <MATH_0001> as <MATH_0002>.\nThe first morphism has a section, hence induces an equivalence of\ncategories of descent data by\nLemma <REF_0001>.\nThe second morphism is an fpqc covering\nhence induces a fully faithful functor by Lemma <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$X \\to X'$",
+        "MATH_0002": "$X \\to X \\times_S X' \\to X'$",
+        "REF_0001": "\\ref{lemma-morphism-with-section-equivalence}",
+        "REF_0002": "\\ref{lemma-fully-faithful}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VZ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nConsider the morphism of schemes\n<MATH_0001>\nover <MATH_0002> which on the <MATH_0003>th component maps into the <MATH_0004>th component\nvia the morphism <MATH_0005>. We claim that <MATH_0006>\nis an fpqc covering of schemes. Namely, by\nTopologies, Lemma <REF_0001>\nfor each <MATH_0007> the morphism <MATH_0008> is an\nfpqc covering. Thus for every affine open <MATH_0009>\n(which we may think of as an affine open of <MATH_0010>)\nwe can find finitely many affine opens\n<MATH_0011>\n(which we may think of as affine opens of <MATH_0012>)\nsuch that <MATH_0013>.\nThis provides enough affine opens of <MATH_0014> which can be covered by finitely\nmany affine opens of <MATH_0015> so that\nTopologies, Lemma <REF_0002> part (3)\napplies, and the claim follows. Let us write <MATH_0016>,\nresp.<SPACE_0001><MATH_0017> for the category of descent data with respect\nto <MATH_0018>, resp.<SPACE_0002><MATH_0019>, and similarly for <MATH_0020> and <MATH_0021>.\nConsider the diagram\n<MATHSEG_0001>Lemma <MATHSEG_0002>Lemma <MATHSEG_0003>\nThis diagram is commutative, see the proof of\nLemma <REF_0003>.\nThe vertical arrows are equivalences. Hence the lemma follows from\nLemma <REF_0004> which shows the top horizontal arrow\nof the diagram is fully faithful.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$$\ng :\nX = \\coprod\\nolimits_{i \\in I} U_i\n\\longrightarrow\nY = \\coprod\\nolimits_{j \\in J} V_j\n$$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$i$",
+        "MATH_0004": "$\\alpha(i)$",
+        "MATH_0005": "$g_{\\alpha(i)}$",
+        "MATH_0006": "$\\{g : X \\to Y\\}$",
+        "REF_0001": "\\ref{topologies-lemma-disjoint-union-is-fpqc-covering}",
+        "MATH_0007": "$j$",
+        "MATH_0008": "$\\{\\coprod_{\\alpha(i) = j} U_i \\to V_j\\}$",
+        "MATH_0009": "$V \\subset V_j$",
+        "MATH_0010": "$Y$",
+        "MATH_0011": "$W_1, \\ldots, W_n \\subset \\coprod_{\\alpha(i) = j} U_i$",
+        "MATH_0012": "$X$",
+        "MATH_0013": "$V = \\bigcup_{i = 1, \\ldots, n} g(W_i)$",
+        "MATH_0014": "$Y$",
+        "MATH_0015": "$X$",
+        "REF_0002": "\\ref{topologies-lemma-recognize-fpqc-covering}",
+        "MATH_0016": "$DD(X/S)$",
+        "SPACE_0001": "\\ ",
+        "MATH_0017": "$DD(\\mathcal{U})$",
+        "MATH_0018": "$X/S$",
+        "SPACE_0002": "\\ ",
+        "MATH_0019": "$\\mathcal{U}$",
+        "MATH_0020": "$Y/S$",
+        "MATH_0021": "$\\mathcal{V}$",
+        "MATHSEG_0001": "$$\n\\xymatrix{\nDD(Y/S) \\ar[r] & DD(X/S) \\\\\nDD(\\mathcal{V}) \\ar[u]^{\\text{",
+        "MATHSEG_0002": "}\\ref{lemma-family-is-one}} \\ar[r] &\nDD(\\mathcal{U}) \\ar[u]_{\\text{",
+        "MATHSEG_0003": "}\\ref{lemma-family-is-one}}\n}\n$$",
+        "REF_0003": "\\ref{lemma-pullback-family}",
+        "REF_0004": "\\ref{lemma-fully-faithful}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VZ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe families of morphisms with target <MATH_0004>.\nLet <MATH_0005>, <MATH_0006> and\n<MATH_0007> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0001>.\nAssume that for each <MATH_0008> the family\n<MATH_0009> is an fpqc\ncovering of <MATH_0010>. Then the pullback functor\n<MATHSEG_0001>descent data relative to <MATHSEG_0002>descent data relative to <MATHSEG_0003>\nof Lemma <REF_0002> is fully faithful.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\alpha : I \\to J$",
+        "MATH_0006": "$\\text{id} : S \\to S$",
+        "MATH_0007": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0008": "$j \\in J$",
+        "MATH_0009": "$\\{g_i : U_i \\to V_j\\}_{\\alpha(i) = j}$",
+        "MATH_0010": "$V_j$",
+        "MATHSEG_0001": "$$\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{V}\n\\longrightarrow\n\\text{",
+        "MATHSEG_0003": "}\n\\mathcal{U}\n$$",
+        "REF_0002": "\\ref{lemma-pullback-family}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VV:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe next lemma shows that, in order to check effectiveness,\nwe may always Zariski refine the given family of morphisms\nwith target <MATH_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VY:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe families of morphisms with target <MATH_0004>.\nLet <MATH_0005>, <MATH_0006> and\n<MATH_0007> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0001>.\nAssume that for each <MATH_0008> the family\n<MATH_0009> is a Zariski covering (see\nTopologies, Definition <REF_0002>)\nof <MATH_0010>. Then the pullback functor\n<MATHSEG_0001>descent data relative to <MATHSEG_0002>descent data relative to <MATHSEG_0003>\nof Lemma <REF_0003> is an equivalence of categories.\nIn particular, the category of schemes over <MATH_0011>\nis equivalent to the category\nof descent data relative to any Zariski covering of <MATH_0012>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Zariski-refinement-coverings-equivalence}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\alpha : I \\to J$",
+        "MATH_0006": "$\\text{id} : S \\to S$",
+        "MATH_0007": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0008": "$j \\in J$",
+        "MATH_0009": "$\\{g_i : U_i \\to V_j\\}_{\\alpha(i) = j}$",
+        "REF_0002": "\\ref{topologies-definition-zariski-covering}",
+        "MATH_0010": "$V_j$",
+        "MATHSEG_0001": "$$\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{V}\n\\longrightarrow\n\\text{",
+        "MATHSEG_0003": "}\n\\mathcal{U}\n$$",
+        "REF_0003": "\\ref{lemma-pullback-family}",
+        "MATH_0011": "$S$",
+        "MATH_0012": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VY:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe functor is faithful and fully faithful by\nLemma <REF_0001>.\nLet us indicate how to prove that it is essentially surjective.\nLet <MATH_0001> be a descent datum relative to <MATH_0002>.\nFix <MATH_0003> and set <MATH_0004>.\nFor <MATH_0005> note that there is a canonical morphism\n<MATH_0006>\nHence we can pullback <MATH_0007> by this morphism\nand set <MATH_0008> for <MATH_0009>.\nIn this way we obtain a descent datum <MATH_0010>\nrelative to the Zariski covering\n<MATH_0011>.\nNote that <MATH_0012> is an isomorphism from the open\n<MATH_0013> of <MATH_0014> to the corresponding\nopen of <MATH_0015>. It follows from\nSchemes, Section <REF_0002>\nthat we may glue <MATH_0016> into a scheme\n<MATH_0017> over <MATH_0018>. Moreover, the morphisms <MATH_0019>\nfor <MATH_0020> and <MATH_0021> glue to a morphism\n<MATH_0022>\nsatisfying the cocycle condition (details omitted).\nHence we obtain the desired descent datum\n<MATH_0023> relative to <MATH_0024>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "MATH_0001": "$(X_i, \\varphi_{ii'})$",
+        "MATH_0002": "$\\mathcal{U}$",
+        "MATH_0003": "$j \\in J$",
+        "MATH_0004": "$I_j = \\{i \\in I \\mid \\alpha(i) = j\\}$",
+        "MATH_0005": "$i, i' \\in I_j$",
+        "MATH_0006": "$$\nc_{ii'} : U_i \\times_{g_i, V_j, g_{i'}} U_{i'} \\to U_i \\times_S U_{i'}.\n$$",
+        "MATH_0007": "$\\varphi_{ii'}$",
+        "MATH_0008": "$\\psi_{ii'} = c_{ii'}^*\\varphi_{ii'}$",
+        "MATH_0009": "$i, i' \\in I_j$",
+        "MATH_0010": "$(X_i, \\psi_{ii'})$",
+        "MATH_0011": "$\\{g_i : U_i \\to V_j\\}_{i \\in I_j}$",
+        "MATH_0012": "$\\psi_{ii'}$",
+        "MATH_0013": "$X_{i, U_i \\times_{V_j} U_{i'}}$",
+        "MATH_0014": "$X_i$",
+        "MATH_0015": "$X_{i'}$",
+        "REF_0002": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0016": "$(X_i, \\psi_{ii'})$",
+        "MATH_0017": "$Y_j$",
+        "MATH_0018": "$V_j$",
+        "MATH_0019": "$\\varphi_{ii'}$",
+        "MATH_0020": "$i \\in I_j$",
+        "MATH_0021": "$i' \\in I_{j'}$",
+        "MATH_0022": "$\\varphi_{jj'} : Y_j \\times_S V_{j'} \\to V_j \\times_S Y_{j'}$",
+        "MATH_0023": "$(Y_j, \\varphi_{jj'})$",
+        "MATH_0024": "$\\mathcal{V}$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe fpqc-coverings of <MATH_0004>.\nIf <MATH_0005> is a refinement of <MATH_0006>,\nthen the pullback functor\n<MATHSEG_0001>descent data relative to <MATHSEG_0002>descent data relative to <MATHSEG_0003>\nis fully faithful.\nIn particular, the category of schemes over <MATH_0007>\nis identified with a full subcategory of the category\nof descent data relative to any fpqc-covering of <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-refine-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "MATH_0006": "$\\mathcal{V}$",
+        "MATHSEG_0001": "$$\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{V}\n\\longrightarrow\n\\text{",
+        "MATHSEG_0003": "}\n\\mathcal{U}\n$$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nConsider the fpqc-covering\n<MATH_0001> of <MATH_0002>.\nIt is a refinement of both <MATH_0003> and <MATH_0004>.\nHence we have a <MATH_0005>-commutative diagram of functors and categories\n<MATH_0006>\nNotation as in the proof of\nLemma <REF_0001> and\ncommutativity by Lemma <REF_0002> part (3).\nHence clearly it suffices to prove the functors\n<MATH_0007> and\n<MATH_0008> are fully faithful.\nThis follows from\nLemma <REF_0003>\nas desired.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\mathcal{W} = \\{U_i \\times_S V_j \\to S\\}_{(i, j) \\in I \\times J}$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\mathcal{U}$",
+        "MATH_0004": "$\\mathcal{V}$",
+        "MATH_0005": "$2$",
+        "MATH_0006": "$$\n\\xymatrix{\nDD(\\mathcal{V}) \\ar[rd] \\ar[rr] & & DD(\\mathcal{U}) \\ar[ld] \\\\\n& DD(\\mathcal{W}) &\n}\n$$",
+        "REF_0001": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "REF_0002": "\\ref{lemma-pullback-family}",
+        "MATH_0007": "$DD(\\mathcal{V}) \\to DD(\\mathcal{W})$",
+        "MATH_0008": "$DD(\\mathcal{U}) \\to DD(\\mathcal{W})$",
+        "REF_0003": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:040L:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLemma <REF_0001>\nsays that morphisms of schemes satisfy fpqc descent.\nIn other words, given a scheme <MATH_0001> and schemes <MATH_0002>, <MATH_0003> over <MATH_0004>\nthe functor\n<MATH_0005>\nsatisfies the sheaf condition for the fpqc topology.\nThe simplest case of this is the following. Suppose that <MATH_0006>\nis a surjective flat morphism of affines. Let <MATH_0007>\nbe a morphism of schemes over <MATH_0008> which is compatible with the\ncanonical descent data. Then there exists a unique morphism\n<MATH_0009> whose base change to <MATH_0010> is <MATH_0011>. In fact this\nspecial case follows in a straightforward manner from\nLemma <REF_0002>.\nAnd, in turn, that lemma is a formal consequence of the following\ntwo facts:\n(a) the base change functor by a faithfully flat morphism is faithful, see\nLemma <REF_0003>\nand (b) a scheme satisfies the sheaf condition for the fpqc topology, see\nLemma <REF_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-morphisms-of-schemes-satisfy-fpqc-descent}",
+        "REF_0001": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$$\n(\\Sch/S)^{opp} \\longrightarrow \\textit{Sets},\n\\quad\nT \\longmapsto \\Mor_T(X_T, Y_T)\n$$",
+        "MATH_0006": "$T \\to S$",
+        "MATH_0007": "$\\psi_0 : X_T \\to Y_T$",
+        "MATH_0008": "$T$",
+        "MATH_0009": "$\\psi : X \\to Y$",
+        "MATH_0010": "$T$",
+        "MATH_0011": "$\\psi_0$",
+        "REF_0002": "\\ref{lemma-fully-faithful}",
+        "REF_0003": "\\ref{lemma-ff-base-change-faithful}",
+        "REF_0004": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-lemma-family-is-one",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nSet <MATH_0004>, and consider it as an <MATH_0005>-scheme.\nThere is a canonical equivalence of categories\n<MATHSEG_0001>category of descent data <MATHSEG_0002>relative to the family <MATHSEG_0003> category of descent data<MATHSEG_0004> relative to <MATHSEG_0005>\nwhich maps <MATH_0006> to <MATH_0007> with\n<MATH_0008> and <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-family-is-one}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$X = \\coprod_{i \\in I} X_i$",
+        "MATH_0005": "$S$",
+        "MATHSEG_0001": "$$\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0002": "} \\\\\n\\text{",
+        "MATHSEG_0003": "} \\{X_i \\to S\\}_{i \\in I}\n\\end{matrix}\n\\longrightarrow\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0004": "} \\\\\n\\text{",
+        "MATHSEG_0005": "} X/S\n\\end{matrix}\n$$",
+        "MATH_0006": "$(V_i, \\varphi_{ij})$",
+        "MATH_0007": "$(V, \\varphi)$",
+        "MATH_0008": "$V = \\coprod_{i\\in I} V_i$",
+        "MATH_0009": "$\\varphi = \\coprod \\varphi_{ij}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-family-is-one",
+      "requested_tag": "023X"
+    },
+    {
+      "context_id": "reference:descent-lemma-fully-faithful",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation of Lemma <REF_0001>\nassume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is an fpqc covering (for example if <MATH_0002> is\nsurjective, flat, and quasi-compact), and\n<STRUCT_0004> <MATH_0003>.\n<STRUCT_0005>\nThen the pullback functor is fully faithful.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fully-faithful}",
+        "REF_0001": "\\ref{lemma-pullback}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$\\{f : X' \\to X\\}$",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S = S'$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-fully-faithful",
+      "requested_tag": "0241"
+    },
+    {
+      "context_id": "reference:descent-lemma-pullback-family",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Pullback of descent data for schemes over families<ENVARGEND_0001>\n<LOCKED_0001>\nLet <MATH_0001> and\n<MATH_0002> be families of morphisms with\nfixed target. Let <MATH_0003>, <MATH_0004> and\n<MATH_0005> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0001>.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0006> be a descent datum relative to the\nfamily <MATH_0007>. The system\n<MATH_0008>\n(with notation as in Remark <REF_0002>)\nis a descent datum relative to <MATH_0009>.\n<STRUCT_0004> This construction defines a functor between descent data relative\nto <MATH_0010> and descent data relative to <MATH_0011>.\n<STRUCT_0005> Given a second <MATH_0012>, <MATH_0013> and\n<MATH_0014> morphism of families\nof maps with fixed target, then if <MATH_0015> the two resulting functors\nbetween descent data are canonically isomorphic.\n<STRUCT_0006> These functors agree, via Lemma <REF_0003>,\nwith the pullback functors constructed in Lemma <REF_0004>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "LOCKED_0001": "\\label{lemma-pullback-family}",
+        "MATH_0001": "$\\mathcal{U} = \\{U_i \\to S'\\}_{i \\in I}$",
+        "MATH_0002": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0003": "$\\alpha : I \\to J$",
+        "MATH_0004": "$h : S' \\to S$",
+        "MATH_0005": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$(Y_j, \\varphi_{jj'})$",
+        "MATH_0007": "$\\{V_j \\to S'\\}$",
+        "MATH_0008": "$$\n\\left(\ng_i^*Y_{\\alpha(i)},\n(g_i \\times g_{i'})^*\\varphi_{\\alpha(i)\\alpha(i')}\n\\right)\n$$",
+        "REF_0002": "\\ref{remark-easier-family}",
+        "MATH_0009": "$\\mathcal{V}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0010": "$\\mathcal{U}$",
+        "MATH_0011": "$\\mathcal{V}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0012": "$\\alpha' : I \\to J$",
+        "MATH_0013": "$h' : S' \\to S$",
+        "MATH_0014": "$g'_i : U_i \\to V_{\\alpha'(i)}$",
+        "MATH_0015": "$h = h'$",
+        "STRUCT_0006": "\\item",
+        "REF_0003": "\\ref{lemma-family-is-one}",
+        "REF_0004": "\\ref{lemma-pullback}",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-pullback-family",
+      "requested_tag": "02VS"
+    },
+    {
+      "context_id": "reference:schemes-section-glueing-schemes",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Glueing schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-glueing-schemes}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-section-glueing-schemes",
+      "requested_tag": "01JA"
+    },
+    {
+      "context_id": "reference:sites-definition-morphism-coverings",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category.\nLet <MATH_0002> be a family\nof morphisms of <MATH_0003> with fixed target.\nLet <MATH_0004> be another.\n<STRUCT_0002>\n<STRUCT_0003>\nA <TEXTITOPEN_0001>morphism of families of maps with fixed target\nof <MATH_0005> from  <MATH_0006> to <MATH_0007><TEXTITCLOSE_0001>,\nor simply a <TEXTITOPEN_0002>morphism from <MATH_0008> to <MATH_0009><TEXTITCLOSE_0002>\nis given by a morphism <MATH_0010>, a map of sets\n<MATH_0011> and for each <MATH_0012>\na morphism <MATH_0013> such that the diagram\n<MATH_0014>\nis commutative.\n<STRUCT_0004> In the special case that <MATH_0015> and <MATH_0016> is the identity\nwe call <MATH_0017> a <TEXTITOPEN_0003>refinement<TEXTITCLOSE_0003> of the family <MATH_0018>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-morphism-coverings}",
+        "MATH_0001": "$\\mathcal{C}$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to U\\}_{i\\in I}$",
+        "MATH_0003": "$\\mathcal{C}$",
+        "MATH_0004": "$\\mathcal{V} = \\{V_j \\to V\\}_{j\\in J}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0005": "$\\mathcal{C}$",
+        "MATH_0006": "$\\mathcal{U}$",
+        "MATH_0007": "$\\mathcal{V}$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0008": "$\\mathcal{U}$",
+        "MATH_0009": "$\\mathcal{V}$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0010": "$U \\to V$",
+        "MATH_0011": "$\\alpha : I \\to J$",
+        "MATH_0012": "$i\\in I$",
+        "MATH_0013": "$U_i \\to V_{\\alpha(i)}$",
+        "MATH_0014": "$$\n\\xymatrix{\nU_i \\ar[r] \\ar[d]\n&\nV_{\\alpha(i)} \\ar[d]\n\\\\\nU \\ar[r]\n&\nV\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0015": "$U = V$",
+        "MATH_0016": "$U \\to V$",
+        "MATH_0017": "$\\mathcal{U}$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0018": "$\\mathcal{V}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-definition-morphism-coverings",
+      "requested_tag": "00VT"
+    },
+    {
+      "context_id": "reference:topologies-definition-zariski-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. A <TEXTITOPEN_0001>Zariski covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is an open immersion and such\nthat <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-zariski-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$T = \\bigcup f_i(T_i)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-zariski-covering",
+      "requested_tag": "020O"
+    },
+    {
+      "context_id": "reference:topologies-lemma-disjoint-union-is-fpqc-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a family of\nmorphisms of schemes with target <MATH_0003>. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is an fpqc covering, and\n<STRUCT_0004> setting <MATH_0005>, and <MATH_0006>\nthe family <MATH_0007> is an fpqc covering.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-disjoint-union-is-fpqc-covering}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$T' = \\coprod_{i \\in I} T_i$",
+        "MATH_0006": "$f = \\coprod_{i \\in I} f_i$",
+        "MATH_0007": "$\\{f : T' \\to T\\}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-disjoint-union-is-fpqc-covering",
+      "requested_tag": "040I"
+    },
+    {
+      "context_id": "reference:topologies-lemma-recognize-fpqc-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a family of\nmorphisms of schemes with target <MATH_0003>. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is an fpqc covering,\n<STRUCT_0004> each <MATH_0005> is flat and for every affine open <MATH_0006>\nthere exist quasi-compact opens\n<MATH_0007> which are almost all empty,\nsuch that <MATH_0008>,\n<STRUCT_0005> each <MATH_0009> is flat and there exists an affine open covering\n<MATH_0010> and for each <MATH_0011>\nthere exist <MATH_0012>\nand quasi-compact opens <MATH_0013> such that\n<MATH_0014>.\n<STRUCT_0006>\nIf <MATH_0015> is quasi-separated, these are also equivalent to\n<STRUCT_0007>\n<ITEMOPEN_0001>(4)<ITEMCLOSE_0001> each <MATH_0016> is flat, and for every <MATH_0017> there exist\n<MATH_0018> and quasi-compact opens <MATH_0019>\nsuch that <MATH_0020> is a\n(not necessarily open) neighbourhood of <MATH_0021> in <MATH_0022>.\n<STRUCT_0008>\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-recognize-fpqc-covering}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$f_i$",
+        "MATH_0006": "$U \\subset T$",
+        "MATH_0007": "$U_i \\subset T_i$",
+        "MATH_0008": "$U = \\bigcup f_i(U_i)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$f_i$",
+        "MATH_0010": "$T = \\bigcup_{\\alpha \\in A} U_\\alpha$",
+        "MATH_0011": "$\\alpha \\in A$",
+        "MATH_0012": "$i_{\\alpha, 1}, \\ldots, i_{\\alpha, n(\\alpha)} \\in I$",
+        "MATH_0013": "$U_{\\alpha, j} \\subset T_{i_{\\alpha, j}}$",
+        "MATH_0014": "$U_\\alpha =\n\\bigcup_{j = 1, \\ldots, n(\\alpha)} f_{i_{\\alpha, j}}(U_{\\alpha, j})$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0015": "$T$",
+        "STRUCT_0007": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0016": "$f_i$",
+        "MATH_0017": "$t \\in T$",
+        "MATH_0018": "$i_1, \\ldots, i_n \\in I$",
+        "MATH_0019": "$U_j \\subset T_{i_j}$",
+        "MATH_0020": "$\\bigcup_{j = 1, \\ldots, n} f_{i_j}(U_j)$",
+        "MATH_0021": "$t$",
+        "MATH_0022": "$T$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-recognize-fpqc-covering",
+      "requested_tag": "03L7"
+    }
+  ]
+}

@@ -1,0 +1,2862 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e23-65f4-76c1-bdcd-32e165d151f8",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p07-20261102T212259Z.json",
+    "hash": "sha256:86705b5cfdbf203e51bf9e67fc64bf7c8aa3cc159ce4fb5196748bfac1f30e67"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02KJ:title",
+      "source_text": "Descent of finiteness and smoothness properties of morphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 51,
+          "projection_end": 60,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KJ:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we show that several properties\nof morphisms (being smooth, locally of finite presentation,\nand so on) descend under faithfully flat morphisms. We start\nwith an algebraic version. (The ``Noetherian'' reader should\nconsult Lemma <REF_0001>\ninstead of the next lemma.)\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-finite-type-local-source-fppf-algebra}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 65,
+          "projection_end": 74,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 82,
+          "projection_end": 88,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 90,
+          "projection_end": 120,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 147,
+          "projection_end": 162,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 163,
+          "projection_end": 172,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 217,
+          "projection_end": 227,
+          "concept": "noetherian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KK:statement",
+      "source_text": "Let <MATH_0001> be ring maps.\nAssume <MATH_0002> is of finite presentation and\n<MATH_0003> faithfully flat and of finite presentation.\nThen <MATH_0004> is of finite presentation.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A \\to B$",
+        "MATH_0002": "$R \\to B$",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$R \\to A$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring maps",
+          "projection_start": 19,
+          "projection_end": 28,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 55,
+          "projection_end": 74,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 91,
+          "projection_end": 106,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 114,
+          "projection_end": 133,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 158,
+          "projection_end": 177,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KK:proof",
+      "source_text": "Consider the algebra <MATH_0001> together with the\npair of maps <MATH_0002> given by <MATH_0003>\nand <MATH_0004>. Of course the two compositions\n<MATH_0005> are the same. Note that as\n<MATH_0006> is flat and of finite presentation (base change of\n<MATH_0007>), the ring map <MATH_0008> is of finite presentation\n(as the composite of <MATH_0009>).\n\n<STRUCT_0001><STRUCT_0002>\nWe are going to use the criterion\nAlgebra, Lemma <REF_0001>\nto show that <MATH_0010> is of finite presentation.\nLet <MATH_0011> be any <MATH_0012>-algebra, and suppose that\n<MATH_0013> is written\nas a directed colimit of <MATH_0014>-algebras.\nLet <MATH_0015> be an <MATH_0016>-algebra homomorphism. We have to\nshow that <MATH_0017> factors through one of the <MATH_0018>.\nConsider the rings <MATH_0019> and\n<MATH_0020>.\nAs <MATH_0021> is faithfully flat of finite presentation over <MATH_0022>, also <MATH_0023>\nis faithfully flat of finite presentation over <MATH_0024>.\nBy Algebra, Lemma <REF_0002>\npart (2) applied to the pair <MATH_0025> and the system <MATH_0026>\nthere exists a <MATH_0027>\nand a flat, finitely presented <MATH_0028>-algebra\n<MATH_0029> such that <MATH_0030>.\nFor <MATH_0031> set\n<MATH_0032> and\n<MATH_0033>.\n\n<STRUCT_0003><STRUCT_0004>\nWe interrupt the flow of the argument to show that <MATH_0034>\nis faithfully flat for <MATH_0035> large enough. (This should really\nbe a separate lemma somewhere else, maybe in the chapter on limits.)\nSince <MATH_0036> is\nflat and of finite presentation it is open (see Morphisms,\nLemma <REF_0003>).\nLet <MATH_0037> be an ideal such that\n<MATH_0038> is the complement\nof the image. Note that formation of the image commutes\nwith base change. Hence, since <MATH_0039>\nis surjective, and <MATH_0040>\nwe see that <MATH_0041>. Thus for some <MATH_0042> we\nhave <MATH_0043>. For this and all greater\n<MATH_0044> the morphism\n<MATH_0045> is surjective.\n\n<STRUCT_0005><STRUCT_0006>\nBy analogy with the notation in the first paragraph of the proof denote\n<MATH_0046> the two canonical maps.\nThen <MATH_0047>\nand <MATH_0048>.\nSince <MATH_0049> and <MATH_0050> are finitely presented over <MATH_0051> there exist\n(by Algebra, Lemma <REF_0004>\napplied several times)\na <MATH_0052> and an <MATH_0053>-algebra maps\n<MATH_0054>, <MATH_0055> such that\nthe diagram\n<MATH_0056>\nis commutative. OK, and this means that <MATH_0057>\nmaps into the equalizer of <MATH_0058> and <MATH_0059>.\nBy Lemma <REF_0005> we\nsee that <MATH_0060> is the equalizer of <MATH_0061> and <MATH_0062>.\nThus we get the desired ring map <MATH_0063> and we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$C = B \\otimes_A B$",
+        "MATH_0002": "$p, q : B \\to C$",
+        "MATH_0003": "$p(b) = b \\otimes 1$",
+        "MATH_0004": "$q(b) = 1 \\otimes b$",
+        "MATH_0005": "$A \\to B \\to C$",
+        "MATH_0006": "$p : B \\to C$",
+        "MATH_0007": "$A \\to B$",
+        "MATH_0008": "$R \\to C$",
+        "MATH_0009": "$R \\to B \\to C$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0001": "\\ref{algebra-lemma-characterize-finite-presentation}",
+        "MATH_0010": "$R \\to A$",
+        "MATH_0011": "$S$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$S = \\colim_{\\lambda \\in \\Lambda} S_\\lambda$",
+        "MATH_0014": "$R$",
+        "MATH_0015": "$A \\to S$",
+        "MATH_0016": "$R$",
+        "MATH_0017": "$A \\to S$",
+        "MATH_0018": "$S_\\lambda$",
+        "MATH_0019": "$B' = S \\otimes_A B$",
+        "MATH_0020": "$C' = S \\otimes_A C = B' \\otimes_S B'$",
+        "MATH_0021": "$B$",
+        "MATH_0022": "$A$",
+        "MATH_0023": "$B'$",
+        "MATH_0024": "$S$",
+        "REF_0002": "\\ref{algebra-lemma-flat-finite-presentation-limit-flat}",
+        "MATH_0025": "$(S \\to B', B')$",
+        "MATH_0026": "$(S_\\lambda)$",
+        "MATH_0027": "$\\lambda_0 \\in \\Lambda$",
+        "MATH_0028": "$S_{\\lambda_0}$",
+        "MATH_0029": "$B_{\\lambda_0}$",
+        "MATH_0030": "$B' = S \\otimes_{S_{\\lambda_0}} B_{\\lambda_0}$",
+        "MATH_0031": "$\\lambda \\geq \\lambda_0$",
+        "MATH_0032": "$B_\\lambda = S_\\lambda \\otimes_{S_{\\lambda_0}} B_{\\lambda_0}$",
+        "MATH_0033": "$C_\\lambda = B_\\lambda \\otimes_{S_\\lambda} B_\\lambda$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0034": "$S_\\lambda \\to B_\\lambda$",
+        "MATH_0035": "$\\lambda$",
+        "MATH_0036": "$\\Spec(B_{\\lambda_0}) \\to \\Spec(S_{\\lambda_0})$",
+        "REF_0003": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0037": "$I \\subset S_{\\lambda_0}$",
+        "MATH_0038": "$V(I) \\subset \\Spec(S_{\\lambda_0})$",
+        "MATH_0039": "$\\Spec(B') \\to \\Spec(S)$",
+        "MATH_0040": "$B' = B_{\\lambda_0} \\otimes_{S_{\\lambda_0}} S$",
+        "MATH_0041": "$IS = S$",
+        "MATH_0042": "$\\lambda \\geq \\lambda_0$",
+        "MATH_0043": "$IS_{\\lambda} = S_\\lambda$",
+        "MATH_0044": "$\\lambda$",
+        "MATH_0045": "$\\Spec(B_\\lambda) \\to \\Spec(S_\\lambda)$",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0046": "$p_\\lambda, q_\\lambda : B_\\lambda \\to C_\\lambda$",
+        "MATH_0047": "$B' = \\colim_{\\lambda \\geq \\lambda_0} B_\\lambda$",
+        "MATH_0048": "$C' = \\colim_{\\lambda \\geq \\lambda_0} C_\\lambda$",
+        "MATH_0049": "$B$",
+        "MATH_0050": "$C$",
+        "MATH_0051": "$R$",
+        "REF_0004": "\\ref{algebra-lemma-characterize-finite-presentation}",
+        "MATH_0052": "$\\lambda \\geq \\lambda_0$",
+        "MATH_0053": "$R$",
+        "MATH_0054": "$B \\to B_\\lambda$",
+        "MATH_0055": "$C \\to C_\\lambda$",
+        "MATH_0056": "$$\n\\xymatrix{\nC \\ar[rr] & &\nC_\\lambda \\\\\nB \\ar[rr]\n\\ar@<1ex>[u]^-p\n\\ar@<-1ex>[u]_-q\n& &\nB_\\lambda\n\\ar@<1ex>[u]^-{p_\\lambda}\n\\ar@<-1ex>[u]_-{q_\\lambda}\n}\n$$",
+        "MATH_0057": "$A \\to B \\to B_\\lambda$",
+        "MATH_0058": "$p_\\lambda$",
+        "MATH_0059": "$q_\\lambda$",
+        "REF_0005": "\\ref{lemma-ff-exact}",
+        "MATH_0060": "$S_\\lambda$",
+        "MATH_0061": "$p_\\lambda$",
+        "MATH_0062": "$q_\\lambda$",
+        "MATH_0063": "$A \\to S_\\lambda$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "algebra",
+          "projection_start": 13,
+          "projection_end": 20,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 59,
+          "projection_end": 63,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "compositions",
+          "projection_start": 132,
+          "projection_end": 144,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 199,
+          "projection_end": 203,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 211,
+          "projection_end": 230,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 232,
+          "projection_end": 243,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 265,
+          "projection_end": 273,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 292,
+          "projection_end": 311,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 408,
+          "projection_end": 415,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 465,
+          "projection_end": 484,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 521,
+          "projection_end": 528,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "directed colimit",
+          "projection_start": 575,
+          "projection_end": 591,
+          "concept": "source-phrase-directed-colimit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 607,
+          "projection_end": 615,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra homomorphism",
+          "projection_start": 651,
+          "projection_end": 671,
+          "concept": "source-phrase-algebra-homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 759,
+          "projection_end": 764,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 812,
+          "projection_end": 827,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 831,
+          "projection_end": 850,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 889,
+          "projection_end": 904,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 908,
+          "projection_end": 927,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 949,
+          "projection_end": 956,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1076,
+          "projection_end": 1080,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 1082,
+          "projection_end": 1100,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1113,
+          "projection_end": 1120,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1172,
+          "projection_end": 1175,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1298,
+          "projection_end": 1313,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "large",
+          "projection_start": 1330,
+          "projection_end": 1335,
+          "concept": "large",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limits",
+          "projection_start": 1424,
+          "projection_end": 1430,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1454,
+          "projection_end": 1458,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 1466,
+          "projection_end": 1485,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1502,
+          "projection_end": 1511,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1554,
+          "projection_end": 1559,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 1607,
+          "projection_end": 1612,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 1641,
+          "projection_end": 1646,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 1647,
+          "projection_end": 1655,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 1661,
+          "projection_end": 1672,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1702,
+          "projection_end": 1712,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1843,
+          "projection_end": 1851,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1867,
+          "projection_end": 1877,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1998,
+          "projection_end": 2007,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2008,
+          "projection_end": 2012,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 2086,
+          "projection_end": 2104,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 2138,
+          "projection_end": 2145,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 2220,
+          "projection_end": 2227,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2228,
+          "projection_end": 2232,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 2272,
+          "projection_end": 2279,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 2295,
+          "projection_end": 2306,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2344,
+          "projection_end": 2348,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 2358,
+          "projection_end": 2367,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 2451,
+          "projection_end": 2460,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 2517,
+          "projection_end": 2525,
+          "concept": "ring-map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KJ:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nHere is an easier version of this dealing with the property\nof being of finite type.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite type",
+          "projection_start": 86,
+          "projection_end": 97,
+          "concept": "finite-type",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0367:statement",
+      "source_text": "Let <MATH_0001> be ring maps.\nAssume <MATH_0002> is of finite type and\n<MATH_0003> faithfully flat and of finite presentation.\nThen <MATH_0004> is of finite type.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A \\to B$",
+        "MATH_0002": "$R \\to B$",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$R \\to A$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring maps",
+          "projection_start": 19,
+          "projection_end": 28,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 55,
+          "projection_end": 66,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 83,
+          "projection_end": 98,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 106,
+          "projection_end": 125,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 150,
+          "projection_end": 161,
+          "concept": "finite-type",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0367:proof",
+      "source_text": "By\nAlgebra, Lemma <REF_0001>\nthere exists a commutative diagram\n<MATH_0001>\nwith <MATH_0002> of finite presentation,\n<MATH_0003> faithfully flat of finite presentation\nand <MATH_0004>. Since <MATH_0005> is of finite\ntype by assumption, we may add some elements to <MATH_0006> and assume\nthat the map <MATH_0007> is surjective!\nIn this case, since <MATH_0008> is faithfully flat, we see\nthat as\n<MATH_0009>\nis surjective, also <MATH_0010> is surjective. Hence we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{algebra-lemma-descend-faithfully-flat-finite-presentation}",
+        "MATH_0001": "$$\n\\xymatrix{\nR \\ar[r] \\ar@{=}[d] &\nA_0 \\ar[d] \\ar[r] &\nB_0 \\ar[d] \\\\\nR \\ar[r] & A \\ar[r] & B\n}\n$$",
+        "MATH_0002": "$R \\to A_0$",
+        "MATH_0003": "$A_0 \\to B_0$",
+        "MATH_0004": "$B = A \\otimes_{A_0} B_0$",
+        "MATH_0005": "$R \\to B$",
+        "MATH_0006": "$A_0$",
+        "MATH_0007": "$B_0 \\to B$",
+        "MATH_0008": "$A_0 \\to B_0$",
+        "MATH_0009": "$$\n(A_0 \\to A) \\otimes_{A_0} B_0 \\cong (B_0 \\to B)\n$$",
+        "MATH_0010": "$A_0 \\to A$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Algebra",
+          "projection_start": 3,
+          "projection_end": 10,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 44,
+          "projection_end": 63,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 96,
+          "projection_end": 115,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 129,
+          "projection_end": 144,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 148,
+          "projection_end": 167,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 209,
+          "projection_end": 220,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 252,
+          "projection_end": 260,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 296,
+          "projection_end": 299,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 315,
+          "projection_end": 325,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 362,
+          "projection_end": 377,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 409,
+          "projection_end": 419,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 441,
+          "projection_end": 451,
+          "concept": "surjective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KL:statement",
+      "source_text": "<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that <MATH_0002> is\nsurjective, flat and locally of finite presentation and assume\nthat <MATH_0003> is locally of finite presentation (resp.<SPACE_0001>locally of finite type).\nThen <MATH_0004> is locally of finite presentation (resp.<SPACE_0002>locally of finite type).\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "LOCKED_0001": "\\begin{reference}\n\\cite[IV, 17.7.5 (i) and (ii)]{EGA}.\n\\end{reference}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$p$",
+        "SPACE_0001": "\\ ",
+        "MATH_0004": "$q$",
+        "SPACE_0002": "\\ "
+      },
+      "required_source_terms": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 35,
+          "projection_end": 54,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 58,
+          "projection_end": 67,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 71,
+          "projection_end": 78,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 107,
+          "projection_end": 117,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 119,
+          "projection_end": 123,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 128,
+          "projection_end": 158,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 190,
+          "projection_end": 220,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 239,
+          "projection_end": 261,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 284,
+          "projection_end": 314,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 333,
+          "projection_end": 355,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KL:proof",
+      "source_text": "The problem is local on <MATH_0001> and <MATH_0002>. Hence we may assume that\n<MATH_0003> and <MATH_0004> are affine. Since <MATH_0005> is flat and locally of finite\npresentation, we see that <MATH_0006> is open\n(Morphisms, Lemma <REF_0001>).\nHence, since <MATH_0007> is quasi-compact, there exist finitely many affine opens\n<MATH_0008> such that <MATH_0009>.\nClearly we may replace <MATH_0010> by <MATH_0011>, and hence we\nmay assume <MATH_0012> is affine as well.\nIn this case the lemma is equivalent to\nLemma <REF_0002>\n(resp. Lemma <REF_0003>)\nabove.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$Y$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$Y$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "REF_0001": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0007": "$Y$",
+        "MATH_0008": "$X_i \\subset X$",
+        "MATH_0009": "$Y = \\bigcup f(X_i)$",
+        "MATH_0010": "$X$",
+        "MATH_0011": "$\\coprod X_i$",
+        "MATH_0012": "$X$",
+        "REF_0002": "\\ref{lemma-flat-finitely-presented-permanence-algebra}",
+        "REF_0003": "\\ref{lemma-finite-type-local-source-fppf-algebra}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 110,
+          "projection_end": 116,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 139,
+          "projection_end": 143,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 148,
+          "projection_end": 178,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 213,
+          "projection_end": 222,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 271,
+          "projection_end": 284,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 312,
+          "projection_end": 324,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 450,
+          "projection_end": 456,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 492,
+          "projection_end": 502,
+          "concept": "equivalent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KJ:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nWe use this to improve some of the results on morphisms\nobtained earlier.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 60,
+          "projection_end": 69,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KM:statement",
+      "source_text": "Let\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0002> is surjective, and syntomic (resp.<SPACE_0001>smooth, resp.<SPACE_0002><ACCENT_0001>tale),\n<STRUCT_0003> <MATH_0003> is syntomic (resp.<SPACE_0003>smooth, resp.<SPACE_0004><ACCENT_0002>tale).\n<STRUCT_0004>\nThen <MATH_0004> is syntomic (resp.<SPACE_0005>smooth, resp.<SPACE_0006><ACCENT_0003>tale).\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$f$",
+        "SPACE_0001": "\\ ",
+        "SPACE_0002": "\\ ",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$p$",
+        "SPACE_0003": "\\ ",
+        "SPACE_0004": "\\ ",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0004": "\\end{enumerate}",
+        "MATH_0004": "$q$",
+        "SPACE_0005": "\\ ",
+        "SPACE_0006": "\\ ",
+        "ACCENT_0003": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 44,
+          "projection_end": 53,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 121,
+          "projection_end": 131,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 164,
+          "projection_end": 170,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 189,
+          "projection_end": 194,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 253,
+          "projection_end": 259,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 278,
+          "projection_end": 283,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 347,
+          "projection_end": 353,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 372,
+          "projection_end": 377,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KM:proof",
+      "source_text": "Combine Morphisms, Lemmas\n<REF_0001>,\n<REF_0002>, and\n<REF_0003>\nwith Lemma <REF_0004> above.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-syntomic-permanence}",
+        "REF_0002": "\\ref{morphisms-lemma-smooth-permanence}",
+        "REF_0003": "\\ref{morphisms-lemma-etale-permanence-two}",
+        "REF_0004": "\\ref{lemma-flat-finitely-presented-permanence}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Morphisms",
+          "projection_start": 8,
+          "projection_end": 17,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KJ:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nActually we can strengthen this result as follows.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:05B5:statement",
+      "source_text": "Let\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0002> is surjective, flat, and locally of finite presentation,\n<STRUCT_0003> <MATH_0003> is smooth (resp.<SPACE_0001><ACCENT_0001>tale).\n<STRUCT_0004>\nThen <MATH_0004> is smooth (resp.<SPACE_0002><ACCENT_0002>tale).\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$p$",
+        "SPACE_0001": "\\ ",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\end{enumerate}",
+        "MATH_0004": "$q$",
+        "SPACE_0002": "\\ ",
+        "ACCENT_0002": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 44,
+          "projection_end": 53,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 121,
+          "projection_end": 131,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 133,
+          "projection_end": 137,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 143,
+          "projection_end": 173,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 204,
+          "projection_end": 210,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 229,
+          "projection_end": 234,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 271,
+          "projection_end": 277,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 296,
+          "projection_end": 301,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B5:proof",
+      "source_text": "Assume (1) and that <MATH_0001> is smooth. By\nLemma <REF_0001>\nwe see that <MATH_0002> is locally of finite presentation.\nBy\nMorphisms, Lemma <REF_0002>\nwe see that <MATH_0003> is flat.\nHence now it suffices to show that the fibres of <MATH_0004> are smooth, see\nMorphisms, Lemma <REF_0003>.\nApply\nVarieties, Lemma <REF_0004>\nto the flat surjective morphisms <MATH_0005> for <MATH_0006> to\nconclude. We omit the proof of the <ACCENT_0001>tale case.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$p$",
+        "REF_0001": "\\ref{lemma-flat-finitely-presented-permanence}",
+        "MATH_0002": "$q$",
+        "REF_0002": "\\ref{morphisms-lemma-flat-permanence}",
+        "MATH_0003": "$q$",
+        "MATH_0004": "$q$",
+        "REF_0003": "\\ref{morphisms-lemma-smooth-flat-smooth-fibres}",
+        "REF_0004": "\\ref{varieties-lemma-flat-under-smooth}",
+        "MATH_0005": "$X_s \\to Y_s$",
+        "MATH_0006": "$s \\in S$",
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 35,
+          "projection_end": 41,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 90,
+          "projection_end": 120,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 125,
+          "projection_end": 134,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 180,
+          "projection_end": 184,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 251,
+          "projection_end": 257,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 263,
+          "projection_end": 272,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 333,
+          "projection_end": 337,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 338,
+          "projection_end": 348,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 349,
+          "projection_end": 358,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 425,
+          "projection_end": 430,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B6:statement",
+      "source_text": "With the assumptions (1) and <MATH_0001> smooth in\nLemma <REF_0001>\nit is not automatically the case that <MATH_0002> is smooth.\nA counter example is <MATH_0003>, <MATH_0004>,\n<MATH_0005> and <MATH_0006> given by <MATH_0007>.\nBut see also Lemma <REF_0002>\nfor some information on the structure of <MATH_0008>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$p$",
+        "REF_0001": "\\ref{lemma-smooth-permanence}",
+        "MATH_0002": "$X \\to Y$",
+        "MATH_0003": "$S = \\Spec(k)$",
+        "MATH_0004": "$X = \\Spec(k[s])$",
+        "MATH_0005": "$Y = \\Spec(k[t])$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$t \\mapsto s^2$",
+        "REF_0002": "\\ref{lemma-syntomic-permanence}",
+        "MATH_0008": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 41,
+          "projection_end": 47,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 121,
+          "projection_end": 127,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B7:statement",
+      "source_text": "Let\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0002> is surjective, flat, and locally of finite presentation,\n<STRUCT_0003> <MATH_0003> is syntomic.\n<STRUCT_0004>\nThen both <MATH_0004> and <MATH_0005> are syntomic.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$p$",
+        "STRUCT_0004": "\\end{enumerate}",
+        "MATH_0004": "$q$",
+        "MATH_0005": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 21,
+          "projection_end": 40,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 44,
+          "projection_end": 53,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 57,
+          "projection_end": 64,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 121,
+          "projection_end": 131,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 133,
+          "projection_end": 137,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 143,
+          "projection_end": 173,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05B7:proof",
+      "source_text": "By Lemma <REF_0001> we see that <MATH_0001>\nis of finite presentation. By\nMorphisms, Lemma <REF_0002>\nwe see that <MATH_0002> is flat.\nBy Morphisms, Lemma <REF_0003>\nit now suffices to show that the local rings of the fibres of\n<MATH_0003> and the fibres of <MATH_0004> are local complete intersection\nrings. To do this we may take the fibre of <MATH_0005> at\na point <MATH_0006>, i.e., we may assume <MATH_0007> is the spectrum of a\nfield. Pick a point <MATH_0008> with image <MATH_0009> and\nconsider the ring map\n<MATH_0010>\nThis is a flat local homomorphism of local Noetherian rings.\nThe local ring <MATH_0011> is a complete intersection.\nThus may use Avramov's result, see\nDivided Power Algebra, Lemma <REF_0004>,\nto conclude that both <MATH_0012> and\n<MATH_0013> are\ncomplete intersection rings.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-flat-finitely-presented-permanence}",
+        "MATH_0001": "$q$",
+        "REF_0002": "\\ref{morphisms-lemma-flat-permanence}",
+        "MATH_0002": "$q$",
+        "REF_0003": "\\ref{morphisms-lemma-syntomic-locally-standard-syntomic}",
+        "MATH_0003": "$Y \\to S$",
+        "MATH_0004": "$X \\to Y$",
+        "MATH_0005": "$X \\to Y \\to S$",
+        "MATH_0006": "$s \\in S$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$x \\in X$",
+        "MATH_0009": "$y \\in Y$",
+        "MATH_0010": "$$\n\\mathcal{O}_{Y, y} \\longrightarrow \\mathcal{O}_{X, x}\n$$",
+        "MATH_0011": "$\\mathcal{O}_{X, x}$",
+        "REF_0004": "\\ref{dpa-lemma-avramov}",
+        "MATH_0012": "$\\mathcal{O}_{Y, y}$",
+        "MATH_0013": "$\\mathcal{O}_{X, x}/\\mathfrak m_y\\mathcal{O}_{X, x}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite presentation",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 74,
+          "projection_end": 83,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 129,
+          "projection_end": 133,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 138,
+          "projection_end": 147,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local rings",
+          "projection_start": 199,
+          "projection_end": 210,
+          "concept": "local-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 302,
+          "projection_end": 307,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 434,
+          "projection_end": 439,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 471,
+          "projection_end": 476,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 506,
+          "projection_end": 514,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 537,
+          "projection_end": 541,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local homomorphism",
+          "projection_start": 542,
+          "projection_end": 560,
+          "concept": "source-phrase-local-homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 570,
+          "projection_end": 580,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 581,
+          "projection_end": 586,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local ring",
+          "projection_start": 592,
+          "projection_end": 602,
+          "concept": "local-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 692,
+          "projection_end": 699,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 795,
+          "projection_end": 800,
+          "concept": "ring",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02KJ:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nThe following type of lemma is occasionally useful.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:06NB:statement",
+      "source_text": "Let <MATH_0001> be morphism of schemes.\nLet <MATH_0002> be one of the following properties of morphisms of schemes:\nflat, locally finite type, locally finite presentation.\nAssume that <MATH_0003> has <MATH_0004> and that <MATH_0005>\ncan be refined by an fppf covering of <MATH_0006>. Then <MATH_0007> is <MATH_0008>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X \\to Y \\to Z$",
+        "MATH_0002": "$P$",
+        "MATH_0003": "$X \\to Z$",
+        "MATH_0004": "$P$",
+        "MATH_0005": "$\\{X \\to Y\\}$",
+        "MATH_0006": "$Y$",
+        "MATH_0007": "$Y \\to Z$",
+        "MATH_0008": "$P$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 19,
+          "projection_end": 27,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 31,
+          "projection_end": 38,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 94,
+          "projection_end": 103,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 107,
+          "projection_end": 114,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 116,
+          "projection_end": 120,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally finite",
+          "projection_start": 122,
+          "projection_end": 136,
+          "concept": "locally-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally finite",
+          "projection_start": 143,
+          "projection_end": 157,
+          "concept": "locally-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fppf covering",
+          "projection_start": 254,
+          "projection_end": 267,
+          "concept": "source-phrase-fppf-covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NB:proof",
+      "source_text": "Let <MATH_0001> be an affine open and let\n<MATH_0002> be an affine open which maps into\n<MATH_0003>. The assumption on <MATH_0004> implies we can\nfind a standard affine fppf covering <MATH_0005>\nand lifts <MATH_0006>. Since <MATH_0007>\nis quasi-compact we can find finitely many affine opens\n<MATH_0008> lying over <MATH_0009>\nsuch that the image of each <MATH_0010>\nis contained in the union <MATH_0011>. Hence after\nreplacing each <MATH_0012> by a standard affine Zariski coverings\nof itself we may assume we have a\nstandard affine fppf covering <MATH_0013>\nsuch that each <MATH_0014> factors through an affine\nopen <MATH_0015> lying over <MATH_0016>.\nIn other words, we have ring maps <MATH_0017> for each <MATH_0018>.\nNote that we can also consider\n<MATH_0019>\nand that the ring map <MATH_0020> is faithfully flat and\nof finite presentation.\n\n<STRUCT_0001><STRUCT_0002>\nThe case <MATH_0021>. In this case we know that <MATH_0022> is flat\nand we have to prove that <MATH_0023> is flat. Suppose that\n<MATH_0024> is an exact sequence of <MATH_0025>-modules. We want to\nshow that <MATH_0026>\nis exact. Let <MATH_0027> be its cohomology and let <MATH_0028> be the cohomology\nof <MATH_0029>. As\n<MATH_0030> is flat we know that <MATH_0031>. On the other hand\n<MATH_0032>\nis exact hence has zero cohomology. Hence the map\n<MATH_0033> is zero (as it factors through the zero module).\nThus <MATH_0034>. As <MATH_0035> is faithfully flat we conclude that\n<MATH_0036> as desired.\n\n<STRUCT_0003><STRUCT_0004>\nThe case <MATH_0037>.\nIn this case we know that <MATH_0038> is of finite type and\nwe have to prove that <MATH_0039> is of finite type.\nBecause <MATH_0040> is of finite presentation (hence of finite type)\nwe see that <MATH_0041> is of finite type, see\nAlgebra, Lemma <REF_0001>.\nTherefore <MATH_0042> is of finite type and we conclude by\nLemma <REF_0002>.\n\n<STRUCT_0005><STRUCT_0006>\nThe case <MATH_0043>.\nIn this case we know that <MATH_0044> is of finite presentation and\nwe have to prove that <MATH_0045> is of finite presentation.\nBecause <MATH_0046> is of finite presentation and <MATH_0047>\nof finite type we see that <MATH_0048> is of finite presentation, see\nAlgebra, Lemma <REF_0003>.\nTherefore <MATH_0049> is of finite presentation and we conclude by\nLemma <REF_0004>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\Spec(C) \\subset Z$",
+        "MATH_0002": "$\\Spec(B) \\subset Y$",
+        "MATH_0003": "$\\Spec(C)$",
+        "MATH_0004": "$X \\to Y$",
+        "MATH_0005": "$\\{\\Spec(B_j) \\to \\Spec(B)\\}$",
+        "MATH_0006": "$x_j : \\Spec(B_j) \\to X$",
+        "MATH_0007": "$\\Spec(B_j)$",
+        "MATH_0008": "$\\Spec(A_i) \\subset X$",
+        "MATH_0009": "$\\Spec(B)$",
+        "MATH_0010": "$x_j$",
+        "MATH_0011": "$\\bigcup \\Spec(A_i)$",
+        "MATH_0012": "$\\Spec(B_j)$",
+        "MATH_0013": "$\\{\\Spec(B_i) \\to \\Spec(B)\\}$",
+        "MATH_0014": "$\\Spec(B_i) \\to Y$",
+        "MATH_0015": "$\\Spec(A_i) \\subset X$",
+        "MATH_0016": "$\\Spec(B)$",
+        "MATH_0017": "$C \\to B \\to A_i \\to B_i$",
+        "MATH_0018": "$i$",
+        "MATH_0019": "$$\nC \\to B \\to A = \\prod A_i \\to B' = \\prod B_i\n$$",
+        "MATH_0020": "$B \\to \\prod B_i$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0021": "$P = flat$",
+        "MATH_0022": "$C \\to A$",
+        "MATH_0023": "$C \\to B$",
+        "MATH_0024": "$N \\to N' \\to N''$",
+        "MATH_0025": "$C$",
+        "MATH_0026": "$N \\otimes_C B \\to N' \\otimes_C B \\to N'' \\otimes_C B$",
+        "MATH_0027": "$H$",
+        "MATH_0028": "$H'$",
+        "MATH_0029": "$N \\otimes_C B' \\to N' \\otimes_C B' \\to N'' \\otimes_C B'$",
+        "MATH_0030": "$B \\to B'$",
+        "MATH_0031": "$H' = H \\otimes_B B'$",
+        "MATH_0032": "$N \\otimes_C A \\to N' \\otimes_C A \\to N'' \\otimes_C A$",
+        "MATH_0033": "$H \\to H'$",
+        "MATH_0034": "$H' = 0$",
+        "MATH_0035": "$B \\to B'$",
+        "MATH_0036": "$H = 0$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0037": "$P = locally\\ finite\\ type$",
+        "MATH_0038": "$C \\to A$",
+        "MATH_0039": "$C \\to B$",
+        "MATH_0040": "$B \\to B'$",
+        "MATH_0041": "$A \\to B'$",
+        "REF_0001": "\\ref{algebra-lemma-compose-finite-type}",
+        "MATH_0042": "$C \\to B'$",
+        "REF_0002": "\\ref{lemma-finite-type-local-source-fppf-algebra}",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0043": "$P = locally\\ finite\\ presentation$",
+        "MATH_0044": "$C \\to A$",
+        "MATH_0045": "$C \\to B$",
+        "MATH_0046": "$B \\to B'$",
+        "MATH_0047": "$B \\to A$",
+        "MATH_0048": "$A \\to B'$",
+        "REF_0003": "\\ref{algebra-lemma-compose-finite-type}",
+        "MATH_0049": "$C \\to B'$",
+        "REF_0004": "\\ref{lemma-flat-finitely-presented-permanence-algebra}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine open",
+          "projection_start": 22,
+          "projection_end": 33,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 60,
+          "projection_end": 71,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 78,
+          "projection_end": 82,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 162,
+          "projection_end": 168,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fppf covering",
+          "projection_start": 169,
+          "projection_end": 182,
+          "concept": "source-phrase-fppf-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 239,
+          "projection_end": 252,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 279,
+          "projection_end": 291,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 341,
+          "projection_end": 346,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 459,
+          "projection_end": 465,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 474,
+          "projection_end": 483,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 527,
+          "projection_end": 533,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fppf covering",
+          "projection_start": 534,
+          "projection_end": 547,
+          "concept": "source-phrase-fppf-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 606,
+          "projection_end": 617,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring maps",
+          "projection_start": 678,
+          "projection_end": 687,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 778,
+          "projection_end": 786,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 802,
+          "projection_end": 817,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 825,
+          "projection_end": 844,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 936,
+          "projection_end": 940,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 982,
+          "projection_end": 986,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "exact sequence",
+          "projection_start": 1019,
+          "projection_end": 1033,
+          "concept": "exact-sequence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1049,
+          "projection_end": 1056,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology",
+          "projection_start": 1124,
+          "projection_end": 1134,
+          "concept": "cohomology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology",
+          "projection_start": 1162,
+          "projection_end": 1172,
+          "concept": "cohomology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1207,
+          "projection_end": 1211,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology",
+          "projection_start": 1292,
+          "projection_end": 1302,
+          "concept": "cohomology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1314,
+          "projection_end": 1317,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1370,
+          "projection_end": 1376,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 1415,
+          "projection_end": 1430,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 1565,
+          "projection_end": 1576,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 1621,
+          "projection_end": 1632,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 1660,
+          "projection_end": 1679,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 1690,
+          "projection_end": 1701,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 1733,
+          "projection_end": 1744,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1750,
+          "projection_end": 1757,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 1805,
+          "projection_end": 1816,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 1947,
+          "projection_end": 1966,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 2011,
+          "projection_end": 2030,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 2058,
+          "projection_end": 2077,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 2097,
+          "projection_end": 2108,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 2139,
+          "projection_end": 2158,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 2164,
+          "projection_end": 2171,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 2219,
+          "projection_end": 2238,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0BMN:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNamely, for a scheme <MATH_0001> a morphism <MATH_0002> is the same thing as\na collection of morphism <MATH_0003> which agree on overlaps by\nLemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$Z \\to T$",
+        "MATH_0003": "$Z_i \\to T$",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we show that several properties\nof morphisms (being smooth, locally of finite presentation,\nand so on) descend under faithfully flat morphisms. We start\nwith an algebraic version. (The ``Noetherian'' reader should\nconsult Lemma <REF_0001>\ninstead of the next lemma.)",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-finite-type-local-source-fppf-algebra}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent of finiteness and smoothness properties of morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-finiteness-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KK:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be ring maps.\nAssume <MATH_0002> is of finite presentation and\n<MATH_0003> faithfully flat and of finite presentation.\nThen <MATH_0004> is of finite presentation.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-finitely-presented-permanence-algebra}",
+        "MATH_0001": "$R \\to A \\to B$",
+        "MATH_0002": "$R \\to B$",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$R \\to A$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nConsider the algebra <MATH_0001> together with the\npair of maps <MATH_0002> given by <MATH_0003>\nand <MATH_0004>. Of course the two compositions\n<MATH_0005> are the same. Note that as\n<MATH_0006> is flat and of finite presentation (base change of\n<MATH_0007>), the ring map <MATH_0008> is of finite presentation\n(as the composite of <MATH_0009>).\n\n<STRUCT_0002><STRUCT_0003>\nWe are going to use the criterion\nAlgebra, Lemma <REF_0001>\nto show that <MATH_0010> is of finite presentation.\nLet <MATH_0011> be any <MATH_0012>-algebra, and suppose that\n<MATH_0013> is written\nas a directed colimit of <MATH_0014>-algebras.\nLet <MATH_0015> be an <MATH_0016>-algebra homomorphism. We have to\nshow that <MATH_0017> factors through one of the <MATH_0018>.\nConsider the rings <MATH_0019> and\n<MATH_0020>.\nAs <MATH_0021> is faithfully flat of finite presentation over <MATH_0022>, also <MATH_0023>\nis faithfully flat of finite presentation over <MATH_0024>.\nBy Algebra, Lemma <REF_0002>\npart (2) applied to the pair <MATH_0025> and the system <MATH_0026>\nthere exists a <MATH_0027>\nand a flat, finitely presented <MATH_0028>-algebra\n<MATH_0029> such that <MATH_0030>.\nFor <MATH_0031> set\n<MATH_0032> and\n<MATH_0033>.\n\n<STRUCT_0004><STRUCT_0005>\nWe interrupt the flow of the argument to show that <MATH_0034>\nis faithfully flat for <MATH_0035> large enough. (This should really\nbe a separate lemma somewhere else, maybe in the chapter on limits.)\nSince <MATH_0036> is\nflat and of finite presentation it is open (see Morphisms,\nLemma <REF_0003>).\nLet <MATH_0037> be an ideal such that\n<MATH_0038> is the complement\nof the image. Note that formation of the image commutes\nwith base change. Hence, since <MATH_0039>\nis surjective, and <MATH_0040>\nwe see that <MATH_0041>. Thus for some <MATH_0042> we\nhave <MATH_0043>. For this and all greater\n<MATH_0044> the morphism\n<MATH_0045> is surjective.\n\n<STRUCT_0006><STRUCT_0007>\nBy analogy with the notation in the first paragraph of the proof denote\n<MATH_0046> the two canonical maps.\nThen <MATH_0047>\nand <MATH_0048>.\nSince <MATH_0049> and <MATH_0050> are finitely presented over <MATH_0051> there exist\n(by Algebra, Lemma <REF_0004>\napplied several times)\na <MATH_0052> and an <MATH_0053>-algebra maps\n<MATH_0054>, <MATH_0055> such that\nthe diagram\n<MATH_0056>\nis commutative. OK, and this means that <MATH_0057>\nmaps into the equalizer of <MATH_0058> and <MATH_0059>.\nBy Lemma <REF_0005> we\nsee that <MATH_0060> is the equalizer of <MATH_0061> and <MATH_0062>.\nThus we get the desired ring map <MATH_0063> and we win.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$C = B \\otimes_A B$",
+        "MATH_0002": "$p, q : B \\to C$",
+        "MATH_0003": "$p(b) = b \\otimes 1$",
+        "MATH_0004": "$q(b) = 1 \\otimes b$",
+        "MATH_0005": "$A \\to B \\to C$",
+        "MATH_0006": "$p : B \\to C$",
+        "MATH_0007": "$A \\to B$",
+        "MATH_0008": "$R \\to C$",
+        "MATH_0009": "$R \\to B \\to C$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0001": "\\ref{algebra-lemma-characterize-finite-presentation}",
+        "MATH_0010": "$R \\to A$",
+        "MATH_0011": "$S$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$S = \\colim_{\\lambda \\in \\Lambda} S_\\lambda$",
+        "MATH_0014": "$R$",
+        "MATH_0015": "$A \\to S$",
+        "MATH_0016": "$R$",
+        "MATH_0017": "$A \\to S$",
+        "MATH_0018": "$S_\\lambda$",
+        "MATH_0019": "$B' = S \\otimes_A B$",
+        "MATH_0020": "$C' = S \\otimes_A C = B' \\otimes_S B'$",
+        "MATH_0021": "$B$",
+        "MATH_0022": "$A$",
+        "MATH_0023": "$B'$",
+        "MATH_0024": "$S$",
+        "REF_0002": "\\ref{algebra-lemma-flat-finite-presentation-limit-flat}",
+        "MATH_0025": "$(S \\to B', B')$",
+        "MATH_0026": "$(S_\\lambda)$",
+        "MATH_0027": "$\\lambda_0 \\in \\Lambda$",
+        "MATH_0028": "$S_{\\lambda_0}$",
+        "MATH_0029": "$B_{\\lambda_0}$",
+        "MATH_0030": "$B' = S \\otimes_{S_{\\lambda_0}} B_{\\lambda_0}$",
+        "MATH_0031": "$\\lambda \\geq \\lambda_0$",
+        "MATH_0032": "$B_\\lambda = S_\\lambda \\otimes_{S_{\\lambda_0}} B_{\\lambda_0}$",
+        "MATH_0033": "$C_\\lambda = B_\\lambda \\otimes_{S_\\lambda} B_\\lambda$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0034": "$S_\\lambda \\to B_\\lambda$",
+        "MATH_0035": "$\\lambda$",
+        "MATH_0036": "$\\Spec(B_{\\lambda_0}) \\to \\Spec(S_{\\lambda_0})$",
+        "REF_0003": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0037": "$I \\subset S_{\\lambda_0}$",
+        "MATH_0038": "$V(I) \\subset \\Spec(S_{\\lambda_0})$",
+        "MATH_0039": "$\\Spec(B') \\to \\Spec(S)$",
+        "MATH_0040": "$B' = B_{\\lambda_0} \\otimes_{S_{\\lambda_0}} S$",
+        "MATH_0041": "$IS = S$",
+        "MATH_0042": "$\\lambda \\geq \\lambda_0$",
+        "MATH_0043": "$IS_{\\lambda} = S_\\lambda$",
+        "MATH_0044": "$\\lambda$",
+        "MATH_0045": "$\\Spec(B_\\lambda) \\to \\Spec(S_\\lambda)$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0046": "$p_\\lambda, q_\\lambda : B_\\lambda \\to C_\\lambda$",
+        "MATH_0047": "$B' = \\colim_{\\lambda \\geq \\lambda_0} B_\\lambda$",
+        "MATH_0048": "$C' = \\colim_{\\lambda \\geq \\lambda_0} C_\\lambda$",
+        "MATH_0049": "$B$",
+        "MATH_0050": "$C$",
+        "MATH_0051": "$R$",
+        "REF_0004": "\\ref{algebra-lemma-characterize-finite-presentation}",
+        "MATH_0052": "$\\lambda \\geq \\lambda_0$",
+        "MATH_0053": "$R$",
+        "MATH_0054": "$B \\to B_\\lambda$",
+        "MATH_0055": "$C \\to C_\\lambda$",
+        "MATH_0056": "$$\n\\xymatrix{\nC \\ar[rr] & &\nC_\\lambda \\\\\nB \\ar[rr]\n\\ar@<1ex>[u]^-p\n\\ar@<-1ex>[u]_-q\n& &\nB_\\lambda\n\\ar@<1ex>[u]^-{p_\\lambda}\n\\ar@<-1ex>[u]_-{q_\\lambda}\n}\n$$",
+        "MATH_0057": "$A \\to B \\to B_\\lambda$",
+        "MATH_0058": "$p_\\lambda$",
+        "MATH_0059": "$q_\\lambda$",
+        "REF_0005": "\\ref{lemma-ff-exact}",
+        "MATH_0060": "$S_\\lambda$",
+        "MATH_0061": "$p_\\lambda$",
+        "MATH_0062": "$q_\\lambda$",
+        "MATH_0063": "$A \\to S_\\lambda$",
+        "STRUCT_0008": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere is an easier version of this dealing with the property\nof being of finite type.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0367:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be ring maps.\nAssume <MATH_0002> is of finite type and\n<MATH_0003> faithfully flat and of finite presentation.\nThen <MATH_0004> is of finite type.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-type-local-source-fppf-algebra}",
+        "MATH_0001": "$R \\to A \\to B$",
+        "MATH_0002": "$R \\to B$",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$R \\to A$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0367:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy\nAlgebra, Lemma <REF_0001>\nthere exists a commutative diagram\n<MATH_0001>\nwith <MATH_0002> of finite presentation,\n<MATH_0003> faithfully flat of finite presentation\nand <MATH_0004>. Since <MATH_0005> is of finite\ntype by assumption, we may add some elements to <MATH_0006> and assume\nthat the map <MATH_0007> is surjective!\nIn this case, since <MATH_0008> is faithfully flat, we see\nthat as\n<MATH_0009>\nis surjective, also <MATH_0010> is surjective. Hence we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{algebra-lemma-descend-faithfully-flat-finite-presentation}",
+        "MATH_0001": "$$\n\\xymatrix{\nR \\ar[r] \\ar@{=}[d] &\nA_0 \\ar[d] \\ar[r] &\nB_0 \\ar[d] \\\\\nR \\ar[r] & A \\ar[r] & B\n}\n$$",
+        "MATH_0002": "$R \\to A_0$",
+        "MATH_0003": "$A_0 \\to B_0$",
+        "MATH_0004": "$B = A \\otimes_{A_0} B_0$",
+        "MATH_0005": "$R \\to B$",
+        "MATH_0006": "$A_0$",
+        "MATH_0007": "$B_0 \\to B$",
+        "MATH_0008": "$A_0 \\to B_0$",
+        "MATH_0009": "$$\n(A_0 \\to A) \\otimes_{A_0} B_0 \\cong (B_0 \\to B)\n$$",
+        "MATH_0010": "$A_0 \\to A$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KL:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that <MATH_0002> is\nsurjective, flat and locally of finite presentation and assume\nthat <MATH_0003> is locally of finite presentation (resp.<SPACE_0001>locally of finite type).\nThen <MATH_0004> is locally of finite presentation (resp.<SPACE_0002>locally of finite type).\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-finitely-presented-permanence}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[IV, 17.7.5 (i) and (ii)]{EGA}.\n\\end{reference}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$p$",
+        "SPACE_0001": "\\ ",
+        "MATH_0004": "$q$",
+        "SPACE_0002": "\\ ",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KL:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe problem is local on <MATH_0001> and <MATH_0002>. Hence we may assume that\n<MATH_0003> and <MATH_0004> are affine. Since <MATH_0005> is flat and locally of finite\npresentation, we see that <MATH_0006> is open\n(Morphisms, Lemma <REF_0001>).\nHence, since <MATH_0007> is quasi-compact, there exist finitely many affine opens\n<MATH_0008> such that <MATH_0009>.\nClearly we may replace <MATH_0010> by <MATH_0011>, and hence we\nmay assume <MATH_0012> is affine as well.\nIn this case the lemma is equivalent to\nLemma <REF_0002>\n(resp. Lemma <REF_0003>)\nabove.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$Y$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$Y$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "REF_0001": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0007": "$Y$",
+        "MATH_0008": "$X_i \\subset X$",
+        "MATH_0009": "$Y = \\bigcup f(X_i)$",
+        "MATH_0010": "$X$",
+        "MATH_0011": "$\\coprod X_i$",
+        "MATH_0012": "$X$",
+        "REF_0002": "\\ref{lemma-flat-finitely-presented-permanence-algebra}",
+        "REF_0003": "\\ref{lemma-finite-type-local-source-fppf-algebra}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe use this to improve some of the results on morphisms\nobtained earlier.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KM:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is surjective, and syntomic (resp.<SPACE_0001>smooth, resp.<SPACE_0002><ACCENT_0001>tale),\n<STRUCT_0004> <MATH_0003> is syntomic (resp.<SPACE_0003>smooth, resp.<SPACE_0004><ACCENT_0002>tale).\n<STRUCT_0005>\nThen <MATH_0004> is syntomic (resp.<SPACE_0005>smooth, resp.<SPACE_0006><ACCENT_0003>tale).\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-smooth-etale-permanence}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "SPACE_0001": "\\ ",
+        "SPACE_0002": "\\ ",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$p$",
+        "SPACE_0003": "\\ ",
+        "SPACE_0004": "\\ ",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$q$",
+        "SPACE_0005": "\\ ",
+        "SPACE_0006": "\\ ",
+        "ACCENT_0003": "\\'e",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KM:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nCombine Morphisms, Lemmas\n<REF_0001>,\n<REF_0002>, and\n<REF_0003>\nwith Lemma <REF_0004> above.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-syntomic-permanence}",
+        "REF_0002": "\\ref{morphisms-lemma-smooth-permanence}",
+        "REF_0003": "\\ref{morphisms-lemma-etale-permanence-two}",
+        "REF_0004": "\\ref{lemma-flat-finitely-presented-permanence}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nActually we can strengthen this result as follows.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B5:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is surjective, flat, and locally of finite presentation,\n<STRUCT_0004> <MATH_0003> is smooth (resp.<SPACE_0001><ACCENT_0001>tale).\n<STRUCT_0005>\nThen <MATH_0004> is smooth (resp.<SPACE_0002><ACCENT_0002>tale).\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-permanence}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$p$",
+        "SPACE_0001": "\\ ",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$q$",
+        "SPACE_0002": "\\ ",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B5:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAssume (1) and that <MATH_0001> is smooth. By\nLemma <REF_0001>\nwe see that <MATH_0002> is locally of finite presentation.\nBy\nMorphisms, Lemma <REF_0002>\nwe see that <MATH_0003> is flat.\nHence now it suffices to show that the fibres of <MATH_0004> are smooth, see\nMorphisms, Lemma <REF_0003>.\nApply\nVarieties, Lemma <REF_0004>\nto the flat surjective morphisms <MATH_0005> for <MATH_0006> to\nconclude. We omit the proof of the <ACCENT_0001>tale case.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$p$",
+        "REF_0001": "\\ref{lemma-flat-finitely-presented-permanence}",
+        "MATH_0002": "$q$",
+        "REF_0002": "\\ref{morphisms-lemma-flat-permanence}",
+        "MATH_0003": "$q$",
+        "MATH_0004": "$q$",
+        "REF_0003": "\\ref{morphisms-lemma-smooth-flat-smooth-fibres}",
+        "REF_0004": "\\ref{varieties-lemma-flat-under-smooth}",
+        "MATH_0005": "$X_s \\to Y_s$",
+        "MATH_0006": "$s \\in S$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B6:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith the assumptions (1) and <MATH_0001> smooth in\nLemma <REF_0001>\nit is not automatically the case that <MATH_0002> is smooth.\nA counter example is <MATH_0003>, <MATH_0004>,\n<MATH_0005> and <MATH_0006> given by <MATH_0007>.\nBut see also Lemma <REF_0002>\nfor some information on the structure of <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-smooth-permanence}",
+        "MATH_0001": "$p$",
+        "REF_0001": "\\ref{lemma-smooth-permanence}",
+        "MATH_0002": "$X \\to Y$",
+        "MATH_0003": "$S = \\Spec(k)$",
+        "MATH_0004": "$X = \\Spec(k[s])$",
+        "MATH_0005": "$Y = \\Spec(k[t])$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$t \\mapsto s^2$",
+        "REF_0002": "\\ref{lemma-syntomic-permanence}",
+        "MATH_0008": "$f$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B7:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is surjective, flat, and locally of finite presentation,\n<STRUCT_0004> <MATH_0003> is syntomic.\n<STRUCT_0005>\nThen both <MATH_0004> and <MATH_0005> are syntomic.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-permanence}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$p$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$q$",
+        "MATH_0005": "$f$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:05B7:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy Lemma <REF_0001> we see that <MATH_0001>\nis of finite presentation. By\nMorphisms, Lemma <REF_0002>\nwe see that <MATH_0002> is flat.\nBy Morphisms, Lemma <REF_0003>\nit now suffices to show that the local rings of the fibres of\n<MATH_0003> and the fibres of <MATH_0004> are local complete intersection\nrings. To do this we may take the fibre of <MATH_0005> at\na point <MATH_0006>, i.e., we may assume <MATH_0007> is the spectrum of a\nfield. Pick a point <MATH_0008> with image <MATH_0009> and\nconsider the ring map\n<MATH_0010>\nThis is a flat local homomorphism of local Noetherian rings.\nThe local ring <MATH_0011> is a complete intersection.\nThus may use Avramov's result, see\nDivided Power Algebra, Lemma <REF_0004>,\nto conclude that both <MATH_0012> and\n<MATH_0013> are\ncomplete intersection rings.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-flat-finitely-presented-permanence}",
+        "MATH_0001": "$q$",
+        "REF_0002": "\\ref{morphisms-lemma-flat-permanence}",
+        "MATH_0002": "$q$",
+        "REF_0003": "\\ref{morphisms-lemma-syntomic-locally-standard-syntomic}",
+        "MATH_0003": "$Y \\to S$",
+        "MATH_0004": "$X \\to Y$",
+        "MATH_0005": "$X \\to Y \\to S$",
+        "MATH_0006": "$s \\in S$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$x \\in X$",
+        "MATH_0009": "$y \\in Y$",
+        "MATH_0010": "$$\n\\mathcal{O}_{Y, y} \\longrightarrow \\mathcal{O}_{X, x}\n$$",
+        "MATH_0011": "$\\mathcal{O}_{X, x}$",
+        "REF_0004": "\\ref{dpa-lemma-avramov}",
+        "MATH_0012": "$\\mathcal{O}_{Y, y}$",
+        "MATH_0013": "$\\mathcal{O}_{X, x}/\\mathfrak m_y\\mathcal{O}_{X, x}$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KJ:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe following type of lemma is occasionally useful.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:06NB:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be morphism of schemes.\nLet <MATH_0002> be one of the following properties of morphisms of schemes:\nflat, locally finite type, locally finite presentation.\nAssume that <MATH_0003> has <MATH_0004> and that <MATH_0005>\ncan be refined by an fppf covering of <MATH_0006>. Then <MATH_0007> is <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-curiosity}",
+        "MATH_0001": "$X \\to Y \\to Z$",
+        "MATH_0002": "$P$",
+        "MATH_0003": "$X \\to Z$",
+        "MATH_0004": "$P$",
+        "MATH_0005": "$\\{X \\to Y\\}$",
+        "MATH_0006": "$Y$",
+        "MATH_0007": "$Y \\to Z$",
+        "MATH_0008": "$P$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:06NB:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be an affine open and let\n<MATH_0002> be an affine open which maps into\n<MATH_0003>. The assumption on <MATH_0004> implies we can\nfind a standard affine fppf covering <MATH_0005>\nand lifts <MATH_0006>. Since <MATH_0007>\nis quasi-compact we can find finitely many affine opens\n<MATH_0008> lying over <MATH_0009>\nsuch that the image of each <MATH_0010>\nis contained in the union <MATH_0011>. Hence after\nreplacing each <MATH_0012> by a standard affine Zariski coverings\nof itself we may assume we have a\nstandard affine fppf covering <MATH_0013>\nsuch that each <MATH_0014> factors through an affine\nopen <MATH_0015> lying over <MATH_0016>.\nIn other words, we have ring maps <MATH_0017> for each <MATH_0018>.\nNote that we can also consider\n<MATH_0019>\nand that the ring map <MATH_0020> is faithfully flat and\nof finite presentation.\n\n<STRUCT_0002><STRUCT_0003>\nThe case <MATH_0021>. In this case we know that <MATH_0022> is flat\nand we have to prove that <MATH_0023> is flat. Suppose that\n<MATH_0024> is an exact sequence of <MATH_0025>-modules. We want to\nshow that <MATH_0026>\nis exact. Let <MATH_0027> be its cohomology and let <MATH_0028> be the cohomology\nof <MATH_0029>. As\n<MATH_0030> is flat we know that <MATH_0031>. On the other hand\n<MATH_0032>\nis exact hence has zero cohomology. Hence the map\n<MATH_0033> is zero (as it factors through the zero module).\nThus <MATH_0034>. As <MATH_0035> is faithfully flat we conclude that\n<MATH_0036> as desired.\n\n<STRUCT_0004><STRUCT_0005>\nThe case <MATH_0037>.\nIn this case we know that <MATH_0038> is of finite type and\nwe have to prove that <MATH_0039> is of finite type.\nBecause <MATH_0040> is of finite presentation (hence of finite type)\nwe see that <MATH_0041> is of finite type, see\nAlgebra, Lemma <REF_0001>.\nTherefore <MATH_0042> is of finite type and we conclude by\nLemma <REF_0002>.\n\n<STRUCT_0006><STRUCT_0007>\nThe case <MATH_0043>.\nIn this case we know that <MATH_0044> is of finite presentation and\nwe have to prove that <MATH_0045> is of finite presentation.\nBecause <MATH_0046> is of finite presentation and <MATH_0047>\nof finite type we see that <MATH_0048> is of finite presentation, see\nAlgebra, Lemma <REF_0003>.\nTherefore <MATH_0049> is of finite presentation and we conclude by\nLemma <REF_0004>.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\Spec(C) \\subset Z$",
+        "MATH_0002": "$\\Spec(B) \\subset Y$",
+        "MATH_0003": "$\\Spec(C)$",
+        "MATH_0004": "$X \\to Y$",
+        "MATH_0005": "$\\{\\Spec(B_j) \\to \\Spec(B)\\}$",
+        "MATH_0006": "$x_j : \\Spec(B_j) \\to X$",
+        "MATH_0007": "$\\Spec(B_j)$",
+        "MATH_0008": "$\\Spec(A_i) \\subset X$",
+        "MATH_0009": "$\\Spec(B)$",
+        "MATH_0010": "$x_j$",
+        "MATH_0011": "$\\bigcup \\Spec(A_i)$",
+        "MATH_0012": "$\\Spec(B_j)$",
+        "MATH_0013": "$\\{\\Spec(B_i) \\to \\Spec(B)\\}$",
+        "MATH_0014": "$\\Spec(B_i) \\to Y$",
+        "MATH_0015": "$\\Spec(A_i) \\subset X$",
+        "MATH_0016": "$\\Spec(B)$",
+        "MATH_0017": "$C \\to B \\to A_i \\to B_i$",
+        "MATH_0018": "$i$",
+        "MATH_0019": "$$\nC \\to B \\to A = \\prod A_i \\to B' = \\prod B_i\n$$",
+        "MATH_0020": "$B \\to \\prod B_i$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0021": "$P = flat$",
+        "MATH_0022": "$C \\to A$",
+        "MATH_0023": "$C \\to B$",
+        "MATH_0024": "$N \\to N' \\to N''$",
+        "MATH_0025": "$C$",
+        "MATH_0026": "$N \\otimes_C B \\to N' \\otimes_C B \\to N'' \\otimes_C B$",
+        "MATH_0027": "$H$",
+        "MATH_0028": "$H'$",
+        "MATH_0029": "$N \\otimes_C B' \\to N' \\otimes_C B' \\to N'' \\otimes_C B'$",
+        "MATH_0030": "$B \\to B'$",
+        "MATH_0031": "$H' = H \\otimes_B B'$",
+        "MATH_0032": "$N \\otimes_C A \\to N' \\otimes_C A \\to N'' \\otimes_C A$",
+        "MATH_0033": "$H \\to H'$",
+        "MATH_0034": "$H' = 0$",
+        "MATH_0035": "$B \\to B'$",
+        "MATH_0036": "$H = 0$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0037": "$P = locally\\ finite\\ type$",
+        "MATH_0038": "$C \\to A$",
+        "MATH_0039": "$C \\to B$",
+        "MATH_0040": "$B \\to B'$",
+        "MATH_0041": "$A \\to B'$",
+        "REF_0001": "\\ref{algebra-lemma-compose-finite-type}",
+        "MATH_0042": "$C \\to B'$",
+        "REF_0002": "\\ref{lemma-finite-type-local-source-fppf-algebra}",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0043": "$P = locally\\ finite\\ presentation$",
+        "MATH_0044": "$C \\to A$",
+        "MATH_0045": "$C \\to B$",
+        "MATH_0046": "$B \\to B'$",
+        "MATH_0047": "$B \\to A$",
+        "MATH_0048": "$A \\to B'$",
+        "REF_0003": "\\ref{algebra-lemma-compose-finite-type}",
+        "MATH_0049": "$C \\to B'$",
+        "REF_0004": "\\ref{lemma-flat-finitely-presented-permanence-algebra}",
+        "STRUCT_0008": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0347:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Local properties of schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-characterize-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is of finite presentation,\n<STRUCT_0004> for every directed system <MATH_0003> of <MATH_0004>-algebras\nthe map\n<MATH_0005>\nis bijective, and\n<STRUCT_0005> for every directed system <MATH_0006> of <MATH_0007>-algebras\nthe map\n<MATH_0008>\nis surjective.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-finite-presentation}",
+        "MATH_0001": "$\\varphi : R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\varphi$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$A_\\lambda$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$$\n\\colim_\\lambda \\Hom_R(S, A_\\lambda) \\longrightarrow\n\\Hom_R(S, \\colim_\\lambda A_\\lambda)\n$$",
+        "STRUCT_0005": "\\item",
+        "MATH_0006": "$A_\\lambda$",
+        "MATH_0007": "$R$",
+        "MATH_0008": "$$\n\\colim_\\lambda \\Hom_R(S, A_\\lambda) \\longrightarrow\n\\Hom_R(S, \\colim_\\lambda A_\\lambda)\n$$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-characterize-finite-presentation",
+      "requested_tag": "00QO"
+    },
+    {
+      "context_id": "reference:algebra-lemma-compose-finite-type",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe notions finite type and finite presentation have the following\npermanence properties.\n<STRUCT_0002>\n<STRUCT_0003> A composition of ring maps of finite type is of finite type.\n<STRUCT_0004> A composition of ring maps of finite presentation is of finite\npresentation.\n<STRUCT_0005> Given <MATH_0001> with <MATH_0002> of finite type,\nthen <MATH_0003> is of finite type.\n<STRUCT_0006> Given <MATH_0004>, with <MATH_0005> of finite presentation,\nand <MATH_0006> of finite type, then <MATH_0007> is of finite presentation.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-compose-finite-type}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\item",
+        "MATH_0001": "$R \\to S' \\to S$",
+        "MATH_0002": "$R \\to S$",
+        "MATH_0003": "$S' \\to S$",
+        "STRUCT_0006": "\\item",
+        "MATH_0004": "$R \\to S' \\to S$",
+        "MATH_0005": "$R \\to S$",
+        "MATH_0006": "$R \\to S'$",
+        "MATH_0007": "$S' \\to S$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-compose-finite-type",
+      "requested_tag": "00F4"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descend-faithfully-flat-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be ring maps.\nAssume <MATH_0002> faithfully flat of finite presentation.\nThen there exists a commutative diagram\n<MATH_0003>\nwith <MATH_0004> of finite presentation,\n<MATH_0005> faithfully flat of finite presentation\nand <MATH_0006>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descend-faithfully-flat-finite-presentation}",
+        "MATH_0001": "$R \\to A \\to B$",
+        "MATH_0002": "$A \\to B$",
+        "MATH_0003": "$$\n\\xymatrix{\nR \\ar[r] \\ar@{=}[d] &\nA_0 \\ar[d] \\ar[r] &\nB_0 \\ar[d] \\\\\nR \\ar[r] & A \\ar[r] & B\n}\n$$",
+        "MATH_0004": "$R \\to A_0$",
+        "MATH_0005": "$A_0 \\to B_0$",
+        "MATH_0006": "$B = A \\otimes_{A_0} B_0$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descend-faithfully-flat-finite-presentation",
+      "requested_tag": "034Y"
+    },
+    {
+      "context_id": "reference:algebra-lemma-flat-finite-presentation-limit-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nLet <MATH_0002> be an <MATH_0003>-module.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is of finite presentation,\n<STRUCT_0004> <MATH_0005> is a finitely presented <MATH_0006>-module, and\n<STRUCT_0005> <MATH_0007> is flat over <MATH_0008>.\n<STRUCT_0006>\nIn this case we have the following:\n<STRUCT_0007>\n<STRUCT_0008> There exists a finite type <MATH_0009>-algebra <MATH_0010> and\na finite type ring map <MATH_0011> and a finite <MATH_0012>-module <MATH_0013>\nsuch that <MATH_0014> is flat over <MATH_0015>, together with a ring maps\n<MATH_0016> and <MATH_0017> and an <MATH_0018>-module map <MATH_0019>\nsuch that <MATH_0020> and <MATH_0021>.\n<STRUCT_0009> If <MATH_0022> is written\nas a directed colimit, then there exists a <MATH_0023> and a ring map\n<MATH_0024> of finite presentation, and an <MATH_0025>-module\n<MATH_0026> of finite presentation such that <MATH_0027> is flat over\n<MATH_0028> and such that <MATH_0029> and\n<MATH_0030>.\n<STRUCT_0010> If\n<MATH_0031>\nis written as a directed colimit such that\n<STRUCT_0011>\n<STRUCT_0012> <MATH_0032> and\n<MATH_0033> are isomorphisms\nfor <MATH_0034>,\n<STRUCT_0013> <MATH_0035> is of finite presentation,\n<STRUCT_0014> <MATH_0036> is a finitely presented <MATH_0037>-module,\n<STRUCT_0015>\nthen for all sufficiently large <MATH_0038> the module <MATH_0039>\nis flat over <MATH_0040>.\n<STRUCT_0016>\n<STRUCT_0017>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-finite-presentation-limit-flat}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$M$",
+        "MATH_0006": "$S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$R$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\begin{enumerate}",
+        "STRUCT_0008": "\\item",
+        "MATH_0009": "$\\mathbf{Z}$",
+        "MATH_0010": "$R_0$",
+        "MATH_0011": "$R_0 \\to S_0$",
+        "MATH_0012": "$S_0$",
+        "MATH_0013": "$M_0$",
+        "MATH_0014": "$M_0$",
+        "MATH_0015": "$R_0$",
+        "MATH_0016": "$R_0 \\to R$",
+        "MATH_0017": "$S_0 \\to S$",
+        "MATH_0018": "$S_0$",
+        "MATH_0019": "$M_0 \\to M$",
+        "MATH_0020": "$S \\cong R \\otimes_{R_0} S_0$",
+        "MATH_0021": "$M = S \\otimes_{S_0} M_0$",
+        "STRUCT_0009": "\\item",
+        "MATH_0022": "$R = \\colim_{\\lambda \\in \\Lambda} R_\\lambda$",
+        "MATH_0023": "$\\lambda$",
+        "MATH_0024": "$R_\\lambda \\to S_\\lambda$",
+        "MATH_0025": "$S_\\lambda$",
+        "MATH_0026": "$M_\\lambda$",
+        "MATH_0027": "$M_\\lambda$",
+        "MATH_0028": "$R_\\lambda$",
+        "MATH_0029": "$S = R \\otimes_{R_\\lambda} S_\\lambda$",
+        "MATH_0030": "$M = S \\otimes_{S_{\\lambda}} M_\\lambda$",
+        "STRUCT_0010": "\\item",
+        "MATH_0031": "$$\n(R \\to S, M) =\n\\colim_{\\lambda \\in \\Lambda}\n(R_\\lambda \\to S_\\lambda, M_\\lambda)\n$$",
+        "STRUCT_0011": "\\begin{enumerate}",
+        "STRUCT_0012": "\\item",
+        "MATH_0032": "$R_\\mu \\otimes_{R_\\lambda} S_\\lambda \\to S_\\mu$",
+        "MATH_0033": "$S_\\mu \\otimes_{S_\\lambda} M_\\lambda \\to M_\\mu$",
+        "MATH_0034": "$\\mu \\geq \\lambda$",
+        "STRUCT_0013": "\\item",
+        "MATH_0035": "$R_\\lambda \\to S_\\lambda$",
+        "STRUCT_0014": "\\item",
+        "MATH_0036": "$M_\\lambda$",
+        "MATH_0037": "$S_\\lambda$",
+        "STRUCT_0015": "\\end{enumerate}",
+        "MATH_0038": "$\\lambda$",
+        "MATH_0039": "$M_\\lambda$",
+        "MATH_0040": "$R_\\lambda$",
+        "STRUCT_0016": "\\end{enumerate}",
+        "STRUCT_0017": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-flat-finite-presentation-limit-flat",
+      "requested_tag": "02JO"
+    },
+    {
+      "context_id": "reference:descent-lemma-ff-exact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> is faithfully flat, see\nAlgebra, Definition <REF_0001>.\nThen for any <MATH_0002>-module <MATH_0003> the extended cochain complex\n(<REF_0002>) is exact.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-ff-exact}",
+        "MATH_0001": "$R \\to A$",
+        "REF_0001": "\\ref{algebra-definition-flat}",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$M$",
+        "REF_0002": "\\ref{equation-extended-complex}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-ff-exact",
+      "requested_tag": "023M"
+    },
+    {
+      "context_id": "reference:dpa-lemma-avramov",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat local homomorphism of Noetherian local rings.\nThen the following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is a complete intersection,\n<STRUCT_0004> <MATH_0003> and <MATH_0004> are complete intersections.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-avramov}",
+        "MATH_0001": "$A \\to B$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$B$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$A$",
+        "MATH_0004": "$B/\\mathfrak m_A B$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "dpa-lemma-avramov",
+      "requested_tag": "09Q7"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-etale-permanence-two",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is surjective, and <ACCENT_0001>tale,\n<STRUCT_0004> <MATH_0003> is <ACCENT_0002>tale, and\n<STRUCT_0005> <MATH_0004> is locally of finite presentation<FOOTNOTEOPEN_0001>In fact this\nis implied by (1) and (2), see\nDescent, Lemma <REF_0001>.\nMoreover, it suffices to assume that <MATH_0005> is surjective, flat and\nlocally of finite presentation, see\nDescent, Lemma <REF_0002>.<FOOTNOTECLOSE_0001>.\n<STRUCT_0006>\nThen <MATH_0006> is <ACCENT_0003>tale.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-permanence-two}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$p$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$q$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "REF_0001": "\\ref{descent-lemma-flat-finitely-presented-permanence}",
+        "MATH_0005": "$f$",
+        "REF_0002": "\\ref{descent-lemma-smooth-permanence}",
+        "FOOTNOTECLOSE_0001": "}",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0006": "$q$",
+        "ACCENT_0003": "\\'e",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-etale-permanence-two",
+      "requested_tag": "02K6"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-flat-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes over <MATH_0002>.\nLet <MATH_0003> be a quasi-coherent sheaf on <MATH_0004>.\nLet <MATH_0005> with <MATH_0006>. If <MATH_0007> is flat at <MATH_0008>, then\n<MATH_0009>\nIn particular: If <MATH_0010> is surjective and flat, then\n<MATH_0011> is flat over <MATH_0012>, if and only if\n<MATH_0013> is flat over <MATH_0014>. If <MATH_0015> is surjective and\nflat, and <MATH_0016> is flat over <MATH_0017>, then <MATH_0018> is flat over <MATH_0019>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-permanence}",
+        "MATH_0001": "$h : X \\to Y$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\mathcal{G}$",
+        "MATH_0004": "$Y$",
+        "MATH_0005": "$x \\in X$",
+        "MATH_0006": "$y = h(x) \\in Y$",
+        "MATH_0007": "$h$",
+        "MATH_0008": "$x$",
+        "MATH_0009": "$$\n\\mathcal{G}\\text{ flat over }S\\text{ at }y\n\\Leftrightarrow\nh^*\\mathcal{G}\\text{ flat over }S\\text{ at }x.\n$$",
+        "MATH_0010": "$h$",
+        "MATH_0011": "$\\mathcal{G}$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$h^*\\mathcal{G}$",
+        "MATH_0014": "$S$",
+        "MATH_0015": "$h$",
+        "MATH_0016": "$X$",
+        "MATH_0017": "$S$",
+        "MATH_0018": "$Y$",
+        "MATH_0019": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-flat-permanence",
+      "requested_tag": "02JZ"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-fppf-open",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA flat morphism locally of finite presentation is universally open.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fppf-open}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-fppf-open",
+      "requested_tag": "01UA"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-smooth-flat-smooth-fibres",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nIf <MATH_0002> is flat, locally of finite presentation, and all\nfibres <MATH_0003> are smooth, then <MATH_0004>\nis smooth.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-flat-smooth-fibres}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$X_s$",
+        "MATH_0004": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-smooth-flat-smooth-fibres",
+      "requested_tag": "01V8"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-smooth-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is surjective, and smooth,\n<STRUCT_0004> <MATH_0003> is smooth, and\n<STRUCT_0005> <MATH_0004> is locally of finite presentation<FOOTNOTEOPEN_0001>In fact this\nis implied by (1) and (2), see\nDescent, Lemma <REF_0001>.\nMoreover, it suffices to assume <MATH_0005> is surjective, flat and locally\nof finite presentation, see\nDescent, Lemma <REF_0002>.<FOOTNOTECLOSE_0001>.\n<STRUCT_0006>\nThen <MATH_0006> is smooth.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-permanence}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$p$",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$q$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "REF_0001": "\\ref{descent-lemma-flat-finitely-presented-permanence}",
+        "MATH_0005": "$f$",
+        "REF_0002": "\\ref{descent-lemma-smooth-permanence}",
+        "FOOTNOTECLOSE_0001": "}",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0006": "$q$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-smooth-permanence",
+      "requested_tag": "02K5"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-syntomic-locally-standard-syntomic",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes. Let <MATH_0002> be a point\nwith image <MATH_0003>. Let <MATH_0004> be an affine open neighbourhood\nof <MATH_0005>. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0006> is syntomic at <MATH_0007>.\n<STRUCT_0004> There exist an affine open <MATH_0008> with <MATH_0009> and\n<MATH_0010> such that <MATH_0011> is standard syntomic.\n<STRUCT_0005> The morphism <MATH_0012> is of finite presentation at <MATH_0013>, the local ring map\n<MATH_0014>\nis flat and <MATH_0015>\nis a complete intersection over <MATH_0016> (see\nAlgebra, Definition <REF_0001>).\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-locally-standard-syntomic}",
+        "MATH_0001": "$f : X  \\to S$",
+        "MATH_0002": "$x \\in X$",
+        "MATH_0003": "$s = f(x)$",
+        "MATH_0004": "$V \\subset S$",
+        "MATH_0005": "$s$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$x$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$U \\subset X$",
+        "MATH_0009": "$x \\in U$",
+        "MATH_0010": "$f(U) \\subset V$",
+        "MATH_0011": "$f|_U : U \\to V$",
+        "STRUCT_0005": "\\item",
+        "MATH_0012": "$f$",
+        "MATH_0013": "$x$",
+        "MATH_0014": "$\\mathcal{O}_{S, s} \\to \\mathcal{O}_{X, x}$",
+        "MATH_0015": "$\\mathcal{O}_{X, x}/\\mathfrak m_s \\mathcal{O}_{X, x}$",
+        "MATH_0016": "$\\kappa(s)$",
+        "REF_0001": "\\ref{algebra-definition-lci-local-ring}",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-syntomic-locally-standard-syntomic",
+      "requested_tag": "01UE"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-syntomic-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes. Assume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is surjective and syntomic,\n<STRUCT_0004> <MATH_0003> is syntomic, and\n<STRUCT_0005> <MATH_0004> is locally of finite presentation<FOOTNOTEOPEN_0001>In fact, if <MATH_0005> is\nsurjective, flat, and locally of finite presentation and <MATH_0006> is syntomic,\nthen both <MATH_0007> and <MATH_0008> are syntomic, see\nDescent, Lemma <REF_0001>.<FOOTNOTECLOSE_0001>.\n<STRUCT_0006>\nThen <MATH_0009> is syntomic.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-permanence}",
+        "MATH_0001": "$$\n\\xymatrix{\nX \\ar[rr]_f \\ar[rd]_p & &\nY \\ar[dl]^q \\\\\n& S\n}\n$$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$p$",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$q$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$p$",
+        "MATH_0007": "$q$",
+        "MATH_0008": "$f$",
+        "REF_0001": "\\ref{descent-lemma-syntomic-permanence}",
+        "FOOTNOTECLOSE_0001": "}",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0009": "$q$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-syntomic-permanence",
+      "requested_tag": "02K3"
+    },
+    {
+      "context_id": "reference:varieties-lemma-flat-under-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a field. Let <MATH_0002> be a morphism of schemes locally\nof finite type over <MATH_0003>. Let <MATH_0004> be a point and set <MATH_0005>.\nIf <MATH_0006> is smooth at <MATH_0007> and <MATH_0008> is flat at <MATH_0009>\nthen <MATH_0010> is smooth at <MATH_0011>. In particular, if <MATH_0012> is\nsmooth over <MATH_0013> and <MATH_0014> is flat and surjective, then <MATH_0015> is smooth over <MATH_0016>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-under-smooth}",
+        "MATH_0001": "$k$",
+        "MATH_0002": "$f : X \\to Y$",
+        "MATH_0003": "$k$",
+        "MATH_0004": "$x \\in X$",
+        "MATH_0005": "$y = f(x)$",
+        "MATH_0006": "$X \\to \\Spec(k)$",
+        "MATH_0007": "$x$",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$x$",
+        "MATH_0010": "$Y \\to \\Spec(k)$",
+        "MATH_0011": "$y$",
+        "MATH_0012": "$X$",
+        "MATH_0013": "$k$",
+        "MATH_0014": "$f$",
+        "MATH_0015": "$Y$",
+        "MATH_0016": "$k$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "varieties-lemma-flat-under-smooth",
+      "requested_tag": "05AX"
+    }
+  ]
+}

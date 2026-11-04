@@ -1,0 +1,899 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19eaf-8304-7270-86fd-c5f2a0a19856",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p20r01-20261102T235957Z.json",
+    "hash": "sha256:f9d73aa6a3442aa9f721aaa8fce6373c48ef53e769add64de0edb03a28939b11"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:08WN:statement",
+      "source_text": "For a ring <MATH_0001> and <MATH_0002> generating the unit\nideal, the morphism <MATH_0003> is\nuniversally injective. Although this is immediate from\nLemma <REF_0001>,\nit is instructive to check it directly: we immediately reduce to the case\nwhere <MATH_0004> is local, in which case some <MATH_0005> must be a unit and so the map\n<MATH_0006> is an isomorphism.\n",
+      "node_kind": "example",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n \\in R$",
+        "MATH_0003": "$R \\to R_{f_1} \\oplus \\ldots \\oplus R_{f_n}$",
+        "REF_0001": "\\ref{lemma-faithfully-flat-universally-injective}",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$f_i$",
+        "MATH_0006": "$R \\to R_{f_i}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 6,
+          "projection_end": 10,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 59,
+          "projection_end": 64,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 70,
+          "projection_end": 78,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 106,
+          "projection_end": 115,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 326,
+          "projection_end": 329,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 348,
+          "projection_end": 359,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WP:statement",
+      "source_text": "Any faithfully flat ring map is universally injective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 4,
+          "projection_end": 19,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 20,
+          "projection_end": 28,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 44,
+          "projection_end": 53,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WP:proof",
+      "source_text": "This is a reformulation of Algebra, Lemma\n<REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{algebra-lemma-faithfully-flat-universally-injective}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Algebra",
+          "projection_start": 27,
+          "projection_end": 34,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WJ:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nThe key observation from <REF_0001> is that universal injectivity \ncan be usefully reformulated in terms of a splitting, using the usual\nconstruction of an injective cogenerator in <MATH_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\cite{mesablishvili1}",
+        "MATH_0001": "$\\text{Mod}_R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "splitting",
+          "projection_start": 123,
+          "projection_end": 132,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 169,
+          "projection_end": 178,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WQ:statement",
+      "source_text": "Let <MATH_0001> be a ring. Define the contravariant functor\n<TEXTITOPEN_0001><MATH_0002><TEXTITCLOSE_0001> <MATH_0003> by setting\n<MATH_0004>\nwith the <MATH_0005>-action on <MATH_0006> given by <MATH_0007>.\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$C$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$ : \\text{Mod}_R \\to \\text{Mod}_R$",
+        "MATH_0004": "$$\nC(M) = \\Hom_{\\textit{Ab}}(M, \\mathbf{Q}/\\mathbf{Z}),\n$$",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$C(M)$",
+        "MATH_0007": "$rf(s) = f(rs)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "contravariant functor",
+          "projection_start": 38,
+          "projection_end": 59,
+          "concept": "contravariant-functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WJ:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nThis functor was denoted <MATH_0001> in\nMore on Algebra, Section <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$M \\mapsto M^\\vee$",
+        "REF_0001": "\\ref{more-algebra-section-injectives-modules}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 19,
+          "projection_end": 26,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 62,
+          "projection_end": 69,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WR:statement",
+      "source_text": "For a ring <MATH_0001>, the functor <MATH_0002> is\nexact and reflects injections and surjections.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "MATH_0002": "$C : \\text{Mod}_R \\to \\text{Mod}_R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 6,
+          "projection_end": 10,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 28,
+          "projection_end": 35,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjections",
+          "projection_start": 85,
+          "projection_end": 96,
+          "concept": "surjection",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WR:proof",
+      "source_text": "Exactness is More on Algebra, Lemma <REF_0001>\nand the other properties follow from this, see\nRemark <REF_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{more-algebra-lemma-vee-exact}",
+        "REF_0002": "\\ref{remark-reflects}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Algebra",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WS:statement",
+      "source_text": "We will use frequently the standard adjunction between <MATH_0001> and tensor \nproduct, in the form of the natural isomorphism of contravariant functors\n<MATH_0002>\ntaking <MATH_0003> to the map <MATH_0004>. See\nAlgebra, Lemma <REF_0001>.\nA corollary of this observation is that if\n<MATH_0005>\nis a split coequalizer diagram in <MATH_0006>, then so is\n<MATH_0007>\nfor any <MATH_0008>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$\\Hom$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-adjunction}\nC(\\bullet_1 \\otimes_R \\bullet_2) \\cong \\Hom_R(\\bullet_1, C(\\bullet_2)): \n\\text{Mod}_R \\times \\text{Mod}_R \\to \\text{Mod}_R\n\\end{equation}",
+        "MATH_0003": "$f: M_1 \\otimes_R M_2 \\to \\mathbf{Q}/\\mathbf{Z}$",
+        "MATH_0004": "$m_1 \\mapsto \n(m_2 \\mapsto f(m_1 \\otimes m_2))$",
+        "REF_0001": "\\ref{algebra-lemma-hom-from-tensor-product-variant}",
+        "MATH_0005": "$$\n\\xymatrix@C=9pc{\nC(M) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N) \\ar[r] & C(P)\n}\n$$",
+        "MATH_0006": "$\\text{Mod}_R$",
+        "MATH_0007": "$$\n\\xymatrix@C=9pc{\nC(M \\otimes_R Q) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N \\otimes_R Q) \\ar[r] & C(P \n\\otimes_R Q)\n}\n$$",
+        "MATH_0008": "$Q \\in \\text{Mod}_R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "adjunction",
+          "projection_start": 36,
+          "projection_end": 46,
+          "concept": "adjunction",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "tensor product",
+          "projection_start": 71,
+          "projection_end": 85,
+          "concept": "tensor-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "natural isomorphism",
+          "projection_start": 106,
+          "projection_end": 125,
+          "concept": "natural-isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 143,
+          "projection_end": 151,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 190,
+          "projection_end": 193,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 211,
+          "projection_end": 218,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 304,
+          "projection_end": 315,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 316,
+          "projection_end": 323,
+          "concept": "diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WU:statement",
+      "source_text": "Let <MATH_0001> be a ring. A morphism <MATH_0002> in <MATH_0003> is universally\ninjective if and only if <MATH_0004> is a split surjection.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f: M \\to N$",
+        "MATH_0003": "$\\text{Mod}_R$",
+        "MATH_0004": "$C(f): C(N) \\to C(M)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 29,
+          "projection_end": 37,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 80,
+          "projection_end": 89,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 128,
+          "projection_end": 138,
+          "concept": "surjection",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WU:proof",
+      "source_text": "By (<REF_0001>), for any <MATH_0001> we have a \ncommutative diagram\n<MATH_0002>\nIf <MATH_0003> is universally injective, then <MATH_0004> is injective,\nso both rows in the above diagram are surjective for <MATH_0005>. We may thus \nlift\n<MATH_0006> to some <MATH_0007> splitting \n<MATH_0008>.\nConversely, if <MATH_0009> is a split surjection, then \nboth rows in the above diagram are surjective,\nso by Lemma <REF_0002>, <MATH_0010> is injective.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{equation-adjunction}",
+        "MATH_0001": "$P \\in \\text{Mod}_R$",
+        "MATH_0002": "$$\n\\xymatrix@C=9pc{\n\\Hom_R( P, C(N)) \\ar[r]_{\\Hom_R(P,C(f))} \\ar[d]^{\\cong} &\n\\Hom_R(P,C(M)) \\ar[d]^{\\cong} \\\\\nC(P \\otimes_R N ) \\ar[r]^{C(1_{P} \\otimes f)} & C(P \\otimes_R M ).\n}\n$$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$1_{C(M)} \\otimes f: C(M) \\otimes_R M \\to \nC(M) \\otimes_R N$",
+        "MATH_0005": "$P = C(M)$",
+        "MATH_0006": "$1_{C(M)} \\in \\Hom_R(C(M), C(M))$",
+        "MATH_0007": "$g \\in \\Hom_R(C(N), C(M))$",
+        "MATH_0008": "$C(f)$",
+        "MATH_0009": "$C(f)$",
+        "REF_0002": "\\ref{lemma-C-is-faithful}",
+        "MATH_0010": "$1_{P} \\otimes f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 47,
+          "projection_end": 66,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 109,
+          "projection_end": 118,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 140,
+          "projection_end": 149,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 177,
+          "projection_end": 184,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 189,
+          "projection_end": 199,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "splitting",
+          "projection_start": 266,
+          "projection_end": 275,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 327,
+          "projection_end": 337,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 367,
+          "projection_end": 374,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 379,
+          "projection_end": 389,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 430,
+          "projection_end": 439,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WV:statement",
+      "source_text": "Let <MATH_0001> be a universally injective morphism in <MATH_0002>. By \nchoosing a splitting\n<MATH_0003> of <MATH_0004>, we may construct a functorial splitting of <MATH_0005> \nfor each <MATH_0006>.\nNamely, by (<REF_0001>) this amounts to splitting <MATH_0007>  functorially in <MATH_0008>,\nand this is achieved by the map <MATH_0009>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$f: M \\to N$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$g$",
+        "MATH_0004": "$C(f)$",
+        "MATH_0005": "$C(1_P \\otimes f)$",
+        "MATH_0006": "$P \\in \\text{Mod}_R$",
+        "REF_0001": "\\ref{equation-adjunction}",
+        "MATH_0007": "$\\Hom_R(P, \nC(f))$",
+        "MATH_0008": "$P$",
+        "MATH_0009": "$g \\circ \\bullet$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 43,
+          "projection_end": 51,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "splitting",
+          "projection_start": 82,
+          "projection_end": 91,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "splitting",
+          "projection_start": 150,
+          "projection_end": 159,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "splitting",
+          "projection_start": 237,
+          "projection_end": 246,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 316,
+          "projection_end": 319,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WW:title",
+      "source_text": "Descent for modules and their morphisms",
+      "node_kind": "subsection_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 12,
+          "projection_end": 19,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 30,
+          "projection_end": 39,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:08WM:example/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny split injection in <MATH_0001> is universally injective. In particular,\nany split injection in <MATH_0002> is universally injective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-split-injection-universally-injective}",
+        "MATH_0001": "$\\text{Mod}_R$",
+        "MATH_0002": "$\\textit{Rings}$",
+        "STRUCT_0002": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WP:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny faithfully flat ring map is universally injective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-faithfully-flat-universally-injective}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WN:example/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor a ring <MATH_0001> and <MATH_0002> generating the unit\nideal, the morphism <MATH_0003> is\nuniversally injective. Although this is immediate from\nLemma <REF_0001>,\nit is instructive to check it directly: we immediately reduce to the case\nwhere <MATH_0004> is local, in which case some <MATH_0005> must be a unit and so the map\n<MATH_0006> is an isomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-cover-universally-injective}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n \\in R$",
+        "MATH_0003": "$R \\to R_{f_1} \\oplus \\ldots \\oplus R_{f_n}$",
+        "REF_0001": "\\ref{lemma-faithfully-flat-universally-injective}",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$f_i$",
+        "MATH_0006": "$R \\to R_{f_i}$",
+        "STRUCT_0002": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WP:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is a reformulation of Algebra, Lemma\n<REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{algebra-lemma-faithfully-flat-universally-injective}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe key observation from <REF_0001> is that universal injectivity \ncan be usefully reformulated in terms of a splitting, using the usual\nconstruction of an injective cogenerator in <MATH_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\cite{mesablishvili1}",
+        "MATH_0001": "$\\text{Mod}_R$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WQ:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Define the contravariant functor\n<TEXTITOPEN_0001><MATH_0002><TEXTITCLOSE_0001> <MATH_0003> by setting\n<MATH_0004>\nwith the <MATH_0005>-action on <MATH_0006> given by <MATH_0007>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-C}",
+        "MATH_0001": "$R$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$C$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$ : \\text{Mod}_R \\to \\text{Mod}_R$",
+        "MATH_0004": "$$\nC(M) = \\Hom_{\\textit{Ab}}(M, \\mathbf{Q}/\\mathbf{Z}),\n$$",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$C(M)$",
+        "MATH_0007": "$rf(s) = f(rs)$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis functor was denoted <MATH_0001> in\nMore on Algebra, Section <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$M \\mapsto M^\\vee$",
+        "REF_0001": "\\ref{more-algebra-section-injectives-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WR:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor a ring <MATH_0001>, the functor <MATH_0002> is\nexact and reflects injections and surjections.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-C-is-faithful}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$C : \\text{Mod}_R \\to \\text{Mod}_R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WR:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nExactness is More on Algebra, Lemma <REF_0001>\nand the other properties follow from this, see\nRemark <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{more-algebra-lemma-vee-exact}",
+        "REF_0002": "\\ref{remark-reflects}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WS:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe will use frequently the standard adjunction between <MATH_0001> and tensor \nproduct, in the form of the natural isomorphism of contravariant functors\n<MATH_0002>\ntaking <MATH_0003> to the map <MATH_0004>. See\nAlgebra, Lemma <REF_0001>.\nA corollary of this observation is that if\n<MATH_0005>\nis a split coequalizer diagram in <MATH_0006>, then so is\n<MATH_0007>\nfor any <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-adjunction}",
+        "MATH_0001": "$\\Hom$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-adjunction}\nC(\\bullet_1 \\otimes_R \\bullet_2) \\cong \\Hom_R(\\bullet_1, C(\\bullet_2)): \n\\text{Mod}_R \\times \\text{Mod}_R \\to \\text{Mod}_R\n\\end{equation}",
+        "MATH_0003": "$f: M_1 \\otimes_R M_2 \\to \\mathbf{Q}/\\mathbf{Z}$",
+        "MATH_0004": "$m_1 \\mapsto \n(m_2 \\mapsto f(m_1 \\otimes m_2))$",
+        "REF_0001": "\\ref{algebra-lemma-hom-from-tensor-product-variant}",
+        "MATH_0005": "$$\n\\xymatrix@C=9pc{\nC(M) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N) \\ar[r] & C(P)\n}\n$$",
+        "MATH_0006": "$\\text{Mod}_R$",
+        "MATH_0007": "$$\n\\xymatrix@C=9pc{\nC(M \\otimes_R Q) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N \\otimes_R Q) \\ar[r] & C(P \n\\otimes_R Q)\n}\n$$",
+        "MATH_0008": "$Q \\in \\text{Mod}_R$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WU:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. A morphism <MATH_0002> in <MATH_0003> is universally\ninjective if and only if <MATH_0004> is a split surjection.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-split-surjection}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f: M \\to N$",
+        "MATH_0003": "$\\text{Mod}_R$",
+        "MATH_0004": "$C(f): C(N) \\to C(M)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WU:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy (<REF_0001>), for any <MATH_0001> we have a \ncommutative diagram\n<MATH_0002>\nIf <MATH_0003> is universally injective, then <MATH_0004> is injective,\nso both rows in the above diagram are surjective for <MATH_0005>. We may thus \nlift\n<MATH_0006> to some <MATH_0007> splitting \n<MATH_0008>.\nConversely, if <MATH_0009> is a split surjection, then \nboth rows in the above diagram are surjective,\nso by Lemma <REF_0002>, <MATH_0010> is injective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{equation-adjunction}",
+        "MATH_0001": "$P \\in \\text{Mod}_R$",
+        "MATH_0002": "$$\n\\xymatrix@C=9pc{\n\\Hom_R( P, C(N)) \\ar[r]_{\\Hom_R(P,C(f))} \\ar[d]^{\\cong} &\n\\Hom_R(P,C(M)) \\ar[d]^{\\cong} \\\\\nC(P \\otimes_R N ) \\ar[r]^{C(1_{P} \\otimes f)} & C(P \\otimes_R M ).\n}\n$$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$1_{C(M)} \\otimes f: C(M) \\otimes_R M \\to \nC(M) \\otimes_R N$",
+        "MATH_0005": "$P = C(M)$",
+        "MATH_0006": "$1_{C(M)} \\in \\Hom_R(C(M), C(M))$",
+        "MATH_0007": "$g \\in \\Hom_R(C(N), C(M))$",
+        "MATH_0008": "$C(f)$",
+        "MATH_0009": "$C(f)$",
+        "REF_0002": "\\ref{lemma-C-is-faithful}",
+        "MATH_0010": "$1_{P} \\otimes f$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WV:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a universally injective morphism in <MATH_0002>. By \nchoosing a splitting\n<MATH_0003> of <MATH_0004>, we may construct a functorial splitting of <MATH_0005> \nfor each <MATH_0006>.\nNamely, by (<REF_0001>) this amounts to splitting <MATH_0007>  functorially in <MATH_0008>,\nand this is achieved by the map <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-functorial-splitting}",
+        "MATH_0001": "$f: M \\to N$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$g$",
+        "MATH_0004": "$C(f)$",
+        "MATH_0005": "$C(1_P \\otimes f)$",
+        "MATH_0006": "$P \\in \\text{Mod}_R$",
+        "REF_0001": "\\ref{equation-adjunction}",
+        "MATH_0007": "$\\Hom_R(P, \nC(f))$",
+        "MATH_0008": "$P$",
+        "MATH_0009": "$g \\circ \\bullet$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:subsection_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for modules and their morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\subsection{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{subsection-descent-modules-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThroughout this subsection, fix a ring map <MATH_0001>. As seen in\nSection <REF_0001> we can use the language of cosimplicial\nalgebras to talk about descent data for modules, but in this\nsubsection we prefer a more down to earth terminology.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f: R \\to S$",
+        "REF_0001": "\\ref{section-descent-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-faithfully-flat-universally-injective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map.\nThen <MATH_0002> is universally injective as a map of <MATH_0003>-modules.\nIn particular <MATH_0004> for any ideal <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-faithfully-flat-universally-injective}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$R \\to S$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$R \\cap IS = I$",
+        "MATH_0005": "$I \\subset R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-faithfully-flat-universally-injective",
+      "requested_tag": "05CK"
+    },
+    {
+      "context_id": "reference:algebra-lemma-hom-from-tensor-product-variant",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Given <MATH_0002>-modules <MATH_0003> and an <MATH_0004>-module <MATH_0005>\nwe have\n<MATH_0006>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-hom-from-tensor-product-variant}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$M, N$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$P$",
+        "MATH_0006": "$$\n\\Hom_R(M \\otimes_S N, P) = \\Hom_S(M, \\Hom_R(N, P))\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-hom-from-tensor-product-variant",
+      "requested_tag": "08YQ"
+    },
+    {
+      "context_id": "reference:descent-remark-reflects",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny functor <MATH_0001> of abelian categories\nwhich is exact and takes nonzero objects to nonzero objects reflects\ninjections and surjections. Namely, exactness implies that\n<MATH_0002> preserves kernels and cokernels (compare with\nHomology, Section <REF_0001>).\nFor example, if <MATH_0003> is a \nfaithfully flat ring homomorphism, then\n<MATH_0004> has these properties.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-reflects}",
+        "MATH_0001": "$F : \\mathcal{A} \\to \\mathcal{B}$",
+        "MATH_0002": "$F$",
+        "REF_0001": "\\ref{homology-section-functors}",
+        "MATH_0003": "$f : R \\to S$",
+        "MATH_0004": "$\\bullet \\otimes_R S: \\text{Mod}_R \\to \\text{Mod}_S$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-remark-reflects",
+      "requested_tag": "08WK"
+    },
+    {
+      "context_id": "reference:more-algebra-lemma-vee-exact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring.\nThe functor <MATH_0002> is exact.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-vee-exact}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M \\mapsto M^\\vee$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "more-algebra-lemma-vee-exact",
+      "requested_tag": "01DA"
+    },
+    {
+      "context_id": "reference:more-algebra-section-injectives-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Injective modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-injectives-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "more-algebra-section-injectives-modules",
+      "requested_tag": "01D8"
+    }
+  ]
+}

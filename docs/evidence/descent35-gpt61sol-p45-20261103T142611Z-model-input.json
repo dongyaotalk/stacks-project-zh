@@ -1,0 +1,465 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p45-20261103T142611Z.json",
+    "hash": "sha256:192bf6fea2bd041fe8978f6747413d0a798abc4063589c69aed3f3c825a6e4ba"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:08WJ:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nRecall that <MATH_0001> denotes the category of commutative rings\nwith <MATH_0002>. For an object <MATH_0003> of <MATH_0004> we denote <MATH_0005>\nthe category of <MATH_0006>-modules.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\textit{Rings}$",
+        "MATH_0002": "$1$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$\\textit{Rings}$",
+        "MATH_0005": "$\\text{Mod}_R$",
+        "MATH_0006": "$R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "category",
+          "projection_start": 50,
+          "projection_end": 58,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 62,
+          "projection_end": 73,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 74,
+          "projection_end": 79,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 105,
+          "projection_end": 111,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 165,
+          "projection_end": 173,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 189,
+          "projection_end": 196,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WK:statement",
+      "source_text": "Any functor <MATH_0001> of abelian categories\nwhich is exact and takes nonzero objects to nonzero objects reflects\ninjections and surjections. Namely, exactness implies that\n<MATH_0002> preserves kernels and cokernels (compare with\nHomology, Section <REF_0001>).\nFor example, if <MATH_0003> is a \nfaithfully flat ring homomorphism, then\n<MATH_0004> has these properties.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$F : \\mathcal{A} \\to \\mathcal{B}$",
+        "MATH_0002": "$F$",
+        "REF_0001": "\\ref{homology-section-functors}",
+        "MATH_0003": "$f : R \\to S$",
+        "MATH_0004": "$\\bullet \\otimes_R S: \\text{Mod}_R \\to \\text{Mod}_S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 4,
+          "projection_end": 11,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "abelian categories",
+          "projection_start": 27,
+          "projection_end": 45,
+          "concept": "abelian-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 79,
+          "projection_end": 86,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 98,
+          "projection_end": 105,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjections",
+          "projection_start": 130,
+          "projection_end": 141,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernels",
+          "projection_start": 196,
+          "projection_end": 203,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cokernels",
+          "projection_start": 208,
+          "projection_end": 217,
+          "concept": "cokernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Homology",
+          "projection_start": 232,
+          "projection_end": 240,
+          "concept": "homology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 296,
+          "projection_end": 311,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 312,
+          "projection_end": 316,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 317,
+          "projection_end": 329,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WJ:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a ring. Recall that a morphism <MATH_0002> in <MATH_0003>\nis <TEXTITOPEN_0001>universally injective<TEXTITCLOSE_0001> if for all <MATH_0004>,\nthe morphism <MATH_0005> is injective.\nSee Algebra, Definition <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f : M \\to N$",
+        "MATH_0003": "$\\text{Mod}_R$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$P \\in \\text{Mod}_R$",
+        "MATH_0005": "$f \\otimes 1_P: M \\otimes_R P \\to N \\otimes_R P$",
+        "REF_0001": "\\ref{algebra-definition-universally-injective}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 35,
+          "projection_end": 39,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 55,
+          "projection_end": 63,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 106,
+          "projection_end": 115,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 144,
+          "projection_end": 152,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 168,
+          "projection_end": 177,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 183,
+          "projection_end": 190,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WL:statement",
+      "source_text": "A ring map <MATH_0001> is <TEXTITOPEN_0001>universally injective<TEXTITCLOSE_0001>\nif it is universally injective as a morphism in <MATH_0002>.\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$f: R \\to S$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$\\text{Mod}_R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring map",
+          "projection_start": 2,
+          "projection_end": 10,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "universally injective",
+          "projection_start": 26,
+          "projection_end": 47,
+          "concept": "universally injective",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "universally injective",
+          "projection_start": 57,
+          "projection_end": 78,
+          "concept": "universally injective",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 84,
+          "projection_end": 92,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WM:statement",
+      "source_text": "Any split injection in <MATH_0001> is universally injective. In particular,\nany split injection in <MATH_0002> is universally injective.\n",
+      "node_kind": "example",
+      "protected_nodes": {
+        "MATH_0001": "$\\text{Mod}_R$",
+        "MATH_0002": "$\\textit{Rings}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 50,
+          "projection_end": 59,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 126,
+          "projection_end": 135,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:subsection_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Universally injective morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\subsection{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{subsection-universally-injective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WK:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny functor <MATH_0001> of abelian categories\nwhich is exact and takes nonzero objects to nonzero objects reflects\ninjections and surjections. Namely, exactness implies that\n<MATH_0002> preserves kernels and cokernels (compare with\nHomology, Section <REF_0001>).\nFor example, if <MATH_0003> is a \nfaithfully flat ring homomorphism, then\n<MATH_0004> has these properties.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-reflects}",
+        "MATH_0001": "$F : \\mathcal{A} \\to \\mathcal{B}$",
+        "MATH_0002": "$F$",
+        "REF_0001": "\\ref{homology-section-functors}",
+        "MATH_0003": "$f : R \\to S$",
+        "MATH_0004": "$\\bullet \\otimes_R S: \\text{Mod}_R \\to \\text{Mod}_S$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nRecall that <MATH_0001> denotes the category of commutative rings\nwith <MATH_0002>. For an object <MATH_0003> of <MATH_0004> we denote <MATH_0005>\nthe category of <MATH_0006>-modules.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\textit{Rings}$",
+        "MATH_0002": "$1$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$\\textit{Rings}$",
+        "MATH_0005": "$\\text{Mod}_R$",
+        "MATH_0006": "$R$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WJ:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a ring. Recall that a morphism <MATH_0002> in <MATH_0003>\nis <TEXTITOPEN_0001>universally injective<TEXTITCLOSE_0001> if for all <MATH_0004>,\nthe morphism <MATH_0005> is injective.\nSee Algebra, Definition <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f : M \\to N$",
+        "MATH_0003": "$\\text{Mod}_R$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$P \\in \\text{Mod}_R$",
+        "MATH_0005": "$f \\otimes 1_P: M \\otimes_R P \\to N \\otimes_R P$",
+        "REF_0001": "\\ref{algebra-definition-universally-injective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WL:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA ring map <MATH_0001> is <TEXTITOPEN_0001>universally injective<TEXTITCLOSE_0001>\nif it is universally injective as a morphism in <MATH_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-universally-injective}",
+        "MATH_0001": "$f: R \\to S$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WM:example/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny split injection in <MATH_0001> is universally injective. In particular,\nany split injection in <MATH_0002> is universally injective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-split-injection-universally-injective}",
+        "MATH_0001": "$\\text{Mod}_R$",
+        "MATH_0002": "$\\textit{Rings}$",
+        "STRUCT_0002": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WN:example/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor a ring <MATH_0001> and <MATH_0002> generating the unit\nideal, the morphism <MATH_0003> is\nuniversally injective. Although this is immediate from\nLemma <REF_0001>,\nit is instructive to check it directly: we immediately reduce to the case\nwhere <MATH_0004> is local, in which case some <MATH_0005> must be a unit and so the map\n<MATH_0006> is an isomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-cover-universally-injective}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f_1, \\ldots, f_n \\in R$",
+        "MATH_0003": "$R \\to R_{f_1} \\oplus \\ldots \\oplus R_{f_n}$",
+        "REF_0001": "\\ref{lemma-faithfully-flat-universally-injective}",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$f_i$",
+        "MATH_0006": "$R \\to R_{f_i}$",
+        "STRUCT_0002": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-definition-universally-injective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a map of <MATH_0002>-modules.  Then <MATH_0003> is called\n<TEXTITOPEN_0001>universally injective<TEXTITCLOSE_0001> if for every <MATH_0004>-module <MATH_0005>, the map <MATH_0006>\nis injective.  A sequence <MATH_0007> of <MATH_0008>-modules is called <TEXTITOPEN_0002>universally exact<TEXTITCLOSE_0002> if it is exact\nand <MATH_0009> is universally injective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-universally-injective}",
+        "MATH_0001": "$f: M \\to N$",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$f$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$Q$",
+        "MATH_0006": "$f\n\\otimes_R \\text{id}_Q: M \\otimes_R Q \\to N \\otimes_R Q$",
+        "MATH_0007": "$0 \\to M_1 \\to M_2 \\to M_3\n\\to 0$",
+        "MATH_0008": "$R$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0009": "$M_1 \\to M_2$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-definition-universally-injective",
+      "requested_tag": "058I"
+    },
+    {
+      "context_id": "reference:homology-section-functors",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Additive functors<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-functors}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "homology-section-functors",
+      "requested_tag": "010M"
+    }
+  ]
+}

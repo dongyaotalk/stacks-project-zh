@@ -1,0 +1,977 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e7e-cc3b-7733-8332-45075e9a740d",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p17-20261102T230701Z.json",
+    "hash": "sha256:ea8d53d6b830f8acc030149b9f0fc68470dd22239419c816916a8f58d09b3cf2"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02YL:title",
+      "source_text": "Properties of morphisms local in the fppf topology on the target",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 14,
+          "projection_end": 23,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 42,
+          "projection_end": 50,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02YL:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we find some properties of morphisms of schemes\nfor which we could not (yet) show they are local on the base in\nthe fpqc topology which, however, are local on the base\nin the fppf topology.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 57,
+          "projection_end": 66,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 70,
+          "projection_end": 77,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 146,
+          "projection_end": 159,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 210,
+          "projection_end": 218,
+          "concept": "topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02YM:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is an immersion''\nis fppf local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "immersion",
+          "projection_start": 44,
+          "projection_end": 53,
+          "concept": "immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02YM:proof",
+      "source_text": "The property of being an immersion is stable under base change,\nsee Schemes, Lemma <REF_0001>.\nThe property of being an immersion is Zariski local on the base.\nFinally, let\n<MATH_0001> be a surjective morphism of affine schemes,\nwhich is flat and locally of finite presentation.\nNote that <MATH_0002> is open by\nMorphisms, Lemma <REF_0002>.\nLet <MATH_0003> be a morphism.\nAssume that the base change <MATH_0004> is an immersion.\nIn particular we see that <MATH_0005> is locally closed.\nHence by Topology, Lemma <REF_0003>\nwe see that <MATH_0006>\nis locally closed. Let <MATH_0007> be\nthe closed subset <MATH_0008>.\nBy Topology, Lemma <REF_0004>\nagain we see that <MATH_0009> is closed in <MATH_0010>.\nHence we may apply Lemma <REF_0005>\nto the fpqc covering <MATH_0011>\nand conclude that <MATH_0012> is a closed\nimmersion. In other words, <MATH_0013> is an immersion.\nTherefore Lemma <REF_0006> applies and we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{schemes-lemma-base-change-immersion}",
+        "MATH_0001": "$\\pi : S' \\to S$",
+        "MATH_0002": "$\\pi : S' \\to S$",
+        "REF_0002": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0003": "$f : X \\to S$",
+        "MATH_0004": "$f' : X' \\to S'$",
+        "MATH_0005": "$f'(X') = \\pi^{-1}(f(X))$",
+        "REF_0003": "\\ref{topology-lemma-open-morphism-quotient-topology}",
+        "MATH_0006": "$f(X) \\subset S$",
+        "MATH_0007": "$Z \\subset S$",
+        "MATH_0008": "$Z = \\overline{f(X)} \\setminus f(X)$",
+        "REF_0004": "\\ref{topology-lemma-open-morphism-quotient-topology}",
+        "MATH_0009": "$f'(X')$",
+        "MATH_0010": "$S' \\setminus Z'$",
+        "REF_0005": "\\ref{lemma-descending-property-closed-immersion}",
+        "MATH_0011": "$\\{S' \\setminus Z' \\to S \\setminus Z\\}$",
+        "MATH_0012": "$f : X \\to S \\setminus Z$",
+        "MATH_0013": "$f$",
+        "REF_0006": "\\ref{lemma-descending-properties-morphisms}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "immersion",
+          "projection_start": 25,
+          "projection_end": 34,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 51,
+          "projection_end": 62,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 68,
+          "projection_end": 75,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 120,
+          "projection_end": 129,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 190,
+          "projection_end": 200,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 201,
+          "projection_end": 209,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine schemes",
+          "projection_start": 213,
+          "projection_end": 227,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 238,
+          "projection_end": 242,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 247,
+          "projection_end": 277,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 312,
+          "projection_end": 321,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 362,
+          "projection_end": 370,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 388,
+          "projection_end": 399,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 418,
+          "projection_end": 427,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topology",
+          "projection_start": 495,
+          "projection_end": 503,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subset",
+          "projection_start": 588,
+          "projection_end": 601,
+          "concept": "closed-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topology",
+          "projection_start": 618,
+          "projection_end": 626,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 744,
+          "projection_end": 757,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed immersion",
+          "projection_start": 805,
+          "projection_end": 821,
+          "concept": "closed-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 857,
+          "projection_end": 866,
+          "concept": "immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0H8J:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is dominant''\nis fppf local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:0H8J:proof",
+      "source_text": "By Morphisms, Lemma <REF_0001>,\ndominant morphisms are preserved\nunder pullback by open morphisms, hence\nby flat morphisms locally of finite presentation\n(Morphisms, Lemma <REF_0002>).\nThe other direction is easier.\nIndeed, being dominant is clearly Zariski local on the base.\nNext, let <MATH_0001> be a surjective morphism of schemes\n(not necessarily flat or locally of finite\npresentation),\nand let <MATH_0002> be a morphism. Assume that the base change\n<MATH_0003> is dominant. Then <MATH_0004> is a composition\nof two dominant morphisms, hence dominant. Since this is also\nthe composition <MATH_0005>, it follows that <MATH_0006> is dominant.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-open-base-change-dominant}",
+        "REF_0002": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$f : X \\to S$",
+        "MATH_0003": "$f' : X' \\to S'$",
+        "MATH_0004": "$X' \\to S'\\to S$",
+        "MATH_0005": "$X' \\to X \\to S$",
+        "MATH_0006": "$X\\to S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Morphisms",
+          "projection_start": 3,
+          "projection_end": 12,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 41,
+          "projection_end": 50,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 71,
+          "projection_end": 79,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 88,
+          "projection_end": 97,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 108,
+          "projection_end": 112,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 113,
+          "projection_end": 122,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 123,
+          "projection_end": 153,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 155,
+          "projection_end": 164,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 304,
+          "projection_end": 314,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 315,
+          "projection_end": 323,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 327,
+          "projection_end": 334,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 352,
+          "projection_end": 356,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 360,
+          "projection_end": 390,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 418,
+          "projection_end": 426,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 444,
+          "projection_end": 455,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 503,
+          "projection_end": 514,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 531,
+          "projection_end": 540,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 581,
+          "projection_end": 592,
+          "concept": "composition",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LB:title",
+      "source_text": "Application of fpqc descent of properties of morphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 20,
+          "projection_end": 27,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 45,
+          "projection_end": 54,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LB:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nThe following lemma may seem a bit frivolous but turns out is a useful\ntool in studying <ACCENT_0001>tale and unramified morphisms.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 102,
+          "projection_end": 107,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 123,
+          "projection_end": 132,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NC:statement",
+      "source_text": "Let <MATH_0001> be a flat, quasi-compact, surjective monomorphism.\nThen f is an isomorphism.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to Y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "flat",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 27,
+          "projection_end": 40,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 42,
+          "projection_end": 52,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphism",
+          "projection_start": 53,
+          "projection_end": 65,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 80,
+          "projection_end": 91,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06NC:proof",
+      "source_text": "As <MATH_0001> is a flat, quasi-compact, surjective morphism\nwe see <MATH_0002> is an fpqc covering of <MATH_0003>.\nThe diagonal <MATH_0004> is an isomorphism\n(Schemes, Lemma <REF_0001>).\nThis implies that the base change of <MATH_0005> by <MATH_0006> is an\nisomorphism. Hence we see <MATH_0007> is an isomorphism by\nLemma <REF_0002>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\{X \\to Y\\}$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$\\Delta : X \\to X \\times_Y X$",
+        "REF_0001": "\\ref{schemes-lemma-monomorphism}",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{lemma-descending-property-isomorphism}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "flat",
+          "projection_start": 20,
+          "projection_end": 24,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 26,
+          "projection_end": 39,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 41,
+          "projection_end": 51,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 52,
+          "projection_end": 60,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 86,
+          "projection_end": 99,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 147,
+          "projection_end": 158,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 160,
+          "projection_end": 167,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 210,
+          "projection_end": 221,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 258,
+          "projection_end": 269,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 302,
+          "projection_end": 313,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0694:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use the criterion of\nLemma <REF_0001>\nto prove this. By\nDivisors, Definition <REF_0002>\nbeing a Koszul-regular (resp.<SPACE_0001><MATH_0001>-regular, quasi-regular)\nimmersion is Zariski local on the base. By\nDivisors, Lemma <REF_0003>\nbeing a Koszul-regular (resp.<SPACE_0002><MATH_0002>-regular, quasi-regular)\nimmersion is preserved under flat base change.\nThe final hypothesis (3) of\nLemma <REF_0004>\ntranslates into the following algebra statement:\nLet <MATH_0003> be a faithfully flat ring map. Let <MATH_0004> be an ideal.\nIf <MATH_0005> is locally on <MATH_0006> generated by a Koszul-regular\n(resp.<SPACE_0003><MATH_0007>-regular, quasi-regular) sequence in <MATH_0008>, then <MATH_0009>\nis locally on <MATH_0010> generated by a Koszul-regular\n(resp.<SPACE_0004><MATH_0011>-regular, quasi-regular) sequence in <MATH_0012>. This is\nMore on Algebra, Lemma <REF_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties-morphisms}",
+        "REF_0002": "\\ref{divisors-definition-regular-immersion}",
+        "SPACE_0001": "\\ ",
+        "MATH_0001": "$H_1$",
+        "REF_0003": "\\ref{divisors-lemma-flat-base-change-regular-immersion}",
+        "SPACE_0002": "\\ ",
+        "MATH_0002": "$H_1$",
+        "REF_0004": "\\ref{lemma-descending-properties-morphisms}",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$I \\subset A$",
+        "MATH_0005": "$IB$",
+        "MATH_0006": "$\\Spec(B)$",
+        "SPACE_0003": "\\ ",
+        "MATH_0007": "$H_1$",
+        "MATH_0008": "$B$",
+        "MATH_0009": "$I \\subset A$",
+        "MATH_0010": "$\\Spec(A)$",
+        "SPACE_0004": "\\ ",
+        "MATH_0011": "$H_1$",
+        "MATH_0012": "$A$",
+        "REF_0005": "\\ref{more-algebra-lemma-flat-descent-regular-ideal}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YL:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we find some properties of morphisms of schemes\nfor which we could not (yet) show they are local on the base in\nthe fpqc topology which, however, are local on the base\nin the fppf topology.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YL:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of morphisms local in the fppf topology on the target<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties-morphisms-fppf}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YM:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is an immersion''\nis fppf local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-fppf-property-immersion}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YM:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe property of being an immersion is stable under base change,\nsee Schemes, Lemma <REF_0001>.\nThe property of being an immersion is Zariski local on the base.\nFinally, let\n<MATH_0001> be a surjective morphism of affine schemes,\nwhich is flat and locally of finite presentation.\nNote that <MATH_0002> is open by\nMorphisms, Lemma <REF_0002>.\nLet <MATH_0003> be a morphism.\nAssume that the base change <MATH_0004> is an immersion.\nIn particular we see that <MATH_0005> is locally closed.\nHence by Topology, Lemma <REF_0003>\nwe see that <MATH_0006>\nis locally closed. Let <MATH_0007> be\nthe closed subset <MATH_0008>.\nBy Topology, Lemma <REF_0004>\nagain we see that <MATH_0009> is closed in <MATH_0010>.\nHence we may apply Lemma <REF_0005>\nto the fpqc covering <MATH_0011>\nand conclude that <MATH_0012> is a closed\nimmersion. In other words, <MATH_0013> is an immersion.\nTherefore Lemma <REF_0006> applies and we win.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{schemes-lemma-base-change-immersion}",
+        "MATH_0001": "$\\pi : S' \\to S$",
+        "MATH_0002": "$\\pi : S' \\to S$",
+        "REF_0002": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0003": "$f : X \\to S$",
+        "MATH_0004": "$f' : X' \\to S'$",
+        "MATH_0005": "$f'(X') = \\pi^{-1}(f(X))$",
+        "REF_0003": "\\ref{topology-lemma-open-morphism-quotient-topology}",
+        "MATH_0006": "$f(X) \\subset S$",
+        "MATH_0007": "$Z \\subset S$",
+        "MATH_0008": "$Z = \\overline{f(X)} \\setminus f(X)$",
+        "REF_0004": "\\ref{topology-lemma-open-morphism-quotient-topology}",
+        "MATH_0009": "$f'(X')$",
+        "MATH_0010": "$S' \\setminus Z'$",
+        "REF_0005": "\\ref{lemma-descending-property-closed-immersion}",
+        "MATH_0011": "$\\{S' \\setminus Z' \\to S \\setminus Z\\}$",
+        "MATH_0012": "$f : X \\to S \\setminus Z$",
+        "MATH_0013": "$f$",
+        "REF_0006": "\\ref{lemma-descending-properties-morphisms}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0H8J:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is dominant''\nis fppf local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-fppf-property-dominant}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0H8J:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy Morphisms, Lemma <REF_0001>,\ndominant morphisms are preserved\nunder pullback by open morphisms, hence\nby flat morphisms locally of finite presentation\n(Morphisms, Lemma <REF_0002>).\nThe other direction is easier.\nIndeed, being dominant is clearly Zariski local on the base.\nNext, let <MATH_0001> be a surjective morphism of schemes\n(not necessarily flat or locally of finite\npresentation),\nand let <MATH_0002> be a morphism. Assume that the base change\n<MATH_0003> is dominant. Then <MATH_0004> is a composition\nof two dominant morphisms, hence dominant. Since this is also\nthe composition <MATH_0005>, it follows that <MATH_0006> is dominant.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-open-base-change-dominant}",
+        "REF_0002": "\\ref{morphisms-lemma-fppf-open}",
+        "MATH_0001": "$S' \\to S$",
+        "MATH_0002": "$f : X \\to S$",
+        "MATH_0003": "$f' : X' \\to S'$",
+        "MATH_0004": "$X' \\to S'\\to S$",
+        "MATH_0005": "$X' \\to X \\to S$",
+        "MATH_0006": "$X\\to S$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LB:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Application of fpqc descent of properties of morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-application-descending-properties-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LB:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe following lemma may seem a bit frivolous but turns out is a useful\ntool in studying <ACCENT_0001>tale and unramified morphisms.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'e"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:06NC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a flat, quasi-compact, surjective monomorphism.\nThen f is an isomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-surjective-quasi-compact-monomorphism-isomorphism}",
+        "MATH_0001": "$f : X \\to Y$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:06NC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAs <MATH_0001> is a flat, quasi-compact, surjective morphism\nwe see <MATH_0002> is an fpqc covering of <MATH_0003>.\nThe diagonal <MATH_0004> is an isomorphism\n(Schemes, Lemma <REF_0001>).\nThis implies that the base change of <MATH_0005> by <MATH_0006> is an\nisomorphism. Hence we see <MATH_0007> is an isomorphism by\nLemma <REF_0002>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\{X \\to Y\\}$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$\\Delta : X \\to X \\times_Y X$",
+        "REF_0001": "\\ref{schemes-lemma-monomorphism}",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$f$",
+        "REF_0002": "\\ref{lemma-descending-property-isomorphism}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LB:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe can use this lemma to show the following important result; we also\ngive a proof avoiding fpqc descent.\nWe will discuss this and related results in more detail in\n<ACCENT_0001>tale Morphisms, Section <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'E",
+        "REF_0001": "\\ref{etale-section-topological-etale}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-properties-morphisms",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> the property is preserved under\nflat, flat and locally of finite presentation, <ACCENT_0001>tale, smooth, or syntomic\nbase change depending on whether <MATH_0003> is fpqc, fppf, <ACCENT_0002>tale, smooth, or\nsyntomic (compare with\nSchemes, Definition <REF_0001>),\n<STRUCT_0004> the property is Zariski local on the base.\n<STRUCT_0005> for any surjective morphism of affine schemes <MATH_0004>\nwhich is flat, flat of finite presentation,\n<ACCENT_0003>tale, smooth or syntomic depending on whether <MATH_0005> is\nfpqc, fppf, <ACCENT_0004>tale, smooth, or syntomic,\nand any morphism of schemes <MATH_0006> property\n<MATH_0007> holds for <MATH_0008> if property <MATH_0009>\nholds for the base change <MATH_0010>.\n<STRUCT_0006>\nThen <MATH_0011> is <MATH_0012> local on the base.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-properties-morphisms}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, fppf, \\etale, smooth, syntomic\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{schemes-definition-preserved-by-base-change}",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$S' \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0005": "$\\tau$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0006": "$f : X \\to S$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$f' : X' = S' \\times_S X \\to S'$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$\\tau$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-properties-morphisms",
+      "requested_tag": "02KP"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-closed-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is a closed immersion''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-closed-immersion}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-closed-immersion",
+      "requested_tag": "02L6"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-isomorphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is an isomorphism''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-isomorphism}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-isomorphism",
+      "requested_tag": "02L4"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-fppf-open",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA flat morphism locally of finite presentation is universally open.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fppf-open}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-fppf-open",
+      "requested_tag": "01UA"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-open-base-change-dominant",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a dominant morphism of schemes.\nLet <MATH_0002> be an open morphism of schemes, and let <MATH_0003>\nbe the base change of <MATH_0004> by <MATH_0005>. Then <MATH_0006> is dominant.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-open-base-change-dominant}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$g : S' \\to S$",
+        "MATH_0003": "$f' : X' \\to S'$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$f'$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-open-base-change-dominant",
+      "requested_tag": "0H8F"
+    },
+    {
+      "context_id": "reference:schemes-lemma-base-change-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be an\nimmersion (resp.<SPACE_0001>closed immersion, resp. open immersion)\nof schemes over <MATH_0003>. Then any base change of <MATH_0004> is an\nimmersion (resp.<SPACE_0002>closed immersion, resp. open immersion).\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-immersion}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$f : X \\to Y$",
+        "SPACE_0001": "\\ ",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$f$",
+        "SPACE_0002": "\\ ",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-base-change-immersion",
+      "requested_tag": "01JY"
+    },
+    {
+      "context_id": "reference:schemes-lemma-monomorphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nThen <MATH_0002> is a monomorphism if and only if the\ndiagonal morphism <MATH_0003> is\nan isomorphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-monomorphism}",
+        "LOCKED_0002": "\\begin{slogan}\nA scheme morphism is a monomorphism iff its diagonal is an isomorphism.\n\\end{slogan}",
+        "MATH_0001": "$j : X \\to Y$",
+        "MATH_0002": "$j$",
+        "MATH_0003": "$\\Delta_{X/Y} : X \\to X \\times_Y X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-monomorphism",
+      "requested_tag": "01L3"
+    },
+    {
+      "context_id": "reference:topology-lemma-open-morphism-quotient-topology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be surjective, open, continuous map of topological spaces.\nLet <MATH_0002> be a subset. Then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003>,\n<STRUCT_0004> <MATH_0004> is closed if and only if <MATH_0005> is closed,\n<STRUCT_0005> <MATH_0006> is open if and only if <MATH_0007> is open, and\n<STRUCT_0006> <MATH_0008> is locally closed if and only if <MATH_0009>\nis locally closed.\n<STRUCT_0007>\nIn particular we see that <MATH_0010> is submersive.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-open-morphism-quotient-topology}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$T \\subset Y$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$f^{-1}(\\overline{T}) = \\overline{f^{-1}(T)}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$T \\subset Y$",
+        "MATH_0005": "$f^{-1}(T)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0006": "$T \\subset Y$",
+        "MATH_0007": "$f^{-1}(T)$",
+        "STRUCT_0006": "\\item",
+        "MATH_0008": "$T \\subset Y$",
+        "MATH_0009": "$f^{-1}(T)$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0010": "$f$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topology-lemma-open-morphism-quotient-topology",
+      "requested_tag": "02YB"
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p46-20261103T142955Z.json",
+    "hash": "sha256:4183b739f65b7a20ce1a67a908d738d9be32268301307fa10e4e913cb42b0cf3"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:08XF:statement",
+      "source_text": "It would make things easier to have a faithfully\nflat ring homomorphism <MATH_0001> for which <MATH_0002> has some \nextra structure.\nFor instance, if one could ensure that <MATH_0003> is split in \n<MATH_0004>,\nthen it would follow that every property of a module or algebra which is stable \nunder base extension\nand which descends along faithfully flat morphisms also descends along \nuniversally injective morphisms.\nAn obvious guess would be to find <MATH_0005> for which <MATH_0006> is not only faithfully flat \nbut also injective in <MATH_0007>,\nbut even for <MATH_0008> no such homomorphism can exist.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$g: R \\to T$",
+        "MATH_0002": "$T \\to S \\otimes_R T$",
+        "MATH_0003": "$T \\to S \\otimes_R T$",
+        "MATH_0004": "$\\textit{Rings}$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$T$",
+        "MATH_0007": "$\\text{Mod}_R$",
+        "MATH_0008": "$R = \\mathbf{Z}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 38,
+          "projection_end": 53,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 54,
+          "projection_end": 58,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 59,
+          "projection_end": 71,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 254,
+          "projection_end": 260,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 264,
+          "projection_end": 271,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 334,
+          "projection_end": 349,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 350,
+          "projection_end": 359,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 392,
+          "projection_end": 401,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 402,
+          "projection_end": 411,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 493,
+          "projection_end": 508,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 518,
+          "projection_end": 527,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 577,
+          "projection_end": 589,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:08XE:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo prove (a), choose a finite set <MATH_0001> of generators of <MATH_0002>\nover <MATH_0003>. Write each <MATH_0004> as <MATH_0005> with\n<MATH_0006> and <MATH_0007>. Let <MATH_0008> be the polynomial <MATH_0009>-algebra\non variables <MATH_0010> and let <MATH_0011> be the <MATH_0012>-algebra map sending\n<MATH_0013> to <MATH_0014>. Then <MATH_0015> is surjective, so\n<MATH_0016> is zero and hence <MATH_0017>\nis zero. This proves (a).\n\n<STRUCT_0002><STRUCT_0003>\nTo see (b) assume <MATH_0018> is a finitely presented <MATH_0019>-algebra.\nThen <MATH_0020> is finite type over <MATH_0021> by (a). Choose a surjection\n<MATH_0022> with kernel <MATH_0023>.\nThen <MATH_0024> is exact.\nBy Algebra, Lemma <REF_0001>\nthe kernel of <MATH_0025>\nis a finitely generated ideal. Thus we can find finitely many elements\n<MATH_0026> such that the images of <MATH_0027> in\n<MATH_0028> generate the kernel of\n<MATH_0029>.\nLet <MATH_0030> be the ideal generated by <MATH_0031>.\nThen <MATH_0032> is a finitely presented <MATH_0033>-algebra\nwith a morphism <MATH_0034> such that <MATH_0035>\nis an isomorphism. Thus <MATH_0036> as desired.\n\n<STRUCT_0004><STRUCT_0005>\nTo prove (c), recall that <MATH_0037> is formally unramified over <MATH_0038> if and only\nif the module of relative differentials <MATH_0039> vanishes, see\nAlgebra, Lemma <REF_0002> or\n<REF_0003>.\nSince <MATH_0040>,\nthe vanishing descends by Theorem <REF_0004>.\n\n<STRUCT_0006><STRUCT_0007>\nTo deduce (d) from the previous cases, recall that <MATH_0041> is unramified\nover <MATH_0042> if and only if <MATH_0043> is formally unramified and of finite type\nover <MATH_0044>, see\nAlgebra, Lemma <REF_0005>.\n\n<STRUCT_0008><STRUCT_0009>\nTo prove (e), recall that by\nAlgebra, Lemma <REF_0006>\nor <REF_0007> the algebra\n<MATH_0045> is <ACCENT_0001>tale over <MATH_0046> if and only if\n<MATH_0047> is flat, unramified, and of finite presentation over <MATH_0048>.\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\{x_i\\}$",
+        "MATH_0002": "$A \\otimes_R S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$x_i$",
+        "MATH_0005": "$\\sum_j y_{ij} \\otimes s_{ij}$",
+        "MATH_0006": "$y_{ij} \\in A$",
+        "MATH_0007": "$s_{ij} \\in S$",
+        "MATH_0008": "$F$",
+        "MATH_0009": "$R$",
+        "MATH_0010": "$e_{ij}$",
+        "MATH_0011": "$F \\to M$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$e_{ij}$",
+        "MATH_0014": "$y_{ij}$",
+        "MATH_0015": "$F \\otimes_R S\\to A \\otimes_R S$",
+        "MATH_0016": "$\\Coker(F \\to A) \\otimes_R S$",
+        "MATH_0017": "$\\Coker(F \\to A)$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0018": "$A \\otimes_R S$",
+        "MATH_0019": "$S$",
+        "MATH_0020": "$A$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$R[x_1, \\ldots, x_n] \\to A$",
+        "MATH_0023": "$I$",
+        "MATH_0024": "$I \\otimes_R S \\to S[x_1, \\ldots, x_n] \\to A \\otimes_R S \\to 0$",
+        "REF_0001": "\\ref{algebra-lemma-finite-presentation-independent}",
+        "MATH_0025": "$S[x_1, \\ldots, x_n] \\to A \\otimes_R S$",
+        "MATH_0026": "$y_1, \\ldots, y_t \\in I$",
+        "MATH_0027": "$y_i \\otimes 1$",
+        "MATH_0028": "$S[x_1, \\ldots, x_n]$",
+        "MATH_0029": "$S[x_1, \\ldots, x_n] \\to A \\otimes_R S$",
+        "MATH_0030": "$I' \\subset I$",
+        "MATH_0031": "$y_1, \\ldots, y_t$",
+        "MATH_0032": "$A' = R[x_1, \\ldots, x_n]/I'$",
+        "MATH_0033": "$R$",
+        "MATH_0034": "$A' \\to A$",
+        "MATH_0035": "$A' \\otimes_R S \\to A \\otimes_R S$",
+        "MATH_0036": "$A' \\cong A$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0037": "$A$",
+        "MATH_0038": "$R$",
+        "MATH_0039": "$\\Omega_{A/R}$",
+        "REF_0002": "\\ref{algebra-lemma-characterize-formally-unramified}",
+        "REF_0003": "\\cite[Proposition~17.2.1]{EGA4}",
+        "MATH_0040": "$\\Omega_{(A \\otimes_R S)/S} = \\Omega_{A/R} \\otimes_R S$",
+        "REF_0004": "\\ref{theorem-descent}",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0041": "$A$",
+        "MATH_0042": "$R$",
+        "MATH_0043": "$A$",
+        "MATH_0044": "$R$",
+        "REF_0005": "\\ref{algebra-lemma-formally-unramified-unramified}",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "REF_0006": "\\ref{algebra-lemma-etale-flat-unramified-finite-presentation}",
+        "REF_0007": "\\cite[Th\\'eor\\`eme~17.6.1]{EGA4}",
+        "MATH_0045": "$A$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0046": "$R$",
+        "MATH_0047": "$A$",
+        "MATH_0048": "$R$",
+        "STRUCT_0010": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023R:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Fpqc descent of quasi-coherent sheaves<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-fpqc-descent-quasi-coherent}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    }
+  ]
+}

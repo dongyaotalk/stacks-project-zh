@@ -1,0 +1,1992 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p42r01-20261103T154501Z.json",
+    "hash": "sha256:319645609980f75eb53ead049553a3aa8d12ad40d3f54e39888c009d60ce6e81"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "revision_requirement": "Complete actual retranslation of every predecessor unit and all five fields. Prior candidates are revision inputs, not approved translation memory. Record all mathematical term occurrences, including source-side inventory omissions; preserve protected tokens in exact order and retain unknown terms as pending.",
+  "complete_previous_candidates": [
+    {
+      "allowed_english": [],
+      "context": {
+        "approved_glossary_entries": [],
+        "generation_contexts": [
+          {
+            "context_id": "neighbor:inventory:descent:04ND:proof/0001",
+            "hash": "sha256:d4c2219df4d7a4e58a72ed03932537fe5e0f720e3473c373b8e226c6509fb2c5",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 302278,
+                "byte_start": 300905,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:41b2b273cda41f25189f7193a98ec24e3d6ec68d65188831bab5f3b923365067",
+                "line_end": 7966,
+                "line_start": 7928
+              },
+              "owner_tag": "04ND",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "proof",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+                  "MATH_0002": "$R = \\mathcal{O}_{V, v}$",
+                  "MATH_0003": "$S = \\mathcal{O}_{U, u}$",
+                  "MATH_0004": "$M = \\mathcal{O}_{U', u'}$",
+                  "MATH_0005": "$$\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n\\longleftarrow\n\\mathcal{O}_{V', v'}\n$$",
+                  "MATH_0006": "$$\n\\mathcal{O}_{U', u'}\n\\longleftarrow\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n$$",
+                  "MATH_0007": "$\\mathcal{O}_{U, u}$",
+                  "REF_0001": "\\ref{definition-local-source-target-at-point}",
+                  "REF_0002": "\\ref{algebra-section-etale}",
+                  "REF_0003": "\\ref{algebra-lemma-local-flat-ff}",
+                  "REF_0004": "\\ref{algebra-lemma-flat-permanence}",
+                  "REF_0005": "\\ref{algebra-lemma-flat-base-change}",
+                  "REF_0006": "\\ref{algebra-lemma-map-between-etale}",
+                  "STRUCT_0001": "\\begin{proof}",
+                  "STRUCT_0002": "\\end{proof}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:1e5df2742906c484091061786a8ec60719d996300cc615831946e7402453d1d8",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:f03fd9da1ef7390b82168047380d5b546484fee16c8b5485f5723b7618ad7cd0",
+                "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are essentially of finite presentation, flat,\nand unramified (see\nAlgebra, Section <REF_0002>).\nIn particular the vertical maps are faithfully flat, see\nAlgebra, Lemma <REF_0003>.\nNow, if the upper horizontal arrow is flat, then the lower horizontal\narrow is flat by an application of\nAlgebra, Lemma <REF_0004>\nwith <MATH_0002>, <MATH_0003> and\n<MATH_0004>. If the lower horizontal arrow is\nflat, then the ring map\n<MATH_0005>\nis flat by\nAlgebra, Lemma <REF_0005>.\nAnd the ring map\n<MATH_0006>\nis a localization of a map between <ACCENT_0002>tale ring extensions of\n<MATH_0007>, hence flat by\nAlgebra, Lemma <REF_0006>.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:e27a9deb163d99016b54ef5c013390ecd27fe38fbb12228489f2a78e906aa968",
+                "unit_id": "inventory:descent:04ND:proof/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NI:proof/0001",
+            "hash": "sha256:cef9bcc6c4620586580556041027ebf7a7bf55ede18deed8c8849b50511642b9",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303183,
+                "byte_start": 302588,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:3f72e142f7cae9349d78df5470f49bf98e32d2f33731618fbf30b8d31bb4a08f",
+                "line_end": 7992,
+                "line_start": 7981
+              },
+              "owner_tag": "04NI",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "proof",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "ACCENT_0003": "\\'e",
+                  "ACCENT_0004": "\\'e",
+                  "MATH_0001": "$U'_v \\to U_v$",
+                  "MATH_0002": "$U' \\to U$",
+                  "MATH_0003": "$U'_v$",
+                  "MATH_0004": "$V'_v$",
+                  "MATH_0005": "$V'_v$",
+                  "MATH_0006": "$\\kappa(v)$",
+                  "MATH_0007": "$v' = \\Spec(\\kappa(v'))$",
+                  "MATH_0008": "$U'_{v'}$",
+                  "MATH_0009": "$U'_v$",
+                  "MATH_0010": "$U'_{v'} \\to U'_v \\to U_v$",
+                  "REF_0001": "\\ref{morphisms-lemma-etale-over-field}",
+                  "REF_0002": "\\ref{morphisms-section-etale}",
+                  "STRUCT_0001": "\\begin{proof}",
+                  "STRUCT_0002": "\\end{proof}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:511be6378a6428bfd3ab0b6ed9d6b39b6f6ffaff2caa8ae7f05d4dab3f9d75ed",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:e1dd51da0784a1eb8f3dd4365fa47ab227748add57dbfac7e6ce3b219d7795fc",
+                "source_text": "<STRUCT_0001>\nNote that <MATH_0001> is <ACCENT_0001>tale as a base change of the <ACCENT_0002>tale\nmorphism <MATH_0002>. The scheme <MATH_0003> is a scheme over <MATH_0004>. By\nMorphisms, Lemma <REF_0001>\nthe scheme <MATH_0005> is a disjoint union of spectra\nof finite separable field extensions of <MATH_0006>.\nOne of these is <MATH_0007>. Hence\n<MATH_0008> is an open and closed subscheme of <MATH_0009> and it follows\nthat <MATH_0010> is <ACCENT_0003>tale (as a composition of an\nopen immersion and an <ACCENT_0004>tale morphism, see\nMorphisms, Section <REF_0002>).\n<STRUCT_0002>",
+                "source_text_hash": "sha256:a13678863eeb43e84f01f6a60f544a21abd9a22ae5004ded1ddfb76fcb9c8d78",
+                "unit_id": "inventory:descent:04NI:proof/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NI:lemma/0001",
+            "hash": "sha256:b33a172544456e6e17153c32ed2e3279fa9342dfd310f60cbff4244e4a14af19",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 302586,
+                "byte_start": 302280,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:86f2e1be7acb9d7fe758e8a6edd79b7d1780e922aadd909888fdeacc11efb0d5",
+                "line_end": 7979,
+                "line_start": 7968
+              },
+              "owner_tag": "04NI",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "lemma",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-etale-on-fiber}",
+                  "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+                  "MATH_0002": "$v' \\in V'$",
+                  "MATH_0003": "$v \\in V$",
+                  "MATH_0004": "$U'_{v'} \\to U_v$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:413141d7c4fa397c1a9abb4922a58a6d5e6e3af0ca196b0ad34bf64b2808576c",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:e35128470d000233c1ff768497bbc3b44143435a38810e4e5f2d02d6902c1ba0",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:6c5191c3e05f2f3338e5d1b5917d98e036b417376f3b3e07c64b77c327c06d46",
+                "unit_id": "inventory:descent:04NI:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04R5:paragraph/0003",
+            "hash": "sha256:3dd358cda749648ab5e3dc57d7d71294f88792969cae48e991287e725457e985",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303421,
+                "byte_start": 303185,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:9fa0c03eef3ba266469c7e3b7eb618aa8ec4f046609f76d74f842ae66f6b70e6",
+                "line_end": 7998,
+                "line_start": 7994
+              },
+              "owner_tag": "04R5",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "paragraph",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "MATH_0001": "$(X, x) \\to (S, s)$",
+                  "MATH_0002": "$(U_s, x)$",
+                  "MATH_0003": "$U \\to S$",
+                  "MATH_0004": "$(X_s, x)$",
+                  "STRUCT_0001": "\\noindent",
+                  "TEXTITCLOSE_0001": "}",
+                  "TEXTITOPEN_0001": "{\\it "
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R1",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:27ce5d6fd07b29bb3e80fe9ac4b07ca2bd187fe1550cca2940e36d4e845e3697",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:ed65c8a20e9e3e88bd4df802f83d35e040e1cf23d859e8447ad2c31cf6449d36",
+                "source_text": "<STRUCT_0001>\nGiven a morphism of germs of schemes <MATH_0001>\nwe can define the <TEXTITOPEN_0001>fibre<TEXTITCLOSE_0001> as the isomorphism class of germs\n<MATH_0002> where <MATH_0003> is any representative. We will often abuse notation\nand just write <MATH_0004>.",
+                "source_text_hash": "sha256:181fd8079f7d45fadbc7b09520338b7758b63a3df46daa1653247ad3e7f965e2",
+                "unit_id": "inventory:descent:04R5:paragraph/0003"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NJ:lemma/0001",
+            "hash": "sha256:4a2ac75dd0661dde380179ad403f845783f0272c8f8a79e4fc2c243476b19f1c",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303730,
+                "byte_start": 303423,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:e7da6ae74d22ecc9f316d64a856441e1139693a1f8e1982783102ec718e610de",
+                "line_end": 8011,
+                "line_start": 8000
+              },
+              "owner_tag": "04NJ",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "lemma",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-dimension-local-ring-fibre}",
+                  "MATH_0001": "$d \\in \\{0, 1, 2, \\ldots, \\infty\\}$",
+                  "MATH_0002": "$$\n\\mathcal{P}_d((X, x) \\to (S, s)) =\n\\text{the local ring }\n\\mathcal{O}_{X_s, x}\n\\text{ of the fibre has dimension }d\n$$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:c8ade5a0447bfd090b4d97ccbd68b8b47ef03bcd06d53b400aac4a73358db13c",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:224eb03a24310d39597f77ad5011e19b129691062a671caf8c82ab55a3774590",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nThe property of morphisms of germs\n<MATH_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:738a4b1a30f2ddca7823a01af3e5c619dfe05f33977b5889e58d7f1bf55b92b7",
+                "unit_id": "inventory:descent:04NJ:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "reference:morphisms-lemma-etale-over-field",
+            "hash": "sha256:fc40d59fb4007de5b774dcbe8a8077515445db7a9a4d57671aa94fad595264d5",
+            "value": {
+              "kind": "locked-English-reference",
+              "location": {
+                "byte_end": 297788,
+                "byte_start": 297199,
+                "file": "morphisms.tex",
+                "fragment_hash": "sha256:25ce1b8abba2bedcc751b5ad2adabccf76f797d3bfea75112f87c426d242f9e1",
+                "line_end": 8190,
+                "line_start": 8174
+              },
+              "owner_tag": "02GL",
+              "parent_tag": "02GH",
+              "requested_label": "morphisms-lemma-etale-over-field",
+              "requested_tag": "02GL",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "morphisms",
+                "node_kind": "lemma",
+                "parent_tag": "02GH",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "ACCENT_0003": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-etale-over-field}",
+                  "LOCKED_0002": "\\begin{slogan}\nDescription of the \\'etale schemes over fields and fibres\nof \\'etale morphisms.\n\\end{slogan}",
+                  "MATH_0001": "$X$",
+                  "MATH_0002": "$k$",
+                  "MATH_0003": "$X \\to \\Spec(k)$",
+                  "MATH_0004": "$X$",
+                  "MATH_0005": "$k$",
+                  "MATH_0006": "$f : X \\to S$",
+                  "MATH_0007": "$s \\in S$",
+                  "MATH_0008": "$X_s$",
+                  "MATH_0009": "$\\kappa(s)$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\begin{enumerate}",
+                  "STRUCT_0003": "\\item",
+                  "STRUCT_0004": "\\item",
+                  "STRUCT_0005": "\\end{enumerate}",
+                  "STRUCT_0006": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:2da7ef9c73938907d7c3ac09b3eb8db5da4d7e249aa5208bdfdc87ae70be99d4",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:303c850aecf379fe3576cfbd2d62541818ca0596a3fb9da7cf5fba54fd4ab45d",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nFibres of <ACCENT_0001>tale morphisms.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme over a field <MATH_0002>.\nThe structure morphism <MATH_0003> is <ACCENT_0002>tale if\nand only if <MATH_0004> is a disjoint union of spectra of finite separable\nfield extensions of <MATH_0005>.\n<STRUCT_0004> If <MATH_0006> is an <ACCENT_0003>tale morphism, then for every <MATH_0007> the\nfibre <MATH_0008> is a disjoint union of spectra of finite separable field\nextensions of <MATH_0009>.\n<STRUCT_0005>\n<STRUCT_0006>",
+                "source_text_hash": "sha256:5ed968fb945dca7165a982e3196587b1e3e2755a8c44ef759ee3b3083418a222",
+                "unit_id": "inventory:morphisms:02GL:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "reference:morphisms-section-etale",
+            "hash": "sha256:8a91b38007c6ff168566e9e861d4b41c8bfa1868ead82e6d0214054fc25c4dba",
+            "value": {
+              "kind": "locked-English-reference",
+              "location": {
+                "byte_end": 292124,
+                "byte_start": 292075,
+                "file": "morphisms.tex",
+                "fragment_hash": "sha256:0934f0a1eb5101abcb9fc4e8688e2ee5113b006f96d0aa3b9488ee6965e6a0db",
+                "line_end": 8035,
+                "line_start": 8034
+              },
+              "owner_tag": "02GH",
+              "parent_tag": "02GH",
+              "requested_label": "morphisms-section-etale",
+              "requested_tag": "02GH",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "morphisms",
+                "node_kind": "section_title",
+                "parent_tag": "02GH",
+                "placeholders": {
+                  "ACCENT_0001": "\\'E",
+                  "LOCKED_0001": "\\label{section-etale}",
+                  "TEXTCLOSE_0001": "}",
+                  "TEXTOPEN_0001": "\\section{"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R1",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:43356df9e194ada9ebdf85c7511d39207d36f63e7acdf4731ec9fc71b7fca564",
+                "source_text": "<TEXTOPEN_0001><ACCENT_0001>tale morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+                "source_text_hash": "sha256:046c58a665849ba78f2629ada5e62b3c8e1d4f8d4db5ffd4531535c27e9d91f2",
+                "unit_id": "inventory:morphisms:02GH:section_title/0001"
+              }
+            }
+          }
+        ],
+        "input_freeze": {
+          "hash": "sha256:2a32ff42b2cb3399c9a0e46fdcde6e05cc0fdb44bf25525d7fa4a1eba0314924",
+          "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p42-20261103T090052Z.json"
+        },
+        "model_output": {
+          "hash": "sha256:a3843d160172a4105341a2a596f3f3f225abaf2440af52b17dc04240b7a26b3b",
+          "path": "docs/evidence/descent35-gpt61sol-p42-20261103T090052Z-raw-01.jsonl",
+          "record_hash": "sha256:a1bbc8cc6c33b4f010f1dede1b70e850c4ccd271ab87eb83c6b4ae4481331fc2"
+        },
+        "neighbor_unit_ids": [
+          "tag:04NI:proof"
+        ],
+        "policy_revision": "git:ca0402bd5fc3d901193977fa5a9e72da0267aed6",
+        "prior_generations": [],
+        "prompt_version": "translator-v2",
+        "source_adoption_id": "descent35-gpt61sol-p42-20261103T090052Z",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "style_guide_path": "config/style-guide.md",
+        "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+        "unit_id": "tag:04NI:statement"
+      },
+      "context_hash": "sha256:ee23534722a8998dfb79cabb5a818895741b2f7b09356dcd09980c606ba0010e",
+      "created_at": "2026-11-03T09:00:52.812713Z",
+      "glossary_revision": "git:ca0402bd5fc3d901193977fa5a9e72da0267aed6",
+      "harness_id": "codex",
+      "harness_version": "0.166.0",
+      "model_id": "gpt-6.1-sol",
+      "model_identity_confidence": "declared",
+      "model_lane": "openai-gpt-6.1-sol",
+      "model_record_id": "openai:gpt-6.1-sol:declared",
+      "model_snapshot": null,
+      "notes": [],
+      "prompt_version": "translator-v2",
+      "publication_status": "CANDIDATE",
+      "qa_status": "PASS",
+      "reasoning_effort": "high",
+      "run_id": "run-descent35-gpt61sol-p42-20261103T090052Z",
+      "schema_version": 2,
+      "source_adoption_id": "descent35-gpt61sol-p42-20261103T090052Z",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_status": "CURRENT",
+      "source_text_hash": "sha256:0f31e49546a398d551719d1c5a916a405076c6cf13885a4ee32bb057374efbea",
+      "stage": "STRUCTURE_OK",
+      "term_occurrences": [
+        {
+          "source_term": "schemes",
+          "target_term": "概形"
+        },
+        {
+          "source_term": "morphisms",
+          "target_term": "态射"
+        },
+        {
+          "source_term": "commutative diagram",
+          "target_term": "交换图"
+        },
+        {
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "source_term": "vertical arrows",
+          "target_term": "竖直箭头"
+        },
+        {
+          "source_term": "point",
+          "target_term": "点"
+        },
+        {
+          "source_term": "mapping",
+          "target_term": "映射"
+        },
+        {
+          "source_term": "fibres",
+          "target_term": "纤维"
+        },
+        {
+          "source_term": "morphism",
+          "target_term": "态射"
+        },
+        {
+          "source_term": "étale",
+          "target_term": "平展"
+        }
+      ],
+      "term_status": "DECISION_REQUIRED",
+      "translation": "考虑概形（schemes）的态射（morphisms）组成的交换图（commutative diagram）\n<MATH_0001>\n，其中竖直箭头是平展（<ACCENT_0001>tale）竖直箭头（vertical arrows），并有一个点（point）<MATH_0002> 映射（mapping）到 <MATH_0003>。\n则纤维（fibres）之间的态射（morphism）<MATH_0004> 是平展（<ACCENT_0002>tale）的。\n",
+      "translation_hash": "sha256:0dcd8b03291cf298059dbe46bf98526a6631894e6a5810251f082d5a3c13e304",
+      "unit_id": "tag:04NI:statement",
+      "unknown_terms": [
+        {
+          "context": "交换图中的概形，待术语批准。",
+          "source_term": "schemes",
+          "target_term": "概形"
+        },
+        {
+          "context": "构成交换图的态射，待术语批准。",
+          "source_term": "morphisms",
+          "target_term": "态射"
+        },
+        {
+          "context": "引理假设中的交换图，待术语批准。",
+          "source_term": "commutative diagram",
+          "target_term": "交换图"
+        },
+        {
+          "context": "竖直箭头及纤维态射的平展性，待术语批准。",
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "context": "图的竖直态射，待术语批准。",
+          "source_term": "vertical arrows",
+          "target_term": "竖直箭头"
+        },
+        {
+          "context": "概形上的点，待术语批准。",
+          "source_term": "point",
+          "target_term": "点"
+        },
+        {
+          "context": "点在态射下的映射关系，待术语批准。",
+          "source_term": "mapping",
+          "target_term": "映射"
+        },
+        {
+          "context": "态射的纤维，待术语批准。",
+          "source_term": "fibres",
+          "target_term": "纤维"
+        },
+        {
+          "context": "纤维之间的态射，待术语批准。",
+          "source_term": "morphism",
+          "target_term": "态射"
+        }
+      ]
+    },
+    {
+      "allowed_english": [],
+      "context": {
+        "approved_glossary_entries": [],
+        "generation_contexts": [
+          {
+            "context_id": "neighbor:inventory:descent:04ND:proof/0001",
+            "hash": "sha256:d4c2219df4d7a4e58a72ed03932537fe5e0f720e3473c373b8e226c6509fb2c5",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 302278,
+                "byte_start": 300905,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:41b2b273cda41f25189f7193a98ec24e3d6ec68d65188831bab5f3b923365067",
+                "line_end": 7966,
+                "line_start": 7928
+              },
+              "owner_tag": "04ND",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "proof",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+                  "MATH_0002": "$R = \\mathcal{O}_{V, v}$",
+                  "MATH_0003": "$S = \\mathcal{O}_{U, u}$",
+                  "MATH_0004": "$M = \\mathcal{O}_{U', u'}$",
+                  "MATH_0005": "$$\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n\\longleftarrow\n\\mathcal{O}_{V', v'}\n$$",
+                  "MATH_0006": "$$\n\\mathcal{O}_{U', u'}\n\\longleftarrow\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n$$",
+                  "MATH_0007": "$\\mathcal{O}_{U, u}$",
+                  "REF_0001": "\\ref{definition-local-source-target-at-point}",
+                  "REF_0002": "\\ref{algebra-section-etale}",
+                  "REF_0003": "\\ref{algebra-lemma-local-flat-ff}",
+                  "REF_0004": "\\ref{algebra-lemma-flat-permanence}",
+                  "REF_0005": "\\ref{algebra-lemma-flat-base-change}",
+                  "REF_0006": "\\ref{algebra-lemma-map-between-etale}",
+                  "STRUCT_0001": "\\begin{proof}",
+                  "STRUCT_0002": "\\end{proof}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:1e5df2742906c484091061786a8ec60719d996300cc615831946e7402453d1d8",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:f03fd9da1ef7390b82168047380d5b546484fee16c8b5485f5723b7618ad7cd0",
+                "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are essentially of finite presentation, flat,\nand unramified (see\nAlgebra, Section <REF_0002>).\nIn particular the vertical maps are faithfully flat, see\nAlgebra, Lemma <REF_0003>.\nNow, if the upper horizontal arrow is flat, then the lower horizontal\narrow is flat by an application of\nAlgebra, Lemma <REF_0004>\nwith <MATH_0002>, <MATH_0003> and\n<MATH_0004>. If the lower horizontal arrow is\nflat, then the ring map\n<MATH_0005>\nis flat by\nAlgebra, Lemma <REF_0005>.\nAnd the ring map\n<MATH_0006>\nis a localization of a map between <ACCENT_0002>tale ring extensions of\n<MATH_0007>, hence flat by\nAlgebra, Lemma <REF_0006>.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:e27a9deb163d99016b54ef5c013390ecd27fe38fbb12228489f2a78e906aa968",
+                "unit_id": "inventory:descent:04ND:proof/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NI:proof/0001",
+            "hash": "sha256:cef9bcc6c4620586580556041027ebf7a7bf55ede18deed8c8849b50511642b9",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303183,
+                "byte_start": 302588,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:3f72e142f7cae9349d78df5470f49bf98e32d2f33731618fbf30b8d31bb4a08f",
+                "line_end": 7992,
+                "line_start": 7981
+              },
+              "owner_tag": "04NI",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "proof",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "ACCENT_0003": "\\'e",
+                  "ACCENT_0004": "\\'e",
+                  "MATH_0001": "$U'_v \\to U_v$",
+                  "MATH_0002": "$U' \\to U$",
+                  "MATH_0003": "$U'_v$",
+                  "MATH_0004": "$V'_v$",
+                  "MATH_0005": "$V'_v$",
+                  "MATH_0006": "$\\kappa(v)$",
+                  "MATH_0007": "$v' = \\Spec(\\kappa(v'))$",
+                  "MATH_0008": "$U'_{v'}$",
+                  "MATH_0009": "$U'_v$",
+                  "MATH_0010": "$U'_{v'} \\to U'_v \\to U_v$",
+                  "REF_0001": "\\ref{morphisms-lemma-etale-over-field}",
+                  "REF_0002": "\\ref{morphisms-section-etale}",
+                  "STRUCT_0001": "\\begin{proof}",
+                  "STRUCT_0002": "\\end{proof}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:511be6378a6428bfd3ab0b6ed9d6b39b6f6ffaff2caa8ae7f05d4dab3f9d75ed",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:e1dd51da0784a1eb8f3dd4365fa47ab227748add57dbfac7e6ce3b219d7795fc",
+                "source_text": "<STRUCT_0001>\nNote that <MATH_0001> is <ACCENT_0001>tale as a base change of the <ACCENT_0002>tale\nmorphism <MATH_0002>. The scheme <MATH_0003> is a scheme over <MATH_0004>. By\nMorphisms, Lemma <REF_0001>\nthe scheme <MATH_0005> is a disjoint union of spectra\nof finite separable field extensions of <MATH_0006>.\nOne of these is <MATH_0007>. Hence\n<MATH_0008> is an open and closed subscheme of <MATH_0009> and it follows\nthat <MATH_0010> is <ACCENT_0003>tale (as a composition of an\nopen immersion and an <ACCENT_0004>tale morphism, see\nMorphisms, Section <REF_0002>).\n<STRUCT_0002>",
+                "source_text_hash": "sha256:a13678863eeb43e84f01f6a60f544a21abd9a22ae5004ded1ddfb76fcb9c8d78",
+                "unit_id": "inventory:descent:04NI:proof/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NI:lemma/0001",
+            "hash": "sha256:b33a172544456e6e17153c32ed2e3279fa9342dfd310f60cbff4244e4a14af19",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 302586,
+                "byte_start": 302280,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:86f2e1be7acb9d7fe758e8a6edd79b7d1780e922aadd909888fdeacc11efb0d5",
+                "line_end": 7979,
+                "line_start": 7968
+              },
+              "owner_tag": "04NI",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "lemma",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-etale-on-fiber}",
+                  "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+                  "MATH_0002": "$v' \\in V'$",
+                  "MATH_0003": "$v \\in V$",
+                  "MATH_0004": "$U'_{v'} \\to U_v$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:413141d7c4fa397c1a9abb4922a58a6d5e6e3af0ca196b0ad34bf64b2808576c",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:e35128470d000233c1ff768497bbc3b44143435a38810e4e5f2d02d6902c1ba0",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:6c5191c3e05f2f3338e5d1b5917d98e036b417376f3b3e07c64b77c327c06d46",
+                "unit_id": "inventory:descent:04NI:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04R5:paragraph/0003",
+            "hash": "sha256:3dd358cda749648ab5e3dc57d7d71294f88792969cae48e991287e725457e985",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303421,
+                "byte_start": 303185,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:9fa0c03eef3ba266469c7e3b7eb618aa8ec4f046609f76d74f842ae66f6b70e6",
+                "line_end": 7998,
+                "line_start": 7994
+              },
+              "owner_tag": "04R5",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "paragraph",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "MATH_0001": "$(X, x) \\to (S, s)$",
+                  "MATH_0002": "$(U_s, x)$",
+                  "MATH_0003": "$U \\to S$",
+                  "MATH_0004": "$(X_s, x)$",
+                  "STRUCT_0001": "\\noindent",
+                  "TEXTITCLOSE_0001": "}",
+                  "TEXTITOPEN_0001": "{\\it "
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R1",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:27ce5d6fd07b29bb3e80fe9ac4b07ca2bd187fe1550cca2940e36d4e845e3697",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:ed65c8a20e9e3e88bd4df802f83d35e040e1cf23d859e8447ad2c31cf6449d36",
+                "source_text": "<STRUCT_0001>\nGiven a morphism of germs of schemes <MATH_0001>\nwe can define the <TEXTITOPEN_0001>fibre<TEXTITCLOSE_0001> as the isomorphism class of germs\n<MATH_0002> where <MATH_0003> is any representative. We will often abuse notation\nand just write <MATH_0004>.",
+                "source_text_hash": "sha256:181fd8079f7d45fadbc7b09520338b7758b63a3df46daa1653247ad3e7f965e2",
+                "unit_id": "inventory:descent:04R5:paragraph/0003"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NJ:lemma/0001",
+            "hash": "sha256:4a2ac75dd0661dde380179ad403f845783f0272c8f8a79e4fc2c243476b19f1c",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303730,
+                "byte_start": 303423,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:e7da6ae74d22ecc9f316d64a856441e1139693a1f8e1982783102ec718e610de",
+                "line_end": 8011,
+                "line_start": 8000
+              },
+              "owner_tag": "04NJ",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "lemma",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-dimension-local-ring-fibre}",
+                  "MATH_0001": "$d \\in \\{0, 1, 2, \\ldots, \\infty\\}$",
+                  "MATH_0002": "$$\n\\mathcal{P}_d((X, x) \\to (S, s)) =\n\\text{the local ring }\n\\mathcal{O}_{X_s, x}\n\\text{ of the fibre has dimension }d\n$$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:c8ade5a0447bfd090b4d97ccbd68b8b47ef03bcd06d53b400aac4a73358db13c",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:224eb03a24310d39597f77ad5011e19b129691062a671caf8c82ab55a3774590",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nThe property of morphisms of germs\n<MATH_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:738a4b1a30f2ddca7823a01af3e5c619dfe05f33977b5889e58d7f1bf55b92b7",
+                "unit_id": "inventory:descent:04NJ:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "reference:morphisms-lemma-etale-over-field",
+            "hash": "sha256:fc40d59fb4007de5b774dcbe8a8077515445db7a9a4d57671aa94fad595264d5",
+            "value": {
+              "kind": "locked-English-reference",
+              "location": {
+                "byte_end": 297788,
+                "byte_start": 297199,
+                "file": "morphisms.tex",
+                "fragment_hash": "sha256:25ce1b8abba2bedcc751b5ad2adabccf76f797d3bfea75112f87c426d242f9e1",
+                "line_end": 8190,
+                "line_start": 8174
+              },
+              "owner_tag": "02GL",
+              "parent_tag": "02GH",
+              "requested_label": "morphisms-lemma-etale-over-field",
+              "requested_tag": "02GL",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "morphisms",
+                "node_kind": "lemma",
+                "parent_tag": "02GH",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "ACCENT_0003": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-etale-over-field}",
+                  "LOCKED_0002": "\\begin{slogan}\nDescription of the \\'etale schemes over fields and fibres\nof \\'etale morphisms.\n\\end{slogan}",
+                  "MATH_0001": "$X$",
+                  "MATH_0002": "$k$",
+                  "MATH_0003": "$X \\to \\Spec(k)$",
+                  "MATH_0004": "$X$",
+                  "MATH_0005": "$k$",
+                  "MATH_0006": "$f : X \\to S$",
+                  "MATH_0007": "$s \\in S$",
+                  "MATH_0008": "$X_s$",
+                  "MATH_0009": "$\\kappa(s)$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\begin{enumerate}",
+                  "STRUCT_0003": "\\item",
+                  "STRUCT_0004": "\\item",
+                  "STRUCT_0005": "\\end{enumerate}",
+                  "STRUCT_0006": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:2da7ef9c73938907d7c3ac09b3eb8db5da4d7e249aa5208bdfdc87ae70be99d4",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:303c850aecf379fe3576cfbd2d62541818ca0596a3fb9da7cf5fba54fd4ab45d",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nFibres of <ACCENT_0001>tale morphisms.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme over a field <MATH_0002>.\nThe structure morphism <MATH_0003> is <ACCENT_0002>tale if\nand only if <MATH_0004> is a disjoint union of spectra of finite separable\nfield extensions of <MATH_0005>.\n<STRUCT_0004> If <MATH_0006> is an <ACCENT_0003>tale morphism, then for every <MATH_0007> the\nfibre <MATH_0008> is a disjoint union of spectra of finite separable field\nextensions of <MATH_0009>.\n<STRUCT_0005>\n<STRUCT_0006>",
+                "source_text_hash": "sha256:5ed968fb945dca7165a982e3196587b1e3e2755a8c44ef759ee3b3083418a222",
+                "unit_id": "inventory:morphisms:02GL:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "reference:morphisms-section-etale",
+            "hash": "sha256:8a91b38007c6ff168566e9e861d4b41c8bfa1868ead82e6d0214054fc25c4dba",
+            "value": {
+              "kind": "locked-English-reference",
+              "location": {
+                "byte_end": 292124,
+                "byte_start": 292075,
+                "file": "morphisms.tex",
+                "fragment_hash": "sha256:0934f0a1eb5101abcb9fc4e8688e2ee5113b006f96d0aa3b9488ee6965e6a0db",
+                "line_end": 8035,
+                "line_start": 8034
+              },
+              "owner_tag": "02GH",
+              "parent_tag": "02GH",
+              "requested_label": "morphisms-section-etale",
+              "requested_tag": "02GH",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "morphisms",
+                "node_kind": "section_title",
+                "parent_tag": "02GH",
+                "placeholders": {
+                  "ACCENT_0001": "\\'E",
+                  "LOCKED_0001": "\\label{section-etale}",
+                  "TEXTCLOSE_0001": "}",
+                  "TEXTOPEN_0001": "\\section{"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R1",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:43356df9e194ada9ebdf85c7511d39207d36f63e7acdf4731ec9fc71b7fca564",
+                "source_text": "<TEXTOPEN_0001><ACCENT_0001>tale morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+                "source_text_hash": "sha256:046c58a665849ba78f2629ada5e62b3c8e1d4f8d4db5ffd4531535c27e9d91f2",
+                "unit_id": "inventory:morphisms:02GH:section_title/0001"
+              }
+            }
+          }
+        ],
+        "input_freeze": {
+          "hash": "sha256:2a32ff42b2cb3399c9a0e46fdcde6e05cc0fdb44bf25525d7fa4a1eba0314924",
+          "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p42-20261103T090052Z.json"
+        },
+        "model_output": {
+          "hash": "sha256:a3843d160172a4105341a2a596f3f3f225abaf2440af52b17dc04240b7a26b3b",
+          "path": "docs/evidence/descent35-gpt61sol-p42-20261103T090052Z-raw-01.jsonl",
+          "record_hash": "sha256:4fd659a1c862a86bbedb546183dd8347aae8e3eebf59ea980014443bce867e79"
+        },
+        "neighbor_unit_ids": [
+          "tag:04NI:statement"
+        ],
+        "policy_revision": "git:ca0402bd5fc3d901193977fa5a9e72da0267aed6",
+        "prior_generations": [],
+        "prompt_version": "translator-v2",
+        "source_adoption_id": "descent35-gpt61sol-p42-20261103T090052Z",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "style_guide_path": "config/style-guide.md",
+        "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+        "unit_id": "tag:04NI:proof"
+      },
+      "context_hash": "sha256:9ea789b4f770fcaf71695a6b0d30c01db8b3ae4cb04eb13ee645233cb40f00c9",
+      "created_at": "2026-11-03T09:00:52.812713Z",
+      "glossary_revision": "git:ca0402bd5fc3d901193977fa5a9e72da0267aed6",
+      "harness_id": "codex",
+      "harness_version": "0.166.0",
+      "model_id": "gpt-6.1-sol",
+      "model_identity_confidence": "declared",
+      "model_lane": "openai-gpt-6.1-sol",
+      "model_record_id": "openai:gpt-6.1-sol:declared",
+      "model_snapshot": null,
+      "notes": [],
+      "prompt_version": "translator-v2",
+      "publication_status": "CANDIDATE",
+      "qa_status": "PASS",
+      "reasoning_effort": "high",
+      "run_id": "run-descent35-gpt61sol-p42-20261103T090052Z",
+      "schema_version": 2,
+      "source_adoption_id": "descent35-gpt61sol-p42-20261103T090052Z",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_status": "CURRENT",
+      "source_text_hash": "sha256:e2e629693d46ed38bb94d549bd0aab39fe709327f7f7c0cb431b4305f4f8de67",
+      "stage": "STRUCTURE_OK",
+      "term_occurrences": [
+        {
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "source_term": "morphism",
+          "target_term": "态射"
+        },
+        {
+          "source_term": "base change",
+          "target_term": "基变换"
+        },
+        {
+          "source_term": "scheme",
+          "target_term": "概形"
+        },
+        {
+          "source_term": "scheme",
+          "target_term": "概形"
+        },
+        {
+          "source_term": "Morphisms",
+          "target_term": "态射"
+        },
+        {
+          "source_term": "scheme",
+          "target_term": "概形"
+        },
+        {
+          "source_term": "finite",
+          "target_term": "有限"
+        },
+        {
+          "source_term": "separable",
+          "target_term": "可分"
+        },
+        {
+          "source_term": "field",
+          "target_term": "域"
+        },
+        {
+          "source_term": "extensions",
+          "target_term": "扩张"
+        },
+        {
+          "source_term": "spectra",
+          "target_term": "谱"
+        },
+        {
+          "source_term": "disjoint union",
+          "target_term": "不交并"
+        },
+        {
+          "source_term": "open and closed subscheme",
+          "target_term": "开闭子概形"
+        },
+        {
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "source_term": "open immersion",
+          "target_term": "开浸入"
+        },
+        {
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "source_term": "morphism",
+          "target_term": "态射"
+        },
+        {
+          "source_term": "composition",
+          "target_term": "复合"
+        },
+        {
+          "source_term": "Morphisms",
+          "target_term": "态射"
+        }
+      ],
+      "term_status": "DECISION_REQUIRED",
+      "translation": "注意，<MATH_0001> 是平展（<ACCENT_0001>tale）的，因为它是平展（<ACCENT_0002>tale）态射（morphism）<MATH_0002> 的基变换（base change）。概形（scheme）<MATH_0003> 是 <MATH_0004> 上的概形（scheme）。由《态射（Morphisms）》引理 <REF_0001>，概形（scheme）<MATH_0005> 是 <MATH_0006> 的有限（finite）可分（separable）域（field）扩张（extensions）的谱（spectra）所成的不交并（disjoint union）。\n其中之一是 <MATH_0007>。因此，<MATH_0008> 是 <MATH_0009> 的开闭子概形（open and closed subscheme），从而 <MATH_0010> 是平展（<ACCENT_0003>tale）的（因为它是开浸入（open immersion）与平展（<ACCENT_0004>tale）态射（morphism）的复合（composition），见《态射（Morphisms）》第 <REF_0002> 节）。\n",
+      "translation_hash": "sha256:e689d106cdd6e3c46522595e59d85fb12c078a98d27c89378d4ed8b7c8b050ce",
+      "unit_id": "tag:04NI:proof",
+      "unknown_terms": [
+        {
+          "context": "本证明中态射的平展性，待术语批准。",
+          "source_term": "étale",
+          "target_term": "平展"
+        },
+        {
+          "context": "基变换与复合中使用的态射，待术语批准。",
+          "source_term": "morphism",
+          "target_term": "态射"
+        },
+        {
+          "context": "平展态射的基变换，待术语批准。",
+          "source_term": "base change",
+          "target_term": "基变换"
+        },
+        {
+          "context": "证明中的概形，待术语批准。",
+          "source_term": "scheme",
+          "target_term": "概形"
+        },
+        {
+          "context": "引用的章节标题，待术语批准。",
+          "source_term": "Morphisms",
+          "target_term": "态射"
+        },
+        {
+          "context": "域扩张的有限性，待术语批准。",
+          "source_term": "finite",
+          "target_term": "有限"
+        },
+        {
+          "context": "域扩张的可分性，待术语批准。",
+          "source_term": "separable",
+          "target_term": "可分"
+        },
+        {
+          "context": "域扩张中的域，待术语批准。",
+          "source_term": "field",
+          "target_term": "域"
+        },
+        {
+          "context": "有限可分域扩张，待术语批准。",
+          "source_term": "extensions",
+          "target_term": "扩张"
+        },
+        {
+          "context": "域扩张的谱，待术语批准。",
+          "source_term": "spectra",
+          "target_term": "谱"
+        },
+        {
+          "context": "谱的不交并，待术语批准。",
+          "source_term": "disjoint union",
+          "target_term": "不交并"
+        },
+        {
+          "context": "纤维作为开闭子概形，待术语批准。",
+          "source_term": "open and closed subscheme",
+          "target_term": "开闭子概形"
+        },
+        {
+          "context": "复合中的开浸入，待术语批准。",
+          "source_term": "open immersion",
+          "target_term": "开浸入"
+        },
+        {
+          "context": "态射的复合，待术语批准。",
+          "source_term": "composition",
+          "target_term": "复合"
+        }
+      ]
+    },
+    {
+      "allowed_english": [],
+      "context": {
+        "approved_glossary_entries": [],
+        "generation_contexts": [
+          {
+            "context_id": "neighbor:inventory:descent:04ND:proof/0001",
+            "hash": "sha256:d4c2219df4d7a4e58a72ed03932537fe5e0f720e3473c373b8e226c6509fb2c5",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 302278,
+                "byte_start": 300905,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:41b2b273cda41f25189f7193a98ec24e3d6ec68d65188831bab5f3b923365067",
+                "line_end": 7966,
+                "line_start": 7928
+              },
+              "owner_tag": "04ND",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "proof",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+                  "MATH_0002": "$R = \\mathcal{O}_{V, v}$",
+                  "MATH_0003": "$S = \\mathcal{O}_{U, u}$",
+                  "MATH_0004": "$M = \\mathcal{O}_{U', u'}$",
+                  "MATH_0005": "$$\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n\\longleftarrow\n\\mathcal{O}_{V', v'}\n$$",
+                  "MATH_0006": "$$\n\\mathcal{O}_{U', u'}\n\\longleftarrow\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n$$",
+                  "MATH_0007": "$\\mathcal{O}_{U, u}$",
+                  "REF_0001": "\\ref{definition-local-source-target-at-point}",
+                  "REF_0002": "\\ref{algebra-section-etale}",
+                  "REF_0003": "\\ref{algebra-lemma-local-flat-ff}",
+                  "REF_0004": "\\ref{algebra-lemma-flat-permanence}",
+                  "REF_0005": "\\ref{algebra-lemma-flat-base-change}",
+                  "REF_0006": "\\ref{algebra-lemma-map-between-etale}",
+                  "STRUCT_0001": "\\begin{proof}",
+                  "STRUCT_0002": "\\end{proof}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:1e5df2742906c484091061786a8ec60719d996300cc615831946e7402453d1d8",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:f03fd9da1ef7390b82168047380d5b546484fee16c8b5485f5723b7618ad7cd0",
+                "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are essentially of finite presentation, flat,\nand unramified (see\nAlgebra, Section <REF_0002>).\nIn particular the vertical maps are faithfully flat, see\nAlgebra, Lemma <REF_0003>.\nNow, if the upper horizontal arrow is flat, then the lower horizontal\narrow is flat by an application of\nAlgebra, Lemma <REF_0004>\nwith <MATH_0002>, <MATH_0003> and\n<MATH_0004>. If the lower horizontal arrow is\nflat, then the ring map\n<MATH_0005>\nis flat by\nAlgebra, Lemma <REF_0005>.\nAnd the ring map\n<MATH_0006>\nis a localization of a map between <ACCENT_0002>tale ring extensions of\n<MATH_0007>, hence flat by\nAlgebra, Lemma <REF_0006>.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:e27a9deb163d99016b54ef5c013390ecd27fe38fbb12228489f2a78e906aa968",
+                "unit_id": "inventory:descent:04ND:proof/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NI:proof/0001",
+            "hash": "sha256:cef9bcc6c4620586580556041027ebf7a7bf55ede18deed8c8849b50511642b9",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303183,
+                "byte_start": 302588,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:3f72e142f7cae9349d78df5470f49bf98e32d2f33731618fbf30b8d31bb4a08f",
+                "line_end": 7992,
+                "line_start": 7981
+              },
+              "owner_tag": "04NI",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "proof",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "ACCENT_0003": "\\'e",
+                  "ACCENT_0004": "\\'e",
+                  "MATH_0001": "$U'_v \\to U_v$",
+                  "MATH_0002": "$U' \\to U$",
+                  "MATH_0003": "$U'_v$",
+                  "MATH_0004": "$V'_v$",
+                  "MATH_0005": "$V'_v$",
+                  "MATH_0006": "$\\kappa(v)$",
+                  "MATH_0007": "$v' = \\Spec(\\kappa(v'))$",
+                  "MATH_0008": "$U'_{v'}$",
+                  "MATH_0009": "$U'_v$",
+                  "MATH_0010": "$U'_{v'} \\to U'_v \\to U_v$",
+                  "REF_0001": "\\ref{morphisms-lemma-etale-over-field}",
+                  "REF_0002": "\\ref{morphisms-section-etale}",
+                  "STRUCT_0001": "\\begin{proof}",
+                  "STRUCT_0002": "\\end{proof}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:511be6378a6428bfd3ab0b6ed9d6b39b6f6ffaff2caa8ae7f05d4dab3f9d75ed",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:e1dd51da0784a1eb8f3dd4365fa47ab227748add57dbfac7e6ce3b219d7795fc",
+                "source_text": "<STRUCT_0001>\nNote that <MATH_0001> is <ACCENT_0001>tale as a base change of the <ACCENT_0002>tale\nmorphism <MATH_0002>. The scheme <MATH_0003> is a scheme over <MATH_0004>. By\nMorphisms, Lemma <REF_0001>\nthe scheme <MATH_0005> is a disjoint union of spectra\nof finite separable field extensions of <MATH_0006>.\nOne of these is <MATH_0007>. Hence\n<MATH_0008> is an open and closed subscheme of <MATH_0009> and it follows\nthat <MATH_0010> is <ACCENT_0003>tale (as a composition of an\nopen immersion and an <ACCENT_0004>tale morphism, see\nMorphisms, Section <REF_0002>).\n<STRUCT_0002>",
+                "source_text_hash": "sha256:a13678863eeb43e84f01f6a60f544a21abd9a22ae5004ded1ddfb76fcb9c8d78",
+                "unit_id": "inventory:descent:04NI:proof/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NI:lemma/0001",
+            "hash": "sha256:b33a172544456e6e17153c32ed2e3279fa9342dfd310f60cbff4244e4a14af19",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 302586,
+                "byte_start": 302280,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:86f2e1be7acb9d7fe758e8a6edd79b7d1780e922aadd909888fdeacc11efb0d5",
+                "line_end": 7979,
+                "line_start": 7968
+              },
+              "owner_tag": "04NI",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "lemma",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-etale-on-fiber}",
+                  "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+                  "MATH_0002": "$v' \\in V'$",
+                  "MATH_0003": "$v \\in V$",
+                  "MATH_0004": "$U'_{v'} \\to U_v$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:413141d7c4fa397c1a9abb4922a58a6d5e6e3af0ca196b0ad34bf64b2808576c",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:e35128470d000233c1ff768497bbc3b44143435a38810e4e5f2d02d6902c1ba0",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:6c5191c3e05f2f3338e5d1b5917d98e036b417376f3b3e07c64b77c327c06d46",
+                "unit_id": "inventory:descent:04NI:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04R5:paragraph/0003",
+            "hash": "sha256:3dd358cda749648ab5e3dc57d7d71294f88792969cae48e991287e725457e985",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303421,
+                "byte_start": 303185,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:9fa0c03eef3ba266469c7e3b7eb618aa8ec4f046609f76d74f842ae66f6b70e6",
+                "line_end": 7998,
+                "line_start": 7994
+              },
+              "owner_tag": "04R5",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "paragraph",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "MATH_0001": "$(X, x) \\to (S, s)$",
+                  "MATH_0002": "$(U_s, x)$",
+                  "MATH_0003": "$U \\to S$",
+                  "MATH_0004": "$(X_s, x)$",
+                  "STRUCT_0001": "\\noindent",
+                  "TEXTITCLOSE_0001": "}",
+                  "TEXTITOPEN_0001": "{\\it "
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R1",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:27ce5d6fd07b29bb3e80fe9ac4b07ca2bd187fe1550cca2940e36d4e845e3697",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:ed65c8a20e9e3e88bd4df802f83d35e040e1cf23d859e8447ad2c31cf6449d36",
+                "source_text": "<STRUCT_0001>\nGiven a morphism of germs of schemes <MATH_0001>\nwe can define the <TEXTITOPEN_0001>fibre<TEXTITCLOSE_0001> as the isomorphism class of germs\n<MATH_0002> where <MATH_0003> is any representative. We will often abuse notation\nand just write <MATH_0004>.",
+                "source_text_hash": "sha256:181fd8079f7d45fadbc7b09520338b7758b63a3df46daa1653247ad3e7f965e2",
+                "unit_id": "inventory:descent:04R5:paragraph/0003"
+              }
+            }
+          },
+          {
+            "context_id": "neighbor:inventory:descent:04NJ:lemma/0001",
+            "hash": "sha256:4a2ac75dd0661dde380179ad403f845783f0272c8f8a79e4fc2c243476b19f1c",
+            "value": {
+              "kind": "locked-English-neighbor",
+              "location": {
+                "byte_end": 303730,
+                "byte_start": 303423,
+                "file": "descent.tex",
+                "fragment_hash": "sha256:e7da6ae74d22ecc9f316d64a856441e1139693a1f8e1982783102ec718e610de",
+                "line_end": 8011,
+                "line_start": 8000
+              },
+              "owner_tag": "04NJ",
+              "parent_tag": "04R5",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "descent",
+                "node_kind": "lemma",
+                "parent_tag": "04R5",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-dimension-local-ring-fibre}",
+                  "MATH_0001": "$d \\in \\{0, 1, 2, \\ldots, \\infty\\}$",
+                  "MATH_0002": "$$\n\\mathcal{P}_d((X, x) \\to (S, s)) =\n\\text{the local ring }\n\\mathcal{O}_{X_s, x}\n\\text{ of the fibre has dimension }d\n$$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:c8ade5a0447bfd090b4d97ccbd68b8b47ef03bcd06d53b400aac4a73358db13c",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:224eb03a24310d39597f77ad5011e19b129691062a671caf8c82ab55a3774590",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nThe property of morphisms of germs\n<MATH_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+                "source_text_hash": "sha256:738a4b1a30f2ddca7823a01af3e5c619dfe05f33977b5889e58d7f1bf55b92b7",
+                "unit_id": "inventory:descent:04NJ:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "reference:morphisms-lemma-etale-over-field",
+            "hash": "sha256:fc40d59fb4007de5b774dcbe8a8077515445db7a9a4d57671aa94fad595264d5",
+            "value": {
+              "kind": "locked-English-reference",
+              "location": {
+                "byte_end": 297788,
+                "byte_start": 297199,
+                "file": "morphisms.tex",
+                "fragment_hash": "sha256:25ce1b8abba2bedcc751b5ad2adabccf76f797d3bfea75112f87c426d242f9e1",
+                "line_end": 8190,
+                "line_start": 8174
+              },
+              "owner_tag": "02GL",
+              "parent_tag": "02GH",
+              "requested_label": "morphisms-lemma-etale-over-field",
+              "requested_tag": "02GL",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "morphisms",
+                "node_kind": "lemma",
+                "parent_tag": "02GH",
+                "placeholders": {
+                  "ACCENT_0001": "\\'e",
+                  "ACCENT_0002": "\\'e",
+                  "ACCENT_0003": "\\'e",
+                  "LOCKED_0001": "\\label{lemma-etale-over-field}",
+                  "LOCKED_0002": "\\begin{slogan}\nDescription of the \\'etale schemes over fields and fibres\nof \\'etale morphisms.\n\\end{slogan}",
+                  "MATH_0001": "$X$",
+                  "MATH_0002": "$k$",
+                  "MATH_0003": "$X \\to \\Spec(k)$",
+                  "MATH_0004": "$X$",
+                  "MATH_0005": "$k$",
+                  "MATH_0006": "$f : X \\to S$",
+                  "MATH_0007": "$s \\in S$",
+                  "MATH_0008": "$X_s$",
+                  "MATH_0009": "$\\kappa(s)$",
+                  "STRUCT_0001": "\\begin{lemma}",
+                  "STRUCT_0002": "\\begin{enumerate}",
+                  "STRUCT_0003": "\\item",
+                  "STRUCT_0004": "\\item",
+                  "STRUCT_0005": "\\end{enumerate}",
+                  "STRUCT_0006": "\\end{lemma}"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R3",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:2da7ef9c73938907d7c3ac09b3eb8db5da4d7e249aa5208bdfdc87ae70be99d4",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:303c850aecf379fe3576cfbd2d62541818ca0596a3fb9da7cf5fba54fd4ab45d",
+                "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nFibres of <ACCENT_0001>tale morphisms.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme over a field <MATH_0002>.\nThe structure morphism <MATH_0003> is <ACCENT_0002>tale if\nand only if <MATH_0004> is a disjoint union of spectra of finite separable\nfield extensions of <MATH_0005>.\n<STRUCT_0004> If <MATH_0006> is an <ACCENT_0003>tale morphism, then for every <MATH_0007> the\nfibre <MATH_0008> is a disjoint union of spectra of finite separable field\nextensions of <MATH_0009>.\n<STRUCT_0005>\n<STRUCT_0006>",
+                "source_text_hash": "sha256:5ed968fb945dca7165a982e3196587b1e3e2755a8c44ef759ee3b3083418a222",
+                "unit_id": "inventory:morphisms:02GL:lemma/0001"
+              }
+            }
+          },
+          {
+            "context_id": "reference:morphisms-section-etale",
+            "hash": "sha256:8a91b38007c6ff168566e9e861d4b41c8bfa1868ead82e6d0214054fc25c4dba",
+            "value": {
+              "kind": "locked-English-reference",
+              "location": {
+                "byte_end": 292124,
+                "byte_start": 292075,
+                "file": "morphisms.tex",
+                "fragment_hash": "sha256:0934f0a1eb5101abcb9fc4e8688e2ee5113b006f96d0aa3b9488ee6965e6a0db",
+                "line_end": 8035,
+                "line_start": 8034
+              },
+              "owner_tag": "02GH",
+              "parent_tag": "02GH",
+              "requested_label": "morphisms-section-etale",
+              "requested_tag": "02GH",
+              "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+              "source_unit": {
+                "chapter": "morphisms",
+                "node_kind": "section_title",
+                "parent_tag": "02GH",
+                "placeholders": {
+                  "ACCENT_0001": "\\'E",
+                  "LOCKED_0001": "\\label{section-etale}",
+                  "TEXTCLOSE_0001": "}",
+                  "TEXTOPEN_0001": "\\section{"
+                },
+                "render": {
+                  "prefix": "",
+                  "suffix": ""
+                },
+                "risk_level": "R1",
+                "schema_version": 1,
+                "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+                "source_status": "CURRENT",
+                "source_structure_hash": "sha256:43356df9e194ada9ebdf85c7511d39207d36f63e7acdf4731ec9fc71b7fca564",
+                "source_text": "<TEXTOPEN_0001><ACCENT_0001>tale morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+                "source_text_hash": "sha256:046c58a665849ba78f2629ada5e62b3c8e1d4f8d4db5ffd4531535c27e9d91f2",
+                "unit_id": "inventory:morphisms:02GH:section_title/0001"
+              }
+            }
+          }
+        ],
+        "input_freeze": {
+          "hash": "sha256:2a32ff42b2cb3399c9a0e46fdcde6e05cc0fdb44bf25525d7fa4a1eba0314924",
+          "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p42-20261103T090052Z.json"
+        },
+        "model_output": {
+          "hash": "sha256:a3843d160172a4105341a2a596f3f3f225abaf2440af52b17dc04240b7a26b3b",
+          "path": "docs/evidence/descent35-gpt61sol-p42-20261103T090052Z-raw-01.jsonl",
+          "record_hash": "sha256:9145a3175a51512046d04713bc861a20185797f928e5f0e037e832dec0cf4b9c"
+        },
+        "neighbor_unit_ids": [],
+        "policy_revision": "git:ca0402bd5fc3d901193977fa5a9e72da0267aed6",
+        "prior_generations": [],
+        "prompt_version": "translator-v2",
+        "source_adoption_id": "descent35-gpt61sol-p42-20261103T090052Z",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "style_guide_path": "config/style-guide.md",
+        "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+        "unit_id": "tag:04R5:prose-0003"
+      },
+      "context_hash": "sha256:7c5934d405d0e3c0f5e650cb1fc3fe56ca1b6700b7b55bb3daf958b8c8741e87",
+      "created_at": "2026-11-03T09:00:52.812713Z",
+      "glossary_revision": "git:ca0402bd5fc3d901193977fa5a9e72da0267aed6",
+      "harness_id": "codex",
+      "harness_version": "0.166.0",
+      "model_id": "gpt-6.1-sol",
+      "model_identity_confidence": "declared",
+      "model_lane": "openai-gpt-6.1-sol",
+      "model_record_id": "openai:gpt-6.1-sol:declared",
+      "model_snapshot": null,
+      "notes": [],
+      "prompt_version": "translator-v2",
+      "publication_status": "CANDIDATE",
+      "qa_status": "PASS",
+      "reasoning_effort": "high",
+      "run_id": "run-descent35-gpt61sol-p42-20261103T090052Z",
+      "schema_version": 2,
+      "source_adoption_id": "descent35-gpt61sol-p42-20261103T090052Z",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_status": "CURRENT",
+      "source_text_hash": "sha256:181fd8079f7d45fadbc7b09520338b7758b63a3df46daa1653247ad3e7f965e2",
+      "stage": "STRUCTURE_OK",
+      "term_occurrences": [
+        {
+          "source_term": "schemes",
+          "target_term": "概形"
+        },
+        {
+          "source_term": "germs",
+          "target_term": "芽"
+        },
+        {
+          "source_term": "morphism",
+          "target_term": "态射"
+        },
+        {
+          "source_term": "fibre",
+          "target_term": "纤维"
+        },
+        {
+          "source_term": "germs",
+          "target_term": "芽"
+        },
+        {
+          "source_term": "isomorphism",
+          "target_term": "同构"
+        },
+        {
+          "source_term": "class",
+          "target_term": "类"
+        },
+        {
+          "source_term": "representative",
+          "target_term": "代表"
+        },
+        {
+          "source_term": "abuse notation",
+          "target_term": "滥用记号"
+        }
+      ],
+      "term_status": "DECISION_REQUIRED",
+      "translation": "\n\n<STRUCT_0001>\n给定概形（schemes）的芽（germs）之间的态射（morphism）<MATH_0001>，我们可以将<TEXTITOPEN_0001>纤维（fibre）<TEXTITCLOSE_0001>定义为芽（germs）<MATH_0002> 的同构（isomorphism）类（class），其中 <MATH_0003> 是任意一个代表（representative）。我们将经常滥用记号（abuse notation），直接写成 <MATH_0004>。\n\n",
+      "translation_hash": "sha256:c1a3afa77b6bbc96c55f326172d435aca03f9205d3684f76fa09a03d4190d34d",
+      "unit_id": "tag:04R5:prose-0003",
+      "unknown_terms": [
+        {
+          "context": "所给芽所属的概形，待术语批准。",
+          "source_term": "schemes",
+          "target_term": "概形"
+        },
+        {
+          "context": "概形芽和纤维芽，待术语批准。",
+          "source_term": "germs",
+          "target_term": "芽"
+        },
+        {
+          "context": "芽之间的态射，待术语批准。",
+          "source_term": "morphism",
+          "target_term": "态射"
+        },
+        {
+          "context": "本段定义的芽态射的纤维，待术语批准。",
+          "source_term": "fibre",
+          "target_term": "纤维"
+        },
+        {
+          "context": "芽的同构关系，待术语批准。",
+          "source_term": "isomorphism",
+          "target_term": "同构"
+        },
+        {
+          "context": "芽的同构类，待术语批准。",
+          "source_term": "class",
+          "target_term": "类"
+        },
+        {
+          "context": "芽态射的代表，待术语批准。",
+          "source_term": "representative",
+          "target_term": "代表"
+        },
+        {
+          "context": "以代表的纤维芽记同构类，待术语批准。",
+          "source_term": "abuse notation",
+          "target_term": "滥用记号"
+        }
+      ]
+    }
+  ],
+  "actual_revision_findings": [
+    {
+      "unit_id": "tag:04NI:statement",
+      "source_word": "vertical arrows",
+      "reason": "Use a complete bilingual rendering of the vertical arrows and remove redundant arrow wording without changing the protected token order."
+    }
+  ],
+  "revision_planning_evidence": {
+    "plan_sha256": "sha256:308399beb9be6b8e5937c2cf059a853b9e9b25a77926cedd9b5bfb639e8bdafb",
+    "triage_sha256": "sha256:46c693903ad12533c2efce6d490902273c6dc9d17c0d2d1e957488f2c380c86b",
+    "state": "Model self-check and lexical context triage; no independent critic, human review, or term approval"
+  },
+  "units": [
+    {
+      "unit_id": "tag:04NI:statement",
+      "source_text": "Consider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$v' \\in V'$",
+        "MATH_0003": "$v \\in V$",
+        "MATH_0004": "$U'_{v'} \\to U_v$",
+        "ACCENT_0002": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 11,
+          "projection_end": 30,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 34,
+          "projection_end": 43,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 47,
+          "projection_end": 54,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 72,
+          "projection_end": 77,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 151,
+          "projection_end": 159,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 185,
+          "projection_end": 190,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04NI:proof",
+      "source_text": "Note that <MATH_0001> is <ACCENT_0001>tale as a base change of the <ACCENT_0002>tale\nmorphism <MATH_0002>. The scheme <MATH_0003> is a scheme over <MATH_0004>. By\nMorphisms, Lemma <REF_0001>\nthe scheme <MATH_0005> is a disjoint union of spectra\nof finite separable field extensions of <MATH_0006>.\nOne of these is <MATH_0007>. Hence\n<MATH_0008> is an open and closed subscheme of <MATH_0009> and it follows\nthat <MATH_0010> is <ACCENT_0003>tale (as a composition of an\nopen immersion and an <ACCENT_0004>tale morphism, see\nMorphisms, Section <REF_0002>).\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$U'_v \\to U_v$",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "MATH_0002": "$U' \\to U$",
+        "MATH_0003": "$U'_v$",
+        "MATH_0004": "$V'_v$",
+        "REF_0001": "\\ref{morphisms-lemma-etale-over-field}",
+        "MATH_0005": "$V'_v$",
+        "MATH_0006": "$\\kappa(v)$",
+        "MATH_0007": "$v' = \\Spec(\\kappa(v'))$",
+        "MATH_0008": "$U'_{v'}$",
+        "MATH_0009": "$U'_v$",
+        "MATH_0010": "$U'_{v'} \\to U'_v \\to U_v$",
+        "ACCENT_0003": "\\'e",
+        "ACCENT_0004": "\\'e",
+        "REF_0002": "\\ref{morphisms-section-etale}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 25,
+          "projection_end": 30,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 36,
+          "projection_end": 47,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 55,
+          "projection_end": 60,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 61,
+          "projection_end": 69,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 87,
+          "projection_end": 93,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 111,
+          "projection_end": 117,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 139,
+          "projection_end": 148,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 171,
+          "projection_end": 177,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 224,
+          "projection_end": 230,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 241,
+          "projection_end": 246,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open and closed subscheme",
+          "projection_start": 327,
+          "projection_end": 352,
+          "concept": "source-phrase-open-and-closed-subscheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 403,
+          "projection_end": 408,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 415,
+          "projection_end": 426,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 433,
+          "projection_end": 447,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 455,
+          "projection_end": 460,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 461,
+          "projection_end": 469,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 475,
+          "projection_end": 484,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04R5:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nGiven a morphism of germs of schemes <MATH_0001>\nwe can define the <TEXTITOPEN_0001>fibre<TEXTITCLOSE_0001> as the isomorphism class of germs\n<MATH_0002> where <MATH_0003> is any representative. We will often abuse notation\nand just write <MATH_0004>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x) \\to (S, s)$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$(U_s, x)$",
+        "MATH_0003": "$U \\to S$",
+        "MATH_0004": "$(X_s, x)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 22,
+          "projection_end": 30,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 43,
+          "projection_end": 50,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre",
+          "projection_start": 81,
+          "projection_end": 86,
+          "concept": "fibre",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 94,
+          "projection_end": 105,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 106,
+          "projection_end": 111,
+          "concept": "class",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:04ND:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are essentially of finite presentation, flat,\nand unramified (see\nAlgebra, Section <REF_0002>).\nIn particular the vertical maps are faithfully flat, see\nAlgebra, Lemma <REF_0003>.\nNow, if the upper horizontal arrow is flat, then the lower horizontal\narrow is flat by an application of\nAlgebra, Lemma <REF_0004>\nwith <MATH_0002>, <MATH_0003> and\n<MATH_0004>. If the lower horizontal arrow is\nflat, then the ring map\n<MATH_0005>\nis flat by\nAlgebra, Lemma <REF_0005>.\nAnd the ring map\n<MATH_0006>\nis a localization of a map between <ACCENT_0002>tale ring extensions of\n<MATH_0007>, hence flat by\nAlgebra, Lemma <REF_0006>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "REF_0002": "\\ref{algebra-section-etale}",
+        "REF_0003": "\\ref{algebra-lemma-local-flat-ff}",
+        "REF_0004": "\\ref{algebra-lemma-flat-permanence}",
+        "MATH_0002": "$R = \\mathcal{O}_{V, v}$",
+        "MATH_0003": "$S = \\mathcal{O}_{U, u}$",
+        "MATH_0004": "$M = \\mathcal{O}_{U', u'}$",
+        "MATH_0005": "$$\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n\\longleftarrow\n\\mathcal{O}_{V', v'}\n$$",
+        "REF_0005": "\\ref{algebra-lemma-flat-base-change}",
+        "MATH_0006": "$$\n\\mathcal{O}_{U', u'}\n\\longleftarrow\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n$$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0007": "$\\mathcal{O}_{U, u}$",
+        "REF_0006": "\\ref{algebra-lemma-map-between-etale}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04NI:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote that <MATH_0001> is <ACCENT_0001>tale as a base change of the <ACCENT_0002>tale\nmorphism <MATH_0002>. The scheme <MATH_0003> is a scheme over <MATH_0004>. By\nMorphisms, Lemma <REF_0001>\nthe scheme <MATH_0005> is a disjoint union of spectra\nof finite separable field extensions of <MATH_0006>.\nOne of these is <MATH_0007>. Hence\n<MATH_0008> is an open and closed subscheme of <MATH_0009> and it follows\nthat <MATH_0010> is <ACCENT_0003>tale (as a composition of an\nopen immersion and an <ACCENT_0004>tale morphism, see\nMorphisms, Section <REF_0002>).\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$U'_v \\to U_v$",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "MATH_0002": "$U' \\to U$",
+        "MATH_0003": "$U'_v$",
+        "MATH_0004": "$V'_v$",
+        "REF_0001": "\\ref{morphisms-lemma-etale-over-field}",
+        "MATH_0005": "$V'_v$",
+        "MATH_0006": "$\\kappa(v)$",
+        "MATH_0007": "$v' = \\Spec(\\kappa(v'))$",
+        "MATH_0008": "$U'_{v'}$",
+        "MATH_0009": "$U'_v$",
+        "MATH_0010": "$U'_{v'} \\to U'_v \\to U_v$",
+        "ACCENT_0003": "\\'e",
+        "ACCENT_0004": "\\'e",
+        "REF_0002": "\\ref{morphisms-section-etale}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04NI:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-on-fiber}",
+        "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$v' \\in V'$",
+        "MATH_0003": "$v \\in V$",
+        "MATH_0004": "$U'_{v'} \\to U_v$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R5:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGiven a morphism of germs of schemes <MATH_0001>\nwe can define the <TEXTITOPEN_0001>fibre<TEXTITCLOSE_0001> as the isomorphism class of germs\n<MATH_0002> where <MATH_0003> is any representative. We will often abuse notation\nand just write <MATH_0004>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x) \\to (S, s)$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$(U_s, x)$",
+        "MATH_0003": "$U \\to S$",
+        "MATH_0004": "$(X_s, x)$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04NJ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nThe property of morphisms of germs\n<MATHSEG_0001>the local ring <MATHSEG_0002> of the fibre has dimension <MATHSEG_0003>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-dimension-local-ring-fibre}",
+        "MATH_0001": "$d \\in \\{0, 1, 2, \\ldots, \\infty\\}$",
+        "MATHSEG_0001": "$$\n\\mathcal{P}_d((X, x) \\to (S, s)) =\n\\text{",
+        "MATHSEG_0002": "}\n\\mathcal{O}_{X_s, x}\n\\text{",
+        "MATHSEG_0003": "}d\n$$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:morphisms-lemma-etale-over-field",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nFibres of <ACCENT_0001>tale morphisms.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme over a field <MATH_0002>.\nThe structure morphism <MATH_0003> is <ACCENT_0002>tale if\nand only if <MATH_0004> is a disjoint union of spectra of finite separable\nfield extensions of <MATH_0005>.\n<STRUCT_0004> If <MATH_0006> is an <ACCENT_0003>tale morphism, then for every <MATH_0007> the\nfibre <MATH_0008> is a disjoint union of spectra of finite separable field\nextensions of <MATH_0009>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-over-field}",
+        "LOCKED_0002": "\\begin{slogan}\nDescription of the \\'etale schemes over fields and fibres\nof \\'etale morphisms.\n\\end{slogan}",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$k$",
+        "MATH_0003": "$X \\to \\Spec(k)$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0004": "$X$",
+        "MATH_0005": "$k$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$f : X \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0007": "$s \\in S$",
+        "MATH_0008": "$X_s$",
+        "MATH_0009": "$\\kappa(s)$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-etale-over-field",
+      "requested_tag": "02GL"
+    },
+    {
+      "context_id": "reference:morphisms-section-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001><ACCENT_0001>tale morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "ACCENT_0001": "\\'E",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-etale}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-section-etale",
+      "requested_tag": "02GH"
+    }
+  ]
+}

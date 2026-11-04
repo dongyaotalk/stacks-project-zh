@@ -1,0 +1,1070 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19da3-0c20-7b02-b760-b6dc594e9835",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p02-20261102T191735Z.json",
+    "hash": "sha256:4dfe843519ec7fb13290aeab6a3208e22314d7a3b7ca9587df518b743d8eb3f3"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:023F:title",
+      "source_text": "Descent for modules",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 12,
+          "projection_end": 19,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023F:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a ring map.\nBy Simplicial, Example <REF_0001>\nthis gives rise to a cosimplicial <MATH_0002>-algebra\n<MATH_0003>\nLet us denote this <MATH_0004> so that <MATH_0005> is the <MATH_0006>-fold\ntensor product of <MATH_0007> over <MATH_0008>. Given a map\n<MATH_0009> the <MATH_0010>-algebra map <MATH_0011>\nis the map\n<MATH_0012>\nwhere we use the convention that the empty product is <MATH_0013>. Thus the first\nfew maps, notation as in\nSimplicial, Section <REF_0002>, are\n<MATH_0014>\nand so on.\n\n<STRUCT_0002><STRUCT_0003>\nAn <MATH_0015>-module <MATH_0016> gives rise to a cosimplicial <MATH_0017>-module\n<MATH_0018>. In other words\n<MATH_0019> and using the <MATH_0020>-algebra maps\n<MATH_0021> to define the corresponding maps on\n<MATH_0022>.\n\n<STRUCT_0004><STRUCT_0005>\nThe analogue to a descent datum\nfor quasi-coherent sheaves in the setting of modules is the following.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R \\to A$",
+        "REF_0001": "\\ref{simplicial-example-push-outs-simplicial-object}",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$$\n\\xymatrix{\nA\n\\ar@<1ex>[r]\n\\ar@<-1ex>[r]\n&\nA \\otimes_R A\n\\ar@<0ex>[l]\n\\ar@<2ex>[r]\n\\ar@<0ex>[r]\n\\ar@<-2ex>[r]\n&\nA \\otimes_R A \\otimes_R A\n\\ar@<1ex>[l]\n\\ar@<-1ex>[l]\n}\n$$",
+        "MATH_0004": "$(A/R)_\\bullet$",
+        "MATH_0005": "$(A/R)_n$",
+        "MATH_0006": "$(n + 1)$",
+        "MATH_0007": "$A$",
+        "MATH_0008": "$R$",
+        "MATH_0009": "$\\varphi : [n] \\to [m]$",
+        "MATH_0010": "$R$",
+        "MATH_0011": "$(A/R)_\\bullet(\\varphi)$",
+        "MATH_0012": "$$\na_0 \\otimes \\ldots \\otimes a_n\n\\longmapsto\n\\prod\\nolimits_{\\varphi(i) = 0} a_i\n\\otimes\n\\prod\\nolimits_{\\varphi(i) = 1} a_i\n\\otimes \\ldots \\otimes\n\\prod\\nolimits_{\\varphi(i) = m} a_i\n$$",
+        "MATH_0013": "$1$",
+        "REF_0002": "\\ref{simplicial-section-cosimplicial-object}",
+        "MATH_0014": "$$\n\\begin{matrix}\n\\delta^1_0 & : & a_0 & \\mapsto & 1 \\otimes a_0 \\\\\n\\delta^1_1 & : & a_0 & \\mapsto & a_0 \\otimes 1 \\\\\n\\sigma^0_0 & : & a_0 \\otimes a_1 & \\mapsto & a_0a_1 \\\\\n\\delta^2_0 & : & a_0 \\otimes a_1 & \\mapsto & 1 \\otimes a_0 \\otimes a_1 \\\\\n\\delta^2_1 & : & a_0 \\otimes a_1 & \\mapsto & a_0 \\otimes 1 \\otimes a_1 \\\\\n\\delta^2_2 & : & a_0 \\otimes a_1 & \\mapsto & a_0 \\otimes a_1 \\otimes 1 \\\\\n\\sigma^1_0 & : & a_0 \\otimes a_1 \\otimes a_2 & \\mapsto & a_0a_1 \\otimes a_2 \\\\\n\\sigma^1_1 & : & a_0 \\otimes a_1 \\otimes a_2 & \\mapsto & a_0 \\otimes a_1a_2\n\\end{matrix}\n$$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0015": "$R$",
+        "MATH_0016": "$M$",
+        "MATH_0017": "$(A/R)_\\bullet$",
+        "MATH_0018": "$(A/R)_\\bullet \\otimes_R M$",
+        "MATH_0019": "$M_n = (A/R)_n \\otimes_R M$",
+        "MATH_0020": "$R$",
+        "MATH_0021": "$(A/R)_n \\to (A/R)_m$",
+        "MATH_0022": "$M \\otimes_R (A/R)_\\bullet$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring map",
+          "projection_start": 35,
+          "projection_end": 43,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 125,
+          "projection_end": 132,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "tensor product",
+          "projection_start": 220,
+          "projection_end": 234,
+          "concept": "tensor-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 276,
+          "projection_end": 279,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra map",
+          "projection_start": 308,
+          "projection_end": 319,
+          "concept": "source-phrase-algebra-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 339,
+          "projection_end": 342,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "empty",
+          "projection_start": 392,
+          "projection_end": 397,
+          "concept": "empty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "product",
+          "projection_start": 398,
+          "projection_end": 405,
+          "concept": "product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 441,
+          "projection_end": 445,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 563,
+          "projection_end": 569,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 623,
+          "projection_end": 629,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 696,
+          "projection_end": 703,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 704,
+          "projection_end": 708,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 749,
+          "projection_end": 753,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 815,
+          "projection_end": 822,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 833,
+          "projection_end": 855,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 874,
+          "projection_end": 881,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023G:statement",
+      "source_text": "Let <MATH_0001> be a ring map.\n<STRUCT_0001>\n<STRUCT_0002> A <TEXTITOPEN_0001>descent datum <MATH_0002> for modules\nwith respect to <MATH_0003><TEXTITCLOSE_0001>\nis given by an <MATH_0004>-module <MATH_0005> and an isomorphism of\n<MATH_0006>-modules\n<MATH_0007>\nsuch that the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002> holds: the diagram\nof <MATH_0008>-module maps\n<MATH_0009>\ncommutes (see below for notation).\n<STRUCT_0003> A <TEXTITOPEN_0003>morphism <MATH_0010> of descent data<TEXTITCLOSE_0003>\nis a morphism of <MATH_0011>-modules <MATH_0012> such that\nthe diagram\n<MATH_0013>\nis commutative.\n<STRUCT_0004>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$R \\to A$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$A$",
+        "MATH_0005": "$N$",
+        "MATH_0006": "$A \\otimes_R A$",
+        "MATH_0007": "$$\n\\varphi : N \\otimes_R A \\to A \\otimes_R N\n$$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0008": "$A \\otimes_R A \\otimes_R A$",
+        "MATH_0009": "$$\n\\xymatrix{\nN \\otimes_R A \\otimes_R A \\ar[rr]_{\\varphi_{02}}\n\\ar[rd]_{\\varphi_{01}}\n& &\nA \\otimes_R A \\otimes_R N \\\\\n& A \\otimes_R N \\otimes_R A \\ar[ru]_{\\varphi_{12}} &\n}\n$$",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0010": "$(N, \\varphi) \\to (N', \\varphi')$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$A$",
+        "MATH_0012": "$\\psi : N \\to N'$",
+        "MATH_0013": "$$\n\\xymatrix{\nN \\otimes_R A \\ar[r]_\\varphi \\ar[d]_{\\psi \\otimes \\text{id}_A} &\nA \\otimes_R N \\ar[d]^{\\text{id}_A \\otimes \\psi} \\\\\nN' \\otimes_R A \\ar[r]^{\\varphi'} &\nA \\otimes_R N'\n}\n$$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring map",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent datum",
+          "projection_start": 61,
+          "projection_end": 74,
+          "concept": "descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "for modules with respect",
+          "projection_start": 87,
+          "projection_end": 111,
+          "concept": "for modules with respect",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 154,
+          "projection_end": 160,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 180,
+          "projection_end": 191,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 207,
+          "projection_end": 214,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cocycle condition",
+          "projection_start": 241,
+          "projection_end": 258,
+          "concept": "cocycle condition",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 270,
+          "projection_end": 277,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 293,
+          "projection_end": 299,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 300,
+          "projection_end": 304,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 317,
+          "projection_end": 325,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 368,
+          "projection_end": 376,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "of descent data",
+          "projection_start": 389,
+          "projection_end": 404,
+          "concept": "of descent data",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 410,
+          "projection_end": 418,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 434,
+          "projection_end": 441,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 468,
+          "projection_end": 475,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 491,
+          "projection_end": 502,
+          "concept": "commutative",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023F:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nIn the definition we use the notation that\n<MATH_0001>,\n<MATH_0002>, and\n<MATH_0003>\nif <MATH_0004>. All three are\n<MATH_0005>-module homomorphisms. Equivalently we have\n<MATH_0006>\nwhere <MATH_0007> is the map\n<MATH_0008>, <MATH_0009>. Namely,\n<MATH_0010>,\nand similarly for the others<FOOTNOTEOPEN_0001>Note that\n<MATH_0011>, if <MATH_0012>,\nsee Simplicial, Definition <REF_0001>.<FOOTNOTECLOSE_0001>.\n\n<STRUCT_0002><STRUCT_0003>\nWe need some more notation to be able to state the next lemma.\nLet <MATH_0013> be a descent datum with respect to a ring map <MATH_0014>.\nFor <MATH_0015> and <MATH_0016> we set\n<MATH_0017>\nwith the factor <MATH_0018> in the <MATH_0019>th spot. It is an <MATH_0020>-module.\nIf we introduce the maps <MATH_0021>, <MATH_0022>\nthen we see that\n<MATH_0023>\nFor <MATH_0024> we let <MATH_0025>\nbe the map such that <MATH_0026> maps to <MATH_0027> and <MATH_0028> to <MATH_0029>. Similarly\nto the above the homomorphism <MATH_0030> induces isomorphisms\n<MATH_0031>\nof <MATH_0032>-modules when <MATH_0033>. If <MATH_0034> we set\n<MATH_0035>. Since these are all isomorphisms they allow us\nto move the factor <MATH_0036> to any spot we like. And the cocycle condition\nexactly means that it does not matter how we do this (e.g., as a composition\nof two of these or at once). Finally, for any <MATH_0037>\nwe define the morphism\n<MATH_0038>\nas the unique <MATH_0039>-semi linear map such that\n<MATH_0040>\nfor all <MATH_0041>.\nThis hints at the following lemma.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\varphi_{01} = \\varphi \\otimes \\text{id}_A$",
+        "MATH_0002": "$\\varphi_{12} = \\text{id}_A \\otimes \\varphi$",
+        "MATH_0003": "$\\varphi_{02}(n \\otimes 1 \\otimes 1) = \\sum a_i \\otimes 1 \\otimes n_i$",
+        "MATH_0004": "$\\varphi(n \\otimes 1) = \\sum a_i \\otimes n_i$",
+        "MATH_0005": "$A \\otimes_R A \\otimes_R A$",
+        "MATH_0006": "$$\n\\varphi_{ij}\n=\n\\varphi \\otimes_{(A/R)_1, \\ (A/R)_\\bullet(\\tau^2_{ij})} (A/R)_2\n$$",
+        "MATH_0007": "$\\tau^2_{ij} : [1] \\to [2]$",
+        "MATH_0008": "$0 \\mapsto i$",
+        "MATH_0009": "$1 \\mapsto j$",
+        "MATH_0010": "$(A/R)_{\\bullet}(\\tau^2_{02})(a_0 \\otimes a_1) =\na_0 \\otimes 1 \\otimes a_1$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0011": "$\\tau^2_{ij} = \\delta^2_k$",
+        "MATH_0012": "$\\{i, j, k\\} = [2] = \\{0, 1, 2\\}$",
+        "REF_0001": "\\ref{simplicial-definition-face-degeneracy}",
+        "FOOTNOTECLOSE_0001": "}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0013": "$(N, \\varphi)$",
+        "MATH_0014": "$R \\to A$",
+        "MATH_0015": "$n \\geq 0$",
+        "MATH_0016": "$i \\in [n]$",
+        "MATH_0017": "$$\nN_{n, i} =\nA \\otimes_R\n\\ldots\n\\otimes_R A \\otimes_R N \\otimes_R A \\otimes_R\n\\ldots\n\\otimes_R A\n$$",
+        "MATH_0018": "$N$",
+        "MATH_0019": "$i$",
+        "MATH_0020": "$(A/R)_n$",
+        "MATH_0021": "$\\tau^n_i : [0] \\to [n]$",
+        "MATH_0022": "$0 \\mapsto i$",
+        "MATH_0023": "$$\nN_{n, i} = N \\otimes_{(A/R)_0, \\ (A/R)_\\bullet(\\tau^n_i)} (A/R)_n\n$$",
+        "MATH_0024": "$0 \\leq i \\leq j \\leq n$",
+        "MATH_0025": "$\\tau^n_{ij} : [1] \\to [n]$",
+        "MATH_0026": "$0$",
+        "MATH_0027": "$i$",
+        "MATH_0028": "$1$",
+        "MATH_0029": "$j$",
+        "MATH_0030": "$\\varphi$",
+        "MATH_0031": "$$\n\\varphi^n_{ij}\n=\n\\varphi \\otimes_{(A/R)_1, \\ (A/R)_\\bullet(\\tau^n_{ij})} (A/R)_n :\nN_{n, i} \\longrightarrow N_{n, j}\n$$",
+        "MATH_0032": "$(A/R)_n$",
+        "MATH_0033": "$i < j$",
+        "MATH_0034": "$i = j$",
+        "MATH_0035": "$\\varphi^n_{ij} = \\text{id}$",
+        "MATH_0036": "$N$",
+        "MATH_0037": "$\\beta : [n] \\to [m]$",
+        "MATH_0038": "$$\nN_{\\beta, i} : N_{n, i} \\to N_{m, \\beta(i)}\n$$",
+        "MATH_0039": "$(A/R)_\\bullet(\\beta)$",
+        "MATH_0040": "$$\nN_{\\beta, i}(1 \\otimes \\ldots \\otimes n \\otimes \\ldots \\otimes 1)\n=\n1 \\otimes \\ldots \\otimes n \\otimes \\ldots \\otimes 1\n$$",
+        "MATH_0041": "$n \\in N$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "module homomorphisms",
+          "projection_start": 141,
+          "projection_end": 161,
+          "concept": "source-phrase-module-homomorphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 221,
+          "projection_end": 224,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 529,
+          "projection_end": 536,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 561,
+          "projection_end": 569,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 710,
+          "projection_end": 716,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 738,
+          "projection_end": 742,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 839,
+          "projection_end": 842,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 865,
+          "projection_end": 869,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 944,
+          "projection_end": 956,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 977,
+          "projection_end": 989,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1017,
+          "projection_end": 1024,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 1098,
+          "projection_end": 1110,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 1268,
+          "projection_end": 1279,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1352,
+          "projection_end": 1360,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 1404,
+          "projection_end": 1410,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1411,
+          "projection_end": 1414,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023H:statement",
+      "source_text": "Let <MATH_0001> be a ring map.\nGiven a descent datum <MATH_0002> we can associate to it a\ncosimplicial <MATH_0003>-module <MATH_0004><FOOTNOTEOPEN_0001>We should really\nwrite <MATH_0005>.<FOOTNOTECLOSE_0001> by the\nrules <MATH_0006> and given <MATH_0007>\nsetting we define\n<MATH_0008>\nThis procedure is functorial in the descent datum.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$(A/R)_\\bullet$",
+        "MATH_0004": "$N_\\bullet$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0005": "$(N, \\varphi)_\\bullet$",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0006": "$N_n = N_{n, n}$",
+        "MATH_0007": "$\\beta : [n] \\to [m]$",
+        "MATH_0008": "$$\nN_\\bullet(\\beta) = (\\varphi^m_{\\beta(n)m}) \\circ N_{\\beta, n} :\nN_{n, n} \\longrightarrow N_{m, m}.\n$$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring map",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 39,
+          "projection_end": 46,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 115,
+          "projection_end": 121,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 321,
+          "projection_end": 328,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023H:proof",
+      "source_text": "Here are the first few maps\nwhere <MATH_0001>\n<MATH_0002>\nwith notation as in\nSimplicial, Section <REF_0001>.\nWe first verify the two properties <MATH_0003>\nand <MATH_0004>.\nThe first one, <MATH_0005>, is clear from\nthe explicit description of the morphisms above.\nTo prove the second relation we have to use the cocycle condition\n(because it does not hold for an arbitrary isomorphism\n<MATH_0006>). Write\n<MATH_0007>. By the description of the\nmaps above we deduce that <MATH_0008> is also equal to\n<MATH_0009>\nSince <MATH_0010> is an isomorphism we see that <MATH_0011> is an isomorphism.\nWrite <MATH_0012> for certain\n<MATH_0013> and <MATH_0014>. Then <MATH_0015>.\nNext, write\n<MATH_0016> for\ncertain <MATH_0017> and <MATH_0018>. Then the cocycle condition\nsays that\n<MATH_0019>\nThis means that <MATH_0020>. Thus <MATH_0021> is a projector, and since it is\nan isomorphism it is the identity.\n\n<STRUCT_0001><STRUCT_0002>\nTo prove fully that <MATH_0022> is a cosimplicial module we have to check\nall 5 types of relations of\nSimplicial, Remark <REF_0002>.\nThe relations on composing <MATH_0023>'s are obvious.\nThe relations on composing <MATH_0024>'s come down to the\ncocycle condition for <MATH_0025>.\nIn exactly the same way as above one checks the relations\n<MATH_0026>.\nFinally, the other relations on compositions of <MATH_0027>'s and <MATH_0028>'s\nhold for any <MATH_0029> whatsoever.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\varphi(n \\otimes 1) = \\sum \\alpha_i \\otimes x_i$",
+        "MATH_0002": "$$\n\\begin{matrix}\n\\delta^1_0 & : & N & \\to & A \\otimes N & n & \\mapsto & 1 \\otimes n \\\\\n\\delta^1_1 & : & N & \\to & A \\otimes N & n & \\mapsto &\n\\sum \\alpha_i \\otimes x_i\\\\\n\\sigma^0_0 & : & A \\otimes N & \\to & N & a_0 \\otimes n & \\mapsto & a_0n \\\\\n\\delta^2_0 & : & A \\otimes N & \\to & A \\otimes A \\otimes N &\na_0 \\otimes n & \\mapsto & 1 \\otimes a_0 \\otimes n \\\\\n\\delta^2_1 & : & A \\otimes N & \\to & A \\otimes A \\otimes N &\na_0 \\otimes n & \\mapsto & a_0 \\otimes 1 \\otimes n \\\\\n\\delta^2_2 & : & A \\otimes N & \\to & A \\otimes A \\otimes N &\na_0 \\otimes n & \\mapsto & \\sum a_0 \\otimes \\alpha_i \\otimes x_i \\\\\n\\sigma^1_0 & : & A \\otimes A \\otimes N & \\to & A \\otimes N &\na_0 \\otimes a_1 \\otimes n & \\mapsto & a_0a_1 \\otimes n \\\\\n\\sigma^1_1 & : & A \\otimes A \\otimes N & \\to & A \\otimes N &\na_0 \\otimes a_1 \\otimes n & \\mapsto & a_0 \\otimes a_1n\n\\end{matrix}\n$$",
+        "REF_0001": "\\ref{simplicial-section-cosimplicial-object}",
+        "MATH_0003": "$\\sigma^0_0 \\circ \\delta^1_0 = \\text{id}$",
+        "MATH_0004": "$\\sigma^0_0 \\circ \\delta^1_1 = \\text{id}$",
+        "MATH_0005": "$\\sigma^0_0 \\circ \\delta^1_0 = \\text{id}$",
+        "MATH_0006": "$\\varphi : N \\otimes_R A \\to A \\otimes_R N$",
+        "MATH_0007": "$p = \\sigma^0_0 \\circ \\delta^1_1 : N \\to N$",
+        "MATH_0008": "$p$",
+        "MATH_0009": "$$\np = \\varphi \\otimes \\text{id} :\nN = (N \\otimes_R A) \\otimes_{(A \\otimes_R A)} A\n\\longrightarrow\n(A \\otimes_R N) \\otimes_{(A \\otimes_R A)} A = N\n$$",
+        "MATH_0010": "$\\varphi$",
+        "MATH_0011": "$p$",
+        "MATH_0012": "$\\varphi(n \\otimes 1) = \\sum \\alpha_i \\otimes x_i$",
+        "MATH_0013": "$\\alpha_i \\in A$",
+        "MATH_0014": "$x_i \\in N$",
+        "MATH_0015": "$p(n) = \\sum \\alpha_ix_i$",
+        "MATH_0016": "$\\varphi(x_i \\otimes 1) = \\sum \\alpha_{ij} \\otimes y_j$",
+        "MATH_0017": "$\\alpha_{ij} \\in A$",
+        "MATH_0018": "$y_j \\in N$",
+        "MATH_0019": "$$\n\\sum \\alpha_i \\otimes \\alpha_{ij} \\otimes y_j\n=\n\\sum \\alpha_i \\otimes 1 \\otimes x_i.\n$$",
+        "MATH_0020": "$p(n) = \\sum \\alpha_ix_i = \\sum \\alpha_i\\alpha_{ij}y_j =\n\\sum \\alpha_i p(x_i) = p(p(n))$",
+        "MATH_0021": "$p$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0022": "$N_\\bullet$",
+        "REF_0002": "\\ref{simplicial-remark-relations-cosimplicial}",
+        "MATH_0023": "$\\sigma$",
+        "MATH_0024": "$\\delta$",
+        "MATH_0025": "$\\varphi$",
+        "MATH_0026": "$\\sigma_j \\circ \\delta_j = \\sigma_j \\circ \\delta_{j + 1} = \\text{id}$",
+        "MATH_0027": "$\\delta$",
+        "MATH_0028": "$\\sigma$",
+        "MATH_0029": "$\\varphi$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "maps",
+          "projection_start": 23,
+          "projection_end": 27,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 248,
+          "projection_end": 257,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relation",
+          "projection_start": 285,
+          "projection_end": 293,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 374,
+          "projection_end": 385,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 445,
+          "projection_end": 449,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 536,
+          "projection_end": 547,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 578,
+          "projection_end": 589,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 863,
+          "projection_end": 874,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 972,
+          "projection_end": 978,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 1011,
+          "projection_end": 1020,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 1059,
+          "projection_end": 1068,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 1113,
+          "projection_end": 1122,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 1250,
+          "projection_end": 1259,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 1292,
+          "projection_end": 1301,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "compositions",
+          "projection_start": 1305,
+          "projection_end": 1317,
+          "concept": "composition",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:023A:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo prove more we first need to study the case of modules over rings.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a ring map.\nBy Simplicial, Example <REF_0001>\nthis gives rise to a cosimplicial <MATH_0002>-algebra\n<MATH_0003>\nLet us denote this <MATH_0004> so that <MATH_0005> is the <MATH_0006>-fold\ntensor product of <MATH_0007> over <MATH_0008>. Given a map\n<MATH_0009> the <MATH_0010>-algebra map <MATH_0011>\nis the map\n<MATH_0012>\nwhere we use the convention that the empty product is <MATH_0013>. Thus the first\nfew maps, notation as in\nSimplicial, Section <REF_0002>, are\n<MATH_0014>\nand so on.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R \\to A$",
+        "REF_0001": "\\ref{simplicial-example-push-outs-simplicial-object}",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$$\n\\xymatrix{\nA\n\\ar@<1ex>[r]\n\\ar@<-1ex>[r]\n&\nA \\otimes_R A\n\\ar@<0ex>[l]\n\\ar@<2ex>[r]\n\\ar@<0ex>[r]\n\\ar@<-2ex>[r]\n&\nA \\otimes_R A \\otimes_R A\n\\ar@<1ex>[l]\n\\ar@<-1ex>[l]\n}\n$$",
+        "MATH_0004": "$(A/R)_\\bullet$",
+        "MATH_0005": "$(A/R)_n$",
+        "MATH_0006": "$(n + 1)$",
+        "MATH_0007": "$A$",
+        "MATH_0008": "$R$",
+        "MATH_0009": "$\\varphi : [n] \\to [m]$",
+        "MATH_0010": "$R$",
+        "MATH_0011": "$(A/R)_\\bullet(\\varphi)$",
+        "MATH_0012": "$$\na_0 \\otimes \\ldots \\otimes a_n\n\\longmapsto\n\\prod\\nolimits_{\\varphi(i) = 0} a_i\n\\otimes\n\\prod\\nolimits_{\\varphi(i) = 1} a_i\n\\otimes \\ldots \\otimes\n\\prod\\nolimits_{\\varphi(i) = m} a_i\n$$",
+        "MATH_0013": "$1$",
+        "REF_0002": "\\ref{simplicial-section-cosimplicial-object}",
+        "MATH_0014": "$$\n\\begin{matrix}\n\\delta^1_0 & : & a_0 & \\mapsto & 1 \\otimes a_0 \\\\\n\\delta^1_1 & : & a_0 & \\mapsto & a_0 \\otimes 1 \\\\\n\\sigma^0_0 & : & a_0 \\otimes a_1 & \\mapsto & a_0a_1 \\\\\n\\delta^2_0 & : & a_0 \\otimes a_1 & \\mapsto & 1 \\otimes a_0 \\otimes a_1 \\\\\n\\delta^2_1 & : & a_0 \\otimes a_1 & \\mapsto & a_0 \\otimes 1 \\otimes a_1 \\\\\n\\delta^2_2 & : & a_0 \\otimes a_1 & \\mapsto & a_0 \\otimes a_1 \\otimes 1 \\\\\n\\sigma^1_0 & : & a_0 \\otimes a_1 \\otimes a_2 & \\mapsto & a_0a_1 \\otimes a_2 \\\\\n\\sigma^1_1 & : & a_0 \\otimes a_1 \\otimes a_2 & \\mapsto & a_0 \\otimes a_1a_2\n\\end{matrix}\n$$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023G:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0002> for modules\nwith respect to <MATH_0003><TEXTITCLOSE_0001>\nis given by an <MATH_0004>-module <MATH_0005> and an isomorphism of\n<MATH_0006>-modules\n<MATH_0007>\nsuch that the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002> holds: the diagram\nof <MATH_0008>-module maps\n<MATH_0009>\ncommutes (see below for notation).\n<STRUCT_0004> A <TEXTITOPEN_0003>morphism <MATH_0010> of descent data<TEXTITCLOSE_0003>\nis a morphism of <MATH_0011>-modules <MATH_0012> such that\nthe diagram\n<MATH_0013>\nis commutative.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-modules}",
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$R \\to A$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$A$",
+        "MATH_0005": "$N$",
+        "MATH_0006": "$A \\otimes_R A$",
+        "MATH_0007": "$$\n\\varphi : N \\otimes_R A \\to A \\otimes_R N\n$$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0008": "$A \\otimes_R A \\otimes_R A$",
+        "MATH_0009": "$$\n\\xymatrix{\nN \\otimes_R A \\otimes_R A \\ar[rr]_{\\varphi_{02}}\n\\ar[rd]_{\\varphi_{01}}\n& &\nA \\otimes_R A \\otimes_R N \\\\\n& A \\otimes_R N \\otimes_R A \\ar[ru]_{\\varphi_{12}} &\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0010": "$(N, \\varphi) \\to (N', \\varphi')$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$A$",
+        "MATH_0012": "$\\psi : N \\to N'$",
+        "MATH_0013": "$$\n\\xymatrix{\nN \\otimes_R A \\ar[r]_\\varphi \\ar[d]_{\\psi \\otimes \\text{id}_A} &\nA \\otimes_R N \\ar[d]^{\\text{id}_A \\otimes \\psi} \\\\\nN' \\otimes_R A \\ar[r]^{\\varphi'} &\nA \\otimes_R N'\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nThe analogue to a descent datum\nfor quasi-coherent sheaves in the setting of modules is the following.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn the definition we use the notation that\n<MATH_0001>,\n<MATH_0002>, and\n<MATH_0003>\nif <MATH_0004>. All three are\n<MATH_0005>-module homomorphisms. Equivalently we have\n<MATH_0006>\nwhere <MATH_0007> is the map\n<MATH_0008>, <MATH_0009>. Namely,\n<MATH_0010>,\nand similarly for the others<FOOTNOTEOPEN_0001>Note that\n<MATH_0011>, if <MATH_0012>,\nsee Simplicial, Definition <REF_0001>.<FOOTNOTECLOSE_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\varphi_{01} = \\varphi \\otimes \\text{id}_A$",
+        "MATH_0002": "$\\varphi_{12} = \\text{id}_A \\otimes \\varphi$",
+        "MATH_0003": "$\\varphi_{02}(n \\otimes 1 \\otimes 1) = \\sum a_i \\otimes 1 \\otimes n_i$",
+        "MATH_0004": "$\\varphi(n \\otimes 1) = \\sum a_i \\otimes n_i$",
+        "MATH_0005": "$A \\otimes_R A \\otimes_R A$",
+        "MATH_0006": "$$\n\\varphi_{ij}\n=\n\\varphi \\otimes_{(A/R)_1, \\ (A/R)_\\bullet(\\tau^2_{ij})} (A/R)_2\n$$",
+        "MATH_0007": "$\\tau^2_{ij} : [1] \\to [2]$",
+        "MATH_0008": "$0 \\mapsto i$",
+        "MATH_0009": "$1 \\mapsto j$",
+        "MATH_0010": "$(A/R)_{\\bullet}(\\tau^2_{02})(a_0 \\otimes a_1) =\na_0 \\otimes 1 \\otimes a_1$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0011": "$\\tau^2_{ij} = \\delta^2_k$",
+        "MATH_0012": "$\\{i, j, k\\} = [2] = \\{0, 1, 2\\}$",
+        "REF_0001": "\\ref{simplicial-definition-face-degeneracy}",
+        "FOOTNOTECLOSE_0001": "}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023H:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nGiven a descent datum <MATH_0002> we can associate to it a\ncosimplicial <MATH_0003>-module <MATH_0004><FOOTNOTEOPEN_0001>We should really\nwrite <MATH_0005>.<FOOTNOTECLOSE_0001> by the\nrules <MATH_0006> and given <MATH_0007>\nsetting we define\n<MATH_0008>\nThis procedure is functorial in the descent datum.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-datum-cosimplicial}",
+        "MATH_0001": "$R \\to A$",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$(A/R)_\\bullet$",
+        "MATH_0004": "$N_\\bullet$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0005": "$(N, \\varphi)_\\bullet$",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0006": "$N_n = N_{n, n}$",
+        "MATH_0007": "$\\beta : [n] \\to [m]$",
+        "MATH_0008": "$$\nN_\\bullet(\\beta) = (\\varphi^m_{\\beta(n)m}) \\circ N_{\\beta, n} :\nN_{n, n} \\longrightarrow N_{m, m}.\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nWe need some more notation to be able to state the next lemma.\nLet <MATH_0001> be a descent datum with respect to a ring map <MATH_0002>.\nFor <MATH_0003> and <MATH_0004> we set\n<MATH_0005>\nwith the factor <MATH_0006> in the <MATH_0007>th spot. It is an <MATH_0008>-module.\nIf we introduce the maps <MATH_0009>, <MATH_0010>\nthen we see that\n<MATH_0011>\nFor <MATH_0012> we let <MATH_0013>\nbe the map such that <MATH_0014> maps to <MATH_0015> and <MATH_0016> to <MATH_0017>. Similarly\nto the above the homomorphism <MATH_0018> induces isomorphisms\n<MATH_0019>\nof <MATH_0020>-modules when <MATH_0021>. If <MATH_0022> we set\n<MATH_0023>. Since these are all isomorphisms they allow us\nto move the factor <MATH_0024> to any spot we like. And the cocycle condition\nexactly means that it does not matter how we do this (e.g., as a composition\nof two of these or at once). Finally, for any <MATH_0025>\nwe define the morphism\n<MATH_0026>\nas the unique <MATH_0027>-semi linear map such that\n<MATH_0028>\nfor all <MATH_0029>.\nThis hints at the following lemma.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$(N, \\varphi)$",
+        "MATH_0002": "$R \\to A$",
+        "MATH_0003": "$n \\geq 0$",
+        "MATH_0004": "$i \\in [n]$",
+        "MATH_0005": "$$\nN_{n, i} =\nA \\otimes_R\n\\ldots\n\\otimes_R A \\otimes_R N \\otimes_R A \\otimes_R\n\\ldots\n\\otimes_R A\n$$",
+        "MATH_0006": "$N$",
+        "MATH_0007": "$i$",
+        "MATH_0008": "$(A/R)_n$",
+        "MATH_0009": "$\\tau^n_i : [0] \\to [n]$",
+        "MATH_0010": "$0 \\mapsto i$",
+        "MATH_0011": "$$\nN_{n, i} = N \\otimes_{(A/R)_0, \\ (A/R)_\\bullet(\\tau^n_i)} (A/R)_n\n$$",
+        "MATH_0012": "$0 \\leq i \\leq j \\leq n$",
+        "MATH_0013": "$\\tau^n_{ij} : [1] \\to [n]$",
+        "MATH_0014": "$0$",
+        "MATH_0015": "$i$",
+        "MATH_0016": "$1$",
+        "MATH_0017": "$j$",
+        "MATH_0018": "$\\varphi$",
+        "MATH_0019": "$$\n\\varphi^n_{ij}\n=\n\\varphi \\otimes_{(A/R)_1, \\ (A/R)_\\bullet(\\tau^n_{ij})} (A/R)_n :\nN_{n, i} \\longrightarrow N_{n, j}\n$$",
+        "MATH_0020": "$(A/R)_n$",
+        "MATH_0021": "$i < j$",
+        "MATH_0022": "$i = j$",
+        "MATH_0023": "$\\varphi^n_{ij} = \\text{id}$",
+        "MATH_0024": "$N$",
+        "MATH_0025": "$\\beta : [n] \\to [m]$",
+        "MATH_0026": "$$\nN_{\\beta, i} : N_{n, i} \\to N_{m, \\beta(i)}\n$$",
+        "MATH_0027": "$(A/R)_\\bullet(\\beta)$",
+        "MATH_0028": "$$\nN_{\\beta, i}(1 \\otimes \\ldots \\otimes n \\otimes \\ldots \\otimes 1)\n=\n1 \\otimes \\ldots \\otimes n \\otimes \\ldots \\otimes 1\n$$",
+        "MATH_0029": "$n \\in N$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023H:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere are the first few maps\nwhere <MATH_0001>\n<MATH_0002>\nwith notation as in\nSimplicial, Section <REF_0001>.\nWe first verify the two properties <MATH_0003>\nand <MATH_0004>.\nThe first one, <MATH_0005>, is clear from\nthe explicit description of the morphisms above.\nTo prove the second relation we have to use the cocycle condition\n(because it does not hold for an arbitrary isomorphism\n<MATH_0006>). Write\n<MATH_0007>. By the description of the\nmaps above we deduce that <MATH_0008> is also equal to\n<MATH_0009>\nSince <MATH_0010> is an isomorphism we see that <MATH_0011> is an isomorphism.\nWrite <MATH_0012> for certain\n<MATH_0013> and <MATH_0014>. Then <MATH_0015>.\nNext, write\n<MATH_0016> for\ncertain <MATH_0017> and <MATH_0018>. Then the cocycle condition\nsays that\n<MATH_0019>\nThis means that <MATH_0020>. Thus <MATH_0021> is a projector, and since it is\nan isomorphism it is the identity.\n\n<STRUCT_0002><STRUCT_0003>\nTo prove fully that <MATH_0022> is a cosimplicial module we have to check\nall 5 types of relations of\nSimplicial, Remark <REF_0002>.\nThe relations on composing <MATH_0023>'s are obvious.\nThe relations on composing <MATH_0024>'s come down to the\ncocycle condition for <MATH_0025>.\nIn exactly the same way as above one checks the relations\n<MATH_0026>.\nFinally, the other relations on compositions of <MATH_0027>'s and <MATH_0028>'s\nhold for any <MATH_0029> whatsoever.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\varphi(n \\otimes 1) = \\sum \\alpha_i \\otimes x_i$",
+        "MATH_0002": "$$\n\\begin{matrix}\n\\delta^1_0 & : & N & \\to & A \\otimes N & n & \\mapsto & 1 \\otimes n \\\\\n\\delta^1_1 & : & N & \\to & A \\otimes N & n & \\mapsto &\n\\sum \\alpha_i \\otimes x_i\\\\\n\\sigma^0_0 & : & A \\otimes N & \\to & N & a_0 \\otimes n & \\mapsto & a_0n \\\\\n\\delta^2_0 & : & A \\otimes N & \\to & A \\otimes A \\otimes N &\na_0 \\otimes n & \\mapsto & 1 \\otimes a_0 \\otimes n \\\\\n\\delta^2_1 & : & A \\otimes N & \\to & A \\otimes A \\otimes N &\na_0 \\otimes n & \\mapsto & a_0 \\otimes 1 \\otimes n \\\\\n\\delta^2_2 & : & A \\otimes N & \\to & A \\otimes A \\otimes N &\na_0 \\otimes n & \\mapsto & \\sum a_0 \\otimes \\alpha_i \\otimes x_i \\\\\n\\sigma^1_0 & : & A \\otimes A \\otimes N & \\to & A \\otimes N &\na_0 \\otimes a_1 \\otimes n & \\mapsto & a_0a_1 \\otimes n \\\\\n\\sigma^1_1 & : & A \\otimes A \\otimes N & \\to & A \\otimes N &\na_0 \\otimes a_1 \\otimes n & \\mapsto & a_0 \\otimes a_1n\n\\end{matrix}\n$$",
+        "REF_0001": "\\ref{simplicial-section-cosimplicial-object}",
+        "MATH_0003": "$\\sigma^0_0 \\circ \\delta^1_0 = \\text{id}$",
+        "MATH_0004": "$\\sigma^0_0 \\circ \\delta^1_1 = \\text{id}$",
+        "MATH_0005": "$\\sigma^0_0 \\circ \\delta^1_0 = \\text{id}$",
+        "MATH_0006": "$\\varphi : N \\otimes_R A \\to A \\otimes_R N$",
+        "MATH_0007": "$p = \\sigma^0_0 \\circ \\delta^1_1 : N \\to N$",
+        "MATH_0008": "$p$",
+        "MATH_0009": "$$\np = \\varphi \\otimes \\text{id} :\nN = (N \\otimes_R A) \\otimes_{(A \\otimes_R A)} A\n\\longrightarrow\n(A \\otimes_R N) \\otimes_{(A \\otimes_R A)} A = N\n$$",
+        "MATH_0010": "$\\varphi$",
+        "MATH_0011": "$p$",
+        "MATH_0012": "$\\varphi(n \\otimes 1) = \\sum \\alpha_i \\otimes x_i$",
+        "MATH_0013": "$\\alpha_i \\in A$",
+        "MATH_0014": "$x_i \\in N$",
+        "MATH_0015": "$p(n) = \\sum \\alpha_ix_i$",
+        "MATH_0016": "$\\varphi(x_i \\otimes 1) = \\sum \\alpha_{ij} \\otimes y_j$",
+        "MATH_0017": "$\\alpha_{ij} \\in A$",
+        "MATH_0018": "$y_j \\in N$",
+        "MATH_0019": "$$\n\\sum \\alpha_i \\otimes \\alpha_{ij} \\otimes y_j\n=\n\\sum \\alpha_i \\otimes 1 \\otimes x_i.\n$$",
+        "MATH_0020": "$p(n) = \\sum \\alpha_ix_i = \\sum \\alpha_i\\alpha_{ij}y_j =\n\\sum \\alpha_i p(x_i) = p(p(n))$",
+        "MATH_0021": "$p$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0022": "$N_\\bullet$",
+        "REF_0002": "\\ref{simplicial-remark-relations-cosimplicial}",
+        "MATH_0023": "$\\sigma$",
+        "MATH_0024": "$\\delta$",
+        "MATH_0025": "$\\varphi$",
+        "MATH_0026": "$\\sigma_j \\circ \\delta_j = \\sigma_j \\circ \\delta_{j + 1} = \\text{id}$",
+        "MATH_0027": "$\\delta$",
+        "MATH_0028": "$\\sigma$",
+        "MATH_0029": "$\\varphi$",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023F:paragraph/0006",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote that to an <MATH_0001>-module <MATH_0002> we can associate a canonical\ndescent datum, namely <MATH_0003> where\n<MATH_0004>\nis the obvious map:\n<MATH_0005>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$(M \\otimes_R A, can)$",
+        "MATH_0004": "$can : (M \\otimes_R A) \\otimes_R A \\to A \\otimes_R (M \\otimes_R A)$",
+        "MATH_0005": "$(m \\otimes a) \\otimes a' \\mapsto a \\otimes (m \\otimes a')$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:simplicial-definition-face-degeneracy",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor any integer <MATH_0001>, and any <MATH_0002> we let\n<TEXTITOPEN_0001><MATH_0003><TEXTITCLOSE_0001>\ndenote the injective order preserving map skipping <MATH_0004>. For any\ninteger <MATH_0005>, and any <MATH_0006> we denote\n<TEXTITOPEN_0002><MATH_0007><TEXTITCLOSE_0002>\nthe surjective order preserving map with\n<MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-face-degeneracy}",
+        "MATH_0001": "$n\\geq 1$",
+        "MATH_0002": "$0\\leq j \\leq n$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0003": "$\\delta^n_j : [n-1] \\to [n]$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$j$",
+        "MATH_0005": "$n\\geq 0$",
+        "MATH_0006": "$0\\leq j \\leq n$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0007": "$\\sigma^n_j : [n + 1]  \\to [n]$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0008": "$(\\sigma^n_j)^{-1}(\\{j\\}) = \\{j, j + 1\\}$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "simplicial-definition-face-degeneracy",
+      "requested_tag": "0165"
+    },
+    {
+      "context_id": "reference:simplicial-example-push-outs-simplicial-object",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> is a morphism of <MATH_0002> such that all\nthe pushouts <MATH_0003> exist.\nThen we set <MATH_0004> equal to the <MATH_0005>-fold pushout,\nand we let <MATH_0006> correspond to the map\n<MATHSEG_0001> in <MATHSEG_0002> in <MATHSEG_0003>\non ``coordinates''.\nIn other words, the map <MATH_0007> is the\nidentity on each component.\nThe two maps <MATH_0008> are the two coprojections.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-push-outs-simplicial-object}",
+        "MATH_0001": "$X\\to Y$",
+        "MATH_0002": "$C$",
+        "MATH_0003": "$Y\\amalg_X Y \\amalg_X \\ldots \\amalg_X Y$",
+        "MATH_0004": "$U_n$",
+        "MATH_0005": "$(n + 1)$",
+        "MATH_0006": "$\\varphi : [n] \\to [m]$",
+        "MATHSEG_0001": "$$\n(y \\text{",
+        "MATHSEG_0002": "}i\\text{th component})\n\\mapsto\n(y \\text{",
+        "MATHSEG_0003": "}\\varphi(i)\\text{th component})\n$$",
+        "MATH_0007": "$U_1 = Y \\amalg_X Y \\to U_0 = Y$",
+        "MATH_0008": "$U_0 = Y \\to U_1 = Y \\amalg_X Y$",
+        "STRUCT_0002": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "simplicial-example-push-outs-simplicial-object",
+      "requested_tag": "016N"
+    },
+    {
+      "context_id": "reference:simplicial-remark-relations-cosimplicial",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nBy abuse of notation we sometimes write <MATH_0001>\ninstead of <MATH_0002>, and similarly for <MATH_0003>.\nThe relations among the morphisms <MATH_0004> and <MATH_0005>\nmay be expressed as follows:\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0006>, then\n<MATH_0007>.\n<STRUCT_0004> If <MATH_0008>, then\n<MATH_0009>.\n<STRUCT_0005> We have\n<MATH_0010>.\n<STRUCT_0006> If <MATH_0011>, then\n<MATH_0012>.\n<STRUCT_0007> If <MATH_0013>, then\n<MATH_0014>.\n<STRUCT_0008>\nThis means that whenever the compositions on both the left and the\nright are defined then the corresponding equality should hold.\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-relations-cosimplicial}",
+        "MATH_0001": "$\\delta_i : U_{n - 1} \\to U_n$",
+        "MATH_0002": "$\\delta^n_i$",
+        "MATH_0003": "$\\sigma_i : U_{n + 1} \\to U_n$",
+        "MATH_0004": "$\\delta^n_i$",
+        "MATH_0005": "$\\sigma^n_i$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0006": "$i < j$",
+        "MATH_0007": "$\\delta_j \\circ \\delta_i = \\delta_i \\circ \\delta_{j - 1}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$i < j$",
+        "MATH_0009": "$\\sigma_j \\circ \\delta_i = \\delta_i \\circ \\sigma_{j - 1}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0010": "$\\text{id} = \\sigma_j \\circ \\delta_j = \\sigma_j \\circ \\delta_{j + 1}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0011": "$i > j + 1$",
+        "MATH_0012": "$\\sigma_j \\circ \\delta_i = \\delta_{i - 1} \\circ \\sigma_j$",
+        "STRUCT_0007": "\\item",
+        "MATH_0013": "$i \\leq j$",
+        "MATH_0014": "$\\sigma_j \\circ \\sigma_i = \\sigma_i \\circ \\sigma_{j + 1}$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "simplicial-remark-relations-cosimplicial",
+      "requested_tag": "016L"
+    },
+    {
+      "context_id": "reference:simplicial-section-cosimplicial-object",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Cosimplicial objects<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-cosimplicial-object}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "simplicial-section-cosimplicial-object",
+      "requested_tag": "016I"
+    }
+  ]
+}

@@ -1,0 +1,706 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p32-20261103T081013Z.json",
+    "hash": "sha256:44e2aff3f328b9928916127b5b2d58c4eeb8577e8495da40d5c4ed523b5174d9"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:040L:statement",
+      "source_text": "Lemma <REF_0001>\nsays that morphisms of schemes satisfy fpqc descent.\nIn other words, given a scheme <MATH_0001> and schemes <MATH_0002>, <MATH_0003> over <MATH_0004>\nthe functor\n<MATH_0005>\nsatisfies the sheaf condition for the fpqc topology.\nThe simplest case of this is the following. Suppose that <MATH_0006>\nis a surjective flat morphism of affines. Let <MATH_0007>\nbe a morphism of schemes over <MATH_0008> which is compatible with the\ncanonical descent data. Then there exists a unique morphism\n<MATH_0009> whose base change to <MATH_0010> is <MATH_0011>. In fact this\nspecial case follows in a straightforward manner from\nLemma <REF_0002>.\nAnd, in turn, that lemma is a formal consequence of the following\ntwo facts:\n(a) the base change functor by a faithfully flat morphism is faithful, see\nLemma <REF_0003>\nand (b) a scheme satisfies the sheaf condition for the fpqc topology, see\nLemma <REF_0004>.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$$\n(\\Sch/S)^{opp} \\longrightarrow \\textit{Sets},\n\\quad\nT \\longmapsto \\Mor_T(X_T, Y_T)\n$$",
+        "MATH_0006": "$T \\to S$",
+        "MATH_0007": "$\\psi_0 : X_T \\to Y_T$",
+        "MATH_0008": "$T$",
+        "MATH_0009": "$\\psi : X \\to Y$",
+        "MATH_0010": "$T$",
+        "MATH_0011": "$\\psi_0$",
+        "REF_0002": "\\ref{lemma-fully-faithful}",
+        "REF_0003": "\\ref{lemma-ff-base-change-faithful}",
+        "REF_0004": "\\ref{lemma-fpqc-universal-effective-epimorphisms}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 27,
+          "projection_end": 36,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 40,
+          "projection_end": 47,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 61,
+          "projection_end": 68,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 94,
+          "projection_end": 100,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 117,
+          "projection_end": 124,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 171,
+          "projection_end": 178,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 205,
+          "projection_end": 220,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 229,
+          "projection_end": 242,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 318,
+          "projection_end": 328,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 329,
+          "projection_end": 333,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 334,
+          "projection_end": 342,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 346,
+          "projection_end": 353,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 376,
+          "projection_end": 384,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 388,
+          "projection_end": 395,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 442,
+          "projection_end": 451,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 452,
+          "projection_end": 459,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 493,
+          "projection_end": 501,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 520,
+          "projection_end": 531,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 733,
+          "projection_end": 744,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 745,
+          "projection_end": 752,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 758,
+          "projection_end": 773,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 774,
+          "projection_end": 782,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithful",
+          "projection_start": 786,
+          "projection_end": 794,
+          "concept": "faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 827,
+          "projection_end": 833,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf condition",
+          "projection_start": 848,
+          "projection_end": 863,
+          "concept": "source-phrase-sheaf-condition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 872,
+          "projection_end": 885,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0AP4:statement",
+      "source_text": "Let <MATH_0001> be a surjective, quasi-compact, flat morphism of\nschemes. Let <MATH_0002> be a descent datum relative to <MATH_0003>.\nSuppose that for all <MATH_0004> there exists an open subscheme\n<MATH_0005> such that <MATH_0006>\nand such that the descent datum <MATH_0007>\nis effective. Then <MATH_0008> is effective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$X \\to S$",
+        "MATH_0002": "$(V, \\varphi)$",
+        "MATH_0003": "$X/S$",
+        "MATH_0004": "$v \\in V$",
+        "MATH_0005": "$v \\in W \\subset V$",
+        "MATH_0006": "$\\varphi(W \\times_S X) \\subset X \\times_S W$",
+        "MATH_0007": "$(W, \\varphi|_{W \\times_S X})$",
+        "MATH_0008": "$(V, \\varphi)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "surjective",
+          "projection_start": 21,
+          "projection_end": 31,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 33,
+          "projection_end": 46,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 48,
+          "projection_end": 52,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 53,
+          "projection_end": 61,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 65,
+          "projection_end": 72,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 95,
+          "projection_end": 102,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 250,
+          "projection_end": 257,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0AP4:proof",
+      "source_text": "Let <MATH_0001> be an open covering with\n<MATH_0002>\nand such that the descent datum <MATH_0003>\nis effective. Let <MATH_0004> be a scheme and let\n<MATH_0005>\nbe an isomorphism of descent data. For each pair of indices\n<MATH_0006> consider the open\n<MATH_0007>.\nBecause everything is compatible with descent data\nand since <MATH_0008> is an fpqc covering, we\nmay apply Lemma <REF_0001>\nto find an open <MATH_0009> such that\n<MATH_0010>.\nNow the identity morphism on <MATH_0011> is\ncompatible with descent data, hence comes from a\nunique morphism <MATH_0012> over <MATH_0013>\n(see Remark <REF_0002>).\nThen <MATH_0014> is a glueing\ndata as in Schemes, Section <REF_0003>\n(proof omitted). Thus we may assume there is a scheme <MATH_0015> over <MATH_0016>\nsuch that <MATH_0017> is open, <MATH_0018> and\n<MATH_0019>, see\nSchemes, Lemma <REF_0004>.\nPulling back to <MATH_0020> we can use the <MATH_0021> to\nget the desired isomorphism <MATH_0022>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$V = \\bigcup W_i$",
+        "MATH_0002": "$\\varphi(W_i \\times_S X) \\subset X \\times_S W_i$",
+        "MATH_0003": "$(W_i, \\varphi|_{W_i \\times_S X})$",
+        "MATH_0004": "$U_i \\to S$",
+        "MATH_0005": "$\\alpha_i : (X \\times_S U_i, can) \\to (W_i, \\varphi|_{W_i \\times_S X})$",
+        "MATH_0006": "$(i, j)$",
+        "MATH_0007": "$\\alpha_i^{-1}(W_i \\cap W_j) \\subset X \\times_S U_i$",
+        "MATH_0008": "$\\{X \\to S\\}$",
+        "REF_0001": "\\ref{lemma-open-fpqc-covering}",
+        "MATH_0009": "$U_{ij} \\subset U_i$",
+        "MATH_0010": "$\\alpha_i^{-1}(W_i \\cap W_j) = X \\times_S U_{ij}$",
+        "MATH_0011": "$W_i \\cap W_j$",
+        "MATH_0012": "$\\varphi_{ij} : U_{ij} \\to U_{ji}$",
+        "MATH_0013": "$S$",
+        "REF_0002": "\\ref{remark-morphisms-of-schemes-satisfy-fpqc-descent}",
+        "MATH_0014": "$(U_i, U_{ij}, \\varphi_{ij})$",
+        "REF_0003": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0015": "$U$",
+        "MATH_0016": "$S$",
+        "MATH_0017": "$U_i \\subset U$",
+        "MATH_0018": "$U_{ij} = U_i \\cap U_j$",
+        "MATH_0019": "$\\varphi_{ij} = \\text{id}_{U_i \\cap U_j}$",
+        "REF_0004": "\\ref{schemes-lemma-glue}",
+        "MATH_0020": "$X$",
+        "MATH_0021": "$\\alpha_i$",
+        "MATH_0022": "$\\alpha : X \\times_S U \\to V$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "covering",
+          "projection_start": 27,
+          "projection_end": 35,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 71,
+          "projection_end": 78,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 132,
+          "projection_end": 138,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 165,
+          "projection_end": 176,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 180,
+          "projection_end": 187,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 300,
+          "projection_end": 307,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 341,
+          "projection_end": 354,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "identity morphism",
+          "projection_start": 445,
+          "projection_end": 462,
+          "concept": "identity-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 497,
+          "projection_end": 504,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 537,
+          "projection_end": 545,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "glueing",
+          "projection_start": 622,
+          "projection_end": 629,
+          "concept": "gluing",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 641,
+          "projection_end": 648,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 716,
+          "projection_end": 722,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 816,
+          "projection_end": 823,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 917,
+          "projection_end": 928,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:02W0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nConsider the fpqc-covering\n<MATH_0001> of <MATH_0002>.\nIt is a refinement of both <MATH_0003> and <MATH_0004>.\nHence we have a <MATH_0005>-commutative diagram of functors and categories\n<MATH_0006>\nNotation as in the proof of\nLemma <REF_0001> and\ncommutativity by Lemma <REF_0002> part (3).\nHence clearly it suffices to prove the functors\n<MATH_0007> and\n<MATH_0008> are fully faithful.\nThis follows from\nLemma <REF_0003>\nas desired.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\mathcal{W} = \\{U_i \\times_S V_j \\to S\\}_{(i, j) \\in I \\times J}$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$\\mathcal{U}$",
+        "MATH_0004": "$\\mathcal{V}$",
+        "MATH_0005": "$2$",
+        "MATH_0006": "$$\n\\xymatrix{\nDD(\\mathcal{V}) \\ar[rd] \\ar[rr] & & DD(\\mathcal{U}) \\ar[ld] \\\\\n& DD(\\mathcal{W}) &\n}\n$$",
+        "REF_0001": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "REF_0002": "\\ref{lemma-pullback-family}",
+        "MATH_0007": "$DD(\\mathcal{V}) \\to DD(\\mathcal{W})$",
+        "MATH_0008": "$DD(\\mathcal{U}) \\to DD(\\mathcal{W})$",
+        "REF_0003": "\\ref{lemma-fpqc-refinement-coverings-fully-faithful}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0AP4:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a surjective, quasi-compact, flat morphism of\nschemes. Let <MATH_0002> be a descent datum relative to <MATH_0003>.\nSuppose that for all <MATH_0004> there exists an open subscheme\n<MATH_0005> such that <MATH_0006>\nand such that the descent datum <MATH_0007>\nis effective. Then <MATH_0008> is effective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-effective-for-fpqc-is-local-upstairs}",
+        "MATH_0001": "$X \\to S$",
+        "MATH_0002": "$(V, \\varphi)$",
+        "MATH_0003": "$X/S$",
+        "MATH_0004": "$v \\in V$",
+        "MATH_0005": "$v \\in W \\subset V$",
+        "MATH_0006": "$\\varphi(W \\times_S X) \\subset X \\times_S W$",
+        "MATH_0007": "$(W, \\varphi|_{W \\times_S X})$",
+        "MATH_0008": "$(V, \\varphi)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:040L:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLemma <REF_0001>\nsays that morphisms of schemes satisfy fpqc descent.\nIn other words, given a scheme <MATH_0001> and schemes <MATH_0002>, <MATH_0003> over <MATH_0004>\nthe functor\n<MATH_0005>\nsatisfies the sheaf condition for the fpqc topology.\nThe simplest case of this is the following. Suppose that <MATH_0006>\nis a surjective flat morphism of affines. Let <MATH_0007>\nbe a morphism of schemes over <MATH_0008> which is compatible with the\ncanonical descent data. Then there exists a unique morphism\n<MATH_0009> whose base change to <MATH_0010> is <MATH_0011>. In fact this\nspecial case follows in a straightforward manner from\nLemma <REF_0002>.\nAnd, in turn, that lemma is a formal consequence of the following\ntwo facts:\n(a) the base change functor by a faithfully flat morphism is faithful, see\nLemma <REF_0003>\nand (b) a scheme satisfies the sheaf condition for the fpqc topology, see\nLemma <REF_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-morphisms-of-schemes-satisfy-fpqc-descent}",
+        "REF_0001": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$Y$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$$\n(\\Sch/S)^{opp} \\longrightarrow \\textit{Sets},\n\\quad\nT \\longmapsto \\Mor_T(X_T, Y_T)\n$$",
+        "MATH_0006": "$T \\to S$",
+        "MATH_0007": "$\\psi_0 : X_T \\to Y_T$",
+        "MATH_0008": "$T$",
+        "MATH_0009": "$\\psi : X \\to Y$",
+        "MATH_0010": "$T$",
+        "MATH_0011": "$\\psi_0$",
+        "REF_0002": "\\ref{lemma-fully-faithful}",
+        "REF_0003": "\\ref{lemma-ff-base-change-faithful}",
+        "REF_0004": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0AP4:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be an open covering with\n<MATH_0002>\nand such that the descent datum <MATH_0003>\nis effective. Let <MATH_0004> be a scheme and let\n<MATH_0005>\nbe an isomorphism of descent data. For each pair of indices\n<MATH_0006> consider the open\n<MATH_0007>.\nBecause everything is compatible with descent data\nand since <MATH_0008> is an fpqc covering, we\nmay apply Lemma <REF_0001>\nto find an open <MATH_0009> such that\n<MATH_0010>.\nNow the identity morphism on <MATH_0011> is\ncompatible with descent data, hence comes from a\nunique morphism <MATH_0012> over <MATH_0013>\n(see Remark <REF_0002>).\nThen <MATH_0014> is a glueing\ndata as in Schemes, Section <REF_0003>\n(proof omitted). Thus we may assume there is a scheme <MATH_0015> over <MATH_0016>\nsuch that <MATH_0017> is open, <MATH_0018> and\n<MATH_0019>, see\nSchemes, Lemma <REF_0004>.\nPulling back to <MATH_0020> we can use the <MATH_0021> to\nget the desired isomorphism <MATH_0022>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$V = \\bigcup W_i$",
+        "MATH_0002": "$\\varphi(W_i \\times_S X) \\subset X \\times_S W_i$",
+        "MATH_0003": "$(W_i, \\varphi|_{W_i \\times_S X})$",
+        "MATH_0004": "$U_i \\to S$",
+        "MATH_0005": "$\\alpha_i : (X \\times_S U_i, can) \\to (W_i, \\varphi|_{W_i \\times_S X})$",
+        "MATH_0006": "$(i, j)$",
+        "MATH_0007": "$\\alpha_i^{-1}(W_i \\cap W_j) \\subset X \\times_S U_i$",
+        "MATH_0008": "$\\{X \\to S\\}$",
+        "REF_0001": "\\ref{lemma-open-fpqc-covering}",
+        "MATH_0009": "$U_{ij} \\subset U_i$",
+        "MATH_0010": "$\\alpha_i^{-1}(W_i \\cap W_j) = X \\times_S U_{ij}$",
+        "MATH_0011": "$W_i \\cap W_j$",
+        "MATH_0012": "$\\varphi_{ij} : U_{ij} \\to U_{ji}$",
+        "MATH_0013": "$S$",
+        "REF_0002": "\\ref{remark-morphisms-of-schemes-satisfy-fpqc-descent}",
+        "MATH_0014": "$(U_i, U_{ij}, \\varphi_{ij})$",
+        "REF_0003": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0015": "$U$",
+        "MATH_0016": "$S$",
+        "MATH_0017": "$U_i \\subset U$",
+        "MATH_0018": "$U_{ij} = U_i \\cap U_j$",
+        "MATH_0019": "$\\varphi_{ij} = \\text{id}_{U_i \\cap U_j}$",
+        "REF_0004": "\\ref{schemes-lemma-glue}",
+        "MATH_0020": "$X$",
+        "MATH_0021": "$\\alpha_i$",
+        "MATH_0022": "$\\alpha : X \\times_S U \\to V$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W1:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descending types of morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-types-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-lemma-ff-base-change-faithful",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a surjective, flat morphism of\nschemes. The base change functor\n<MATH_0002>\nis faithful.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-ff-base-change-faithful}",
+        "MATH_0001": "$h : S' \\to S$",
+        "MATH_0002": "$$\n\\Sch/S \\longrightarrow \\Sch/S', \\quad\nX \\longmapsto S' \\times_S X\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-ff-base-change-faithful",
+      "requested_tag": "02VX"
+    },
+    {
+      "context_id": "reference:descent-lemma-fpqc-universal-effective-epimorphisms",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nThen <MATH_0002> is a universal effective epimorphism\nin the category of schemes, see\nSites, Definition <REF_0002>.\nIn other words, every representable functor on the category of schemes\nsatisfies the sheaf condition for the fpqc topology, see\nTopologies, Definition <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-universal-effective-epimorphisms}",
+        "MATH_0001": "$\\{T_i \\to T\\}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0002": "$\\{T_i \\to T\\}$",
+        "REF_0002": "\\ref{sites-definition-universal-effective-epimorphisms}",
+        "REF_0003": "\\ref{topologies-definition-sheaf-property-fpqc}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-fpqc-universal-effective-epimorphisms",
+      "requested_tag": "023Q"
+    },
+    {
+      "context_id": "reference:descent-lemma-fully-faithful",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation of Lemma <REF_0001>\nassume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0001> is an fpqc covering (for example if <MATH_0002> is\nsurjective, flat, and quasi-compact), and\n<STRUCT_0004> <MATH_0003>.\n<STRUCT_0005>\nThen the pullback functor is fully faithful.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fully-faithful}",
+        "REF_0001": "\\ref{lemma-pullback}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$\\{f : X' \\to X\\}$",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S = S'$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-fully-faithful",
+      "requested_tag": "0241"
+    },
+    {
+      "context_id": "reference:descent-lemma-open-fpqc-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a fpqc covering.\nSuppose that for each <MATH_0002> we have an open subset <MATH_0003>\nsuch that for all <MATH_0004> we have\n<MATH_0005> as open\nsubsets of <MATH_0006>. Then there exists a unique open subset\n<MATH_0007> such that <MATH_0008> for each <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-open-fpqc-covering}",
+        "MATH_0001": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0002": "$i$",
+        "MATH_0003": "$W_i \\subset T_i$",
+        "MATH_0004": "$i, j \\in I$",
+        "MATH_0005": "$\\text{pr}_0^{-1}(W_i) = \\text{pr}_1^{-1}(W_j)$",
+        "MATH_0006": "$T_i \\times_T T_j$",
+        "MATH_0007": "$W \\subset T$",
+        "MATH_0008": "$W_i = f_i^{-1}(W)$",
+        "MATH_0009": "$i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-open-fpqc-covering",
+      "requested_tag": "03N0"
+    },
+    {
+      "context_id": "reference:descent-lemma-refine-coverings-fully-faithful",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe fpqc-coverings of <MATH_0004>.\nIf <MATH_0005> is a refinement of <MATH_0006>,\nthen the pullback functor\n<MATH_0007>\nis fully faithful.\nIn particular, the category of schemes over <MATH_0008>\nis identified with a full subcategory of the category\nof descent data relative to any fpqc-covering of <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-refine-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "MATH_0006": "$\\mathcal{V}$",
+        "MATH_0007": "$$\n\\text{descent data relative to }\n\\mathcal{V}\n\\longrightarrow\n\\text{descent data relative to }\n\\mathcal{U}\n$$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-refine-coverings-fully-faithful",
+      "requested_tag": "02W0"
+    },
+    {
+      "context_id": "reference:schemes-lemma-glue",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nGiven any glueing data of locally ringed spaces there\nexists a locally ringed space <MATH_0001> and open subspaces\n<MATH_0002> together with isomorphisms\n<MATH_0003> of locally ringed spaces such that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004>,\n<STRUCT_0004> <MATH_0005>, and\n<STRUCT_0005> <MATH_0006>.\n<STRUCT_0006>\nThe locally ringed space <MATH_0007> is characterized by the following\nmapping properties: Given a locally ringed space <MATH_0008> we have\n<MATH_0009>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-glue}",
+        "LOCKED_0002": "\\begin{slogan}\nIf you have two locally ringed spaces, and a subspace of the first one\nis isomorphic to a subspace of the other, then you can glue them together\ninto one big locally ringed space.\n\\end{slogan}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$U_i \\subset X$",
+        "MATH_0003": "$\\varphi_i : X_i \\to U_i$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$X=\\bigcup_{i\\in I} U_i$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$\\varphi_i(U_{ij}) = U_i \\cap U_j$",
+        "STRUCT_0005": "\\item",
+        "MATH_0006": "$\\varphi_{ij} =\n\\varphi_j^{-1}|_{U_i \\cap U_j} \\circ \\varphi_i|_{U_{ij}}$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0007": "$X$",
+        "MATH_0008": "$Y$",
+        "MATH_0009": "\\begin{eqnarray*}\n\\Mor(X, Y) & = & \\{ (f_i)_{i\\in I} \\mid\nf_i : X_i \\to Y, \\ f_j \\circ \\varphi_{ij} = f_i|_{U_{ij}}\\} \\\\\nf & \\mapsto & (f|_{U_i} \\circ \\varphi_i)_{i \\in I} \\\\\n\\Mor(Y, X) & = &\n\\left\\{\n\\begin{matrix}\n\\text{open covering }Y = \\bigcup\\nolimits_{i \\in I} V_i\\text{ and }\n(g_i : V_i \\to X_i)_{i \\in I}\n\\text{ such that}\\\\\ng_i^{-1}(U_{ij}) = V_i \\cap V_j\n\\text{ and }\ng_j|_{V_i \\cap V_j} = \\varphi_{ij} \\circ g_i|_{V_i \\cap V_j}\n\\end{matrix}\n\\right\\} \\\\\ng & \\mapsto &\nV_i = g^{-1}(U_i), \\ g_i = \\varphi_i^{-1} \\circ g|_{V_i}\n\\end{eqnarray*}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-glue",
+      "requested_tag": "01JB"
+    },
+    {
+      "context_id": "reference:schemes-section-glueing-schemes",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Glueing schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-glueing-schemes}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-section-glueing-schemes",
+      "requested_tag": "01JA"
+    }
+  ]
+}

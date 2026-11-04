@@ -1,0 +1,998 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p29-20261103T075640Z.json",
+    "hash": "sha256:00f1048ab5937bb655b08e2708861601d07ee4fa8ab98e864bb3e397d654f042"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:03LC:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\n<STRUCT_0001>\n<STRUCT_0002> The equivalences of categories of\nProposition <REF_0001>\nare compatible with pullback.\nMore precisely, we have <MATH_0002>\nfor any quasi-coherent sheaf <MATH_0003> on <MATH_0004>.\n<STRUCT_0003> The equivalences of categories of\nProposition <REF_0002> part (1)\nare <TEXTBFOPEN_0001>not<TEXTBFCLOSE_0001> compatible with pushforward in general.\n<STRUCT_0004> If <MATH_0005> is quasi-compact and quasi-separated, and\n<MATH_0006> then <MATH_0007> and <MATH_0008>\npreserve quasi-coherent sheaves and the diagram\n<MATH_0009>\nis commutative, i.e., <MATH_0010>.\n<STRUCT_0005>\n",
+      "node_kind": "proposition",
+      "protected_nodes": {
+        "MATH_0001": "$f : T \\to S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "REF_0001": "\\ref{proposition-equivalence-quasi-coherent}",
+        "MATH_0002": "$f^*(\\mathcal{G}^a) = (f^*\\mathcal{G})^a$",
+        "MATH_0003": "$\\mathcal{G}$",
+        "MATH_0004": "$S$",
+        "STRUCT_0003": "\\item",
+        "REF_0002": "\\ref{proposition-equivalence-quasi-coherent}",
+        "TEXTBFOPEN_0001": "{\\bf ",
+        "TEXTBFCLOSE_0001": "}",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$\\tau \\in \\{Zariski, \\etale\\}$",
+        "MATH_0007": "$f_*$",
+        "MATH_0008": "$f_{small, *}$",
+        "MATH_0009": "$$\n\\xymatrix{\n\\QCoh(\\mathcal{O}_T)\n\\ar[rr]_{f_*} \\ar[d]_{\\mathcal{F} \\mapsto \\mathcal{F}^a} & &\n\\QCoh(\\mathcal{O}_S)\n\\ar[d]^{\\mathcal{G} \\mapsto \\mathcal{G}^a} \\\\\n\\QCoh(T_\\tau, \\mathcal{O}) \\ar[rr]^{f_{small, *}} & &\n\\QCoh(S_\\tau, \\mathcal{O})\n}\n$$",
+        "MATH_0010": "$f_{small, *}(\\mathcal{F}^a) = (f_*\\mathcal{F})^a$",
+        "STRUCT_0005": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalences",
+          "projection_start": 74,
+          "projection_end": 86,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 90,
+          "projection_end": 100,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 147,
+          "projection_end": 155,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 201,
+          "projection_end": 221,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalences",
+          "projection_start": 268,
+          "projection_end": 280,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 284,
+          "projection_end": 294,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 410,
+          "projection_end": 423,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-separated",
+          "projection_start": 428,
+          "projection_end": 443,
+          "concept": "quasi-separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 503,
+          "projection_end": 525,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 534,
+          "projection_end": 541,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 557,
+          "projection_end": 568,
+          "concept": "commutative",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03LC:proof",
+      "source_text": "Part (1) follows from the discussion in\nRemark <REF_0001>.\nPart (2) is just a warning, and can be explained in the following way:\nFirst the statement cannot be made precise since <MATH_0001> does not\ntransform quasi-coherent sheaves into quasi-coherent sheaves in general.\nEven if this is the case for <MATH_0002> (and any base change of <MATH_0003>), then the\ncompatibility over the big sites would mean that formation of <MATH_0004>\ncommutes with any base change, which does not hold in general.\nAn explicit example is the quasi-compact open immersion\n<MATH_0005>\nwhere <MATH_0006> is a field. We have <MATH_0007>\nbut after base change to <MATH_0008> by the <MATH_0009> map\nwe see that the pushforward is zero.\n\n<STRUCT_0001><STRUCT_0002>\nLet us prove (3) in case <MATH_0010>. Note that <MATH_0011>, and any\nbase change of <MATH_0012>, transforms quasi-coherent sheaves\ninto quasi-coherent sheaves, see\nSchemes, Lemma <REF_0002>.\nThe equality <MATH_0013>\nmeans that for any <ACCENT_0001>tale morphism <MATH_0014> we have\n<MATH_0015>\nwhere <MATH_0016> is the projection. This is true by\nCohomology of Schemes, Lemma <REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{remark-change-topologies-ringed-sites}",
+        "MATH_0001": "$f_*$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$f_*\\mathcal{F}$",
+        "MATH_0005": "$j : X = \\mathbf{A}^2_k \\setminus \\{0\\} \\to \\mathbf{A}^2_k = Y$",
+        "MATH_0006": "$k$",
+        "MATH_0007": "$j_*\\mathcal{O}_X = \\mathcal{O}_Y$",
+        "MATH_0008": "$\\Spec(k)$",
+        "MATH_0009": "$0$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0010": "$\\tau = \\etale$",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$f$",
+        "REF_0002": "\\ref{schemes-lemma-push-forward-quasi-coherent}",
+        "MATH_0013": "$f_{small, *}(\\mathcal{F}^a) = (f_*\\mathcal{F})^a$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0014": "$g : U \\to S$",
+        "MATH_0015": "$\\Gamma(U, g^*f_*\\mathcal{F}) = \\Gamma(U \\times_S T, (g')^*\\mathcal{F})$",
+        "MATH_0016": "$g' : U \\times_S T \\to T$",
+        "REF_0003": "\\ref{coherent-lemma-flat-base-change-cohomology}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 210,
+          "projection_end": 232,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 238,
+          "projection_end": 260,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 323,
+          "projection_end": 334,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 388,
+          "projection_end": 393,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 435,
+          "projection_end": 443,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 453,
+          "projection_end": 464,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact open",
+          "projection_start": 525,
+          "projection_end": 543,
+          "concept": "source-phrase-quasi-compact-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 544,
+          "projection_end": 553,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 589,
+          "projection_end": 594,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 626,
+          "projection_end": 637,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 672,
+          "projection_end": 675,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 809,
+          "projection_end": 820,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 848,
+          "projection_end": 870,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 876,
+          "projection_end": 898,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 904,
+          "projection_end": 911,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 975,
+          "projection_end": 980,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 981,
+          "projection_end": 989,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 1075,
+          "projection_end": 1096,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:071N:statement",
+      "source_text": "Let <MATH_0001> be a quasi-compact and quasi-separated morphism of schemes.\nLet <MATH_0002> be a quasi-coherent sheaf on <MATH_0003>. For either the <ACCENT_0001>tale\nor Zariski topology, there are canonical isomorphisms\n<MATH_0004>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f : T \\to S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$T$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0004": "$R^if_{small, *}(\\mathcal{F}^a) = (R^if_*\\mathcal{F})^a$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 21,
+          "projection_end": 34,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-separated",
+          "projection_start": 39,
+          "projection_end": 54,
+          "concept": "quasi-separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 55,
+          "projection_end": 63,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 67,
+          "projection_end": 74,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf",
+          "projection_start": 97,
+          "projection_end": 117,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 149,
+          "projection_end": 154,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 166,
+          "projection_end": 174,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 186,
+          "projection_end": 195,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 196,
+          "projection_end": 208,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:071N:proof",
+      "source_text": "We prove this for the <ACCENT_0001>tale topology; we omit the proof in the case\nof the Zariski topology. By Cohomology of Schemes, Lemma\n<REF_0001>\nthe sheaves <MATH_0001> are quasi-coherent so that the assertion\nmakes sense. The sheaf <MATH_0002> is the sheaf associated\nto the presheaf\n<MATH_0003>\nwhere <MATH_0004> is an object of <MATH_0005>, see\nCohomology on Sites, Lemma <REF_0002>.\nBy our conventions the right hand side is the <ACCENT_0002>tale\ncohomology of the restriction of <MATH_0006> to the localization\n<MATH_0007> which equals\n<MATH_0008>. By\nProposition <REF_0003>\nthis is presheaf the same as the presheaf\n<MATH_0009>\nwhere <MATH_0010> is the projection. If <MATH_0011> is affine\nthen this is the same as <MATH_0012>, see\nCohomology of Schemes, Lemma\n<REF_0004>.\nBy\nCohomology of Schemes, Lemma <REF_0005>\nthis is equal to <MATH_0013> which is the value\nof <MATH_0014> on <MATH_0015>.\nThus the values of the sheaves of modules\n<MATH_0016> and <MATH_0017>\non every affine object of <MATH_0018> are canonically isomorphic\nwhich implies they are canonically isomorphic.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "ACCENT_0001": "\\'e",
+        "REF_0001": "\\ref{coherent-lemma-quasi-coherence-higher-direct-images}",
+        "MATH_0001": "$R^if_*\\mathcal{F}$",
+        "MATH_0002": "$R^if_{small, *}\\mathcal{F}^a$",
+        "MATH_0003": "$$\nU \\longmapsto H^i(U \\times_S T, \\mathcal{F}^a)\n$$",
+        "MATH_0004": "$g : U \\to S$",
+        "MATH_0005": "$S_\\etale$",
+        "REF_0002": "\\ref{sites-cohomology-lemma-higher-direct-images}",
+        "ACCENT_0002": "\\'e",
+        "MATH_0006": "$\\mathcal{F}^a$",
+        "MATH_0007": "$T_\\etale/U \\times_S T$",
+        "MATH_0008": "$(U \\times_S T)_\\etale$",
+        "REF_0003": "\\ref{proposition-same-cohomology-quasi-coherent}",
+        "MATH_0009": "$$\nU \\longmapsto\nH^i(U \\times_S T, (g')^*\\mathcal{F}),\n$$",
+        "MATH_0010": "$g' : U \\times_S T \\to T$",
+        "MATH_0011": "$U$",
+        "MATH_0012": "$H^0(U, R^if'_*(g')^*\\mathcal{F})$",
+        "REF_0004": "\\ref{coherent-lemma-quasi-coherence-higher-direct-images-application}",
+        "REF_0005": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0013": "$H^0(U, g^*R^if_*\\mathcal{F})$",
+        "MATH_0014": "$(R^if_*\\mathcal{F})^a$",
+        "MATH_0015": "$U$",
+        "MATH_0016": "$R^if_{small, *}(\\mathcal{F}^a)$",
+        "MATH_0017": "$(R^if_*\\mathcal{F})^a$",
+        "MATH_0018": "$S_\\etale$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 22,
+          "projection_end": 27,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 28,
+          "projection_end": 36,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 83,
+          "projection_end": 91,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 96,
+          "projection_end": 117,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 140,
+          "projection_end": 147,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 218,
+          "projection_end": 223,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 243,
+          "projection_end": 248,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 267,
+          "projection_end": 275,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 312,
+          "projection_end": 318,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology on Sites",
+          "projection_start": 339,
+          "projection_end": 358,
+          "concept": "source-phrase-cohomology-on-sites",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale cohomology",
+          "projection_start": 424,
+          "projection_end": 440,
+          "concept": "source-phrase-etale-cohomology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 482,
+          "projection_end": 494,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 567,
+          "projection_end": 575,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 592,
+          "projection_end": 600,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 668,
+          "projection_end": 674,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 717,
+          "projection_end": 738,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 761,
+          "projection_end": 782,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 903,
+          "projection_end": 910,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 914,
+          "projection_end": 921,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 959,
+          "projection_end": 965,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 966,
+          "projection_end": 972,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonically isomorphic",
+          "projection_start": 992,
+          "projection_end": 1014,
+          "concept": "source-phrase-canonically-isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonically isomorphic",
+          "projection_start": 1038,
+          "projection_end": 1060,
+          "concept": "source-phrase-canonically-isomorphic",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:03DW:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe result for <MATH_0001> is clear from the definition of <MATH_0002>.\nLet <MATH_0003>, or <MATH_0004>,\nor <MATH_0005>.\n\n<STRUCT_0002><STRUCT_0003>\nWe are going to apply\nCohomology on Sites,\nLemma <REF_0001>\nwith <MATH_0006>,\n<MATH_0007> the set of affine schemes\nin <MATH_0008>, and <MATH_0009> the\nset of standard affine <MATH_0010>-coverings. Assumption (3) of\nthe lemma is satisfied by\nLemma <REF_0002>.\nHence we conclude that <MATH_0011> for every\naffine object <MATH_0012> of <MATH_0013>.\n\n<STRUCT_0004><STRUCT_0005>\nNext, let <MATH_0014> be any separated object.\nDenote <MATH_0015> the structure morphism.\nLet <MATH_0016> be an affine open covering.\nWe may also think of this as a <MATH_0017>-covering\n<MATH_0018> of <MATH_0019> in <MATH_0020>.\nNote that\n<MATH_0021> is affine as we assumed <MATH_0022> separated.\nBy\nCohomology on Sites, Lemma\n<REF_0003>\nand the result above we see that\n<MATH_0023>\nthe last equality by\nCohomology of Schemes, Lemma\n<REF_0004>.\nIn particular, if <MATH_0024> is separated we can take <MATH_0025> and\n<MATH_0026> and the proposition is proved.\nWe suggest the reader skip the rest of the proof (or rewrite it\nto give a clearer exposition).\n\n<STRUCT_0006><STRUCT_0007>\nChoose an injective resolution <MATH_0027> on <MATH_0028>.\nChoose an injective resolution <MATH_0029>\non <MATH_0030>. Denote <MATH_0031> the restriction of <MATH_0032>\nto opens of <MATH_0033>; this is a sheaf on the topological space <MATH_0034> as open\ncoverings are <MATH_0035>-coverings. We get a complex\n<MATH_0036>\nwhich is exact since its sections over any affine open <MATH_0037>\nis exact (by the vanishing of <MATH_0038>, <MATH_0039> seen\nabove). Hence by\nDerived Categories, Lemma <REF_0005>\nthere exists map of complexes\n<MATH_0040> which in particular\ninduces a map\n<MATH_0041>\nTaking cohomology gives the map\n<MATH_0042> which\nwe have to prove is an isomorphism.\nLet <MATH_0043> be an affine open covering\nwhich we may think of as a <MATH_0044>-covering also.\nBy the above we get a map of double complexes\n<MATH_0045>\nThis map induces a map of spectral sequences\n<MATH_0046>\nThe first spectral sequence converges to\n<MATH_0047> and the second to\n<MATH_0048>. On the other hand, we have seen\nthat the induced maps <MATH_0049> are\nbijections (as all the intersections are separated being opens in affines).\nWhence also the maps <MATH_0050>\nare isomorphisms, and we win.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$q = 0$",
+        "MATH_0002": "$\\mathcal{F}^a$",
+        "MATH_0003": "$\\mathcal{C} = (\\Sch/S)_\\tau$",
+        "MATH_0004": "$\\mathcal{C} = S_\\etale$",
+        "MATH_0005": "$\\mathcal{C} = S_{Zar}$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0001": "\\ref{sites-cohomology-lemma-cech-vanish-collection}",
+        "MATH_0006": "$\\mathcal{F} = \\mathcal{F}^a$",
+        "MATH_0007": "$\\mathcal{B} \\subset \\Ob(\\mathcal{C})$",
+        "MATH_0008": "$\\mathcal{C}$",
+        "MATH_0009": "$\\text{Cov} \\subset \\text{Cov}_\\mathcal{C}$",
+        "MATH_0010": "$\\tau$",
+        "REF_0002": "\\ref{lemma-standard-covering-Cech-quasi-coherent}",
+        "MATH_0011": "$H^p(U, \\mathcal{F}^a) = 0$",
+        "MATH_0012": "$U$",
+        "MATH_0013": "$\\mathcal{C}$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0014": "$U \\in \\Ob(\\mathcal{C})$",
+        "MATH_0015": "$f : U \\to S$",
+        "MATH_0016": "$U = \\bigcup U_i$",
+        "MATH_0017": "$\\tau$",
+        "MATH_0018": "$\\mathcal{U} = \\{U_i \\to U\\}$",
+        "MATH_0019": "$U$",
+        "MATH_0020": "$\\mathcal{C}$",
+        "MATH_0021": "$U_{i_0} \\times_U \\ldots \\times_U U_{i_p} =\nU_{i_0} \\cap \\ldots \\cap U_{i_p}$",
+        "MATH_0022": "$U$",
+        "REF_0003": "\\ref{sites-cohomology-lemma-cech-spectral-sequence-application}",
+        "MATH_0023": "$$\nH^p(U, \\mathcal{F}^a) = \\check{H}^p(\\mathcal{U}, \\mathcal{F}^a)\n= H^p(U, f^*\\mathcal{F})\n$$",
+        "REF_0004": "\\ref{coherent-lemma-cech-cohomology-quasi-coherent}",
+        "MATH_0024": "$S$",
+        "MATH_0025": "$U = S$",
+        "MATH_0026": "$f = \\text{id}_S$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0027": "$\\mathcal{F} \\to \\mathcal{I}^\\bullet$",
+        "MATH_0028": "$S$",
+        "MATH_0029": "$\\mathcal{F}^a \\to \\mathcal{J}^\\bullet$",
+        "MATH_0030": "$\\mathcal{C}$",
+        "MATH_0031": "$\\mathcal{J}^n|_S$",
+        "MATH_0032": "$\\mathcal{J}^n$",
+        "MATH_0033": "$S$",
+        "MATH_0034": "$S$",
+        "MATH_0035": "$\\tau$",
+        "MATH_0036": "$$\n0 \\to \\mathcal{F} \\to \\mathcal{J}^0|_S \\to \\mathcal{J}^1|_S \\to \\ldots\n$$",
+        "MATH_0037": "$U \\subset S$",
+        "MATH_0038": "$H^p(U, \\mathcal{F}^a)$",
+        "MATH_0039": "$p > 0$",
+        "REF_0005": "\\ref{derived-lemma-morphisms-lift}",
+        "MATH_0040": "$\\mathcal{J}^\\bullet|_S \\to \\mathcal{I}^\\bullet$",
+        "MATH_0041": "$$\nR\\Gamma(\\mathcal{C}, \\mathcal{F}^a)\n=\n\\Gamma(S, \\mathcal{J}^\\bullet)\n\\longrightarrow\n\\Gamma(S, \\mathcal{I}^\\bullet)\n=\nR\\Gamma(S, \\mathcal{F}).\n$$",
+        "MATH_0042": "$H^n(\\mathcal{C}, \\mathcal{F}^a) \\to H^n(S, \\mathcal{F})$",
+        "MATH_0043": "$\\mathcal{U} : S = \\bigcup U_i$",
+        "MATH_0044": "$\\tau$",
+        "MATH_0045": "$$\n\\check{\\mathcal{C}}^\\bullet(\\mathcal{U}, \\mathcal{J})\n=\n\\check{\\mathcal{C}}^\\bullet(\\mathcal{U}, \\mathcal{J}|_S)\n\\longrightarrow\n\\check{\\mathcal{C}}^\\bullet(\\mathcal{U}, \\mathcal{I}).\n$$",
+        "MATH_0046": "$$\n{}^\\tau\\! E_2^{p, q} = \\check{H}^p(\\mathcal{U}, \\underline{H}^q(\\mathcal{F}^a))\n\\longrightarrow\nE_2^{p, q} = \\check{H}^p(\\mathcal{U}, \\underline{H}^q(\\mathcal{F}))\n$$",
+        "MATH_0047": "$H^{p + q}(\\mathcal{C}, \\mathcal{F})$",
+        "MATH_0048": "$H^{p + q}(S, \\mathcal{F})$",
+        "MATH_0049": "${}^\\tau\\! E_2^{p, q} \\to E_2^{p, q}$",
+        "MATH_0050": "$H^n(\\mathcal{C}, \\mathcal{F}^a) \\to H^n(S, \\mathcal{F})$",
+        "STRUCT_0008": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03LC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nPart (1) follows from the discussion in\nRemark <REF_0001>.\nPart (2) is just a warning, and can be explained in the following way:\nFirst the statement cannot be made precise since <MATH_0001> does not\ntransform quasi-coherent sheaves into quasi-coherent sheaves in general.\nEven if this is the case for <MATH_0002> (and any base change of <MATH_0003>), then the\ncompatibility over the big sites would mean that formation of <MATH_0004>\ncommutes with any base change, which does not hold in general.\nAn explicit example is the quasi-compact open immersion\n<MATH_0005>\nwhere <MATH_0006> is a field. We have <MATH_0007>\nbut after base change to <MATH_0008> by the <MATH_0009> map\nwe see that the pushforward is zero.\n\n<STRUCT_0002><STRUCT_0003>\nLet us prove (3) in case <MATH_0010>. Note that <MATH_0011>, and any\nbase change of <MATH_0012>, transforms quasi-coherent sheaves\ninto quasi-coherent sheaves, see\nSchemes, Lemma <REF_0002>.\nThe equality <MATH_0013>\nmeans that for any <ACCENT_0001>tale morphism <MATH_0014> we have\n<MATH_0015>\nwhere <MATH_0016> is the projection. This is true by\nCohomology of Schemes, Lemma <REF_0003>.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{remark-change-topologies-ringed-sites}",
+        "MATH_0001": "$f_*$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$f_*\\mathcal{F}$",
+        "MATH_0005": "$j : X = \\mathbf{A}^2_k \\setminus \\{0\\} \\to \\mathbf{A}^2_k = Y$",
+        "MATH_0006": "$k$",
+        "MATH_0007": "$j_*\\mathcal{O}_X = \\mathcal{O}_Y$",
+        "MATH_0008": "$\\Spec(k)$",
+        "MATH_0009": "$0$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0010": "$\\tau = \\etale$",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$f$",
+        "REF_0002": "\\ref{schemes-lemma-push-forward-quasi-coherent}",
+        "MATH_0013": "$f_{small, *}(\\mathcal{F}^a) = (f_*\\mathcal{F})^a$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0014": "$g : U \\to S$",
+        "MATH_0015": "$\\Gamma(U, g^*f_*\\mathcal{F}) = \\Gamma(U \\times_S T, (g')^*\\mathcal{F})$",
+        "MATH_0016": "$g' : U \\times_S T \\to T$",
+        "REF_0003": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03LC:proposition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\n<STRUCT_0002>\n<STRUCT_0003> The equivalences of categories of\nProposition <REF_0001>\nare compatible with pullback.\nMore precisely, we have <MATH_0002>\nfor any quasi-coherent sheaf <MATH_0003> on <MATH_0004>.\n<STRUCT_0004> The equivalences of categories of\nProposition <REF_0002> part (1)\nare <TEXTBFOPEN_0001>not<TEXTBFCLOSE_0001> compatible with pushforward in general.\n<STRUCT_0005> If <MATH_0005> is quasi-compact and quasi-separated, and\n<MATH_0006> then <MATH_0007> and <MATH_0008>\npreserve quasi-coherent sheaves and the diagram\n<MATH_0009>\nis commutative, i.e., <MATH_0010>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-equivalence-quasi-coherent-functorial}",
+        "MATH_0001": "$f : T \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "REF_0001": "\\ref{proposition-equivalence-quasi-coherent}",
+        "MATH_0002": "$f^*(\\mathcal{G}^a) = (f^*\\mathcal{G})^a$",
+        "MATH_0003": "$\\mathcal{G}$",
+        "MATH_0004": "$S$",
+        "STRUCT_0004": "\\item",
+        "REF_0002": "\\ref{proposition-equivalence-quasi-coherent}",
+        "TEXTBFOPEN_0001": "{\\bf ",
+        "TEXTBFCLOSE_0001": "}",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$\\tau \\in \\{Zariski, \\etale\\}$",
+        "MATH_0007": "$f_*$",
+        "MATH_0008": "$f_{small, *}$",
+        "MATH_0009": "$$\n\\xymatrix{\n\\QCoh(\\mathcal{O}_T)\n\\ar[rr]_{f_*} \\ar[d]_{\\mathcal{F} \\mapsto \\mathcal{F}^a} & &\n\\QCoh(\\mathcal{O}_S)\n\\ar[d]^{\\mathcal{G} \\mapsto \\mathcal{G}^a} \\\\\n\\QCoh(T_\\tau, \\mathcal{O}) \\ar[rr]^{f_{small, *}} & &\n\\QCoh(S_\\tau, \\mathcal{O})\n}\n$$",
+        "MATH_0010": "$f_{small, *}(\\mathcal{F}^a) = (f_*\\mathcal{F})^a$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:071N:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a quasi-compact and quasi-separated morphism of schemes.\nLet <MATH_0002> be a quasi-coherent sheaf on <MATH_0003>. For either the <ACCENT_0001>tale\nor Zariski topology, there are canonical isomorphisms\n<MATH_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-higher-direct-images-small-etale}",
+        "MATH_0001": "$f : T \\to S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$T$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0004": "$R^if_{small, *}(\\mathcal{F}^a) = (R^if_*\\mathcal{F})^a$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:071N:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe prove this for the <ACCENT_0001>tale topology; we omit the proof in the case\nof the Zariski topology. By Cohomology of Schemes, Lemma\n<REF_0001>\nthe sheaves <MATH_0001> are quasi-coherent so that the assertion\nmakes sense. The sheaf <MATH_0002> is the sheaf associated\nto the presheaf\n<MATH_0003>\nwhere <MATH_0004> is an object of <MATH_0005>, see\nCohomology on Sites, Lemma <REF_0002>.\nBy our conventions the right hand side is the <ACCENT_0002>tale\ncohomology of the restriction of <MATH_0006> to the localization\n<MATH_0007> which equals\n<MATH_0008>. By\nProposition <REF_0003>\nthis is presheaf the same as the presheaf\n<MATH_0009>\nwhere <MATH_0010> is the projection. If <MATH_0011> is affine\nthen this is the same as <MATH_0012>, see\nCohomology of Schemes, Lemma\n<REF_0004>.\nBy\nCohomology of Schemes, Lemma <REF_0005>\nthis is equal to <MATH_0013> which is the value\nof <MATH_0014> on <MATH_0015>.\nThus the values of the sheaves of modules\n<MATH_0016> and <MATH_0017>\non every affine object of <MATH_0018> are canonically isomorphic\nwhich implies they are canonically isomorphic.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "ACCENT_0001": "\\'e",
+        "REF_0001": "\\ref{coherent-lemma-quasi-coherence-higher-direct-images}",
+        "MATH_0001": "$R^if_*\\mathcal{F}$",
+        "MATH_0002": "$R^if_{small, *}\\mathcal{F}^a$",
+        "MATH_0003": "$$\nU \\longmapsto H^i(U \\times_S T, \\mathcal{F}^a)\n$$",
+        "MATH_0004": "$g : U \\to S$",
+        "MATH_0005": "$S_\\etale$",
+        "REF_0002": "\\ref{sites-cohomology-lemma-higher-direct-images}",
+        "ACCENT_0002": "\\'e",
+        "MATH_0006": "$\\mathcal{F}^a$",
+        "MATH_0007": "$T_\\etale/U \\times_S T$",
+        "MATH_0008": "$(U \\times_S T)_\\etale$",
+        "REF_0003": "\\ref{proposition-same-cohomology-quasi-coherent}",
+        "MATH_0009": "$$\nU \\longmapsto\nH^i(U \\times_S T, (g')^*\\mathcal{F}),\n$$",
+        "MATH_0010": "$g' : U \\times_S T \\to T$",
+        "MATH_0011": "$U$",
+        "MATH_0012": "$H^0(U, R^if'_*(g')^*\\mathcal{F})$",
+        "REF_0004": "\\ref{coherent-lemma-quasi-coherence-higher-direct-images-application}",
+        "REF_0005": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0013": "$H^0(U, g^*R^if_*\\mathcal{F})$",
+        "MATH_0014": "$(R^if_*\\mathcal{F})^a$",
+        "MATH_0015": "$U$",
+        "MATH_0016": "$R^if_{small, *}(\\mathcal{F}^a)$",
+        "MATH_0017": "$(R^if_*\\mathcal{F})^a$",
+        "MATH_0018": "$S_\\etale$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0GN9:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Quasi-coherent sheaves and topologies, II<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-quasi-coherent-sheaves-bis}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:coherent-lemma-flat-base-change-cohomology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Flat base change<ENVARGEND_0001>\n<LOCKED_0001>\nConsider a cartesian diagram of schemes\n<MATH_0001>\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module\nwith pullback <MATH_0004>.\nAssume that <MATH_0005> is flat and that <MATH_0006> is quasi-compact and quasi-separated.\nFor any <MATH_0007>\n<STRUCT_0002>\n<STRUCT_0003> the base change map of\nCohomology, Lemma <REF_0001>\nis an isomorphism\n<MATH_0008>\n<STRUCT_0004> if <MATH_0009> and <MATH_0010>, then\n<MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "LOCKED_0001": "\\label{lemma-flat-base-change-cohomology}",
+        "MATH_0001": "$$\n\\xymatrix{\nX' \\ar[d]_{f'} \\ar[r]_{g'} & X \\ar[d]^f \\\\\nS' \\ar[r]^g & S\n}\n$$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{F}' = (g')^*\\mathcal{F}$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$i \\geq 0$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "REF_0001": "\\ref{cohomology-lemma-base-change-map-flat-case}",
+        "MATH_0008": "$$\ng^*R^if_*\\mathcal{F} \\longrightarrow R^if'_*\\mathcal{F}',\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$S = \\Spec(A)$",
+        "MATH_0010": "$S' = \\Spec(B)$",
+        "MATH_0011": "$H^i(X, \\mathcal{F}) \\otimes_A B = H^i(X', \\mathcal{F}')$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-flat-base-change-cohomology",
+      "requested_tag": "02KH"
+    },
+    {
+      "context_id": "reference:coherent-lemma-quasi-coherence-higher-direct-images",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nAssume that <MATH_0002> is quasi-separated and quasi-compact.\n<STRUCT_0002>\n<STRUCT_0003> For any quasi-coherent <MATH_0003>-module <MATH_0004> the\nhigher direct images <MATH_0005> are quasi-coherent on <MATH_0006>.\n<STRUCT_0004> If <MATH_0007> is quasi-compact, there exists an integer <MATH_0008>\nsuch that <MATH_0009> for all <MATH_0010> and any\nquasi-coherent sheaf <MATH_0011> on <MATH_0012>.\n<STRUCT_0005> In fact, if <MATH_0013> is quasi-compact we can find <MATH_0014>\nsuch that for every\nmorphism of schemes <MATH_0015> we have <MATH_0016>\nfor <MATH_0017> and any quasi-coherent sheaf <MATH_0018>\non <MATH_0019>. Here <MATH_0020> is the base change of <MATH_0021>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-quasi-coherence-higher-direct-images}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$R^pf_*\\mathcal{F}$",
+        "MATH_0006": "$S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$n = n(X, S, f)$",
+        "MATH_0009": "$R^pf_*\\mathcal{F} = 0$",
+        "MATH_0010": "$p \\geq n$",
+        "MATH_0011": "$\\mathcal{F}$",
+        "MATH_0012": "$X$",
+        "STRUCT_0005": "\\item",
+        "MATH_0013": "$S$",
+        "MATH_0014": "$n = n(X, S, f)$",
+        "MATH_0015": "$S' \\to S$",
+        "MATH_0016": "$R^p(f')_*\\mathcal{F}' = 0$",
+        "MATH_0017": "$p \\geq n$",
+        "MATH_0018": "$\\mathcal{F}'$",
+        "MATH_0019": "$X'$",
+        "MATH_0020": "$f' : X' = S' \\times_S X \\to S'$",
+        "MATH_0021": "$f$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-quasi-coherence-higher-direct-images",
+      "requested_tag": "01XJ"
+    },
+    {
+      "context_id": "reference:coherent-lemma-quasi-coherence-higher-direct-images-application",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nAssume that <MATH_0002> is quasi-separated and quasi-compact.\nAssume <MATH_0003> is affine.\nFor any quasi-coherent <MATH_0004>-module <MATH_0005>\nwe have\n<MATH_0006>\nfor all <MATH_0007>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-quasi-coherence-higher-direct-images-application}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{O}_X$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$$\nH^q(X, \\mathcal{F}) = H^0(S, R^qf_*\\mathcal{F})\n$$",
+        "MATH_0007": "$q \\in \\mathbf{Z}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-quasi-coherence-higher-direct-images-application",
+      "requested_tag": "01XK"
+    },
+    {
+      "context_id": "reference:descent-proposition-equivalence-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> The functor <MATH_0003>\ndefines an equivalence of categories\n<MATH_0004>\nbetween the category of quasi-coherent sheaves on <MATH_0005> and the category\nof quasi-coherent <MATH_0006>-modules on the big <MATH_0007> site of <MATH_0008>.\n<STRUCT_0004> Let <MATH_0009> or <MATH_0010>.\nThe functor <MATH_0011>\ndefines an equivalence of categories\n<MATH_0012>\nbetween the category of quasi-coherent sheaves on <MATH_0013> and the category\nof quasi-coherent <MATH_0014>-modules on the small <MATH_0015> site of <MATH_0016>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-equivalence-quasi-coherent}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$\\mathcal{F} \\mapsto \\mathcal{F}^a$",
+        "MATH_0004": "$$\n\\QCoh(\\mathcal{O}_S)\n\\longrightarrow\n\\QCoh((\\Sch/S)_\\tau, \\mathcal{O})\n$$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$\\mathcal{O}$",
+        "MATH_0007": "$\\tau$",
+        "MATH_0008": "$S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$\\tau = Zariski$",
+        "MATH_0010": "$\\tau = \\etale$",
+        "MATH_0011": "$\\mathcal{F} \\mapsto \\mathcal{F}^a$",
+        "MATH_0012": "$$\n\\QCoh(\\mathcal{O}_S)\n\\longrightarrow\n\\QCoh(S_\\tau, \\mathcal{O})\n$$",
+        "MATH_0013": "$S$",
+        "MATH_0014": "$\\mathcal{O}$",
+        "MATH_0015": "$\\tau$",
+        "MATH_0016": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-proposition-equivalence-quasi-coherent",
+      "requested_tag": "03DX"
+    },
+    {
+      "context_id": "reference:descent-proposition-same-cohomology-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a quasi-coherent sheaf on <MATH_0003>.\nLet <MATH_0004>.\n<STRUCT_0002>\n<STRUCT_0003> There is a canonical isomorphism\n<MATH_0005>\n<STRUCT_0004> There are canonical isomorphisms\n<MATH_0006>\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-same-cohomology-quasi-coherent}",
+        "LOCKED_0002": "\\begin{slogan}\nCohomology of quasi-coherent sheaves is the same no matter which\ntopology you use.\n\\end{slogan}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\tau \\in \\{Zariski, \\linebreak[0] \\etale, \\linebreak[0]\nsmooth, \\linebreak[0] syntomic, \\linebreak[0] fppf\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$$\nH^q(S, \\mathcal{F}) = H^q((\\Sch/S)_\\tau, \\mathcal{F}^a).\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$$\nH^q(S, \\mathcal{F}) =\nH^q(S_{Zar}, \\mathcal{F}^a) =\nH^q(S_\\etale, \\mathcal{F}^a).\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-proposition-same-cohomology-quasi-coherent",
+      "requested_tag": "03DW"
+    },
+    {
+      "context_id": "reference:descent-remark-change-topologies-ringed-sites",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nRemark <REF_0001>\nand\nLemma <REF_0002>\nhave the following applications:\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a scheme.\nThe construction <MATH_0002> is\nthe pullback under the morphism of ringed sites\n<MATH_0003>\nor the morphism\n<MATH_0004>.\n<STRUCT_0004> Let <MATH_0005> be a morphism of schemes.\nFor any of the morphisms <MATH_0006> of ringed sites of\nRemark <REF_0003>\nwe have\n<MATH_0007>\nThis follows from (1) and the fact that pullbacks are compatible with\ncompositions of morphisms of ringed sites, see\nModules on Sites,\nLemma <REF_0004>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-change-topologies-ringed-sites}",
+        "REF_0001": "\\ref{remark-change-topologies-ringed}",
+        "REF_0002": "\\ref{lemma-compare-sites}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{F} \\mapsto \\mathcal{F}^a$",
+        "MATH_0003": "$\\text{id}_{\\tau, Zar} : ((\\Sch/S)_\\tau, \\mathcal{O})\n\\to (S_{Zar}, \\mathcal{O})$",
+        "MATH_0004": "$\\text{id}_{small, \\etale, Zar} :\n(S_\\etale, \\mathcal{O}) \\to (S_{Zar}, \\mathcal{O})$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$f_{sites}$",
+        "REF_0003": "\\ref{remark-change-topologies-ringed}",
+        "MATH_0007": "$$\n(f^*\\mathcal{F})^a = f_{sites}^*\\mathcal{F}^a.\n$$",
+        "REF_0004": "\\ref{sites-modules-lemma-push-pull-composition-modules}",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-remark-change-topologies-ringed-sites",
+      "requested_tag": "03FH"
+    },
+    {
+      "context_id": "reference:schemes-lemma-push-forward-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nIf <MATH_0002> is quasi-compact and quasi-separated then\n<MATH_0003> transforms quasi-coherent <MATH_0004>-modules\ninto quasi-coherent <MATH_0005>-modules.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-push-forward-quasi-coherent}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$f_*$",
+        "MATH_0004": "$\\mathcal{O}_X$",
+        "MATH_0005": "$\\mathcal{O}_S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-push-forward-quasi-coherent",
+      "requested_tag": "01LC"
+    },
+    {
+      "context_id": "reference:sites-cohomology-lemma-higher-direct-images",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of ringed sites\ncorresponding to the continuous functor <MATH_0002>.\nFor any <MATH_0003>\nthe sheaf <MATH_0004> is the sheaf associated to the\npresheaf\n<MATH_0005>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-higher-direct-images}",
+        "MATH_0001": "$f : (\\mathcal{C}, \\mathcal{O}_\\mathcal{C}) \\to\n(\\mathcal{D}, \\mathcal{O}_\\mathcal{D})$",
+        "MATH_0002": "$u : \\mathcal{D} \\to \\mathcal{C}$",
+        "MATH_0003": "$\\mathcal{F} \\in \\Ob(\\textit{Mod}(\\mathcal{O}_\\mathcal{C}))$",
+        "MATH_0004": "$R^if_*\\mathcal{F}$",
+        "MATH_0005": "$$\nV \\longmapsto H^i(u(V), \\mathcal{F})\n$$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "sites-cohomology-lemma-higher-direct-images",
+      "requested_tag": "072W"
+    }
+  ]
+}

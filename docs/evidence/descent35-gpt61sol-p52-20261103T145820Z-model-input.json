@@ -1,0 +1,189 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p52-20261103T145820Z.json",
+    "hash": "sha256:3c3e24456245dd37316d46df60604813edcc231afa10a3def0e07f183543da64"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02KO:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nWe say <MATH_0003> is <TEXTITOPEN_0001><MATH_0004> local on the base<TEXTITCLOSE_0001>, or\n<TEXTITOPEN_0002><MATH_0005> local on the target<TEXTITCLOSE_0002>, or\n<TEXTITOPEN_0003>local on the base for the <MATH_0006>-topology<TEXTITCLOSE_0003> if for any\n<MATH_0007>-covering <MATH_0008> (see\nTopologies, Section <REF_0001>)\nand any morphism of schemes <MATH_0009> over <MATH_0010> we\nhave\n<MATHSEG_0001> has <MATHSEG_0002>each <MATHSEG_0003> has <MATHSEG_0004>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, fppf, syntomic, smooth, \\etale, Zariski\\}$",
+        "MATH_0003": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0005": "$\\tau$",
+        "TEXTITCLOSE_0002": "}",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0006": "$\\tau$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0007": "$\\tau$",
+        "MATH_0008": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "REF_0001": "\\ref{topologies-section-procedure}",
+        "MATH_0009": "$f : X \\to Y$",
+        "MATH_0010": "$S$",
+        "MATHSEG_0001": "$$\nf \\text{",
+        "MATHSEG_0002": "}\\mathcal{P}\n\\Leftrightarrow\n\\text{",
+        "MATHSEG_0003": "}Y_i \\times_Y X \\to Y_i\\text{",
+        "MATHSEG_0004": "}\\mathcal{P}.\n$$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local on the base",
+          "projection_start": 118,
+          "projection_end": 135,
+          "concept": "local on the base",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "local on the target",
+          "projection_start": 152,
+          "projection_end": 171,
+          "concept": "local on the target",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "local on the base for the",
+          "projection_start": 176,
+          "projection_end": 201,
+          "concept": "local on the base for the",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 214,
+          "projection_end": 222,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 246,
+          "projection_end": 254,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 272,
+          "projection_end": 282,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 312,
+          "projection_end": 320,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 324,
+          "projection_end": 331,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:02KN:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nSuppose that <MATH_0001> is a morphism of schemes.\nLet <MATH_0002> be a morphism of schemes.\nLet <MATH_0003> be the base change of <MATH_0004> by <MATH_0005>:\n<MATH_0006>\nLet <MATH_0007> be a property of morphisms of schemes.\nThen we can wonder if (a) <MATH_0008>,\nand also whether the converse (b) <MATH_0009>\nis true. If (a) holds whenever <MATH_0010> is flat, then we say <MATH_0011>\nis preserved under flat base change. If (b) holds whenever <MATH_0012> is\nsurjective and flat, then we say <MATH_0013> descends through\nflat surjective base changes. If <MATH_0014> is preserved under\nflat base changes and descends through flat surjective base changes,\nthen we say <MATH_0015> is flat local on the target.\nCompare with the discussion in\nSection <REF_0001>.\nThis turns out to be a very important notion which\nwe formalize in the following definition.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$g : Y' \\to Y$",
+        "MATH_0003": "$f' : X' \\to Y'$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$$\n\\xymatrix{\nX' \\ar[d]_{f'} \\ar[r]_{g'} & X \\ar[d]^f \\\\\nY' \\ar[r]^g & Y\n}\n$$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$\\mathcal{P}(f) \\Rightarrow \\mathcal{P}(f')$",
+        "MATH_0009": "$\\mathcal{P}(f') \\Rightarrow \\mathcal{P}(f)$",
+        "MATH_0010": "$g$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$g$",
+        "MATH_0013": "$\\mathcal{P}$",
+        "MATH_0014": "$\\mathcal{P}$",
+        "MATH_0015": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{section-descending-properties}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02KN:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo be sure, since isomorphisms are always coverings\nwe see (or require) that property <MATH_0001> holds for <MATH_0002>\nif and only if it holds for any arrow <MATH_0003> isomorphic to <MATH_0004>.\nIf a property is <MATH_0005>-local on the target then it is preserved\nby base changes by morphisms which occur in <MATH_0006>-coverings. Here\nis a formal statement.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$X \\to Y$",
+        "MATH_0003": "$X' \\to Y'$",
+        "MATH_0004": "$X \\to Y$",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\tau$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:topologies-section-procedure",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>The general procedure<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-procedure}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-section-procedure",
+      "requested_tag": "020M"
+    }
+  ]
+}

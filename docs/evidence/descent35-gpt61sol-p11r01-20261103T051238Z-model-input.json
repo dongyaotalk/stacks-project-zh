@@ -1,0 +1,3254 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19f9d-a472-7af0-b64c-88e5a839ff35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p11r01-20261103T051238Z.json",
+    "hash": "sha256:3cfeb701acbf36289c86130b193bb0579b9b070379adb995195e0f25aa8d8c2a"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02W1:title",
+      "source_text": "Descending types of morphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 20,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W1:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn the following we study the question as to whether\ndescent data for schemes relative to a fpqc-covering\nare effective. The first remark to make is that this\nis not always the case. We will see this in Algebraic\nSpaces, Example <REF_0001>.\nEven projective morphisms do not always satisfy descent\nfor fpqc-coverings, by Examples,\nLemma <REF_0002>.\n\n<STRUCT_0002><STRUCT_0003>\nOn the other hand, if the schemes we are trying to\ndescend are particularly simple, then it is sometime the\ncase that for whole classes of schemes descent data\nare effective. We will introduce terminology here that\ndescribes this phenomenon abstractly, even though it\nmay lead to confusion if not used correctly later on.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{spaces-example-non-representable-descent}",
+        "REF_0002": "\\ref{examples-lemma-non-effective-descent-projective}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 67,
+          "projection_end": 74,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 84,
+          "projection_end": 91,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 111,
+          "projection_end": 119,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebraic Spaces",
+          "projection_start": 217,
+          "projection_end": 233,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "projective",
+          "projection_start": 260,
+          "projection_end": 270,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 271,
+          "projection_end": 280,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 303,
+          "projection_end": 310,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 320,
+          "projection_end": 329,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 415,
+          "projection_end": 422,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "classes",
+          "projection_start": 517,
+          "projection_end": 524,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 528,
+          "projection_end": 535,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 536,
+          "projection_end": 543,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W2:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nWe say\n<TEXTITOPEN_0001>morphisms of type <MATH_0003> satisfy descent for <MATH_0004>-coverings<TEXTITCLOSE_0001>\nif for\nany <MATH_0005>-covering <MATH_0006>\n(see Topologies, Section <REF_0001>),\nany descent datum <MATH_0007> relative to <MATH_0008>\nsuch that each morphism <MATH_0009> has property <MATH_0010>\nis effective.\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, fpqc, fppf, \\etale, smooth, syntomic\\}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0003": "$\\mathcal{P}$",
+        "MATH_0004": "$\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\mathcal{U} : \\{U_i \\to S\\}_{i \\in I}$",
+        "REF_0001": "\\ref{topologies-section-procedure}",
+        "MATH_0007": "$(X_i, \\varphi_{ij})$",
+        "MATH_0008": "$\\mathcal{U}$",
+        "MATH_0009": "$X_i \\to U_i$",
+        "MATH_0010": "$\\mathcal{P}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms of type",
+          "projection_start": 91,
+          "projection_end": 108,
+          "concept": "morphisms of type",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "satisfy descent for",
+          "projection_start": 121,
+          "projection_end": 140,
+          "concept": "satisfy descent for",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 153,
+          "projection_end": 162,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 186,
+          "projection_end": 194,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 212,
+          "projection_end": 222,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 249,
+          "projection_end": 256,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 314,
+          "projection_end": 322,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W1:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nNote that in each of the cases we have already seen that\nthe functor from schemes over <MATH_0001> to descent data over\n<MATH_0002> is fully faithful\n(Lemma <REF_0001> combined\nwith the results in Topologies that any <MATH_0003>-covering\nis also a fpqc-covering).\nWe have also seen that descent data are always effective with\nrespect to Zariski coverings\n(Lemma <REF_0002>).\nIt may be prudent to only study the notion just introduced\nwhen <MATH_0004> is either stable under any base change or at least\nlocal on the base in the <MATH_0005>-topology\n(see Definition <REF_0003>)\nin order to avoid erroneous arguments (relying on <MATH_0006>\nwhen descending halfway).\n\n<STRUCT_0002><STRUCT_0003>\nHere is the obligatory lemma reducing this question\nto the case of a covering given by a single morphism of affines.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U}$",
+        "REF_0001": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0003": "$\\tau$",
+        "REF_0002": "\\ref{lemma-Zariski-refinement-coverings-equivalence}",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$\\tau$",
+        "REF_0003": "\\ref{definition-property-morphisms-local}",
+        "MATH_0006": "$\\mathcal{P}$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 75,
+          "projection_end": 82,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 88,
+          "projection_end": 95,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 116,
+          "projection_end": 123,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 149,
+          "projection_end": 163,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 211,
+          "projection_end": 221,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 243,
+          "projection_end": 251,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 267,
+          "projection_end": 275,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 301,
+          "projection_end": 308,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 359,
+          "projection_end": 368,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 492,
+          "projection_end": 503,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 553,
+          "projection_end": 561,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 774,
+          "projection_end": 782,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 801,
+          "projection_end": 809,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 813,
+          "projection_end": 820,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W3:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nSuppose that\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0003> is stable under any base change\n(see Schemes, Definition <REF_0001>),\n<STRUCT_0003> if <MATH_0004>, <MATH_0005> have <MATH_0006>,\nthen so does <MATH_0007>, and\n<STRUCT_0004> for any surjective morphism of affines\n<MATH_0008> which is flat, flat of finite presentation,\n<ACCENT_0001>tale, smooth or syntomic depending on whether <MATH_0009> is\nfpqc, fppf, <ACCENT_0002>tale, smooth, or syntomic,\nany descent datum <MATH_0010> relative\nto <MATH_0011> over <MATH_0012> such that <MATH_0013> holds for\n<MATH_0014> is effective.\n<STRUCT_0005>\nThen morphisms of type <MATH_0015> satisfy descent for <MATH_0016>-coverings.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, fppf, \\etale, smooth, syntomic\\}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0003": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{schemes-definition-preserved-by-base-change}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$Y_j \\to V_j$",
+        "MATH_0005": "$j = 1, \\ldots, m$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "MATH_0007": "$\\coprod Y_j \\to \\coprod V_j$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$X \\to S$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0009": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0010": "$(V, \\varphi)$",
+        "MATH_0011": "$X$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$\\mathcal{P}$",
+        "MATH_0014": "$V \\to X$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0015": "$\\mathcal{P}$",
+        "MATH_0016": "$\\tau$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 157,
+          "projection_end": 168,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 174,
+          "projection_end": 181,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 319,
+          "projection_end": 329,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 330,
+          "projection_end": 338,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 342,
+          "projection_end": 349,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 371,
+          "projection_end": 375,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 377,
+          "projection_end": 381,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 385,
+          "projection_end": 404,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 406,
+          "projection_end": 411,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 413,
+          "projection_end": 419,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 480,
+          "projection_end": 485,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 487,
+          "projection_end": 493,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 512,
+          "projection_end": 519,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 656,
+          "projection_end": 665,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 694,
+          "projection_end": 701,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 718,
+          "projection_end": 727,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02W3:proof",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002>\nbe a <MATH_0003>-covering of <MATH_0004>.\nLet <MATH_0005> be a descent datum relative to\n<MATH_0006> and assume that each morphism <MATH_0007> has property\n<MATH_0008>. We have to show there exists a scheme <MATH_0009> such that\n<MATH_0010>.\n\n<STRUCT_0001><STRUCT_0002>\nBefore we start the proof proper we remark that for any\nfamily of morphisms <MATH_0011> and any\nmorphism of families <MATH_0012>, if we pullback\nthe descent datum <MATH_0013> to a descent datum\n<MATH_0014> over <MATH_0015>, then each of the\nmorphisms <MATH_0016> has property <MATH_0017> also.\nThis is true because of assumption (1) that <MATH_0018> is stable\nunder any base change and the definition of pullback\n(see Definition <REF_0001>).\nWe will use this without further mention.\n\n<STRUCT_0003><STRUCT_0004>\nFirst, let us prove the lemma when <MATH_0019> is affine.\nBy Topologies, Lemma\n<REF_0002>,\n<REF_0003>,\n<REF_0004>,\n<REF_0005>, or\n<REF_0006>\nthere exists a standard <MATH_0020>-covering\n<MATH_0021>\nwhich refines <MATH_0022>. The pullback functor\n<MATH_0023>\nbetween categories of descent data is fully faithful\nby Lemma <REF_0007>.\nHence it suffices to prove that the descent datum over\nthe standard <MATH_0024>-covering <MATH_0025> is effective.\nBy assumption (2) we see that <MATH_0026>\nhas property <MATH_0027>.\nBy Lemma <REF_0008> this reduces us to the covering\n<MATH_0028> for which we have\nassumed the result in assumption (3) of the lemma.\nHence the lemma holds when <MATH_0029> is affine.\n\n<STRUCT_0005><STRUCT_0006>\nAssume <MATH_0030> is general. Let <MATH_0031> be an affine open.\nBy the properties of site the family\n<MATH_0032> is a\n<MATH_0033>-covering of <MATH_0034>. Denote\n<MATH_0035> the restriction (or pullback) of\nthe given descent datum to <MATH_0036>.\nHence by what we just saw we obtain a scheme <MATH_0037> over <MATH_0038>\nwhose canonical descent datum with respect to\n<MATH_0039> is isomorphic to <MATH_0040>.\nSuppose that <MATH_0041> is an affine open of <MATH_0042>.\nThen both <MATH_0043> and <MATH_0044> have canonical\ndescent data isomorphic to <MATH_0045>.\nHence, by Lemma <REF_0009>\nagain we obtain a canonical morphism\n<MATH_0046> over <MATH_0047> which identifies\n<MATH_0048> with the inverse image of <MATH_0049> in <MATH_0050>.\nWe omit the verification that given affine opens\n<MATH_0051> of <MATH_0052> we have\n<MATH_0053>.\n\n<STRUCT_0007><STRUCT_0008>\nBy Constructions, Lemma <REF_0010> the data\n<MATH_0054> glue to a scheme <MATH_0055>.\nMoreover, we are given isomorphisms <MATH_0056>\nwhich recover the maps <MATH_0057>. Unwinding the construction\nof the schemes <MATH_0058> we obtain isomorphisms\n<MATH_0059>\ncompatible with the maps <MATH_0060> and compatible with\nrestricting to smaller affine opens in <MATH_0061>. This implies that\nthe canonical descent datum on <MATH_0062> is isomorphic\nto the given descent datum and we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{\\varphi_i : U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\tau$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$(X_i, \\varphi_{ii'})$",
+        "MATH_0006": "$\\mathcal{U}$",
+        "MATH_0007": "$X_i \\to U_i$",
+        "MATH_0008": "$\\mathcal{P}$",
+        "MATH_0009": "$X \\to S$",
+        "MATH_0010": "$(X_i, \\varphi_{ii'}) \\cong (U_i \\times_S X, can)$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0011": "$\\mathcal{V} : \\{V_j \\to S\\}$",
+        "MATH_0012": "$\\mathcal{V} \\to \\mathcal{U}$",
+        "MATH_0013": "$(X_i, \\varphi_{ii'})$",
+        "MATH_0014": "$(Y_j, \\varphi_{jj'})$",
+        "MATH_0015": "$\\mathcal{V}$",
+        "MATH_0016": "$Y_j \\to V_j$",
+        "MATH_0017": "$\\mathcal{P}$",
+        "MATH_0018": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{definition-pullback-functor-family}",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0019": "$S$",
+        "REF_0002": "\\ref{topologies-lemma-fpqc-affine}",
+        "REF_0003": "\\ref{topologies-lemma-fppf-affine}",
+        "REF_0004": "\\ref{topologies-lemma-etale-affine}",
+        "REF_0005": "\\ref{topologies-lemma-smooth-affine}",
+        "REF_0006": "\\ref{topologies-lemma-syntomic-affine}",
+        "MATH_0020": "$\\tau$",
+        "MATH_0021": "$\\mathcal{V} : \\{V_j \\to S\\}_{j = 1, \\ldots, m}$",
+        "MATH_0022": "$\\mathcal{U}$",
+        "MATH_0023": "$DD(\\mathcal{U}) \\to DD(\\mathcal{V})$",
+        "REF_0007": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0024": "$\\tau$",
+        "MATH_0025": "$\\mathcal{V}$",
+        "MATH_0026": "$\\coprod Y_j \\to \\coprod V_j$",
+        "MATH_0027": "$\\mathcal{P}$",
+        "REF_0008": "\\ref{lemma-family-is-one}",
+        "MATH_0028": "$\\{\\coprod_{j = 1, \\ldots, m} V_j \\to S\\}$",
+        "MATH_0029": "$S$",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0030": "$S$",
+        "MATH_0031": "$V \\subset S$",
+        "MATH_0032": "$\\mathcal{U}_V = \\{V \\times_S U_i \\to V\\}_{i \\in I}$",
+        "MATH_0033": "$\\tau$",
+        "MATH_0034": "$V$",
+        "MATH_0035": "$(X_i, \\varphi_{ii'})_V$",
+        "MATH_0036": "$\\mathcal{U}_V$",
+        "MATH_0037": "$X_V$",
+        "MATH_0038": "$V$",
+        "MATH_0039": "$\\mathcal{U}_V$",
+        "MATH_0040": "$(X_i, \\varphi_{ii'})_V$",
+        "MATH_0041": "$V' \\subset V$",
+        "MATH_0042": "$V$",
+        "MATH_0043": "$X_{V'}$",
+        "MATH_0044": "$V' \\times_V X_V$",
+        "MATH_0045": "$(X_i, \\varphi_{ii'})_{V'}$",
+        "REF_0009": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0046": "$\\rho^V_{V'} : X_{V'} \\to X_V$",
+        "MATH_0047": "$S$",
+        "MATH_0048": "$X_{V'}$",
+        "MATH_0049": "$V'$",
+        "MATH_0050": "$X_V$",
+        "MATH_0051": "$V'' \\subset V' \\subset V$",
+        "MATH_0052": "$S$",
+        "MATH_0053": "$\\rho^V_{V''} = \\rho^V_{V'} \\circ \\rho^{V'}_{V''}$",
+        "STRUCT_0007": "\\medskip",
+        "STRUCT_0008": "\\noindent",
+        "REF_0010": "\\ref{constructions-lemma-relative-glueing}",
+        "MATH_0054": "$(X_V, \\rho^V_{V'})$",
+        "MATH_0055": "$X \\to S$",
+        "MATH_0056": "$V \\times_S X \\to X_V$",
+        "MATH_0057": "$\\rho^V_{V'}$",
+        "MATH_0058": "$X_V$",
+        "MATH_0059": "$$\nV \\times_S U_i \\times_S X\n\\longrightarrow\nV \\times_S X_i\n$$",
+        "MATH_0060": "$\\varphi_{ii'}$",
+        "MATH_0061": "$X$",
+        "MATH_0062": "$U_i \\times_S X$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 62,
+          "projection_end": 70,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 108,
+          "projection_end": 115,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 167,
+          "projection_end": 175,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 245,
+          "projection_end": 251,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 340,
+          "projection_end": 346,
+          "concept": "proper",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 370,
+          "projection_end": 389,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 410,
+          "projection_end": 418,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 450,
+          "projection_end": 458,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 463,
+          "projection_end": 470,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 494,
+          "projection_end": 501,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 555,
+          "projection_end": 564,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 684,
+          "projection_end": 695,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 718,
+          "projection_end": 726,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 875,
+          "projection_end": 881,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 886,
+          "projection_end": 896,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1002,
+          "projection_end": 1010,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 1054,
+          "projection_end": 1062,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1063,
+          "projection_end": 1070,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 1091,
+          "projection_end": 1101,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1105,
+          "projection_end": 1112,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 1121,
+          "projection_end": 1135,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1193,
+          "projection_end": 1200,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1237,
+          "projection_end": 1245,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1383,
+          "projection_end": 1391,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 1515,
+          "projection_end": 1521,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1603,
+          "projection_end": 1614,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 1637,
+          "projection_end": 1641,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1682,
+          "projection_end": 1690,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 1746,
+          "projection_end": 1754,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1769,
+          "projection_end": 1776,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 1837,
+          "projection_end": 1843,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1879,
+          "projection_end": 1888,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1889,
+          "projection_end": 1896,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1934,
+          "projection_end": 1944,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 1992,
+          "projection_end": 2003,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 2063,
+          "projection_end": 2072,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 2073,
+          "projection_end": 2080,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 2086,
+          "projection_end": 2096,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical morphism",
+          "projection_start": 2158,
+          "projection_end": 2176,
+          "concept": "source-phrase-canonical-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 2244,
+          "projection_end": 2251,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 2252,
+          "projection_end": 2257,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 2325,
+          "projection_end": 2337,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 2479,
+          "projection_end": 2485,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 2522,
+          "projection_end": 2534,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2565,
+          "projection_end": 2569,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 2617,
+          "projection_end": 2624,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 2647,
+          "projection_end": 2659,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2692,
+          "projection_end": 2696,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine opens",
+          "projection_start": 2752,
+          "projection_end": 2764,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 2803,
+          "projection_end": 2812,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 2813,
+          "projection_end": 2820,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 2845,
+          "projection_end": 2855,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 2869,
+          "projection_end": 2876,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0244:title",
+      "source_text": "Descending affine morphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 11,
+          "projection_end": 17,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 18,
+          "projection_end": 27,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0244:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we show that\n``affine morphisms satisfy descent for fpqc-coverings''.\nHere is the formal statement.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 45,
+          "projection_end": 51,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 52,
+          "projection_end": 61,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 70,
+          "projection_end": 77,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 87,
+          "projection_end": 96,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0245:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nLet <MATH_0003> be a descent datum\nrelative to <MATH_0004>. If each morphism\n<MATH_0005> is affine, then the descent datum is\neffective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i\\in I}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$(V_i/X_i, \\varphi_{ij})$",
+        "MATH_0004": "$\\{X_i \\to S\\}$",
+        "MATH_0005": "$V_i \\to X_i$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 51,
+          "projection_end": 64,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 70,
+          "projection_end": 80,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 126,
+          "projection_end": 133,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 173,
+          "projection_end": 181,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 197,
+          "projection_end": 203,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 214,
+          "projection_end": 221,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0245:proof",
+      "source_text": "Being affine is a property of morphisms of schemes\nwhich is local on the base and preserved under any base change, see\nMorphisms, Lemmas <REF_0001> and\n<REF_0002>.\nHence Lemma <REF_0003> applies\nand it suffices to prove the statement of the lemma\nin case the fpqc-covering is given by a single\n<MATH_0001> flat surjective morphism of affines.\nSay <MATH_0002> and <MATH_0003> so\nthat <MATH_0004> is a faithfully flat ring map.\nLet <MATH_0005> be a descent datum relative to <MATH_0006> over <MATH_0007>\nand assume that <MATH_0008> is affine.\nThen <MATH_0009> being affine implies that <MATH_0010>\nfor some <MATH_0011>-algebra <MATH_0012> (see\nMorphisms, Definition <REF_0004>).\nThe isomorphism <MATH_0013> corresponds to an isomorphism\nof rings\n<MATH_0014>\nas <MATH_0015>-algebras. The cocycle condition on <MATH_0016>\nsays that\n<MATH_0017>\nis commutative. Inverting these arrows we see that we have a\ndescent datum for modules with respect to <MATH_0018> as in\nDefinition <REF_0005>.\nHence we may apply Proposition <REF_0006>\nto obtain an <MATH_0019>-module\n<MATH_0020>\nand an isomorphism <MATH_0021>\nrespecting descent data. Given any pair <MATH_0022>\nthe product <MATH_0023> in <MATH_0024> lies in <MATH_0025> since the\nmap <MATH_0026> is an algebra homomorphism. Hence\n<MATH_0027> is an <MATH_0028>-algebra whose base change to <MATH_0029> is\nisomorphic to <MATH_0030> compatibly with descent data.\nApplying <MATH_0031> we obtain a scheme\n<MATH_0032> over <MATH_0033> such that <MATH_0034>\nas desired.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-characterize-affine}",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-affine}",
+        "REF_0003": "\\ref{lemma-descending-types-morphisms}",
+        "MATH_0001": "$\\{X \\to S\\}$",
+        "MATH_0002": "$X = \\Spec(A)$",
+        "MATH_0003": "$S = \\Spec(R)$",
+        "MATH_0004": "$R \\to A$",
+        "MATH_0005": "$(V, \\varphi)$",
+        "MATH_0006": "$X$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$V \\to X$",
+        "MATH_0009": "$V \\to X$",
+        "MATH_0010": "$V = \\Spec(B)$",
+        "MATH_0011": "$A$",
+        "MATH_0012": "$B$",
+        "REF_0004": "\\ref{morphisms-definition-affine}",
+        "MATH_0013": "$\\varphi$",
+        "MATH_0014": "$$\n\\varphi^\\sharp :\nB \\otimes_R A \\longleftarrow A \\otimes_R B\n$$",
+        "MATH_0015": "$A \\otimes_R A$",
+        "MATH_0016": "$\\varphi$",
+        "MATH_0017": "$$\n\\xymatrix{\nB \\otimes_R A \\otimes_R A & &\nA \\otimes_R A \\otimes_R B \\ar[ll] \\ar[ld]\\\\\n& A \\otimes_R B \\otimes_R A \\ar[lu] &\n}\n$$",
+        "MATH_0018": "$R \\to A$",
+        "REF_0005": "\\ref{definition-descent-datum-modules}",
+        "REF_0006": "\\ref{proposition-descent-module}",
+        "MATH_0019": "$R$",
+        "MATH_0020": "$C = \\Ker(B \\to A \\otimes_R B)$",
+        "MATH_0021": "$A \\otimes_R C \\cong B$",
+        "MATH_0022": "$c, c' \\in C$",
+        "MATH_0023": "$cc'$",
+        "MATH_0024": "$B$",
+        "MATH_0025": "$C$",
+        "MATH_0026": "$\\varphi$",
+        "MATH_0027": "$C$",
+        "MATH_0028": "$R$",
+        "MATH_0029": "$A$",
+        "MATH_0030": "$B$",
+        "MATH_0031": "$\\Spec$",
+        "MATH_0032": "$U$",
+        "MATH_0033": "$S$",
+        "MATH_0034": "$(V, \\varphi) \\cong (X \\times_S U, can)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "affine",
+          "projection_start": 6,
+          "projection_end": 12,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 30,
+          "projection_end": 39,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 43,
+          "projection_end": 50,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 102,
+          "projection_end": 113,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 119,
+          "projection_end": 128,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 264,
+          "projection_end": 272,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 306,
+          "projection_end": 310,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 311,
+          "projection_end": 321,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 322,
+          "projection_end": 330,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 334,
+          "projection_end": 341,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 400,
+          "projection_end": 415,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 416,
+          "projection_end": 424,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 447,
+          "projection_end": 454,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 533,
+          "projection_end": 539,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 564,
+          "projection_end": 570,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 617,
+          "projection_end": 624,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 642,
+          "projection_end": 651,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 681,
+          "projection_end": 692,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 723,
+          "projection_end": 734,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "rings",
+          "projection_start": 738,
+          "projection_end": 743,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 771,
+          "projection_end": 779,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 843,
+          "projection_end": 854,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 901,
+          "projection_end": 908,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 919,
+          "projection_end": 926,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1051,
+          "projection_end": 1057,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1077,
+          "projection_end": 1088,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1112,
+          "projection_end": 1119,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "product",
+          "projection_start": 1157,
+          "projection_end": 1164,
+          "concept": "product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1222,
+          "projection_end": 1225,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra homomorphism",
+          "projection_start": 1244,
+          "projection_end": 1264,
+          "concept": "source-phrase-algebra-homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1302,
+          "projection_end": 1309,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 1316,
+          "projection_end": 1327,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1346,
+          "projection_end": 1356,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1388,
+          "projection_end": 1395,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 1435,
+          "projection_end": 1441,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03I0:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nLet <MATH_0003> be a descent datum\nrelative to <MATH_0004>. If each morphism\n<MATH_0005> is a closed immersion, then the descent datum is\neffective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i\\in I}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$(V_i/X_i, \\varphi_{ij})$",
+        "MATH_0004": "$\\{X_i \\to S\\}$",
+        "MATH_0005": "$V_i \\to X_i$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 51,
+          "projection_end": 64,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 70,
+          "projection_end": 80,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 126,
+          "projection_end": 133,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 173,
+          "projection_end": 181,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed immersion",
+          "projection_start": 199,
+          "projection_end": 215,
+          "concept": "closed-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 226,
+          "projection_end": 233,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:03I0:proof",
+      "source_text": "This is true because a closed immersion is an affine morphism\n(Morphisms, Lemma <REF_0001>),\nand hence Lemma <REF_0002> applies.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-closed-immersion-affine}",
+        "REF_0002": "\\ref{lemma-affine}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "closed immersion",
+          "projection_start": 23,
+          "projection_end": 39,
+          "concept": "closed-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 46,
+          "projection_end": 52,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 53,
+          "projection_end": 61,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 63,
+          "projection_end": 72,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0246:title",
+      "source_text": "Descending quasi-affine morphisms",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "quasi-affine",
+          "projection_start": 11,
+          "projection_end": 23,
+          "concept": "hyphen-quasi-affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 24,
+          "projection_end": 33,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0246:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we show that\n``quasi-affine morphisms satisfy descent for fpqc-coverings''.\nHere is the formal statement.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-affine",
+          "projection_start": 45,
+          "projection_end": 57,
+          "concept": "hyphen-quasi-affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 58,
+          "projection_end": 67,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 76,
+          "projection_end": 83,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coverings",
+          "projection_start": 93,
+          "projection_end": 102,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0247:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nLet <MATH_0003> be a descent datum\nrelative to <MATH_0004>. If each morphism\n<MATH_0005> is quasi-affine, then the descent datum is\neffective.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i\\in I}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$(V_i/X_i, \\varphi_{ij})$",
+        "MATH_0004": "$\\{X_i \\to S\\}$",
+        "MATH_0005": "$V_i \\to X_i$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 51,
+          "projection_end": 64,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 70,
+          "projection_end": 80,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 126,
+          "projection_end": 133,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 173,
+          "projection_end": 181,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-affine",
+          "projection_start": 197,
+          "projection_end": 209,
+          "concept": "hyphen-quasi-affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 220,
+          "projection_end": 227,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0247:proof",
+      "source_text": "Being quasi-affine is a property of morphisms of schemes\nwhich is preserved under any base change, see\nMorphisms, Lemmas <REF_0001> and\n<REF_0002>.\nHence Lemma <REF_0003> applies\nand it suffices to prove the statement of the lemma\nin case the fpqc-covering is given by a single\n<MATH_0001> flat surjective morphism of affines.\nSay <MATH_0002> and <MATH_0003> so\nthat <MATH_0004> is a faithfully flat ring map.\nLet <MATH_0005> be a descent datum relative to <MATH_0006> over <MATH_0007>\nand assume that <MATH_0008> is quasi-affine.\n\n<STRUCT_0001><STRUCT_0002>\nAccording to Morphisms, Lemma <REF_0004>\nthis means that\n<MATH_0009>\nis a quasi-compact open immersion of schemes over <MATH_0010>.\nThe projections <MATH_0011> are flat\nand hence we have\n<MATH_0012>\nby flat base change\n(Cohomology of Schemes, Lemma <REF_0005>).\nThus the isomorphism <MATH_0013> (which\nis an isomorphism over <MATH_0014>) induces an isomorphism\nof quasi-coherent sheaves of algebras\n<MATH_0015>\non <MATH_0016>.\nThe cocycle condition for <MATH_0017> implies the cocycle condition\nfor <MATH_0018>. Another way to say this is that it produces\na descent datum <MATH_0019> on the affine scheme <MATH_0020> relative to\n<MATH_0021> over <MATH_0022>, which moreover has the property that the morphism\n<MATH_0023> is a morphism of descent data.\nHence by Lemma <REF_0006>\n(or by effectivity of descent for quasi-coherent\nalgebras) we obtain a scheme <MATH_0024> with an isomorphism\n<MATH_0025> of descent data.\nWe note in passing that <MATH_0026> is affine by\nLemma <REF_0007>.\n\n<STRUCT_0003><STRUCT_0004>\nAnd now we can think of <MATH_0027> as a (quasi-compact)\nopen <MATH_0028> with the property that\nit is stable under the descent datum\n<MATH_0029>\nIn other words <MATH_0030>\nfor any <MATH_0031> mapping to the same point of <MATH_0032>.\nBecause <MATH_0033> is surjective we immediately find that\n<MATH_0034> is the inverse image of a subset <MATH_0035> under\nthe morphism <MATH_0036>.\nBecause <MATH_0037> is quasi-compact, flat and surjective\nalso <MATH_0038> is quasi-compact flat and surjective.\nHence by Morphisms, Lemma <REF_0008>\nthis subset <MATH_0039> is open and we win.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-characterize-quasi-affine}",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-quasi-affine}",
+        "REF_0003": "\\ref{lemma-descending-types-morphisms}",
+        "MATH_0001": "$\\{X \\to S\\}$",
+        "MATH_0002": "$X = \\Spec(A)$",
+        "MATH_0003": "$S = \\Spec(R)$",
+        "MATH_0004": "$R \\to A$",
+        "MATH_0005": "$(V, \\varphi)$",
+        "MATH_0006": "$X$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$\\pi : V \\to X$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0004": "\\ref{morphisms-lemma-characterize-quasi-affine}",
+        "MATH_0009": "$$\nV \\longrightarrow \\underline{\\Spec}_X(\\pi_*\\mathcal{O}_V) = W\n$$",
+        "MATH_0010": "$X$",
+        "MATH_0011": "$\\text{pr}_i : X \\times_S X \\to X$",
+        "MATH_0012": "$$\n\\text{pr}_0^*\\pi_*\\mathcal{O}_V =\n(\\pi \\times \\text{id}_X)_*\\mathcal{O}_{V \\times_S X}, \\quad\n\\text{pr}_1^*\\pi_*\\mathcal{O}_V =\n(\\text{id}_X \\times \\pi)_*\\mathcal{O}_{X \\times_S V}\n$$",
+        "REF_0005": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0013": "$\\varphi : V \\times_S X \\to X \\times_S V$",
+        "MATH_0014": "$X \\times_S X$",
+        "MATH_0015": "$$\n\\varphi^\\sharp :\n\\text{pr}_0^*\\pi_*\\mathcal{O}_V\n\\longrightarrow\n\\text{pr}_1^*\\pi_*\\mathcal{O}_V\n$$",
+        "MATH_0016": "$X \\times_S X$",
+        "MATH_0017": "$\\varphi$",
+        "MATH_0018": "$\\varphi^\\sharp$",
+        "MATH_0019": "$\\varphi'$",
+        "MATH_0020": "$W$",
+        "MATH_0021": "$X$",
+        "MATH_0022": "$S$",
+        "MATH_0023": "$V \\to W$",
+        "REF_0006": "\\ref{lemma-affine}",
+        "MATH_0024": "$U' \\to S$",
+        "MATH_0025": "$(W, \\varphi') \\cong (X \\times_S U', can)$",
+        "MATH_0026": "$U'$",
+        "REF_0007": "\\ref{lemma-descending-property-affine}",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0027": "$V$",
+        "MATH_0028": "$V \\subset X \\times_S U'$",
+        "MATH_0029": "$$\ncan : X \\times_S U' \\times_S X \\to X \\times_S X \\times_S U',\n(x_0, u', x_1) \\mapsto (x_0, x_1, u').\n$$",
+        "MATH_0030": "$(x_0, u') \\in V \\Rightarrow (x_1, u') \\in V$",
+        "MATH_0031": "$x_0, x_1, u'$",
+        "MATH_0032": "$S$",
+        "MATH_0033": "$X \\to S$",
+        "MATH_0034": "$V$",
+        "MATH_0035": "$U \\subset U'$",
+        "MATH_0036": "$X \\times_S U' \\to U'$",
+        "MATH_0037": "$X \\to S$",
+        "MATH_0038": "$X \\times_S U' \\to U'$",
+        "REF_0008": "\\ref{morphisms-lemma-fpqc-quotient-topology}",
+        "MATH_0039": "$U \\subset U'$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-affine",
+          "projection_start": 6,
+          "projection_end": 18,
+          "concept": "hyphen-quasi-affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 36,
+          "projection_end": 45,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 49,
+          "projection_end": 56,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 86,
+          "projection_end": 97,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 103,
+          "projection_end": 112,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 248,
+          "projection_end": 256,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 290,
+          "projection_end": 294,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 295,
+          "projection_end": 305,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 306,
+          "projection_end": 314,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affines",
+          "projection_start": 318,
+          "projection_end": 325,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 384,
+          "projection_end": 399,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 400,
+          "projection_end": 408,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 431,
+          "projection_end": 438,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-affine",
+          "projection_start": 517,
+          "projection_end": 529,
+          "concept": "hyphen-quasi-affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 571,
+          "projection_end": 580,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact open",
+          "projection_start": 632,
+          "projection_end": 650,
+          "concept": "source-phrase-quasi-compact-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 651,
+          "projection_end": 660,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 664,
+          "projection_end": 671,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 722,
+          "projection_end": 726,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 760,
+          "projection_end": 764,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 765,
+          "projection_end": 776,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Cohomology of Schemes",
+          "projection_start": 778,
+          "projection_end": 799,
+          "concept": "source-phrase-cohomology-of-schemes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 829,
+          "projection_end": 840,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 866,
+          "projection_end": 877,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 907,
+          "projection_end": 918,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 922,
+          "projection_end": 944,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 948,
+          "projection_end": 956,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1116,
+          "projection_end": 1123,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine scheme",
+          "projection_start": 1149,
+          "projection_end": 1162,
+          "concept": "affine-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1258,
+          "projection_end": 1266,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1284,
+          "projection_end": 1292,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1296,
+          "projection_end": 1303,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1358,
+          "projection_end": 1365,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coherent algebras",
+          "projection_start": 1376,
+          "projection_end": 1393,
+          "concept": "coherent-algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 1407,
+          "projection_end": 1413,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1434,
+          "projection_end": 1445,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1461,
+          "projection_end": 1468,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 1514,
+          "projection_end": 1520,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 1611,
+          "projection_end": 1624,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1689,
+          "projection_end": 1696,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1827,
+          "projection_end": 1837,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 1882,
+          "projection_end": 1889,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 1890,
+          "projection_end": 1895,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "subset",
+          "projection_start": 1901,
+          "projection_end": 1907,
+          "concept": "subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1930,
+          "projection_end": 1938,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 1975,
+          "projection_end": 1988,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1990,
+          "projection_end": 1994,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1999,
+          "projection_end": 2009,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 2030,
+          "projection_end": 2043,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 2044,
+          "projection_end": 2048,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 2053,
+          "projection_end": 2063,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 2074,
+          "projection_end": 2083,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "subset",
+          "projection_start": 2107,
+          "projection_end": 2113,
+          "concept": "subset",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:0AP4:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be an open covering with\n<MATH_0002>\nand such that the descent datum <MATH_0003>\nis effective. Let <MATH_0004> be a scheme and let\n<MATH_0005>\nbe an isomorphism of descent data. For each pair of indices\n<MATH_0006> consider the open\n<MATH_0007>.\nBecause everything is compatible with descent data\nand since <MATH_0008> is an fpqc covering, we\nmay apply Lemma <REF_0001>\nto find an open <MATH_0009> such that\n<MATH_0010>.\nNow the identity morphism on <MATH_0011> is\ncompatible with descent data, hence comes from a\nunique morphism <MATH_0012> over <MATH_0013>\n(see Remark <REF_0002>).\nThen <MATH_0014> is a glueing\ndata as in Schemes, Section <REF_0003>\n(proof omitted). Thus we may assume there is a scheme <MATH_0015> over <MATH_0016>\nsuch that <MATH_0017> is open, <MATH_0018> and\n<MATH_0019>, see\nSchemes, Lemma <REF_0004>.\nPulling back to <MATH_0020> we can use the <MATH_0021> to\nget the desired isomorphism <MATH_0022>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$V = \\bigcup W_i$",
+        "MATH_0002": "$\\varphi(W_i \\times_S X) \\subset X \\times_S W_i$",
+        "MATH_0003": "$(W_i, \\varphi|_{W_i \\times_S X})$",
+        "MATH_0004": "$U_i \\to S$",
+        "MATH_0005": "$\\alpha_i : (X \\times_S U_i, can) \\to (W_i, \\varphi|_{W_i \\times_S X})$",
+        "MATH_0006": "$(i, j)$",
+        "MATH_0007": "$\\alpha_i^{-1}(W_i \\cap W_j) \\subset X \\times_S U_i$",
+        "MATH_0008": "$\\{X \\to S\\}$",
+        "REF_0001": "\\ref{lemma-open-fpqc-covering}",
+        "MATH_0009": "$U_{ij} \\subset U_i$",
+        "MATH_0010": "$\\alpha_i^{-1}(W_i \\cap W_j) = X \\times_S U_{ij}$",
+        "MATH_0011": "$W_i \\cap W_j$",
+        "MATH_0012": "$\\varphi_{ij} : U_{ij} \\to U_{ji}$",
+        "MATH_0013": "$S$",
+        "REF_0002": "\\ref{remark-morphisms-of-schemes-satisfy-fpqc-descent}",
+        "MATH_0014": "$(U_i, U_{ij}, \\varphi_{ij})$",
+        "REF_0003": "\\ref{schemes-section-glueing-schemes}",
+        "MATH_0015": "$U$",
+        "MATH_0016": "$S$",
+        "MATH_0017": "$U_i \\subset U$",
+        "MATH_0018": "$U_{ij} = U_i \\cap U_j$",
+        "MATH_0019": "$\\varphi_{ij} = \\text{id}_{U_i \\cap U_j}$",
+        "REF_0004": "\\ref{schemes-lemma-glue}",
+        "MATH_0020": "$X$",
+        "MATH_0021": "$\\alpha_i$",
+        "MATH_0022": "$\\alpha : X \\times_S U \\to V$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W1:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn the following we study the question as to whether\ndescent data for schemes relative to a fpqc-covering\nare effective. The first remark to make is that this\nis not always the case. We will see this in Algebraic\nSpaces, Example <REF_0001>.\nEven projective morphisms do not always satisfy descent\nfor fpqc-coverings, by Examples,\nLemma <REF_0002>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{spaces-example-non-representable-descent}",
+        "REF_0002": "\\ref{examples-lemma-non-effective-descent-projective}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W1:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descending types of morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-types-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W2:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nWe say\n<TEXTITOPEN_0001>morphisms of type <MATH_0003> satisfy descent for <MATH_0004>-coverings<TEXTITCLOSE_0001>\nif for\nany <MATH_0005>-covering <MATH_0006>\n(see Topologies, Section <REF_0001>),\nany descent datum <MATH_0007> relative to <MATH_0008>\nsuch that each morphism <MATH_0009> has property <MATH_0010>\nis effective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descending-types-morphisms}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{Zariski, fpqc, fppf, \\etale, smooth, syntomic\\}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0003": "$\\mathcal{P}$",
+        "MATH_0004": "$\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\tau$",
+        "MATH_0006": "$\\mathcal{U} : \\{U_i \\to S\\}_{i \\in I}$",
+        "REF_0001": "\\ref{topologies-section-procedure}",
+        "MATH_0007": "$(X_i, \\varphi_{ij})$",
+        "MATH_0008": "$\\mathcal{U}$",
+        "MATH_0009": "$X_i \\to U_i$",
+        "MATH_0010": "$\\mathcal{P}$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W1:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nOn the other hand, if the schemes we are trying to\ndescend are particularly simple, then it is sometime the\ncase that for whole classes of schemes descent data\nare effective. We will introduce terminology here that\ndescribes this phenomenon abstractly, even though it\nmay lead to confusion if not used correctly later on.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W1:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nNote that in each of the cases we have already seen that\nthe functor from schemes over <MATH_0001> to descent data over\n<MATH_0002> is fully faithful\n(Lemma <REF_0001> combined\nwith the results in Topologies that any <MATH_0003>-covering\nis also a fpqc-covering).\nWe have also seen that descent data are always effective with\nrespect to Zariski coverings\n(Lemma <REF_0002>).\nIt may be prudent to only study the notion just introduced\nwhen <MATH_0004> is either stable under any base change or at least\nlocal on the base in the <MATH_0005>-topology\n(see Definition <REF_0003>)\nin order to avoid erroneous arguments (relying on <MATH_0006>\nwhen descending halfway).",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U}$",
+        "REF_0001": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0003": "$\\tau$",
+        "REF_0002": "\\ref{lemma-Zariski-refinement-coverings-equivalence}",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$\\tau$",
+        "REF_0003": "\\ref{definition-property-morphisms-local}",
+        "MATH_0006": "$\\mathcal{P}$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W3:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nSuppose that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is stable under any base change\n(see Schemes, Definition <REF_0001>),\n<STRUCT_0004> if <MATH_0004>, <MATH_0005> have <MATH_0006>,\nthen so does <MATH_0007>, and\n<STRUCT_0005> for any surjective morphism of affines\n<MATH_0008> which is flat, flat of finite presentation,\n<ACCENT_0001>tale, smooth or syntomic depending on whether <MATH_0009> is\nfpqc, fppf, <ACCENT_0002>tale, smooth, or syntomic,\nany descent datum <MATH_0010> relative\nto <MATH_0011> over <MATH_0012> such that <MATH_0013> holds for\n<MATH_0014> is effective.\n<STRUCT_0006>\nThen morphisms of type <MATH_0015> satisfy descent for <MATH_0016>-coverings.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-types-morphisms}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, fppf, \\etale, smooth, syntomic\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{schemes-definition-preserved-by-base-change}",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$Y_j \\to V_j$",
+        "MATH_0005": "$j = 1, \\ldots, m$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "MATH_0007": "$\\coprod Y_j \\to \\coprod V_j$",
+        "STRUCT_0005": "\\item",
+        "MATH_0008": "$X \\to S$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0009": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0010": "$(V, \\varphi)$",
+        "MATH_0011": "$X$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$\\mathcal{P}$",
+        "MATH_0014": "$V \\to X$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0015": "$\\mathcal{P}$",
+        "MATH_0016": "$\\tau$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W1:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nHere is the obligatory lemma reducing this question\nto the case of a covering given by a single morphism of affines.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W3:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>\nbe a <MATH_0003>-covering of <MATH_0004>.\nLet <MATH_0005> be a descent datum relative to\n<MATH_0006> and assume that each morphism <MATH_0007> has property\n<MATH_0008>. We have to show there exists a scheme <MATH_0009> such that\n<MATH_0010>.\n\n<STRUCT_0002><STRUCT_0003>\nBefore we start the proof proper we remark that for any\nfamily of morphisms <MATH_0011> and any\nmorphism of families <MATH_0012>, if we pullback\nthe descent datum <MATH_0013> to a descent datum\n<MATH_0014> over <MATH_0015>, then each of the\nmorphisms <MATH_0016> has property <MATH_0017> also.\nThis is true because of assumption (1) that <MATH_0018> is stable\nunder any base change and the definition of pullback\n(see Definition <REF_0001>).\nWe will use this without further mention.\n\n<STRUCT_0004><STRUCT_0005>\nFirst, let us prove the lemma when <MATH_0019> is affine.\nBy Topologies, Lemma\n<REF_0002>,\n<REF_0003>,\n<REF_0004>,\n<REF_0005>, or\n<REF_0006>\nthere exists a standard <MATH_0020>-covering\n<MATH_0021>\nwhich refines <MATH_0022>. The pullback functor\n<MATH_0023>\nbetween categories of descent data is fully faithful\nby Lemma <REF_0007>.\nHence it suffices to prove that the descent datum over\nthe standard <MATH_0024>-covering <MATH_0025> is effective.\nBy assumption (2) we see that <MATH_0026>\nhas property <MATH_0027>.\nBy Lemma <REF_0008> this reduces us to the covering\n<MATH_0028> for which we have\nassumed the result in assumption (3) of the lemma.\nHence the lemma holds when <MATH_0029> is affine.\n\n<STRUCT_0006><STRUCT_0007>\nAssume <MATH_0030> is general. Let <MATH_0031> be an affine open.\nBy the properties of site the family\n<MATH_0032> is a\n<MATH_0033>-covering of <MATH_0034>. Denote\n<MATH_0035> the restriction (or pullback) of\nthe given descent datum to <MATH_0036>.\nHence by what we just saw we obtain a scheme <MATH_0037> over <MATH_0038>\nwhose canonical descent datum with respect to\n<MATH_0039> is isomorphic to <MATH_0040>.\nSuppose that <MATH_0041> is an affine open of <MATH_0042>.\nThen both <MATH_0043> and <MATH_0044> have canonical\ndescent data isomorphic to <MATH_0045>.\nHence, by Lemma <REF_0009>\nagain we obtain a canonical morphism\n<MATH_0046> over <MATH_0047> which identifies\n<MATH_0048> with the inverse image of <MATH_0049> in <MATH_0050>.\nWe omit the verification that given affine opens\n<MATH_0051> of <MATH_0052> we have\n<MATH_0053>.\n\n<STRUCT_0008><STRUCT_0009>\nBy Constructions, Lemma <REF_0010> the data\n<MATH_0054> glue to a scheme <MATH_0055>.\nMoreover, we are given isomorphisms <MATH_0056>\nwhich recover the maps <MATH_0057>. Unwinding the construction\nof the schemes <MATH_0058> we obtain isomorphisms\n<MATH_0059>\ncompatible with the maps <MATH_0060> and compatible with\nrestricting to smaller affine opens in <MATH_0061>. This implies that\nthe canonical descent datum on <MATH_0062> is isomorphic\nto the given descent datum and we win.\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{\\varphi_i : U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\tau$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$(X_i, \\varphi_{ii'})$",
+        "MATH_0006": "$\\mathcal{U}$",
+        "MATH_0007": "$X_i \\to U_i$",
+        "MATH_0008": "$\\mathcal{P}$",
+        "MATH_0009": "$X \\to S$",
+        "MATH_0010": "$(X_i, \\varphi_{ii'}) \\cong (U_i \\times_S X, can)$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0011": "$\\mathcal{V} : \\{V_j \\to S\\}$",
+        "MATH_0012": "$\\mathcal{V} \\to \\mathcal{U}$",
+        "MATH_0013": "$(X_i, \\varphi_{ii'})$",
+        "MATH_0014": "$(Y_j, \\varphi_{jj'})$",
+        "MATH_0015": "$\\mathcal{V}$",
+        "MATH_0016": "$Y_j \\to V_j$",
+        "MATH_0017": "$\\mathcal{P}$",
+        "MATH_0018": "$\\mathcal{P}$",
+        "REF_0001": "\\ref{definition-pullback-functor-family}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0019": "$S$",
+        "REF_0002": "\\ref{topologies-lemma-fpqc-affine}",
+        "REF_0003": "\\ref{topologies-lemma-fppf-affine}",
+        "REF_0004": "\\ref{topologies-lemma-etale-affine}",
+        "REF_0005": "\\ref{topologies-lemma-smooth-affine}",
+        "REF_0006": "\\ref{topologies-lemma-syntomic-affine}",
+        "MATH_0020": "$\\tau$",
+        "MATH_0021": "$\\mathcal{V} : \\{V_j \\to S\\}_{j = 1, \\ldots, m}$",
+        "MATH_0022": "$\\mathcal{U}$",
+        "MATH_0023": "$DD(\\mathcal{U}) \\to DD(\\mathcal{V})$",
+        "REF_0007": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0024": "$\\tau$",
+        "MATH_0025": "$\\mathcal{V}$",
+        "MATH_0026": "$\\coprod Y_j \\to \\coprod V_j$",
+        "MATH_0027": "$\\mathcal{P}$",
+        "REF_0008": "\\ref{lemma-family-is-one}",
+        "MATH_0028": "$\\{\\coprod_{j = 1, \\ldots, m} V_j \\to S\\}$",
+        "MATH_0029": "$S$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0030": "$S$",
+        "MATH_0031": "$V \\subset S$",
+        "MATH_0032": "$\\mathcal{U}_V = \\{V \\times_S U_i \\to V\\}_{i \\in I}$",
+        "MATH_0033": "$\\tau$",
+        "MATH_0034": "$V$",
+        "MATH_0035": "$(X_i, \\varphi_{ii'})_V$",
+        "MATH_0036": "$\\mathcal{U}_V$",
+        "MATH_0037": "$X_V$",
+        "MATH_0038": "$V$",
+        "MATH_0039": "$\\mathcal{U}_V$",
+        "MATH_0040": "$(X_i, \\varphi_{ii'})_V$",
+        "MATH_0041": "$V' \\subset V$",
+        "MATH_0042": "$V$",
+        "MATH_0043": "$X_{V'}$",
+        "MATH_0044": "$V' \\times_V X_V$",
+        "MATH_0045": "$(X_i, \\varphi_{ii'})_{V'}$",
+        "REF_0009": "\\ref{lemma-refine-coverings-fully-faithful}",
+        "MATH_0046": "$\\rho^V_{V'} : X_{V'} \\to X_V$",
+        "MATH_0047": "$S$",
+        "MATH_0048": "$X_{V'}$",
+        "MATH_0049": "$V'$",
+        "MATH_0050": "$X_V$",
+        "MATH_0051": "$V'' \\subset V' \\subset V$",
+        "MATH_0052": "$S$",
+        "MATH_0053": "$\\rho^V_{V''} = \\rho^V_{V'} \\circ \\rho^{V'}_{V''}$",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "REF_0010": "\\ref{constructions-lemma-relative-glueing}",
+        "MATH_0054": "$(X_V, \\rho^V_{V'})$",
+        "MATH_0055": "$X \\to S$",
+        "MATH_0056": "$V \\times_S X \\to X_V$",
+        "MATH_0057": "$\\rho^V_{V'}$",
+        "MATH_0058": "$X_V$",
+        "MATH_0059": "$$\nV \\times_S U_i \\times_S X\n\\longrightarrow\nV \\times_S X_i\n$$",
+        "MATH_0060": "$\\varphi_{ii'}$",
+        "MATH_0061": "$X$",
+        "MATH_0062": "$U_i \\times_S X$",
+        "STRUCT_0010": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0244:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descending affine morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-affine}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0244:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we show that\n``affine morphisms satisfy descent for fpqc-coverings''.\nHere is the formal statement.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0245:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nLet <MATH_0003> be a descent datum\nrelative to <MATH_0004>. If each morphism\n<MATH_0005> is affine, then the descent datum is\neffective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-affine}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i\\in I}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$(V_i/X_i, \\varphi_{ij})$",
+        "MATH_0004": "$\\{X_i \\to S\\}$",
+        "MATH_0005": "$V_i \\to X_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0245:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBeing affine is a property of morphisms of schemes\nwhich is local on the base and preserved under any base change, see\nMorphisms, Lemmas <REF_0001> and\n<REF_0002>.\nHence Lemma <REF_0003> applies\nand it suffices to prove the statement of the lemma\nin case the fpqc-covering is given by a single\n<MATH_0001> flat surjective morphism of affines.\nSay <MATH_0002> and <MATH_0003> so\nthat <MATH_0004> is a faithfully flat ring map.\nLet <MATH_0005> be a descent datum relative to <MATH_0006> over <MATH_0007>\nand assume that <MATH_0008> is affine.\nThen <MATH_0009> being affine implies that <MATH_0010>\nfor some <MATH_0011>-algebra <MATH_0012> (see\nMorphisms, Definition <REF_0004>).\nThe isomorphism <MATH_0013> corresponds to an isomorphism\nof rings\n<MATH_0014>\nas <MATH_0015>-algebras. The cocycle condition on <MATH_0016>\nsays that\n<MATH_0017>\nis commutative. Inverting these arrows we see that we have a\ndescent datum for modules with respect to <MATH_0018> as in\nDefinition <REF_0005>.\nHence we may apply Proposition <REF_0006>\nto obtain an <MATH_0019>-module\n<MATH_0020>\nand an isomorphism <MATH_0021>\nrespecting descent data. Given any pair <MATH_0022>\nthe product <MATH_0023> in <MATH_0024> lies in <MATH_0025> since the\nmap <MATH_0026> is an algebra homomorphism. Hence\n<MATH_0027> is an <MATH_0028>-algebra whose base change to <MATH_0029> is\nisomorphic to <MATH_0030> compatibly with descent data.\nApplying <MATH_0031> we obtain a scheme\n<MATH_0032> over <MATH_0033> such that <MATH_0034>\nas desired.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-characterize-affine}",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-affine}",
+        "REF_0003": "\\ref{lemma-descending-types-morphisms}",
+        "MATH_0001": "$\\{X \\to S\\}$",
+        "MATH_0002": "$X = \\Spec(A)$",
+        "MATH_0003": "$S = \\Spec(R)$",
+        "MATH_0004": "$R \\to A$",
+        "MATH_0005": "$(V, \\varphi)$",
+        "MATH_0006": "$X$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$V \\to X$",
+        "MATH_0009": "$V \\to X$",
+        "MATH_0010": "$V = \\Spec(B)$",
+        "MATH_0011": "$A$",
+        "MATH_0012": "$B$",
+        "REF_0004": "\\ref{morphisms-definition-affine}",
+        "MATH_0013": "$\\varphi$",
+        "MATH_0014": "$$\n\\varphi^\\sharp :\nB \\otimes_R A \\longleftarrow A \\otimes_R B\n$$",
+        "MATH_0015": "$A \\otimes_R A$",
+        "MATH_0016": "$\\varphi$",
+        "MATH_0017": "$$\n\\xymatrix{\nB \\otimes_R A \\otimes_R A & &\nA \\otimes_R A \\otimes_R B \\ar[ll] \\ar[ld]\\\\\n& A \\otimes_R B \\otimes_R A \\ar[lu] &\n}\n$$",
+        "MATH_0018": "$R \\to A$",
+        "REF_0005": "\\ref{definition-descent-datum-modules}",
+        "REF_0006": "\\ref{proposition-descent-module}",
+        "MATH_0019": "$R$",
+        "MATH_0020": "$C = \\Ker(B \\to A \\otimes_R B)$",
+        "MATH_0021": "$A \\otimes_R C \\cong B$",
+        "MATH_0022": "$c, c' \\in C$",
+        "MATH_0023": "$cc'$",
+        "MATH_0024": "$B$",
+        "MATH_0025": "$C$",
+        "MATH_0026": "$\\varphi$",
+        "MATH_0027": "$C$",
+        "MATH_0028": "$R$",
+        "MATH_0029": "$A$",
+        "MATH_0030": "$B$",
+        "MATH_0031": "$\\Spec$",
+        "MATH_0032": "$U$",
+        "MATH_0033": "$S$",
+        "MATH_0034": "$(V, \\varphi) \\cong (X \\times_S U, can)$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03I0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nLet <MATH_0003> be a descent datum\nrelative to <MATH_0004>. If each morphism\n<MATH_0005> is a closed immersion, then the descent datum is\neffective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-closed-immersion}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i\\in I}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$(V_i/X_i, \\varphi_{ij})$",
+        "MATH_0004": "$\\{X_i \\to S\\}$",
+        "MATH_0005": "$V_i \\to X_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:03I0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is true because a closed immersion is an affine morphism\n(Morphisms, Lemma <REF_0001>),\nand hence Lemma <REF_0002> applies.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-closed-immersion-affine}",
+        "REF_0002": "\\ref{lemma-affine}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0246:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descending quasi-affine morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-quasi-affine}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0246:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn this section we show that\n``quasi-affine morphisms satisfy descent for fpqc-coverings''.\nHere is the formal statement.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0247:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nLet <MATH_0003> be a descent datum\nrelative to <MATH_0004>. If each morphism\n<MATH_0005> is quasi-affine, then the descent datum is\neffective.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-quasi-affine}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i\\in I}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0003": "$(V_i/X_i, \\varphi_{ij})$",
+        "MATH_0004": "$\\{X_i \\to S\\}$",
+        "MATH_0005": "$V_i \\to X_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0247:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBeing quasi-affine is a property of morphisms of schemes\nwhich is preserved under any base change, see\nMorphisms, Lemmas <REF_0001> and\n<REF_0002>.\nHence Lemma <REF_0003> applies\nand it suffices to prove the statement of the lemma\nin case the fpqc-covering is given by a single\n<MATH_0001> flat surjective morphism of affines.\nSay <MATH_0002> and <MATH_0003> so\nthat <MATH_0004> is a faithfully flat ring map.\nLet <MATH_0005> be a descent datum relative to <MATH_0006> over <MATH_0007>\nand assume that <MATH_0008> is quasi-affine.\n\n<STRUCT_0002><STRUCT_0003>\nAccording to Morphisms, Lemma <REF_0004>\nthis means that\n<MATH_0009>\nis a quasi-compact open immersion of schemes over <MATH_0010>.\nThe projections <MATH_0011> are flat\nand hence we have\n<MATH_0012>\nby flat base change\n(Cohomology of Schemes, Lemma <REF_0005>).\nThus the isomorphism <MATH_0013> (which\nis an isomorphism over <MATH_0014>) induces an isomorphism\nof quasi-coherent sheaves of algebras\n<MATH_0015>\non <MATH_0016>.\nThe cocycle condition for <MATH_0017> implies the cocycle condition\nfor <MATH_0018>. Another way to say this is that it produces\na descent datum <MATH_0019> on the affine scheme <MATH_0020> relative to\n<MATH_0021> over <MATH_0022>, which moreover has the property that the morphism\n<MATH_0023> is a morphism of descent data.\nHence by Lemma <REF_0006>\n(or by effectivity of descent for quasi-coherent\nalgebras) we obtain a scheme <MATH_0024> with an isomorphism\n<MATH_0025> of descent data.\nWe note in passing that <MATH_0026> is affine by\nLemma <REF_0007>.\n\n<STRUCT_0004><STRUCT_0005>\nAnd now we can think of <MATH_0027> as a (quasi-compact)\nopen <MATH_0028> with the property that\nit is stable under the descent datum\n<MATH_0029>\nIn other words <MATH_0030>\nfor any <MATH_0031> mapping to the same point of <MATH_0032>.\nBecause <MATH_0033> is surjective we immediately find that\n<MATH_0034> is the inverse image of a subset <MATH_0035> under\nthe morphism <MATH_0036>.\nBecause <MATH_0037> is quasi-compact, flat and surjective\nalso <MATH_0038> is quasi-compact flat and surjective.\nHence by Morphisms, Lemma <REF_0008>\nthis subset <MATH_0039> is open and we win.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-characterize-quasi-affine}",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-quasi-affine}",
+        "REF_0003": "\\ref{lemma-descending-types-morphisms}",
+        "MATH_0001": "$\\{X \\to S\\}$",
+        "MATH_0002": "$X = \\Spec(A)$",
+        "MATH_0003": "$S = \\Spec(R)$",
+        "MATH_0004": "$R \\to A$",
+        "MATH_0005": "$(V, \\varphi)$",
+        "MATH_0006": "$X$",
+        "MATH_0007": "$S$",
+        "MATH_0008": "$\\pi : V \\to X$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0004": "\\ref{morphisms-lemma-characterize-quasi-affine}",
+        "MATH_0009": "$$\nV \\longrightarrow \\underline{\\Spec}_X(\\pi_*\\mathcal{O}_V) = W\n$$",
+        "MATH_0010": "$X$",
+        "MATH_0011": "$\\text{pr}_i : X \\times_S X \\to X$",
+        "MATH_0012": "$$\n\\text{pr}_0^*\\pi_*\\mathcal{O}_V =\n(\\pi \\times \\text{id}_X)_*\\mathcal{O}_{V \\times_S X}, \\quad\n\\text{pr}_1^*\\pi_*\\mathcal{O}_V =\n(\\text{id}_X \\times \\pi)_*\\mathcal{O}_{X \\times_S V}\n$$",
+        "REF_0005": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0013": "$\\varphi : V \\times_S X \\to X \\times_S V$",
+        "MATH_0014": "$X \\times_S X$",
+        "MATH_0015": "$$\n\\varphi^\\sharp :\n\\text{pr}_0^*\\pi_*\\mathcal{O}_V\n\\longrightarrow\n\\text{pr}_1^*\\pi_*\\mathcal{O}_V\n$$",
+        "MATH_0016": "$X \\times_S X$",
+        "MATH_0017": "$\\varphi$",
+        "MATH_0018": "$\\varphi^\\sharp$",
+        "MATH_0019": "$\\varphi'$",
+        "MATH_0020": "$W$",
+        "MATH_0021": "$X$",
+        "MATH_0022": "$S$",
+        "MATH_0023": "$V \\to W$",
+        "REF_0006": "\\ref{lemma-affine}",
+        "MATH_0024": "$U' \\to S$",
+        "MATH_0025": "$(W, \\varphi') \\cong (X \\times_S U', can)$",
+        "MATH_0026": "$U'$",
+        "REF_0007": "\\ref{lemma-descending-property-affine}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0027": "$V$",
+        "MATH_0028": "$V \\subset X \\times_S U'$",
+        "MATH_0029": "$$\ncan : X \\times_S U' \\times_S X \\to X \\times_S X \\times_S U',\n(x_0, u', x_1) \\mapsto (x_0, x_1, u').\n$$",
+        "MATH_0030": "$(x_0, u') \\in V \\Rightarrow (x_1, u') \\in V$",
+        "MATH_0031": "$x_0, x_1, u'$",
+        "MATH_0032": "$S$",
+        "MATH_0033": "$X \\to S$",
+        "MATH_0034": "$V$",
+        "MATH_0035": "$U \\subset U'$",
+        "MATH_0036": "$X \\times_S U' \\to U'$",
+        "MATH_0037": "$X \\to S$",
+        "MATH_0038": "$X \\times_S U' \\to U'$",
+        "REF_0008": "\\ref{morphisms-lemma-fpqc-quotient-topology}",
+        "MATH_0039": "$U \\subset U'$",
+        "STRUCT_0006": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02W4:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent data in terms of sheaves<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-data-sheaves}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:coherent-lemma-flat-base-change-cohomology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001><ENVARGOPEN_0001>Flat base change<ENVARGEND_0001>\n<LOCKED_0001>\nConsider a cartesian diagram of schemes\n<MATH_0001>\nLet <MATH_0002> be a quasi-coherent <MATH_0003>-module\nwith pullback <MATH_0004>.\nAssume that <MATH_0005> is flat and that <MATH_0006> is quasi-compact and quasi-separated.\nFor any <MATH_0007>\n<STRUCT_0002>\n<STRUCT_0003> the base change map of\nCohomology, Lemma <REF_0001>\nis an isomorphism\n<MATH_0008>\n<STRUCT_0004> if <MATH_0009> and <MATH_0010>, then\n<MATH_0011>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "ENVARGOPEN_0001": "[",
+        "ENVARGEND_0001": "]",
+        "LOCKED_0001": "\\label{lemma-flat-base-change-cohomology}",
+        "MATH_0001": "$$\n\\xymatrix{\nX' \\ar[d]_{f'} \\ar[r]_{g'} & X \\ar[d]^f \\\\\nS' \\ar[r]^g & S\n}\n$$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$\\mathcal{F}' = (g')^*\\mathcal{F}$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$i \\geq 0$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "REF_0001": "\\ref{cohomology-lemma-base-change-map-flat-case}",
+        "MATH_0008": "$$\ng^*R^if_*\\mathcal{F} \\longrightarrow R^if'_*\\mathcal{F}',\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$S = \\Spec(A)$",
+        "MATH_0010": "$S' = \\Spec(B)$",
+        "MATH_0011": "$H^i(X, \\mathcal{F}) \\otimes_A B = H^i(X', \\mathcal{F}')$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "coherent-lemma-flat-base-change-cohomology",
+      "requested_tag": "02KH"
+    },
+    {
+      "context_id": "reference:constructions-lemma-relative-glueing",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a basis for the topology of <MATH_0003>.\nSuppose given the following data:\n<STRUCT_0002>\n<STRUCT_0003> For every <MATH_0004> a scheme <MATH_0005> over <MATH_0006>.\n<STRUCT_0004> For <MATH_0007> with <MATH_0008> a morphism\n<MATH_0009> over <MATH_0010>.\n<STRUCT_0005>\nAssume that\n<STRUCT_0006>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> each <MATH_0011> induces an isomorphism\n<MATH_0012> of schemes over <MATH_0013>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> whenever <MATH_0014>, with\n<MATH_0015> we have <MATH_0016>.\n<STRUCT_0007>\nThen there exists a morphism <MATH_0017> of schemes\nand isomorphisms <MATH_0018> over <MATH_0019>\nsuch that for <MATH_0020> with <MATH_0021> the composition\n<MATH_0022>\nis the morphism <MATH_0023>. Moreover <MATH_0024> is unique up to\nunique isomorphism over <MATH_0025>.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-relative-glueing}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{B}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$U \\in \\mathcal{B}$",
+        "MATH_0005": "$f_U : X_U \\to U$",
+        "MATH_0006": "$U$",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$U, V \\in \\mathcal{B}$",
+        "MATH_0008": "$V \\subset U$",
+        "MATH_0009": "$\\rho^U_V : X_V \\to X_U$",
+        "MATH_0010": "$U$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0011": "$\\rho^U_V$",
+        "MATH_0012": "$X_V \\to f_U^{-1}(V)$",
+        "MATH_0013": "$V$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0014": "$W, V, U \\in \\mathcal{B}$",
+        "MATH_0015": "$W \\subset V \\subset U$",
+        "MATH_0016": "$\\rho^U_W = \\rho^U_V \\circ \\rho ^V_W$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0017": "$f : X \\to S$",
+        "MATH_0018": "$i_U : f^{-1}(U) \\to X_U$",
+        "MATH_0019": "$U \\in \\mathcal{B}$",
+        "MATH_0020": "$V, U \\in \\mathcal{B}$",
+        "MATH_0021": "$V \\subset U$",
+        "MATH_0022": "$$\n\\xymatrix{\nX_V \\ar[r]^{i_V^{-1}} &\nf^{-1}(V) \\ar[rr]^{inclusion} & &\nf^{-1}(U) \\ar[r]^{i_U} &\nX_U\n}\n$$",
+        "MATH_0023": "$\\rho^U_V$",
+        "MATH_0024": "$X$",
+        "MATH_0025": "$S$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "constructions-lemma-relative-glueing",
+      "requested_tag": "01LH"
+    },
+    {
+      "context_id": "reference:descent-definition-descent-datum-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0002> for modules\nwith respect to <MATH_0003><TEXTITCLOSE_0001>\nis given by an <MATH_0004>-module <MATH_0005> and an isomorphism of\n<MATH_0006>-modules\n<MATH_0007>\nsuch that the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002> holds: the diagram\nof <MATH_0008>-module maps\n<MATH_0009>\ncommutes (see below for notation).\n<STRUCT_0004> A <TEXTITOPEN_0003>morphism <MATH_0010> of descent data<TEXTITCLOSE_0003>\nis a morphism of <MATH_0011>-modules <MATH_0012> such that\nthe diagram\n<MATH_0013>\nis commutative.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-modules}",
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$R \\to A$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$A$",
+        "MATH_0005": "$N$",
+        "MATH_0006": "$A \\otimes_R A$",
+        "MATH_0007": "$$\n\\varphi : N \\otimes_R A \\to A \\otimes_R N\n$$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0008": "$A \\otimes_R A \\otimes_R A$",
+        "MATH_0009": "$$\n\\xymatrix{\nN \\otimes_R A \\otimes_R A \\ar[rr]_{\\varphi_{02}}\n\\ar[rd]_{\\varphi_{01}}\n& &\nA \\otimes_R A \\otimes_R N \\\\\n& A \\otimes_R N \\otimes_R A \\ar[ru]_{\\varphi_{12}} &\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0010": "$(N, \\varphi) \\to (N', \\varphi')$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$A$",
+        "MATH_0012": "$\\psi : N \\to N'$",
+        "MATH_0013": "$$\n\\xymatrix{\nN \\otimes_R A \\ar[r]_\\varphi \\ar[d]_{\\psi \\otimes \\text{id}_A} &\nA \\otimes_R N \\ar[d]^{\\text{id}_A \\otimes \\psi} \\\\\nN' \\otimes_R A \\ar[r]^{\\varphi'} &\nA \\otimes_R N'\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-descent-datum-modules",
+      "requested_tag": "023G"
+    },
+    {
+      "context_id": "reference:descent-definition-property-morphisms-local",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nWe say <MATH_0003> is <TEXTITOPEN_0001><MATH_0004> local on the base<TEXTITCLOSE_0001>, or\n<TEXTITOPEN_0002><MATH_0005> local on the target<TEXTITCLOSE_0002>, or\n<TEXTITOPEN_0003>local on the base for the <MATH_0006>-topology<TEXTITCLOSE_0003> if for any\n<MATH_0007>-covering <MATH_0008> (see\nTopologies, Section <REF_0001>)\nand any morphism of schemes <MATH_0009> over <MATH_0010> we\nhave\n<MATH_0011>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-property-morphisms-local}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, fppf, syntomic, smooth, \\etale, Zariski\\}$",
+        "MATH_0003": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$\\tau$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0005": "$\\tau$",
+        "TEXTITCLOSE_0002": "}",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0006": "$\\tau$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0007": "$\\tau$",
+        "MATH_0008": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "REF_0001": "\\ref{topologies-section-procedure}",
+        "MATH_0009": "$f : X \\to Y$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$$\nf \\text{ has }\\mathcal{P}\n\\Leftrightarrow\n\\text{each }Y_i \\times_Y X \\to Y_i\\text{ has }\\mathcal{P}.\n$$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-property-morphisms-local",
+      "requested_tag": "02KO"
+    },
+    {
+      "context_id": "reference:descent-definition-pullback-functor-family",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith <MATH_0001>,\n<MATH_0002>, <MATH_0003>, <MATH_0004>,\nand <MATH_0005> as in Lemma <REF_0001>\nthe functor\n<MATH_0006>\nconstructed in that lemma\nis called the <TEXTITOPEN_0001>pullback functor<TEXTITCLOSE_0001> on descent data.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-pullback-functor-family}",
+        "MATH_0001": "$\\mathcal{U} = \\{U_i \\to S'\\}_{i \\in I}$",
+        "MATH_0002": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0003": "$\\alpha : I \\to J$",
+        "MATH_0004": "$h : S' \\to S$",
+        "MATH_0005": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{lemma-pullback-family}",
+        "MATH_0006": "$$\n(Y_j, \\varphi_{jj'}) \\longmapsto\n(g_i^*Y_{\\alpha(i)}, (g_i \\times g_{i'})^*\\varphi_{\\alpha(i)\\alpha(i')})\n$$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-pullback-functor-family",
+      "requested_tag": "02VT"
+    },
+    {
+      "context_id": "reference:descent-lemma-Zariski-refinement-coverings-equivalence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe families of morphisms with target <MATH_0004>.\nLet <MATH_0005>, <MATH_0006> and\n<MATH_0007> be a morphism of families\nof maps with fixed target, see\nSites, Definition <REF_0001>.\nAssume that for each <MATH_0008> the family\n<MATH_0009> is a Zariski covering (see\nTopologies, Definition <REF_0002>)\nof <MATH_0010>. Then the pullback functor\n<MATH_0011>\nof Lemma <REF_0003> is an equivalence of categories.\nIn particular, the category of schemes over <MATH_0012>\nis equivalent to the category\nof descent data relative to any Zariski covering of <MATH_0013>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Zariski-refinement-coverings-equivalence}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\alpha : I \\to J$",
+        "MATH_0006": "$\\text{id} : S \\to S$",
+        "MATH_0007": "$g_i : U_i \\to V_{\\alpha(i)}$",
+        "REF_0001": "\\ref{sites-definition-morphism-coverings}",
+        "MATH_0008": "$j \\in J$",
+        "MATH_0009": "$\\{g_i : U_i \\to V_j\\}_{\\alpha(i) = j}$",
+        "REF_0002": "\\ref{topologies-definition-zariski-covering}",
+        "MATH_0010": "$V_j$",
+        "MATH_0011": "$$\n\\text{descent data relative to }\n\\mathcal{V}\n\\longrightarrow\n\\text{descent data relative to }\n\\mathcal{U}\n$$",
+        "REF_0003": "\\ref{lemma-pullback-family}",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-Zariski-refinement-coverings-equivalence",
+      "requested_tag": "02VY"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is affine''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-affine}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-affine",
+      "requested_tag": "02L5"
+    },
+    {
+      "context_id": "reference:descent-lemma-family-is-one",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nSet <MATH_0004>, and consider it as an <MATH_0005>-scheme.\nThere is a canonical equivalence of categories\n<MATH_0006>\nwhich maps <MATH_0007> to <MATH_0008> with\n<MATH_0009> and <MATH_0010>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-family-is-one}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$X = \\coprod_{i \\in I} X_i$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$$\n\\begin{matrix}\n\\text{category of descent data } \\\\\n\\text{relative to the family } \\{X_i \\to S\\}_{i \\in I}\n\\end{matrix}\n\\longrightarrow\n\\begin{matrix}\n\\text{ category of descent data} \\\\\n\\text{ relative to } X/S\n\\end{matrix}\n$$",
+        "MATH_0007": "$(V_i, \\varphi_{ij})$",
+        "MATH_0008": "$(V, \\varphi)$",
+        "MATH_0009": "$V = \\coprod_{i\\in I} V_i$",
+        "MATH_0010": "$\\varphi = \\coprod \\varphi_{ij}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-family-is-one",
+      "requested_tag": "023X"
+    },
+    {
+      "context_id": "reference:descent-lemma-refine-coverings-fully-faithful",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002>, and\n<MATH_0003>,\nbe fpqc-coverings of <MATH_0004>.\nIf <MATH_0005> is a refinement of <MATH_0006>,\nthen the pullback functor\n<MATH_0007>\nis fully faithful.\nIn particular, the category of schemes over <MATH_0008>\nis identified with a full subcategory of the category\nof descent data relative to any fpqc-covering of <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-refine-coverings-fully-faithful}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\mathcal{U} = \\{U_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$\\mathcal{V} = \\{V_j \\to S\\}_{j \\in J}$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$\\mathcal{U}$",
+        "MATH_0006": "$\\mathcal{V}$",
+        "MATH_0007": "$$\n\\text{descent data relative to }\n\\mathcal{V}\n\\longrightarrow\n\\text{descent data relative to }\n\\mathcal{U}\n$$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-refine-coverings-fully-faithful",
+      "requested_tag": "02W0"
+    },
+    {
+      "context_id": "reference:descent-proposition-descent-module",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a faithfully flat ring map.\nThen\n<STRUCT_0002>\n<STRUCT_0003> any descent datum on modules with respect to <MATH_0002>\nis effective,\n<STRUCT_0004> the functor <MATH_0003> from <MATH_0004>-modules\nto the category of descent data is an equivalence, and\n<STRUCT_0005> the inverse functor is given by <MATH_0005>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proposition}",
+        "LOCKED_0001": "\\label{proposition-descent-module}",
+        "LOCKED_0002": "\\begin{slogan}\nEffective descent for modules along faithfully flat ring maps.\n\\end{slogan}",
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to A$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$M \\mapsto (A \\otimes_R M, can)$",
+        "MATH_0004": "$R$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$(N, \\varphi) \\mapsto H^0(s(N_\\bullet))$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{proposition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-proposition-descent-module",
+      "requested_tag": "023N"
+    },
+    {
+      "context_id": "reference:examples-lemma-non-effective-descent-projective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThere is an etale covering <MATH_0001> of schemes and a descent datum\n<MATH_0002> relative to <MATH_0003> such that \n<MATH_0004> is projective,\nbut the descent datum is not effective in the category of schemes.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-non-effective-descent-projective}",
+        "MATH_0001": "$X\\to S$",
+        "MATH_0002": "$(V/X,\\varphi)$",
+        "MATH_0003": "$X\\to S$",
+        "MATH_0004": "$V\\to X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "examples-lemma-non-effective-descent-projective",
+      "requested_tag": "08KF"
+    },
+    {
+      "context_id": "reference:morphisms-definition-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA morphism of schemes <MATH_0001> is called <TEXTITOPEN_0001>affine<TEXTITCLOSE_0001> if\nthe inverse image of every affine open of <MATH_0002> is an affine\nopen of <MATH_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-affine}",
+        "MATH_0001": "$f : X \\to S$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$X$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-definition-affine",
+      "requested_tag": "01S6"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-base-change-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe base change of an affine morphism is affine.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-affine}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-base-change-affine",
+      "requested_tag": "01SD"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-base-change-quasi-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe base change of a quasi-affine morphism is quasi-affine.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-quasi-affine}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-base-change-quasi-affine",
+      "requested_tag": "01SO"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-characterize-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0002> is affine.\n<STRUCT_0004> There exists an affine open covering <MATH_0003>\nsuch that each <MATH_0004> is affine.\n<STRUCT_0005> There exists a quasi-coherent sheaf of <MATH_0005>-algebras\n<MATH_0006> and an isomorphism\n<MATH_0007>\nof schemes over <MATH_0008>. See\nConstructions, Section <REF_0001> for notation.\n<STRUCT_0006>\nMoreover, in this case <MATH_0009>.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-affine}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[II, Corollary 1.3.2]{EGA}\n\\end{reference}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S = \\bigcup W_j$",
+        "MATH_0004": "$f^{-1}(W_j)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$\\mathcal{O}_S$",
+        "MATH_0006": "$\\mathcal{A}$",
+        "MATH_0007": "$X \\cong \\underline{\\Spec}_S(\\mathcal{A})$",
+        "MATH_0008": "$S$",
+        "REF_0001": "\\ref{constructions-section-spec}",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0009": "$X = \\underline{\\Spec}_S(f_*\\mathcal{O}_X)$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-characterize-affine",
+      "requested_tag": "01S8"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-characterize-quasi-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0002> is quasi-affine.\n<STRUCT_0004> There exists an affine open covering <MATH_0003>\nsuch that each <MATH_0004> is quasi-affine.\n<STRUCT_0005> There exists a quasi-coherent sheaf of <MATH_0005>-algebras\n<MATH_0006> and a quasi-compact open immersion\n<MATH_0007>\nover <MATH_0008>.\n<STRUCT_0006> Same as in (3) but with <MATH_0009>\nand the horizontal arrow the canonical morphism of\nConstructions, Lemma <REF_0001>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-quasi-affine}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S = \\bigcup W_j$",
+        "MATH_0004": "$f^{-1}(W_j)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0005": "$\\mathcal{O}_S$",
+        "MATH_0006": "$\\mathcal{A}$",
+        "MATH_0007": "$$\n\\xymatrix{\nX \\ar[rr] \\ar[rd] & & \\underline{\\Spec}_S(\\mathcal{A}) \\ar[dl] \\\\\n& S &\n}\n$$",
+        "MATH_0008": "$S$",
+        "STRUCT_0006": "\\item",
+        "MATH_0009": "$\\mathcal{A} = f_*\\mathcal{O}_X$",
+        "REF_0001": "\\ref{constructions-lemma-canonical-morphism}",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-characterize-quasi-affine",
+      "requested_tag": "01SM"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-closed-immersion-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA closed immersion is affine.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-closed-immersion-affine}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-closed-immersion-affine",
+      "requested_tag": "01SE"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-fpqc-quotient-topology",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a quasi-compact, surjective, flat morphism.\nA subset <MATH_0002> is open (resp.<SPACE_0001>closed) if and only\n<MATH_0003> is open (resp.<SPACE_0002>closed). In other words, <MATH_0004> is\na submersive morphism.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-quotient-topology}",
+        "LOCKED_0002": "\\begin{reference}\n\\cite[Expose VIII, Corollaire 4.3]{SGA1} and\n\\cite[IV, Corollaire 2.3.12]{EGA}\n\\end{reference}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$T \\subset Y$",
+        "SPACE_0001": "\\ ",
+        "MATH_0003": "$f^{-1}(T)$",
+        "SPACE_0002": "\\ ",
+        "MATH_0004": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-fpqc-quotient-topology",
+      "requested_tag": "02JY"
+    },
+    {
+      "context_id": "reference:schemes-definition-preserved-by-base-change",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nProperties and base change.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0001> be a property of schemes over a base.\nWe say that <MATH_0002> is <TEXTITOPEN_0001>preserved under arbitrary base change<TEXTITCLOSE_0001>,\nor simply that <MATH_0003> is <TEXTITOPEN_0002>preserved under base change<TEXTITCLOSE_0002>\nif whenever <MATH_0004>\nhas <MATH_0005>, any base change <MATH_0006> has <MATH_0007>.\n<STRUCT_0004> Let <MATH_0008> be a property of morphisms of schemes over a base.\nWe say that <MATH_0009> is <TEXTITOPEN_0003>preserved under arbitrary base change<TEXTITCLOSE_0003>,\nor simply that <TEXTITOPEN_0004>preserved under base change<TEXTITCLOSE_0004> if whenever\n<MATH_0010> over <MATH_0011> has <MATH_0012>, any base change\n<MATH_0013> over <MATH_0014> has <MATH_0015>.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-preserved-by-base-change}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\mathcal{P}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0004": "$X/S$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$X_{S'}/S'$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$\\mathcal{P}$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "TEXTITOPEN_0004": "{\\it ",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0010": "$f : X \\to Y$",
+        "MATH_0011": "$S$",
+        "MATH_0012": "$\\mathcal{P}$",
+        "MATH_0013": "$f' : X_{S'} \\to Y_{S'}$",
+        "MATH_0014": "$S'$",
+        "MATH_0015": "$\\mathcal{P}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-definition-preserved-by-base-change",
+      "requested_tag": "01JZ"
+    },
+    {
+      "context_id": "reference:spaces-example-non-representable-descent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a field. Let <MATH_0002> be a degree <MATH_0003> Galois extension\nwith <MATH_0004>. Let <MATH_0005>\nand <MATH_0006>. Note that\n<MATH_0007>\nwhere <MATH_0008>. Take\n<MATH_0009>\nwhere <MATH_0010> denotes the <MATH_0011>-rational point whose <MATH_0012>-coordinate is zero.\nIt is easy to see that <MATH_0013> is an <ACCENT_0001>tale equivalence relation on <MATH_0014> over <MATH_0015>\nand hence <MATH_0016> is an algebraic space by\nTheorem <REF_0001>. Here are some properties of <MATH_0017> (some\nof which will not make sense until later):\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0018> is an isomorphism over <MATH_0019>,\n<STRUCT_0004> the morphism <MATH_0020> is <ACCENT_0002>tale (see\nProperties of Spaces,\nDefinition <REF_0002>)\n<STRUCT_0005> the fibre <MATH_0021> of <MATH_0022> over <MATH_0023> is isomorphic to\n<MATH_0024>,\n<STRUCT_0006> <MATH_0025> is not a scheme because if it were, then <MATH_0026>\nwould be a local domain <MATH_0027> with\nfraction field <MATH_0028>, with <MATH_0029> and residue field\n<MATH_0030> which is impossible,\n<STRUCT_0007> <MATH_0031> is not separated, but it is\nlocally separated and quasi-separated,\n<STRUCT_0008> there exists a surjective, finite, <ACCENT_0003>tale morphism <MATH_0032>\nsuch that the base change <MATH_0033> is a scheme (namely, if\nwe base change to <MATH_0034> then <MATH_0035> splits into\ntwo copies of <MATH_0036> and <MATH_0037> becomes isomorphic to the affine line with\n<MATH_0038> doubled, see\nSchemes, Example <REF_0003>), and\n<STRUCT_0009> if we think of <MATH_0039> as a finite type algebraic space over\n<MATH_0040>, then similarly the base change <MATH_0041> is a scheme\nbut <MATH_0042> is not a scheme.\n<STRUCT_0010>\nIn particular, this gives an example of a descent datum for schemes\nrelative to the covering <MATH_0043>\nwhich is not effective.\n<STRUCT_0011>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-non-representable-descent}",
+        "MATH_0001": "$k$",
+        "MATH_0002": "$k'/k$",
+        "MATH_0003": "$2$",
+        "MATH_0004": "$\\text{Gal}(k'/k) = \\{1, \\sigma\\}$",
+        "MATH_0005": "$S = \\Spec(k[x])$",
+        "MATH_0006": "$U = \\Spec(k'[x])$",
+        "MATH_0007": "$$\nU \\times_S U =\n\\Spec((k' \\otimes_k k')[x]) =\n\\Delta(U) \\amalg \\Delta'(U)\n$$",
+        "MATH_0008": "$\\Delta' = (1, \\sigma) : U \\to U \\times_S U$",
+        "MATH_0009": "$$\nR = \\Delta(U) \\amalg \\Delta'(U \\setminus \\{0_U\\})\n$$",
+        "MATH_0010": "$0_U \\in U$",
+        "MATH_0011": "$k'$",
+        "MATH_0012": "$x$",
+        "MATH_0013": "$R$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0014": "$U$",
+        "MATH_0015": "$S$",
+        "MATH_0016": "$X = U/R$",
+        "REF_0001": "\\ref{theorem-presentation}",
+        "MATH_0017": "$X$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0018": "$X \\to S$",
+        "MATH_0019": "$S \\setminus \\{0_S\\}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0020": "$X \\to S$",
+        "ACCENT_0002": "\\'e",
+        "REF_0002": "\\ref{spaces-properties-definition-etale}",
+        "STRUCT_0005": "\\item",
+        "MATH_0021": "$0_X$",
+        "MATH_0022": "$X \\to S$",
+        "MATH_0023": "$0_S$",
+        "MATH_0024": "$\\Spec(k') = 0_U$",
+        "STRUCT_0006": "\\item",
+        "MATH_0025": "$X$",
+        "MATH_0026": "$\\mathcal{O}_{X, 0_X}$",
+        "MATH_0027": "$(\\mathcal{O}, \\mathfrak m, \\kappa)$",
+        "MATH_0028": "$k(x)$",
+        "MATH_0029": "$x \\in \\mathfrak m$",
+        "MATH_0030": "$\\kappa = k'$",
+        "STRUCT_0007": "\\item",
+        "MATH_0031": "$X$",
+        "STRUCT_0008": "\\item",
+        "ACCENT_0003": "\\'e",
+        "MATH_0032": "$S' \\to S$",
+        "MATH_0033": "$X' = S' \\times_S X$",
+        "MATH_0034": "$S' = \\Spec(k'[x])$",
+        "MATH_0035": "$U$",
+        "MATH_0036": "$S'$",
+        "MATH_0037": "$X'$",
+        "MATH_0038": "$0$",
+        "REF_0003": "\\ref{schemes-example-affine-space-zero-doubled}",
+        "STRUCT_0009": "\\item",
+        "MATH_0039": "$X$",
+        "MATH_0040": "$\\Spec(k)$",
+        "MATH_0041": "$X_{k'}$",
+        "MATH_0042": "$X$",
+        "STRUCT_0010": "\\end{enumerate}",
+        "MATH_0043": "$\\{\\Spec(k') \\to \\Spec(k)\\}$",
+        "STRUCT_0011": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "spaces-example-non-representable-descent",
+      "requested_tag": "03FN"
+    },
+    {
+      "context_id": "reference:topologies-definition-fpqc-covering",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. An <TEXTITOPEN_0001>fpqc covering of <MATH_0002><TEXTITCLOSE_0001> is a family\nof morphisms <MATH_0003> of schemes\nsuch that each <MATH_0004> is flat and such that for every affine open\n<MATH_0005> there exists <MATH_0006>, a map\n<MATH_0007> and affine opens\n<MATH_0008>, <MATH_0009>\nwith <MATH_0010>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-fpqc-covering}",
+        "MATH_0001": "$T$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$T$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$\\{f_i : T_i \\to T\\}_{i \\in I}$",
+        "MATH_0004": "$f_i$",
+        "MATH_0005": "$U \\subset T$",
+        "MATH_0006": "$n \\geq 0$",
+        "MATH_0007": "$a : \\{1, \\ldots, n\\} \\to I$",
+        "MATH_0008": "$V_j \\subset T_{a(j)}$",
+        "MATH_0009": "$j = 1, \\ldots, n$",
+        "MATH_0010": "$\\bigcup_{j = 1}^n f_{a(j)}(V_j) = U$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-definition-fpqc-covering",
+      "requested_tag": "022B"
+    },
+    {
+      "context_id": "reference:topologies-lemma-etale-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an <ACCENT_0001>tale covering of <MATH_0003>.\nThen there exists an <ACCENT_0002>tale covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$T$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j$",
+        "MATH_0008": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-etale-affine",
+      "requested_tag": "0218"
+    },
+    {
+      "context_id": "reference:topologies-lemma-fppf-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an fppf covering of <MATH_0003>.\nThen there exists an fppf covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fppf-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j$",
+        "MATH_0008": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-fppf-affine",
+      "requested_tag": "021P"
+    },
+    {
+      "context_id": "reference:topologies-lemma-fpqc-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be an fpqc covering of <MATH_0003>.\nThen there exists an fpqc covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme. Moreover, we may choose each <MATH_0007> to be open affine\nin one of the <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, n}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j$",
+        "MATH_0008": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-fpqc-affine",
+      "requested_tag": "022E"
+    },
+    {
+      "context_id": "reference:topologies-lemma-smooth-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a smooth covering of <MATH_0003>.\nThen there exists a smooth covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsmooth, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-smooth-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j \\to T$",
+        "REF_0001": "\\ref{morphisms-definition-smooth}",
+        "MATH_0008": "$U_j$",
+        "MATH_0009": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-smooth-affine",
+      "requested_tag": "0222"
+    },
+    {
+      "context_id": "reference:topologies-lemma-syntomic-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an affine scheme.\nLet <MATH_0002> be a syntomic covering of <MATH_0003>.\nThen there exists a syntomic covering\n<MATH_0004> which is a refinement\nof <MATH_0005> such that each <MATH_0006> is an affine\nscheme, and such that each morphism <MATH_0007> is standard\nsyntomic, see Morphisms, Definition <REF_0001>.\nMoreover, we may choose each <MATH_0008> to be open affine in one of the <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-syntomic-affine}",
+        "MATH_0001": "$T$",
+        "MATH_0002": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0003": "$T$",
+        "MATH_0004": "$\\{U_j \\to T\\}_{j = 1, \\ldots, m}$",
+        "MATH_0005": "$\\{T_i \\to T\\}_{i \\in I}$",
+        "MATH_0006": "$U_j$",
+        "MATH_0007": "$U_j \\to T$",
+        "REF_0001": "\\ref{morphisms-definition-syntomic}",
+        "MATH_0008": "$U_j$",
+        "MATH_0009": "$T_i$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-lemma-syntomic-affine",
+      "requested_tag": "0228"
+    },
+    {
+      "context_id": "reference:topologies-section-procedure",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>The general procedure<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-procedure}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "topologies-section-procedure",
+      "requested_tag": "020M"
+    }
+  ]
+}

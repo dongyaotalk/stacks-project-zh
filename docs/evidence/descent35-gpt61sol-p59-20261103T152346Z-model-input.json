@@ -1,0 +1,478 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p59-20261103T152346Z.json",
+    "hash": "sha256:4ac41d3732a444e8915c0996623061e735deebeee2cf8a981591424439a97199"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:04ND:statement",
+      "source_text": "The property of morphisms of germs\n<MATHSEG_0001> is flat<MATHSEG_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATHSEG_0001": "$$\n\\mathcal{P}((X, x) \\to (S, s)) =\n\\mathcal{O}_{S, s} \\to \\mathcal{O}_{X, x}\\text{",
+        "MATHSEG_0002": "}\n$$",
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 16,
+          "projection_end": 25,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 53,
+          "projection_end": 57,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 75,
+          "projection_end": 80,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04ND:proof",
+      "source_text": "Given a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are essentially of finite presentation, flat,\nand unramified (see\nAlgebra, Section <REF_0002>).\nIn particular the vertical maps are faithfully flat, see\nAlgebra, Lemma <REF_0003>.\nNow, if the upper horizontal arrow is flat, then the lower horizontal\narrow is flat by an application of\nAlgebra, Lemma <REF_0004>\nwith <MATH_0002>, <MATH_0003> and\n<MATH_0004>. If the lower horizontal arrow is\nflat, then the ring map\n<MATH_0005>\nis flat by\nAlgebra, Lemma <REF_0005>.\nAnd the ring map\n<MATH_0006>\nis a localization of a map between <ACCENT_0002>tale ring extensions of\n<MATH_0007>, hence flat by\nAlgebra, Lemma <REF_0006>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "REF_0002": "\\ref{algebra-section-etale}",
+        "REF_0003": "\\ref{algebra-lemma-local-flat-ff}",
+        "REF_0004": "\\ref{algebra-lemma-flat-permanence}",
+        "MATH_0002": "$R = \\mathcal{O}_{V, v}$",
+        "MATH_0003": "$S = \\mathcal{O}_{U, u}$",
+        "MATH_0004": "$M = \\mathcal{O}_{U', u'}$",
+        "MATH_0005": "$$\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n\\longleftarrow\n\\mathcal{O}_{V', v'}\n$$",
+        "REF_0005": "\\ref{algebra-lemma-flat-base-change}",
+        "MATH_0006": "$$\n\\mathcal{O}_{U', u'}\n\\longleftarrow\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n$$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0007": "$\\mathcal{O}_{U, u}$",
+        "REF_0006": "\\ref{algebra-lemma-map-between-etale}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "diagram",
+          "projection_start": 8,
+          "projection_end": 15,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 68,
+          "projection_end": 75,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 85,
+          "projection_end": 98,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local rings",
+          "projection_start": 102,
+          "projection_end": 113,
+          "concept": "local-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localizations",
+          "projection_start": 160,
+          "projection_end": 173,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 177,
+          "projection_end": 182,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring maps",
+          "projection_start": 183,
+          "projection_end": 192,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 232,
+          "projection_end": 251,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 253,
+          "projection_end": 257,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 279,
+          "projection_end": 286,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 336,
+          "projection_end": 340,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 345,
+          "projection_end": 360,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 366,
+          "projection_end": 373,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "horizontal",
+          "projection_start": 411,
+          "projection_end": 421,
+          "concept": "horizontal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 431,
+          "projection_end": 435,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "lower horizontal arrow",
+          "projection_start": 446,
+          "projection_end": 468,
+          "concept": "source-phrase-lower-horizontal-arrow",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 472,
+          "projection_end": 476,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 498,
+          "projection_end": 505,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "lower horizontal arrow",
+          "projection_start": 578,
+          "projection_end": 600,
+          "concept": "source-phrase-lower-horizontal-arrow",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 604,
+          "projection_end": 608,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 619,
+          "projection_end": 627,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 643,
+          "projection_end": 647,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 651,
+          "projection_end": 658,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 686,
+          "projection_end": 694,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 712,
+          "projection_end": 724,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 730,
+          "projection_end": 733,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 742,
+          "projection_end": 747,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 748,
+          "projection_end": 752,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 786,
+          "projection_end": 790,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 794,
+          "projection_end": 801,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:04R5:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA morphism of germs <MATH_0001> determines a well defined\nmap of local rings. Hence the following lemma makes sense.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x) \\to (S, s)$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04ND:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are essentially of finite presentation, flat,\nand unramified (see\nAlgebra, Section <REF_0002>).\nIn particular the vertical maps are faithfully flat, see\nAlgebra, Lemma <REF_0003>.\nNow, if the upper horizontal arrow is flat, then the lower horizontal\narrow is flat by an application of\nAlgebra, Lemma <REF_0004>\nwith <MATH_0002>, <MATH_0003> and\n<MATH_0004>. If the lower horizontal arrow is\nflat, then the ring map\n<MATH_0005>\nis flat by\nAlgebra, Lemma <REF_0005>.\nAnd the ring map\n<MATH_0006>\nis a localization of a map between <ACCENT_0002>tale ring extensions of\n<MATH_0007>, hence flat by\nAlgebra, Lemma <REF_0006>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "REF_0002": "\\ref{algebra-section-etale}",
+        "REF_0003": "\\ref{algebra-lemma-local-flat-ff}",
+        "REF_0004": "\\ref{algebra-lemma-flat-permanence}",
+        "MATH_0002": "$R = \\mathcal{O}_{V, v}$",
+        "MATH_0003": "$S = \\mathcal{O}_{U, u}$",
+        "MATH_0004": "$M = \\mathcal{O}_{U', u'}$",
+        "MATH_0005": "$$\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n\\longleftarrow\n\\mathcal{O}_{V', v'}\n$$",
+        "REF_0005": "\\ref{algebra-lemma-flat-base-change}",
+        "MATH_0006": "$$\n\\mathcal{O}_{U', u'}\n\\longleftarrow\n\\mathcal{O}_{V', v'} \\otimes_{\\mathcal{O}_{V, v}} \\mathcal{O}_{U, u}\n$$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0007": "$\\mathcal{O}_{U, u}$",
+        "REF_0006": "\\ref{algebra-lemma-map-between-etale}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04ND:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property of morphisms of germs\n<MATHSEG_0001> is flat<MATHSEG_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-at-point}",
+        "MATHSEG_0001": "$$\n\\mathcal{P}((X, x) \\to (S, s)) =\n\\mathcal{O}_{S, s} \\to \\mathcal{O}_{X, x}\\text{",
+        "MATHSEG_0002": "}\n$$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04NI:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-on-fiber}",
+        "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$v' \\in V'$",
+        "MATH_0003": "$v \\in V$",
+        "MATH_0004": "$U'_{v'} \\to U_v$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-flat-base-change",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> is (faithfully) flat over <MATH_0002>, and that <MATH_0003>\nis a ring map. Then <MATH_0004> is (faithfully) flat over <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-base-change}",
+        "MATH_0001": "$M$",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$R \\to R'$",
+        "MATH_0004": "$M \\otimes_R R'$",
+        "MATH_0005": "$R'$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-flat-base-change",
+      "requested_tag": "00HI"
+    },
+    {
+      "context_id": "reference:algebra-lemma-flat-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Let <MATH_0002> be an <MATH_0003>-module.\nIf <MATH_0004> is flat as an <MATH_0005>-module and faithfully flat as an <MATH_0006>-module,\nthen <MATH_0007> is flat.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-permanence}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "MATH_0006": "$S$",
+        "MATH_0007": "$R \\to S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-flat-permanence",
+      "requested_tag": "039V"
+    },
+    {
+      "context_id": "reference:algebra-lemma-local-flat-ff",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA flat local ring homomorphism of local rings is faithfully flat.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-flat-ff}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-local-flat-ff",
+      "requested_tag": "00HR"
+    },
+    {
+      "context_id": "reference:algebra-lemma-map-between-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be <ACCENT_0001>tale.\nThen any <MATH_0003>-algebra map <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-map-between-etale}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$R \\to S'$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$S' \\to S$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-map-between-etale",
+      "requested_tag": "00U7"
+    },
+    {
+      "context_id": "reference:algebra-section-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001><ACCENT_0001>tale ring maps<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "ACCENT_0001": "\\'E",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-etale}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-section-etale",
+      "requested_tag": "00U0"
+    },
+    {
+      "context_id": "reference:descent-definition-local-source-target-at-point",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of germs of schemes.\nWe say <MATH_0002> is  <TEXTITOPEN_0001><ACCENT_0001>tale local on the source-and-target<TEXTITCLOSE_0001>\nif for any commutative diagram\n<MATH_0003>\nof germs with <ACCENT_0002>tale vertical arrows we have\n<MATH_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-local-source-target-at-point}",
+        "MATH_0001": "$\\mathcal{Q}$",
+        "MATH_0002": "$\\mathcal{Q}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "ACCENT_0001": "\\'e",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$$\n\\xymatrix{\n(U', u') \\ar[d]_a \\ar[r]_{h'} & (V', v') \\ar[d]^b \\\\\n(U, u) \\ar[r]^h & (V, v)\n}\n$$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0004": "$\\mathcal{Q}(h) \\Leftrightarrow \\mathcal{Q}(h')$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-local-source-target-at-point",
+      "requested_tag": "04NB"
+    }
+  ]
+}

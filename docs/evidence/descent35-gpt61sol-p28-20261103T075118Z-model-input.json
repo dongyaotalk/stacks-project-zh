@@ -1,0 +1,1211 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p28-20261103T075118Z.json",
+    "hash": "sha256:78d1ca83b4fe4e46c46a083d5f4ab8b3038d023f0e765868192ed0a591482270"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:04R5:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a germ of a scheme.\nThe dimension of <MATH_0002> at <MATH_0003> is the minimum of the dimensions of\nopen neighbourhoods of <MATH_0004> in <MATH_0005>, and any small enough open neighbourhood\nhas this dimension. Hence this is an invariant of the isomorphism class\nof the germ. We denote this simply <MATH_0006>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x)$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$x$",
+        "MATH_0004": "$x$",
+        "MATH_0005": "$X$",
+        "MATH_0006": "$\\dim_x(X)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 45,
+          "projection_end": 51,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "dimension",
+          "projection_start": 57,
+          "projection_end": 66,
+          "concept": "dimension",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "dimensions",
+          "projection_start": 119,
+          "projection_end": 129,
+          "concept": "dimension",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "small",
+          "projection_start": 192,
+          "projection_end": 197,
+          "concept": "small",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "dimension",
+          "projection_start": 233,
+          "projection_end": 242,
+          "concept": "dimension",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 278,
+          "projection_end": 289,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 290,
+          "projection_end": 295,
+          "concept": "class",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04NL:statement",
+      "source_text": "Let <MATH_0001>.\nThe property of morphisms of germs\n<MATH_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$d \\in \\{0, 1, 2, \\ldots, \\infty\\}$",
+        "MATH_0002": "$$\n\\mathcal{P}_d((X, x) \\to (S, s))\n\\Leftrightarrow\n\\dim_x (X_s) = d\n$$",
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 67,
+          "projection_end": 72,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04NL:proof",
+      "source_text": "Given a diagram as in\nDefinition <REF_0001>\nwe obtain an <ACCENT_0001>tale morphism of fibres\n<MATH_0001> mapping <MATH_0002> to <MATH_0003>, see\nLemma <REF_0002>.\nHence now the equality <MATH_0004> follows from\nLemma <REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "ACCENT_0001": "\\'e",
+        "MATH_0001": "$U'_{v'} \\to U_v$",
+        "MATH_0002": "$u'$",
+        "MATH_0003": "$u$",
+        "REF_0002": "\\ref{lemma-etale-on-fiber}",
+        "MATH_0004": "$\\dim_u(U_v) = \\dim_{u'}(U'_{v'})$",
+        "REF_0003": "\\ref{lemma-dimension-at-point-local}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "diagram",
+          "projection_start": 8,
+          "projection_end": 15,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 57,
+          "projection_end": 62,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 63,
+          "projection_end": 71,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023U:title",
+      "source_text": "Descent data for schemes over schemes",
+      "node_kind": "section_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 17,
+          "projection_end": 24,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 30,
+          "projection_end": 37,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023U:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nMost of the arguments in this section are formal relying only\non the definition of a descent datum. In\nSimplicial Spaces, Section <REF_0001>\nwe will examine the relationship with simplicial schemes which will\nsomewhat clarify the situation.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{spaces-simplicial-section-simplicial-descent}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "descent",
+          "projection_start": 99,
+          "projection_end": 106,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 204,
+          "projection_end": 211,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023V:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\n<STRUCT_0001>\n<STRUCT_0002> Let <MATH_0002> be a scheme over <MATH_0003>.\nA <TEXTITOPEN_0001>descent datum for <MATH_0004><TEXTITCLOSE_0001> is an isomorphism\n<MATH_0005> of schemes over\n<MATH_0006> satisfying the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>\nthat the diagram\n<MATH_0007>\ncommutes (with obvious notation).\n<STRUCT_0003> We also say that the pair <MATH_0008> is\na <TEXTITOPEN_0003>descent datum relative to <MATH_0009><TEXTITCLOSE_0003>.\n<STRUCT_0004> A <TEXTITOPEN_0004>morphism <MATH_0010> of\ndescent data relative to <MATH_0011><TEXTITCLOSE_0004> is a morphism\n<MATH_0012> of schemes over <MATH_0013> such that\nthe diagram\n<MATH_0014>\ncommutes.\n<STRUCT_0005>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$V \\to X$",
+        "MATH_0003": "$X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$V/X/S$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\varphi : V \\times_S X \\to X \\times_S V$",
+        "MATH_0006": "$X \\times_S X$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0007": "$$\n\\xymatrix{\nV \\times_S X \\times_S X \\ar[rd]^{\\varphi_{01}} \\ar[rr]_{\\varphi_{02}} &\n&\nX \\times_S X \\times_S V\\\\\n&\nX \\times_S V \\times_S X \\ar[ru]^{\\varphi_{12}}\n}\n$$",
+        "STRUCT_0003": "\\item",
+        "MATH_0008": "$(V/X, \\varphi)$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0009": "$X \\to S$",
+        "TEXTITCLOSE_0003": "}",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0010": "$g : (V/X, \\varphi) \\to (V'/X, \\varphi')$",
+        "MATH_0011": "$X \\to S$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0012": "$g : V \\to V'$",
+        "MATH_0013": "$X$",
+        "MATH_0014": "$$\n\\xymatrix{\nV \\times_S X \\ar[r]_{\\varphi} \\ar[d]_{g \\times \\text{id}_X} &\nX \\times_S V \\ar[d]^{\\text{id}_X \\times g} \\\\\nV' \\times_S X \\ar[r]^{\\varphi'} & X \\times_S V'\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 91,
+          "projection_end": 97,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent datum for",
+          "projection_start": 118,
+          "projection_end": 135,
+          "concept": "descent datum for",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 154,
+          "projection_end": 165,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 181,
+          "projection_end": 188,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cocycle condition",
+          "projection_start": 221,
+          "projection_end": 238,
+          "concept": "cocycle condition",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 248,
+          "projection_end": 255,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 268,
+          "projection_end": 276,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent datum relative",
+          "projection_start": 359,
+          "projection_end": 381,
+          "concept": "descent datum relative",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 414,
+          "projection_end": 422,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "of descent data relative",
+          "projection_start": 435,
+          "projection_end": 459,
+          "concept": "of descent data relative",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 480,
+          "projection_end": 488,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 504,
+          "projection_end": 511,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 543,
+          "projection_end": 550,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 563,
+          "projection_end": 571,
+          "concept": "commutes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023U:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nThere are all kinds of ``miraculous'' identities which arise out of the\ndefinition above. For example the pullback of <MATH_0001> via the diagonal\nmorphism <MATH_0002> can be seen as a morphism\n<MATH_0003>.\nThis because <MATH_0004>\nand also <MATH_0005>.\nIn fact, <MATH_0006> is equal to the identity.\nThis is a good exercise if you are unfamiliar with this material.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\varphi$",
+        "MATH_0002": "$\\Delta : X \\to X \\times_S X$",
+        "MATH_0003": "$\\Delta^*\\varphi : V \\to V$",
+        "MATH_0004": "$X \\times_{\\Delta, X \\times_S X} (V \\times_S X) = V$",
+        "MATH_0005": "$X \\times_{\\Delta, X \\times_S X} (X \\times_S V) = V$",
+        "MATH_0006": "$\\Delta^*\\varphi$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "pullback",
+          "projection_start": 120,
+          "projection_end": 128,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 161,
+          "projection_end": 169,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 199,
+          "projection_end": 207,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VP:statement",
+      "source_text": "Let <MATH_0001> be a morphism of schemes. Let <MATH_0002> be\na descent datum relative to <MATH_0003>. We may think of the\nisomorphism <MATH_0004> as an isomorphism\n<MATH_0005>\nof schemes over <MATH_0006>. So loosely speaking one may\nthink of <MATH_0007> as a map\n<MATH_0008><FOOTNOTEOPEN_0001>Unfortunately,\nwe have chosen the ``wrong'' direction for our arrow here. In\nDefinitions <REF_0001> and\n<REF_0002>\nwe should have the opposite direction to what was done in\nDefinition <REF_0003>\nby the general principle that ``functions'' and ``spaces'' are dual.<FOOTNOTECLOSE_0001>.\nThe cocycle condition then says that\n<MATH_0009>.\nIn this way it is very similar to the case of a descent datum on\nquasi-coherent sheaves.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$X \\to S$",
+        "MATH_0002": "$(V/X, \\varphi)$",
+        "MATH_0003": "$X \\to S$",
+        "MATH_0004": "$\\varphi$",
+        "MATH_0005": "$$\n(X \\times_S X) \\times_{\\text{pr}_0, X} V\n\\longrightarrow\n(X \\times_S X) \\times_{\\text{pr}_1, X} V\n$$",
+        "MATH_0006": "$X \\times_S X$",
+        "MATH_0007": "$\\varphi$",
+        "MATH_0008": "$\\varphi : \\text{pr}_0^*V \\to \\text{pr}_1^*V$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "REF_0001": "\\ref{definition-descent-datum}",
+        "REF_0002": "\\ref{definition-descent-datum-for-family-of-morphisms}",
+        "REF_0003": "\\ref{definition-descent-datum-quasi-coherent}",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0009": "$\\text{pr}_{02}^*\\varphi =\n\\text{pr}_{12}^*\\varphi \\circ \\text{pr}_{01}^*\\varphi$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 63,
+          "projection_end": 70,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 122,
+          "projection_end": 133,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 152,
+          "projection_end": 163,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 179,
+          "projection_end": 186,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 259,
+          "projection_end": 262,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functions",
+          "projection_start": 520,
+          "projection_end": 529,
+          "concept": "function",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 676,
+          "projection_end": 683,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 693,
+          "projection_end": 715,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023U:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nHere is the definition in case you have a family of morphisms\nwith fixed target.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 56,
+          "projection_end": 75,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023W:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\n<STRUCT_0001>\n<STRUCT_0002> A <TEXTITOPEN_0001>descent datum <MATH_0004> relative to the\nfamily <MATH_0005><TEXTITCLOSE_0001> is given by a scheme <MATH_0006> over <MATH_0007>\nfor each <MATH_0008>, an isomorphism\n<MATH_0009>\nof schemes over <MATH_0010> for each pair <MATH_0011>\nsuch that for every triple of indices <MATH_0012>\nthe diagram\n<MATH_0013>\nof schemes over <MATH_0014> commutes\n(with obvious notation).\n<STRUCT_0003> A <TEXTITOPEN_0002>morphism\n<MATH_0015>\nof descent data<TEXTITCLOSE_0002> is given by a family\n<MATH_0016> of morphisms of\n<MATH_0017>-schemes <MATH_0018> such that all the diagrams\n<MATH_0019>\ncommute.\n<STRUCT_0004>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$(V_i, \\varphi_{ij})$",
+        "MATH_0005": "$\\{X_i \\to S\\}$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0006": "$V_i$",
+        "MATH_0007": "$X_i$",
+        "MATH_0008": "$i \\in I$",
+        "MATH_0009": "$\\varphi_{ij} : V_i \\times_S X_j \\to X_i \\times_S V_j$",
+        "MATH_0010": "$X_i \\times_S X_j$",
+        "MATH_0011": "$(i, j) \\in I^2$",
+        "MATH_0012": "$(i, j, k) \\in I^3$",
+        "MATH_0013": "$$\n\\xymatrix{\nV_i \\times_S X_j \\times_S X_k\n\\ar[rd]^{\\text{pr}_{01}^*\\varphi_{ij}}\n\\ar[rr]_{\\text{pr}_{02}^*\\varphi_{ik}} &\n&\nX_i \\times_S X_j \\times_S V_k\\\\\n&\nX_i \\times_S V_j \\times_S X_k\n\\ar[ru]^{\\text{pr}_{12}^*\\varphi_{jk}}\n}\n$$",
+        "MATH_0014": "$X_i \\times_S X_j \\times_S X_k$",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0015": "$\\psi : (V_i, \\varphi_{ij}) \\to (V'_i, \\varphi'_{ij})$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0016": "$\\psi = (\\psi_i)_{i \\in I}$",
+        "MATH_0017": "$X_i$",
+        "MATH_0018": "$\\psi_i : V_i \\to V'_i$",
+        "MATH_0019": "$$\n\\xymatrix{\nV_i \\times_S X_j \\ar[r]_{\\varphi_{ij}} \\ar[d]_{\\psi_i \\times \\text{id}} &\nX_i \\times_S V_j \\ar[d]^{\\text{id} \\times \\psi_j} \\\\\nV'_i \\times_S X_j \\ar[r]^{\\varphi'_{ij}} & X_i \\times_S V'_j\n}\n$$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent datum",
+          "projection_start": 125,
+          "projection_end": 138,
+          "concept": "descent datum",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "relative to the family",
+          "projection_start": 151,
+          "projection_end": 173,
+          "concept": "relative to the family",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 200,
+          "projection_end": 206,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 261,
+          "projection_end": 272,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 288,
+          "projection_end": 295,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 393,
+          "projection_end": 400,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 416,
+          "projection_end": 423,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 441,
+          "projection_end": 449,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 491,
+          "projection_end": 499,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "of descent data",
+          "projection_start": 512,
+          "projection_end": 527,
+          "concept": "of descent data",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 564,
+          "projection_end": 573,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 589,
+          "projection_end": 596,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagrams",
+          "projection_start": 627,
+          "projection_end": 635,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commute",
+          "projection_start": 648,
+          "projection_end": 655,
+          "concept": "commutes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023U:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nThis is the notion that comes up naturally for example when the question arises\nwhether the fibred category of relative curves is a stack in the\nfpqc topology (it isn't -- at least not if you stick to schemes).\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "fibred category",
+          "projection_start": 106,
+          "projection_end": 121,
+          "concept": "fibred-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 146,
+          "projection_end": 151,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc topology",
+          "projection_start": 159,
+          "projection_end": 172,
+          "concept": "source-phrase-fpqc-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 215,
+          "projection_end": 222,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VQ:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nLet <MATH_0004> be a descent datum relative to\n<MATH_0005>. We may think of the isomorphisms <MATH_0006>\nas isomorphisms\n<MATH_0007>\nof schemes over <MATH_0008>. So loosely speaking one may\nthink of <MATH_0009> as an isomorphism\n<MATH_0010> over <MATH_0011>.\nThe cocycle condition then says that\n<MATH_0012>.\nIn this way it is very similar to the case of a descent datum on\nquasi-coherent sheaves.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$(V_i, \\varphi_{ij})$",
+        "MATH_0005": "$\\{X_i \\to S\\}$",
+        "MATH_0006": "$\\varphi_{ij}$",
+        "MATH_0007": "$$\n(X_i \\times_S X_j) \\times_{\\text{pr}_0, X_i} V_i\n\\longrightarrow\n(X_i \\times_S X_j) \\times_{\\text{pr}_1, X_j} V_j\n$$",
+        "MATH_0008": "$X_i \\times_S X_j$",
+        "MATH_0009": "$\\varphi_{ij}$",
+        "MATH_0010": "$\\text{pr}_0^*V_i \\to \\text{pr}_1^*V_j$",
+        "MATH_0011": "$X_i \\times_S X_j$",
+        "MATH_0012": "$\\text{pr}_{02}^*\\varphi_{ik} =\n\\text{pr}_{12}^*\\varphi_{jk} \\circ \\text{pr}_{01}^*\\varphi_{ij}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 116,
+          "projection_end": 123,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 175,
+          "projection_end": 187,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 203,
+          "projection_end": 215,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 231,
+          "projection_end": 238,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 312,
+          "projection_end": 323,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 452,
+          "projection_end": 459,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 469,
+          "projection_end": 491,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023U:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nThe reason we will usually work with the version of a family consisting\nof a single morphism is the following lemma.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 98,
+          "projection_end": 106,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:04NK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain the following diagram of local homomorphisms of local rings\n<MATH_0001>\nNote that the vertical arrows are localizations of <ACCENT_0001>tale ring maps,\nin particular they are unramified (see\nAlgebra, Section <REF_0002>).\nHence <MATH_0002> and <MATH_0003>\nare finite separable field extensions.\nThus we have\n<MATH_0004>\nwhich proves the lemma.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "MATH_0001": "$$\n\\xymatrix{\n\\mathcal{O}_{U', u'} & \\mathcal{O}_{V', v'} \\ar[l] \\\\\n\\mathcal{O}_{U, u} \\ar[u] & \\mathcal{O}_{V, v} \\ar[l] \\ar[u]\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "REF_0002": "\\ref{algebra-section-etale}",
+        "MATH_0002": "$\\kappa(u')/\\kappa(u)$",
+        "MATH_0003": "$\\kappa(v')/\\kappa(v)$",
+        "MATH_0004": "$\\text{trdeg}_{\\kappa(v)} \\kappa(u) = \\text{trdeg}_{\\kappa(v')} \\kappa(u)$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04NL:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nThe property of morphisms of germs\n<MATH_0002>\nis <ACCENT_0001>tale local on the source-and-target.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-dimension-at-point}",
+        "MATH_0001": "$d \\in \\{0, 1, 2, \\ldots, \\infty\\}$",
+        "MATH_0002": "$$\n\\mathcal{P}_d((X, x) \\to (S, s))\n\\Leftrightarrow\n\\dim_x (X_s) = d\n$$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R5:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a germ of a scheme.\nThe dimension of <MATH_0002> at <MATH_0003> is the minimum of the dimensions of\nopen neighbourhoods of <MATH_0004> in <MATH_0005>, and any small enough open neighbourhood\nhas this dimension. Hence this is an invariant of the isomorphism class\nof the germ. We denote this simply <MATH_0006>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$(X, x)$",
+        "MATH_0002": "$X$",
+        "MATH_0003": "$x$",
+        "MATH_0004": "$x$",
+        "MATH_0005": "$X$",
+        "MATH_0006": "$\\dim_x(X)$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04NL:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nGiven a diagram as in\nDefinition <REF_0001>\nwe obtain an <ACCENT_0001>tale morphism of fibres\n<MATH_0001> mapping <MATH_0002> to <MATH_0003>, see\nLemma <REF_0002>.\nHence now the equality <MATH_0004> follows from\nLemma <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{definition-local-source-target-at-point}",
+        "ACCENT_0001": "\\'e",
+        "MATH_0001": "$U'_{v'} \\to U_v$",
+        "MATH_0002": "$u'$",
+        "MATH_0003": "$u$",
+        "REF_0002": "\\ref{lemma-etale-on-fiber}",
+        "MATH_0004": "$\\dim_u(U_v) = \\dim_{u'}(U'_{v'})$",
+        "REF_0003": "\\ref{lemma-dimension-at-point-local}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023U:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent data for schemes over schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-datum}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023U:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nMost of the arguments in this section are formal relying only\non the definition of a descent datum. In\nSimplicial Spaces, Section <REF_0001>\nwe will examine the relationship with simplicial schemes which will\nsomewhat clarify the situation.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{spaces-simplicial-section-simplicial-descent}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023V:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0002> be a scheme over <MATH_0003>.\nA <TEXTITOPEN_0001>descent datum for <MATH_0004><TEXTITCLOSE_0001> is an isomorphism\n<MATH_0005> of schemes over\n<MATH_0006> satisfying the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>\nthat the diagram\n<MATH_0007>\ncommutes (with obvious notation).\n<STRUCT_0004> We also say that the pair <MATH_0008> is\na <TEXTITOPEN_0003>descent datum relative to <MATH_0009><TEXTITCLOSE_0003>.\n<STRUCT_0005> A <TEXTITOPEN_0004>morphism <MATH_0010> of\ndescent data relative to <MATH_0011><TEXTITCLOSE_0004> is a morphism\n<MATH_0012> of schemes over <MATH_0013> such that\nthe diagram\n<MATH_0014>\ncommutes.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$V \\to X$",
+        "MATH_0003": "$X$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$V/X/S$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\varphi : V \\times_S X \\to X \\times_S V$",
+        "MATH_0006": "$X \\times_S X$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0007": "$$\n\\xymatrix{\nV \\times_S X \\times_S X \\ar[rd]^{\\varphi_{01}} \\ar[rr]_{\\varphi_{02}} &\n&\nX \\times_S X \\times_S V\\\\\n&\nX \\times_S V \\times_S X \\ar[ru]^{\\varphi_{12}}\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$(V/X, \\varphi)$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0009": "$X \\to S$",
+        "TEXTITCLOSE_0003": "}",
+        "STRUCT_0005": "\\item",
+        "TEXTITOPEN_0004": "{\\it ",
+        "MATH_0010": "$g : (V/X, \\varphi) \\to (V'/X, \\varphi')$",
+        "MATH_0011": "$X \\to S$",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0012": "$g : V \\to V'$",
+        "MATH_0013": "$X$",
+        "MATH_0014": "$$\n\\xymatrix{\nV \\times_S X \\ar[r]_{\\varphi} \\ar[d]_{g \\times \\text{id}_X} &\nX \\times_S V \\ar[d]^{\\text{id}_X \\times g} \\\\\nV' \\times_S X \\ar[r]^{\\varphi'} & X \\times_S V'\n}\n$$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023U:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThere are all kinds of ``miraculous'' identities which arise out of the\ndefinition above. For example the pullback of <MATH_0001> via the diagonal\nmorphism <MATH_0002> can be seen as a morphism\n<MATH_0003>.\nThis because <MATH_0004>\nand also <MATH_0005>.\nIn fact, <MATH_0006> is equal to the identity.\nThis is a good exercise if you are unfamiliar with this material.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\varphi$",
+        "MATH_0002": "$\\Delta : X \\to X \\times_S X$",
+        "MATH_0003": "$\\Delta^*\\varphi : V \\to V$",
+        "MATH_0004": "$X \\times_{\\Delta, X \\times_S X} (V \\times_S X) = V$",
+        "MATH_0005": "$X \\times_{\\Delta, X \\times_S X} (X \\times_S V) = V$",
+        "MATH_0006": "$\\Delta^*\\varphi$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VP:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes. Let <MATH_0002> be\na descent datum relative to <MATH_0003>. We may think of the\nisomorphism <MATH_0004> as an isomorphism\n<MATH_0005>\nof schemes over <MATH_0006>. So loosely speaking one may\nthink of <MATH_0007> as a map\n<MATH_0008><FOOTNOTEOPEN_0001>Unfortunately,\nwe have chosen the ``wrong'' direction for our arrow here. In\nDefinitions <REF_0001> and\n<REF_0002>\nwe should have the opposite direction to what was done in\nDefinition <REF_0003>\nby the general principle that ``functions'' and ``spaces'' are dual.<FOOTNOTECLOSE_0001>.\nThe cocycle condition then says that\n<MATH_0009>.\nIn this way it is very similar to the case of a descent datum on\nquasi-coherent sheaves.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-easier}",
+        "MATH_0001": "$X \\to S$",
+        "MATH_0002": "$(V/X, \\varphi)$",
+        "MATH_0003": "$X \\to S$",
+        "MATH_0004": "$\\varphi$",
+        "MATH_0005": "$$\n(X \\times_S X) \\times_{\\text{pr}_0, X} V\n\\longrightarrow\n(X \\times_S X) \\times_{\\text{pr}_1, X} V\n$$",
+        "MATH_0006": "$X \\times_S X$",
+        "MATH_0007": "$\\varphi$",
+        "MATH_0008": "$\\varphi : \\text{pr}_0^*V \\to \\text{pr}_1^*V$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "REF_0001": "\\ref{definition-descent-datum}",
+        "REF_0002": "\\ref{definition-descent-datum-for-family-of-morphisms}",
+        "REF_0003": "\\ref{definition-descent-datum-quasi-coherent}",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0009": "$\\text{pr}_{02}^*\\varphi =\n\\text{pr}_{12}^*\\varphi \\circ \\text{pr}_{01}^*\\varphi$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023U:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nHere is the definition in case you have a family of morphisms\nwith fixed target.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023W:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0004> relative to the\nfamily <MATH_0005><TEXTITCLOSE_0001> is given by a scheme <MATH_0006> over <MATH_0007>\nfor each <MATH_0008>, an isomorphism\n<MATH_0009>\nof schemes over <MATH_0010> for each pair <MATH_0011>\nsuch that for every triple of indices <MATH_0012>\nthe diagram\n<MATH_0013>\nof schemes over <MATH_0014> commutes\n(with obvious notation).\n<STRUCT_0004> A <TEXTITOPEN_0002>morphism\n<MATH_0015>\nof descent data<TEXTITCLOSE_0002> is given by a family\n<MATH_0016> of morphisms of\n<MATH_0017>-schemes <MATH_0018> such that all the diagrams\n<MATH_0019>\ncommute.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-for-family-of-morphisms}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$(V_i, \\varphi_{ij})$",
+        "MATH_0005": "$\\{X_i \\to S\\}$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0006": "$V_i$",
+        "MATH_0007": "$X_i$",
+        "MATH_0008": "$i \\in I$",
+        "MATH_0009": "$\\varphi_{ij} : V_i \\times_S X_j \\to X_i \\times_S V_j$",
+        "MATH_0010": "$X_i \\times_S X_j$",
+        "MATH_0011": "$(i, j) \\in I^2$",
+        "MATH_0012": "$(i, j, k) \\in I^3$",
+        "MATH_0013": "$$\n\\xymatrix{\nV_i \\times_S X_j \\times_S X_k\n\\ar[rd]^{\\text{pr}_{01}^*\\varphi_{ij}}\n\\ar[rr]_{\\text{pr}_{02}^*\\varphi_{ik}} &\n&\nX_i \\times_S X_j \\times_S V_k\\\\\n&\nX_i \\times_S V_j \\times_S X_k\n\\ar[ru]^{\\text{pr}_{12}^*\\varphi_{jk}}\n}\n$$",
+        "MATH_0014": "$X_i \\times_S X_j \\times_S X_k$",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0015": "$\\psi : (V_i, \\varphi_{ij}) \\to (V'_i, \\varphi'_{ij})$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0016": "$\\psi = (\\psi_i)_{i \\in I}$",
+        "MATH_0017": "$X_i$",
+        "MATH_0018": "$\\psi_i : V_i \\to V'_i$",
+        "MATH_0019": "$$\n\\xymatrix{\nV_i \\times_S X_j \\ar[r]_{\\varphi_{ij}} \\ar[d]_{\\psi_i \\times \\text{id}} &\nX_i \\times_S V_j \\ar[d]^{\\text{id} \\times \\psi_j} \\\\\nV'_i \\times_S X_j \\ar[r]^{\\varphi'_{ij}} & X_i \\times_S V'_j\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023U:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis is the notion that comes up naturally for example when the question arises\nwhether the fibred category of relative curves is a stack in the\nfpqc topology (it isn't -- at least not if you stick to schemes).",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VQ:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nLet <MATH_0004> be a descent datum relative to\n<MATH_0005>. We may think of the isomorphisms <MATH_0006>\nas isomorphisms\n<MATH_0007>\nof schemes over <MATH_0008>. So loosely speaking one may\nthink of <MATH_0009> as an isomorphism\n<MATH_0010> over <MATH_0011>.\nThe cocycle condition then says that\n<MATH_0012>.\nIn this way it is very similar to the case of a descent datum on\nquasi-coherent sheaves.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-easier-family}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$(V_i, \\varphi_{ij})$",
+        "MATH_0005": "$\\{X_i \\to S\\}$",
+        "MATH_0006": "$\\varphi_{ij}$",
+        "MATH_0007": "$$\n(X_i \\times_S X_j) \\times_{\\text{pr}_0, X_i} V_i\n\\longrightarrow\n(X_i \\times_S X_j) \\times_{\\text{pr}_1, X_j} V_j\n$$",
+        "MATH_0008": "$X_i \\times_S X_j$",
+        "MATH_0009": "$\\varphi_{ij}$",
+        "MATH_0010": "$\\text{pr}_0^*V_i \\to \\text{pr}_1^*V_j$",
+        "MATH_0011": "$X_i \\times_S X_j$",
+        "MATH_0012": "$\\text{pr}_{02}^*\\varphi_{ik} =\n\\text{pr}_{12}^*\\varphi_{jk} \\circ \\text{pr}_{01}^*\\varphi_{ij}$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023U:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe reason we will usually work with the version of a family consisting\nof a single morphism is the following lemma.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023X:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nSet <MATH_0004>, and consider it as an <MATH_0005>-scheme.\nThere is a canonical equivalence of categories\n<MATH_0006>\nwhich maps <MATH_0007> to <MATH_0008> with\n<MATH_0009> and <MATH_0010>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-family-is-one}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$X = \\coprod_{i \\in I} X_i$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$$\n\\begin{matrix}\n\\text{category of descent data } \\\\\n\\text{relative to the family } \\{X_i \\to S\\}_{i \\in I}\n\\end{matrix}\n\\longrightarrow\n\\begin{matrix}\n\\text{ category of descent data} \\\\\n\\text{ relative to } X/S\n\\end{matrix}\n$$",
+        "MATH_0007": "$(V_i, \\varphi_{ij})$",
+        "MATH_0008": "$(V, \\varphi)$",
+        "MATH_0009": "$V = \\coprod_{i\\in I} V_i$",
+        "MATH_0010": "$\\varphi = \\coprod \\varphi_{ij}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-definition-descent-datum-quasi-coherent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a family\nof morphisms with target <MATH_0003>.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0004>\nfor quasi-coherent sheaves<TEXTITCLOSE_0001> with respect to the given family\nis given by a quasi-coherent sheaf <MATH_0005> on <MATH_0006> for\neach <MATH_0007>, an isomorphism of quasi-coherent\n<MATH_0008>-modules\n<MATH_0009>\nfor each pair <MATH_0010>\nsuch that for every triple of indices <MATH_0011> the\ndiagram\n<MATH_0012>\nof <MATH_0013>-modules\ncommutes. This is called the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>.\n<STRUCT_0004> A <TEXTITOPEN_0003>morphism <MATH_0014> of descent data<TEXTITCLOSE_0003> is given\nby a family <MATH_0015> of morphisms of\n<MATH_0016>-modules <MATH_0017>\nsuch that all the diagrams\n<MATH_0018>\ncommute.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-quasi-coherent}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{f_i : S_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0004": "$(\\mathcal{F}_i, \\varphi_{ij})$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0005": "$\\mathcal{F}_i$",
+        "MATH_0006": "$S_i$",
+        "MATH_0007": "$i \\in I$",
+        "MATH_0008": "$\\mathcal{O}_{S_i \\times_S S_j}$",
+        "MATH_0009": "$\\varphi_{ij} : \\text{pr}_0^*\\mathcal{F}_i \\to \\text{pr}_1^*\\mathcal{F}_j$",
+        "MATH_0010": "$(i, j) \\in I^2$",
+        "MATH_0011": "$(i, j, k) \\in I^3$",
+        "MATH_0012": "$$\n\\xymatrix{\n\\text{pr}_0^*\\mathcal{F}_i \\ar[rd]_{\\text{pr}_{01}^*\\varphi_{ij}}\n\\ar[rr]_{\\text{pr}_{02}^*\\varphi_{ik}} & &\n\\text{pr}_2^*\\mathcal{F}_k \\\\\n& \\text{pr}_1^*\\mathcal{F}_j \\ar[ru]_{\\text{pr}_{12}^*\\varphi_{jk}} &\n}\n$$",
+        "MATH_0013": "$\\mathcal{O}_{S_i \\times_S S_j \\times_S S_k}$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0014": "$\\psi : (\\mathcal{F}_i, \\varphi_{ij}) \\to\n(\\mathcal{F}'_i, \\varphi'_{ij})$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0015": "$\\psi = (\\psi_i)_{i\\in I}$",
+        "MATH_0016": "$\\mathcal{O}_{S_i}$",
+        "MATH_0017": "$\\psi_i : \\mathcal{F}_i \\to \\mathcal{F}'_i$",
+        "MATH_0018": "$$\n\\xymatrix{\n\\text{pr}_0^*\\mathcal{F}_i \\ar[r]_{\\varphi_{ij}} \\ar[d]_{\\text{pr}_0^*\\psi_i}\n& \\text{pr}_1^*\\mathcal{F}_j \\ar[d]^{\\text{pr}_1^*\\psi_j} \\\\\n\\text{pr}_0^*\\mathcal{F}'_i \\ar[r]^{\\varphi'_{ij}} &\n\\text{pr}_1^*\\mathcal{F}'_j \\\\\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-descent-datum-quasi-coherent",
+      "requested_tag": "023B"
+    },
+    {
+      "context_id": "reference:descent-definition-local-source-target-at-point",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of germs of schemes.\nWe say <MATH_0002> is  <TEXTITOPEN_0001><ACCENT_0001>tale local on the source-and-target<TEXTITCLOSE_0001>\nif for any commutative diagram\n<MATH_0003>\nof germs with <ACCENT_0002>tale vertical arrows we have\n<MATH_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-local-source-target-at-point}",
+        "MATH_0001": "$\\mathcal{Q}$",
+        "MATH_0002": "$\\mathcal{Q}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "ACCENT_0001": "\\'e",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$$\n\\xymatrix{\n(U', u') \\ar[d]_a \\ar[r]_{h'} & (V', v') \\ar[d]^b \\\\\n(U, u) \\ar[r]^h & (V, v)\n}\n$$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0004": "$\\mathcal{Q}(h) \\Leftrightarrow \\mathcal{Q}(h')$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-local-source-target-at-point",
+      "requested_tag": "04NB"
+    },
+    {
+      "context_id": "reference:descent-lemma-dimension-at-point-local",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an <ACCENT_0001>tale morphism of schemes.\nLet <MATH_0002> and <MATH_0003>. Then <MATH_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-dimension-at-point-local}",
+        "MATH_0001": "$f : U \\to V$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$u \\in U$",
+        "MATH_0003": "$v = f(u)$",
+        "MATH_0004": "$\\dim_u(U) = \\dim_v(V)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-dimension-at-point-local",
+      "requested_tag": "04N4"
+    },
+    {
+      "context_id": "reference:descent-lemma-etale-on-fiber",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider a commutative diagram of morphisms of schemes\n<MATH_0001>\nwith <ACCENT_0001>tale vertical arrows and a point <MATH_0002> mapping to <MATH_0003>.\nThen the morphism of fibres <MATH_0004> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-on-fiber}",
+        "MATH_0001": "$$\n\\xymatrix{\nU' \\ar[r] \\ar[d] & V' \\ar[d] \\\\\nU \\ar[r] & V\n}\n$$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$v' \\in V'$",
+        "MATH_0003": "$v \\in V$",
+        "MATH_0004": "$U'_{v'} \\to U_v$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-etale-on-fiber",
+      "requested_tag": "04NI"
+    },
+    {
+      "context_id": "reference:spaces-simplicial-section-simplicial-descent",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Descent in terms of simplicial schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-simplicial-descent}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "spaces-simplicial-section-simplicial-descent",
+      "requested_tag": "0248"
+    }
+  ]
+}

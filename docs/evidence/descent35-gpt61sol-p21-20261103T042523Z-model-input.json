@@ -1,0 +1,3002 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19f9d-a472-7af0-b64c-88e5a839ff35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p21-20261103T042523Z.json",
+    "hash": "sha256:79499b553c5d31f5104e7e8867310376a0b270bcc97c5964a715921199ea7d42"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:08WW:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nThroughout this subsection, fix a ring map <MATH_0001>. As seen in\nSection <REF_0001> we can use the language of cosimplicial\nalgebras to talk about descent data for modules, but in this\nsubsection we prefer a more down to earth terminology.\n\n<STRUCT_0002><STRUCT_0003>\nFor <MATH_0002>, let <MATH_0003> be the <MATH_0004>-fold tensor product of <MATH_0005> over <MATH_0006>.\nDefine the ring homomorphisms <MATH_0007>,\n<MATH_0008>, and\n<MATH_0009> by the formulas\n<MATH_0010>\nIn other words, the upper index indicates the source ring, while the lower \nindex indicates where to insert factors of 1. (This notation is compatible\nwith the notation introduced in Section <REF_0002>.)\n\n<STRUCT_0004><STRUCT_0005>\nRecall<FOOTNOTEOPEN_0001>To be precise, our <MATH_0011> here is the inverse of\n<MATH_0012> from Definition <REF_0003>.<FOOTNOTECLOSE_0001>\nfrom Definition <REF_0004> that for\n<MATH_0013>, a <TEXTITOPEN_0001>descent datum<TEXTITCLOSE_0001> on <MATH_0014> relative to <MATH_0015> is\nan isomorphism\n<MATH_0016>\nof <MATH_0017>-modules satisfying the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002>\n<MATH_0018>\nLet <MATH_0019> be the category of <MATH_0020>-modules equipped with descent data \nrelative to <MATH_0021>.\n\n<STRUCT_0006><STRUCT_0007>\nFor example, for <MATH_0022> and a choice of isomorphism\n<MATH_0023> gives rise to a descent datum by identifying\n<MATH_0024> and <MATH_0025>\nnaturally with <MATH_0026>. This construction in particular\ndefines a functor <MATH_0027>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f: R \\to S$",
+        "REF_0001": "\\ref{section-descent-modules}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0002": "$i = 1, 2, 3$",
+        "MATH_0003": "$S_i$",
+        "MATH_0004": "$i$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$\\delta_0^1, \\delta_1^1: S_1 \\to S_2$",
+        "MATH_0008": "$\\delta_{01}^1, \\delta_{02}^1, \\delta_{12}^1: S_1 \\to S_3$",
+        "MATH_0009": "$\\delta_0^2, \\delta_1^2, \\delta_2^2: S_2 \\to S_3$",
+        "MATH_0010": "\\begin{align*}\n\\delta^1_0  (a_0) & =  1 \\otimes a_0 \\\\\n\\delta^1_1  (a_0) & = a_0 \\otimes 1 \\\\\n\\delta^2_0  (a_0 \\otimes a_1) & =  1 \\otimes a_0 \\otimes a_1 \\\\\n\\delta^2_1  (a_0 \\otimes a_1) & =  a_0 \\otimes 1 \\otimes a_1 \\\\\n\\delta^2_2  (a_0 \\otimes a_1) & =  a_0 \\otimes a_1 \\otimes 1 \\\\\n\\delta_{01}^1(a_0) & = 1 \\otimes 1 \\otimes a_0 \\\\\n\\delta_{02}^1(a_0) & = 1 \\otimes a_0 \\otimes 1 \\\\\n\\delta_{12}^1(a_0) & = a_0 \\otimes 1 \\otimes 1.\n\\end{align*}",
+        "REF_0002": "\\ref{section-descent-modules}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0011": "$\\theta$",
+        "MATH_0012": "$\\varphi$",
+        "REF_0003": "\\ref{definition-descent-datum-modules}",
+        "FOOTNOTECLOSE_0001": "}",
+        "REF_0004": "\\ref{definition-descent-datum-modules}",
+        "MATH_0013": "$M \\in \\text{Mod}_S$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0014": "$M$",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$$\n\\theta :\nM \\otimes_{S,\\delta^1_0} S_2\n\\longrightarrow\nM \\otimes_{S,\\delta^1_1} S_2\n$$",
+        "MATH_0017": "$S_2$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0018": "\\begin{equation}\n\\label{equation-cocycle-condition}\n(\\theta \\otimes \\delta_2^2) \\circ (\\theta \\otimes \\delta_2^0) = (\\theta \\otimes \n\\delta_2^1):\nM \\otimes_{S, \\delta^1_{01}} S_3 \\to M \\otimes_{S,\\delta^1_{12}} S_3.\n\\end{equation}",
+        "MATH_0019": "$DD_{S/R}$",
+        "MATH_0020": "$S$",
+        "MATH_0021": "$f$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0022": "$M_0 \\in \\text{Mod}_R$",
+        "MATH_0023": "$M \\cong M_0 \\otimes_R S$",
+        "MATH_0024": "$M \\otimes_{S,\\delta^1_0} S_2$",
+        "MATH_0025": "$M \\otimes_{S,\\delta^1_1} S_2$",
+        "MATH_0026": "$M_0 \\otimes_R S_2$",
+        "MATH_0027": "$f^*: \\text{Mod}_R \\to DD_{S/R}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring map",
+          "projection_start": 48,
+          "projection_end": 56,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 140,
+          "projection_end": 148,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 163,
+          "projection_end": 170,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 180,
+          "projection_end": 187,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "tensor product",
+          "projection_start": 340,
+          "projection_end": 354,
+          "concept": "tensor-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 399,
+          "projection_end": 403,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 404,
+          "projection_end": 417,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 541,
+          "projection_end": 545,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 786,
+          "projection_end": 793,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 908,
+          "projection_end": 915,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 967,
+          "projection_end": 978,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1006,
+          "projection_end": 1013,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 1082,
+          "projection_end": 1090,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1106,
+          "projection_end": 1113,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1128,
+          "projection_end": 1135,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1238,
+          "projection_end": 1249,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 1278,
+          "projection_end": 1285,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1405,
+          "projection_end": 1412,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WY:statement",
+      "source_text": "The functor <MATH_0001>\nis called <TEXTITOPEN_0001>base extension along <MATH_0002><TEXTITCLOSE_0001>. We say that <MATH_0003> is a\n<TEXTITOPEN_0002>descent morphism for modules<TEXTITCLOSE_0002> if <MATH_0004> is fully\nfaithful. We say that <MATH_0005> is an <TEXTITOPEN_0003>effective descent morphism for modules<TEXTITCLOSE_0003>\nif <MATH_0006> is an equivalence of categories.\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$f^*: \\text{Mod}_R \\to DD_{S/R}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$f$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$f$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0004": "$f^*$",
+        "MATH_0005": "$f$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0006": "$f^*$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 4,
+          "projection_end": 11,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base extension along",
+          "projection_start": 34,
+          "projection_end": 54,
+          "concept": "base extension along",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "descent morphism for modules",
+          "projection_start": 97,
+          "projection_end": 125,
+          "concept": "descent morphism for modules",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 144,
+          "projection_end": 158,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "effective descent morphism for modules",
+          "projection_start": 190,
+          "projection_end": 228,
+          "concept": "effective descent morphism for modules",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 250,
+          "projection_end": 275,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WW:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nOur goal is to show that for <MATH_0001> universally injective, we can use <MATH_0002> to \nlocate <MATH_0003> within <MATH_0004>. This process makes crucial use of some equalizer\ndiagrams.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\theta$",
+        "MATH_0003": "$M_0$",
+        "MATH_0004": "$M$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 67,
+          "projection_end": 76,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 182,
+          "projection_end": 191,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagrams",
+          "projection_start": 192,
+          "projection_end": 200,
+          "concept": "diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WZ:statement",
+      "source_text": "For <MATH_0001>, the diagram\n<MATH_0002>\nis a split equalizer.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$(M,\\theta) \\in DD_{S/R}$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-equalizer-M}\n\\xymatrix@C=8pc{\nM \\ar[r]^{\\theta \\circ (1_M \\otimes \\delta_0^1)} &\nM \\otimes_{S, \\delta_1^1} S_2\n\\ar@<1ex>[r]^{(\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0)}\n\\ar@<-1ex>[r]_{1_{M \\otimes S_2} \\otimes \\delta^2_1} & \nM \\otimes_{S, \\delta_{12}^1} S_3\n}\n\\end{equation}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "diagram",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 52,
+          "projection_end": 61,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WZ:proof",
+      "source_text": "Define the ring homomorphisms <MATH_0001> and <MATH_0002> by the formulas\n<MATH_0003>\nWe then take the auxiliary morphisms to be \n<MATH_0004>\nand <MATH_0005>.\nOf the compatibilities required in (<REF_0001>), \nthe first follows from tensoring the cocycle condition\n(<REF_0002>) with <MATH_0006>\nand the others are immediate.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\sigma^0_0: S_2 \\to S_1$",
+        "MATH_0002": "$\\sigma_0^1, \n\\sigma_1^1: S_3 \\to S_2$",
+        "MATH_0003": "\\begin{align*}\n\\sigma^0_0 (a_0 \\otimes a_1) & = a_0a_1 \\\\\n\\sigma^1_0 (a_0 \\otimes a_1 \\otimes a_2) & = a_0a_1 \\otimes a_2 \\\\\n\\sigma^1_1 (a_0 \\otimes a_1 \\otimes a_2) & = a_0 \\otimes a_1a_2.\n\\end{align*}",
+        "MATH_0004": "$1_M \\otimes \\sigma_0^0: M \\otimes_{S, \\delta_1^1} S_2 \\to M$",
+        "MATH_0005": "$1_M \\otimes \\sigma_0^1: M \\otimes_{S,\\delta_{12}^1} S_3 \\to M \\otimes_{S, \n\\delta_1^1} S_2$",
+        "REF_0001": "\\ref{equation-split-equalizer-conditions}",
+        "REF_0002": "\\ref{equation-cocycle-condition}",
+        "MATH_0006": "$\\sigma_1^1$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "ring",
+          "projection_start": 11,
+          "projection_end": 15,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 16,
+          "projection_end": 29,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 113,
+          "projection_end": 122,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X1:statement",
+      "source_text": "For <MATH_0001>, the diagram\n<MATH_0002>\nobtained by applying <MATH_0003> to (<REF_0001>) is a split\ncoequalizer.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$(M, \\theta) \\in DD_{S/R}$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-coequalizer-CM}\n\\xymatrix@C=8pc{\nC(M \\otimes_{S, \\delta_{12}^1} S_3)\n\\ar@<1ex>[r]^{C((\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0))}\n\\ar@<-1ex>[r]_{C(1_{M \\otimes S_2} \\otimes \\delta^2_1)} &\nC(M \\otimes_{S, \\delta_1^1} S_2 )\n\\ar[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))} & C(M).\n}\n\\end{equation}",
+        "MATH_0003": "$C$",
+        "REF_0001": "\\ref{equation-equalizer-M}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "diagram",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 101,
+          "projection_end": 112,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X1:proof",
+      "source_text": "Omitted.\n",
+      "node_kind": "proof",
+      "protected_nodes": {},
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:08X3:statement",
+      "source_text": "The diagram\n<MATH_0001>\nis a split equalizer.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "\\begin{equation}\n\\label{equation-equalizer-S}\n\\xymatrix@C=8pc{\nS_1 \\ar[r]^{\\delta^1_1} &\nS_2 \\ar@<1ex>[r]^{\\delta^2_2} \\ar@<-1ex>[r]_{\\delta^2_1} & \nS_3\n}\n\\end{equation}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "diagram",
+          "projection_start": 4,
+          "projection_end": 11,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 35,
+          "projection_end": 44,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X3:proof",
+      "source_text": "In Lemma <REF_0001>, take <MATH_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-equalizer-M}",
+        "MATH_0001": "$(M, \\theta) = f^*(S)$"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:08WW:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nThis suggests a definition of a potential quasi-inverse functor for <MATH_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f^*$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "quasi-inverse",
+          "projection_start": 56,
+          "projection_end": 69,
+          "concept": "quasi-inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 70,
+          "projection_end": 77,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X5:statement",
+      "source_text": "Define the functor <TEXTITOPEN_0001><MATH_0001><TEXTITCLOSE_0001> <MATH_0002> by taking\n<MATH_0003> to be the <MATH_0004>-submodule of <MATH_0005> for which the diagram\n<MATH_0006>\nis an equalizer.\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0001": "$f_*$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$: DD_{S/R} \\to \\text{Mod}_R$",
+        "MATH_0003": "$f_*(M, \\theta)$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$M$",
+        "MATH_0006": "\\begin{equation}\n\\label{equation-equalizer-f}\n\\xymatrix@C=8pc{f_*(M,\\theta) \\ar[r] & M \\ar@<1ex>^{\\theta \\circ (1_M \\otimes \n\\delta_0^1)}[r] \\ar@<-1ex>_{1_M \\otimes \\delta_1^1}[r] & \nM \\otimes_{S, \\delta_1^1} S_2 \n}\n\\end{equation}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 11,
+          "projection_end": 18,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 126,
+          "projection_end": 133,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 152,
+          "projection_end": 161,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08WW:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nUsing Lemma <REF_0001> and the fact that the restriction functor\n<MATH_0001> is right adjoint to the base extension\nfunctor <MATH_0002>,\nwe deduce that <MATH_0003> is right adjoint to <MATH_0004>.\n\n<STRUCT_0002><STRUCT_0003>\nWe are ready for the key lemma. In the faithfully flat case this is a \ntriviality (see Remark <REF_0002>),\nbut in the general case some argument is needed.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-equalizer-M}",
+        "MATH_0001": "$\\text{Mod}_S \\to \\text{Mod}_R$",
+        "MATH_0002": "$\\bullet \\otimes_R S: \\text{Mod}_R \\to \\text{Mod}_S$",
+        "MATH_0003": "$f_*$",
+        "MATH_0004": "$f^*$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0002": "\\ref{remark-descent-lemma}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "functor",
+          "projection_start": 71,
+          "projection_end": 78,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "right adjoint",
+          "projection_start": 94,
+          "projection_end": 107,
+          "concept": "right-adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 130,
+          "projection_end": 137,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "right adjoint",
+          "projection_start": 181,
+          "projection_end": 194,
+          "concept": "right-adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 277,
+          "projection_end": 292,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X7:statement",
+      "source_text": "If <MATH_0001> is universally injective, then the diagram\n<MATH_0002>\nobtained by tensoring (<REF_0001>) over <MATH_0003> with <MATH_0004> is an \nequalizer.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$f$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-equalizer-f2}\n\\xymatrix@C=8pc{\nf_*(M, \\theta) \\otimes_R S\n\\ar[r]^{\\theta \\circ (1_M \\otimes \\delta_0^1)} &\nM \\otimes_{S, \\delta_1^1} S_2 \n\\ar@<1ex>[r]^{(\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0)}\n\\ar@<-1ex>[r]_{1_{M \\otimes S_2} \\otimes \\delta^2_1} &\nM \\otimes_{S, \\delta_{12}^1} S_3\n}\n\\end{equation}",
+        "REF_0001": "\\ref{equation-equalizer-f}",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 30,
+          "projection_end": 39,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 50,
+          "projection_end": 57,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 145,
+          "projection_end": 154,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X7:proof",
+      "source_text": "By\nLemma <REF_0001> and\nRemark <REF_0002>,\nthe map <MATH_0001> can be split functorially \nin <MATH_0002>. This gives the upper vertical arrows in the commutative diagram\n<MATH_0003>\nin which the compositions along the columns are identity morphisms.\nThe second row is the coequalizer diagram\n(<REF_0003>); this produces the dashed arrow.\nFrom the top right square, we obtain auxiliary morphisms <MATH_0004> \nand <MATH_0005> which imply that the first row is \na split coequalizer diagram.\nBy Remark <REF_0004>, we may tensor with <MATH_0006> inside <MATH_0007> to obtain \nthe split coequalizer diagram\n<MATH_0008>\nBy Lemma <REF_0005>, we conclude\n(<REF_0006>) must also be an equalizer.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-split-surjection}",
+        "REF_0002": "\\ref{remark-functorial-splitting}",
+        "MATH_0001": "$C(1_N \\otimes f): C(N \\otimes_R S) \\to C(N)$",
+        "MATH_0002": "$N$",
+        "MATH_0003": "$$\n\\xymatrix@C=8pc{\nC(M \\otimes_{S, \\delta_1^1} S_2)\n\\ar@<1ex>^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))}[r]\n\\ar@<-1ex>_{C(1_M \\otimes \\delta_1^1)}[r] \\ar[d] &\nC(M) \\ar[r]\\ar[d] & C(f_*(M,\\theta)) \\ar@{-->}[d] \\\\\nC(M \\otimes_{S,\\delta_{12}^1} S_3)\n\\ar@<1ex>^{C((\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0))}[r]\n\\ar@<-1ex>_{C(1_{M \\otimes S_2} \\otimes \\delta^2_1)}[r] \\ar[d] &\nC(M \\otimes_{S, \\delta_1^1} S_2 )\n\\ar[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))}\n\\ar[d]^{C(1_M \\otimes \\delta_1^1)} &\nC(M) \\ar[d] \\ar@{=}[dl] \\\\\nC(M \\otimes_{S, \\delta_1^1} S_2)\n\\ar@<1ex>[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))}\n\\ar@<-1ex>[r]_{C(1_M \\otimes \\delta_1^1)} &\nC(M) \\ar[r] &\nC(f_*(M,\\theta))\n}\n$$",
+        "REF_0003": "\\ref{equation-coequalizer-CM}",
+        "MATH_0004": "$C(f_*(M,\\theta)) \\to \nC(M)$",
+        "MATH_0005": "$C(M) \\to C(M\\otimes_{S,\\delta_1^1} S_2)$",
+        "REF_0004": "\\ref{remark-adjunction}",
+        "MATH_0006": "$S$",
+        "MATH_0007": "$C$",
+        "MATH_0008": "$$\n\\xymatrix@C=8pc{\nC(M \\otimes_{S,\\delta_2^2 \\circ \\delta_1^1} S_3)\n\\ar@<1ex>^{C((\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0))}[r] \n\\ar@<-1ex>_{C(1_{M \\otimes S_2} \\otimes \\delta^2_1)}[r] &\nC(M \\otimes_{S, \\delta_1^1} S_2 )\n\\ar[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))} &\nC(f_*(M,\\theta) \\otimes_R S).\n}\n$$",
+        "REF_0005": "\\ref{lemma-C-is-faithful}",
+        "REF_0006": "\\ref{equation-equalizer-f2}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "map",
+          "projection_start": 47,
+          "projection_end": 50,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 149,
+          "projection_end": 168,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "compositions",
+          "projection_start": 194,
+          "projection_end": 206,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "identity morphisms",
+          "projection_start": 229,
+          "projection_end": 247,
+          "concept": "identity-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 271,
+          "projection_end": 282,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 283,
+          "projection_end": 290,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 384,
+          "projection_end": 393,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 464,
+          "projection_end": 475,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 476,
+          "projection_end": 483,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "coequalizer",
+          "projection_start": 577,
+          "projection_end": 588,
+          "concept": "coequalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 589,
+          "projection_end": 596,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizer",
+          "projection_start": 671,
+          "projection_end": 680,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08X9:statement",
+      "source_text": "If <MATH_0001> is a split injection in <MATH_0002>, one can simplify the argument by \nsplitting <MATH_0003> directly,\nwithout using <MATH_0004>. Things are even simpler if <MATH_0005> is faithfully flat; in this \ncase,\nthe conclusion of Lemma <REF_0001> \nis immediate because tensoring over <MATH_0006> with <MATH_0007> preserves all equalizers.\n",
+      "node_kind": "remark",
+      "protected_nodes": {
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$C$",
+        "MATH_0005": "$f$",
+        "REF_0001": "\\ref{lemma-descent-lemma}",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$S$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "splitting",
+          "projection_start": 85,
+          "projection_end": 94,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 186,
+          "projection_end": 201,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizers",
+          "projection_start": 331,
+          "projection_end": 341,
+          "concept": "equalizer",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XA:statement",
+      "source_text": "The following conditions are equivalent.\n<STRUCT_0001>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> The morphism <MATH_0001> is a descent morphism for modules.\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> The morphism <MATH_0002> is an effective descent morphism for modules.\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> The morphism <MATH_0003> is universally injective.\n<STRUCT_0002>\n",
+      "node_kind": "theorem",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0001": "$f$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0002": "$f$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0003": "$f$",
+        "STRUCT_0002": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "equivalent",
+          "projection_start": 29,
+          "projection_end": 39,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 94,
+          "projection_end": 102,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 120,
+          "projection_end": 127,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 128,
+          "projection_end": 136,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 141,
+          "projection_end": 148,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 189,
+          "projection_end": 197,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 226,
+          "projection_end": 233,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 234,
+          "projection_end": 242,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 247,
+          "projection_end": 254,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 295,
+          "projection_end": 303,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 331,
+          "projection_end": 340,
+          "concept": "injective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XA:proof",
+      "source_text": "It is clear that (b) implies (a). We now check that (a) implies (c). If <MATH_0001> is \nnot universally injective, we can find <MATH_0002> such that the map\n<MATH_0003> has nontrivial kernel <MATH_0004>.\nThe natural projection <MATH_0005> is not an isomorphism, but its image in \n<MATH_0006> is an isomorphism.\nHence <MATH_0007> is not fully faithful.\n\n<STRUCT_0001><STRUCT_0002>\nWe finally check that (c) implies (b). By Lemmas \n<REF_0001> and <REF_0002>, for\n<MATH_0008>,\nthe natural map <MATH_0009> is an isomorphism of <MATH_0010>-modules.\nFor <MATH_0011> we want to show <MATH_0012> is an\nisomorphism. By adjunction, the composition\n<MATH_0013> is the identity, while the above\nshows that the second arrow is an isomorphism. Thus\n<MATH_0014> is an isomorphism. By Algebra, Lemma\n<REF_0003>\nwe conclude <MATH_0015> is an isomorphism.\nConsequently, <MATH_0016> and <MATH_0017> are  quasi-inverse functors, proving the claim.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f$",
+        "MATH_0002": "$M \\in \\text{Mod}_R$",
+        "MATH_0003": "$1_M \\otimes f: M \\to M \\otimes_R S$",
+        "MATH_0004": "$N$",
+        "MATH_0005": "$M \\to M/N$",
+        "MATH_0006": "$DD_{S/R}$",
+        "MATH_0007": "$f^*$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0001": "\\ref{lemma-equalizer-M}",
+        "REF_0002": "\\ref{lemma-descent-lemma}",
+        "MATH_0008": "$(M, \\theta) \\in DD_{S/R}$",
+        "MATH_0009": "$f^* f_*(M,\\theta) \\to M$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$M_0 \\in \\text{Mod}_R$",
+        "MATH_0012": "$M_0 \\to f_*f^*M_0$",
+        "MATH_0013": "$f^*M_0 \\to f^*f_*f^*M_0 \\to f^*M_0$",
+        "MATH_0014": "$f^*M_0 \\to f^*f_*f^*M_0$",
+        "REF_0003": "\\ref{algebra-lemma-base-change-along-universally-injective-ring-map}",
+        "MATH_0015": "$M_0 \\to f_* f^* M_0$",
+        "MATH_0016": "$f_*$",
+        "MATH_0017": "$f^*$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 103,
+          "projection_end": 112,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 152,
+          "projection_end": 155,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 183,
+          "projection_end": 189,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 248,
+          "projection_end": 259,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 269,
+          "projection_end": 274,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 296,
+          "projection_end": 307,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 334,
+          "projection_end": 348,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 482,
+          "projection_end": 485,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 504,
+          "projection_end": 515,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 531,
+          "projection_end": 538,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 590,
+          "projection_end": 601,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "adjunction",
+          "projection_start": 606,
+          "projection_end": 616,
+          "concept": "adjunction",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 622,
+          "projection_end": 633,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 713,
+          "projection_end": 724,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 749,
+          "projection_end": 760,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 765,
+          "projection_end": 772,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 821,
+          "projection_end": 832,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-inverse",
+          "projection_start": 880,
+          "projection_end": 893,
+          "concept": "quasi-inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 894,
+          "projection_end": 902,
+          "concept": "functor",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XB:title",
+      "source_text": "Descent for properties of modules",
+      "node_kind": "subsection_title",
+      "protected_nodes": {},
+      "required_source_terms": [
+        {
+          "source_term": "Descent",
+          "projection_start": 0,
+          "projection_end": 7,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 26,
+          "projection_end": 33,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XB:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nThroughout this subsection, fix a universally injective ring map <MATH_0001>,\nan object <MATH_0002>, and a ring map <MATH_0003>. We now investigate\nthe question of which properties of <MATH_0004> or <MATH_0005> can be checked after base\nextension along <MATH_0006>. We start with some results from \n<REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f : R \\to S$",
+        "MATH_0002": "$M \\in \\text{Mod}_R$",
+        "MATH_0003": "$R \\to A$",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$A$",
+        "MATH_0006": "$f$",
+        "REF_0001": "\\cite{mesablishvili2}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "injective",
+          "projection_start": 60,
+          "projection_end": 69,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 70,
+          "projection_end": 78,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 95,
+          "projection_end": 101,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 121,
+          "projection_end": 129,
+          "concept": "ring-map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XC:statement",
+      "source_text": "If <MATH_0001> is flat, then <MATH_0002> is an injective <MATH_0003>-module.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$M \\in \\text{Mod}_R$",
+        "MATH_0002": "$C(M)$",
+        "MATH_0003": "$R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "flat",
+          "projection_start": 18,
+          "projection_end": 22,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 47,
+          "projection_end": 56,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 69,
+          "projection_end": 75,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XC:proof",
+      "source_text": "Let <MATH_0001> be an exact sequence in <MATH_0002>. Since \n<MATH_0003> is flat,\n<MATH_0004>\nis exact.\nBy Lemma <REF_0001>,\n<MATH_0005>\nis exact. By (<REF_0002>), this last sequence can be rewritten\nas\n<MATH_0006>\nHence <MATH_0007> is an injective object of <MATH_0008>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$0 \\to N \\to P \\to Q \\to 0$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$M$",
+        "MATH_0004": "$$\n0 \\to N \\otimes_R M \\to P \\otimes_R M \\to Q \\otimes_R M \\to 0\n$$",
+        "REF_0001": "\\ref{lemma-C-is-faithful}",
+        "MATH_0005": "$$\n0 \\to C(Q \\otimes_R M) \\to C(P \\otimes_R M) \\to C(N \\otimes_R M) \\to 0\n$$",
+        "REF_0002": "\\ref{equation-adjunction}",
+        "MATH_0006": "$$\n0 \\to \\Hom_R(Q, C(M)) \\to \\Hom_R(P, C(M)) \\to \\Hom_R(N, C(M)) \\to 0.\n$$",
+        "MATH_0007": "$C(M)$",
+        "MATH_0008": "$\\text{Mod}_R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "exact sequence",
+          "projection_start": 22,
+          "projection_end": 36,
+          "concept": "exact-sequence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 74,
+          "projection_end": 78,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective object",
+          "projection_start": 237,
+          "projection_end": 253,
+          "concept": "source-phrase-injective-object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XD:statement",
+      "source_text": "If <MATH_0001> has one of the following properties as an <MATH_0002>-module\n<STRUCT_0001>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001>\nfinitely generated;\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002>\nfinitely presented;\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003>\nflat;\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004>\nfaithfully flat;\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005>\nfinite projective;\n<STRUCT_0002>\nthen so does <MATH_0003> as an <MATH_0004>-module (and conversely).\n",
+      "node_kind": "theorem",
+      "protected_nodes": {
+        "MATH_0001": "$M \\otimes_R S$",
+        "MATH_0002": "$S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "ITEMOPEN_0004": "\\item[",
+        "ITEMCLOSE_0004": "]",
+        "ITEMOPEN_0005": "\\item[",
+        "ITEMCLOSE_0005": "]",
+        "STRUCT_0002": "\\end{enumerate}",
+        "MATH_0003": "$M$",
+        "MATH_0004": "$R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "module",
+          "projection_start": 69,
+          "projection_end": 75,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely generated",
+          "projection_start": 125,
+          "projection_end": 143,
+          "concept": "finitely-generated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 180,
+          "projection_end": 198,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 235,
+          "projection_end": 239,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 276,
+          "projection_end": 291,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 328,
+          "projection_end": 334,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "projective",
+          "projection_start": 335,
+          "projection_end": 345,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 404,
+          "projection_end": 410,
+          "concept": "module",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XD:proof",
+      "source_text": "To prove (a), choose a finite set <MATH_0001> of generators of <MATH_0002>\nin <MATH_0003>. Write each <MATH_0004> as <MATH_0005> with\n<MATH_0006> and <MATH_0007>. Let <MATH_0008> be the finite free <MATH_0009>-module with\nbasis <MATH_0010> and let <MATH_0011> be the <MATH_0012>-module map sending <MATH_0013> to\n<MATH_0014>. Then <MATH_0015> is surjective, so\n<MATH_0016> is zero and hence <MATH_0017>\nis zero. This proves (a).\n\n<STRUCT_0001><STRUCT_0002>\nTo see (b) assume <MATH_0018> is finitely presented. Then <MATH_0019> is finitely\ngenerated by (a). Choose a surjection <MATH_0020> with kernel <MATH_0021>.\nThen <MATH_0022> is exact.\nBy Algebra, Lemma <REF_0001>\nthe kernel of <MATH_0023>\nis a finite <MATH_0024>-module. Thus we can find finitely many elements\n<MATH_0025> such that the images of <MATH_0026> in\n<MATH_0027> generate the kernel of <MATH_0028>.\nLet <MATH_0029> be the submodule generated by <MATH_0030>.\nThen <MATH_0031> is a finitely presented <MATH_0032>-module\nwith a morphism <MATH_0033> such that <MATH_0034>\nis an isomorphism. Thus <MATH_0035> as desired.\n\n<STRUCT_0003><STRUCT_0004>\nTo prove (c), let <MATH_0036> be a short exact sequence in \n<MATH_0037>. Since <MATH_0038> is a right exact functor,\n<MATH_0039> is surjective. So by\nLemma <REF_0002> the map\n<MATH_0040> is injective.\nIf <MATH_0041> is flat, then\nLemma <REF_0003> shows\n<MATH_0042> is an injective object of <MATH_0043>, so the injection\n<MATH_0044>\nis split in <MATH_0045> and hence also in <MATH_0046>.\nSince <MATH_0047> is a split surjection by \nLemma <REF_0004>, it follows that \n<MATH_0048> is a split injection in <MATH_0049>. That is, the sequence\n<MATH_0050>\nis split exact. \nFor <MATH_0051>, by (<REF_0005>) we see that \n<MATH_0052>\nis split exact. By Lemma <REF_0006>, \n<MATH_0053>\nis exact. This implies <MATH_0054> is flat over <MATH_0055>. Namely, taking\n<MATH_0056> a free module surjecting onto <MATH_0057> we conclude that\n<MATH_0058> for all modules <MATH_0059> and we can use\nAlgebra, Lemma <REF_0007>.\nThis proves (c).\n\n<STRUCT_0005><STRUCT_0006>\nTo deduce (d) from (c), note that if <MATH_0060> and <MATH_0061> \nis zero,\nthen <MATH_0062> is zero,\nso <MATH_0063> is zero and hence <MATH_0064> is zero.\n\n<STRUCT_0007><STRUCT_0008>\nTo deduce (e) at this point, it suffices to recall that <MATH_0065> is finitely \ngenerated and projective if and only if it is finitely presented and flat.\nSee Algebra, Lemma <REF_0008>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\{n_i\\}$",
+        "MATH_0002": "$M \\otimes_R S$",
+        "MATH_0003": "$\\text{Mod}_S$",
+        "MATH_0004": "$n_i$",
+        "MATH_0005": "$\\sum_j m_{ij} \\otimes s_{ij}$",
+        "MATH_0006": "$m_{ij} \\in M$",
+        "MATH_0007": "$s_{ij} \\in S$",
+        "MATH_0008": "$F$",
+        "MATH_0009": "$R$",
+        "MATH_0010": "$e_{ij}$",
+        "MATH_0011": "$F \\to M$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$e_{ij}$",
+        "MATH_0014": "$m_{ij}$",
+        "MATH_0015": "$F \\otimes_R S\\to M \\otimes_R S$",
+        "MATH_0016": "$\\Coker(F \\to M) \\otimes_R S$",
+        "MATH_0017": "$\\Coker(F \\to M)$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0018": "$M \\otimes_R S$",
+        "MATH_0019": "$M$",
+        "MATH_0020": "$R^{\\oplus n} \\to M$",
+        "MATH_0021": "$K$",
+        "MATH_0022": "$K \\otimes_R S \\to S^{\\oplus r} \\to M \\otimes_R S \\to 0$",
+        "REF_0001": "\\ref{algebra-lemma-extension}",
+        "MATH_0023": "$S^{\\oplus r} \\to M \\otimes_R S$",
+        "MATH_0024": "$S$",
+        "MATH_0025": "$k_1, \\ldots, k_t \\in K$",
+        "MATH_0026": "$k_i \\otimes 1$",
+        "MATH_0027": "$S^{\\oplus r}$",
+        "MATH_0028": "$S^{\\oplus r} \\to M \\otimes_R S$",
+        "MATH_0029": "$K' \\subset K$",
+        "MATH_0030": "$k_1, \\ldots, k_t$",
+        "MATH_0031": "$M' = R^{\\oplus r}/K'$",
+        "MATH_0032": "$R$",
+        "MATH_0033": "$M' \\to M$",
+        "MATH_0034": "$M' \\otimes_R S \\to M \\otimes_R S$",
+        "MATH_0035": "$M' \\cong M$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0036": "$0 \\to M' \\to M'' \\to M \\to 0$",
+        "MATH_0037": "$\\text{Mod}_R$",
+        "MATH_0038": "$\\bullet \\otimes_R S$",
+        "MATH_0039": "$M'' \\otimes_R S \\to M \\otimes_R S$",
+        "REF_0002": "\\ref{lemma-C-is-faithful}",
+        "MATH_0040": "$C(M \\otimes_R S) \\to C(M'' \\otimes_R S)$",
+        "MATH_0041": "$M \\otimes_R S$",
+        "REF_0003": "\\ref{lemma-flat-to-injective}",
+        "MATH_0042": "$C(M \\otimes_R S)$",
+        "MATH_0043": "$\\text{Mod}_S$",
+        "MATH_0044": "$C(M \\otimes_R S) \\to C(M'' \\otimes_R S)$",
+        "MATH_0045": "$\\text{Mod}_S$",
+        "MATH_0046": "$\\text{Mod}_R$",
+        "MATH_0047": "$C(M \\otimes_R S) \\to C(M)$",
+        "REF_0004": "\\ref{lemma-split-surjection}",
+        "MATH_0048": "$C(M) \\to C(M'')$",
+        "MATH_0049": "$\\text{Mod}_R$",
+        "MATH_0050": "$$\n0 \\to C(M) \\to C(M'') \\to C(M') \\to 0\n$$",
+        "MATH_0051": "$N \\in \\text{Mod}_R$",
+        "REF_0005": "\\ref{equation-adjunction}",
+        "MATH_0052": "$$\n0 \\to C(M \\otimes_R N) \\to C(M'' \\otimes_R N) \\to C(M' \\otimes_R N) \\to 0\n$$",
+        "REF_0006": "\\ref{lemma-C-is-faithful}",
+        "MATH_0053": "$$\n0 \\to M' \\otimes_R N \\to M'' \\otimes_R N \\to M \\otimes_R N \\to 0\n$$",
+        "MATH_0054": "$M$",
+        "MATH_0055": "$R$",
+        "MATH_0056": "$M'$",
+        "MATH_0057": "$M$",
+        "MATH_0058": "$\\text{Tor}_1^R(M, N) = 0$",
+        "MATH_0059": "$N$",
+        "REF_0007": "\\ref{algebra-lemma-characterize-flat}",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0060": "$N \\in \\text{Mod}_R$",
+        "MATH_0061": "$M \\otimes_R N$",
+        "MATH_0062": "$M \\otimes_R S \\otimes_S (N \\otimes_R S) \\cong (M \\otimes_R N) \\otimes_R \nS$",
+        "MATH_0063": "$N \\otimes_R S$",
+        "MATH_0064": "$N$",
+        "STRUCT_0007": "\\medskip",
+        "STRUCT_0008": "\\noindent",
+        "MATH_0065": "$M$",
+        "REF_0008": "\\ref{algebra-lemma-finite-projective}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite set",
+          "projection_start": 23,
+          "projection_end": 33,
+          "concept": "source-phrase-finite-set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite free",
+          "projection_start": 186,
+          "projection_end": 197,
+          "concept": "source-phrase-finite-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 210,
+          "projection_end": 216,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module map",
+          "projection_start": 279,
+          "projection_end": 289,
+          "concept": "source-phrase-module-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 346,
+          "projection_end": 356,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 489,
+          "projection_end": 507,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely generated",
+          "projection_start": 529,
+          "projection_end": 547,
+          "concept": "finitely-generated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 565,
+          "projection_end": 575,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 593,
+          "projection_end": 599,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 643,
+          "projection_end": 650,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 673,
+          "projection_end": 679,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 700,
+          "projection_end": 706,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 719,
+          "projection_end": 725,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 758,
+          "projection_end": 766,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "images",
+          "projection_start": 793,
+          "projection_end": 799,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 843,
+          "projection_end": 849,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 947,
+          "projection_end": 965,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 978,
+          "projection_end": 984,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 992,
+          "projection_end": 1000,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1041,
+          "projection_end": 1052,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "short exact sequence",
+          "projection_start": 1145,
+          "projection_end": 1165,
+          "concept": "short-exact-sequence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1217,
+          "projection_end": 1224,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1241,
+          "projection_end": 1251,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1280,
+          "projection_end": 1283,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective",
+          "projection_start": 1299,
+          "projection_end": 1308,
+          "concept": "injective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1328,
+          "projection_end": 1332,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "injective object",
+          "projection_start": 1380,
+          "projection_end": 1396,
+          "concept": "source-phrase-injective-object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 1526,
+          "projection_end": 1536,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1817,
+          "projection_end": 1821,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "free module",
+          "projection_start": 1869,
+          "projection_end": 1880,
+          "concept": "source-phrase-free-module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 1946,
+          "projection_end": 1953,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1981,
+          "projection_end": 1988,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely generated",
+          "projection_start": 2304,
+          "projection_end": 2322,
+          "concept": "finitely-generated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "projective",
+          "projection_start": 2327,
+          "projection_end": 2337,
+          "concept": "projective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 2359,
+          "projection_end": 2377,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 2382,
+          "projection_end": 2386,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 2392,
+          "projection_end": 2399,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XB:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nThere is a variant for <MATH_0001>-algebras.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "algebras",
+          "projection_start": 49,
+          "projection_end": 57,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XE:statement",
+      "source_text": "If <MATH_0001> has one of the following properties as an <MATH_0002>-algebra\n<STRUCT_0001>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001>\nof finite type;\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002>\nof finite presentation;\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003>\nformally unramified;\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004>\nunramified;\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005>\n<ACCENT_0001>tale;\n<STRUCT_0002>\nthen so does <MATH_0003> as an <MATH_0004>-algebra (and of course conversely).\n",
+      "node_kind": "theorem",
+      "protected_nodes": {
+        "MATH_0001": "$A \\otimes_R S$",
+        "MATH_0002": "$S$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "ITEMOPEN_0004": "\\item[",
+        "ITEMCLOSE_0004": "]",
+        "ITEMOPEN_0005": "\\item[",
+        "ITEMCLOSE_0005": "]",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{enumerate}",
+        "MATH_0003": "$A$",
+        "MATH_0004": "$R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "algebra",
+          "projection_start": 69,
+          "projection_end": 76,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 129,
+          "projection_end": 140,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 180,
+          "projection_end": 199,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 339,
+          "projection_end": 344,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 403,
+          "projection_end": 410,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08XE:proof",
+      "source_text": "To prove (a), choose a finite set <MATH_0001> of generators of <MATH_0002>\nover <MATH_0003>. Write each <MATH_0004> as <MATH_0005> with\n<MATH_0006> and <MATH_0007>. Let <MATH_0008> be the polynomial <MATH_0009>-algebra\non variables <MATH_0010> and let <MATH_0011> be the <MATH_0012>-algebra map sending\n<MATH_0013> to <MATH_0014>. Then <MATH_0015> is surjective, so\n<MATH_0016> is zero and hence <MATH_0017>\nis zero. This proves (a).\n\n<STRUCT_0001><STRUCT_0002>\nTo see (b) assume <MATH_0018> is a finitely presented <MATH_0019>-algebra.\nThen <MATH_0020> is finite type over <MATH_0021> by (a). Choose a surjection\n<MATH_0022> with kernel <MATH_0023>.\nThen <MATH_0024> is exact.\nBy Algebra, Lemma <REF_0001>\nthe kernel of <MATH_0025>\nis a finitely generated ideal. Thus we can find finitely many elements\n<MATH_0026> such that the images of <MATH_0027> in\n<MATH_0028> generate the kernel of\n<MATH_0029>.\nLet <MATH_0030> be the ideal generated by <MATH_0031>.\nThen <MATH_0032> is a finitely presented <MATH_0033>-algebra\nwith a morphism <MATH_0034> such that <MATH_0035>\nis an isomorphism. Thus <MATH_0036> as desired.\n\n<STRUCT_0003><STRUCT_0004>\nTo prove (c), recall that <MATH_0037> is formally unramified over <MATH_0038> if and only\nif the module of relative differentials <MATH_0039> vanishes, see\nAlgebra, Lemma <REF_0002> or\n<REF_0003>.\nSince <MATH_0040>,\nthe vanishing descends by Theorem <REF_0004>.\n\n<STRUCT_0005><STRUCT_0006>\nTo deduce (d) from the previous cases, recall that <MATH_0041> is unramified\nover <MATH_0042> if and only if <MATH_0043> is formally unramified and of finite type\nover <MATH_0044>, see\nAlgebra, Lemma <REF_0005>.\n\n<STRUCT_0007><STRUCT_0008>\nTo prove (e), recall that by\nAlgebra, Lemma <REF_0006>\nor <REF_0007> the algebra\n<MATH_0045> is <ACCENT_0001>tale over <MATH_0046> if and only if\n<MATH_0047> is flat, unramified, and of finite presentation over <MATH_0048>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$\\{x_i\\}$",
+        "MATH_0002": "$A \\otimes_R S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$x_i$",
+        "MATH_0005": "$\\sum_j y_{ij} \\otimes s_{ij}$",
+        "MATH_0006": "$y_{ij} \\in A$",
+        "MATH_0007": "$s_{ij} \\in S$",
+        "MATH_0008": "$F$",
+        "MATH_0009": "$R$",
+        "MATH_0010": "$e_{ij}$",
+        "MATH_0011": "$F \\to M$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$e_{ij}$",
+        "MATH_0014": "$y_{ij}$",
+        "MATH_0015": "$F \\otimes_R S\\to A \\otimes_R S$",
+        "MATH_0016": "$\\Coker(F \\to A) \\otimes_R S$",
+        "MATH_0017": "$\\Coker(F \\to A)$",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0018": "$A \\otimes_R S$",
+        "MATH_0019": "$S$",
+        "MATH_0020": "$A$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$R[x_1, \\ldots, x_n] \\to A$",
+        "MATH_0023": "$I$",
+        "MATH_0024": "$I \\otimes_R S \\to S[x_1, \\ldots, x_n] \\to A \\otimes_R S \\to 0$",
+        "REF_0001": "\\ref{algebra-lemma-finite-presentation-independent}",
+        "MATH_0025": "$S[x_1, \\ldots, x_n] \\to A \\otimes_R S$",
+        "MATH_0026": "$y_1, \\ldots, y_t \\in I$",
+        "MATH_0027": "$y_i \\otimes 1$",
+        "MATH_0028": "$S[x_1, \\ldots, x_n]$",
+        "MATH_0029": "$S[x_1, \\ldots, x_n] \\to A \\otimes_R S$",
+        "MATH_0030": "$I' \\subset I$",
+        "MATH_0031": "$y_1, \\ldots, y_t$",
+        "MATH_0032": "$A' = R[x_1, \\ldots, x_n]/I'$",
+        "MATH_0033": "$R$",
+        "MATH_0034": "$A' \\to A$",
+        "MATH_0035": "$A' \\otimes_R S \\to A \\otimes_R S$",
+        "MATH_0036": "$A' \\cong A$",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0037": "$A$",
+        "MATH_0038": "$R$",
+        "MATH_0039": "$\\Omega_{A/R}$",
+        "REF_0002": "\\ref{algebra-lemma-characterize-formally-unramified}",
+        "REF_0003": "\\cite[Proposition~17.2.1]{EGA4}",
+        "MATH_0040": "$\\Omega_{(A \\otimes_R S)/S} = \\Omega_{A/R} \\otimes_R S$",
+        "REF_0004": "\\ref{theorem-descent}",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0041": "$A$",
+        "MATH_0042": "$R$",
+        "MATH_0043": "$A$",
+        "MATH_0044": "$R$",
+        "REF_0005": "\\ref{algebra-lemma-formally-unramified-unramified}",
+        "STRUCT_0007": "\\medskip",
+        "STRUCT_0008": "\\noindent",
+        "REF_0006": "\\ref{algebra-lemma-etale-flat-unramified-finite-presentation}",
+        "REF_0007": "\\cite[Th\\'eor\\`eme~17.6.1]{EGA4}",
+        "MATH_0045": "$A$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0046": "$R$",
+        "MATH_0047": "$A$",
+        "MATH_0048": "$R$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite set",
+          "projection_start": 23,
+          "projection_end": 33,
+          "concept": "source-phrase-finite-set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 211,
+          "projection_end": 218,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra map",
+          "projection_start": 283,
+          "projection_end": 294,
+          "concept": "source-phrase-algebra-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 351,
+          "projection_end": 361,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 496,
+          "projection_end": 514,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 527,
+          "projection_end": 534,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 556,
+          "projection_end": 567,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 602,
+          "projection_end": 612,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 630,
+          "projection_end": 636,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 680,
+          "projection_end": 687,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 710,
+          "projection_end": 716,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely generated",
+          "projection_start": 737,
+          "projection_end": 755,
+          "concept": "finitely-generated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 756,
+          "projection_end": 761,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 794,
+          "projection_end": 802,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "images",
+          "projection_start": 829,
+          "projection_end": 835,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 879,
+          "projection_end": 885,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 925,
+          "projection_end": 930,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finitely presented",
+          "projection_start": 979,
+          "projection_end": 997,
+          "concept": "finitely-presented",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1010,
+          "projection_end": 1017,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1025,
+          "projection_end": 1033,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 1074,
+          "projection_end": 1085,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1240,
+          "projection_end": 1246,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1299,
+          "projection_end": 1306,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite type",
+          "projection_start": 1583,
+          "projection_end": 1594,
+          "concept": "finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1617,
+          "projection_end": 1624,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1700,
+          "projection_end": 1707,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1744,
+          "projection_end": 1751,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1767,
+          "projection_end": 1772,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1820,
+          "projection_end": 1824,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 1845,
+          "projection_end": 1864,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:08WW:subsection_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for modules and their morphisms<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\subsection{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{subsection-descent-modules-morphisms}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WY:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe functor <MATH_0001>\nis called <TEXTITOPEN_0001>base extension along <MATH_0002><TEXTITCLOSE_0001>. We say that <MATH_0003> is a\n<TEXTITOPEN_0002>descent morphism for modules<TEXTITCLOSE_0002> if <MATH_0004> is fully\nfaithful. We say that <MATH_0005> is an <TEXTITOPEN_0003>effective descent morphism for modules<TEXTITCLOSE_0003>\nif <MATH_0006> is an equivalence of categories.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-effective-descent}",
+        "MATH_0001": "$f^*: \\text{Mod}_R \\to DD_{S/R}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$f$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0003": "$f$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0004": "$f^*$",
+        "MATH_0005": "$f$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0006": "$f^*$",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:paragraph/0006",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nFor example, for <MATH_0001> and a choice of isomorphism\n<MATH_0002> gives rise to a descent datum by identifying\n<MATH_0003> and <MATH_0004>\nnaturally with <MATH_0005>. This construction in particular\ndefines a functor <MATH_0006>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$M_0 \\in \\text{Mod}_R$",
+        "MATH_0002": "$M \\cong M_0 \\otimes_R S$",
+        "MATH_0003": "$M \\otimes_{S,\\delta^1_0} S_2$",
+        "MATH_0004": "$M \\otimes_{S,\\delta^1_1} S_2$",
+        "MATH_0005": "$M_0 \\otimes_R S_2$",
+        "MATH_0006": "$f^*: \\text{Mod}_R \\to DD_{S/R}$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:paragraph/0007",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOur goal is to show that for <MATH_0001> universally injective, we can use <MATH_0002> to \nlocate <MATH_0003> within <MATH_0004>. This process makes crucial use of some equalizer\ndiagrams.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\theta$",
+        "MATH_0003": "$M_0$",
+        "MATH_0004": "$M$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WZ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor <MATH_0001>, the diagram\n<MATH_0002>\nis a split equalizer.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-equalizer-M}",
+        "MATH_0001": "$(M,\\theta) \\in DD_{S/R}$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-equalizer-M}\n\\xymatrix@C=8pc{\nM \\ar[r]^{\\theta \\circ (1_M \\otimes \\delta_0^1)} &\nM \\otimes_{S, \\delta_1^1} S_2\n\\ar@<1ex>[r]^{(\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0)}\n\\ar@<-1ex>[r]_{1_{M \\otimes S_2} \\otimes \\delta^2_1} & \nM \\otimes_{S, \\delta_{12}^1} S_3\n}\n\\end{equation}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WZ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nDefine the ring homomorphisms <MATH_0001> and <MATH_0002> by the formulas\n<MATH_0003>\nWe then take the auxiliary morphisms to be \n<MATH_0004>\nand <MATH_0005>.\nOf the compatibilities required in (<REF_0001>), \nthe first follows from tensoring the cocycle condition\n(<REF_0002>) with <MATH_0006>\nand the others are immediate.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\sigma^0_0: S_2 \\to S_1$",
+        "MATH_0002": "$\\sigma_0^1, \n\\sigma_1^1: S_3 \\to S_2$",
+        "MATH_0003": "\\begin{align*}\n\\sigma^0_0 (a_0 \\otimes a_1) & = a_0a_1 \\\\\n\\sigma^1_0 (a_0 \\otimes a_1 \\otimes a_2) & = a_0a_1 \\otimes a_2 \\\\\n\\sigma^1_1 (a_0 \\otimes a_1 \\otimes a_2) & = a_0 \\otimes a_1a_2.\n\\end{align*}",
+        "MATH_0004": "$1_M \\otimes \\sigma_0^0: M \\otimes_{S, \\delta_1^1} S_2 \\to M$",
+        "MATH_0005": "$1_M \\otimes \\sigma_0^1: M \\otimes_{S,\\delta_{12}^1} S_3 \\to M \\otimes_{S, \n\\delta_1^1} S_2$",
+        "REF_0001": "\\ref{equation-split-equalizer-conditions}",
+        "REF_0002": "\\ref{equation-cocycle-condition}",
+        "MATH_0006": "$\\sigma_1^1$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X1:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor <MATH_0001>, the diagram\n<MATH_0002>\nobtained by applying <MATH_0003> to (<REF_0001>) is a split\ncoequalizer.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-equalizer-CM}",
+        "MATH_0001": "$(M, \\theta) \\in DD_{S/R}$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-coequalizer-CM}\n\\xymatrix@C=8pc{\nC(M \\otimes_{S, \\delta_{12}^1} S_3)\n\\ar@<1ex>[r]^{C((\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0))}\n\\ar@<-1ex>[r]_{C(1_{M \\otimes S_2} \\otimes \\delta^2_1)} &\nC(M \\otimes_{S, \\delta_1^1} S_2 )\n\\ar[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))} & C(M).\n}\n\\end{equation}",
+        "MATH_0003": "$C$",
+        "REF_0001": "\\ref{equation-equalizer-M}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X1:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nOmitted.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X3:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe diagram\n<MATH_0001>\nis a split equalizer.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-equalizer-S}",
+        "MATH_0001": "\\begin{equation}\n\\label{equation-equalizer-S}\n\\xymatrix@C=8pc{\nS_1 \\ar[r]^{\\delta^1_1} &\nS_2 \\ar@<1ex>[r]^{\\delta^2_2} \\ar@<-1ex>[r]_{\\delta^2_1} & \nS_3\n}\n\\end{equation}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X3:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIn Lemma <REF_0001>, take <MATH_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-equalizer-M}",
+        "MATH_0001": "$(M, \\theta) = f^*(S)$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:paragraph/0008",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis suggests a definition of a potential quasi-inverse functor for <MATH_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f^*$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X5:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nDefine the functor <TEXTITOPEN_0001><MATH_0001><TEXTITCLOSE_0001> <MATH_0002> by taking\n<MATH_0003> to be the <MATH_0004>-submodule of <MATH_0005> for which the diagram\n<MATH_0006>\nis an equalizer.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-pushforward}",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0001": "$f_*$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0002": "$: DD_{S/R} \\to \\text{Mod}_R$",
+        "MATH_0003": "$f_*(M, \\theta)$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$M$",
+        "MATH_0006": "\\begin{equation}\n\\label{equation-equalizer-f}\n\\xymatrix@C=8pc{f_*(M,\\theta) \\ar[r] & M \\ar@<1ex>^{\\theta \\circ (1_M \\otimes \n\\delta_0^1)}[r] \\ar@<-1ex>_{1_M \\otimes \\delta_1^1}[r] & \nM \\otimes_{S, \\delta_1^1} S_2 \n}\n\\end{equation}",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:paragraph/0009",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nUsing Lemma <REF_0001> and the fact that the restriction functor\n<MATH_0001> is right adjoint to the base extension\nfunctor <MATH_0002>,\nwe deduce that <MATH_0003> is right adjoint to <MATH_0004>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{lemma-equalizer-M}",
+        "MATH_0001": "$\\text{Mod}_S \\to \\text{Mod}_R$",
+        "MATH_0002": "$\\bullet \\otimes_R S: \\text{Mod}_R \\to \\text{Mod}_S$",
+        "MATH_0003": "$f_*$",
+        "MATH_0004": "$f^*$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X7:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf <MATH_0001> is universally injective, then the diagram\n<MATH_0002>\nobtained by tensoring (<REF_0001>) over <MATH_0003> with <MATH_0004> is an \nequalizer.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-lemma}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-equalizer-f2}\n\\xymatrix@C=8pc{\nf_*(M, \\theta) \\otimes_R S\n\\ar[r]^{\\theta \\circ (1_M \\otimes \\delta_0^1)} &\nM \\otimes_{S, \\delta_1^1} S_2 \n\\ar@<1ex>[r]^{(\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0)}\n\\ar@<-1ex>[r]_{1_{M \\otimes S_2} \\otimes \\delta^2_1} &\nM \\otimes_{S, \\delta_{12}^1} S_3\n}\n\\end{equation}",
+        "REF_0001": "\\ref{equation-equalizer-f}",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08WW:paragraph/0010",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001><STRUCT_0002>\nWe are ready for the key lemma. In the faithfully flat case this is a \ntriviality (see Remark <REF_0001>),\nbut in the general case some argument is needed.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0001": "\\ref{remark-descent-lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X7:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBy\nLemma <REF_0001> and\nRemark <REF_0002>,\nthe map <MATH_0001> can be split functorially \nin <MATH_0002>. This gives the upper vertical arrows in the commutative diagram\n<MATH_0003>\nin which the compositions along the columns are identity morphisms.\nThe second row is the coequalizer diagram\n(<REF_0003>); this produces the dashed arrow.\nFrom the top right square, we obtain auxiliary morphisms <MATH_0004> \nand <MATH_0005> which imply that the first row is \na split coequalizer diagram.\nBy Remark <REF_0004>, we may tensor with <MATH_0006> inside <MATH_0007> to obtain \nthe split coequalizer diagram\n<MATH_0008>\nBy Lemma <REF_0005>, we conclude\n(<REF_0006>) must also be an equalizer.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-split-surjection}",
+        "REF_0002": "\\ref{remark-functorial-splitting}",
+        "MATH_0001": "$C(1_N \\otimes f): C(N \\otimes_R S) \\to C(N)$",
+        "MATH_0002": "$N$",
+        "MATH_0003": "$$\n\\xymatrix@C=8pc{\nC(M \\otimes_{S, \\delta_1^1} S_2)\n\\ar@<1ex>^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))}[r]\n\\ar@<-1ex>_{C(1_M \\otimes \\delta_1^1)}[r] \\ar[d] &\nC(M) \\ar[r]\\ar[d] & C(f_*(M,\\theta)) \\ar@{-->}[d] \\\\\nC(M \\otimes_{S,\\delta_{12}^1} S_3)\n\\ar@<1ex>^{C((\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0))}[r]\n\\ar@<-1ex>_{C(1_{M \\otimes S_2} \\otimes \\delta^2_1)}[r] \\ar[d] &\nC(M \\otimes_{S, \\delta_1^1} S_2 )\n\\ar[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))}\n\\ar[d]^{C(1_M \\otimes \\delta_1^1)} &\nC(M) \\ar[d] \\ar@{=}[dl] \\\\\nC(M \\otimes_{S, \\delta_1^1} S_2)\n\\ar@<1ex>[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))}\n\\ar@<-1ex>[r]_{C(1_M \\otimes \\delta_1^1)} &\nC(M) \\ar[r] &\nC(f_*(M,\\theta))\n}\n$$",
+        "REF_0003": "\\ref{equation-coequalizer-CM}",
+        "MATH_0004": "$C(f_*(M,\\theta)) \\to \nC(M)$",
+        "MATH_0005": "$C(M) \\to C(M\\otimes_{S,\\delta_1^1} S_2)$",
+        "REF_0004": "\\ref{remark-adjunction}",
+        "MATH_0006": "$S$",
+        "MATH_0007": "$C$",
+        "MATH_0008": "$$\n\\xymatrix@C=8pc{\nC(M \\otimes_{S,\\delta_2^2 \\circ \\delta_1^1} S_3)\n\\ar@<1ex>^{C((\\theta \\otimes \\delta_2^2) \\circ (1_M \\otimes \\delta^2_0))}[r] \n\\ar@<-1ex>_{C(1_{M \\otimes S_2} \\otimes \\delta^2_1)}[r] &\nC(M \\otimes_{S, \\delta_1^1} S_2 )\n\\ar[r]^{C(\\theta \\circ (1_M \\otimes \\delta_0^1))} &\nC(f_*(M,\\theta) \\otimes_R S).\n}\n$$",
+        "REF_0005": "\\ref{lemma-C-is-faithful}",
+        "REF_0006": "\\ref{equation-equalizer-f2}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08X9:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf <MATH_0001> is a split injection in <MATH_0002>, one can simplify the argument by \nsplitting <MATH_0003> directly,\nwithout using <MATH_0004>. Things are even simpler if <MATH_0005> is faithfully flat; in this \ncase,\nthe conclusion of Lemma <REF_0001> \nis immediate because tensoring over <MATH_0006> with <MATH_0007> preserves all equalizers.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-descent-lemma}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$C$",
+        "MATH_0005": "$f$",
+        "REF_0001": "\\ref{lemma-descent-lemma}",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$S$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XA:theorem/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe following conditions are equivalent.\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> The morphism <MATH_0001> is a descent morphism for modules.\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> The morphism <MATH_0002> is an effective descent morphism for modules.\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> The morphism <MATH_0003> is universally injective.\n<STRUCT_0003>\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{theorem}",
+        "LOCKED_0001": "\\label{theorem-descent}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0001": "$f$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0002": "$f$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0003": "$f$",
+        "STRUCT_0003": "\\end{enumerate}",
+        "STRUCT_0004": "\\end{theorem}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XA:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt is clear that (b) implies (a). We now check that (a) implies (c). If <MATH_0001> is \nnot universally injective, we can find <MATH_0002> such that the map\n<MATH_0003> has nontrivial kernel <MATH_0004>.\nThe natural projection <MATH_0005> is not an isomorphism, but its image in \n<MATH_0006> is an isomorphism.\nHence <MATH_0007> is not fully faithful.\n\n<STRUCT_0002><STRUCT_0003>\nWe finally check that (c) implies (b). By Lemmas \n<REF_0001> and <REF_0002>, for\n<MATH_0008>,\nthe natural map <MATH_0009> is an isomorphism of <MATH_0010>-modules.\nFor <MATH_0011> we want to show <MATH_0012> is an\nisomorphism. By adjunction, the composition\n<MATH_0013> is the identity, while the above\nshows that the second arrow is an isomorphism. Thus\n<MATH_0014> is an isomorphism. By Algebra, Lemma\n<REF_0003>\nwe conclude <MATH_0015> is an isomorphism.\nConsequently, <MATH_0016> and <MATH_0017> are  quasi-inverse functors, proving the claim.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f$",
+        "MATH_0002": "$M \\in \\text{Mod}_R$",
+        "MATH_0003": "$1_M \\otimes f: M \\to M \\otimes_R S$",
+        "MATH_0004": "$N$",
+        "MATH_0005": "$M \\to M/N$",
+        "MATH_0006": "$DD_{S/R}$",
+        "MATH_0007": "$f^*$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "REF_0001": "\\ref{lemma-equalizer-M}",
+        "REF_0002": "\\ref{lemma-descent-lemma}",
+        "MATH_0008": "$(M, \\theta) \\in DD_{S/R}$",
+        "MATH_0009": "$f^* f_*(M,\\theta) \\to M$",
+        "MATH_0010": "$S$",
+        "MATH_0011": "$M_0 \\in \\text{Mod}_R$",
+        "MATH_0012": "$M_0 \\to f_*f^*M_0$",
+        "MATH_0013": "$f^*M_0 \\to f^*f_*f^*M_0 \\to f^*M_0$",
+        "MATH_0014": "$f^*M_0 \\to f^*f_*f^*M_0$",
+        "REF_0003": "\\ref{algebra-lemma-base-change-along-universally-injective-ring-map}",
+        "MATH_0015": "$M_0 \\to f_* f^* M_0$",
+        "MATH_0016": "$f_*$",
+        "MATH_0017": "$f^*$",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XB:subsection_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Descent for properties of modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\subsection{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{subsection-descent-properties-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XB:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThroughout this subsection, fix a universally injective ring map <MATH_0001>,\nan object <MATH_0002>, and a ring map <MATH_0003>. We now investigate\nthe question of which properties of <MATH_0004> or <MATH_0005> can be checked after base\nextension along <MATH_0006>. We start with some results from \n<REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$f : R \\to S$",
+        "MATH_0002": "$M \\in \\text{Mod}_R$",
+        "MATH_0003": "$R \\to A$",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$A$",
+        "MATH_0006": "$f$",
+        "REF_0001": "\\cite{mesablishvili2}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XC:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf <MATH_0001> is flat, then <MATH_0002> is an injective <MATH_0003>-module.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-to-injective}",
+        "MATH_0001": "$M \\in \\text{Mod}_R$",
+        "MATH_0002": "$C(M)$",
+        "MATH_0003": "$R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XC:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be an exact sequence in <MATH_0002>. Since \n<MATH_0003> is flat,\n<MATH_0004>\nis exact.\nBy Lemma <REF_0001>,\n<MATH_0005>\nis exact. By (<REF_0002>), this last sequence can be rewritten\nas\n<MATH_0006>\nHence <MATH_0007> is an injective object of <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$0 \\to N \\to P \\to Q \\to 0$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$M$",
+        "MATH_0004": "$$\n0 \\to N \\otimes_R M \\to P \\otimes_R M \\to Q \\otimes_R M \\to 0\n$$",
+        "REF_0001": "\\ref{lemma-C-is-faithful}",
+        "MATH_0005": "$$\n0 \\to C(Q \\otimes_R M) \\to C(P \\otimes_R M) \\to C(N \\otimes_R M) \\to 0\n$$",
+        "REF_0002": "\\ref{equation-adjunction}",
+        "MATH_0006": "$$\n0 \\to \\Hom_R(Q, C(M)) \\to \\Hom_R(P, C(M)) \\to \\Hom_R(N, C(M)) \\to 0.\n$$",
+        "MATH_0007": "$C(M)$",
+        "MATH_0008": "$\\text{Mod}_R$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XD:theorem/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf <MATH_0001> has one of the following properties as an <MATH_0002>-module\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001>\nfinitely generated;\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002>\nfinitely presented;\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003>\nflat;\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004>\nfaithfully flat;\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005>\nfinite projective;\n<STRUCT_0003>\nthen so does <MATH_0003> as an <MATH_0004>-module (and conversely).\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{theorem}",
+        "LOCKED_0001": "\\label{theorem-descend-module-properties}",
+        "MATH_0001": "$M \\otimes_R S$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "ITEMOPEN_0004": "\\item[",
+        "ITEMCLOSE_0004": "]",
+        "ITEMOPEN_0005": "\\item[",
+        "ITEMCLOSE_0005": "]",
+        "STRUCT_0003": "\\end{enumerate}",
+        "MATH_0003": "$M$",
+        "MATH_0004": "$R$",
+        "STRUCT_0004": "\\end{theorem}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XD:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo prove (a), choose a finite set <MATH_0001> of generators of <MATH_0002>\nin <MATH_0003>. Write each <MATH_0004> as <MATH_0005> with\n<MATH_0006> and <MATH_0007>. Let <MATH_0008> be the finite free <MATH_0009>-module with\nbasis <MATH_0010> and let <MATH_0011> be the <MATH_0012>-module map sending <MATH_0013> to\n<MATH_0014>. Then <MATH_0015> is surjective, so\n<MATH_0016> is zero and hence <MATH_0017>\nis zero. This proves (a).\n\n<STRUCT_0002><STRUCT_0003>\nTo see (b) assume <MATH_0018> is finitely presented. Then <MATH_0019> is finitely\ngenerated by (a). Choose a surjection <MATH_0020> with kernel <MATH_0021>.\nThen <MATH_0022> is exact.\nBy Algebra, Lemma <REF_0001>\nthe kernel of <MATH_0023>\nis a finite <MATH_0024>-module. Thus we can find finitely many elements\n<MATH_0025> such that the images of <MATH_0026> in\n<MATH_0027> generate the kernel of <MATH_0028>.\nLet <MATH_0029> be the submodule generated by <MATH_0030>.\nThen <MATH_0031> is a finitely presented <MATH_0032>-module\nwith a morphism <MATH_0033> such that <MATH_0034>\nis an isomorphism. Thus <MATH_0035> as desired.\n\n<STRUCT_0004><STRUCT_0005>\nTo prove (c), let <MATH_0036> be a short exact sequence in \n<MATH_0037>. Since <MATH_0038> is a right exact functor,\n<MATH_0039> is surjective. So by\nLemma <REF_0002> the map\n<MATH_0040> is injective.\nIf <MATH_0041> is flat, then\nLemma <REF_0003> shows\n<MATH_0042> is an injective object of <MATH_0043>, so the injection\n<MATH_0044>\nis split in <MATH_0045> and hence also in <MATH_0046>.\nSince <MATH_0047> is a split surjection by \nLemma <REF_0004>, it follows that \n<MATH_0048> is a split injection in <MATH_0049>. That is, the sequence\n<MATH_0050>\nis split exact. \nFor <MATH_0051>, by (<REF_0005>) we see that \n<MATH_0052>\nis split exact. By Lemma <REF_0006>, \n<MATH_0053>\nis exact. This implies <MATH_0054> is flat over <MATH_0055>. Namely, taking\n<MATH_0056> a free module surjecting onto <MATH_0057> we conclude that\n<MATH_0058> for all modules <MATH_0059> and we can use\nAlgebra, Lemma <REF_0007>.\nThis proves (c).\n\n<STRUCT_0006><STRUCT_0007>\nTo deduce (d) from (c), note that if <MATH_0060> and <MATH_0061> \nis zero,\nthen <MATH_0062> is zero,\nso <MATH_0063> is zero and hence <MATH_0064> is zero.\n\n<STRUCT_0008><STRUCT_0009>\nTo deduce (e) at this point, it suffices to recall that <MATH_0065> is finitely \ngenerated and projective if and only if it is finitely presented and flat.\nSee Algebra, Lemma <REF_0008>.\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\{n_i\\}$",
+        "MATH_0002": "$M \\otimes_R S$",
+        "MATH_0003": "$\\text{Mod}_S$",
+        "MATH_0004": "$n_i$",
+        "MATH_0005": "$\\sum_j m_{ij} \\otimes s_{ij}$",
+        "MATH_0006": "$m_{ij} \\in M$",
+        "MATH_0007": "$s_{ij} \\in S$",
+        "MATH_0008": "$F$",
+        "MATH_0009": "$R$",
+        "MATH_0010": "$e_{ij}$",
+        "MATH_0011": "$F \\to M$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$e_{ij}$",
+        "MATH_0014": "$m_{ij}$",
+        "MATH_0015": "$F \\otimes_R S\\to M \\otimes_R S$",
+        "MATH_0016": "$\\Coker(F \\to M) \\otimes_R S$",
+        "MATH_0017": "$\\Coker(F \\to M)$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0018": "$M \\otimes_R S$",
+        "MATH_0019": "$M$",
+        "MATH_0020": "$R^{\\oplus n} \\to M$",
+        "MATH_0021": "$K$",
+        "MATH_0022": "$K \\otimes_R S \\to S^{\\oplus r} \\to M \\otimes_R S \\to 0$",
+        "REF_0001": "\\ref{algebra-lemma-extension}",
+        "MATH_0023": "$S^{\\oplus r} \\to M \\otimes_R S$",
+        "MATH_0024": "$S$",
+        "MATH_0025": "$k_1, \\ldots, k_t \\in K$",
+        "MATH_0026": "$k_i \\otimes 1$",
+        "MATH_0027": "$S^{\\oplus r}$",
+        "MATH_0028": "$S^{\\oplus r} \\to M \\otimes_R S$",
+        "MATH_0029": "$K' \\subset K$",
+        "MATH_0030": "$k_1, \\ldots, k_t$",
+        "MATH_0031": "$M' = R^{\\oplus r}/K'$",
+        "MATH_0032": "$R$",
+        "MATH_0033": "$M' \\to M$",
+        "MATH_0034": "$M' \\otimes_R S \\to M \\otimes_R S$",
+        "MATH_0035": "$M' \\cong M$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0036": "$0 \\to M' \\to M'' \\to M \\to 0$",
+        "MATH_0037": "$\\text{Mod}_R$",
+        "MATH_0038": "$\\bullet \\otimes_R S$",
+        "MATH_0039": "$M'' \\otimes_R S \\to M \\otimes_R S$",
+        "REF_0002": "\\ref{lemma-C-is-faithful}",
+        "MATH_0040": "$C(M \\otimes_R S) \\to C(M'' \\otimes_R S)$",
+        "MATH_0041": "$M \\otimes_R S$",
+        "REF_0003": "\\ref{lemma-flat-to-injective}",
+        "MATH_0042": "$C(M \\otimes_R S)$",
+        "MATH_0043": "$\\text{Mod}_S$",
+        "MATH_0044": "$C(M \\otimes_R S) \\to C(M'' \\otimes_R S)$",
+        "MATH_0045": "$\\text{Mod}_S$",
+        "MATH_0046": "$\\text{Mod}_R$",
+        "MATH_0047": "$C(M \\otimes_R S) \\to C(M)$",
+        "REF_0004": "\\ref{lemma-split-surjection}",
+        "MATH_0048": "$C(M) \\to C(M'')$",
+        "MATH_0049": "$\\text{Mod}_R$",
+        "MATH_0050": "$$\n0 \\to C(M) \\to C(M'') \\to C(M') \\to 0\n$$",
+        "MATH_0051": "$N \\in \\text{Mod}_R$",
+        "REF_0005": "\\ref{equation-adjunction}",
+        "MATH_0052": "$$\n0 \\to C(M \\otimes_R N) \\to C(M'' \\otimes_R N) \\to C(M' \\otimes_R N) \\to 0\n$$",
+        "REF_0006": "\\ref{lemma-C-is-faithful}",
+        "MATH_0053": "$$\n0 \\to M' \\otimes_R N \\to M'' \\otimes_R N \\to M \\otimes_R N \\to 0\n$$",
+        "MATH_0054": "$M$",
+        "MATH_0055": "$R$",
+        "MATH_0056": "$M'$",
+        "MATH_0057": "$M$",
+        "MATH_0058": "$\\text{Tor}_1^R(M, N) = 0$",
+        "MATH_0059": "$N$",
+        "REF_0007": "\\ref{algebra-lemma-characterize-flat}",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0060": "$N \\in \\text{Mod}_R$",
+        "MATH_0061": "$M \\otimes_R N$",
+        "MATH_0062": "$M \\otimes_R S \\otimes_S (N \\otimes_R S) \\cong (M \\otimes_R N) \\otimes_R \nS$",
+        "MATH_0063": "$N \\otimes_R S$",
+        "MATH_0064": "$N$",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "MATH_0065": "$M$",
+        "REF_0008": "\\ref{algebra-lemma-finite-projective}",
+        "STRUCT_0010": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XB:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThere is a variant for <MATH_0001>-algebras.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$R$"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XE:theorem/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf <MATH_0001> has one of the following properties as an <MATH_0002>-algebra\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001>\nof finite type;\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002>\nof finite presentation;\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003>\nformally unramified;\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004>\nunramified;\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005>\n<ACCENT_0001>tale;\n<STRUCT_0003>\nthen so does <MATH_0003> as an <MATH_0004>-algebra (and of course conversely).\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{theorem}",
+        "LOCKED_0001": "\\label{theorem-descend-algebra-properties}",
+        "MATH_0001": "$A \\otimes_R S$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "ITEMOPEN_0004": "\\item[",
+        "ITEMCLOSE_0004": "]",
+        "ITEMOPEN_0005": "\\item[",
+        "ITEMCLOSE_0005": "]",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0003": "\\end{enumerate}",
+        "MATH_0003": "$A$",
+        "MATH_0004": "$R$",
+        "STRUCT_0004": "\\end{theorem}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XE:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nTo prove (a), choose a finite set <MATH_0001> of generators of <MATH_0002>\nover <MATH_0003>. Write each <MATH_0004> as <MATH_0005> with\n<MATH_0006> and <MATH_0007>. Let <MATH_0008> be the polynomial <MATH_0009>-algebra\non variables <MATH_0010> and let <MATH_0011> be the <MATH_0012>-algebra map sending\n<MATH_0013> to <MATH_0014>. Then <MATH_0015> is surjective, so\n<MATH_0016> is zero and hence <MATH_0017>\nis zero. This proves (a).\n\n<STRUCT_0002><STRUCT_0003>\nTo see (b) assume <MATH_0018> is a finitely presented <MATH_0019>-algebra.\nThen <MATH_0020> is finite type over <MATH_0021> by (a). Choose a surjection\n<MATH_0022> with kernel <MATH_0023>.\nThen <MATH_0024> is exact.\nBy Algebra, Lemma <REF_0001>\nthe kernel of <MATH_0025>\nis a finitely generated ideal. Thus we can find finitely many elements\n<MATH_0026> such that the images of <MATH_0027> in\n<MATH_0028> generate the kernel of\n<MATH_0029>.\nLet <MATH_0030> be the ideal generated by <MATH_0031>.\nThen <MATH_0032> is a finitely presented <MATH_0033>-algebra\nwith a morphism <MATH_0034> such that <MATH_0035>\nis an isomorphism. Thus <MATH_0036> as desired.\n\n<STRUCT_0004><STRUCT_0005>\nTo prove (c), recall that <MATH_0037> is formally unramified over <MATH_0038> if and only\nif the module of relative differentials <MATH_0039> vanishes, see\nAlgebra, Lemma <REF_0002> or\n<REF_0003>.\nSince <MATH_0040>,\nthe vanishing descends by Theorem <REF_0004>.\n\n<STRUCT_0006><STRUCT_0007>\nTo deduce (d) from the previous cases, recall that <MATH_0041> is unramified\nover <MATH_0042> if and only if <MATH_0043> is formally unramified and of finite type\nover <MATH_0044>, see\nAlgebra, Lemma <REF_0005>.\n\n<STRUCT_0008><STRUCT_0009>\nTo prove (e), recall that by\nAlgebra, Lemma <REF_0006>\nor <REF_0007> the algebra\n<MATH_0045> is <ACCENT_0001>tale over <MATH_0046> if and only if\n<MATH_0047> is flat, unramified, and of finite presentation over <MATH_0048>.\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$\\{x_i\\}$",
+        "MATH_0002": "$A \\otimes_R S$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$x_i$",
+        "MATH_0005": "$\\sum_j y_{ij} \\otimes s_{ij}$",
+        "MATH_0006": "$y_{ij} \\in A$",
+        "MATH_0007": "$s_{ij} \\in S$",
+        "MATH_0008": "$F$",
+        "MATH_0009": "$R$",
+        "MATH_0010": "$e_{ij}$",
+        "MATH_0011": "$F \\to M$",
+        "MATH_0012": "$R$",
+        "MATH_0013": "$e_{ij}$",
+        "MATH_0014": "$y_{ij}$",
+        "MATH_0015": "$F \\otimes_R S\\to A \\otimes_R S$",
+        "MATH_0016": "$\\Coker(F \\to A) \\otimes_R S$",
+        "MATH_0017": "$\\Coker(F \\to A)$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0018": "$A \\otimes_R S$",
+        "MATH_0019": "$S$",
+        "MATH_0020": "$A$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$R[x_1, \\ldots, x_n] \\to A$",
+        "MATH_0023": "$I$",
+        "MATH_0024": "$I \\otimes_R S \\to S[x_1, \\ldots, x_n] \\to A \\otimes_R S \\to 0$",
+        "REF_0001": "\\ref{algebra-lemma-finite-presentation-independent}",
+        "MATH_0025": "$S[x_1, \\ldots, x_n] \\to A \\otimes_R S$",
+        "MATH_0026": "$y_1, \\ldots, y_t \\in I$",
+        "MATH_0027": "$y_i \\otimes 1$",
+        "MATH_0028": "$S[x_1, \\ldots, x_n]$",
+        "MATH_0029": "$S[x_1, \\ldots, x_n] \\to A \\otimes_R S$",
+        "MATH_0030": "$I' \\subset I$",
+        "MATH_0031": "$y_1, \\ldots, y_t$",
+        "MATH_0032": "$A' = R[x_1, \\ldots, x_n]/I'$",
+        "MATH_0033": "$R$",
+        "MATH_0034": "$A' \\to A$",
+        "MATH_0035": "$A' \\otimes_R S \\to A \\otimes_R S$",
+        "MATH_0036": "$A' \\cong A$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0037": "$A$",
+        "MATH_0038": "$R$",
+        "MATH_0039": "$\\Omega_{A/R}$",
+        "REF_0002": "\\ref{algebra-lemma-characterize-formally-unramified}",
+        "REF_0003": "\\cite[Proposition~17.2.1]{EGA4}",
+        "MATH_0040": "$\\Omega_{(A \\otimes_R S)/S} = \\Omega_{A/R} \\otimes_R S$",
+        "REF_0004": "\\ref{theorem-descent}",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0041": "$A$",
+        "MATH_0042": "$R$",
+        "MATH_0043": "$A$",
+        "MATH_0044": "$R$",
+        "REF_0005": "\\ref{algebra-lemma-formally-unramified-unramified}",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "REF_0006": "\\ref{algebra-lemma-etale-flat-unramified-finite-presentation}",
+        "REF_0007": "\\cite[Th\\'eor\\`eme~17.6.1]{EGA4}",
+        "MATH_0045": "$A$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0046": "$R$",
+        "MATH_0047": "$A$",
+        "MATH_0048": "$R$",
+        "STRUCT_0010": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:08XF:remark/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIt would make things easier to have a faithfully\nflat ring homomorphism <MATH_0001> for which <MATH_0002> has some \nextra structure.\nFor instance, if one could ensure that <MATH_0003> is split in \n<MATH_0004>,\nthen it would follow that every property of a module or algebra which is stable \nunder base extension\nand which descends along faithfully flat morphisms also descends along \nuniversally injective morphisms.\nAn obvious guess would be to find <MATH_0005> for which <MATH_0006> is not only faithfully flat \nbut also injective in <MATH_0007>,\nbut even for <MATH_0008> no such homomorphism can exist.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-when-locally-split}",
+        "MATH_0001": "$g: R \\to T$",
+        "MATH_0002": "$T \\to S \\otimes_R T$",
+        "MATH_0003": "$T \\to S \\otimes_R T$",
+        "MATH_0004": "$\\textit{Rings}$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$T$",
+        "MATH_0007": "$\\text{Mod}_R$",
+        "MATH_0008": "$R = \\mathbf{Z}$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-base-change-along-universally-injective-ring-map",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map which is universally injective\nas a map of <MATH_0002>-modules. Then the functor <MATH_0003>\non <MATH_0004>-modules reflects injections, surjections, and isomorphisms.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-along-universally-injective-ring-map}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$M \\mapsto M \\otimes_R S$",
+        "MATH_0004": "$R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-base-change-along-universally-injective-ring-map",
+      "requested_tag": "0H9I"
+    },
+    {
+      "context_id": "reference:algebra-lemma-characterize-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002> be an <MATH_0003>-module.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The module <MATH_0004> is flat over <MATH_0005>.\n<STRUCT_0004> For all <MATH_0006> the functor <MATH_0007> is zero.\n<STRUCT_0005> The functor <MATH_0008> is zero.\n<STRUCT_0006> For all ideals <MATH_0009> we have <MATH_0010>.\n<STRUCT_0007> For all finitely generated ideals <MATH_0011> we have\n<MATH_0012>.\n<STRUCT_0008>\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-flat}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$i > 0$",
+        "MATH_0007": "$\\text{Tor}_i^R(M, -)$",
+        "STRUCT_0005": "\\item",
+        "MATH_0008": "$\\text{Tor}_1^R(M, -)$",
+        "STRUCT_0006": "\\item",
+        "MATH_0009": "$I \\subset R$",
+        "MATH_0010": "$\\text{Tor}_1^R(M, R/I) = 0$",
+        "STRUCT_0007": "\\item",
+        "MATH_0011": "$I \\subset R$",
+        "MATH_0012": "$\\text{Tor}_1^R(M, R/I) = 0$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-characterize-flat",
+      "requested_tag": "00M5"
+    },
+    {
+      "context_id": "reference:algebra-lemma-characterize-formally-unramified",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is formally unramified,\n<STRUCT_0004> the module of differentials <MATH_0003> is zero.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-characterize-formally-unramified}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$\\Omega_{S/R}$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-characterize-formally-unramified",
+      "requested_tag": "00UO"
+    },
+    {
+      "context_id": "reference:algebra-lemma-etale-flat-unramified-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is <ACCENT_0001>tale,\n<STRUCT_0004> <MATH_0003> is flat and G-unramified, and\n<STRUCT_0005> <MATH_0004> is flat, unramified, and of finite presentation.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-flat-unramified-finite-presentation}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$R \\to S$",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$R \\to S$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-etale-flat-unramified-finite-presentation",
+      "requested_tag": "08WD"
+    },
+    {
+      "context_id": "reference:algebra-lemma-extension",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring.\nLet\n<MATH_0002>\nbe a short exact sequence of <MATH_0003>-modules.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0004> and <MATH_0005> are finite <MATH_0006>-modules, then <MATH_0007> is a finite\n<MATH_0008>-module.\n<STRUCT_0004> If <MATH_0009> and <MATH_0010> are finitely presented <MATH_0011>-modules, then <MATH_0012>\nis a finitely presented <MATH_0013>-module.\n<STRUCT_0005> If <MATH_0014> is a finite <MATH_0015>-module, then <MATH_0016> is a finite <MATH_0017>-module.\n<STRUCT_0006> If <MATH_0018> is a finitely presented <MATH_0019>-module and <MATH_0020> is a\nfinite <MATH_0021>-module, then <MATH_0022> is a finitely presented <MATH_0023>-module.\n<STRUCT_0007> If <MATH_0024> is a finitely presented <MATH_0025>-module and <MATH_0026> is a finite\n<MATH_0027>-module, then <MATH_0028> is a finite <MATH_0029>-module.\n<STRUCT_0008>\n<STRUCT_0009>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-extension}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$$\n0 \\to M_1 \\to M_2 \\to M_3 \\to 0\n$$",
+        "MATH_0003": "$R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$M_1$",
+        "MATH_0005": "$M_3$",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$M_2$",
+        "MATH_0008": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$M_1$",
+        "MATH_0010": "$M_3$",
+        "MATH_0011": "$R$",
+        "MATH_0012": "$M_2$",
+        "MATH_0013": "$R$",
+        "STRUCT_0005": "\\item",
+        "MATH_0014": "$M_2$",
+        "MATH_0015": "$R$",
+        "MATH_0016": "$M_3$",
+        "MATH_0017": "$R$",
+        "STRUCT_0006": "\\item",
+        "MATH_0018": "$M_2$",
+        "MATH_0019": "$R$",
+        "MATH_0020": "$M_1$",
+        "MATH_0021": "$R$",
+        "MATH_0022": "$M_3$",
+        "MATH_0023": "$R$",
+        "STRUCT_0007": "\\item",
+        "MATH_0024": "$M_3$",
+        "MATH_0025": "$R$",
+        "MATH_0026": "$M_2$",
+        "MATH_0027": "$R$",
+        "MATH_0028": "$M_1$",
+        "MATH_0029": "$R$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-extension",
+      "requested_tag": "0519"
+    },
+    {
+      "context_id": "reference:algebra-lemma-finite-presentation-independent",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map of finite presentation.\nFor any surjection <MATH_0002> the\nkernel of <MATH_0003> is a finitely generated ideal in <MATH_0004>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-presentation-independent}",
+        "MATH_0001": "$R \\to S$",
+        "MATH_0002": "$\\alpha : R[x_1, \\ldots, x_n] \\to S$",
+        "MATH_0003": "$\\alpha$",
+        "MATH_0004": "$R[x_1, \\ldots, x_n]$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-finite-presentation-independent",
+      "requested_tag": "00R2"
+    },
+    {
+      "context_id": "reference:algebra-lemma-finite-projective",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring and let <MATH_0002> be an <MATH_0003>-module.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> is finitely presented and <MATH_0005>-flat,\n<STRUCT_0004> <MATH_0006> is finite projective,\n<STRUCT_0005> <MATH_0007> is a direct summand of a finite free <MATH_0008>-module,\n<STRUCT_0006> <MATH_0009> is finitely presented and\nfor all <MATH_0010> the\nlocalization <MATH_0011> is free,\n<STRUCT_0007> <MATH_0012> is finitely presented and\nfor all maximal ideals <MATH_0013> the\nlocalization <MATH_0014> is free,\n<STRUCT_0008> <MATH_0015> is finite and locally free,\n<STRUCT_0009> <MATH_0016> is finite locally free, and\n<STRUCT_0010> <MATH_0017> is finite, for every prime <MATH_0018> the module\n<MATH_0019> is free, and the function\n<MATH_0020>\nis locally constant in the Zariski topology.\n<STRUCT_0011>\n<STRUCT_0012>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-projective}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$M$",
+        "MATH_0003": "$R$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0004": "$M$",
+        "MATH_0005": "$R$",
+        "STRUCT_0004": "\\item",
+        "MATH_0006": "$M$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$M$",
+        "MATH_0008": "$R$",
+        "STRUCT_0006": "\\item",
+        "MATH_0009": "$M$",
+        "MATH_0010": "$\\mathfrak p \\in \\Spec(R)$",
+        "MATH_0011": "$M_{\\mathfrak p}$",
+        "STRUCT_0007": "\\item",
+        "MATH_0012": "$M$",
+        "MATH_0013": "$\\mathfrak m \\subset R$",
+        "MATH_0014": "$M_{\\mathfrak m}$",
+        "STRUCT_0008": "\\item",
+        "MATH_0015": "$M$",
+        "STRUCT_0009": "\\item",
+        "MATH_0016": "$M$",
+        "STRUCT_0010": "\\item",
+        "MATH_0017": "$M$",
+        "MATH_0018": "$\\mathfrak p$",
+        "MATH_0019": "$M_{\\mathfrak p}$",
+        "MATH_0020": "$$\n\\rho_M : \\Spec(R) \\to \\mathbf{Z}, \\quad\n\\mathfrak p\n\\longmapsto\n\\dim_{\\kappa(\\mathfrak p)} M \\otimes_R \\kappa(\\mathfrak p)\n$$",
+        "STRUCT_0011": "\\end{enumerate}",
+        "STRUCT_0012": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-finite-projective",
+      "requested_tag": "00NX"
+    },
+    {
+      "context_id": "reference:algebra-lemma-formally-unramified-unramified",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. The following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is formally unramified and of finite type, and\n<STRUCT_0004> <MATH_0003> is unramified.\n<STRUCT_0005>\nMoreover, also the following are equivalent\n<STRUCT_0006>\n<STRUCT_0007> <MATH_0004> is formally unramified and of finite presentation, and\n<STRUCT_0008> <MATH_0005> is G-unramified.\n<STRUCT_0009>\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-formally-unramified-unramified}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$R \\to S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "STRUCT_0007": "\\item",
+        "MATH_0004": "$R \\to S$",
+        "STRUCT_0008": "\\item",
+        "MATH_0005": "$R \\to S$",
+        "STRUCT_0009": "\\end{enumerate}",
+        "STRUCT_0010": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-formally-unramified-unramified",
+      "requested_tag": "00UU"
+    },
+    {
+      "context_id": "reference:descent-definition-descent-datum-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\n<STRUCT_0002>\n<STRUCT_0003> A <TEXTITOPEN_0001>descent datum <MATH_0002> for modules\nwith respect to <MATH_0003><TEXTITCLOSE_0001>\nis given by an <MATH_0004>-module <MATH_0005> and an isomorphism of\n<MATH_0006>-modules\n<MATH_0007>\nsuch that the <TEXTITOPEN_0002>cocycle condition<TEXTITCLOSE_0002> holds: the diagram\nof <MATH_0008>-module maps\n<MATH_0009>\ncommutes (see below for notation).\n<STRUCT_0004> A <TEXTITOPEN_0003>morphism <MATH_0010> of descent data<TEXTITCLOSE_0003>\nis a morphism of <MATH_0011>-modules <MATH_0012> such that\nthe diagram\n<MATH_0013>\nis commutative.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-descent-datum-modules}",
+        "MATH_0001": "$R \\to A$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0002": "$(N, \\varphi)$",
+        "MATH_0003": "$R \\to A$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$A$",
+        "MATH_0005": "$N$",
+        "MATH_0006": "$A \\otimes_R A$",
+        "MATH_0007": "$$\n\\varphi : N \\otimes_R A \\to A \\otimes_R N\n$$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0008": "$A \\otimes_R A \\otimes_R A$",
+        "MATH_0009": "$$\n\\xymatrix{\nN \\otimes_R A \\otimes_R A \\ar[rr]_{\\varphi_{02}}\n\\ar[rd]_{\\varphi_{01}}\n& &\nA \\otimes_R A \\otimes_R N \\\\\n& A \\otimes_R N \\otimes_R A \\ar[ru]_{\\varphi_{12}} &\n}\n$$",
+        "STRUCT_0004": "\\item",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0010": "$(N, \\varphi) \\to (N', \\varphi')$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0011": "$A$",
+        "MATH_0012": "$\\psi : N \\to N'$",
+        "MATH_0013": "$$\n\\xymatrix{\nN \\otimes_R A \\ar[r]_\\varphi \\ar[d]_{\\psi \\otimes \\text{id}_A} &\nA \\otimes_R N \\ar[d]^{\\text{id}_A \\otimes \\psi} \\\\\nN' \\otimes_R A \\ar[r]^{\\varphi'} &\nA \\otimes_R N'\n}\n$$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-definition-descent-datum-modules",
+      "requested_tag": "023G"
+    },
+    {
+      "context_id": "reference:descent-equation-adjunction",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe will use frequently the standard adjunction between <MATH_0001> and tensor \nproduct, in the form of the natural isomorphism of contravariant functors\n<MATH_0002>\ntaking <MATH_0003> to the map <MATH_0004>. See\nAlgebra, Lemma <REF_0001>.\nA corollary of this observation is that if\n<MATH_0005>\nis a split coequalizer diagram in <MATH_0006>, then so is\n<MATH_0007>\nfor any <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-adjunction}",
+        "MATH_0001": "$\\Hom$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-adjunction}\nC(\\bullet_1 \\otimes_R \\bullet_2) \\cong \\Hom_R(\\bullet_1, C(\\bullet_2)): \n\\text{Mod}_R \\times \\text{Mod}_R \\to \\text{Mod}_R\n\\end{equation}",
+        "MATH_0003": "$f: M_1 \\otimes_R M_2 \\to \\mathbf{Q}/\\mathbf{Z}$",
+        "MATH_0004": "$m_1 \\mapsto \n(m_2 \\mapsto f(m_1 \\otimes m_2))$",
+        "REF_0001": "\\ref{algebra-lemma-hom-from-tensor-product-variant}",
+        "MATH_0005": "$$\n\\xymatrix@C=9pc{\nC(M) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N) \\ar[r] & C(P)\n}\n$$",
+        "MATH_0006": "$\\text{Mod}_R$",
+        "MATH_0007": "$$\n\\xymatrix@C=9pc{\nC(M \\otimes_R Q) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N \\otimes_R Q) \\ar[r] & C(P \n\\otimes_R Q)\n}\n$$",
+        "MATH_0008": "$Q \\in \\text{Mod}_R$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-equation-adjunction",
+      "requested_tag": "08WT"
+    },
+    {
+      "context_id": "reference:descent-equation-split-equalizer-conditions",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA <TEXTITOPEN_0001>split equalizer<TEXTITCLOSE_0001> is a diagram (<REF_0001>) with\n<MATH_0001> for which there exist auxiliary morphisms\n<MATH_0002> and <MATH_0003> such that\n<MATH_0004>\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-split-equalizer}",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "REF_0001": "\\ref{equation-equalizer}",
+        "MATH_0001": "$g_1 \\circ f = g_2 \\circ f$",
+        "MATH_0002": "$h : B \\to A$",
+        "MATH_0003": "$i : C \\to B$",
+        "MATH_0004": "\\begin{equation}\n\\label{equation-split-equalizer-conditions}\nh \\circ f = 1_A, \\quad f \\circ h = i \\circ g_1, \\quad i \\circ g_2 = 1_B.\n\\end{equation}",
+        "STRUCT_0002": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-equation-split-equalizer-conditions",
+      "requested_tag": "08WI"
+    },
+    {
+      "context_id": "reference:descent-lemma-C-is-faithful",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nFor a ring <MATH_0001>, the functor <MATH_0002> is\nexact and reflects injections and surjections.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-C-is-faithful}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$C : \\text{Mod}_R \\to \\text{Mod}_R$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-C-is-faithful",
+      "requested_tag": "08WR"
+    },
+    {
+      "context_id": "reference:descent-lemma-split-surjection",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. A morphism <MATH_0002> in <MATH_0003> is universally\ninjective if and only if <MATH_0004> is a split surjection.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-split-surjection}",
+        "MATH_0001": "$R$",
+        "MATH_0002": "$f: M \\to N$",
+        "MATH_0003": "$\\text{Mod}_R$",
+        "MATH_0004": "$C(f): C(N) \\to C(M)$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-split-surjection",
+      "requested_tag": "08WU"
+    },
+    {
+      "context_id": "reference:descent-remark-adjunction",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe will use frequently the standard adjunction between <MATH_0001> and tensor \nproduct, in the form of the natural isomorphism of contravariant functors\n<MATH_0002>\ntaking <MATH_0003> to the map <MATH_0004>. See\nAlgebra, Lemma <REF_0001>.\nA corollary of this observation is that if\n<MATH_0005>\nis a split coequalizer diagram in <MATH_0006>, then so is\n<MATH_0007>\nfor any <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-adjunction}",
+        "MATH_0001": "$\\Hom$",
+        "MATH_0002": "\\begin{equation}\n\\label{equation-adjunction}\nC(\\bullet_1 \\otimes_R \\bullet_2) \\cong \\Hom_R(\\bullet_1, C(\\bullet_2)): \n\\text{Mod}_R \\times \\text{Mod}_R \\to \\text{Mod}_R\n\\end{equation}",
+        "MATH_0003": "$f: M_1 \\otimes_R M_2 \\to \\mathbf{Q}/\\mathbf{Z}$",
+        "MATH_0004": "$m_1 \\mapsto \n(m_2 \\mapsto f(m_1 \\otimes m_2))$",
+        "REF_0001": "\\ref{algebra-lemma-hom-from-tensor-product-variant}",
+        "MATH_0005": "$$\n\\xymatrix@C=9pc{\nC(M) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N) \\ar[r] & C(P)\n}\n$$",
+        "MATH_0006": "$\\text{Mod}_R$",
+        "MATH_0007": "$$\n\\xymatrix@C=9pc{\nC(M \\otimes_R Q) \\ar@<1ex>[r] \\ar@<-1ex>[r] & C(N \\otimes_R Q) \\ar[r] & C(P \n\\otimes_R Q)\n}\n$$",
+        "MATH_0008": "$Q \\in \\text{Mod}_R$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-remark-adjunction",
+      "requested_tag": "08WS"
+    },
+    {
+      "context_id": "reference:descent-remark-functorial-splitting",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a universally injective morphism in <MATH_0002>. By \nchoosing a splitting\n<MATH_0003> of <MATH_0004>, we may construct a functorial splitting of <MATH_0005> \nfor each <MATH_0006>.\nNamely, by (<REF_0001>) this amounts to splitting <MATH_0007>  functorially in <MATH_0008>,\nand this is achieved by the map <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-functorial-splitting}",
+        "MATH_0001": "$f: M \\to N$",
+        "MATH_0002": "$\\text{Mod}_R$",
+        "MATH_0003": "$g$",
+        "MATH_0004": "$C(f)$",
+        "MATH_0005": "$C(1_P \\otimes f)$",
+        "MATH_0006": "$P \\in \\text{Mod}_R$",
+        "REF_0001": "\\ref{equation-adjunction}",
+        "MATH_0007": "$\\Hom_R(P, \nC(f))$",
+        "MATH_0008": "$P$",
+        "MATH_0009": "$g \\circ \\bullet$",
+        "STRUCT_0002": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-remark-functorial-splitting",
+      "requested_tag": "08WV"
+    },
+    {
+      "context_id": "reference:descent-section-descent-modules",
+      "kind": "locked-English-reference",
+      "source_text": "<TEXTOPEN_0001>Descent for modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descent-modules}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-section-descent-modules",
+      "requested_tag": "023F"
+    }
+  ]
+}

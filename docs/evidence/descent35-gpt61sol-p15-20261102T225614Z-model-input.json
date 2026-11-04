@@ -1,0 +1,1992 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a19e6b-67ee-78f2-a1ef-1dcf18ddf672",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p15-20261102T225614Z.json",
+    "hash": "sha256:0b8dd18b34b29ff722d94fdecf4655a8838771908caaa8862e1bd579168a33af"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:02L9:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is integral''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "integral",
+          "projection_start": 41,
+          "projection_end": 49,
+          "concept": "integral",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02L9:proof",
+      "source_text": "An integral morphism is the same thing as an affine,\nuniversally closed morphism. See\nMorphisms, Lemma <REF_0001>.\nHence the lemma follows on combining\nLemmas <REF_0002>\nand <REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-integral-universally-closed}",
+        "REF_0002": "\\ref{lemma-descending-property-universally-closed}",
+        "REF_0003": "\\ref{lemma-descending-property-affine}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "integral",
+          "projection_start": 3,
+          "projection_end": 11,
+          "concept": "integral",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 12,
+          "projection_end": 20,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 45,
+          "projection_end": 51,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 72,
+          "projection_end": 80,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 86,
+          "projection_end": 95,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LA:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is finite''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite",
+          "projection_start": 41,
+          "projection_end": 47,
+          "concept": "finite",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02LA:proof",
+      "source_text": "An finite morphism is the same thing as an integral\nmorphism which is locally of finite type. See\nMorphisms, Lemma <REF_0001>.\nHence the lemma follows on combining\nLemmas <REF_0002>\nand <REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-finite-integral}",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-type}",
+        "REF_0003": "\\ref{lemma-descending-property-integral}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite",
+          "projection_start": 3,
+          "projection_end": 9,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 10,
+          "projection_end": 18,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "integral",
+          "projection_start": 43,
+          "projection_end": 51,
+          "concept": "integral",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 52,
+          "projection_end": 60,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 70,
+          "projection_end": 92,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 98,
+          "projection_end": 107,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VI:statement",
+      "source_text": "The properties\n<MATH_0001>``<MATH_0002> is locally quasi-finite''\nand\n<MATH_0003>``<MATH_0004> is quasi-finite''\nare fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\mathcal{P}(f) =$",
+        "MATH_0004": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally quasi-finite",
+          "projection_start": 43,
+          "projection_end": 63,
+          "concept": "source-phrase-locally-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-finite",
+          "projection_start": 98,
+          "projection_end": 110,
+          "concept": "hyphen-quasi-finite",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VI:proof",
+      "source_text": "Let <MATH_0001> be a morphism of schemes, and let <MATH_0002>\nbe an fpqc covering such that each base change\n<MATH_0003> is locally quasi-finite.\nWe have already seen\n(Lemma <REF_0001>)\nthat ``locally of finite type'' is fpqc local\non the base, and hence we see that <MATH_0004> is locally of finite type.\nThen it follows from\nMorphisms, Lemma <REF_0002>\nthat <MATH_0005> is locally quasi-finite. The quasi-finite case follows\nas we have already seen that ``quasi-compact'' is fpqc local on the base\n(Lemma <REF_0003>).\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\{S_i \\to S\\}$",
+        "MATH_0003": "$f_i : X_i \\to S_i$",
+        "REF_0001": "\\ref{lemma-descending-property-locally-finite-type}",
+        "MATH_0004": "$f$",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-quasi-finite}",
+        "MATH_0005": "$f$",
+        "REF_0003": "\\ref{lemma-descending-property-quasi-compact}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 68,
+          "projection_end": 81,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 97,
+          "projection_end": 108,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally quasi-finite",
+          "projection_start": 124,
+          "projection_end": 144,
+          "concept": "source-phrase-locally-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 193,
+          "projection_end": 215,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 282,
+          "projection_end": 304,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 327,
+          "projection_end": 336,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally quasi-finite",
+          "projection_start": 375,
+          "projection_end": 395,
+          "concept": "source-phrase-locally-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-finite",
+          "projection_start": 401,
+          "projection_end": 413,
+          "concept": "hyphen-quasi-finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 458,
+          "projection_end": 471,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VJ:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is locally of finite type\nof relative dimension <MATH_0003>'' is fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$d$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 41,
+          "projection_end": 63,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relative dimension",
+          "projection_start": 67,
+          "projection_end": 85,
+          "concept": "source-phrase-relative-dimension",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VJ:proof",
+      "source_text": "This follows immediately from the fact that being locally of finite\ntype is fpqc local on the base and\nMorphisms, Lemma <REF_0001>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-dimension-fibre-after-base-change}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 50,
+          "projection_end": 72,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 103,
+          "projection_end": 112,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VK:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is syntomic''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:02VK:proof",
+      "source_text": "A morphism is syntomic if and only if it is locally of finite presentation,\nflat, and has locally complete intersections as fibres. We have seen\nalready that being flat and locally of finite presentation are\nfpqc local on the base (Lemmas\n<REF_0001>, and\n<REF_0002>).\nHence the result follows for syntomic from\nMorphisms, Lemma <REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-property-flat}",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "REF_0003": "\\ref{morphisms-lemma-set-points-where-fibres-lci}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 2,
+          "projection_end": 10,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 44,
+          "projection_end": 74,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 76,
+          "projection_end": 80,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 164,
+          "projection_end": 168,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 173,
+          "projection_end": 203,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 311,
+          "projection_end": 320,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VL:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is smooth''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "smooth",
+          "projection_start": 41,
+          "projection_end": 47,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VL:proof",
+      "source_text": "A morphism is smooth if and only if it is locally of finite presentation,\nflat, and has smooth fibres. We have seen\nalready that being flat and locally of finite presentation are\nfpqc local on the base (Lemmas\n<REF_0001>, and\n<REF_0002>).\nHence the result follows for smooth from\nMorphisms, Lemma <REF_0003>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-property-flat}",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "REF_0003": "\\ref{morphisms-lemma-set-points-where-fibres-smooth}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 2,
+          "projection_end": 10,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 14,
+          "projection_end": 20,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 42,
+          "projection_end": 72,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 74,
+          "projection_end": 78,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 88,
+          "projection_end": 94,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 135,
+          "projection_end": 139,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 144,
+          "projection_end": 174,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 268,
+          "projection_end": 274,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 280,
+          "projection_end": 289,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VM:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is unramified''\nis fpqc local on the base.\nThe property <MATH_0003>``<MATH_0004> is G-unramified''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\mathcal{P}(f) =$",
+        "MATH_0004": "$f$"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:02VM:proof",
+      "source_text": "A morphism is unramified (resp.<SPACE_0001>G-unramified) if and only if it is\nlocally of finite type (resp.<SPACE_0002>finite presentation)\nand its diagonal morphism is an open immersion (see\nMorphisms, Lemma <REF_0001>).\nWe have seen already that being locally of finite type\n(resp.<SPACE_0003>locally of finite presentation) and an open immersion is\nfpqc local on the base (Lemmas\n<REF_0002>,\n<REF_0003>, and\n<REF_0004>).\nHence the result follows formally.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "SPACE_0001": "\\ ",
+        "SPACE_0002": "\\ ",
+        "REF_0001": "\\ref{morphisms-lemma-diagonal-unramified-morphism}",
+        "SPACE_0003": "\\ ",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "REF_0003": "\\ref{lemma-descending-property-locally-finite-type}",
+        "REF_0004": "\\ref{lemma-descending-property-open-immersion}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 2,
+          "projection_end": 10,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 78,
+          "projection_end": 100,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite presentation",
+          "projection_start": 119,
+          "projection_end": 138,
+          "concept": "finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 157,
+          "projection_end": 165,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 172,
+          "projection_end": 186,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 192,
+          "projection_end": 201,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite type",
+          "projection_start": 254,
+          "projection_end": 276,
+          "concept": "locally-finite-type",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 295,
+          "projection_end": 325,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 334,
+          "projection_end": 348,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VN:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is <ACCENT_0001>tale''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 41,
+          "projection_end": 46,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VN:proof",
+      "source_text": "A morphism is <ACCENT_0001>tale if and only if it flat and G-unramified.\nSee Morphisms, Lemma <REF_0001>.\nWe have seen already that being flat and G-unramified\nare fpqc local on the base (Lemmas\n<REF_0002>, and\n<REF_0003>).\nHence the result follows.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "ACCENT_0001": "\\'e",
+        "REF_0001": "\\ref{morphisms-lemma-flat-unramified-etale}",
+        "REF_0002": "\\ref{lemma-descending-property-flat}",
+        "REF_0003": "\\ref{lemma-descending-property-unramified}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 2,
+          "projection_end": 10,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 14,
+          "projection_end": 19,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 38,
+          "projection_end": 42,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 65,
+          "projection_end": 74,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 126,
+          "projection_end": 130,
+          "concept": "flat",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VO:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is finite locally free''\nis fpqc local on the base.\nLet <MATH_0003>.\nThe property <MATH_0004>``<MATH_0005> is finite locally free of degree <MATH_0006>''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$d \\geq 0$",
+        "MATH_0004": "$\\mathcal{P}(f) =$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$d$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite locally free",
+          "projection_start": 41,
+          "projection_end": 60,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 148,
+          "projection_end": 167,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 171,
+          "projection_end": 177,
+          "concept": "degree",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02VO:proof",
+      "source_text": "Being finite locally free is equivalent to being\nfinite, flat and locally of finite presentation\n(Morphisms, Lemma <REF_0001>).\nHence this follows from Lemmas\n<REF_0002>,\n<REF_0003>, and\n<REF_0004>.\nIf <MATH_0001> is finite locally free, and <MATH_0002> is a surjective\nfamily of morphisms such that each pullback <MATH_0003> has\ndegree <MATH_0004>, then <MATH_0005> has degree <MATH_0006>, for example because we\ncan read off the degree in a point <MATH_0007> from the fibre\n<MATH_0008>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{morphisms-lemma-finite-flat}",
+        "REF_0002": "\\ref{lemma-descending-property-finite}",
+        "REF_0003": "\\ref{lemma-descending-property-flat}",
+        "REF_0004": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "MATH_0001": "$f : Z \\to U$",
+        "MATH_0002": "$\\{U_i \\to U\\}$",
+        "MATH_0003": "$Z \\times_U U_i \\to U_i$",
+        "MATH_0004": "$d$",
+        "MATH_0005": "$Z \\to U$",
+        "MATH_0006": "$d$",
+        "MATH_0007": "$u \\in U$",
+        "MATH_0008": "$(f_*\\mathcal{O}_Z)_u \\otimes_{\\mathcal{O}_{U, u}} \\kappa(u)$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "finite locally free",
+          "projection_start": 6,
+          "projection_end": 25,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 29,
+          "projection_end": 39,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 49,
+          "projection_end": 55,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 57,
+          "projection_end": 61,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 66,
+          "projection_end": 96,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 98,
+          "projection_end": 107,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 217,
+          "projection_end": 236,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 259,
+          "projection_end": 269,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 270,
+          "projection_end": 289,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 305,
+          "projection_end": 313,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 330,
+          "projection_end": 336,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 371,
+          "projection_end": 377,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 431,
+          "projection_end": 437,
+          "concept": "degree",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02YK:statement",
+      "source_text": "The property <MATH_0001>``<MATH_0002> is a monomorphism''\nis fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "monomorphism",
+          "projection_start": 43,
+          "projection_end": 55,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:02YK:proof",
+      "source_text": "Let <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an fpqc covering, and assume\neach of the base changes <MATH_0003> of <MATH_0004> is\na monomorphism. Let <MATH_0005> be two morphisms\nsuch that <MATH_0006>. We have to show that <MATH_0007>.\nSince <MATH_0008> is a monomorphism we see that <MATH_0009>, where\n<MATH_0010> are\nthe base changes. In particular the compositions\n<MATH_0011> are equal.\nSince <MATH_0012>\nis an epimorphism (see\ne.g.<SPACE_0001>Lemma <REF_0001>)\nwe conclude <MATH_0013>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\{S_i \\to S\\}$",
+        "MATH_0003": "$f_i : X_i \\to S_i$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$a, b : T \\to X$",
+        "MATH_0006": "$f \\circ a = f \\circ b$",
+        "MATH_0007": "$a = b$",
+        "MATH_0008": "$f_i$",
+        "MATH_0009": "$a_i = b_i$",
+        "MATH_0010": "$a_i, b_i : S_i \\times_S T \\to X_i$",
+        "MATH_0011": "$S_i \\times_S T \\to T \\to X$",
+        "MATH_0012": "$\\coprod S_i \\times_S T \\to T$",
+        "SPACE_0001": "\\ ",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "MATH_0013": "$a = b$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 33,
+          "projection_end": 40,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fpqc covering",
+          "projection_start": 64,
+          "projection_end": 77,
+          "concept": "source-phrase-fpqc-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base changes",
+          "projection_start": 102,
+          "projection_end": 114,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphism",
+          "projection_start": 147,
+          "projection_end": 159,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 184,
+          "projection_end": 193,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "monomorphism",
+          "projection_start": 274,
+          "projection_end": 286,
+          "concept": "monomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base changes",
+          "projection_start": 338,
+          "projection_end": 350,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "compositions",
+          "projection_start": 370,
+          "projection_end": 382,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "epimorphism",
+          "projection_start": 430,
+          "projection_end": 441,
+          "concept": "epimorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0694:statement",
+      "source_text": "The properties\n<STRUCT_0001>\n<ITEMOPEN_0001><ITEMCLOSE_0001> <MATH_0001>``<MATH_0002> is a Koszul-regular immersion'',\n<ITEMOPEN_0002><ITEMCLOSE_0002> <MATH_0003>``<MATH_0004> is an <MATH_0005>-regular immersion'', and\n<ITEMOPEN_0003><ITEMCLOSE_0003> <MATH_0006>``<MATH_0007> is a quasi-regular immersion''\n<STRUCT_0002>\nare fpqc local on the base.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0003": "$\\mathcal{P}(f) =$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$H_1$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0006": "$\\mathcal{P}(f) =$",
+        "MATH_0007": "$f$",
+        "STRUCT_0002": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "immersion",
+          "projection_start": 106,
+          "projection_end": 115,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 202,
+          "projection_end": 211,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 295,
+          "projection_end": 304,
+          "concept": "immersion",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0694:proof",
+      "source_text": "We will use the criterion of\nLemma <REF_0001>\nto prove this. By\nDivisors, Definition <REF_0002>\nbeing a Koszul-regular (resp.<SPACE_0001><MATH_0001>-regular, quasi-regular)\nimmersion is Zariski local on the base. By\nDivisors, Lemma <REF_0003>\nbeing a Koszul-regular (resp.<SPACE_0002><MATH_0002>-regular, quasi-regular)\nimmersion is preserved under flat base change.\nThe final hypothesis (3) of\nLemma <REF_0004>\ntranslates into the following algebra statement:\nLet <MATH_0003> be a faithfully flat ring map. Let <MATH_0004> be an ideal.\nIf <MATH_0005> is locally on <MATH_0006> generated by a Koszul-regular\n(resp.<SPACE_0003><MATH_0007>-regular, quasi-regular) sequence in <MATH_0008>, then <MATH_0009>\nis locally on <MATH_0010> generated by a Koszul-regular\n(resp.<SPACE_0004><MATH_0011>-regular, quasi-regular) sequence in <MATH_0012>. This is\nMore on Algebra, Lemma <REF_0005>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{lemma-descending-properties-morphisms}",
+        "REF_0002": "\\ref{divisors-definition-regular-immersion}",
+        "SPACE_0001": "\\ ",
+        "MATH_0001": "$H_1$",
+        "REF_0003": "\\ref{divisors-lemma-flat-base-change-regular-immersion}",
+        "SPACE_0002": "\\ ",
+        "MATH_0002": "$H_1$",
+        "REF_0004": "\\ref{lemma-descending-properties-morphisms}",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$I \\subset A$",
+        "MATH_0005": "$IB$",
+        "MATH_0006": "$\\Spec(B)$",
+        "SPACE_0003": "\\ ",
+        "MATH_0007": "$H_1$",
+        "MATH_0008": "$B$",
+        "MATH_0009": "$I \\subset A$",
+        "MATH_0010": "$\\Spec(A)$",
+        "SPACE_0004": "\\ ",
+        "MATH_0011": "$H_1$",
+        "MATH_0012": "$A$",
+        "REF_0005": "\\ref{more-algebra-lemma-flat-descent-regular-ideal}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Divisors",
+          "projection_start": 64,
+          "projection_end": 72,
+          "concept": "divisor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 173,
+          "projection_end": 182,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Divisors",
+          "projection_start": 216,
+          "projection_end": 224,
+          "concept": "divisor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "immersion",
+          "projection_start": 320,
+          "projection_end": 329,
+          "concept": "immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 349,
+          "projection_end": 353,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 354,
+          "projection_end": 365,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 442,
+          "projection_end": 449,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 482,
+          "projection_end": 497,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 498,
+          "projection_end": 506,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 530,
+          "projection_end": 535,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 855,
+          "projection_end": 862,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:02L8:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an fpqc covering.\nWrite <MATH_0003> and <MATH_0004>\nthe base change of <MATH_0005>. Also denote\n<MATH_0006> the given flat morphisms.\nAssume each <MATH_0007> is a quasi-compact immersion.\nBy Schemes, Lemma <REF_0001>\neach <MATH_0008> is separated.\nBy Lemmas <REF_0002> and\n<REF_0003>\nthis implies that <MATH_0009> is quasi-compact and separated.\nLet <MATH_0010> be the factorization of <MATH_0011> through its\nscheme theoretic image. By\nMorphisms, Lemma <REF_0004>\nthe closed subscheme <MATH_0012> is cut out by the\nquasi-coherent sheaf of ideals\n<MATH_0013>\nas <MATH_0014> is quasi-compact. By flat base change\n(see for example\nCohomology of Schemes, Lemma <REF_0005>;\nhere we use <MATH_0015> is separated)\nwe see <MATH_0016> is the pullback <MATH_0017>.\nHence <MATH_0018> is cut out by the\nquasi-coherent sheaf of ideals <MATH_0019>.\nBy Morphisms, Lemma <REF_0006>\nthe morphisms <MATH_0020>\nare open immersions. Hence by\nLemma <REF_0007>\nwe see that <MATH_0021> is an open immersion and\nhence <MATH_0022> is an immersion as desired\n(we already saw it was quasi-compact).\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\{Y_i \\to Y\\}$",
+        "MATH_0003": "$X_i = Y_i \\times_Y X$",
+        "MATH_0004": "$f_i : X_i \\to Y_i$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$q_i : Y_i \\to Y$",
+        "MATH_0007": "$f_i$",
+        "REF_0001": "\\ref{schemes-lemma-immersions-monomorphisms}",
+        "MATH_0008": "$f_i$",
+        "REF_0002": "\\ref{lemma-descending-property-quasi-compact}",
+        "REF_0003": "\\ref{lemma-descending-property-separated}",
+        "MATH_0009": "$f$",
+        "MATH_0010": "$X \\to Z \\to Y$",
+        "MATH_0011": "$f$",
+        "REF_0004": "\\ref{morphisms-lemma-quasi-compact-scheme-theoretic-image}",
+        "MATH_0012": "$Z \\subset Y$",
+        "MATH_0013": "$\\mathcal{I} = \\Ker(\\mathcal{O}_Y \\to f_*\\mathcal{O}_X)$",
+        "MATH_0014": "$f$",
+        "REF_0005": "\\ref{coherent-lemma-flat-base-change-cohomology}",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$f_{i, *}\\mathcal{O}_{X_i}$",
+        "MATH_0017": "$q_i^*f_*\\mathcal{O}_X$",
+        "MATH_0018": "$Y_i \\times_Y Z$",
+        "MATH_0019": "$q_i^*\\mathcal{I} =\n\\Ker(\\mathcal{O}_{Y_i} \\to f_{i, *}\\mathcal{O}_{X_i})$",
+        "REF_0006": "\\ref{morphisms-lemma-quasi-compact-immersion}",
+        "MATH_0020": "$X_i \\to Y_i \\times_Y Z$",
+        "REF_0007": "\\ref{lemma-descending-property-open-immersion}",
+        "MATH_0021": "$X \\to Z$",
+        "MATH_0022": "$f$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02L9:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAn integral morphism is the same thing as an affine,\nuniversally closed morphism. See\nMorphisms, Lemma <REF_0001>.\nHence the lemma follows on combining\nLemmas <REF_0002>\nand <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-integral-universally-closed}",
+        "REF_0002": "\\ref{lemma-descending-property-universally-closed}",
+        "REF_0003": "\\ref{lemma-descending-property-affine}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02L9:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is integral''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-integral}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LA:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is finite''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-finite}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02LA:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nAn finite morphism is the same thing as an integral\nmorphism which is locally of finite type. See\nMorphisms, Lemma <REF_0001>.\nHence the lemma follows on combining\nLemmas <REF_0002>\nand <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-finite-integral}",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-type}",
+        "REF_0003": "\\ref{lemma-descending-property-integral}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VI:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe properties\n<MATH_0001>``<MATH_0002> is locally quasi-finite''\nand\n<MATH_0003>``<MATH_0004> is quasi-finite''\nare fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-quasi-finite}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\mathcal{P}(f) =$",
+        "MATH_0004": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VI:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a morphism of schemes, and let <MATH_0002>\nbe an fpqc covering such that each base change\n<MATH_0003> is locally quasi-finite.\nWe have already seen\n(Lemma <REF_0001>)\nthat ``locally of finite type'' is fpqc local\non the base, and hence we see that <MATH_0004> is locally of finite type.\nThen it follows from\nMorphisms, Lemma <REF_0002>\nthat <MATH_0005> is locally quasi-finite. The quasi-finite case follows\nas we have already seen that ``quasi-compact'' is fpqc local on the base\n(Lemma <REF_0003>).\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\{S_i \\to S\\}$",
+        "MATH_0003": "$f_i : X_i \\to S_i$",
+        "REF_0001": "\\ref{lemma-descending-property-locally-finite-type}",
+        "MATH_0004": "$f$",
+        "REF_0002": "\\ref{morphisms-lemma-base-change-quasi-finite}",
+        "MATH_0005": "$f$",
+        "REF_0003": "\\ref{lemma-descending-property-quasi-compact}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VJ:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally of finite type\nof relative dimension <MATH_0003>'' is fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-relative-dimension-d}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$d$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VJ:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThis follows immediately from the fact that being locally of finite\ntype is fpqc local on the base and\nMorphisms, Lemma <REF_0001>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-dimension-fibre-after-base-change}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VK:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is syntomic''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-syntomic}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA morphism is syntomic if and only if it is locally of finite presentation,\nflat, and has locally complete intersections as fibres. We have seen\nalready that being flat and locally of finite presentation are\nfpqc local on the base (Lemmas\n<REF_0001>, and\n<REF_0002>).\nHence the result follows for syntomic from\nMorphisms, Lemma <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-property-flat}",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "REF_0003": "\\ref{morphisms-lemma-set-points-where-fibres-lci}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VL:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is smooth''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-smooth}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VL:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA morphism is smooth if and only if it is locally of finite presentation,\nflat, and has smooth fibres. We have seen\nalready that being flat and locally of finite presentation are\nfpqc local on the base (Lemmas\n<REF_0001>, and\n<REF_0002>).\nHence the result follows for smooth from\nMorphisms, Lemma <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-property-flat}",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "REF_0003": "\\ref{morphisms-lemma-set-points-where-fibres-smooth}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VM:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is unramified''\nis fpqc local on the base.\nThe property <MATH_0003>``<MATH_0004> is G-unramified''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-unramified}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\mathcal{P}(f) =$",
+        "MATH_0004": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VM:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA morphism is unramified (resp.<SPACE_0001>G-unramified) if and only if it is\nlocally of finite type (resp.<SPACE_0002>finite presentation)\nand its diagonal morphism is an open immersion (see\nMorphisms, Lemma <REF_0001>).\nWe have seen already that being locally of finite type\n(resp.<SPACE_0003>locally of finite presentation) and an open immersion is\nfpqc local on the base (Lemmas\n<REF_0002>,\n<REF_0003>, and\n<REF_0004>).\nHence the result follows formally.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "SPACE_0001": "\\ ",
+        "SPACE_0002": "\\ ",
+        "REF_0001": "\\ref{morphisms-lemma-diagonal-unramified-morphism}",
+        "SPACE_0003": "\\ ",
+        "REF_0002": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "REF_0003": "\\ref{lemma-descending-property-locally-finite-type}",
+        "REF_0004": "\\ref{lemma-descending-property-open-immersion}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VN:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is <ACCENT_0001>tale''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-etale}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VN:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nA morphism is <ACCENT_0001>tale if and only if it flat and G-unramified.\nSee Morphisms, Lemma <REF_0001>.\nWe have seen already that being flat and G-unramified\nare fpqc local on the base (Lemmas\n<REF_0002>, and\n<REF_0003>).\nHence the result follows.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "ACCENT_0001": "\\'e",
+        "REF_0001": "\\ref{morphisms-lemma-flat-unramified-etale}",
+        "REF_0002": "\\ref{lemma-descending-property-flat}",
+        "REF_0003": "\\ref{lemma-descending-property-unramified}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VO:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is finite locally free''\nis fpqc local on the base.\nLet <MATH_0003>.\nThe property <MATH_0004>``<MATH_0005> is finite locally free of degree <MATH_0006>''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-finite-locally-free}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$d \\geq 0$",
+        "MATH_0004": "$\\mathcal{P}(f) =$",
+        "MATH_0005": "$f$",
+        "MATH_0006": "$d$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02VO:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nBeing finite locally free is equivalent to being\nfinite, flat and locally of finite presentation\n(Morphisms, Lemma <REF_0001>).\nHence this follows from Lemmas\n<REF_0002>,\n<REF_0003>, and\n<REF_0004>.\nIf <MATH_0001> is finite locally free, and <MATH_0002> is a surjective\nfamily of morphisms such that each pullback <MATH_0003> has\ndegree <MATH_0004>, then <MATH_0005> has degree <MATH_0006>, for example because we\ncan read off the degree in a point <MATH_0007> from the fibre\n<MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{morphisms-lemma-finite-flat}",
+        "REF_0002": "\\ref{lemma-descending-property-finite}",
+        "REF_0003": "\\ref{lemma-descending-property-flat}",
+        "REF_0004": "\\ref{lemma-descending-property-locally-finite-presentation}",
+        "MATH_0001": "$f : Z \\to U$",
+        "MATH_0002": "$\\{U_i \\to U\\}$",
+        "MATH_0003": "$Z \\times_U U_i \\to U_i$",
+        "MATH_0004": "$d$",
+        "MATH_0005": "$Z \\to U$",
+        "MATH_0006": "$d$",
+        "MATH_0007": "$u \\in U$",
+        "MATH_0008": "$(f_*\\mathcal{O}_Z)_u \\otimes_{\\mathcal{O}_{U, u}} \\kappa(u)$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YK:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is a monomorphism''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-monomorphism}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YK:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an fpqc covering, and assume\neach of the base changes <MATH_0003> of <MATH_0004> is\na monomorphism. Let <MATH_0005> be two morphisms\nsuch that <MATH_0006>. We have to show that <MATH_0007>.\nSince <MATH_0008> is a monomorphism we see that <MATH_0009>, where\n<MATH_0010> are\nthe base changes. In particular the compositions\n<MATH_0011> are equal.\nSince <MATH_0012>\nis an epimorphism (see\ne.g.<SPACE_0001>Lemma <REF_0001>)\nwe conclude <MATH_0013>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$\\{S_i \\to S\\}$",
+        "MATH_0003": "$f_i : X_i \\to S_i$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$a, b : T \\to X$",
+        "MATH_0006": "$f \\circ a = f \\circ b$",
+        "MATH_0007": "$a = b$",
+        "MATH_0008": "$f_i$",
+        "MATH_0009": "$a_i = b_i$",
+        "MATH_0010": "$a_i, b_i : S_i \\times_S T \\to X_i$",
+        "MATH_0011": "$S_i \\times_S T \\to T \\to X$",
+        "MATH_0012": "$\\coprod S_i \\times_S T \\to T$",
+        "SPACE_0001": "\\ ",
+        "REF_0001": "\\ref{lemma-fpqc-universal-effective-epimorphisms}",
+        "MATH_0013": "$a = b$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0694:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe properties\n<STRUCT_0002>\n<ITEMOPEN_0001><ITEMCLOSE_0001> <MATH_0001>``<MATH_0002> is a Koszul-regular immersion'',\n<ITEMOPEN_0002><ITEMCLOSE_0002> <MATH_0003>``<MATH_0004> is an <MATH_0005>-regular immersion'', and\n<ITEMOPEN_0003><ITEMCLOSE_0003> <MATH_0006>``<MATH_0007> is a quasi-regular immersion''\n<STRUCT_0003>\nare fpqc local on the base.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-regular-immersion}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0003": "$\\mathcal{P}(f) =$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$H_1$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0006": "$\\mathcal{P}(f) =$",
+        "MATH_0007": "$f$",
+        "STRUCT_0003": "\\end{enumerate}",
+        "STRUCT_0004": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:0694:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe will use the criterion of\nLemma <REF_0001>\nto prove this. By\nDivisors, Definition <REF_0002>\nbeing a Koszul-regular (resp.<SPACE_0001><MATH_0001>-regular, quasi-regular)\nimmersion is Zariski local on the base. By\nDivisors, Lemma <REF_0003>\nbeing a Koszul-regular (resp.<SPACE_0002><MATH_0002>-regular, quasi-regular)\nimmersion is preserved under flat base change.\nThe final hypothesis (3) of\nLemma <REF_0004>\ntranslates into the following algebra statement:\nLet <MATH_0003> be a faithfully flat ring map. Let <MATH_0004> be an ideal.\nIf <MATH_0005> is locally on <MATH_0006> generated by a Koszul-regular\n(resp.<SPACE_0003><MATH_0007>-regular, quasi-regular) sequence in <MATH_0008>, then <MATH_0009>\nis locally on <MATH_0010> generated by a Koszul-regular\n(resp.<SPACE_0004><MATH_0011>-regular, quasi-regular) sequence in <MATH_0012>. This is\nMore on Algebra, Lemma <REF_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-descending-properties-morphisms}",
+        "REF_0002": "\\ref{divisors-definition-regular-immersion}",
+        "SPACE_0001": "\\ ",
+        "MATH_0001": "$H_1$",
+        "REF_0003": "\\ref{divisors-lemma-flat-base-change-regular-immersion}",
+        "SPACE_0002": "\\ ",
+        "MATH_0002": "$H_1$",
+        "REF_0004": "\\ref{lemma-descending-properties-morphisms}",
+        "MATH_0003": "$A \\to B$",
+        "MATH_0004": "$I \\subset A$",
+        "MATH_0005": "$IB$",
+        "MATH_0006": "$\\Spec(B)$",
+        "SPACE_0003": "\\ ",
+        "MATH_0007": "$H_1$",
+        "MATH_0008": "$B$",
+        "MATH_0009": "$I \\subset A$",
+        "MATH_0010": "$\\Spec(A)$",
+        "SPACE_0004": "\\ ",
+        "MATH_0011": "$H_1$",
+        "MATH_0012": "$A$",
+        "REF_0005": "\\ref{more-algebra-lemma-flat-descent-regular-ideal}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:02YL:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of morphisms local in the fppf topology on the target<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-descending-properties-morphisms-fppf}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-properties-morphisms",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes over a base.\nLet <MATH_0002>.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> the property is preserved under\nflat, flat and locally of finite presentation, <ACCENT_0001>tale, smooth, or syntomic\nbase change depending on whether <MATH_0003> is fpqc, fppf, <ACCENT_0002>tale, smooth, or\nsyntomic (compare with\nSchemes, Definition <REF_0001>),\n<STRUCT_0004> the property is Zariski local on the base.\n<STRUCT_0005> for any surjective morphism of affine schemes <MATH_0004>\nwhich is flat, flat of finite presentation,\n<ACCENT_0003>tale, smooth or syntomic depending on whether <MATH_0005> is\nfpqc, fppf, <ACCENT_0004>tale, smooth, or syntomic,\nand any morphism of schemes <MATH_0006> property\n<MATH_0007> holds for <MATH_0008> if property <MATH_0009>\nholds for the base change <MATH_0010>.\n<STRUCT_0006>\nThen <MATH_0011> is <MATH_0012> local on the base.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-properties-morphisms}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\tau \\in \\{fpqc, fppf, \\etale, smooth, syntomic\\}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$\\tau$",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{schemes-definition-preserved-by-base-change}",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$S' \\to S$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0005": "$\\tau$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0006": "$f : X \\to S$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$f' : X' = S' \\times_S X \\to S'$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0011": "$\\mathcal{P}$",
+        "MATH_0012": "$\\tau$",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-properties-morphisms",
+      "requested_tag": "02KP"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-affine",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is affine''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-affine}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-affine",
+      "requested_tag": "02L5"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is flat''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-flat}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-flat",
+      "requested_tag": "02L2"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-locally-finite-presentation",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally of finite presentation''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-locally-finite-presentation}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-locally-finite-presentation",
+      "requested_tag": "02KY"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-locally-finite-type",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally of finite type''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-locally-finite-type}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-locally-finite-type",
+      "requested_tag": "02KX"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-open-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is an open immersion''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-open-immersion}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-open-immersion",
+      "requested_tag": "02L3"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-quasi-compact",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is quasi-compact''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-quasi-compact}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-quasi-compact",
+      "requested_tag": "02KQ"
+    },
+    {
+      "context_id": "reference:descent-lemma-descending-property-universally-closed",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is universally closed''\nis fpqc local on the base.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descending-property-universally-closed}",
+        "MATH_0001": "$\\mathcal{P}(f) =$",
+        "MATH_0002": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-descending-property-universally-closed",
+      "requested_tag": "02KS"
+    },
+    {
+      "context_id": "reference:descent-lemma-fpqc-universal-effective-epimorphisms",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an fpqc covering, see\nTopologies, Definition <REF_0001>.\nThen <MATH_0002> is a universal effective epimorphism\nin the category of schemes, see\nSites, Definition <REF_0002>.\nIn other words, every representable functor on the category of schemes\nsatisfies the sheaf condition for the fpqc topology, see\nTopologies, Definition <REF_0003>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-fpqc-universal-effective-epimorphisms}",
+        "MATH_0001": "$\\{T_i \\to T\\}$",
+        "REF_0001": "\\ref{topologies-definition-fpqc-covering}",
+        "MATH_0002": "$\\{T_i \\to T\\}$",
+        "REF_0002": "\\ref{sites-definition-universal-effective-epimorphisms}",
+        "REF_0003": "\\ref{topologies-definition-sheaf-property-fpqc}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-fpqc-universal-effective-epimorphisms",
+      "requested_tag": "023Q"
+    },
+    {
+      "context_id": "reference:divisors-definition-regular-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be an immersion of schemes. Choose an open subscheme\n<MATH_0002> such that <MATH_0003> identifies <MATH_0004> with a closed\nsubscheme of <MATH_0005> and denote <MATH_0006>\nthe corresponding quasi-coherent sheaf of ideals.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0007> is a <TEXTITOPEN_0001>regular immersion<TEXTITCLOSE_0001> if\n<MATH_0008> is regular.\n<STRUCT_0004> We say <MATH_0009> is a <TEXTITOPEN_0002>Koszul-regular immersion<TEXTITCLOSE_0002> if\n<MATH_0010> is Koszul-regular.\n<STRUCT_0005> We say <MATH_0011> is a <TEXTITOPEN_0003><MATH_0012>-regular immersion<TEXTITCLOSE_0003> if\n<MATH_0013> is <MATH_0014>-regular.\n<STRUCT_0006> We say <MATH_0015> is a <TEXTITOPEN_0004>quasi-regular immersion<TEXTITCLOSE_0004> if\n<MATH_0016> is quasi-regular.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-regular-immersion}",
+        "LOCKED_0002": "\\begin{reference}\nThe concept of a Koszul-regular immersion was introduced in\n\\cite[Expose VII, Definition 1.4]{SGA6} where it was called a\nregular immersion.\n\\end{reference}",
+        "MATH_0001": "$i : Z \\to X$",
+        "MATH_0002": "$U \\subset X$",
+        "MATH_0003": "$i$",
+        "MATH_0004": "$Z$",
+        "MATH_0005": "$U$",
+        "MATH_0006": "$\\mathcal{I} \\subset \\mathcal{O}_U$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0007": "$i$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0008": "$\\mathcal{I}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0009": "$i$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0010": "$\\mathcal{I}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0011": "$i$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0012": "$H_1$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0013": "$\\mathcal{I}$",
+        "MATH_0014": "$H_1$",
+        "STRUCT_0006": "\\item",
+        "MATH_0015": "$i$",
+        "TEXTITOPEN_0004": "{\\it ",
+        "TEXTITCLOSE_0004": "}",
+        "MATH_0016": "$\\mathcal{I}$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "divisors-definition-regular-immersion",
+      "requested_tag": "063J"
+    },
+    {
+      "context_id": "reference:divisors-lemma-flat-base-change-regular-immersion",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a regular (resp.<SPACE_0001>Koszul-regular,\n<MATH_0002>-regular, quasi-regular) immersion. Let <MATH_0003> be a flat\nmorphism. Then the base change <MATH_0004>\nis a regular (resp.<SPACE_0002>Koszul-regular,\n<MATH_0005>-regular, quasi-regular) immersion.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-base-change-regular-immersion}",
+        "MATH_0001": "$i : Z \\to X$",
+        "SPACE_0001": "\\ ",
+        "MATH_0002": "$H_1$",
+        "MATH_0003": "$X' \\to X$",
+        "MATH_0004": "$i' : Z \\times_X X' \\to X'$",
+        "SPACE_0002": "\\ ",
+        "MATH_0005": "$H_1$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "divisors-lemma-flat-base-change-regular-immersion",
+      "requested_tag": "067P"
+    },
+    {
+      "context_id": "reference:more-algebra-lemma-flat-descent-regular-ideal",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a faithfully flat ring map. Let <MATH_0002> be an ideal.\nIf <MATH_0003> is a Koszul-regular\n(resp.<SPACE_0001><MATH_0004>-regular, resp.<SPACE_0002>quasi-regular) ideal in <MATH_0005>, then\n<MATH_0006> is a Koszul-regular (resp.<SPACE_0003><MATH_0007>-regular, resp.<SPACE_0004>quasi-regular)\nideal in <MATH_0008>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-descent-regular-ideal}",
+        "MATH_0001": "$A \\to B$",
+        "MATH_0002": "$I \\subset A$",
+        "MATH_0003": "$IB$",
+        "SPACE_0001": "\\ ",
+        "MATH_0004": "$H_1$",
+        "SPACE_0002": "\\ ",
+        "MATH_0005": "$B$",
+        "MATH_0006": "$I$",
+        "SPACE_0003": "\\ ",
+        "MATH_0007": "$H_1$",
+        "SPACE_0004": "\\ ",
+        "MATH_0008": "$A$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "more-algebra-lemma-flat-descent-regular-ideal",
+      "requested_tag": "068N"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-base-change-quasi-finite",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a morphism of schemes.\nDenote <MATH_0003> the base change of <MATH_0004> by <MATH_0005>\nand denote <MATH_0006> the projection.\nAssume <MATH_0007> is locally of finite type over <MATH_0008>.\n<STRUCT_0002>\n<STRUCT_0003> Let <MATH_0009> (resp.<SPACE_0001><MATH_0010>)\nbe the set of points where <MATH_0011> (resp.<SPACE_0002><MATH_0012>) is quasi-finite.\nThen <MATH_0013>.\n<STRUCT_0004> The base change of a locally quasi-finite morphism is\nlocally quasi-finite.\n<STRUCT_0005> The base change of a quasi-finite morphism is\nquasi-finite.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-base-change-quasi-finite}",
+        "LOCKED_0002": "\\begin{slogan}\n(Locally) quasi-finite morphisms are stable under base change.\n\\end{slogan}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$g : S' \\to S$",
+        "MATH_0003": "$f' : X' \\to S'$",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$g$",
+        "MATH_0006": "$g' : X' \\to X$",
+        "MATH_0007": "$X$",
+        "MATH_0008": "$S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0009": "$U \\subset X$",
+        "SPACE_0001": "\\ ",
+        "MATH_0010": "$U' \\subset X'$",
+        "MATH_0011": "$f$",
+        "SPACE_0002": "\\ ",
+        "MATH_0012": "$f'$",
+        "MATH_0013": "$U' = U \\times_S S' = (g')^{-1}(U)$",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\item",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-base-change-quasi-finite",
+      "requested_tag": "01TM"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-diagonal-unramified-morphism",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is unramified, then the diagonal morphism\n<MATH_0003> is an open immersion.\n<STRUCT_0004> If <MATH_0004> is locally of finite type\nand <MATH_0005> is an open immersion, then <MATH_0006> is unramified.\n<STRUCT_0005> If <MATH_0007> is locally of finite presentation and <MATH_0008> is an open\nimmersion, then <MATH_0009> is G-unramified.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-diagonal-unramified-morphism}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$\\Delta : X \\to X \\times_S X$",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$f$",
+        "MATH_0005": "$\\Delta$",
+        "MATH_0006": "$f$",
+        "STRUCT_0005": "\\item",
+        "MATH_0007": "$f$",
+        "MATH_0008": "$\\Delta$",
+        "MATH_0009": "$f$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-diagonal-unramified-morphism",
+      "requested_tag": "02GE"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-dimension-fibre-after-base-change",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a fibre product diagram of schemes. Assume <MATH_0002> locally of finite type.\nSuppose that <MATH_0003>, <MATH_0004>, <MATH_0005> and\n<MATH_0006>. Then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007>,\n<STRUCT_0004> if <MATH_0008> is the fibre of the morphism <MATH_0009>\nover <MATH_0010>, then\n<MATH_0011>\nIn particular <MATH_0012>\nand <MATH_0013>.\n<STRUCT_0005> given <MATH_0014> there exists a choice of <MATH_0015> such that\n<MATH_0016> and\n<MATH_0017>.\n<STRUCT_0006>\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-dimension-fibre-after-base-change}",
+        "MATH_0001": "$$\n\\xymatrix{\nX' \\ar[r]_{g'} \\ar[d]_{f'} & X \\ar[d]^f \\\\\nS' \\ar[r]^g & S\n}\n$$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$x' \\in X'$",
+        "MATH_0004": "$x = g'(x')$",
+        "MATH_0005": "$s' = f'(x')$",
+        "MATH_0006": "$s = g(s') = f(x)$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0007": "$\\dim_x(X_s) = \\dim_{x'}(X'_{s'})$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$F$",
+        "MATH_0009": "$X'_{s'} \\to X_s$",
+        "MATH_0010": "$x$",
+        "MATH_0011": "$$\n\\dim(\\mathcal{O}_{F, x'}) =\n\\dim(\\mathcal{O}_{X'_{s'}, x'}) - \\dim(\\mathcal{O}_{X_s, x}) =\n\\text{trdeg}_{\\kappa(s)}(\\kappa(x)) -\n\\text{trdeg}_{\\kappa(s')}(\\kappa(x'))\n$$",
+        "MATH_0012": "$\\dim(\\mathcal{O}_{X'_{s'}, x'}) \\geq \\dim(\\mathcal{O}_{X_s, x})$",
+        "MATH_0013": "$\\text{trdeg}_{\\kappa(s)}(\\kappa(x)) \\geq\n\\text{trdeg}_{\\kappa(s')}(\\kappa(x'))$",
+        "STRUCT_0005": "\\item",
+        "MATH_0014": "$s', s, x$",
+        "MATH_0015": "$x'$",
+        "MATH_0016": "$\\dim(\\mathcal{O}_{X'_{s'}, x'}) = \\dim(\\mathcal{O}_{X_s, x})$",
+        "MATH_0017": "$\\text{trdeg}_{\\kappa(s)}(\\kappa(x)) = \\text{trdeg}_{\\kappa(s')}(\\kappa(x'))$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-dimension-fibre-after-base-change",
+      "requested_tag": "02FY"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-flat",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is finite locally free,\n<STRUCT_0004> <MATH_0003> is finite, flat, and locally of finite presentation.\n<STRUCT_0005>\nIf <MATH_0004> is locally Noetherian these are also equivalent to\n<STRUCT_0006>\n<ITEMOPEN_0001>(3)<ITEMCLOSE_0001> <MATH_0005> is finite and flat.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-flat}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$f$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$S$",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0005": "$f$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-flat",
+      "requested_tag": "02KB"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-finite-integral",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA finite morphism is integral.\nAn integral morphism which is locally of finite type is finite.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-finite-integral}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-finite-integral",
+      "requested_tag": "01WJ"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-flat-unramified-etale",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA morphism is <ACCENT_0001>tale at a point if and only if it is flat and G-unramified\nat that point.\nA morphism is <ACCENT_0002>tale if and only if it is flat and G-unramified.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-flat-unramified-etale}",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-flat-unramified-etale",
+      "requested_tag": "02GV"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-integral-universally-closed",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is integral, and\n<STRUCT_0004> <MATH_0003> is affine and universally closed.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-integral-universally-closed}",
+        "LOCKED_0002": "\\begin{slogan}\nintegral $=$ affine $+$ universally closed\n\\end{slogan}",
+        "MATH_0001": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$f$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-integral-universally-closed",
+      "requested_tag": "01WM"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-set-points-where-fibres-lci",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nAssume <MATH_0002> locally of finite type. Formation of the set\n<MATH_0003>\ncommutes with arbitrary base change:\nFor any morphism <MATH_0004>, consider\nthe base change <MATH_0005> of <MATH_0006> and the\nprojection <MATH_0007>. Then the corresponding\nset <MATH_0008> for the morphism <MATH_0009> is equal to <MATH_0010>.\nIn particular, if <MATH_0011> is assumed flat, and locally of finite\npresentation then the same holds for the open set of points\nwhere <MATH_0012> is syntomic.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-set-points-where-fibres-lci}",
+        "MATH_0001": "$f : X \\to S$",
+        "MATH_0002": "$f$",
+        "MATH_0003": "$$\nT = \\{x \\in X \\mid \\mathcal{O}_{X_{f(x)}, x}\n\\text{ is a complete intersection over }\\kappa(f(x))\\}\n$$",
+        "MATH_0004": "$g : S' \\to S$",
+        "MATH_0005": "$f' : X' \\to S'$",
+        "MATH_0006": "$f$",
+        "MATH_0007": "$g' : X' \\to X$",
+        "MATH_0008": "$T'$",
+        "MATH_0009": "$f'$",
+        "MATH_0010": "$T' = (g')^{-1}(T)$",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$f$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-set-points-where-fibres-lci",
+      "requested_tag": "02V3"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-set-points-where-fibres-smooth",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet\n<MATH_0001>\nbe a cartesian diagram of schemes. Let <MATH_0002>, resp.<SPACE_0001><MATH_0003>\nbe the open subscheme of points where <MATH_0004>, resp.<SPACE_0002><MATH_0005> is smooth.\nThen <MATH_0006> if\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is flat and locally of finite presentation, or\n<STRUCT_0004> <MATH_0008> is locally of finite presentation and <MATH_0009> is flat.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-set-points-where-fibres-smooth}",
+        "MATH_0001": "$$\n\\xymatrix{\nX' \\ar[r]_{g'} \\ar[d]_{f'} & X \\ar[d]^f \\\\\nS' \\ar[r]^g & S\n}\n$$",
+        "MATH_0002": "$W \\subset X$",
+        "SPACE_0001": "\\ ",
+        "MATH_0003": "$W' \\subset X'$",
+        "MATH_0004": "$f$",
+        "SPACE_0002": "\\ ",
+        "MATH_0005": "$f'$",
+        "MATH_0006": "$W' = (g')^{-1}(W)$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0007": "$f$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$g$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-set-points-where-fibres-smooth",
+      "requested_tag": "02V4"
+    }
+  ]
+}

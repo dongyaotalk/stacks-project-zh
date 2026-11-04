@@ -1,0 +1,2388 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a03b-1275-76f2-bc16-a9950f7006ba",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p27-20261103T073815Z.json",
+    "hash": "sha256:c9ddc0175f54f599f42fa3a052862e2b21de13a00771e8bf1358366c434f1978"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:04QW:title",
+      "source_text": "Properties of morphisms <ACCENT_0001>tale local on source-and-target",
+      "node_kind": "section_title",
+      "protected_nodes": {
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 14,
+          "projection_end": 23,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 24,
+          "projection_end": 29,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QW:prose-0001",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a property of morphisms of schemes. There is an\nintuitive meaning to the phrase ``<MATH_0002> is <ACCENT_0001>tale local on the\nsource and target''. However, it turns out that this notion is not\nthe same as asking <MATH_0003> to be both <ACCENT_0002>tale\nlocal on the source and <ACCENT_0003>tale local on the target.\nBefore we discuss this further we give two silly examples.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "ACCENT_0003": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 47,
+          "projection_end": 56,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 60,
+          "projection_end": 67,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 130,
+          "projection_end": 135,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 258,
+          "projection_end": 263,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 288,
+          "projection_end": 293,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QX:statement",
+      "source_text": "Consider the property <MATH_0001> of morphisms of schemes defined\nby the rule <MATH_0002>``<MATH_0003> is locally Noetherian''.\nThe reader can verify that this is <ACCENT_0001>tale local on the source and\n<ACCENT_0002>tale local on the target (omitted, see\nLemma <REF_0001>).\nBut it is <TEXTBFOPEN_0001>not<TEXTBFCLOSE_0001> true that if <MATH_0004> has <MATH_0005>\nand <MATH_0006> is <ACCENT_0003>tale, then <MATH_0007> has <MATH_0008>.\nNamely, <MATH_0009> could be the identity on <MATH_0010> and <MATH_0011> could be an open\nimmersion of a locally Noetherian scheme <MATH_0012> into a non locally Noetherian\nscheme <MATH_0013>.\n",
+      "node_kind": "example",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}(X \\to Y) = $",
+        "MATH_0003": "$Y$",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{lemma-Noetherian-local-fppf}",
+        "TEXTBFOPEN_0001": "{\\bf ",
+        "TEXTBFCLOSE_0001": "}",
+        "MATH_0004": "$f : X \\to Y$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$g : Y \\to Z$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0007": "$g \\circ f$",
+        "MATH_0008": "$\\mathcal{P}$",
+        "MATH_0009": "$f$",
+        "MATH_0010": "$Y$",
+        "MATH_0011": "$g$",
+        "MATH_0012": "$Y$",
+        "MATH_0013": "$Z$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 37,
+          "projection_end": 46,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 50,
+          "projection_end": 57,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 106,
+          "projection_end": 124,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 163,
+          "projection_end": 168,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 193,
+          "projection_end": 198,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 326,
+          "projection_end": 331,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "open immersion",
+          "projection_start": 452,
+          "projection_end": 466,
+          "concept": "open-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 472,
+          "projection_end": 490,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 491,
+          "projection_end": 497,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 521,
+          "projection_end": 539,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 540,
+          "projection_end": 546,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QW:prose-0002",
+      "source_text": "\n\n<STRUCT_0001>\nThe following example is in some sense worse.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "required_source_terms": []
+    },
+    {
+      "unit_id": "tag:04QY:statement",
+      "source_text": "Consider the property <MATH_0001> of morphisms of schemes defined\nby the rule <MATH_0002>``for every <MATH_0003> which is\na specialization of some <MATH_0004>, <MATH_0005> the local ring\n<MATH_0006> is Noetherian''. Let us verify that this is\n<ACCENT_0001>tale local on the source and <ACCENT_0002>tale local on the target. We will freely use\nSchemes, Lemma <REF_0001>.\n\n<STRUCT_0001><STRUCT_0002>\nLocal on the target:\nLet <MATH_0007> be an <ACCENT_0003>tale covering. Let <MATH_0008>\nbe the base change of <MATH_0009>, and denote <MATH_0010> the projection.\nAssume <MATH_0011>. Let <MATH_0012>\nbe a specialization. Then <MATH_0013> so\n<MATH_0014> implies <MATH_0015> is Noetherian.\nAlso <MATH_0016> is a\nlocalization of an <ACCENT_0004>tale ring map.\nHence <MATH_0017> is Noetherian by\nAlgebra, Lemma <REF_0002>.\nConversely, assume <MATH_0018> for all <MATH_0019>. Let <MATH_0020>\nbe a specialization. Choose an <MATH_0021> and <MATH_0022> mapping to <MATH_0023>.\nSince <MATH_0024> can be viewed as a point of\n<MATH_0025> and\n<MATH_0026> is faithfully flat,\nthere exists a point\n<MATH_0027>\nmapping to <MATH_0028>. Then <MATH_0029>, and <MATH_0030> specializes to <MATH_0031>.\nThus we see that <MATH_0032> is Noetherian by\n<MATH_0033> which implies that <MATH_0034> is\nNoetherian by\nAlgebra, Lemma <REF_0003>.\n\n<STRUCT_0003><STRUCT_0004>\nLocal on the source:\nLet <MATH_0035> be an <ACCENT_0005>tale covering. Let <MATH_0036>\nbe the composition <MATH_0037>. Assume <MATH_0038>. Let\n<MATH_0039> be a specialization. Then <MATH_0040> so\n<MATH_0041> implies <MATH_0042> is Noetherian. Thus\n<MATH_0043> holds.\nConversely, assume <MATH_0044> for all <MATH_0045>. Let <MATH_0046>\nbe a specialization. Choose an <MATH_0047> and <MATH_0048> mapping to <MATH_0049>.\nThen <MATH_0050> is a specialization of <MATH_0051>. Hence\n<MATH_0052> implies <MATH_0053> is Noetherian\nas desired.\n\n<STRUCT_0005><STRUCT_0006>\nWe claim that there exists a commutative diagram\n<MATH_0054>\nwith surjective <ACCENT_0006>tale vertical arrows, such that <MATH_0055> has <MATH_0056>\nand <MATH_0057> does not have <MATH_0058>. Namely, let\n<MATH_0059>\nand let <MATH_0060> be the open subscheme which is the complement of\nthe point all of whose coordinates <MATH_0061>. Let <MATH_0062>, let\n<MATH_0063>, let <MATH_0064> the obvious map, and let <MATH_0065>\nbe the inclusion of <MATH_0066> into the first summand of <MATH_0067>. The claim above\nholds because <MATH_0068> is locally Noetherian, but <MATH_0069> is not.\n",
+      "node_kind": "example",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}(f : X \\to Y) = $",
+        "MATH_0003": "$y \\in Y$",
+        "MATH_0004": "$f(x)$",
+        "MATH_0005": "$x \\in X$",
+        "MATH_0006": "$\\mathcal{O}_{Y, y}$",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{schemes-lemma-specialize-points}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0007": "$\\{g_i : Y_i \\to Y\\}$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0008": "$f_i : X_i \\to Y_i$",
+        "MATH_0009": "$f$",
+        "MATH_0010": "$h_i : X_i \\to X$",
+        "MATH_0011": "$\\mathcal{P}(f)$",
+        "MATH_0012": "$f(x_i) \\leadsto y_i$",
+        "MATH_0013": "$f(h_i(x_i)) \\leadsto g_i(y_i)$",
+        "MATH_0014": "$\\mathcal{P}(f)$",
+        "MATH_0015": "$\\mathcal{O}_{Y, g_i(y_i)}$",
+        "MATH_0016": "$\\mathcal{O}_{Y, g_i(y_i)} \\to \\mathcal{O}_{Y_i, y_i}$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0017": "$\\mathcal{O}_{Y_i, y_i}$",
+        "REF_0002": "\\ref{algebra-lemma-Noetherian-permanence}",
+        "MATH_0018": "$\\mathcal{P}(f_i)$",
+        "MATH_0019": "$i$",
+        "MATH_0020": "$f(x) \\leadsto y$",
+        "MATH_0021": "$i$",
+        "MATH_0022": "$y_i \\in Y_i$",
+        "MATH_0023": "$y$",
+        "MATH_0024": "$x$",
+        "MATH_0025": "$\\Spec(\\mathcal{O}_{Y, y}) \\times_Y X$",
+        "MATH_0026": "$\\mathcal{O}_{Y, y} \\to \\mathcal{O}_{Y_i, y_i}$",
+        "MATH_0027": "$x_i \\in \\Spec(\\mathcal{O}_{Y_i, y_i}) \\times_Y X$",
+        "MATH_0028": "$x$",
+        "MATH_0029": "$x_i \\in X_i$",
+        "MATH_0030": "$f_i(x_i)$",
+        "MATH_0031": "$y_i$",
+        "MATH_0032": "$\\mathcal{O}_{Y_i, y_i}$",
+        "MATH_0033": "$\\mathcal{P}(f_i)$",
+        "MATH_0034": "$\\mathcal{O}_{Y, y}$",
+        "REF_0003": "\\ref{algebra-lemma-descent-Noetherian}",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0035": "$\\{h_i : X_i \\to X\\}$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0036": "$f_i : X_i \\to Y$",
+        "MATH_0037": "$f \\circ h_i$",
+        "MATH_0038": "$\\mathcal{P}(f)$",
+        "MATH_0039": "$f(x_i) \\leadsto y$",
+        "MATH_0040": "$f(h_i(x_i)) \\leadsto y$",
+        "MATH_0041": "$\\mathcal{P}(f)$",
+        "MATH_0042": "$\\mathcal{O}_{Y, y}$",
+        "MATH_0043": "$\\mathcal{P}(f_i)$",
+        "MATH_0044": "$\\mathcal{P}(f_i)$",
+        "MATH_0045": "$i$",
+        "MATH_0046": "$f(x) \\leadsto y$",
+        "MATH_0047": "$i$",
+        "MATH_0048": "$x_i \\in X_i$",
+        "MATH_0049": "$x$",
+        "MATH_0050": "$y$",
+        "MATH_0051": "$f_i(x_i) = f(x)$",
+        "MATH_0052": "$\\mathcal{P}(f_i)$",
+        "MATH_0053": "$\\mathcal{O}_{Y, y}$",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0054": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0055": "$h$",
+        "MATH_0056": "$\\mathcal{P}$",
+        "MATH_0057": "$f$",
+        "MATH_0058": "$\\mathcal{P}$",
+        "MATH_0059": "$$\nY =\n\\Spec\\Big(\n\\mathbf{C}[x_n; n \\in \\mathbf{Z}]/(x_n x_m; n \\not = m)\n\\Big)\n$$",
+        "MATH_0060": "$X \\subset Y$",
+        "MATH_0061": "$x_n = 0$",
+        "MATH_0062": "$U = X$",
+        "MATH_0063": "$V = X \\amalg Y$",
+        "MATH_0064": "$a, b$",
+        "MATH_0065": "$h : U \\to V$",
+        "MATH_0066": "$U = X$",
+        "MATH_0067": "$V$",
+        "MATH_0068": "$U$",
+        "MATH_0069": "$Y$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 37,
+          "projection_end": 46,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 50,
+          "projection_end": 57,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "local ring",
+          "projection_start": 176,
+          "projection_end": 186,
+          "concept": "local-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 202,
+          "projection_end": 212,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 243,
+          "projection_end": 248,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 273,
+          "projection_end": 278,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Schemes",
+          "projection_start": 319,
+          "projection_end": 326,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 416,
+          "projection_end": 421,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 422,
+          "projection_end": 430,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 455,
+          "projection_end": 466,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 634,
+          "projection_end": 644,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 668,
+          "projection_end": 680,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 687,
+          "projection_end": 692,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 693,
+          "projection_end": 701,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 724,
+          "projection_end": 734,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 738,
+          "projection_end": 745,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "faithfully flat",
+          "projection_start": 993,
+          "projection_end": 1008,
+          "concept": "source-phrase-faithfully-flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 1161,
+          "projection_end": 1171,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 1221,
+          "projection_end": 1231,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1235,
+          "projection_end": 1242,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1332,
+          "projection_end": 1337,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1338,
+          "projection_end": 1346,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 1371,
+          "projection_end": 1382,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 1508,
+          "projection_end": 1518,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian",
+          "projection_start": 1789,
+          "projection_end": 1799,
+          "concept": "noetherian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 1868,
+          "projection_end": 1887,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1905,
+          "projection_end": 1915,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1916,
+          "projection_end": 1921,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2223,
+          "projection_end": 2226,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inclusion",
+          "projection_start": 2255,
+          "projection_end": 2264,
+          "concept": "inclusion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally Noetherian",
+          "projection_start": 2364,
+          "projection_end": 2382,
+          "concept": "locally-noetherian",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QW:prose-0003",
+      "source_text": "\n\n<STRUCT_0001>\nWhat should be the correct notion of a property which is <ACCENT_0001>tale local\non the source-and-target? We think that, by analogy with\nMorphisms, Definition <REF_0001>\nit should be the following.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'e",
+        "REF_0001": "\\ref{morphisms-definition-property-local}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 71,
+          "projection_end": 76,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 140,
+          "projection_end": 149,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QZ:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes.\nWe say <MATH_0002> is <TEXTITOPEN_0001><ACCENT_0001>tale local on source-and-target<TEXTITCLOSE_0001> if\n<STRUCT_0001>\n<STRUCT_0002> (stable under precomposing with <ACCENT_0002>tale maps)\nif <MATH_0003> is <ACCENT_0003>tale and <MATH_0004> has <MATH_0005>,\nthen <MATH_0006> has <MATH_0007>,\n<STRUCT_0003> (stable under <ACCENT_0004>tale base change)\nif <MATH_0008> has <MATH_0009> and <MATH_0010> is <ACCENT_0005>tale, then\nthe base change <MATH_0011> has <MATH_0012>, and\n<STRUCT_0004> (locality) given a morphism <MATH_0013> the following are equivalent\n<STRUCT_0005>\n<STRUCT_0006> <MATH_0014> has <MATH_0015>,\n<STRUCT_0007> for every <MATH_0016> there exists a commutative diagram\n<MATH_0017>\nwith <ACCENT_0006>tale vertical arrows and <MATH_0018> with <MATH_0019> such that\n<MATH_0020> has <MATH_0021>.\n<STRUCT_0008>\n<STRUCT_0009>\n",
+      "node_kind": "definition",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "ACCENT_0001": "\\'e",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "ACCENT_0002": "\\'e",
+        "MATH_0003": "$f : X \\to Y$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0004": "$g : Y \\to Z$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$g \\circ f$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "STRUCT_0003": "\\item",
+        "ACCENT_0004": "\\'e",
+        "MATH_0008": "$f : X \\to Y$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$Y' \\to Y$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0011": "$f' : Y' \\times_Y X \\to Y'$",
+        "MATH_0012": "$\\mathcal{P}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0013": "$f : X \\to Y$",
+        "STRUCT_0005": "\\begin{enumerate}",
+        "STRUCT_0006": "\\item",
+        "MATH_0014": "$f$",
+        "MATH_0015": "$\\mathcal{P}$",
+        "STRUCT_0007": "\\item",
+        "MATH_0016": "$x \\in X$",
+        "MATH_0017": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0018": "$u \\in U$",
+        "MATH_0019": "$a(u) = x$",
+        "MATH_0020": "$h$",
+        "MATH_0021": "$\\mathcal{P}$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale local on source-and-target",
+          "projection_start": 77,
+          "projection_end": 109,
+          "concept": "étale local on source-and-target",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 173,
+          "projection_end": 178,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 179,
+          "projection_end": 183,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 203,
+          "projection_end": 208,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 304,
+          "projection_end": 309,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 310,
+          "projection_end": 321,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 373,
+          "projection_end": 378,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 389,
+          "projection_end": 400,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 467,
+          "projection_end": 475,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 506,
+          "projection_end": 516,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 625,
+          "projection_end": 644,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 662,
+          "projection_end": 667,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QW:prose-0004",
+      "source_text": "\n\n<STRUCT_0001>\nIt turns out this definition excludes the behavior seen in\nExamples <REF_0001> and <REF_0002>.\nWe will compare this to the definition in the paper\n<REF_0003> by Deligne and Mumford in\nRemark <REF_0004>.\nMoreover, a property which is <ACCENT_0001>tale local on the source-and-target is\n<ACCENT_0002>tale local on the source and <ACCENT_0003>tale local on the target.\nFinally, the converse is almost true as we will see in\nLemma <REF_0005>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{example-silly-one}",
+        "REF_0002": "\\ref{example-silly-two}",
+        "REF_0003": "\\cite{DM}",
+        "REF_0004": "\\ref{remark-compare-definitions}",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "ACCENT_0003": "\\'e",
+        "REF_0005": "\\ref{lemma-etale-local-source-target}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 247,
+          "projection_end": 252,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 287,
+          "projection_end": 292,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 317,
+          "projection_end": 322,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04R0:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes which is\n<ACCENT_0001>tale local on source-and-target. Then\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0002> is <ACCENT_0002>tale local on the source,\n<STRUCT_0003> <MATH_0003> is <ACCENT_0003>tale local on the target,\n<STRUCT_0004> <MATH_0004> is stable under postcomposing with <ACCENT_0004>tale morphisms:\nif <MATH_0005> has <MATH_0006> and <MATH_0007> is <ACCENT_0005>tale, then\n<MATH_0008> has <MATH_0009>, and\n<STRUCT_0005> <MATH_0010> has a permanence property: given <MATH_0011> and\n<MATH_0012> <ACCENT_0006>tale such that <MATH_0013> has <MATH_0014>, then\n<MATH_0015> has <MATH_0016>.\n<STRUCT_0006>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0003": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0004": "$\\mathcal{P}$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "MATH_0007": "$g : Y \\to Z$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0008": "$g \\circ f$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0010": "$\\mathcal{P}$",
+        "MATH_0011": "$f : X \\to Y$",
+        "MATH_0012": "$g : Y \\to Z$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0013": "$g \\circ f$",
+        "MATH_0014": "$\\mathcal{P}$",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "STRUCT_0006": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 63,
+          "projection_end": 68,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 145,
+          "projection_end": 150,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 201,
+          "projection_end": 206,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 289,
+          "projection_end": 294,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 295,
+          "projection_end": 304,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 356,
+          "projection_end": 361,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 488,
+          "projection_end": 493,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04R0:proof",
+      "source_text": "We write everything out completely.\n\n<STRUCT_0001><STRUCT_0002>\nProof of (1). Let <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an <ACCENT_0001>tale covering of <MATH_0003>. If each composition\n<MATH_0004> has <MATH_0005>, then for each <MATH_0006> we can find\nan <MATH_0007> and a point <MATH_0008> mapping to <MATH_0009>. Then\n<MATH_0010> is an <ACCENT_0002>tale morphism of germs, and\n<MATH_0011> is an <ACCENT_0003>tale morphism, and <MATH_0012> is as in part (3) of\nDefinition <REF_0001>.\nThus we see that <MATH_0013> has <MATH_0014>.\nConversely, if <MATH_0015> has <MATH_0016> then each <MATH_0017> has\n<MATH_0018> by\nDefinition <REF_0002> part (1).\n\n<STRUCT_0003><STRUCT_0004>\nProof of (2). Let <MATH_0019> be a morphism of schemes.\nLet <MATH_0020> be an <ACCENT_0004>tale covering of <MATH_0021>.\nWrite <MATH_0022> and <MATH_0023> for the base change\nof <MATH_0024>.  If each  <MATH_0025> has <MATH_0026>, then for each\n<MATH_0027> we pick an <MATH_0028> and a point <MATH_0029> mapping to <MATH_0030>.\nThen <MATH_0031> is an <ACCENT_0005>tale morphism of germs, <MATH_0032> is\n<ACCENT_0006>tale, and <MATH_0033> is as in part (3) of\nDefinition <REF_0003>.\nThus we see that <MATH_0034> has <MATH_0035>.\nConversely, if <MATH_0036> has <MATH_0037>, then each <MATH_0038> has\n<MATH_0039> by\nDefinition <REF_0004> part (2).\n\n<STRUCT_0005><STRUCT_0006>\nProof of (3). Assume <MATH_0040> has <MATH_0041> and <MATH_0042> is\n<ACCENT_0007>tale. For every <MATH_0043> we can think of <MATH_0044> as an\n<ACCENT_0008>tale morphism of germs, <MATH_0045> is an <ACCENT_0009>tale morphism, and <MATH_0046> is as\nin part (3) of\nDefinition <REF_0005>.\nThus we see that <MATH_0047> has <MATH_0048>.\n\n<STRUCT_0007><STRUCT_0008>\nProof of (4). Let <MATH_0049> be a morphism and <MATH_0050> <ACCENT_0010>tale\nsuch that <MATH_0051> has <MATH_0052>. Then by\nDefinition <REF_0006> part (2)\nwe see that <MATH_0053> has <MATH_0054>. But\nthe morphism <MATH_0055> is <ACCENT_0011>tale as a section to the\n<ACCENT_0012>tale projection <MATH_0056>, see\nMorphisms, Lemma <REF_0007>.\nHence <MATH_0057> has <MATH_0058> by\nDefinition <REF_0008> part (1).\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\{X_i \\to X\\}_{i \\in I}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$h_i : X_i \\to Y$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$i \\in I$",
+        "MATH_0008": "$x_i \\in X_i$",
+        "MATH_0009": "$x$",
+        "MATH_0010": "$(X_i, x_i) \\to (X, x)$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0011": "$\\text{id}_Y : Y \\to Y$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0012": "$h_i$",
+        "REF_0001": "\\ref{definition-local-source-target}",
+        "MATH_0013": "$f$",
+        "MATH_0014": "$\\mathcal{P}$",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "MATH_0017": "$X_i \\to Y$",
+        "MATH_0018": "$\\mathcal{P}$",
+        "REF_0002": "\\ref{definition-local-source-target}",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "MATH_0019": "$f : X \\to Y$",
+        "MATH_0020": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0021": "$Y$",
+        "MATH_0022": "$X_i = Y_i \\times_Y X$",
+        "MATH_0023": "$h_i : X_i \\to Y_i$",
+        "MATH_0024": "$f$",
+        "MATH_0025": "$h_i : X_i \\to Y_i$",
+        "MATH_0026": "$\\mathcal{P}$",
+        "MATH_0027": "$x \\in X$",
+        "MATH_0028": "$i \\in I$",
+        "MATH_0029": "$x_i \\in X_i$",
+        "MATH_0030": "$x$",
+        "MATH_0031": "$(X_i, x_i) \\to (X, x)$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0032": "$Y_i \\to Y$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0033": "$h_i$",
+        "REF_0003": "\\ref{definition-local-source-target}",
+        "MATH_0034": "$f$",
+        "MATH_0035": "$\\mathcal{P}$",
+        "MATH_0036": "$f$",
+        "MATH_0037": "$\\mathcal{P}$",
+        "MATH_0038": "$X_i \\to Y_i$",
+        "MATH_0039": "$\\mathcal{P}$",
+        "REF_0004": "\\ref{definition-local-source-target}",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "MATH_0040": "$f : X \\to Y$",
+        "MATH_0041": "$\\mathcal{P}$",
+        "MATH_0042": "$g : Y \\to Z$",
+        "ACCENT_0007": "\\'e",
+        "MATH_0043": "$x \\in X$",
+        "MATH_0044": "$(X, x) \\to (X, x)$",
+        "ACCENT_0008": "\\'e",
+        "MATH_0045": "$Y \\to Z$",
+        "ACCENT_0009": "\\'e",
+        "MATH_0046": "$h = f$",
+        "REF_0005": "\\ref{definition-local-source-target}",
+        "MATH_0047": "$g \\circ f$",
+        "MATH_0048": "$\\mathcal{P}$",
+        "STRUCT_0007": "\\medskip",
+        "STRUCT_0008": "\\noindent",
+        "MATH_0049": "$f : X \\to Y$",
+        "MATH_0050": "$g : Y \\to Z$",
+        "ACCENT_0010": "\\'e",
+        "MATH_0051": "$g \\circ f$",
+        "MATH_0052": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{definition-local-source-target}",
+        "MATH_0053": "$\\text{pr}_Y : Y \\times_Z X \\to Y$",
+        "MATH_0054": "$\\mathcal{P}$",
+        "MATH_0055": "$(f, 1) : X \\to Y \\times_Z X$",
+        "ACCENT_0011": "\\'e",
+        "ACCENT_0012": "\\'e",
+        "MATH_0056": "$\\text{pr}_X : Y \\times_Z X \\to X$",
+        "REF_0007": "\\ref{morphisms-lemma-etale-permanence}",
+        "MATH_0057": "$f = \\text{pr}_Y \\circ (f, 1)$",
+        "MATH_0058": "$\\mathcal{P}$",
+        "REF_0008": "\\ref{definition-local-source-target}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphism",
+          "projection_start": 98,
+          "projection_end": 106,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 110,
+          "projection_end": 117,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 141,
+          "projection_end": 146,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 147,
+          "projection_end": 155,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 180,
+          "projection_end": 191,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 345,
+          "projection_end": 350,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 351,
+          "projection_end": 359,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 392,
+          "projection_end": 397,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 398,
+          "projection_end": 406,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 692,
+          "projection_end": 700,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 704,
+          "projection_end": 711,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 735,
+          "projection_end": 740,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 741,
+          "projection_end": 749,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 808,
+          "projection_end": 819,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 993,
+          "projection_end": 998,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 999,
+          "projection_end": 1007,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1033,
+          "projection_end": 1038,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1358,
+          "projection_end": 1363,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1421,
+          "projection_end": 1426,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1427,
+          "projection_end": 1435,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1464,
+          "projection_end": 1469,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1470,
+          "projection_end": 1478,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1648,
+          "projection_end": 1656,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1673,
+          "projection_end": 1678,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1806,
+          "projection_end": 1814,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1830,
+          "projection_end": 1835,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1856,
+          "projection_end": 1861,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 1890,
+          "projection_end": 1899,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QW:prose-0005",
+      "source_text": "\n\n<STRUCT_0001>\nThe following lemma is the analogue of\nMorphisms, Lemma <REF_0001>.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{morphisms-lemma-locally-P-characterize}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "Morphisms",
+          "projection_start": 53,
+          "projection_end": 62,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04R1:statement",
+      "source_text": "Let <MATH_0001> be a property of morphisms of schemes which is\n<ACCENT_0001>tale local on source-and-target. Let <MATH_0002> be a morphism\nof schemes. The following are equivalent:\n<STRUCT_0001>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0003> has property <MATH_0004>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> for every <MATH_0005> there exists an <ACCENT_0002>tale morphism of germs\n<MATH_0006>, an <ACCENT_0003>tale morphism <MATH_0007>, and\na morphism <MATH_0008> such that <MATH_0009> and\n<MATH_0010> has <MATH_0011>,\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003>\nfor any commutative diagram\n<MATH_0012>\nwith <MATH_0013>, <MATH_0014> <ACCENT_0004>tale the morphism <MATH_0015> has <MATH_0016>,\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004> for some diagram as in (c)\nwith <MATH_0017> surjective <MATH_0018> has <MATH_0019>,\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005> there exists an <ACCENT_0005>tale covering <MATH_0020> such\nthat each base change <MATH_0021> has <MATH_0022>,\n<ITEMOPEN_0006>(f)<ITEMCLOSE_0006> there exists an <ACCENT_0006>tale covering <MATH_0023> such\nthat each composition <MATH_0024> has <MATH_0025>,\n<ITEMOPEN_0007>(g)<ITEMCLOSE_0007> there exists an <ACCENT_0007>tale covering <MATH_0026> and\nfor each <MATH_0027> an <ACCENT_0008>tale covering\n<MATH_0028> such that each morphism\n<MATH_0029> has <MATH_0030>.\n<STRUCT_0002>\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f : X \\to Y$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0005": "$x \\in X$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0006": "$a : (U, u) \\to (X, x)$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0007": "$b : V \\to Y$",
+        "MATH_0008": "$h : U \\to V$",
+        "MATH_0009": "$f \\circ a = b \\circ h$",
+        "MATH_0010": "$h$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0012": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "MATH_0013": "$a$",
+        "MATH_0014": "$b$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0015": "$h$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "ITEMOPEN_0004": "\\item[",
+        "ITEMCLOSE_0004": "]",
+        "MATH_0017": "$a : U \\to X$",
+        "MATH_0018": "$h$",
+        "MATH_0019": "$\\mathcal{P}$",
+        "ITEMOPEN_0005": "\\item[",
+        "ITEMCLOSE_0005": "]",
+        "ACCENT_0005": "\\'e",
+        "MATH_0020": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "MATH_0021": "$Y_i \\times_Y X \\to Y_i$",
+        "MATH_0022": "$\\mathcal{P}$",
+        "ITEMOPEN_0006": "\\item[",
+        "ITEMCLOSE_0006": "]",
+        "ACCENT_0006": "\\'e",
+        "MATH_0023": "$\\{X_i \\to X\\}_{i \\in I}$",
+        "MATH_0024": "$X_i \\to Y$",
+        "MATH_0025": "$\\mathcal{P}$",
+        "ITEMOPEN_0007": "\\item[",
+        "ITEMCLOSE_0007": "]",
+        "ACCENT_0007": "\\'e",
+        "MATH_0026": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "MATH_0027": "$i \\in I$",
+        "ACCENT_0008": "\\'e",
+        "MATH_0028": "$\\{X_{ij} \\to Y_i \\times_Y X\\}_{j \\in J_i}$",
+        "MATH_0029": "$X_{ij} \\to Y_i$",
+        "MATH_0030": "$\\mathcal{P}$",
+        "STRUCT_0002": "\\end{enumerate}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "morphisms",
+          "projection_start": 33,
+          "projection_end": 42,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 46,
+          "projection_end": 53,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 63,
+          "projection_end": 68,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 118,
+          "projection_end": 126,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 130,
+          "projection_end": 137,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 157,
+          "projection_end": 167,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 329,
+          "projection_end": 334,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 335,
+          "projection_end": 343,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 369,
+          "projection_end": 374,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 375,
+          "projection_end": 383,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 403,
+          "projection_end": 411,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 522,
+          "projection_end": 541,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 584,
+          "projection_end": 589,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 594,
+          "projection_end": 602,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 676,
+          "projection_end": 683,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 711,
+          "projection_end": 721,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 802,
+          "projection_end": 807,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 808,
+          "projection_end": 816,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 844,
+          "projection_end": 855,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 936,
+          "projection_end": 941,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 942,
+          "projection_end": 950,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 978,
+          "projection_end": 989,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1070,
+          "projection_end": 1075,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1076,
+          "projection_end": 1084,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1125,
+          "projection_end": 1130,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 1131,
+          "projection_end": 1139,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1167,
+          "projection_end": 1175,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04R1:proof",
+      "source_text": "The equivalence of (a) and (b) is part of\nDefinition <REF_0001>.\nThe equivalence of (a) and (e) is\nLemma <REF_0002> part (2).\nThe equivalence of (a) and (f) is\nLemma <REF_0003> part (1).\nAs (a) is now equivalent to (e) and (f) it follows that\n(a) equivalent to (g).\n\n<STRUCT_0001><STRUCT_0002>\nIt is clear that (c) implies (a). If (a) holds, then for any\ndiagram as in (c) the morphism <MATH_0001> has <MATH_0002> by\nDefinition <REF_0004> part (1),\nwhereupon <MATH_0003> has <MATH_0004> by\nLemma <REF_0005> part (4).\nThus (a) and (c) are equivalent. It is clear that (c) implies (d).\nTo see that (d) implies (a) assume we have a diagram as in (c)\nwith <MATH_0005> surjective and <MATH_0006> having <MATH_0007>.\nThen <MATH_0008> has <MATH_0009> by\nLemma <REF_0006> part (3).\nSince <MATH_0010> is an <ACCENT_0001>tale covering we conclude that\n<MATH_0011> has <MATH_0012> by\nLemma <REF_0007> part (1).\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "REF_0001": "\\ref{definition-local-source-target}",
+        "REF_0002": "\\ref{lemma-local-source-target-implies}",
+        "REF_0003": "\\ref{lemma-local-source-target-implies}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "MATH_0001": "$f \\circ a$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "REF_0004": "\\ref{definition-local-source-target}",
+        "MATH_0003": "$h$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "REF_0005": "\\ref{lemma-local-source-target-implies}",
+        "MATH_0005": "$a : U \\to X$",
+        "MATH_0006": "$h$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$b \\circ h$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{lemma-local-source-target-implies}",
+        "MATH_0010": "$\\{a : U \\to X\\}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$\\mathcal{P}$",
+        "REF_0007": "\\ref{lemma-local-source-target-implies}"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "equivalence",
+          "projection_start": 4,
+          "projection_end": 15,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 69,
+          "projection_end": 80,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 130,
+          "projection_end": 141,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 201,
+          "projection_end": 211,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 247,
+          "projection_end": 257,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 354,
+          "projection_end": 361,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 376,
+          "projection_end": 384,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 537,
+          "projection_end": 547,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 628,
+          "projection_end": 635,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 663,
+          "projection_end": 673,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 797,
+          "projection_end": 802,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 803,
+          "projection_end": 811,
+          "concept": "covering",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04QW:prose-0006",
+      "source_text": "\n\n<STRUCT_0001>\nIt seems that the result of the following lemma is not a formality, i.e.,\nit actually uses something about the geometry of <ACCENT_0001>tale morphisms.\n\n",
+      "node_kind": "paragraph",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'e"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "étale",
+          "projection_start": 137,
+          "projection_end": 142,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 143,
+          "projection_end": 152,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:03YV:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe are going to use\nLemma <REF_0001>.\nBy\nMorphisms, Lemma <REF_0002>\nthe property of being unramified (resp.<SPACE_0001>G-unramified)\nis local for Zariski on source and target. By\nMorphisms, Lemmas <REF_0003> and\n<REF_0004>\nwe see the precomposition\nof an unramified (resp.<SPACE_0002>G-unramified) morphism by an <ACCENT_0001>tale morphism is\nunramified (resp.<SPACE_0003>G-unramified).\nFinally, suppose that <MATH_0001> is a morphism of affine schemes\nand that <MATH_0002> is a surjective <ACCENT_0002>tale morphism of affine schemes\nsuch that <MATH_0003> is unramified (resp.<SPACE_0004>G-unramified).\nThen <MATH_0004> is of finite type (resp.<SPACE_0005>finite presentation), and by\nLemma <REF_0005>\n(resp.<SPACE_0006>Lemma <REF_0006>)\nwe see that <MATH_0005> is of finite type (resp.<SPACE_0007>finite presentation) also. By\nMorphisms, Lemma <REF_0007>\nwe have a short exact sequence\n<MATH_0006>\nAs <MATH_0007> is unramified we see that the middle term is zero.\nHence, as <MATH_0008> is faithfully flat we see that <MATH_0009>.\nHence <MATH_0010> is unramified (resp.<SPACE_0008>G-unramified), see\nMorphisms, Lemma <REF_0008>.\nThis proves the last assumption of\nLemma <REF_0009>\nand finishes the proof.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{lemma-properties-morphisms-local-source}",
+        "REF_0002": "\\ref{morphisms-lemma-unramified-characterize}",
+        "SPACE_0001": "\\ ",
+        "REF_0003": "\\ref{morphisms-lemma-composition-unramified}",
+        "REF_0004": "\\ref{morphisms-lemma-etale-smooth-unramified}",
+        "SPACE_0002": "\\ ",
+        "ACCENT_0001": "\\'e",
+        "SPACE_0003": "\\ ",
+        "MATH_0001": "$X \\to Y$",
+        "MATH_0002": "$f : X' \\to X$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0003": "$X' \\to Y$",
+        "SPACE_0004": "\\ ",
+        "MATH_0004": "$X' \\to Y$",
+        "SPACE_0005": "\\ ",
+        "REF_0005": "\\ref{lemma-finite-type-local-source-fppf-algebra}",
+        "SPACE_0006": "\\ ",
+        "REF_0006": "\\ref{lemma-flat-finitely-presented-permanence-algebra}",
+        "MATH_0005": "$X \\to Y$",
+        "SPACE_0007": "\\ ",
+        "REF_0007": "\\ref{morphisms-lemma-triangle-differentials-smooth}",
+        "MATH_0006": "$$\n0 \\to f^*\\Omega_{X/Y} \\to \\Omega_{X'/Y} \\to \\Omega_{X'/X} \\to 0.\n$$",
+        "MATH_0007": "$X' \\to Y$",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$\\Omega_{X/Y} = 0$",
+        "MATH_0010": "$X \\to Y$",
+        "SPACE_0008": "\\ ",
+        "REF_0008": "\\ref{morphisms-lemma-unramified-omega-zero}",
+        "REF_0009": "\\ref{lemma-properties-morphisms-local-source}",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:paragraph/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a property of morphisms of schemes. There is an\nintuitive meaning to the phrase ``<MATH_0002> is <ACCENT_0001>tale local on the\nsource and target''. However, it turns out that this notion is not\nthe same as asking <MATH_0003> to be both <ACCENT_0002>tale\nlocal on the source and <ACCENT_0003>tale local on the target.\nBefore we discuss this further we give two silly examples.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "ACCENT_0003": "\\'e"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:section_title/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<TEXTOPEN_0001>Properties of morphisms <ACCENT_0001>tale local on source-and-target<TEXTCLOSE_0001>\n<LOCKED_0001>",
+      "protected_nodes": {
+        "TEXTOPEN_0001": "\\section{",
+        "ACCENT_0001": "\\'e",
+        "TEXTCLOSE_0001": "}",
+        "LOCKED_0001": "\\label{section-properties-etale-local-source-target}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QX:example/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider the property <MATH_0001> of morphisms of schemes defined\nby the rule <MATH_0002>``<MATH_0003> is locally Noetherian''.\nThe reader can verify that this is <ACCENT_0001>tale local on the source and\n<ACCENT_0002>tale local on the target (omitted, see\nLemma <REF_0001>).\nBut it is <TEXTBFOPEN_0001>not<TEXTBFCLOSE_0001> true that if <MATH_0004> has <MATH_0005>\nand <MATH_0006> is <ACCENT_0003>tale, then <MATH_0007> has <MATH_0008>.\nNamely, <MATH_0009> could be the identity on <MATH_0010> and <MATH_0011> could be an open\nimmersion of a locally Noetherian scheme <MATH_0012> into a non locally Noetherian\nscheme <MATH_0013>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-silly-one}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}(X \\to Y) = $",
+        "MATH_0003": "$Y$",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{lemma-Noetherian-local-fppf}",
+        "TEXTBFOPEN_0001": "{\\bf ",
+        "TEXTBFCLOSE_0001": "}",
+        "MATH_0004": "$f : X \\to Y$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$g : Y \\to Z$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0007": "$g \\circ f$",
+        "MATH_0008": "$\\mathcal{P}$",
+        "MATH_0009": "$f$",
+        "MATH_0010": "$Y$",
+        "MATH_0011": "$g$",
+        "MATH_0012": "$Y$",
+        "MATH_0013": "$Z$",
+        "STRUCT_0002": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:paragraph/0002",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe following example is in some sense worse.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QY:example/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nConsider the property <MATH_0001> of morphisms of schemes defined\nby the rule <MATH_0002>``for every <MATH_0003> which is\na specialization of some <MATH_0004>, <MATH_0005> the local ring\n<MATH_0006> is Noetherian''. Let us verify that this is\n<ACCENT_0001>tale local on the source and <ACCENT_0002>tale local on the target. We will freely use\nSchemes, Lemma <REF_0001>.\n\n<STRUCT_0002><STRUCT_0003>\nLocal on the target:\nLet <MATH_0007> be an <ACCENT_0003>tale covering. Let <MATH_0008>\nbe the base change of <MATH_0009>, and denote <MATH_0010> the projection.\nAssume <MATH_0011>. Let <MATH_0012>\nbe a specialization. Then <MATH_0013> so\n<MATH_0014> implies <MATH_0015> is Noetherian.\nAlso <MATH_0016> is a\nlocalization of an <ACCENT_0004>tale ring map.\nHence <MATH_0017> is Noetherian by\nAlgebra, Lemma <REF_0002>.\nConversely, assume <MATH_0018> for all <MATH_0019>. Let <MATH_0020>\nbe a specialization. Choose an <MATH_0021> and <MATH_0022> mapping to <MATH_0023>.\nSince <MATH_0024> can be viewed as a point of\n<MATH_0025> and\n<MATH_0026> is faithfully flat,\nthere exists a point\n<MATH_0027>\nmapping to <MATH_0028>. Then <MATH_0029>, and <MATH_0030> specializes to <MATH_0031>.\nThus we see that <MATH_0032> is Noetherian by\n<MATH_0033> which implies that <MATH_0034> is\nNoetherian by\nAlgebra, Lemma <REF_0003>.\n\n<STRUCT_0004><STRUCT_0005>\nLocal on the source:\nLet <MATH_0035> be an <ACCENT_0005>tale covering. Let <MATH_0036>\nbe the composition <MATH_0037>. Assume <MATH_0038>. Let\n<MATH_0039> be a specialization. Then <MATH_0040> so\n<MATH_0041> implies <MATH_0042> is Noetherian. Thus\n<MATH_0043> holds.\nConversely, assume <MATH_0044> for all <MATH_0045>. Let <MATH_0046>\nbe a specialization. Choose an <MATH_0047> and <MATH_0048> mapping to <MATH_0049>.\nThen <MATH_0050> is a specialization of <MATH_0051>. Hence\n<MATH_0052> implies <MATH_0053> is Noetherian\nas desired.\n\n<STRUCT_0006><STRUCT_0007>\nWe claim that there exists a commutative diagram\n<MATH_0054>\nwith surjective <ACCENT_0006>tale vertical arrows, such that <MATH_0055> has <MATH_0056>\nand <MATH_0057> does not have <MATH_0058>. Namely, let\n<MATH_0059>\nand let <MATH_0060> be the open subscheme which is the complement of\nthe point all of whose coordinates <MATH_0061>. Let <MATH_0062>, let\n<MATH_0063>, let <MATH_0064> the obvious map, and let <MATH_0065>\nbe the inclusion of <MATH_0066> into the first summand of <MATH_0067>. The claim above\nholds because <MATH_0068> is locally Noetherian, but <MATH_0069> is not.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{example}",
+        "LOCKED_0001": "\\label{example-silly-two}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}(f : X \\to Y) = $",
+        "MATH_0003": "$y \\in Y$",
+        "MATH_0004": "$f(x)$",
+        "MATH_0005": "$x \\in X$",
+        "MATH_0006": "$\\mathcal{O}_{Y, y}$",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "REF_0001": "\\ref{schemes-lemma-specialize-points}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0007": "$\\{g_i : Y_i \\to Y\\}$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0008": "$f_i : X_i \\to Y_i$",
+        "MATH_0009": "$f$",
+        "MATH_0010": "$h_i : X_i \\to X$",
+        "MATH_0011": "$\\mathcal{P}(f)$",
+        "MATH_0012": "$f(x_i) \\leadsto y_i$",
+        "MATH_0013": "$f(h_i(x_i)) \\leadsto g_i(y_i)$",
+        "MATH_0014": "$\\mathcal{P}(f)$",
+        "MATH_0015": "$\\mathcal{O}_{Y, g_i(y_i)}$",
+        "MATH_0016": "$\\mathcal{O}_{Y, g_i(y_i)} \\to \\mathcal{O}_{Y_i, y_i}$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0017": "$\\mathcal{O}_{Y_i, y_i}$",
+        "REF_0002": "\\ref{algebra-lemma-Noetherian-permanence}",
+        "MATH_0018": "$\\mathcal{P}(f_i)$",
+        "MATH_0019": "$i$",
+        "MATH_0020": "$f(x) \\leadsto y$",
+        "MATH_0021": "$i$",
+        "MATH_0022": "$y_i \\in Y_i$",
+        "MATH_0023": "$y$",
+        "MATH_0024": "$x$",
+        "MATH_0025": "$\\Spec(\\mathcal{O}_{Y, y}) \\times_Y X$",
+        "MATH_0026": "$\\mathcal{O}_{Y, y} \\to \\mathcal{O}_{Y_i, y_i}$",
+        "MATH_0027": "$x_i \\in \\Spec(\\mathcal{O}_{Y_i, y_i}) \\times_Y X$",
+        "MATH_0028": "$x$",
+        "MATH_0029": "$x_i \\in X_i$",
+        "MATH_0030": "$f_i(x_i)$",
+        "MATH_0031": "$y_i$",
+        "MATH_0032": "$\\mathcal{O}_{Y_i, y_i}$",
+        "MATH_0033": "$\\mathcal{P}(f_i)$",
+        "MATH_0034": "$\\mathcal{O}_{Y, y}$",
+        "REF_0003": "\\ref{algebra-lemma-descent-Noetherian}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0035": "$\\{h_i : X_i \\to X\\}$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0036": "$f_i : X_i \\to Y$",
+        "MATH_0037": "$f \\circ h_i$",
+        "MATH_0038": "$\\mathcal{P}(f)$",
+        "MATH_0039": "$f(x_i) \\leadsto y$",
+        "MATH_0040": "$f(h_i(x_i)) \\leadsto y$",
+        "MATH_0041": "$\\mathcal{P}(f)$",
+        "MATH_0042": "$\\mathcal{O}_{Y, y}$",
+        "MATH_0043": "$\\mathcal{P}(f_i)$",
+        "MATH_0044": "$\\mathcal{P}(f_i)$",
+        "MATH_0045": "$i$",
+        "MATH_0046": "$f(x) \\leadsto y$",
+        "MATH_0047": "$i$",
+        "MATH_0048": "$x_i \\in X_i$",
+        "MATH_0049": "$x$",
+        "MATH_0050": "$y$",
+        "MATH_0051": "$f_i(x_i) = f(x)$",
+        "MATH_0052": "$\\mathcal{P}(f_i)$",
+        "MATH_0053": "$\\mathcal{O}_{Y, y}$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0054": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0055": "$h$",
+        "MATH_0056": "$\\mathcal{P}$",
+        "MATH_0057": "$f$",
+        "MATH_0058": "$\\mathcal{P}$",
+        "MATH_0059": "$$\nY =\n\\Spec\\Big(\n\\mathbf{C}[x_n; n \\in \\mathbf{Z}]/(x_n x_m; n \\not = m)\n\\Big)\n$$",
+        "MATH_0060": "$X \\subset Y$",
+        "MATH_0061": "$x_n = 0$",
+        "MATH_0062": "$U = X$",
+        "MATH_0063": "$V = X \\amalg Y$",
+        "MATH_0064": "$a, b$",
+        "MATH_0065": "$h : U \\to V$",
+        "MATH_0066": "$U = X$",
+        "MATH_0067": "$V$",
+        "MATH_0068": "$U$",
+        "MATH_0069": "$Y$",
+        "STRUCT_0008": "\\end{example}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:paragraph/0003",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWhat should be the correct notion of a property which is <ACCENT_0001>tale local\non the source-and-target? We think that, by analogy with\nMorphisms, Definition <REF_0001>\nit should be the following.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'e",
+        "REF_0001": "\\ref{morphisms-definition-property-local}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QZ:definition/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes.\nWe say <MATH_0002> is <TEXTITOPEN_0001><ACCENT_0001>tale local on source-and-target<TEXTITCLOSE_0001> if\n<STRUCT_0002>\n<STRUCT_0003> (stable under precomposing with <ACCENT_0002>tale maps)\nif <MATH_0003> is <ACCENT_0003>tale and <MATH_0004> has <MATH_0005>,\nthen <MATH_0006> has <MATH_0007>,\n<STRUCT_0004> (stable under <ACCENT_0004>tale base change)\nif <MATH_0008> has <MATH_0009> and <MATH_0010> is <ACCENT_0005>tale, then\nthe base change <MATH_0011> has <MATH_0012>, and\n<STRUCT_0005> (locality) given a morphism <MATH_0013> the following are equivalent\n<STRUCT_0006>\n<STRUCT_0007> <MATH_0014> has <MATH_0015>,\n<STRUCT_0008> for every <MATH_0016> there exists a commutative diagram\n<MATH_0017>\nwith <ACCENT_0006>tale vertical arrows and <MATH_0018> with <MATH_0019> such that\n<MATH_0020> has <MATH_0021>.\n<STRUCT_0009>\n<STRUCT_0010>\n<STRUCT_0011>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-local-source-target}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "ACCENT_0001": "\\'e",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "ACCENT_0002": "\\'e",
+        "MATH_0003": "$f : X \\to Y$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0004": "$g : Y \\to Z$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$g \\circ f$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "STRUCT_0004": "\\item",
+        "ACCENT_0004": "\\'e",
+        "MATH_0008": "$f : X \\to Y$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "MATH_0010": "$Y' \\to Y$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0011": "$f' : Y' \\times_Y X \\to Y'$",
+        "MATH_0012": "$\\mathcal{P}$",
+        "STRUCT_0005": "\\item",
+        "MATH_0013": "$f : X \\to Y$",
+        "STRUCT_0006": "\\begin{enumerate}",
+        "STRUCT_0007": "\\item",
+        "MATH_0014": "$f$",
+        "MATH_0015": "$\\mathcal{P}$",
+        "STRUCT_0008": "\\item",
+        "MATH_0016": "$x \\in X$",
+        "MATH_0017": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0018": "$u \\in U$",
+        "MATH_0019": "$a(u) = x$",
+        "MATH_0020": "$h$",
+        "MATH_0021": "$\\mathcal{P}$",
+        "STRUCT_0009": "\\end{enumerate}",
+        "STRUCT_0010": "\\end{enumerate}",
+        "STRUCT_0011": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:paragraph/0004",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt turns out this definition excludes the behavior seen in\nExamples <REF_0001> and <REF_0002>.\nWe will compare this to the definition in the paper\n<REF_0003> by Deligne and Mumford in\nRemark <REF_0004>.\nMoreover, a property which is <ACCENT_0001>tale local on the source-and-target is\n<ACCENT_0002>tale local on the source and <ACCENT_0003>tale local on the target.\nFinally, the converse is almost true as we will see in\nLemma <REF_0005>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{example-silly-one}",
+        "REF_0002": "\\ref{example-silly-two}",
+        "REF_0003": "\\cite{DM}",
+        "REF_0004": "\\ref{remark-compare-definitions}",
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "ACCENT_0003": "\\'e",
+        "REF_0005": "\\ref{lemma-etale-local-source-target}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R0:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes which is\n<ACCENT_0001>tale local on source-and-target. Then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is <ACCENT_0002>tale local on the source,\n<STRUCT_0004> <MATH_0003> is <ACCENT_0003>tale local on the target,\n<STRUCT_0005> <MATH_0004> is stable under postcomposing with <ACCENT_0004>tale morphisms:\nif <MATH_0005> has <MATH_0006> and <MATH_0007> is <ACCENT_0005>tale, then\n<MATH_0008> has <MATH_0009>, and\n<STRUCT_0006> <MATH_0010> has a permanence property: given <MATH_0011> and\n<MATH_0012> <ACCENT_0006>tale such that <MATH_0013> has <MATH_0014>, then\n<MATH_0015> has <MATH_0016>.\n<STRUCT_0007>\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-source-target-implies}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0003": "\\'e",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$\\mathcal{P}$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "MATH_0007": "$g : Y \\to Z$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0008": "$g \\circ f$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "STRUCT_0006": "\\item",
+        "MATH_0010": "$\\mathcal{P}$",
+        "MATH_0011": "$f : X \\to Y$",
+        "MATH_0012": "$g : Y \\to Z$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0013": "$g \\circ f$",
+        "MATH_0014": "$\\mathcal{P}$",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R0:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nWe write everything out completely.\n\n<STRUCT_0002><STRUCT_0003>\nProof of (1). Let <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be an <ACCENT_0001>tale covering of <MATH_0003>. If each composition\n<MATH_0004> has <MATH_0005>, then for each <MATH_0006> we can find\nan <MATH_0007> and a point <MATH_0008> mapping to <MATH_0009>. Then\n<MATH_0010> is an <ACCENT_0002>tale morphism of germs, and\n<MATH_0011> is an <ACCENT_0003>tale morphism, and <MATH_0012> is as in part (3) of\nDefinition <REF_0001>.\nThus we see that <MATH_0013> has <MATH_0014>.\nConversely, if <MATH_0015> has <MATH_0016> then each <MATH_0017> has\n<MATH_0018> by\nDefinition <REF_0002> part (1).\n\n<STRUCT_0004><STRUCT_0005>\nProof of (2). Let <MATH_0019> be a morphism of schemes.\nLet <MATH_0020> be an <ACCENT_0004>tale covering of <MATH_0021>.\nWrite <MATH_0022> and <MATH_0023> for the base change\nof <MATH_0024>.  If each  <MATH_0025> has <MATH_0026>, then for each\n<MATH_0027> we pick an <MATH_0028> and a point <MATH_0029> mapping to <MATH_0030>.\nThen <MATH_0031> is an <ACCENT_0005>tale morphism of germs, <MATH_0032> is\n<ACCENT_0006>tale, and <MATH_0033> is as in part (3) of\nDefinition <REF_0003>.\nThus we see that <MATH_0034> has <MATH_0035>.\nConversely, if <MATH_0036> has <MATH_0037>, then each <MATH_0038> has\n<MATH_0039> by\nDefinition <REF_0004> part (2).\n\n<STRUCT_0006><STRUCT_0007>\nProof of (3). Assume <MATH_0040> has <MATH_0041> and <MATH_0042> is\n<ACCENT_0007>tale. For every <MATH_0043> we can think of <MATH_0044> as an\n<ACCENT_0008>tale morphism of germs, <MATH_0045> is an <ACCENT_0009>tale morphism, and <MATH_0046> is as\nin part (3) of\nDefinition <REF_0005>.\nThus we see that <MATH_0047> has <MATH_0048>.\n\n<STRUCT_0008><STRUCT_0009>\nProof of (4). Let <MATH_0049> be a morphism and <MATH_0050> <ACCENT_0010>tale\nsuch that <MATH_0051> has <MATH_0052>. Then by\nDefinition <REF_0006> part (2)\nwe see that <MATH_0053> has <MATH_0054>. But\nthe morphism <MATH_0055> is <ACCENT_0011>tale as a section to the\n<ACCENT_0012>tale projection <MATH_0056>, see\nMorphisms, Lemma <REF_0007>.\nHence <MATH_0057> has <MATH_0058> by\nDefinition <REF_0008> part (1).\n<STRUCT_0010>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$\\{X_i \\to X\\}_{i \\in I}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$h_i : X_i \\to Y$",
+        "MATH_0005": "$\\mathcal{P}$",
+        "MATH_0006": "$x \\in X$",
+        "MATH_0007": "$i \\in I$",
+        "MATH_0008": "$x_i \\in X_i$",
+        "MATH_0009": "$x$",
+        "MATH_0010": "$(X_i, x_i) \\to (X, x)$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0011": "$\\text{id}_Y : Y \\to Y$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0012": "$h_i$",
+        "REF_0001": "\\ref{definition-local-source-target}",
+        "MATH_0013": "$f$",
+        "MATH_0014": "$\\mathcal{P}$",
+        "MATH_0015": "$f$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "MATH_0017": "$X_i \\to Y$",
+        "MATH_0018": "$\\mathcal{P}$",
+        "REF_0002": "\\ref{definition-local-source-target}",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "MATH_0019": "$f : X \\to Y$",
+        "MATH_0020": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0021": "$Y$",
+        "MATH_0022": "$X_i = Y_i \\times_Y X$",
+        "MATH_0023": "$h_i : X_i \\to Y_i$",
+        "MATH_0024": "$f$",
+        "MATH_0025": "$h_i : X_i \\to Y_i$",
+        "MATH_0026": "$\\mathcal{P}$",
+        "MATH_0027": "$x \\in X$",
+        "MATH_0028": "$i \\in I$",
+        "MATH_0029": "$x_i \\in X_i$",
+        "MATH_0030": "$x$",
+        "MATH_0031": "$(X_i, x_i) \\to (X, x)$",
+        "ACCENT_0005": "\\'e",
+        "MATH_0032": "$Y_i \\to Y$",
+        "ACCENT_0006": "\\'e",
+        "MATH_0033": "$h_i$",
+        "REF_0003": "\\ref{definition-local-source-target}",
+        "MATH_0034": "$f$",
+        "MATH_0035": "$\\mathcal{P}$",
+        "MATH_0036": "$f$",
+        "MATH_0037": "$\\mathcal{P}$",
+        "MATH_0038": "$X_i \\to Y_i$",
+        "MATH_0039": "$\\mathcal{P}$",
+        "REF_0004": "\\ref{definition-local-source-target}",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0040": "$f : X \\to Y$",
+        "MATH_0041": "$\\mathcal{P}$",
+        "MATH_0042": "$g : Y \\to Z$",
+        "ACCENT_0007": "\\'e",
+        "MATH_0043": "$x \\in X$",
+        "MATH_0044": "$(X, x) \\to (X, x)$",
+        "ACCENT_0008": "\\'e",
+        "MATH_0045": "$Y \\to Z$",
+        "ACCENT_0009": "\\'e",
+        "MATH_0046": "$h = f$",
+        "REF_0005": "\\ref{definition-local-source-target}",
+        "MATH_0047": "$g \\circ f$",
+        "MATH_0048": "$\\mathcal{P}$",
+        "STRUCT_0008": "\\medskip",
+        "STRUCT_0009": "\\noindent",
+        "MATH_0049": "$f : X \\to Y$",
+        "MATH_0050": "$g : Y \\to Z$",
+        "ACCENT_0010": "\\'e",
+        "MATH_0051": "$g \\circ f$",
+        "MATH_0052": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{definition-local-source-target}",
+        "MATH_0053": "$\\text{pr}_Y : Y \\times_Z X \\to Y$",
+        "MATH_0054": "$\\mathcal{P}$",
+        "MATH_0055": "$(f, 1) : X \\to Y \\times_Z X$",
+        "ACCENT_0011": "\\'e",
+        "ACCENT_0012": "\\'e",
+        "MATH_0056": "$\\text{pr}_X : Y \\times_Z X \\to X$",
+        "REF_0007": "\\ref{morphisms-lemma-etale-permanence}",
+        "MATH_0057": "$f = \\text{pr}_Y \\circ (f, 1)$",
+        "MATH_0058": "$\\mathcal{P}$",
+        "REF_0008": "\\ref{definition-local-source-target}",
+        "STRUCT_0010": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe following lemma is the analogue of\nMorphisms, Lemma <REF_0001>.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{morphisms-lemma-locally-P-characterize}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R1:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes which is\n<ACCENT_0001>tale local on source-and-target. Let <MATH_0002> be a morphism\nof schemes. The following are equivalent:\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0003> has property <MATH_0004>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> for every <MATH_0005> there exists an <ACCENT_0002>tale morphism of germs\n<MATH_0006>, an <ACCENT_0003>tale morphism <MATH_0007>, and\na morphism <MATH_0008> such that <MATH_0009> and\n<MATH_0010> has <MATH_0011>,\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003>\nfor any commutative diagram\n<MATH_0012>\nwith <MATH_0013>, <MATH_0014> <ACCENT_0004>tale the morphism <MATH_0015> has <MATH_0016>,\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004> for some diagram as in (c)\nwith <MATH_0017> surjective <MATH_0018> has <MATH_0019>,\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005> there exists an <ACCENT_0005>tale covering <MATH_0020> such\nthat each base change <MATH_0021> has <MATH_0022>,\n<ITEMOPEN_0006>(f)<ITEMCLOSE_0006> there exists an <ACCENT_0006>tale covering <MATH_0023> such\nthat each composition <MATH_0024> has <MATH_0025>,\n<ITEMOPEN_0007>(g)<ITEMCLOSE_0007> there exists an <ACCENT_0007>tale covering <MATH_0026> and\nfor each <MATH_0027> an <ACCENT_0008>tale covering\n<MATH_0028> such that each morphism\n<MATH_0029> has <MATH_0030>.\n<STRUCT_0003>\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-local-source-target-characterize}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0002": "$f : X \\to Y$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0005": "$x \\in X$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0006": "$a : (U, u) \\to (X, x)$",
+        "ACCENT_0003": "\\'e",
+        "MATH_0007": "$b : V \\to Y$",
+        "MATH_0008": "$h : U \\to V$",
+        "MATH_0009": "$f \\circ a = b \\circ h$",
+        "MATH_0010": "$h$",
+        "MATH_0011": "$\\mathcal{P}$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0012": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "MATH_0013": "$a$",
+        "MATH_0014": "$b$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0015": "$h$",
+        "MATH_0016": "$\\mathcal{P}$",
+        "ITEMOPEN_0004": "\\item[",
+        "ITEMCLOSE_0004": "]",
+        "MATH_0017": "$a : U \\to X$",
+        "MATH_0018": "$h$",
+        "MATH_0019": "$\\mathcal{P}$",
+        "ITEMOPEN_0005": "\\item[",
+        "ITEMCLOSE_0005": "]",
+        "ACCENT_0005": "\\'e",
+        "MATH_0020": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "MATH_0021": "$Y_i \\times_Y X \\to Y_i$",
+        "MATH_0022": "$\\mathcal{P}$",
+        "ITEMOPEN_0006": "\\item[",
+        "ITEMCLOSE_0006": "]",
+        "ACCENT_0006": "\\'e",
+        "MATH_0023": "$\\{X_i \\to X\\}_{i \\in I}$",
+        "MATH_0024": "$X_i \\to Y$",
+        "MATH_0025": "$\\mathcal{P}$",
+        "ITEMOPEN_0007": "\\item[",
+        "ITEMCLOSE_0007": "]",
+        "ACCENT_0007": "\\'e",
+        "MATH_0026": "$\\{Y_i \\to Y\\}_{i \\in I}$",
+        "MATH_0027": "$i \\in I$",
+        "ACCENT_0008": "\\'e",
+        "MATH_0028": "$\\{X_{ij} \\to Y_i \\times_Y X\\}_{j \\in J_i}$",
+        "MATH_0029": "$X_{ij} \\to Y_i$",
+        "MATH_0030": "$\\mathcal{P}$",
+        "STRUCT_0003": "\\end{enumerate}",
+        "STRUCT_0004": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R1:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe equivalence of (a) and (b) is part of\nDefinition <REF_0001>.\nThe equivalence of (a) and (e) is\nLemma <REF_0002> part (2).\nThe equivalence of (a) and (f) is\nLemma <REF_0003> part (1).\nAs (a) is now equivalent to (e) and (f) it follows that\n(a) equivalent to (g).\n\n<STRUCT_0002><STRUCT_0003>\nIt is clear that (c) implies (a). If (a) holds, then for any\ndiagram as in (c) the morphism <MATH_0001> has <MATH_0002> by\nDefinition <REF_0004> part (1),\nwhereupon <MATH_0003> has <MATH_0004> by\nLemma <REF_0005> part (4).\nThus (a) and (c) are equivalent. It is clear that (c) implies (d).\nTo see that (d) implies (a) assume we have a diagram as in (c)\nwith <MATH_0005> surjective and <MATH_0006> having <MATH_0007>.\nThen <MATH_0008> has <MATH_0009> by\nLemma <REF_0006> part (3).\nSince <MATH_0010> is an <ACCENT_0001>tale covering we conclude that\n<MATH_0011> has <MATH_0012> by\nLemma <REF_0007> part (1).\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "REF_0001": "\\ref{definition-local-source-target}",
+        "REF_0002": "\\ref{lemma-local-source-target-implies}",
+        "REF_0003": "\\ref{lemma-local-source-target-implies}",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0001": "$f \\circ a$",
+        "MATH_0002": "$\\mathcal{P}$",
+        "REF_0004": "\\ref{definition-local-source-target}",
+        "MATH_0003": "$h$",
+        "MATH_0004": "$\\mathcal{P}$",
+        "REF_0005": "\\ref{lemma-local-source-target-implies}",
+        "MATH_0005": "$a : U \\to X$",
+        "MATH_0006": "$h$",
+        "MATH_0007": "$\\mathcal{P}$",
+        "MATH_0008": "$b \\circ h$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "REF_0006": "\\ref{lemma-local-source-target-implies}",
+        "MATH_0010": "$\\{a : U \\to X\\}$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$\\mathcal{P}$",
+        "REF_0007": "\\ref{lemma-local-source-target-implies}",
+        "STRUCT_0004": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04QW:paragraph/0006",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nIt seems that the result of the following lemma is not a formality, i.e.,\nit actually uses something about the geometry of <ACCENT_0001>tale morphisms.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent",
+        "ACCENT_0001": "\\'e"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:04R2:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes.\nAssume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is <ACCENT_0001>tale local on the source,\n<STRUCT_0004> <MATH_0003> is <ACCENT_0002>tale local on the target, and\n<STRUCT_0005> <MATH_0004> is stable under postcomposing with open immersions:\nif <MATH_0005> has <MATH_0006> and <MATH_0007> is an open\nsubscheme then <MATH_0008> has <MATH_0009>.\n<STRUCT_0006>\nThen <MATH_0010> is <ACCENT_0003>tale local on the source-and-target.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-local-source-target}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "MATH_0007": "$Y \\subset Z$",
+        "MATH_0008": "$X \\to Z$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0010": "$\\mathcal{P}$",
+        "ACCENT_0003": "\\'e",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "reference:algebra-lemma-Noetherian-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nAny finitely generated ring over a Noetherian ring\nis Noetherian. Any localization of a Noetherian ring\nis Noetherian.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Noetherian-permanence}",
+        "LOCKED_0002": "\\begin{slogan}\nNoetherian property is stable by passage to finite type extension\nand localization.\n\\end{slogan}",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-Noetherian-permanence",
+      "requested_tag": "00FN"
+    },
+    {
+      "context_id": "reference:algebra-lemma-descent-Noetherian",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\nAssume that\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is faithfully flat, and\n<STRUCT_0004> <MATH_0003> is Noetherian.\n<STRUCT_0005>\nThen <MATH_0004> is Noetherian.\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-descent-Noetherian}",
+        "MATH_0001": "$R \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$R \\to S$",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$S$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "MATH_0004": "$R$",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "algebra-lemma-descent-Noetherian",
+      "requested_tag": "033E"
+    },
+    {
+      "context_id": "reference:descent-lemma-Noetherian-local-fppf",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe property <MATH_0001>``<MATH_0002> is locally Noetherian'' is local\nin the fppf topology.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-Noetherian-local-fppf}",
+        "MATH_0001": "$\\mathcal{P}(S) =$",
+        "MATH_0002": "$S$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-Noetherian-local-fppf",
+      "requested_tag": "034C"
+    },
+    {
+      "context_id": "reference:descent-lemma-etale-local-source-target",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of morphisms of schemes.\nAssume\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> is <ACCENT_0001>tale local on the source,\n<STRUCT_0004> <MATH_0003> is <ACCENT_0002>tale local on the target, and\n<STRUCT_0005> <MATH_0004> is stable under postcomposing with open immersions:\nif <MATH_0005> has <MATH_0006> and <MATH_0007> is an open\nsubscheme then <MATH_0008> has <MATH_0009>.\n<STRUCT_0006>\nThen <MATH_0010> is <ACCENT_0003>tale local on the source-and-target.\n<STRUCT_0007>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-local-source-target}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0004": "\\item",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0005": "\\item",
+        "MATH_0004": "$\\mathcal{P}$",
+        "MATH_0005": "$f : X \\to Y$",
+        "MATH_0006": "$\\mathcal{P}$",
+        "MATH_0007": "$Y \\subset Z$",
+        "MATH_0008": "$X \\to Z$",
+        "MATH_0009": "$\\mathcal{P}$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "MATH_0010": "$\\mathcal{P}$",
+        "ACCENT_0003": "\\'e",
+        "STRUCT_0007": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-lemma-etale-local-source-target",
+      "requested_tag": "04R2"
+    },
+    {
+      "context_id": "reference:descent-remark-compare-definitions",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAt this point we have three possible definitions of what it means for a\nproperty <MATH_0001> of morphisms to be ``<ACCENT_0001>tale local on the source and\ntarget'':\n<STRUCT_0002>\n<ITEMOPEN_0001>(ST)<ITEMCLOSE_0001> <MATH_0002> is <ACCENT_0002>tale local on the source and <MATH_0003> is\n<ACCENT_0003>tale local on the target,\n<ITEMOPEN_0002>(DM)<ITEMCLOSE_0002> (the definition in the paper <REF_0001> by\nDeligne and Mumford) for every diagram\n<MATH_0004>\nwith surjective <ACCENT_0004>tale vertical arrows we have\n<MATH_0005>, and\n<ITEMOPEN_0003>(SP)<ITEMCLOSE_0003> <MATH_0006> is <ACCENT_0005>tale local on the source-and-target.\n<STRUCT_0003>\nIn this section we have seen that (SP) <MATH_0007> (DM) <MATH_0008> (ST).\nThe\nExamples <REF_0002> and <REF_0003>\nshow that neither implication can be reversed. Finally,\nLemma <REF_0004>\nshows that the difference disappears when looking at properties of\nmorphisms which are stable under postcomposing with open immersions, which\nin practice will always be the case.\n<STRUCT_0004>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{remark}",
+        "LOCKED_0001": "\\label{remark-compare-definitions}",
+        "MATH_0001": "$\\mathcal{P}$",
+        "ACCENT_0001": "\\'e",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0002": "$\\mathcal{P}$",
+        "ACCENT_0002": "\\'e",
+        "MATH_0003": "$\\mathcal{P}$",
+        "ACCENT_0003": "\\'e",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "REF_0001": "\\cite[Page 100]{DM}",
+        "MATH_0004": "$$\n\\xymatrix{\nU \\ar[d]_a \\ar[r]_h & V \\ar[d]^b \\\\\nX \\ar[r]^f & Y\n}\n$$",
+        "ACCENT_0004": "\\'e",
+        "MATH_0005": "$\\mathcal{P}(h) \\Leftrightarrow \\mathcal{P}(f)$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0006": "$\\mathcal{P}$",
+        "ACCENT_0005": "\\'e",
+        "STRUCT_0003": "\\end{enumerate}",
+        "MATH_0007": "$\\Rightarrow$",
+        "MATH_0008": "$\\Rightarrow$",
+        "REF_0002": "\\ref{example-silly-one}",
+        "REF_0003": "\\ref{example-silly-two}",
+        "REF_0004": "\\ref{lemma-etale-local-source-target}",
+        "STRUCT_0004": "\\end{remark}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "descent-remark-compare-definitions",
+      "requested_tag": "04R4"
+    },
+    {
+      "context_id": "reference:morphisms-definition-property-local",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a property of ring maps.\n<STRUCT_0002>\n<STRUCT_0003> We say that <MATH_0002> is <TEXTITOPEN_0001>local<TEXTITCLOSE_0001> if the following hold:\n<STRUCT_0004>\n<STRUCT_0005> For any ring map <MATH_0003>, and any <MATH_0004> we have\n<MATH_0005>.\n<STRUCT_0006> For any rings <MATH_0006>, <MATH_0007>, any <MATH_0008>, <MATH_0009>, and any ring map\n<MATH_0010> we have <MATH_0011>.\n<STRUCT_0007> For any ring map <MATH_0012>, and <MATH_0013> such that\n<MATH_0014> then\n<MATH_0015>.\n<STRUCT_0008>\n<STRUCT_0009> We say that <MATH_0016> is <TEXTITOPEN_0002>stable under base change<TEXTITCLOSE_0002> if for any\nring maps <MATH_0017>, <MATH_0018> we have\n<MATH_0019>.\n<STRUCT_0010> We say that <MATH_0020> is <TEXTITOPEN_0003>stable under composition<TEXTITCLOSE_0003> if for any\nring maps <MATH_0021>, <MATH_0022> we have\n<MATH_0023>.\n<STRUCT_0011>\n<STRUCT_0012>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{definition}",
+        "LOCKED_0001": "\\label{definition-property-local}",
+        "MATH_0001": "$P$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0002": "$P$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "STRUCT_0004": "\\begin{enumerate}",
+        "STRUCT_0005": "\\item",
+        "MATH_0003": "$R \\to A$",
+        "MATH_0004": "$f \\in R$",
+        "MATH_0005": "$P(R \\to A) \\Rightarrow P(R_f \\to A_f)$",
+        "STRUCT_0006": "\\item",
+        "MATH_0006": "$R$",
+        "MATH_0007": "$A$",
+        "MATH_0008": "$f \\in R$",
+        "MATH_0009": "$a\\in A$",
+        "MATH_0010": "$R_f \\to A$",
+        "MATH_0011": "$P(R_f \\to A) \\Rightarrow P(R \\to A_a)$",
+        "STRUCT_0007": "\\item",
+        "MATH_0012": "$R \\to A$",
+        "MATH_0013": "$a_i \\in A$",
+        "MATH_0014": "$(a_1, \\ldots, a_n) = A$",
+        "MATH_0015": "$\\forall i, P(R \\to A_{a_i}) \\Rightarrow P(R \\to A)$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\item",
+        "MATH_0016": "$P$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0017": "$R \\to A$",
+        "MATH_0018": "$R \\to R'$",
+        "MATH_0019": "$P(R \\to A) \\Rightarrow P(R' \\to R' \\otimes_R A)$",
+        "STRUCT_0010": "\\item",
+        "MATH_0020": "$P$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0021": "$A \\to B$",
+        "MATH_0022": "$B \\to C$",
+        "MATH_0023": "$P(A \\to B) \\wedge P(B \\to C) \\Rightarrow P(A \\to C)$",
+        "STRUCT_0011": "\\end{enumerate}",
+        "STRUCT_0012": "\\end{definition}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-definition-property-local",
+      "requested_tag": "01SR"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-etale-permanence",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a morphism of schemes over <MATH_0002>.\nIf <MATH_0003> and <MATH_0004> are <ACCENT_0001>tale over <MATH_0005>, then\n<MATH_0006> is <ACCENT_0002>tale.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-etale-permanence}",
+        "LOCKED_0002": "\\begin{slogan}\nCancellation law for \\'etale morphisms\n\\end{slogan}",
+        "MATH_0001": "$f : X \\to Y$",
+        "MATH_0002": "$S$",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$Y$",
+        "ACCENT_0001": "\\'e",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$f$",
+        "ACCENT_0002": "\\'e",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-etale-permanence",
+      "requested_tag": "02GW"
+    },
+    {
+      "context_id": "reference:morphisms-lemma-locally-P-characterize",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a local property of ring maps.\nLet <MATH_0002> be a morphism of schemes.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> The morphism <MATH_0003> is locally of type <MATH_0004>.\n<STRUCT_0004> For every affine opens <MATH_0005>, <MATH_0006>\nwith <MATH_0007> we have <MATH_0008>.\n<STRUCT_0005> There exists an open covering <MATH_0009>\nand open coverings <MATH_0010> such\nthat each of the morphisms <MATH_0011>, <MATH_0012>\nis locally of type <MATH_0013>.\n<STRUCT_0006> There exists an affine open covering <MATH_0014>\nand affine open coverings <MATH_0015> such\nthat <MATH_0016> holds, for all\n<MATH_0017>.\n<STRUCT_0007>\nMoreover, if <MATH_0018> is locally of type <MATH_0019> then for\nany open subschemes <MATH_0020>, <MATH_0021> with <MATH_0022>\nthe restriction <MATH_0023> is locally of type <MATH_0024>.\n<STRUCT_0008>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-locally-P-characterize}",
+        "MATH_0001": "$P$",
+        "MATH_0002": "$f : X \\to S$",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0003": "$f$",
+        "MATH_0004": "$P$",
+        "STRUCT_0004": "\\item",
+        "MATH_0005": "$U \\subset X$",
+        "MATH_0006": "$V \\subset S$",
+        "MATH_0007": "$f(U) \\subset V$",
+        "MATH_0008": "$P(\\mathcal{O}_S(V) \\to \\mathcal{O}_X(U))$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$S = \\bigcup_{j \\in J} V_j$",
+        "MATH_0010": "$f^{-1}(V_j) = \\bigcup_{i \\in I_j} U_i$",
+        "MATH_0011": "$U_i \\to V_j$",
+        "MATH_0012": "$j\\in J, i\\in I_j$",
+        "MATH_0013": "$P$",
+        "STRUCT_0006": "\\item",
+        "MATH_0014": "$S = \\bigcup_{j \\in J} V_j$",
+        "MATH_0015": "$f^{-1}(V_j) = \\bigcup_{i \\in I_j} U_i$",
+        "MATH_0016": "$P(\\mathcal{O}_S(V_j) \\to \\mathcal{O}_X(U_i))$",
+        "MATH_0017": "$j\\in J, i\\in I_j$",
+        "STRUCT_0007": "\\end{enumerate}",
+        "MATH_0018": "$f$",
+        "MATH_0019": "$P$",
+        "MATH_0020": "$U \\subset X$",
+        "MATH_0021": "$V \\subset S$",
+        "MATH_0022": "$f(U) \\subset V$",
+        "MATH_0023": "$f|_U : U \\to V$",
+        "MATH_0024": "$P$",
+        "STRUCT_0008": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "morphisms-lemma-locally-P-characterize",
+      "requested_tag": "01SU"
+    },
+    {
+      "context_id": "reference:schemes-lemma-specialize-points",
+      "kind": "locked-English-reference",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be points of <MATH_0003>.\nThen <MATH_0004> is a generalization of <MATH_0005> if and only if\n<MATH_0006> is in the image of the canonical morphism\n<MATH_0007>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-specialize-points}",
+        "MATH_0001": "$X$",
+        "MATH_0002": "$x, x' \\in X$",
+        "MATH_0003": "$X$",
+        "MATH_0004": "$x' \\in X$",
+        "MATH_0005": "$x$",
+        "MATH_0006": "$x'$",
+        "MATH_0007": "$\\Spec(\\mathcal{O}_{X, x}) \\to X$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": "schemes-lemma-specialize-points",
+      "requested_tag": "01J7"
+    }
+  ]
+}

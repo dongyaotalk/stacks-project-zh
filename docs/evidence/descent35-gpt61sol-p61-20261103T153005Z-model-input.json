@@ -1,0 +1,243 @@
+{
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.166.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1a195-1ad7-7a73-b0f1-f765a1a1dc35",
+    "replayable": false
+  },
+  "input_freeze": {
+    "path": "translation-data/source-adoption-inputs/descent35-gpt61sol-p61-20261103T153005Z.json",
+    "hash": "sha256:c4529ced79966b24f61b5f9218ba72adc454dccef2105cdc87d9d86d71d616dd"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "approved_glossary": [],
+  "units": [
+    {
+      "unit_id": "tag:023X:statement",
+      "source_text": "Let <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nSet <MATH_0004>, and consider it as an <MATH_0005>-scheme.\nThere is a canonical equivalence of categories\n<MATHSEG_0001>category of descent data <MATHSEG_0002>relative to the family <MATHSEG_0003> category of descent data<MATHSEG_0004> relative to <MATHSEG_0005>\nwhich maps <MATH_0006> to <MATH_0007> with\n<MATH_0008> and <MATH_0009>.\n",
+      "node_kind": "lemma",
+      "protected_nodes": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$X = \\coprod_{i \\in I} X_i$",
+        "MATH_0005": "$S$",
+        "MATHSEG_0001": "$$\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0002": "} \\\\\n\\text{",
+        "MATHSEG_0003": "} \\{X_i \\to S\\}_{i \\in I}\n\\end{matrix}\n\\longrightarrow\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0004": "} \\\\\n\\text{",
+        "MATHSEG_0005": "} X/S\n\\end{matrix}\n$$",
+        "MATH_0006": "$(V_i, \\varphi_{ij})$",
+        "MATH_0007": "$(V, \\varphi)$",
+        "MATH_0008": "$V = \\coprod_{i\\in I} V_i$",
+        "MATH_0009": "$\\varphi = \\coprod \\varphi_{ij}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "family of morphisms",
+          "projection_start": 50,
+          "projection_end": 69,
+          "concept": "source-phrase-families-of-morphisms",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 146,
+          "projection_end": 152,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 165,
+          "projection_end": 174,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 175,
+          "projection_end": 200,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 215,
+          "projection_end": 223,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 227,
+          "projection_end": 234,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 292,
+          "projection_end": 300,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 304,
+          "projection_end": 311,
+          "concept": "descent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 364,
+          "projection_end": 368,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:023X:proof",
+      "source_text": "Observe that <MATH_0001>\nand similarly for higher fibre products.\nGiving a morphism <MATH_0002> is exactly the same as\ngiving a family <MATH_0003>. And giving a descent datum\n<MATH_0004> is exactly the same as giving a family <MATH_0005>.\n",
+      "node_kind": "proof",
+      "protected_nodes": {
+        "MATH_0001": "$X \\times_S X = \\coprod_{ij} X_i \\times_S X_j$",
+        "MATH_0002": "$V \\to X$",
+        "MATH_0003": "$V_i \\to X_i$",
+        "MATH_0004": "$\\varphi$",
+        "MATH_0005": "$\\varphi_{ij}$"
+      },
+      "required_source_terms": [
+        {
+          "source_term": "fibre products",
+          "projection_start": 50,
+          "projection_end": 64,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 75,
+          "projection_end": 83,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "descent",
+          "projection_start": 161,
+          "projection_end": 168,
+          "concept": "descent",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "context_id": "neighbor:inventory:descent:023U:paragraph/0005",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nThe reason we will usually work with the version of a family consisting\nof a single morphism is the following lemma.",
+      "protected_nodes": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023X:proof/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\nObserve that <MATH_0001>\nand similarly for higher fibre products.\nGiving a morphism <MATH_0002> is exactly the same as\ngiving a family <MATH_0003>. And giving a descent datum\n<MATH_0004> is exactly the same as giving a family <MATH_0005>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{proof}",
+        "MATH_0001": "$X \\times_S X = \\coprod_{ij} X_i \\times_S X_j$",
+        "MATH_0002": "$V \\to X$",
+        "MATH_0003": "$V_i \\to X_i$",
+        "MATH_0004": "$\\varphi$",
+        "MATH_0005": "$\\varphi_{ij}$",
+        "STRUCT_0002": "\\end{proof}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023X:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a family of morphisms with target <MATH_0003>.\nSet <MATH_0004>, and consider it as an <MATH_0005>-scheme.\nThere is a canonical equivalence of categories\n<MATHSEG_0001>category of descent data <MATHSEG_0002>relative to the family <MATHSEG_0003> category of descent data<MATHSEG_0004> relative to <MATHSEG_0005>\nwhich maps <MATH_0006> to <MATH_0007> with\n<MATH_0008> and <MATH_0009>.\n<STRUCT_0002>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-family-is-one}",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$\\{X_i \\to S\\}_{i \\in I}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$X = \\coprod_{i \\in I} X_i$",
+        "MATH_0005": "$S$",
+        "MATHSEG_0001": "$$\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0002": "} \\\\\n\\text{",
+        "MATHSEG_0003": "} \\{X_i \\to S\\}_{i \\in I}\n\\end{matrix}\n\\longrightarrow\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0004": "} \\\\\n\\text{",
+        "MATHSEG_0005": "} X/S\n\\end{matrix}\n$$",
+        "MATH_0006": "$(V_i, \\varphi_{ij})$",
+        "MATH_0007": "$(V, \\varphi)$",
+        "MATH_0008": "$V = \\coprod_{i\\in I} V_i$",
+        "MATH_0009": "$\\varphi = \\coprod \\varphi_{ij}$",
+        "STRUCT_0002": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    },
+    {
+      "context_id": "neighbor:inventory:descent:023Y:lemma/0001",
+      "kind": "locked-English-neighbor",
+      "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nPullback of descent data for schemes over schemes.\n<STRUCT_0002>\n<STRUCT_0003> Let\n<MATH_0001>\nbe a commutative diagram of morphisms of schemes.\nThe construction\n<MATH_0002>\nwhere <MATH_0003> and where\n<MATH_0004> is defined as the composition\n<MATH_0005>\ndefines a functor from the category of descent data\nrelative to <MATH_0006> to the category of descent data\nrelative to <MATH_0007>.\n<STRUCT_0004> Given two morphisms <MATH_0008>, <MATH_0009> making the\ndiagram commute the functors <MATH_0010> and <MATH_0011> are\ncanonically isomorphic.\n<STRUCT_0005>\n<STRUCT_0006>",
+      "protected_nodes": {
+        "STRUCT_0001": "\\begin{lemma}",
+        "LOCKED_0001": "\\label{lemma-pullback}",
+        "STRUCT_0002": "\\begin{enumerate}",
+        "STRUCT_0003": "\\item",
+        "MATH_0001": "$$\n\\xymatrix{\nX' \\ar[r]_f \\ar[d]_{a'} & X \\ar[d]^a \\\\\nS' \\ar[r]^h & S\n}\n$$",
+        "MATH_0002": "$$\n(V \\to X, \\varphi) \\longmapsto f^*(V \\to X, \\varphi) = (V' \\to X', \\varphi')\n$$",
+        "MATH_0003": "$V' = X' \\times_X V$",
+        "MATH_0004": "$\\varphi'$",
+        "MATH_0005": "$$\n\\xymatrix{\nV' \\times_{S'} X' \\ar@{=}[r] &\n(X' \\times_X V) \\times_{S'} X' \\ar@{=}[r] &\n(X' \\times_{S'} X') \\times_{X \\times_S X} (V \\times_S X)\n\\ar[d]^{\\text{id} \\times \\varphi} \\\\\nX' \\times_{S'} V' \\ar@{=}[r] &\nX' \\times_{S'} (X' \\times_X V) &\n(X' \\times_{S'} X') \\times_{X \\times_S X} (X \\times_S V) \\ar@{=}[l]\n}\n$$",
+        "MATH_0006": "$X \\to S$",
+        "MATH_0007": "$X' \\to S'$",
+        "STRUCT_0004": "\\item",
+        "MATH_0008": "$f_i : X' \\to X$",
+        "MATH_0009": "$i = 0, 1$",
+        "MATH_0010": "$f_0^*$",
+        "MATH_0011": "$f_1^*$",
+        "STRUCT_0005": "\\end{enumerate}",
+        "STRUCT_0006": "\\end{lemma}"
+      },
+      "protected_math_reference": null,
+      "requested_label": null,
+      "requested_tag": null
+    }
+  ]
+}

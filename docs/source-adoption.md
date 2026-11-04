@@ -43,6 +43,28 @@ python3 stacks_zh.py assemble-source-adoption \
 所有 batch 完整验证后才安装全部候选、run 和最后的采用记录；安装故障恢复
 已替换的临时候选并移除新文件。
 
+### 未安装候选的失败生成历史
+
+实际生成的 raw 在记录 Schema、完整覆盖或受保护候选装配阶段被拒绝时，可保留
+现有 run Schema 中 `inputs.settings.frozen_generation_input` 指向的完整原冻结输入。
+该失败 run 的 `context_hashes` 和 `accepted_records` 必须为空；实际生成的完整
+context hash 顺序另存于 `generation_context_hashes`。`raw_attempts` 保存全部原始
+尝试的精确路径、原字节 hash 及逐文件 unit 顺序，`observed_assembly_exit_code`
+保存真实非零退出，`observed_assembly_error` 保存 `ERROR: ` 加实际装配错误全文。
+身份、来源、政策、模型、Harness、turn、effort、时间及完整 unit 顺序须等于
+`frozen_generation_input`；不得同时声明成功采用指针或存在同 ID 的采用记录。
+
+来源采用加载器以原 origin 政策完整重选来源、上下文和全部祖先，逐字核验冻结
+输入、run、所有 raw 和历史快照；全部 raw 在首个拒绝之前均绑定。随后只读执行
+同一 raw 解析与候选装配，必须重现记录中的拒绝全文；能够完整装配的输出不能
+伪称失败。此入口仅支持上述 raw/装配阶段的负结果，不把其他失败原因解释成
+已验证历史。已首次加入 Git 的任何证据仍不可通过重算 hash 改写。
+
+经完整验证的失败冻结输入所引用的前继快照是同次来源采用凭证的历史依赖，
+不因没有成功采用记录而被误判为孤立文件。未验证或无关快照继续拒绝；失败 run
+不新增当前 adoption、候选、进度或渲染正文，不消费当前前继，不获得任何审校、
+术语或发布状态。失败证据变化或新增/移除 run 文件会使同次凭证失效。
+
 ## 来源权限
 
 从锁定 English Git 重新选择完整容器，验证真实 owner、Section、kind、ordinal、

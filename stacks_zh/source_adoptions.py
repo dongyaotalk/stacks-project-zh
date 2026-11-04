@@ -1125,6 +1125,75 @@ def assemble_source_adoption(root: Path, input_path: Path, raw_paths: list[Path]
         raise RecordError('invalid complete first-source adoption input: ' + str(exc)) from exc
 
 
+def _recorded_failed_generation(root, path, manifest, harvest):
+    """Replay a rejected generation as history only; never install or adopt it."""
+    _schema(manifest, 'run-manifest.schema.json')
+    settings = manifest['inputs']['settings']
+    entry = settings['frozen_generation_input']
+    frozen, reads, native, _ = _prepare(root, entry, harvest)
+    reads.read(dict(path=path.relative_to(root).as_posix(), hash=byte_hash(_input_bytes(path))),
+               r'translation-data/runs/[A-Za-z0-9._-]+\.json')
+    scope = _task_scope(frozen, reads, entry, current=False)
+    identity = frozen['runtime']
+    if (path.stem != frozen['run_id'] or manifest['run_id'] != frozen['run_id']
+            or manifest['run_kind'] != 'translation' or manifest.get('status') != 'recorded'
+            or manifest['task_id'] != frozen['task_id'] or manifest['source_commit'] != frozen['source_commit']
+            or manifest['created_at'] != frozen['created_at'] or manifest['unit_ids'] != frozen['unit_ids']
+            or manifest['harness'] != identity['harness'] or manifest['model'] != identity['model']
+            or manifest['replayable'] != identity['replayable']
+            or settings.get('reasoning_effort') != identity['reasoning_effort']
+            or settings.get('turn_id') != identity['turn_id']
+            or manifest['inputs']['prompt_version'] != 'translator-v2'
+            or any(manifest['inputs'][key] != 'git:' + frozen['origin_commit']
+                   for key in ['policy_revision', 'glossary_revision'])
+            or manifest['inputs']['context_hashes'] != [] or settings.get('accepted_records') != []
+            or settings.get('generation_context_hashes') != [c['hash'] for c in frozen['contexts']]
+            or type(settings.get('observed_assembly_exit_code')) is not int
+            or settings['observed_assembly_exit_code'] == 0
+            or 'source_adoption_id' in settings or 'input_freeze' in settings
+            or (root / f"translation-data/source-adoptions/{frozen['adoption_id']}.json").exists()):
+        raise RecordError('recorded failed generation differs from its complete original freeze')
+    from .provenance import _parse_registry_section, _registry_scalar
+    policies = {e['path']: _git_origin_bytes(root, frozen['origin_commit'], e['path']).decode('utf-8')
+                for e in frozen['policies'] if e['path'] in {'config/models.yml', 'config/harnesses.yml'}}
+    models = _parse_registry_section(policies['config/models.yml'], 'model_records')
+    lanes = _parse_registry_section(policies['config/models.yml'], 'lanes')
+    harnesses = _parse_registry_section(policies['config/harnesses.yml'], 'harnesses')
+    model, harness = identity['model'], identity['harness']
+    registered, lane = models.get(model['record_id']), lanes.get(identity['model_lane'])
+    if (model['identity_confidence'] == 'unknown' or harness['version'].lower() in {'auto', 'unknown', 'unavailable'}
+            or registered is None or lane is None
+            or harnesses.get(harness['id'], {}).get('adapter_version') != harness['adapter_version']
+            or any(expected is not None and _registry_scalar(model.get(key)) != expected
+                   for key, expected in registered.items() if key in model)
+            or any(lane.get(key) != actual for key, actual in [
+                ('model_id', model['resolved_id'] or model['requested_id']),
+                ('model_record_id', model['record_id']), ('harness_id', harness['id']),
+                ('prompt_version', 'translator-v2')])):
+        raise RecordError('recorded failed generation identity differs from its accepted registry')
+    attempts = settings.get('raw_attempts')
+    if not isinstance(attempts, list) or not attempts:
+        raise RecordError('recorded failed generation requires all original raw attempts')
+    # Bind all attempts before replay can stop at the first invalid model record.
+    for attempt in attempts:
+        if attempt['path'] not in scope['allowed_write_files']:
+            raise RecordError('failed generation raw output escapes its exact frozen scope')
+        rows = _rows(reads.read(attempt))
+        if attempt.get('unit_ids') != [r.get('unit_id') for r in rows]:
+            raise RecordError('failed generation raw attempt order differs')
+    try:
+        raw = _raw_records(reads, attempts, frozen['unit_ids'], scope['allowed_write_files'])
+        _generated(frozen, raw, entry)
+    except RecordError as exc:
+        if settings.get('observed_assembly_error') != 'ERROR: ' + str(exc):
+            raise RecordError('recorded failed generation rejection differs from actual replay') from exc
+    else:
+        raise RecordError('recorded failed generation has complete valid assembly')
+    native.assert_unchanged()
+    reads.snapshot.assert_unchanged()
+    return reads.snapshot
+
+
 @isolated_inputs
 def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
     """Replay all complete active first-adoption records, including every prior model."""
@@ -1150,6 +1219,7 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
         inventory = InputSnapshot(root)
         inventory.watch_tree(root / 'translation-data/source-adoptions')
         inventory.watch_tree(root / 'translation-data/retired/source-adoptions')
+        inventory.watch_tree(root / 'translation-data/runs')
     except (OSError, ValueError) as exc:
         return {}, [str(exc)]
     snapshots = [inventory]
@@ -1233,6 +1303,14 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
                     if relative in shared_overrides and shared_overrides[relative] != entry:
                         raise RecordError('shared ordinary history has competing snapshots')
                     shared_overrides[relative] = entry
+        except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError) as exc:
+            errors.append(str(path) + ': ' + str(exc))
+    for path in sorted(_input_glob(root / 'translation-data/runs', '*.json')):
+        try:
+            manifest = json.loads(_input_bytes(path))
+            settings = manifest.get('inputs', {}).get('settings', {})
+            if isinstance(settings, dict) and 'frozen_generation_input' in settings:
+                snapshots.append(_recorded_failed_generation(root, path, manifest, harvest))
         except (OSError, ValueError, KeyError, TypeError, IndexError, subprocess.SubprocessError) as exc:
             errors.append(str(path) + ': ' + str(exc))
     used = {path for snapshot in snapshots[1:] for path in snapshot.hashes}

@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 103 | 第 5-6、9-33、35-104、106-111 章 |
+| 未开始 | 102 | 第 5-6、9-33、36-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 13 | 第 1-4、7-8、34、105、112-116 章 |
+| 候选译文完成，待审校 | 14 | 第 1-4、7-8、34-35、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 213 / 3,299（6.5%） | 0 | 3,086 |
+| 模型候选译文 | 252 / 3,299（7.6%） | 0 | 3,047 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -70,7 +70,7 @@
 | 32 | 概形的极限（`limits`） | 未开始 | 0 / 22（0.0%） | 0 | 22 | 0 | 0 |
 | 33 | 簇（`varieties`） | 未开始 | 0 / 48（0.0%） | 0 | 48 | 0 | 0 |
 | 34 | 概形上的拓扑（`topologies`） | 候选译文完成，待审校 | 13 / 13（100.0%） | 0 | 0 | 0 | 0 |
-| 35 | 下降（`descent`） | 未开始 | 0 / 39（0.0%） | 0 | 39 | 0 | 0 |
+| 35 | 下降（`descent`） | 候选译文完成，待审校 | 39 / 39（100.0%） | 0 | 0 | 0 | 0 |
 | 36 | 概形的导出范畴（`perfect`） | 未开始 | 0 / 41（0.0%） | 0 | 41 | 0 | 0 |
 | 37 | 态射进阶（`more-morphisms`） | 未开始 | 0 / 81（0.0%） | 0 | 81 | 0 | 0 |
 | 38 | 平坦性进阶（`flat`） | 未开始 | 0 / 44（0.0%） | 0 | 44 | 0 | 0 |
@@ -345,6 +345,52 @@
 | 11 | `03FE` | Change of topologies | 完成 | 未开始 | 未开始 |
 | 12 | `022I` | Change of big sites | 完成 | 未开始 | 未开始 |
 | 13 | `0EUV` | Extending functors | 完成 | 未开始 | 未开始 |
+
+### 第 35 章 下降（`descent`）
+
+共 39 个 Section：候选完成 39，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `0239` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `023A` | Descent data for quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 3 | `023F` | Descent for modules | 完成 | 未开始 | 未开始 |
+| 4 | `08WE` | Descent for universally injective morphisms | 完成 | 未开始 | 未开始 |
+| 5 | `023R` | Fpqc descent of quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 6 | `0CDQ` | Galois descent for quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 7 | `05AY` | Descent of finiteness properties of modules | 完成 | 未开始 | 未开始 |
+| 8 | `03DR` | Quasi-coherent sheaves and topologies, I | 完成 | 未开始 | 未开始 |
+| 9 | `0GN8` | Cohomology of quasi-coherent modules and topologies | 完成 | 未开始 | 未开始 |
+| 10 | `0GN9` | Quasi-coherent sheaves and topologies, II | 完成 | 未开始 | 未开始 |
+| 11 | `0GZT` | Quasi-coherent modules and affines | 完成 | 未开始 | 未开始 |
+| 12 | `07AF` | Parasitic modules | 完成 | 未开始 | 未开始 |
+| 13 | `023P` | Fpqc coverings are universal effective epimorphisms | 完成 | 未开始 | 未开始 |
+| 14 | `02KJ` | Descent of finiteness and smoothness properties of morphisms | 完成 | 未开始 | 未开始 |
+| 15 | `0347` | Local properties of schemes | 完成 | 未开始 | 未开始 |
+| 16 | `034B` | Properties of schemes local in the fppf topology | 完成 | 未开始 | 未开始 |
+| 17 | `0369` | Properties of schemes local in the syntomic topology | 完成 | 未开始 | 未开始 |
+| 18 | `034D` | Properties of schemes local in the smooth topology | 完成 | 未开始 | 未开始 |
+| 19 | `06QL` | Variants on descending properties | 完成 | 未开始 | 未开始 |
+| 20 | `04QQ` | Germs of schemes | 完成 | 未开始 | 未开始 |
+| 21 | `04QT` | Local properties of germs | 完成 | 未开始 | 未开始 |
+| 22 | `02KN` | Properties of morphisms local on the target | 完成 | 未开始 | 未开始 |
+| 23 | `02YJ` | Properties of morphisms local in the fpqc topology on the target | 完成 | 未开始 | 未开始 |
+| 24 | `02YL` | Properties of morphisms local in the fppf topology on the target | 完成 | 未开始 | 未开始 |
+| 25 | `02LB` | Application of fpqc descent of properties of morphisms | 完成 | 未开始 | 未开始 |
+| 26 | `036F` | Properties of morphisms local on the source | 完成 | 未开始 | 未开始 |
+| 27 | `036J` | Properties of morphisms local in the fpqc topology on the source | 完成 | 未开始 | 未开始 |
+| 28 | `036M` | Properties of morphisms local in the fppf topology on the source | 完成 | 未开始 | 未开始 |
+| 29 | `036R` | Properties of morphisms local in the syntomic topology on the source | 完成 | 未开始 | 未开始 |
+| 30 | `036T` | Properties of morphisms local in the smooth topology on the source | 完成 | 未开始 | 未开始 |
+| 31 | `036V` | Properties of morphisms local in the \'etale topology on the source | 完成 | 未开始 | 未开始 |
+| 32 | `04QW` | Properties of morphisms \'etale local on source-and-target | 完成 | 未开始 | 未开始 |
+| 33 | `04R5` | Properties of morphisms of germs local on source-and-target | 完成 | 未开始 | 未开始 |
+| 34 | `023U` | Descent data for schemes over schemes | 完成 | 未开始 | 未开始 |
+| 35 | `02VV` | Fully faithfulness of the pullback functors | 完成 | 未开始 | 未开始 |
+| 36 | `02W1` | Descending types of morphisms | 完成 | 未开始 | 未开始 |
+| 37 | `0244` | Descending affine morphisms | 完成 | 未开始 | 未开始 |
+| 38 | `0246` | Descending quasi-affine morphisms | 完成 | 未开始 | 未开始 |
+| 39 | `02W4` | Descent data in terms of sheaves | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

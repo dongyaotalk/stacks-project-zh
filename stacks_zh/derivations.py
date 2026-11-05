@@ -56,7 +56,7 @@ def _path(root: Path, value: str, pattern: str) -> Path:
 
 
 def _source_tex(unit: dict[str, Any]) -> str:
-    return unit["render"]["prefix"] + restore_placeholders(unit, unit["source_text"]) + unit["render"]["suffix"]
+    return unit["render"]["prefix"] + restore_placeholders(unit, unit["source_text"], _source_replay=True) + unit["render"]["suffix"]
 
 
 def _git_origin_bytes(root: Path, commit: str, path: str) -> bytes:

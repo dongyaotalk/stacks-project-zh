@@ -13,6 +13,7 @@ import unicodedata
 from typing import Any
 
 from . import math_text_descent as descent
+from . import math_text_etale as etale
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
@@ -22,7 +23,7 @@ USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
           'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
           'matrix-row-statement', 'matrix-operator-compatibility',
-          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES
+          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -90,19 +91,21 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         component_contract = ({'literal': COMPONENT_LITERAL, 'usage': COMPONENT_USAGE,
                                'components': [' irred.', 'comp. with '], 'separator': COMPONENT_SEPARATOR}
                               if rule.get('usage') == COMPONENT_USAGE else
+                              etale.component_contract(literal)
+                              if rule.get('usage') == etale.COMPONENT_USAGE else
                               {'literal': descent.ETALE_LITERAL, 'usage': descent.COMPONENT_USAGE,
                                'components': descent.ETALE_COMPONENTS, 'separator': descent.ETALE_SEPARATOR})
         module_suffix = rule.get('usage') == 'root-condition' and literal == '-module'
         if (not isinstance(literal, str) or not (literal == component_contract['literal'] if component else
                 literal == '-isomorphism' if rule.get('usage') == 'numeric-isomorphism-suffix'
-                else module_suffix or re.fullmatch(literal_pattern, literal))
+                else module_suffix or etale.literal_exception(literal, rule.get('usage')) or re.fullmatch(literal_pattern, literal))
                 or not re.search(r'[A-Za-z]{2,}', literal) or literal in seen_literals):
             raise ValueError('invalid or duplicate natural math-text literal')
         if literal in notations:
             raise ValueError('math text cannot be both notation and natural language')
         seen_literals.add(literal)
         if (rule['command'] != 'text' or not isinstance(rule['usage'], str)
-                or rule['usage'] not in ({COMPONENT_USAGE, descent.COMPONENT_USAGE} if component else USAGES)):
+                or rule['usage'] not in ({COMPONENT_USAGE, descent.COMPONENT_USAGE, etale.COMPONENT_USAGE} if component else USAGES)):
             raise ValueError('unsupported natural math-text command or usage')
         if component and any(rule[name] != component_contract[name]
                              for name in ('literal', 'usage', 'components', 'separator')):
@@ -122,9 +125,10 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                     'matrix-category-description': {' over '},
                     'descent-sheaf-set-matrices': {'each '}}
         if (base is None or base.get('slot_schema_version') == 3
-                or base['usage'] != 'root-phrase'
-                or context['usage'] not in expected
-                or base['literal'] not in expected[context['usage']]):
+                or not ((base['usage'] == 'root-phrase'
+                         and context['usage'] in expected
+                         and base['literal'] in expected[context['usage']])
+                        or (base['usage'], base['literal']) in etale.CONTEXTS.get(context['usage'], set()))):
             raise ValueError('natural context requires its exact ordinary root literal and new role')
         pair = (base['literal'], context['usage'])
         if pair in context_pairs:
@@ -442,6 +446,8 @@ def _context_usage(source, stream, index, kind):
 
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
+    if kind in etale.USAGES | {etale.COMPONENT_USAGE}:
+        return etale.usage(source, stream, index, kind)
     if kind in descent.USAGES | {descent.COMPONENT_USAGE}:
         return descent.usage(source, stream, index, kind)
     node = stream[index]
@@ -708,7 +714,7 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
                             or slot['slot_id'] != f"{region['region_id']}/text/{part // 2 + 1:04d}"):
                         raise ValueError('math text slot ID/order differs')
                     bounds = [pieces[part - 1]['placeholder'], pieces[part + 1]['placeholder']]
-                    if slot['boundary_placeholders'] != bounds or not plain_text(slot['source']):
+                    if slot['boundary_placeholders'] != bounds or not (plain_text(slot['source']) or etale.source_leaf(slot)):
                         raise ValueError('math text slot has invalid boundaries or plain source')
                     a = len(rebuilt.encode('utf-8')); b = a + len(slot['source'].encode('utf-8'))
                     if slot['slot_byte_span'] != {'start': a, 'end': b}:
@@ -785,7 +791,9 @@ def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
                     separator = first['parameter_components']['separator'] if component else None
                     leaves = node.get('value','').split(separator) if component else [node.get('value','')]
                     if (node.get('command') != first['command'] or len(leaves) != len(slots)
-                            or any(not plain_text(leaf) for leaf in leaves)
+                            or any(not plain_text(leaf) and not (source == region['source']
+                                 and etale.source_leaf(slots[ordinal]))
+                                   for ordinal, leaf in enumerate(leaves))
                             or usage(source, stream, index, first['classification_witness']['usage']) is None):
                         raise ValueError('translated slot lost its original command/role')
                     pieces.append({'locked':source[cursor:node['parameter_start']]})
@@ -823,15 +831,19 @@ def _slot_node(source, stream, slot, version):
     else:
         kind = slot['classification_witness']['usage']
         literal, separator = ((COMPONENT_LITERAL, COMPONENT_SEPARATOR) if kind == COMPONENT_USAGE else
+                              (node['value'], etale.SEPARATOR) if kind == etale.COMPONENT_USAGE
+                              and node['value'] in etale.COMPONENT_LITERALS else
                               (descent.ETALE_LITERAL, descent.ETALE_SEPARATOR))
         if (version != 3 or node['value'] != component['parameter_source']
-                or kind not in {COMPONENT_USAGE, descent.COMPONENT_USAGE}
+                or kind not in {COMPONENT_USAGE, descent.COMPONENT_USAGE, etale.COMPONENT_USAGE}
                 or component['parameter_source'] != literal
                 or component['component_count'] != 2 or component['separator'] != separator):
             raise ValueError('unsupported composite parent parameter or version')
         leaves = node['value'].split(separator)
         ordinal = component['component_index']-1
-        if len(leaves) != 2 or ordinal not in {0,1} or any(not plain_text(v) for v in leaves):
+        if len(leaves) != 2 or ordinal not in {0,1} or any(not plain_text(v) and not (kind == etale.COMPONENT_USAGE
+                and node['value'] == etale.COMPONENT_LITERALS[0] and i == 0 and v == ' ')
+                for i, v in enumerate(leaves)):
             raise ValueError('invalid complete composite text leaves')
         start = span['start'] + (len((leaves[0]+separator).encode()) if ordinal else 0)
         if slot['source'] != leaves[ordinal] or slot['slot_byte_span'] != dict(start=start,end=start+len(leaves[ordinal].encode())):

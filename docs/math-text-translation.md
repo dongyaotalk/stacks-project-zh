@@ -723,3 +723,38 @@ ref后的拒绝与未登记文字的阻断。真实来源见证由生产库存�
 来源对应和整章预检；完整39节来源能力与候选覆盖分别报告。此前草案的
 579/579 READY 是 lowering 单元数，不能与550个完整容器混用，也不表示
 来源已采用、中文候选已生成或独立 critic、人审、术语、发布已批准。
+
+
+## 第41章有限数学文字框架（独立工具 #908）
+
+本工具只增加默认关闭的语法能力，不登记生产 literal，不采用候选或改变词表。
+真实来源缺口为 etale 的024L完整有限可分条件、024U截面与连通分支对应、
+039R加厚前后概形集合、0BTH带原label下降方程及0BTP拟紧分离平展下降矩阵。
+三个独立角色为 `etale-unramified-condition`、`etale-sections-correspondence`
+和 `etale-scheme-diagrams`。识别器逐字核对五个完整数学框架的全部token、
+对象、箭头、delimiter、环境、label及token间原空白；仅已登记的纯text参数
+可开放。错误对象、未知邻居、注释、截短框架或附加数学均不获得新权限。
+
+既有 ` is an isomorphism` / root-phrase、` such that` /
+descent-sheaf-set-matrices、`descent data ` / descent-sheaf-set-matrices及
+` relative to ` / descent-data-matrices只能通过显式有限context分别继承到
+前述对应框架。不能链接context、借组件base或扩大原角色。完整原参数
+`schemes quasi-compact,` 的标点例外只属于 etale-scheme-diagrams。
+
+`etale-scheme-component` 是独立unit-v3组件分支。三个精确父参数为
+` \'etale over `、`separated, \'etale over `、
+` quasi-compact, separated, \'etale over `。中间原重音 `\'e` 保持锁定
+MATHSEG，两叶原顺序、完整UTF-8跨度、父参数和separator独立验证。第一参数
+的第一源叶恰为一个ASCII空格；只有这一精确父参数/角色/组件位置可作为
+原重音词的源组件。两个目标叶仍必须非空纯文字；不放宽普通plain_text。
+
+完整原source_text的源回放单独验证regions，禁止override、渲染分隔或任何
+目标文字进入此分支。source_tex、派生源字节与来源目录hash只读入口显式
+采用它；候选/renderer默认仍执行严格目标检查。经完整框架验证的只读术语
+投影呈现原重音为é，使六次étale跨组件术语仍逐次检查，不改变恢复的TeX。
+空目标、降级版本、重算hash后的数学/跨度/父参数/角色篡改仍失败。
+
+独立合成Git回归覆盖五框架、源回放与目标拒绝、完整两代历史、首次采用、
+Schema、溯源和实际renderer接口；所有测试中文字均标明synthetic，不冒称
+真实模型候选。Mat/depth应用和for some等已有角色只需后续独立生产政策，
+不构成本工具扩权依据。生产config/macro-policy.yml原字节保持。

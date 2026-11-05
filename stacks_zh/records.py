@@ -192,10 +192,16 @@ def restore_placeholders(
     overrides: Mapping[str, str] | None = None,
     *,
     delimit_commands: bool = False,
+    _source_replay: bool = False,
 ) -> str:
     if unit.get('schema_version') in {2,3}:
-        from .math_text import validate_translation
-        errors = validate_translation(unit, translation)
+        from .math_text import validate_regions, validate_translation
+        if _source_replay:
+            if translation != unit.get('source_text') or overrides or delimit_commands:
+                raise RecordError('source replay requires complete original text without rendering overrides')
+            errors = validate_regions(unit)
+        else:
+            errors = validate_translation(unit, translation)
         if errors:
             raise RecordError('\n'.join(errors))
         if overrides and any(name.startswith('MATHSEG_') and value != unit['placeholders'].get(name)
@@ -262,6 +268,8 @@ def term_display_text(text: str, placeholders: Mapping[str, str], *, unit=None) 
     if unit is not None:
         from .math_text_descent import term_projection
         text = term_projection(unit, text)
+        from .math_text_etale import term_projection as etale_projection
+        text = etale_projection(unit, text)
     text = TEXT_ACCENT_TOKEN_RE.sub(accent, text)
     return FONT_WRAPPER_RE.sub(lambda match: "" if is_font_wrapper(match.group(0), placeholders) else match.group(0), text)
 

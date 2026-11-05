@@ -19,7 +19,7 @@ def _space(text: str) -> str:
 
 
 def source_tex_hash(unit: dict[str, Any]) -> str:
-    return sha256_value(unit["render"]["prefix"] + restore_placeholders(unit, unit["source_text"]) + unit["render"]["suffix"])
+    return sha256_value(unit["render"]["prefix"] + restore_placeholders(unit, unit["source_text"], _source_replay=True) + unit["render"]["suffix"])
 
 
 def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:

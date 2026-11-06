@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from .records import (RecordError, load_jsonl, load_upstream_commit, placeholder_names,
-                      sha256_value, stamp_unit_hashes, validate_tex_controls)
+                      sha256_value, stamp_unit_hashes, validate_source_tex_controls,
+                      validate_tex_controls)
 
 LABEL = re.compile(r"\\label\{([^{}]+)\}")
 TAG_UNIT = re.compile(r"^tag:([0-9A-Z]+)(?::(.+))?$")
@@ -31,7 +32,7 @@ def _named_title_label(unit: dict[str, Any]) -> str | None:
     # suffix closes the argument and owns the label; no body token is needed.
     if opening and unit['node_kind'] == 'environment_title' and not names:
         ending = TITLE_END.fullmatch(unit['render']['suffix'])
-        if ending is None or not unit['source_text'].strip() or validate_tex_controls(unit, {'translation': unit['source_text']}):
+        if ending is None or not unit['source_text'].strip() or validate_source_tex_controls(unit):
             raise RecordError(f"{unit['unit_id']}: invalid separate named environment title boundary")
         return ending.group(1)
     if not opening and not names:
@@ -46,7 +47,7 @@ def _named_title_label(unit: dict[str, Any]) -> str | None:
     ending = TITLE_END.fullmatch(unit['placeholders'][name])
     if (head is None or ending is None or placeholder_names(unit['source_text']).count(name) != 1
             or not head[1].strip()
-            or validate_tex_controls(unit, {'translation': unit['source_text']})):
+            or validate_source_tex_controls(unit)):
         raise RecordError(f"{unit['unit_id']}: missing, moved or malformed named environment title closure")
     return ending.group(1)
 

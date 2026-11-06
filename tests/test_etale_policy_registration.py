@@ -7,7 +7,9 @@ from pathlib import Path
 
 from stacks_zh.extraction import Policy, Scanner
 from stacks_zh.math_text import find_slots, validate_regions, validate_translation
+from stacks_zh.records import validate_tex_controls
 from stacks_zh.schema_validation import validate_named_schema
+from stacks_zh.source_integrity import environment_title_errors
 from stacks_zh.source_reextractions import source_tex
 from test_descent_policy_registration import entries, scan
 from test_descent_math_text import CHAIN, DATA, ARROW, SETS, REFERENCES, PROJ, PROJECTIONS
@@ -196,6 +198,20 @@ class EtalePolicyRegistrationTests(unittest.TestCase):
                     self.assertEqual(validate_named_schema(unit, 'unit.schema.json', 'policy-source'), [])
                     self.assertEqual(validate_regions(unit), [])
                     self.assertEqual(source_tex(unit), record['full_fragment'])
+
+    def test_named_source_title_accepts_the_original_blank_accent_leaves(self):
+        record = next(row for row in EVIDENCE['after'] if row['selector']['owner_tag'] == '039R')
+        unit, = record['units']
+        self.assertEqual(source_tex(unit), record['full_fragment'])
+        self.assertEqual(environment_title_errors(unit), [])
+        original_as_candidate = {'translation': unit['source_text']}
+        self.assertTrue(any('nonempty plain text' in error
+                            for error in validate_tex_controls(unit, original_as_candidate)))
+        self.assertEqual(validate_tex_controls(unit, synthetic_fields(unit)), [])
+        injected = dict(unit, source_text=unit['source_text'].replace('Une ', r'\input{bad} ', 1))
+        self.assertTrue(environment_title_errors(injected))
+        missing_closure = dict(unit, source_text=unit['source_text'].replace('<OWNARGEND_0001>', '', 1))
+        self.assertTrue(environment_title_errors(missing_closure))
 
     def test_registered_blank_accent_source_is_distinct_from_nonempty_target(self):
         for record in EVIDENCE['after']:

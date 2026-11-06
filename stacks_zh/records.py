@@ -274,18 +274,29 @@ def term_display_text(text: str, placeholders: Mapping[str, str], *, unit=None) 
     return FONT_WRAPPER_RE.sub(lambda match: "" if is_font_wrapper(match.group(0), placeholders) else match.group(0), text)
 
 
+def _prose_tex_control_errors(unit: dict[str, Any], field: str, text: Any) -> list[str]:
+    if not isinstance(text, str):
+        return [f"{unit.get('unit_id')}: {field} must be a string"]
+    if re.search(r"\\(?:[A-Za-z@]+|.)|[%#$&_^~{}]", PLACEHOLDER_TOKEN_RE.sub("", text)):
+        return [f"{unit.get('unit_id')}: {field} contains unprotected TeX controls"]
+    return []
+
+
+def validate_source_tex_controls(unit: dict[str, Any]) -> list[str]:
+    """Check source prose and original typed math without treating it as a candidate."""
+    from .math_text import validate_regions
+
+    return _prose_tex_control_errors(unit, "source_text", unit.get("source_text", "")) + validate_regions(unit)
+
+
 def validate_tex_controls(unit: dict[str, Any], candidate: dict[str, Any]) -> list[str]:
     """Reject every unprotected TeX control in source and translated prose."""
-    errors = []
-    for field, text in (("source_text", unit.get("source_text", "")), ("translation", candidate.get("translation", ""))):
-        if not isinstance(text, str):
-            errors.append(f"{unit.get('unit_id')}: {field} must be a string")
-            continue
-        if re.search(r"\\(?:[A-Za-z@]+|.)|[%#$&_^~{}]", PLACEHOLDER_TOKEN_RE.sub("", text)):
-            errors.append(f"{unit.get('unit_id')}: {field} contains unprotected TeX controls")
+    translation = candidate.get("translation", "")
+    errors = _prose_tex_control_errors(unit, "source_text", unit.get("source_text", ""))
+    errors.extend(_prose_tex_control_errors(unit, "translation", translation))
     from .math_text import validate_translation
-    if isinstance(candidate.get('translation'), str):
-        errors.extend(validate_translation(unit, candidate['translation']))
+    if isinstance(candidate.get("translation"), str):
+        errors.extend(validate_translation(unit, translation))
     return errors
 
 

@@ -758,3 +758,36 @@ MATHSEG，两叶原顺序、完整UTF-8跨度、父参数和separator独立验�
 Schema、溯源和实际renderer接口；所有测试中文字均标明synthetic，不冒称
 真实模型候选。Mat/depth应用和for some等已有角色只需后续独立生产政策，
 不构成本工具扩权依据。生产config/macro-policy.yml原字节保持。
+
+
+## 第41章数学文字生产登记（Issue #911）
+
+本次登记以已合并工具 #908 / PR #910 为前提，只改变英文宏政策、来源见证和
+生产回归，不改变工具、Schema、来源锁、词表、模型候选或历史运行。九处实际
+完整来源为024L正文、024U定理、024Y例、039R定理、039T命题、025Q证明、
+0BTH下降正文、0BTP命题及0CBR引理；真实Git selector、原片段/hash及
+Schema/逐字原文回放见 `docs/evidence/etale41-math-text-policy-20261106.json`。
+
+- 11项普通text规则登记完整大小写、首尾空格、字体、有限usage及真实见证。
+  `is unramified at` 和 `for some` 使用既有root-phrase；其余自然文字
+  使用工具已接受的三个有限etale框架，不把自然文字作为数学记号保护。
+- 3项组件登记完整父参数及原反斜线重音，两叶和UTF-8边界保持；源首叶为
+  一个空格的权限仍限精确角色/参数/位置，两个目标叶必须非空。
+- 4项context独立继承已有的such that、is an isomorphism、descent data及
+  relative to，分别限定在截面对应和下降框架；旧literal原usage不改变。
+- Mat仅登记text/applied；depth仅增加applied，原subscripted、字体、
+  source_label及所有其他旧记号条目保持。applied沿已接受的后继开括号规则
+  分类，不引入参数个数或非空限制；原工具也如此处理Cov等已登记应用。
+  错误字体、缺失下标、未登记用法、未分类自然文字和变更框架对象/箭头/label
+  仍不能借登记获得权限。组件目标叶的非空检查继续执行。
+
+`tests/fixtures/macro-policy-before-etale.yml` 保存登记前已接受main的完整
+政策原字节。移除本次所有新项并恢复depth必须逐字重建该快照。下降的历史
+精确delta回归以此中间快照为边界，其余旧正负例继续核验当前生产政策；
+新回归同时逐项约束当前政策相对该快照的唯一增量。before-descent及
+before-projection历史fixture不回写，不跳过旧检查。
+
+来源可回放不是模型候选完成，也不代表政策已接受、独立critic、人审或术语
+批准。政策在main接受后，保全旧库存和所有旧冻结，按新政策准备当前完整
+来源库存/对应与章节计划；已有typed见证的policy hash不得回写到旧证据中。
+具体DATA仍使用同一集中任务的精确范围、当次真实身份和完整模型五字段。

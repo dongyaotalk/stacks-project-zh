@@ -10,6 +10,9 @@ from test_descent_math_text import CHAIN, DATA, ARROW, SETS, REFERENCES, PROJ, P
 ROOT = Path(__file__).resolve().parents[1]
 BEFORE = (ROOT/'tests/fixtures/macro-policy-before-descent.yml').read_text()
 CURRENT = (ROOT/'config/macro-policy.yml').read_text()
+# Freeze the historical descent delta; later etale additions have their own
+# exact-delta test. All compatibility cases below still use current production.
+AFTER_DESCENT = (ROOT/'tests/fixtures/macro-policy-before-etale.yml').read_text()
 ADDED = {
     'locked_math_text_notations': {'Proj', 'Rings', 'trdeg'},
     'translatable_math_text': {
@@ -42,9 +45,9 @@ def scan(text, policy):
 
 class DescentPolicyRegistrationTests(unittest.TestCase):
     def test_only_declared_policy_entries_change_and_old_bytes_reconstruct(self):
-        restored = CURRENT
+        restored = AFTER_DESCENT
         for section, additions in ADDED.items():
-            old, new = entries(BEFORE, section), entries(CURRENT, section)
+            old, new = entries(BEFORE, section), entries(AFTER_DESCENT, section)
             self.assertEqual(set(new), set(old) | additions)
             for key in additions:
                 self.assertEqual(restored.count(new[key]), 1)
@@ -56,7 +59,7 @@ class DescentPolicyRegistrationTests(unittest.TestCase):
                 else:
                     self.assertEqual(new[key], old[key], (section, key))
         self.assertEqual(restored, BEFORE)
-        old, new = Policy(BEFORE), Policy(CURRENT)
+        old, new = Policy(BEFORE), Policy(AFTER_DESCENT)
         for key, rule in old.math_text_rules.items():
             self.assertEqual(new.math_text_rules[key], rule, key)
         for key, rule in old.math_text_notations.items():

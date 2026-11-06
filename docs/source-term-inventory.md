@@ -614,3 +614,42 @@ unit 的 source TeX hash 相等；large 使用完整 prose_block 的 canonical h
 尚未采用事实的完整容器证据，按精确 ID 和出现序号限定普通例外。其他同词
 数学出现、来源、保护结构与 Schema 保持；本登记不批准中文术语，不改旧
 raw/run/freeze。
+
+## 第41章项目专名的精确普通出现（独立政策 #909）
+
+锁定英文 etale / Section024K / owner024K / prose_block1 的完整两段引言中，
+“chapters of the Stacks project”的Stacks是项目专名，属于普通非数学用法。
+本次仅增加既有nonmathematical_occurrences的一项：tag:024K:prose-0001、
+Stacks、occurrence_index=0、完整source TeX SHA256
+52b67923c9f9767319e7c54a945167665032cd1ce58cf13b1eef79d6f3b89b63。
+完整原Git选择、canonical unit、原字节、前后来源要求和独立未采用容器验证
+见docs/evidence/etale41-project-name-20261105.json。
+
+现有工具在该DATA尚未进入main时独立核验完整原生来源；不新增工具或Schema。
+所有数学stack/stacks词形、其他章/ID/hash/序号的要求保持，unknown_terms和
+术语批准仍独立。allowed_english不能代替来源分类，也不能为了过QA将项目名
+误译为数学栈。DATA #907同一失败中的其他术语粒度缺项仍须真实模型完整再生成，
+本政策不豁免它们、不修改历史raw/freeze、不产生候选或批准。
+
+
+同一独立政策 #909 在第五包完整来源中另记录两处精确声明边界分类。
+0251完整定义的 `flat (resp. faithfully flat` 是斜体内两种性质的并列，
+不能当作一个带未闭括号的术语。仅排除这一个完整声明span后，目录中的
+flat和faithfully flat分别恢复逐次要求，各有两次；两种性质均未豁免。
+0253完整定义中夹在受保护底参数和点参数之间的单独at是方位连接词，
+仅排除第0次；后续两个完整flat at声明继续强制检查。
+
+两项均绑定原canonical unit ID、完整source TeX hash及第0次出现；
+其他章/ID/hash/序号不继承。完整Git容器、原文、分类前后盘点、明确标注
+synthetic的最小词汇诊断，以及全部三项未采用来源的独立验证见
+`docs/evidence/etale41-declaration-source-policy-20261105.json`。
+原项目名阶段证据保持，新增证据不冒称模型输出或完整候选QA。
+此处复用已接受的精确出现分类，不增加通用解析器权限或放宽数学术语要求。
+
+同一任务另发现0BTM完整proof中的赋值动词Set。它紧接开头括注的右括号，
+现行赋值识别器未识别这一具体语境；不能因此将它当作数学集合名词。
+仅登记tag:0BTM:proof、Set、第0次，完整source TeX SHA256
+c8fec1e247860c00b55186215f777c29763b53e6ad3f4afef5e80165fd2c8e95。
+既有通用赋值识别器保持；数学set以及其他章、ID、hash或序号不继承例外。
+上述声明证据文件另存该完整Git proof、原始冻结绑定、分类前后要求和
+独立未采用来源核验，全部四项验证通过；synthetic诊断不代表模型候选QA。

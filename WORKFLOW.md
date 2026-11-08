@@ -152,13 +152,14 @@ candidate 文件的原字节快照，再用独立派生记录保存输入/输出
 只有结构化翻译数据通过对应门禁后，渲染器才生成模型目录和 TeX。正式发布仅从
 `reviewed` 通道构建；原始模型候选只能生成带有明确声明的预览版。
 
-任何修改在创建 Git 提交或 Pull Request 前都必须完成一次适用的本地 LaTeX 编译，
-且命令必须以零状态退出。翻译候选必须先执行 `make render MODEL=<model-lane>`，再执行
-`make pdf MODEL=<model-lane>`，以编译包含本次候选的模型通道；其他文档、进度、政策和
-工具修改也对当前候选通道执行这两条命令（默认 `MODEL=openai-gpt-5.6-sol`）。只有
-模板、样式、Makefile 或渲染路径发生变化时才追加 `make template`。裸 `make pdf` 不再
-有隐式 `template` 默认值，必须显式指定 `MODEL`。缺少 TeX 工具链或出现编译错误时不得
-提交、推送或创建 PR，也不得通过修改生成的 TeX、PDF 或日志绕过失败。生成产物仍不得提交。
+章节候选在任务末直接执行 `make pdf-chapter CHAPTER=<slug> MODEL=<lane>
+BASE_REF=<已确认主线提交>`，同一进程检查完整章节及本次直接关联输入一次、渲染一次，
+再集中编译。只需 QA 时用 `qa-chapter`。公共工具、来源、Schema、政策或共享依赖变化
+执行 `qa-current-all` 和适用回归；模板/渲染/Make 改动另做必要集成构建。显式完整历史
+审计用 `audit-history`；旧 `qa-all` 保持严格兼容语义，不是每章/每 PR 的固定前置。
+本地编译仍要求零退出与最终日志门禁，默认不截图。缺少工具链或失败阻断提交/PR；
+生成物不提交。日常结果为 `chapter-current/history_audit=not_run`，不表示人审或发布通过。
+接口和信任边界见 [章节当前验收](docs/chapter-current-validation.md)。
 默认 `BOOK_TEMPLATE=ajbook`，书目由 Biber 处理；旧 Springer 模板只可通过
 `BOOK_TEMPLATE=springer` 显式选用，并使用 BibTeX。
 
@@ -211,8 +212,7 @@ make render-batch \
 workflow、harvest、index 和章节模板仍由 Make 的共同前置检查覆盖。完整历史回放
 产生私有内存凭证，决策、渲染及 typed 正文定位复用同次来源采用结果；凭证绑定
 实际 root、HEAD、来源身份、输入文件集合和原字节，以及完整有序 pair。输入变化
-立即失败，不读取磁盘 PASS，也不跨进程免检。普通渲染和章节预览内部同样复用
-本次完整回放；默认严格 `validate` / `validate-many` 的定位范围保持。
+立即失败，不读取磁盘 PASS，也不跨进程免检。普通整书渲染复用本次完整回放；章节路径使用独立 chapter-current 结果，不进入历史回放。默认严格 `validate` / `validate-many` 的定位范围保持。
 
 这里的 batch 是开发调度边界，不是新的翻译事实文件：每个 Tag 仍保留独立 unit 和
 candidate 文件及可审计溯源。一个 batch 任务可以在同一章用 `parent_tags` 声明 2–8 个
@@ -220,8 +220,7 @@ candidate 文件及可审计溯源。一个 batch 任务可以在同一章用 `p
 或与其他任务共享写入文件。模型生成应一次请求多个 unit，再用 `assemble-batch` 按
 `unit_id` 拆回各自的草稿和 candidate 文件；batch 命令不会合并这些事实，也不会自动
 提升审校状态。整个 batch
-提交前只需统一执行一次完整模型通道的 `make qa-all`、`make render`、`make pdf` 和 CI
-门禁，合并后也只做一次独立进度/计划同步。
+提交前统一执行一次适用章节 `pdf-chapter` 与 CI 分类门禁，合并后只做一次独立进度/计划同步。
 
 以上单 run 约束适用于一次模型输入包及旧内联 batch 任务。显式整章候选任务按
 `docs/chapter-translation.md` 的精确范围清单协调多个包；同一任务保持同一 lane、
@@ -302,7 +301,10 @@ make qa BATCH=<batch> MODEL=<model>
 make batch-pack BATCHES="<batch-a> <batch-b>"
 make assemble-batch BATCHES="<batch-a> <batch-b>" DRAFTS=<jsonl> MODEL=<model> ...
 make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model>
-make qa-all
+make qa-chapter CHAPTER=<chapter> MODEL=<lane> BASE_REF=<main-commit>
+make qa-current-all BASE_REF=<main-commit>
+make audit-history
+make qa-all # 严格兼容入口
 make provenance-check
 make decision-check
 make proof-source-audit

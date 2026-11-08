@@ -95,6 +95,16 @@ class ChapterPreviewTests(unittest.TestCase):
                         render_batch(u,c if pairs is c else pairs,lock,output,'test','预览',
                                      manifest,tags_path=tags,chapter=chapter)
 
+    def test_bibliography_search_preserves_absolute_harvest_path_with_spaces(self):
+        root=Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as d:
+            harvest=Path(d)/'English source with spaces';harvest.mkdir()
+            extra=Path(d)/'show.mk'
+            extra.write_text('show-bib-path:\n\t@printf "%s\\n" "$(BIB_SEARCH_PATH)"\n')
+            result=subprocess.run(['make','-s','-f',str(root/'Makefile'),'-f',str(extra),'show-bib-path',
+                'HARVEST_DIR='+str(harvest)],cwd=root,capture_output=True,text=True,check=True)
+            self.assertEqual(result.stdout.strip(),str(harvest.resolve())+':'+str(root/'ajbook-template')+':')
+
     def test_make_preview_recipe_has_distinct_model_aux_pdf_and_final_gate(self):
         result = subprocess.run(['make','-n','pdf-chapter','MODEL=openai-gpt-5.6-sol',
                                  'CHAPTER=categories'], cwd=Path(__file__).parents[1],

@@ -203,8 +203,9 @@ Prompt-Version: <declared version>
 - 是否修改了生成目录或不允许的共享文件；
 - 是否把一个模型候选提升成了人工审校状态。
 
-当前本地 `make qa` 验证单个 batch；GitHub 的 `policy-and-data` job 对仓库内全部已跟踪
-候选 batch 执行 `make qa-all`。独立的 `pr-contract` job 验证 Issue 生命周期、branch、
+日常本地 `make qa-chapter` 验证完整章节及直接输入；GitHub 的 `policy-and-data` job
+按完整 diff 和实际记录确定所有受影响章，共享/公共变化扩大为 `qa-current-all`。
+`audit-history`/旧 `qa-all` 保留严格历史审计语义。独立的 `pr-contract` job 验证 Issue 生命周期、branch、
 changed paths 和结构化 unit 是否落在任务坐标内；语义范围和非结构化内容仍由维护者
 人工核对，不能把 PR 模板勾选框当作完整审查。
 

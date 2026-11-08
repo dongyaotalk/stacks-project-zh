@@ -212,6 +212,22 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
                         expanded.append((location, lane, original))
             else:
                 expanded.append((location, lane, candidate))
+    errors.extend(_candidate_manifest_errors(root, expanded, manifests))
+    for batch, identifiers in typed_active.items():
+        for identifier in sorted(identifiers):
+            if (batch, identifier) not in typed_seen:
+                errors.append(f'{batch}: active unit-v2 requires a validated candidate: {identifier}')
+    return source_adoptions, errors
+
+
+def _candidate_manifest_errors(root, expanded, manifests, *, context_order=True, current_derivations=False):
+    """Shared actual model/Harness/manifest checks; history traversal belongs to caller."""
+    errors, candidate_context_hashes = [], {}
+    harness_registry = _input_text(root / "config" / "harnesses.yml", encoding="utf-8") if (root / "config" / "harnesses.yml").is_file() else ""
+    model_registry = _input_text(root / "config" / "models.yml", encoding="utf-8") if (root / "config" / "models.yml").is_file() else ""
+    model_lanes = _parse_registry_section(model_registry, "lanes")
+    model_records = _parse_registry_section(model_registry, "model_records")
+    harness_records = _parse_registry_section(harness_registry, "harnesses")
     for location, lane, candidate in expanded:
         if candidate.get("schema_version") != 2:
             errors.append(f"{location}: candidate must use schema_version 2")
@@ -291,6 +307,8 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
             errors.append(f"{location}: context.prompt_version does not match candidate")
         if isinstance(context, dict) and isinstance(inputs, dict):
             for field in ("policy_revision", "source_commit"):
+                if current_derivations and candidate.get('derivation_id') and field == 'policy_revision':
+                    continue  # Direct derivation binds its own accepted tool policy.
                 expected = inputs.get(field) if field == "policy_revision" else manifest.get(field)
                 if context.get(field) != expected:
                     errors.append(f"{location}: context.{field} does not match {manifest_path}")
@@ -299,12 +317,13 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
         if model_registry and f"{candidate.get('model_record_id')}:" not in model_registry:
             errors.append(f"{location}: model_record_id is not registered: {candidate.get('model_record_id')!r}")
         unit_ids = manifest.get("unit_ids", [])
-        if candidate.get("unit_id") not in unit_ids:
+        if (not (current_derivations and candidate.get('derivation_id'))
+                and candidate.get("unit_id") not in unit_ids):
             errors.append(f"{location}: unit_id is absent from {manifest_path}")
         context_hash = candidate.get("context_hash")
         if isinstance(context_hash, str):
             candidate_context_hashes.setdefault(run_id, []).append(context_hash)
-    for run_id, (manifest_path, manifest) in manifests.items():
+    for run_id, (manifest_path, manifest) in (manifests.items() if context_order else []):
         inputs = manifest.get("inputs")
         if not isinstance(inputs, dict) or "context_hashes" not in inputs:
             continue
@@ -313,8 +332,4 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
             errors.append(
                 f"{manifest_path}: inputs.context_hashes does not match candidate records"
             )
-    for batch, identifiers in typed_active.items():
-        for identifier in sorted(identifiers):
-            if (batch, identifier) not in typed_seen:
-                errors.append(f'{batch}: active unit-v2 requires a validated candidate: {identifier}')
-    return source_adoptions, errors
+    return errors

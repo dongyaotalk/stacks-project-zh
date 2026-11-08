@@ -60,6 +60,17 @@ def _source_tex(unit: dict[str, Any]) -> str:
 
 
 def _git_origin_bytes(root: Path, commit: str, path: str) -> bytes:
+    from .source_adoptions import _DAILY
+    daily = _DAILY.get()
+    if daily is not None:
+        key = ('git-origin', str(root), commit, path)
+        if key not in daily.cache:
+            daily.cache[key] = _git_origin_bytes_full(root, commit, path)
+        return daily.cache[key]
+    return _git_origin_bytes_full(root, commit, path)
+
+
+def _git_origin_bytes_full(root: Path, commit: str, path: str) -> bytes:
     ancestry = subprocess.run(["git", "-C", str(root), "merge-base", "--is-ancestor", commit, "HEAD"], capture_output=True)
     if ancestry.returncode:
         raise DerivationError("origin_commit must be a reachable ancestor of HEAD")

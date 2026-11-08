@@ -621,6 +621,10 @@ def render_batch(
 ) -> list[Path]:
     if not SAFE_NAME_RE.fullmatch(model_lane) or ".." in model_lane:
         raise RecordError(f"invalid model lane {model_lane!r}")
+    from .chapter_validation import ChapterCheckResult
+    if type(_validation) is ChapterCheckResult:
+        lock_path=lock_path.resolve()
+        output_dir=output_dir.absolute()
     source_commit = load_upstream_commit(lock_path)
     unit_paths = [unit_path] if isinstance(unit_path, Path) else list(unit_path)
     candidate_paths = [candidate_path] if isinstance(candidate_path, Path) else list(candidate_path)
@@ -637,13 +641,20 @@ def render_batch(
     if (harvest is not None and chapter_source_dir is not None
             and harvest.resolve() != chapter_source_dir.resolve()):
         raise RecordError('render chapter source differs from the verified harvest identity')
-    if _validation is not None:
-        from .repository_validation import _require_batch_validation
-        validation = _require_batch_validation(_validation, lock_path.parent, effective_harvest,
-                                               unit_paths, candidate_paths)
-        proof = validation.provenance
     if any(path.is_symlink() for path in [*unit_paths, *candidate_paths]):
         raise RecordError('render requires active validated files; input is a symlink')
+    if _validation is not None:
+        from .repository_validation import _require_batch_validation
+        from .chapter_validation import ChapterCheckResult
+        if type(_validation) is ChapterCheckResult:
+            _validation.assert_valid(lock_path.parent, effective_harvest, unit_paths, candidate_paths)
+            if chapter != _validation.chapter or model_lane != _validation.lane:
+                raise RecordError('chapter render scope/lane mismatch')
+            validation = proof = _validation
+        else:
+            validation = _require_batch_validation(_validation, lock_path.parent, effective_harvest,
+                                                   unit_paths, candidate_paths)
+            proof = validation.provenance
     render_input_bytes = {path: _input_bytes(path) for path in unit_paths}
     for path in (chapter_manifest_path, tags_path, chapter_title_path):
         if path is not None:
@@ -719,7 +730,8 @@ def render_batch(
             from .repository_validation import _complete_provenance
             proof, provenance_errors = _complete_provenance(root, effective_harvest)
         else:
-            proof.assert_valid(root, effective_harvest)
+            if type(validation) is not ChapterCheckResult:
+                proof.assert_valid(root, effective_harvest)
             provenance_errors = []
         if provenance_errors:
             raise RecordError('render blocked by composite provenance:\n' + '\n'.join(provenance_errors))
@@ -730,7 +742,7 @@ def render_batch(
             if ([clean(u) for p in unit_paths for u in load_jsonl(p)] != [clean(u) for u in units]
                     or [clean(c) for p in candidate_paths for c in load_jsonl(p)] != [clean(c) for c in candidates]):
                 raise RecordError('typed math facts changed during renderer provenance validation')
-    histories = {identifier:derivation_history(root, identifier)
+    histories = validation.derivations if type(validation) is ChapterCheckResult else {identifier:derivation_history(root, identifier)
                  for identifier in {c['derivation_id'] for c in candidates if c.get('derivation_id')}
                  } if composite else {}
     if proof is not None:
@@ -746,7 +758,8 @@ def render_batch(
                           for e in histories.get(candidate.get('derivation_id'), []))}
     source_adoptions = {}
     if first_source:
-        proof.assert_valid(root, effective_harvest)
+        if type(validation) is not ChapterCheckResult:
+            proof.assert_valid(root, effective_harvest)
         source_adoptions = proof.adoptions
         grouped_ids.update(u['unit_id'] for u in units
                            if candidate_by_id[u['unit_id']].get('source_adoption_id'))
@@ -792,7 +805,15 @@ def render_batch(
     if tags_path is not None:
         for batch in unit_batches:
             _validate_title_permanent_tags(batch, tags_by_label, tags_path)
-    if chapter_source_dir is not None:
+    if chapter_source_dir is not None and chapter is not None and validation is not None:
+        from .chapter_validation import ChapterCheckResult
+        if type(validation) is ChapterCheckResult:
+            located = zip(validation.current._pair_locations,
+                          (u for batch in unit_batches for u in batch), strict=True)
+            units = [u for _, u in sorted(located, key=lambda x:x[0])]
+        else:
+            units = _order_unit_batches_by_chapter_source(unit_batches, chapter_source_dir, root=root, _source_adoptions=proof.adoptions)
+    elif chapter_source_dir is not None:
         units = _order_unit_batches_by_chapter_source(
             unit_batches, chapter_source_dir, root=root,
             _source_adoptions=proof.adoptions if proof is not None else None,
@@ -830,12 +851,12 @@ def render_batch(
                                        if operation.get('source_reextraction_id'))
                 correction_keys.update(correction_bindings(record))
                 from .pre_adoption_replays import pre_adoption_history
-                for provisional in pre_adoption_history(root, record['derivation_id']):
+                for provisional in ([] if type(validation) is ChapterCheckResult else pre_adoption_history(root, record['derivation_id'])):
                     correction_keys.update(correction_bindings(provisional['snapshots']['derivation']))
                 container_ids.update(restoration_bindings(record))
                 grouped_history |= record['tool']['version'] == '4'
                 original_models.update(row['model_id'] for row in load_jsonl(root / record['files']['input_candidates']['path']))
-        corrections, correction_errors = load_repository_corrections(root)
+        corrections, correction_errors = (validation.corrections, []) if type(validation) is ChapterCheckResult else load_repository_corrections(root)
         if correction_errors or not correction_keys <= corrections.keys():
             raise RecordError('render has no complete model-correction evidence')
         raw = [corrections[key]['candidate'] for key in sorted(correction_keys)]
@@ -858,8 +879,9 @@ def render_batch(
                 if not re.fullmatch(r'[A-Za-z0-9._+-]+', name):
                     raise RecordError('group origin model identity contains unsafe TeX characters')
             origins = ', '.join(sorted(original_models)).replace('_', r'\_')
+            origin_scope = '本次直接输入生成模型' if type(validation) is ChapterCheckResult else '组内全部历史生成模型'
             correction_notice += ('含旧新分组修订记录；'
-                                  f'组内全部历史生成模型={origins}；兼容身份仅为历史锚点；'
+                                  f'{origin_scope}={origins}；兼容身份仅为历史锚点；'
                                   '全部历史见 translation-data/derivations；')
         if container_ids:
             correction_notice += (f'含 {len(container_ids)} 份完整英文容器恢复记录；'
@@ -959,15 +981,17 @@ def render_batch(
             raise RecordError('render source or candidate files changed during validation') from exc
         if changed:
             raise RecordError('render source or candidate files changed during validation')
-        current_inputs().assert_unchanged()
+        if type(validation) is not ChapterCheckResult:
+            current_inputs().assert_unchanged()
         if validation is not None:
             validation.assert_valid(root, effective_harvest, unit_paths, candidate_paths)
         elif proof is not None:
             proof.assert_valid(root, effective_harvest)
-        if _current is not None:
+        if _current is not None and type(validation) is not ChapterCheckResult:
             _current.assert_unchanged()
 
-    assert_inputs()
+    if type(validation) is not ChapterCheckResult:
+        assert_inputs()
     chapters_dir = output_dir / "chapters"
     payloads: dict[Path, bytes] = {}
     for chapter in chapter_order:

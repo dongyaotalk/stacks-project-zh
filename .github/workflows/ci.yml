@@ -22,6 +22,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -42,24 +43,35 @@ jobs:
           git -C ../stacks-project fetch --depth 1 origin "$commit"
           git -C ../stacks-project checkout --detach FETCH_HEAD
 
-      - name: Validate workflow and tools
-        run: |
-          make workflow-check
-          make tool-test
-          make qa-all
-          git diff --check
-
-      - name: Verify generated reports when their policy or generator changes
-        if: github.event_name == 'pull_request'
+      - name: Dispatch current validation from trusted comparison tools
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         shell: bash
         run: |
           set -euo pipefail
-          changed=$(git diff --name-only "$BASE_SHA"...HEAD)
-          if grep -Eq '^(README\.md|docs/(progress|translation-progress)\.md|stacks_zh/progress\.py|tests/test_progress\.py|Makefile)$' <<<"$changed"; then
-            make progress-check
+          test "$(git rev-parse HEAD)" = "$EVENT_HEAD"
+          force=()
+          if test -z "$EVENT_BASE" || test "$EVENT_BASE" = 0000000000000000000000000000000000000000; then
+            compare="$EVENT_HEAD"
+            force=(--force-broad)
+          else
+            compare=$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")
+            git merge-base --is-ancestor "$compare" "$EVENT_BASE"
           fi
-          if grep -Eq '^(README\.md|docs/(translation-priority|translation-plan|task-allocation|ci)\.md|config/translation-priorities\.json|schema/translation-priorities\.schema\.json|stacks_zh/(planning|schema_validation|cli)\.py|tests/test_planning\.py|Makefile|\.github/workflows/ci\.yml)$' <<<"$changed"; then
-            make plan-check
+          # The trusted main event base is an explicit local anchor for the
+          # same Base contract used by local checks. Never read it from PR data.
+          if test -n "$EVENT_BASE" && test "$EVENT_BASE" != 0000000000000000000000000000000000000000; then
+            git update-ref refs/remotes/origin/main "$EVENT_BASE"
+          else
+            git update-ref refs/remotes/origin/main "$EVENT_HEAD"
           fi
+          git worktree add --detach ../ci-trusted-tools "$compare"
+          driver=../ci-trusted-tools/scripts/ci-current.py
+          if ! test -f "$driver"; then
+            driver=scripts/ci-current.py
+            force=(--force-broad)
+          fi
+          python "$driver" --root "$PWD" --harvest "$PWD/../stacks-project" \
+            --base-ref "$compare" "${force[@]}"

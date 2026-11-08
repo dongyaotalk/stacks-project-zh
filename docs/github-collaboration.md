@@ -99,7 +99,7 @@ tooling, documentation, blocked, claimed
 - 必须附双语 diff、QA 摘要、来源信息和未决问题。
 
 batch PR 用一个 Issue 的 `parent_tags` 声明完整范围，可共享一次模型 run 和一次最终
-全量构建；各 Tag 的 unit/candidate 文件仍独立，不能借 batch 混入不相邻范围。
+适用章节联合构建；各 Tag 的 unit/candidate 文件仍独立，不能借 batch 混入不相邻范围。
 
 审校 PR 只做审校发现所需的最小修订；术语 PR 与译文应用 PR 分离；上游同步 PR
 只处理一个旧 commit 到新 commit 的范围。
@@ -115,8 +115,9 @@ PR 模板仍是贡献者的人工声明，但 `pr-contract` 会从 GitHub 原生
 当前 GitHub 规则集已经配置：
 
 - 禁止直接向 `main` push；
-- PR 必须通过 `pr-contract` 和 `policy-and-data`；前者检查 Issue→PR 合同，后者包括
-  workflow、工具、harvest、溯源、决策和全部候选 batch QA；
+- PR 必须通过 `pr-contract` 和 `policy-and-data`；前者检查 Issue→PR 合同，后者按
+  [CI 矩阵](ci.md) 检查 workflow、harvest 和实际受影响章节的当前来源、直接关系及
+  决策；公共或工具变化扩大为当前全量和适用工具回归，完整历史由显式审计执行；
 - 禁止删除和非快进更新；
 - 需要 CODEOWNER 审核的普通 PR 使用 `.github/CODEOWNERS`；
 - 仓库作者 `@dongyaotalk` 具有 PR-only administrator bypass，可以独立合并自己

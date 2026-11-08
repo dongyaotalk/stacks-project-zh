@@ -48,12 +48,21 @@ class InputSnapshot:
     def _safe(self, path: Path) -> Path:
         path = path if path.is_absolute() else self.root / path
         if (not path.resolve().is_relative_to(self.root)
-                or any(p.is_symlink() for p in [path, *path.parents] if p.resolve().is_relative_to(self.root))):
+                or any(p.is_symlink() for p in [path, *path.parents] if p.is_relative_to(self.root))):
             raise RecordError(f'validation input escapes repository or is a symlink: {path}')
         return path.parent.resolve() / path.name
 
     def read(self, path: Path) -> bytes:
         path = self._safe(path)
+        from .source_adoptions import _DAILY
+        daily = _DAILY.get()
+        key = ('input-bytes', str(path))
+        if daily is not None and key in daily.cache:
+            payload, digest = daily.cache[key]
+            if path in self.hashes and self.hashes[path] != digest:
+                raise RecordError(f'validation input view conflicts: {path}')
+            self.hashes[path] = digest
+            return payload
         try:
             payload = _input_bytes(path)
         except OSError as exc:
@@ -62,10 +71,18 @@ class InputSnapshot:
         if path in self.hashes and self.hashes[path] != digest:
             raise RecordError(f'validation input changed: {path}')
         self.hashes[path] = digest
+        if daily is not None:
+            daily.cache[key] = payload, digest
         return payload
 
     def jsonl(self, path: Path) -> list[dict[str, Any]]:
         path = self._safe(path)
+        from .source_adoptions import _DAILY
+        daily=_DAILY.get()
+        key=('jsonl',str(path))
+        if daily is not None and key in daily.cache:
+            import copy
+            return copy.deepcopy(daily.cache[key])
         try:
             lines = self.read(path).decode('utf-8').splitlines()
         except UnicodeError as exc:
@@ -84,6 +101,7 @@ class InputSnapshot:
             records.append(record)
         if not records:
             raise RecordError(f'{path}: no records')
+        if daily is not None:daily.cache[key]=records
         return records
 
     def watch_tree(self, directory: Path, pattern: str = "*") -> None:
@@ -99,8 +117,11 @@ class InputSnapshot:
         if directory.is_dir():
             directories.add(directory)
         remember_tree(directory, pattern, paths, directories)
+        from .source_adoptions import _DAILY
+        daily=_DAILY.get()
         for path in sorted(paths):
-            self.read(path)
+            if daily is None or path not in self.hashes:
+                self.read(path)
 
     def _tracked_paths(self) -> set[Path]:
         result = subprocess.run(['git', '-C', str(self.root), 'ls-files', '-z'], capture_output=True)
@@ -142,7 +163,8 @@ class InputSnapshot:
         for name in ['Makefile', 'AGENTS.md', 'WORKFLOW.md', 'stacks_zh.py']:
             self.read(self.root / name)
 
-    def assert_unchanged(self) -> None:
+    def assert_identity(self) -> None:
+        """Check repository/path claims; byte claims are checked by the input union."""
         if self._head() != self.head:
             raise RecordError('repository HEAD changed during validation')
         if self.git_paths is not None and self._tracked_paths() != self.git_paths:
@@ -153,6 +175,13 @@ class InputSnapshot:
                 raise RecordError(f'validation input is a symlink: {directory}')
             if {p for p in directory.rglob(pattern) if p.is_file()} != paths:
                 raise RecordError(f'validation input paths changed: {directory}')
+    def assert_unchanged(self) -> None:
+        from .source_adoptions import _DAILY
+        daily=_DAILY.get()
+        if daily is not None:
+            daily.snapshots[id(self)]=self
+            return  # A union check follows this explicit direct-relation phase.
+        self.assert_identity()
         for path in list(self.hashes):
             self.read(path)
 
@@ -189,7 +218,7 @@ class CurrentSourceQA:
 
     @object_inputs
     def __init__(self, root: Path, harvest: Path | None = None, *, snapshot: InputSnapshot | None = None,
-                 inventory: Path | None = None):
+                 inventory: Path | None = None, fresh_chapters: bool = False):
         from .source_containers import Containers
         self.root = root.resolve()
         from .repository_validation import _ImplementationIdentity
@@ -226,6 +255,7 @@ class CurrentSourceQA:
             self.root, self.catalog, list(self.units.values()), self.harvest, containers=self.containers)
         if errors:
             raise RecordError('source catalog evidence failed:\n' + '\n'.join(errors))
+        self.fresh_chapters = fresh_chapters
         self.inventory = inventory or self.root / 'source-ir/extraction'
         if not self.inventory.is_absolute():
             self.inventory = self.root / self.inventory
@@ -238,6 +268,18 @@ class CurrentSourceQA:
         from .source_alignment import Corpus, verified_inventory
         key = tuple(sorted(chapters))
         if key not in self._corpora:
+            if self.fresh_chapters:
+                from .source_adoptions import _fresh_source_corpus
+                entries = []
+                # Each Corpus carries policy/real locked-Git windows. Merge its
+                # verified rows through the normal Corpus constructor below.
+                for chapter in sorted(chapters):
+                    corpus, _ = _fresh_source_corpus(self.root, self.harvest, chapter, _native=self.containers)
+                    if len(chapters) == 1:
+                        self._corpora[key] = corpus
+                        return corpus
+                # Multi-chapter current-all normally invokes one chapter at a time.
+                raise RecordError('fresh current source scope requires one chapter at a time')
             if not self.inventory.exists():
                 write_inventory(self.root, self.harvest, self.inventory)
             self.snapshot.watch_tree(self.inventory)

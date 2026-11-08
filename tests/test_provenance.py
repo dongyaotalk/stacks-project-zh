@@ -10,6 +10,22 @@ from stacks_zh.records import sha256_value
 
 
 class ProvenanceTests(unittest.TestCase):
+    def test_current_derivation_manifest_retains_origin_identity_without_old_coordinate_requirement(self):
+        from test_derivations import save_fixture
+        from stacks_zh.provenance import _candidate_manifest_errors
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            save_fixture(root)
+            cp=root/'translation-data/candidates/fixture/test.jsonl'
+            candidate=json.loads(cp.read_text())
+            mp=root/'translation-data/runs/fixture-run.json'
+            manifests={'fixture-run':(mp,json.loads(mp.read_text()))}
+            expanded=[(str(cp),'fixture',candidate)]
+            self.assertTrue(_candidate_manifest_errors(root,expanded,manifests,context_order=False))
+            self.assertEqual(_candidate_manifest_errors(root,expanded,manifests,context_order=False,current_derivations=True),[])
+            candidate['model_id']='wrong-origin'
+            self.assertTrue(_candidate_manifest_errors(root,expanded,manifests,context_order=False,current_derivations=True))
+
     def test_candidate_must_match_run_manifest(self) -> None:
         source_commit = "a" * 40
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -298,9 +298,9 @@ def extract_plain_proof(old_unit: dict[str, Any], fragment: str, new_id: str | N
     return stamp_unit_hashes(unit)
 
 
-def load_source_reextractions(root: Path, harvest: Path | None = None) -> tuple[dict[str, dict[str, Any]], list[str]]:
+def load_source_reextractions(root: Path, harvest: Path | None = None, *, identifiers=None) -> tuple[dict[str, dict[str, Any]], list[str]]:
     records, errors, english = {}, [], None
-    for path in sorted(_input_glob(root / 'translation-data/source-reextractions', '*.json', recursive=True)):
+    for path in sorted(_input_glob(root / 'translation-data/source-reextractions', '*.json', recursive=True)) if identifiers is None else [root/'translation-data/source-reextractions'/(i+'.json') for i in sorted(identifiers)]:
         try:
             _safe_path(root, path.relative_to(root).as_posix(), rf'translation-data/source-reextractions/{ID}\.json')
             record = json.loads(_input_text(path, encoding='utf-8'))

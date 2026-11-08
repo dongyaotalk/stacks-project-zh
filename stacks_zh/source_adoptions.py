@@ -10,6 +10,10 @@ from .validation_io import isolated_inputs, current_inputs
 from .validation_io import read_bytes as _input_bytes, glob_paths as _input_glob, read_text as _input_text
 
 import copy
+from contextvars import ContextVar
+
+# Only the explicit current-chapter session installs a trusted Git boundary.
+_DAILY = ContextVar("chapter_adoption_boundary", default=None)
 import io
 import json
 import os
@@ -230,6 +234,22 @@ def _task_scope(frozen, reads, input_entry, *, current):
 
 
 def _context_sources(frozen, native):
+    """Reuse identical verified contexts only within this direct-relation boundary."""
+    daily=_DAILY.get()
+    if daily is None:
+        return _context_sources_full(frozen,native)
+    observed,references=set(),set()
+    for item in frozen['contexts']:
+        key=('context-source',id(native),frozen['source_commit'],sha256_value(item))
+        if key not in daily.cache:
+            nodes,labels=_context_sources_full(dict(contexts=[item],source_commit=frozen['source_commit']),native)
+            daily.cache[key]=(frozenset(nodes),frozenset(labels))
+        nodes,labels=daily.cache[key]
+        observed.update(nodes);references.update(labels)
+    return observed,references
+
+
+def _context_sources_full(frozen, native):
     """Context hashes bind real complete IR nodes or complete labelled math."""
     from .math_text import delimiter_kind
     observed = set()
@@ -311,13 +331,20 @@ def _source_references(text, policy):
 class Reads:
     def __init__(self, root, overrides=None):
         self.root = root
-        self.snapshot = InputSnapshot(root)
+        daily = _DAILY.get()
+        self.snapshot = daily.base.snapshot if daily is not None else InputSnapshot(root)
         self.overrides = overrides or {}
+        self.logical = {}
 
     def output(self, relative):
         if relative in self.overrides:
-            return self.read(self.overrides[relative], EVIDENCE)
-        return self.snapshot.read(self.root / relative)
+            raw = self.read(self.overrides[relative], EVIDENCE)
+        else:
+            raw = self.snapshot.read(self.root / relative)
+        if relative in self.logical and self.logical[relative] != byte_hash(raw):
+            raise RecordError('direct logical input changed: ' + relative)
+        self.logical[relative] = byte_hash(raw)
+        return raw
 
     def read(self, entry, pattern=EVIDENCE):
         path = safe_path(self.root, entry['path'], pattern)
@@ -339,6 +366,16 @@ def _rows(raw):
 
 
 def _origin_units(root, origin):
+    daily = _DAILY.get()
+    if daily is not None:
+        key = ('origin-units', str(root), origin)
+        if key not in daily.cache:
+            daily.cache[key] = _origin_units_full(root, origin)
+        return daily.cache[key]
+    return _origin_units_full(root, origin)
+
+
+def _origin_units_full(root, origin):
     # Archive is parsed in memory. Never extract paths or execute source TeX.
     names = subprocess.check_output(['git', '-C', str(root), 'ls-tree', '--name-only', origin,
                                      '--', 'translation-data/units'])
@@ -354,6 +391,16 @@ def _origin_units(root, origin):
 
 
 def fresh_source_corpus(root, harvest, chapter):
+    daily = _DAILY.get()
+    if daily is not None:
+        key = ('corpus', str(root), str(harvest), chapter)
+        if key not in daily.cache:
+            daily.cache[key] = _fresh_source_corpus(root, harvest, chapter)
+        return daily.cache[key]
+    return _fresh_source_corpus(root, harvest, chapter)
+
+
+def _fresh_source_corpus(root, harvest, chapter, *, _native=None):
     """Apply the accepted alignment window rule to one freshly read Git chapter.
 
     This is the same non-language frame construction used by verified_inventory:
@@ -363,7 +410,7 @@ def fresh_source_corpus(root, harvest, chapter):
     is separately replayed under its frozen origin policy.
     """
     from .source_reextractions import source_tex
-    native = Containers(root, harvest)
+    native = _native or Containers(root, harvest)
     raw, rows, _ = native.document(chapter)
     windows = []
     for index, row in enumerate(rows):
@@ -604,6 +651,13 @@ def _complete_prior_runs(reads, histories):
 
 
 def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, visiting=None):
+    daily = _DAILY.get()
+    if daily is not None and not current:
+        return daily.prepare(root, input_entry, harvest, overrides, visiting)
+    return _prepare_full(root, input_entry, harvest, current=current, overrides=overrides, visiting=visiting)
+
+
+def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=None, visiting=None):
     reads = Reads(root, overrides)
     frozen = reads.json(input_entry)
     _schema(frozen, 'source-adoption-input.schema.json')
@@ -645,7 +699,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
         if item['context_id'] in seen_contexts or sha256_value(item['value']) != item['hash']:
             raise RecordError('frozen context is duplicated or has a different hash')
         seen_contexts.add(item['context_id'])
-    native = Containers(root, harvest, policy_bytes=policy_bytes['config/macro-policy.yml'])
+    native = _daily_containers(root, harvest, policy_bytes['config/macro-policy.yml'])
     if native.english.commit != source:
         raise RecordError('first adoption has a stale English source commit')
     context_nodes, context_references = _context_sources(frozen, native)
@@ -772,7 +826,7 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
     corpus, alignment_native = fresh_source_corpus(root, harvest, chapter)
     relevant = {**other_batches, **{'origin:' + path: [u for u in group if u.get('chapter') == chapter]
                 for path, group in old_batches.items() if any(u.get('chapter') == chapter for u in group)}}
-    matches, _ = align_batches(relevant, corpus)
+    matches, _ = _daily_align(relevant, corpus)
     for entry in matches:
         if entry['status'] not in {'BYTE_EXACT', 'PRESENTATION_EQUIVALENT'} or entry.get('extractor_state') != 'READY':
             raise RecordError('cannot prove first-source disjointness: ' + entry['unit_id'])
@@ -857,6 +911,17 @@ def _shared_run_histories(root, frozen, reads, harvest, current, visiting, histo
 
 
 def _first_commit(root, relative):
+    daily = _DAILY.get()
+    if daily is not None:
+        if relative in daily.base.entries:
+            return daily.base.commit  # Already accepted; only presence matters here.
+        key = ('first-new-commit', relative)
+        if key not in daily.cache:
+            commits = subprocess.check_output(['git', '-C', str(root), 'log', '--diff-filter=A',
+                '--format=%H', '--reverse', daily.base.commit+'..'+daily.base.snapshot.head,
+                '--', relative], text=True).splitlines()
+            daily.cache[key] = commits[0] if commits else None
+        return daily.cache[key]
     commits = subprocess.check_output(['git', '-C', str(root), 'log', '--diff-filter=A',
                                       '--format=%H', '--reverse', 'HEAD', '--', relative], text=True).splitlines()
     return commits[0] if commits else None
@@ -1332,6 +1397,13 @@ def load_repository_source_adoptions(root: Path, harvest: Path | None = None):
 
 
 def _replay_record(record, frozen, reads, native):
+    daily = _DAILY.get()
+    if daily is not None:
+        return daily.replay(record, frozen, reads, native)
+    return _replay_record_full(record, frozen, reads, native)
+
+
+def _replay_record_full(record, frozen, reads, native):
     _schema(record, 'source-adoption.schema.json')
     expected_version = frozen['tool_version'].replace('-input', '')
     if record['tool_version'] != expected_version:
@@ -1386,3 +1458,29 @@ def source_adoption_provenance_hash(root, candidate):
         raise RecordError('decision has no unique validated first source adoption')
     reads.snapshot.assert_unchanged()
     return sha256_value(dict(candidate=clean(candidate), record=record, input=frozen))
+
+
+def _daily_containers(root, harvest, policy_bytes):
+    daily = _DAILY.get()
+    if daily is None:
+        return Containers(root, harvest, policy_bytes=policy_bytes)
+    key = ('containers', str(root), str(harvest), byte_hash(policy_bytes))
+    if key not in daily.cache:
+        daily.cache[key] = Containers(root, harvest, policy_bytes=policy_bytes)
+    return daily.cache[key]
+
+
+def _daily_align(batches, corpus):
+    daily = _DAILY.get()
+    if daily is None:
+        return align_batches(batches, corpus)
+    result,maps=[],{}
+    for name,rows in batches.items():
+        key=('aligned-batch',sha256_value(rows))
+        if key not in daily.cache:
+            entries,mapping=align_batches({name:rows},corpus)
+            daily.cache[key]=(entries,mapping.get(name,{}))
+        entries,mapping=daily.cache[key]
+        result.extend({**entry,'batch':name} for entry in entries)
+        maps[name]=mapping
+    return result,maps

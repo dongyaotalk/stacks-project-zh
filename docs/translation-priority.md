@@ -113,3 +113,8 @@ Chapter/Tag 选择也继续使用完整动作状态机。
 翻译中顺手调整。chapter template 是可再生任务骨架，unit/candidate/reviewed 是翻译
 事实，均不得承载 P0–P4 字段。current unit、candidate 或 reviewed 数据合并后，应像
 进度报告一样用独立计划更新运行 `make plan`，普通翻译 PR 不夹带生成文档。
+
+纯生成计划/进度同步使用 [CI 合同](ci.md) 的 `generated-reports`，实际执行两个
+报告 check、workflow/harvest 和 diff，保留 pr-contract；不会授予章节或人工审校通过。
+README 标记外、事实、配置、来源、工具或未知路径同时改变时扩大验证。相关渲染
+输入和行为未变时按该合同绑定并复用编译证据；输入改变或绑定不充分时重新构建。

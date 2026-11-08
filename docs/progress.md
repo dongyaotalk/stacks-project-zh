@@ -110,7 +110,7 @@ make progress-check
 
 翻译候选 PR 不直接手改进度表。候选合并到 `main` 后，应在下一批翻译开始前运行
 `make progress`，并用独立 `docs(progress): ...` PR 提交生成结果。若同一 PR 修改进度
-生成器、统计口径或工作流政策，则按工具/政策变更运行全量 QA，并在 Git 提交前通过
+生成器、统计口径或工作流政策，则按工具/政策变更运行 `qa-current-all` 和适用工具回归，并在 Git 提交前通过
 适用的本地 LaTeX 编译门禁。
 
 管理员 bypass 只解决 GitHub 合并权限，不改变进度、审校或发布状态。
@@ -118,7 +118,11 @@ make progress-check
 ## 本地编译门禁
 
 任何提交或 Pull Request 前都必须完成适用的本地 LaTeX 编译并确认命令以零状态退出。
-进度生成器、进度规范和 README 的改动按实际影响范围运行章节或必要集成构建
+纯生成进度/计划同步按 [CI 合同](ci.md) 使用 `generated-reports`；两个真实生成器
+check、workflow/harvest、diff 与 pr-contract 必须通过，不附加全工具、当前数据 QA、
+历史或 render/pdf。README 非生成部分、生成器、政策、来源或事实同时变化时扩大验证。
+相关渲染输入和行为未变且 hash/原命令/退出/最终日志绑定完整时，可复用适用的
+编译证据；无法证明或发生变化时按实际影响范围运行章节或必要集成构建
 （入口见 [章节当前验收](chapter-current-validation.md)），并运行
 `make progress-check`。只有同时修改模板、样式、Makefile 或渲染路径时才另外运行
 `make template`。这里的验证要求引擎零退出及完整最终 LaTeX 日志门禁，包括硬错误、

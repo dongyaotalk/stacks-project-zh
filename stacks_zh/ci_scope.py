@@ -15,6 +15,18 @@ def classify(root, base, *, paths=None):
     if paths is None:
         paths = list(filter(None,git(root,'diff','--name-only','--no-renames','-z',base,raw=True).decode().split('\0')))
     paths = sorted(set(paths))
+    from .generated_reports import REPORT_FILES, report_scope
+    if paths and set(paths) <= REPORT_FILES:
+        scope = report_scope(root, base)
+        if scope is not None:
+            return dict(kind='generated-reports', paths=sorted(scope[1].changed), chapters=[],
+                        validation_state='requires_report_checks',
+                        reason='only generated report regions; both trusted generator checks required')
+        from .chapter_validation import Base
+        from .current_qa import InputSnapshot
+        paths = sorted(set(paths) | Base(root, base, InputSnapshot(root)).changed)
+        return dict(kind='current-all', paths=paths, chapters=[],
+                    reason='report filenames contain public/unsafe or mixed changes')
     if not paths or all(DESCRIPTIVE.fullmatch(p) for p in paths):
         return dict(kind='documentation',paths=paths,chapters=[],reason='only descriptive documents; data QA not run')
     broad = [p for p in paths if not DATA.fullmatch(p)]

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .records import RecordError, load_upstream_commit
+from .validation_io import read_text, read_bytes, glob_paths
 
 
 README_START = "<!-- translation-progress:start -->"
@@ -195,7 +196,7 @@ class _ChapterSource:
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(read_text(path, encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise RecordError(f"cannot read JSON {path}: {exc}") from exc
     if not isinstance(value, dict):
@@ -206,7 +207,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _read_jsonl(paths: Iterable[Path]) -> Iterable[tuple[Path, int, dict[str, Any]]]:
     for path in sorted(paths):
         try:
-            lines = path.read_text(encoding="utf-8").splitlines()
+            lines = read_text(path, encoding="utf-8").splitlines()
         except OSError as exc:
             raise RecordError(f"cannot read JSONL {path}: {exc}") from exc
         for line_number, line in enumerate(lines, start=1):
@@ -224,7 +225,7 @@ def _read_jsonl(paths: Iterable[Path]) -> Iterable[tuple[Path, int, dict[str, An
 def _load_chapters(root: Path, source_commit: str, *, templates: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     templates = templates if templates is not None else [
         _read_json(path)
-        for path in sorted((root / "translation-data/chapter-templates").glob("*.json"))
+        for path in sorted(glob_paths(root / "translation-data/chapter-templates", "*.json"))
     ]
     if not templates:
         raise RecordError("translation-data/chapter-templates: no chapter templates")
@@ -256,7 +257,7 @@ def _load_titles(root: Path) -> dict[str, str]:
 
 def _load_tag_index(tags_path: Path, chapter_slugs: set[str], *, tags_text: str | None = None) -> _TagIndex:
     try:
-        lines = (tags_path.read_text(encoding="utf-8") if tags_text is None else tags_text).splitlines()
+        lines = (read_text(tags_path, encoding="utf-8") if tags_text is None else tags_text).splitlines()
     except OSError as exc:
         raise RecordError(f"cannot read permanent Tag map {tags_path}: {exc}") from exc
     sorted_slugs = sorted(chapter_slugs, key=len, reverse=True)
@@ -316,7 +317,7 @@ def _chapter_source(
     source_path = harvest_root / source_file
     try:
         if source_text is None:
-            source_text = source_path.read_text(encoding="utf-8")
+            source_text = read_text(source_path, encoding="utf-8")
     except OSError as exc:
         raise RecordError(f"cannot read locked chapter source {source_path}: {exc}") from exc
 
@@ -419,7 +420,7 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
     prepared_tags_by_section: dict[tuple[str, int], set[str]] = defaultdict(set)
     units_by_file: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for path, line_number, unit in _read_jsonl(
-        (root / "translation-data/units").glob("*.jsonl")
+        glob_paths(root / "translation-data/units", "*.jsonl")
     ):
         units_by_file[path.relative_to(root).as_posix()].append(unit)
         if unit.get("source_commit") != source_commit or unit.get("source_status") != "CURRENT":
@@ -464,7 +465,7 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
 
     candidate_units: set[str] = set()
     for path, line_number, candidate in _read_jsonl(
-        (root / "translation-data/candidates").glob("*/*.jsonl")
+        glob_paths(root / "translation-data/candidates", "*/*.jsonl")
     ):
         if (
             candidate.get("source_commit") != source_commit
@@ -478,7 +479,7 @@ def collect_progress(root: Path, tags_path: Path) -> ProgressSnapshot:
 
     reviewed_units: set[str] = set()
     published_units: set[str] = set()
-    for path in sorted((root / "translation-data/reviewed").rglob("*.json")):
+    for path in sorted(glob_paths(root / "translation-data/reviewed", "*.json", recursive=True)):
         revision = _read_json(path)
         if (
             revision.get("source_commit") != source_commit
@@ -749,7 +750,7 @@ def update_progress_report(
     check: bool,
 ) -> tuple[int, list[str]]:
     snapshot = collect_progress(root, tags_path)
-    actual_readme = readme_path.read_text(encoding="utf-8")
+    actual_readme = read_bytes(readme_path).decode("utf-8")
     expected_readme = _replace_readme_block(actual_readme, render_readme_progress(snapshot))
     expected_report = render_chapter_report(snapshot)
     errors: list[str] = []
@@ -757,7 +758,7 @@ def update_progress_report(
         if actual_readme != expected_readme:
             errors.append(f"{readme_path}: translation progress block is out of date")
         try:
-            actual_report = report_path.read_text(encoding="utf-8")
+            actual_report = read_bytes(report_path).decode("utf-8")
         except OSError:
             errors.append(f"{report_path}: chapter progress report is missing")
         else:

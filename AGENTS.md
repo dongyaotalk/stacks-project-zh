@@ -144,6 +144,11 @@
   use `make pdf-chapter` directly when a PDF is needed (one check and one render).
 - Shared Schema, QA, workflow, source or policy changes require `make qa-current-all
   BASE_REF=<accepted-main>` and applicable tool regressions. Unknown paths expand scope.
+- Pure generated progress/plan changes use the trusted CI dispatcher with both
+  real report checks, workflow/harvest and diff checks. README changes must stay
+  inside the generators' existing markers and every other input must match accepted
+  main. They do not require tool tests, current data QA, history or render/PDF.
+  See `docs/ci.md`; filenames alone never authorize this scope.
 - `make audit-history` explicitly replays complete history; `qa-all` remains its strict
   compatibility alias. Neither is mandatory for every chapter/PR. See
   `docs/chapter-current-validation.md` and `docs/ci.md`.
@@ -157,10 +162,14 @@
   CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main>`. It includes current QA and
   rendering once. Shared template/render/Make changes also need an applicable
   integration build; choose its actual affected lane, rather than an unrelated book.
+  When rendering inputs and behavior are unchanged, reuse the applicable successful
+  compilation evidence with explicit input/hash and final-log binding (see `docs/ci.md`).
   Keep zero engine exit and final TeX log gates. Default acceptance requires no
   screenshots. Missing toolchain or a failed build blocks commit/PR.
 - Daily receipts say `chapter-current` and `history_audit=not_run`; they confer no
   human review or publication approval. Old raw/run/freeze/approval records remain immutable.
+- Report receipts say `generated-reports`, with `data_qa`, `history_audit` and
+  `tool_tests` all `not_run`; they do not confer chapter acceptance or human approval.
 - A source revision mismatch, protected-node change, unresolved critical
   translation/workflow issue, or missing required human review is an error;
   never silently continue. Faithfully retained source limitations are recorded

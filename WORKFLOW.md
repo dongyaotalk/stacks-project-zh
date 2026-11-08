@@ -160,6 +160,12 @@ BASE_REF=<已确认主线提交>`，同一进程检查完整章节及本次直�
 本地编译仍要求零退出与最终日志门禁，默认不截图。缺少工具链或失败阻断提交/PR；
 生成物不提交。日常结果为 `chapter-current/history_audit=not_run`，不表示人审或发布通过。
 接口和信任边界见 [章节当前验收](docs/chapter-current-validation.md)。
+纯生成 progress/plan 同步按 [CI 合同](docs/ci.md) 使用 `generated-reports`：完整 diff
+仅含既有 README 生成区间及两份报告，全部事实、生成器、政策和来源输入与可信主线
+一致，实际运行两个生成检查、workflow/harvest 和 diff 检查。它不附加工具测试、
+当前数据 QA、历史或渲染/PDF，也不授予章节或人工审校通过。公共/混合/未知变化
+保持广范围合同。相关渲染输入和行为未变时，注明输入/hash 及最终日志绑定后可复用
+适用的本地编译证据；发生变化或绑定不充分时执行实际受影响构建。
 默认 `BOOK_TEMPLATE=ajbook`，书目由 Biber 处理；旧 Springer 模板只可通过
 `BOOK_TEMPLATE=springer` 显式选用，并使用 BibTeX。
 

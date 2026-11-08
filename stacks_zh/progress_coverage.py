@@ -14,6 +14,7 @@ from .source_container_boundaries import _item_tags
 from .source_containers import Containers, clean, load_source_containers, lower_container, safe_path
 from .source_integrity import STATEMENTS
 from .source_reextractions import byte_hash, source_tex
+from .validation_io import read_text, read_bytes, glob_paths
 
 
 def native_container_tag_coverage(selected, policy, tags):
@@ -51,8 +52,9 @@ def _restored_container_tag_coverage(
     """
     commit = load_upstream_commit(root / 'upstream.lock')
     owners, queries = {}, {}
-    for path in sorted((root / 'translation-data/derivations').glob('*.json')):
-        record = json.loads(path.read_text(encoding='utf-8'))
+    archives = set(glob_paths(root / 'translation-data/derivation-archives', '*.json'))
+    for path in sorted(glob_paths(root / 'translation-data/derivations', '*.json')):
+        record = json.loads(read_text(path, encoding='utf-8'))
         if record.get('tool', {}).get('version') != '4':
             continue
         identifier = record.get('derivation_id')
@@ -62,7 +64,7 @@ def _restored_container_tag_coverage(
             raise RecordError('progress container derivation has an invalid identity')
         # An archived output is not a current preparation, even if its labels
         # or unit IDs happen to be present somewhere in today's data.
-        if (root / 'translation-data/derivation-archives' / (identifier + '.json')).exists():
+        if root / 'translation-data/derivation-archives' / (identifier + '.json') in archives:
             continue
         relative = record.get('files', {}).get('output_units', {}).get('path')
         if relative not in units_by_file:
@@ -82,7 +84,7 @@ def _restored_container_tag_coverage(
             source_path = safe_path(root, f'translation-data/source-container-restorations/{restoration}.json',
                 r'translation-data/source-container-restorations/[A-Za-z0-9._-]+\.json')
             try:
-                source = json.loads(source_path.read_text(encoding='utf-8'))
+                source = json.loads(read_text(source_path, encoding='utf-8'))
                 fragment = source['fragment']
                 if not isinstance(fragment, str):
                     raise ValueError('fragment must be source text')
@@ -102,7 +104,7 @@ def _restored_container_tag_coverage(
         outputs = [u for group in groups for u in group['output_units']]
         ids = [u['unit_id'] for u in units]
         if (record['source_commit'] != commit
-                or byte_hash(current_path.read_bytes()) != record['files']['output_units']['hash']
+                or byte_hash(read_bytes(current_path)) != record['files']['output_units']['hash']
                 or outputs != units or len(set(ids)) != len(ids)
                 or [i for g in groups for i in g['output_unit_ids']] != ids
                 or len({g['group_id'] for g in groups}) != len(groups)
@@ -146,14 +148,15 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
     from .source_adoptions import POLICIES, Reads, _schema, _task_scope
 
     directory = root / 'translation-data/source-adoptions'
-    if not directory.exists():
+    paths = tuple(glob_paths(directory, '*.json'))
+    if not paths:
         return {}
     reads = Reads(root)
     reads.snapshot.watch_tree(directory)
     records, consumed = {}, set()
     successors = {}
     current_ids = {u['unit_id'] for units in units_by_file.values() for u in units}
-    for path in sorted(directory.glob('*.json')):
+    for path in sorted(paths):
         safe_path(root, path.relative_to(root).as_posix(),
                   r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
         record = json.loads(reads.snapshot.read(path))

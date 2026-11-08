@@ -1,5 +1,8 @@
 # 可复制的 Codex 提示词
 
+> 2026-11-08 验收入口修订：下文完整历史、全工具和整书命令保留为当时任务的记录或显式审计动作，不能作为普通每章/每 PR 的固定要求。日常章节、公共变化、历史审计和必要集成构建统一服从 [章节当前合同](chapter-current-validation.md) 与 [CI 矩阵](ci.md)。默认仅编译及最终日志门禁，不截图；原 raw/run/freeze、历史事实和批准记录保持。
+
+
 > 2026-10-19 唯一必要纯工具前置 [Issue812](https://github.com/dongyaotalk/stacks-project-zh/issues/812) / [PR813](https://github.com/dongyaotalk/stacks-project-zh/pull/813) 已合并；最终集成接受 main 为 `991e3ed2efc22b35dbef028e0cdb5b0ae28fd187`。用户已明确授权此例外。仅修复可信门禁的大文件可空分类、回归及实测时限，完整原字节/来源/审批要求保持。全部集中DATA仍在原PR809；实际生成的DATA origin与上下文继续绑定5b527d9，不回写历史。
 
 > 工具前置 [Issue #810](https://github.com/dongyaotalk/stacks-project-zh/issues/810) / [PR #811](https://github.com/dongyaotalk/stacks-project-zh/pull/811) 已完成并合并，接受 main 为 `5b527d9cf753ba3f589d1cc7fe9d18be31ddfd81`。完整来源恢复、组合数学文字和哈希范围清单合同已接受；原工具提交与文档历史保留，不重做此前置。后续 DATA 的 origin 使用该已接受提交，英文锁不变；现有 Issue #808 / PR #809 统一收尾全部 DATA、S5、S7和最终文档。

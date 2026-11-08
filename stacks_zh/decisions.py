@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .records import sha256_value
+from .records import sha256_value, RecordError, load_jsonl
 from .schema_validation import validate_named_schema
 from .terminology import load_approved_term_pairs
 from .model_corrections import candidate_provenance_hash
@@ -25,9 +25,9 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _candidate_index(root: Path, errors: list[str]) -> dict[tuple[str, str, str], dict[str, Any]]:
+def _candidate_index(root: Path, errors: list[str], paths=None) -> dict[tuple[str, str, str], dict[str, Any]]:
     result: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for path in sorted(_input_glob(root / "translation-data" / "candidates", "*/*.jsonl")):
+    for path in sorted(paths if paths is not None else _input_glob(root / "translation-data" / "candidates", "*/*.jsonl")):
         for line_number, line in enumerate(_input_text(path, encoding="utf-8").splitlines(), 1):
             if not line.strip():
                 continue
@@ -139,21 +139,35 @@ def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, A
 
 @tracked_inputs
 def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
-                                  _provenance: object | None = None) -> list[str]:
+                                  _provenance: object | None = None, _current_pairs=None, _changed=(), _base=None) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
     from .repository_validation import _ImplementationIdentity
     implementation = _ImplementationIdentity()
     current_inputs().seed_implementation(implementation)
-    current_inputs().watch_root(root)
+    if _current_pairs is None:
+        current_inputs().watch_root(root)
     errors: list[str] = []
-    candidates = _candidate_index(root, errors)
+    candidates = _candidate_index(root, errors, None if _current_pairs is None else [c for u,c in _current_pairs])
+    current_ids = None if _current_pairs is None else {key[0] for key in candidates}
+    if _current_pairs is not None:
+        # Decisions on these exact units can refer to another accepted lane.
+        # Read only their paired filenames, not every candidate/context in the repository.
+        selected_paths={cp for _,cp in _current_pairs}
+        selected_names={cp.name for cp in selected_paths}
+        # Enumerate names once. Each per-filename glob otherwise repeatedly
+        # compares the entire frozen fact inventory, including unrelated history.
+        extra={p for p in _input_glob(root/'translation-data/candidates','*/*.jsonl')
+               if p.name in selected_names and p not in selected_paths}
+        others=_candidate_index(root,errors,extra)
+        if candidates.keys() & others.keys():errors.append('duplicate candidate identity across lanes')
+        candidates.update(others)
     corrected = [candidate for candidate in candidates.values()
                  if 'model_correction_id' in candidate or 'source_adoption_id' in candidate]
     if _provenance is not None:
         from .repository_validation import _require_live_provenance
         _require_live_provenance(_provenance, root, harvest)
     if corrected:
-        provenance_errors = [] if _provenance is not None else validate_repository_provenance(root, harvest)
+        provenance_errors = [] if _provenance is not None or _current_pairs is not None else validate_repository_provenance(root, harvest)
         errors.extend(provenance_errors)
         if not provenance_errors:
             # A binding is needed only for a real decision referencing it.
@@ -170,6 +184,28 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
                 if (candidate.get('unit_id'), candidate.get('run_id'), candidate.get('translation_hash')) not in selected_keys:
                     continue
                 try:
+                    if _current_pairs is not None and candidate.get('model_correction_id'):
+                        # Legacy composite hashes include the entire archival graph.
+                        # Accepted decisions remain valid only with the exact accepted
+                        # candidate/input and decision bytes. New composite approvals
+                        # require the explicit strict decision audit, never a fake hash.
+                        cp = next(p for p in [*[c for _,c in _current_pairs],*extra]
+                                  if p.parent.name == candidate.get('model_lane') and any(
+                                      row.get('unit_id') == candidate.get('unit_id') for row in load_jsonl(p)))
+                        matches = []
+                        for path in _input_glob(root/'translation-data/selections', '*.json'):
+                            entry = _read_json(path)
+                            if (entry.get('unit_id'),entry.get('run_id'),entry.get('translation_hash')) == (
+                                    candidate.get('unit_id'),candidate.get('run_id'),candidate.get('translation_hash')):
+                                if (_base is None or not _base.accepted(path.relative_to(root).as_posix())
+                                        or not _base.accepted(cp.relative_to(root).as_posix())
+                                        or not _base.accepted('translation-data/units/'+cp.name)):
+                                    raise RecordError('new composite decision needs explicit decision-check history binding')
+                                matches.append(entry.get('provenance_hash'))
+                        if len(set(matches)) != 1:
+                            raise RecordError('accepted composite decisions have inconsistent bindings')
+                        candidate['_provenance_hash'] = matches[0]
+                        continue
                     candidate['_provenance_hash'] = candidate_provenance_hash(root, candidate)
                 except (OSError, ValueError, KeyError, TypeError) as exc:
                     errors.append(f"{candidate.get('unit_id')}: invalid composite provenance: {exc}")
@@ -182,6 +218,8 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
             selection = _read_json(path)
         except ValueError as exc:
             errors.append(str(exc))
+            continue
+        if current_ids is not None and selection.get("unit_id") not in current_ids and path.relative_to(root).as_posix() not in _changed:
             continue
         errors.extend(
             validate_named_schema(selection, "selection.schema.json", str(path))
@@ -223,6 +261,8 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
             except ValueError as exc:
                 errors.append(str(exc))
                 continue
+            if current_ids is not None and review.get("unit_id") not in current_ids and path.relative_to(root).as_posix() not in _changed:
+                continue
             errors.extend(validate_named_schema(review, "review.schema.json", str(path)))
             review_id = review.get("review_id")
             if not isinstance(review_id, str) or not review_id:
@@ -254,6 +294,8 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
             revision = _read_json(path)
         except ValueError as exc:
             errors.append(str(exc))
+            continue
+        if current_ids is not None and revision.get("unit_id") not in current_ids and path.relative_to(root).as_posix() not in _changed:
             continue
         errors.extend(
             validate_named_schema(
@@ -423,3 +465,8 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
                     errors.append(f"{previous_path}: replaced revision must have status superseded")
     errors.extend(_validate_revision_chains(revisions))
     return errors
+
+
+def validate_current_decisions(root, harvest, pairs, *, changed=(), base=None):
+    """Current exact selection/review/revision links; caller checks direct provenance."""
+    return validate_repository_decisions(root, harvest, _current_pairs=pairs, _changed=changed, _base=base)

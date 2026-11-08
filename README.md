@@ -199,9 +199,9 @@ Translation Memory。候选进入 `main` 只表示实验记录被保存，不等
 | --- | --- | --- | --- |
 | 翻译候选 | `runs/` 和某一模型通道的 candidate JSONL | `translate/<chapter>/<tag>/<model>` | `make qa` |
 | 人工审校 | `review/language/`、`review/mathematics/` 和必要的 revision | `review/<chapter>/<tag>` | `make decision-check` |
-| 术语 | 术语 Issue；获批后独立修改 glossary | `term/<english-term>` | `make qa-all` |
+| 术语 | 术语 Issue；获批后独立修改 glossary | `term/<english-term>` | `make qa-current-all BASE_REF=<accepted-main>` |
 | Python/工具 | `stacks_zh/`、`scripts/`、`tests/` | `tool/<feature>` | `make tool-test` |
-| Schema/政策 | `schema/`、`config/`、规范文档和迁移 | `tool/<feature>` 或 `docs/<topic>` | `make qa-all` |
+| Schema/政策 | `schema/`、`config/`、规范文档和迁移 | `tool/<feature>` 或 `docs/<topic>` | `make qa-current-all BASE_REF=<accepted-main>` |
 | CI/构建 | `.github/workflows/`、`Makefile` | `build/<feature>` | 对应完整检查 |
 | 文档 | `README.md`、`docs/` | `docs/<topic>` | `make workflow-check` |
 
@@ -566,8 +566,7 @@ make render-batch \
 保持在 300–1500。`batch-pack` 会拒绝跨章节、重复 unit 和未确认的范围越界；
 `assemble-batch` 会在任何写入前拒绝缺失/额外/重复 `unit_id`，解析一次 Harness 版本，
 再分别写入 candidate。batch 只是开发调度边界，每个 unit、candidate、run manifest 和
-PR 写入所有权仍保持独立，不能把候选事实合并或自动提升审校状态。提交前仍要运行完整模型通道的
-`make qa-all`、`make render`、`make pdf` 和 CI 门禁。
+PR 写入所有权仍保持独立，不能把候选事实合并或自动提升审校状态。提交前执行适用章节 `pdf-chapter` 和 CI 分类门禁；公共变化执行 `qa-current-all`，历史审计使用显式 `audit-history`。
 
 ### 5. 贡献 Python、工具、Schema、CI 或文档
 
@@ -584,7 +583,8 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 make tool-test
 make workflow-check
 make schema-check
-make qa-all                              # 影响 Schema/QA/政策时必需
+make qa-current-all BASE_REF=<accepted-main> # 公共变化
+make audit-history                      # 显式历史审计，需要时运行
 git diff --check
 ~~~
 
@@ -623,9 +623,7 @@ git diff --check
 候选批次运行：
 
 ~~~bash
-make qa BATCH=<batch> MODEL=<model-lane>
-make render MODEL=<model-lane>
-make pdf MODEL=<model-lane>
+make pdf-chapter CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main>
 ~~~
 
 开发阶段可用多个 batch 一次完成本地 QA 和选定范围预览：
@@ -635,28 +633,26 @@ make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
 ~~~
 
-这不会替代提交前的完整模型通道构建和 CI 全量检查。
-
-后两条命令必须在 Git 提交前成功，以确认本次候选所在模型通道可以完整编译。
+章节最终直接执行联合 pdf-chapter，检查一次、渲染一次、集中编译一次。默认不截图。
+结果为 chapter-current/history_audit=not_run，不表示人工审校通过；见 [当前章节合同](docs/chapter-current-validation.md)。
 
 修改共享 Schema、QA、工作流或政策时还要验证全部已跟踪候选：
 
 ~~~bash
-make qa-all
+make qa-current-all BASE_REF=<accepted-main>
 ~~~
 
 上游同步不能只修改锁文件。先导出 old/new commit 的 units 和 Tag 索引，再运行
 `make upstream-diff` 生成 JSON/Markdown 报告；报告中的受影响单元、失效状态和未解决
 映射必须在同步 PR 中逐项处理。
 
-其他文档、进度、政策和工具修改在 Git 提交前运行当前候选通道：
+其他文档、进度、政策和工具修改按实际影响范围完成章节或集成构建，例如：
 
 ~~~bash
-make render MODEL=openai-gpt-5.6-sol
-make pdf MODEL=openai-gpt-5.6-sol
+make pdf-chapter CHAPTER=<affected-chapter> MODEL=<affected-lane> BASE_REF=<accepted-main>
 ~~~
 
-上述命令默认使用 `BOOK_TEMPLATE=ajbook`，从
+共享模板/渲染修改仍完成必要集成构建；普通章节不追加无关整书构建。上述命令默认使用 `BOOK_TEMPLATE=ajbook`，从
 `ajbook-template/translations/<model-lane>/` 构建。旧 Springer 模板仅用于兼容检查，
 可显式执行 `make pdf MODEL=<model-lane> BOOK_TEMPLATE=springer`。
 

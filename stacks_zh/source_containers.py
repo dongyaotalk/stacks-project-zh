@@ -108,6 +108,16 @@ class Containers:
         return self.documents[chapter]
 
     def select(self, selector: dict[str, Any]) -> dict[str, Any]:
+        from .source_adoptions import _DAILY
+        daily = _DAILY.get()
+        if daily is not None:
+            key=('select',id(self),json.dumps(selector,sort_keys=True))
+            if key not in daily.cache:
+                daily.cache[key]=self._select(selector)
+            return copy.deepcopy(daily.cache[key])
+        return self._select(selector)
+
+    def _select(self, selector: dict[str, Any]) -> dict[str, Any]:
         if set(selector) != {'file', 'owner_tag', 'owner_label', 'parent_tag', 'kind', 'ordinal'}:
             raise RecordError('container selector requires an explicit full semantic coordinate')
         file, kind = selector['file'], selector['kind']

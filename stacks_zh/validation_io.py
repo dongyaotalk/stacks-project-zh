@@ -36,6 +36,7 @@ class InputReads:
     """All bytes actually supplied to parsers, plus the path sets they enumerated."""
     def __init__(self):
         self.hashes = {}
+        self.modes = {}
         self.globs = {}
         self.trees = {}
         self.roots = set()
@@ -56,6 +57,10 @@ class InputReads:
     def observe(self, path, raw):
         path = self._path(path)
         digest = hashlib.sha256(raw).hexdigest()
+        mode = path.stat().st_mode & (0o170000 | 0o111)
+        if path in self.modes and self.modes[path] != mode:
+            _error(f'validation input type/mode changed while reading: {path}')
+        self.modes[path] = mode
         if path in self.absent or (path in self.hashes and self.hashes[path] != digest):
             _error(f'validation input bytes changed while reading: {path}')
         self.hashes[path] = digest
@@ -100,6 +105,21 @@ class InputReads:
                 or (key in self.globs and paths != self.globs[key])):
             _error(f'validation input paths changed while enumerating: {directory}')
         self.globs[key] = paths
+
+    def include(self, other):
+        """Merge actual claims before one boundary reread; conflicting views fail."""
+        if type(other) is not InputReads:
+            _error('validation union requires actual input reads')
+        for name in ('hashes', 'modes', 'globs', 'trees'):
+            target=getattr(self,name)
+            for key,value in getattr(other,name).items():
+                if key in target and target[key]!=value:
+                    _error(f'validation input union conflicts: {key}')
+                target[key]=value
+        self.roots.update(other.roots)
+        self.absent.update(other.absent)
+        if self.absent & self.hashes.keys():
+            _error('validation input union conflicts with an absent path')
 
     def seed_snapshot(self, snapshot):
         for path, digest in snapshot.hashes.items():
@@ -158,18 +178,21 @@ class InputReads:
 
     def claims(self):
         return (id(self), dict(self.hashes), dict(self.globs), dict(self.trees),
-                frozenset(self.roots), frozenset(self.absent))
+                frozenset(self.roots), frozenset(self.absent), dict(self.modes))
 
     def require_claims(self, claims):
-        identity, hashes, globs, trees, roots, absent = claims
+        identity, hashes, globs, trees, roots, absent, modes = claims
         if (id(self) != identity or not roots <= self.roots or not absent <= self.absent
                 or any(self.hashes.get(p) != value for p, value in hashes.items())
                 or any(self.globs.get(key) != value for key, value in globs.items())
                 or any(self.trees.get(key) != value for key, value in trees.items())):
             _error('validation receipt actual-read claims changed')
+        if any(self.modes.get(p) != value for p,value in modes.items()):
+            _error('validation receipt actual-read mode claims changed')
 
     def binding(self):
         value = dict(files={str(p): value for p, value in self.hashes.items()},
+            modes={str(p):value for p,value in self.modes.items()},
             globs=[(str(p), pattern, recursive, sorted(str(x) for x in paths))
                    for (p, pattern, recursive), paths in sorted(self.globs.items())],
             trees=[(str(p), pattern, sorted(str(x) for x in paths))
@@ -181,6 +204,8 @@ class InputReads:
         for path, digest in self.hashes.items():
             self._path(path)
             try:
+                if path in self.modes and path.stat().st_mode & (0o170000 | 0o111) != self.modes[path]:
+                    _error(f'validation input type/mode changed: {path}')
                 raw = path.read_bytes()
             except OSError as exc:
                 _error(f'validation input changed or unavailable: {path}: {exc}')
@@ -274,9 +299,13 @@ def render_inputs(function):
         reads = None
         if validation is not None:
             from .repository_validation import _BatchPass
-            if type(validation) is not _BatchPass:
-                _error('render requires an actual live batch validation result')
-            reads = validation.provenance.reads
+            from .chapter_validation import ChapterCheckResult
+            if type(validation) is ChapterCheckResult:
+                reads = validation.reads
+            elif type(validation) is _BatchPass:
+                reads = validation.provenance.reads
+            else:
+                _error('render requires an actual live batch or chapter validation result')
         elif current is not None:
             from .current_qa import CurrentSourceQA
             if type(current) is not CurrentSourceQA:

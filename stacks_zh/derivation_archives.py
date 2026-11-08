@@ -38,7 +38,7 @@ def _git_bytes(root: Path, commit: str, path: str) -> bytes:
     return result.stdout
 
 
-def load_derivation_archives(root: Path) -> tuple[dict[str, dict[str, Any]], list[str]]:
+def load_derivation_archives(root: Path, *, identifiers=None) -> tuple[dict[str, dict[str, Any]], list[str]]:
     """Verify archive storage/Git bindings; replay and successor checks follow.
 
     Archives retain the earlier record's logical active paths. They redirect
@@ -46,7 +46,7 @@ def load_derivation_archives(root: Path) -> tuple[dict[str, dict[str, Any]], lis
     inputs or the new current record's output.
     """
     archives, errors = {}, []
-    for path in sorted(_input_glob(root / 'translation-data/derivation-archives', '*.json')):
+    for path in (sorted(_input_glob(root / 'translation-data/derivation-archives', '*.json')) if identifiers is None else [root/'translation-data/derivation-archives'/(i+'.json') for i in sorted(identifiers)]):
         try:
             _path(root, path.relative_to(root).as_posix(), path.relative_to(root).as_posix())
             archive = json.loads(_input_text(path, encoding='utf-8'))

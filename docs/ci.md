@@ -1,140 +1,45 @@
 # CI 门禁合同
 
-本文定义 GitHub Actions 的确定性检查和门禁合同。当前仓库的
-`.github/workflows/ci.yml` 和 `.github/workflows/pr-contract.yml` 已启用。前者在 PR
-和 `main` push 上验证仓库数据，后者通过 `pull_request_target` 从默认分支运行可信
-校验器。远程 `main` 规则集要求 `policy-and-data` 和 `pr-contract` 成功后才能合并。
-本文中的“应”表示需要保持的仓库合同，而不是尚未实现的计划。
+`policy-and-data` 使用完整变更集合与记录语义分类；`pr-contract` 保留 Issue/PR 精确
+范围、来源身份、closing relation 和 fresh-main 等实际职责。名称、权限及远端保护不变。
 
-## 1. 必须检查的内容
+## 1. 调度矩阵
 
-章节翻译的开发检查频率遵守 [默认执行规则](chapter-translation.md)：局部变化先做
-局部核验，稳定后每个独立任务集中完成最终验收，不逐模型包启动本节全部命令。
-可信且输入未变的已有结果注明绑定后复用，不能把旧结果称为新运行。远端必需
-CI、提交前实际 render/pdf 与最后一轮 TeX 日志门禁保持；默认不截图或逐页目视检查。
+| 变化 | policy-and-data |
+| --- | --- |
+| 纯章节 unit/candidate、run/raw/freeze/直接关系/相关决定 | 单章 chapter-current；多章/共享参与者明确扩大为 qa-current-all，纯数据不附加全工具测试 |
+| 明确列举的非规范说明文档 | workflow/harvest 与 diff 检查，报告数据验收未运行原因 |
+| 工具、Schema、公共政策/来源、共享或未知路径 | tool-test、qa-current-all、来源/index/模板及适用专项回归 |
+| 历史语义/验证器变化 | 对应历史回归；任务明确要求真实全审计时运行 audit-history |
 
-每个 PR 至少应执行：
+纯章节路径不无条件运行全工具测试或历史审计。分类失败、删除、类型变化或无法识别
+的公共路径不能静默跳过。全局 ID 库存仍读取全部 unit；不得从文件名前缀猜章节。
 
-~~~bash
-make workflow-check
-make tool-test
-make qa-all
-git diff --check
-~~~
+PR checkout 明确使用 event head；比较点为 event base 与 head 的 merge-base，并确认
+比较点属于事件主线。分类器和纯数据验证器来自比较点的可信 checkout；工具 PR
+执行 head 的工具回归和当前全量。首次迁移时 base 无调度器，明确扩大为工具/当前全量。
+main push 使用 before/head 范围；首次或缺失比较点明确走当前全量，不依赖历史 artifact。
+不使用 pull_request_target 执行不可信 head，不改变现有 pr-contract 的可信执行方式。
 
-`qa-all` 包含 harvest、upstream index、全部117章模板及一次完整
-`check-repository` 会话；会话实际执行全部JSON Schema、完整递归历史溯源、决策
-绑定和全部lane的当前候选严格QA。无需在同一次最终验收中再单独重复这些检查。
-独立 `schema-check`、`provenance-check`、`decision-check` 命令仍可用于定位问题，
-默认验证范围不降低。CI及本地使用Python3.12；本地Make显式传
-`PYTHON="$(pyenv which python)"`，并先确认其版本为3.12。
-当前CI时限为60分钟。完整门禁和本地编译要求保持，不通过删减历史递归或检查来
-缩短门禁。同进程复用的接口、依赖和验证边界见
-[严格验证会话](validation-sessions.md)；本地实测不能冒称远端CI结果。
+本地 Python3.12 命令：
 
-上游同步 PR 还必须用 `make upstream-diff OLD_UNITS=... NEW_UNITS=...
-NEW_COMMIT=... OUTPUT_JSON=... OUTPUT_MD=...` 生成并审查 old/new 报告；报告出现
-未解决映射时不得更新 `upstream.lock`。
+```sh
+make qa-chapter CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main> PYTHON=<python3.12>
+# 要 PDF 时直接联合执行，不先重复 QA：
+make pdf-chapter CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main> PYTHON=<python3.12>
+make qa-current-all BASE_REF=<accepted-main> PYTHON=<python3.12>
+make audit-history PYTHON=<python3.12>
+```
 
-贡献者在提交翻译数据 PR 前还应对目标 batch 执行：
+来源路径总是显式传 HARVEST_DIR。章节渲染/QA 的范围、输入变化、恢复与报告见
+[章节当前验收](chapter-current-validation.md)。旧 qa-all/check-repository、qa-batch、
+render-batch 和普通整书 render 继续保持严格语义；不要把它们放入普通章节固定流水线。
 
-~~~bash
-make qa BATCH=<batch> MODEL=<model-lane>
-make render MODEL=<model-lane>
-make pdf MODEL=<model-lane>
-~~~
-
-开发阶段可以把多个不重叠、按位置成对的 batch 一次交给本地检查，以减少重复启动：
-
-~~~bash
-make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
-make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>
-~~~
-
-`qa-batch` 共享一次工作流、来源、Schema、溯源和决策检查，并对每个 pair 执行候选 QA；
-它会拒绝缺失文件、重复 unit/candidate 以及跨模型、Harness 或 run。`render-batch` 只
-写入选定 batch 的忽略目录。该模式是快速本地迭代，不是 CI 增量门禁；PR 前仍须执行
-目标模型通道的完整 `make render`、`make pdf`，CI 仍运行全量 `make qa-all` 和其他
-必需检查。
-
-`qa` 和 `qa-batch` 由 `check-batches` 在一个 Python 会话内执行 Schema、完整
-溯源、决策和当前候选 QA。`render-batch` 保留相同 Make 前置门禁，调用
-`check-and-render` 将批量 QA 与生成串在同次会话，不再先启动独立 `qa-batch`。
-联合入口只接受本次仓库溯源实际覆盖的活跃 unit/candidate 路径，不能借仓库通过
-结果验证任意临时目录的候选；默认严格 `validate` / `validate-many` 的定位范围保持。
-一次联合调用的完整 provenance 与仓库来源采用装载入口各执行一次，祖先和共享
-历史的必要递归不减少。普通 render、章节预览和 typed 无标签正文定位也消费
-本次实际回放结果；独立调用无结果时仍完整验证。
-
-会话同时绑定 `docs/evidence/` 中 raw/冻结证据、全部 retired/嵌套快照、prompts、
-政策及来源库存实际输入；保留来源采用结果自身的内容绑定和全部快照检查。
-来源位置、锁定提交、英文 tracked 文件集合/原字节，以及中文 HEAD/输入变化
-均拒绝继续消费结果。日志和字节码不是成功缓存。前置失败不会进入渲染，生成中
-变化不能产生成功回执；独立进程各自严格验证，最终 PDF 日志/复制门禁保持。
-
-如果目标是减少模型 token，而不只是减少 QA 进程，应先运行 `make batch-pack`，让一次
-请求覆盖多个同章 unit，再运行 `make assemble-batch` 按 `unit_id` 拆分草稿。拆分后仍
-保持每个 batch 的独立 candidate、run manifest 和写入所有权；批量请求不能合并事实文件、
-混用未经审校候选或自动提升状态。开发阶段可以只重复 `qa-batch`/`render-batch`；提交
-前仍统一运行完整的 `qa-all`、`render`、`pdf` 和 CI。
-
-开发时还可生成某一完整章节的独立 PDF：
-
-~~~bash
-make pdf-chapter CHAPTER=categories MODEL=openai-gpt-5.6-sol PYTHON="$(pyenv which python)"
-~~~
-
-`render-chapter` 从该模型通道中选择该章的全部批次，拒绝跨章混合批、缺失/错误
-配对和非法章名，仍校验复合来源的全库溯源。TeX 只引入该章，章节编号保持锁定
-来源清单的位置；跨章引用按原渲染规则显示永久 Tag 链接。该预览明确标注候选
-与章节范围，生成 lane 为 `<model>-chapter-<chapter>`，辅助文件在
-`build/chapter-preview/`、PDF 在 `output/pdf/chapter-preview/`，不覆盖整书产物，
-不使用整书旧 aux。最终 TeX 日志门禁保持，不忽略缺字/引用错误。这是开发预览，
-PR 前仍执行完整 `render`、`pdf`、`qa-all` 和其他适用检查。
-
-`qa-all` 由 `check-repository` 单进程遍历所有模型通道的全部候选文件，保留每个
-pair的事实边界和原有确定性QA，并强制当前锁定Git来源、永久Tag、TeX控制、
-展开脚注/标题、英文目录证据及逐次术语、token原序/次数和尾空白检查。
-不同模型/run不因进程复用而混合，不使用 `validate-many` 的单次run限制，也不按
-changed paths跳过批次。一次会话只执行一次完整历史溯源，通过后发出私有内存
-凭证供同次决策检查使用；实际HEAD、全部输入文件集合/原字节变化立即失败。
-没有磁盘成功缓存或关闭门禁的CLI选项；独立决策命令仍执行完整溯源。
-
-需要快速定位时可以直接对完整批次运行默认严格CLI，避免反复跑历史全链：
-
-~~~bash
-"$(pyenv which python)" stacks_zh.py validate \
-  --units translation-data/units/<batch>.jsonl \
-  --candidates translation-data/candidates/<model-lane>/<batch>.jsonl \
-  --harvest ../stacks-project
-~~~
-
-这会核验真实来源及当前候选，而完整历史溯源由最终 `make qa-all` 统一执行。
-涉及历史/Schema/决策代码时须选择相应回归，不能拿单批检查代替最终验收。
-
-当前 GitHub workflow 随后以 `make qa-all` 复查仓库内全部候选 batch，而不是只检查
-changed path。任何修改在创建 Git 提交或 PR 前都必须完成适用的本地 LaTeX 编译：
-翻译候选编译对应模型通道，其他文档、进度、政策和工具修改也编译当前候选通道
-（默认 `openai-gpt-5.6-sol`）。只有模板、样式、Makefile 或渲染路径修改才执行
-`make template`。当前
-`policy-and-data` job 不安装 TeX，也不会自动完成该构建，因此 PR 清单中的本地编译
-结果是必需声明，不是 CI 已代为执行的项目。缺少工具链或构建失败时不得提交、推送
-或创建 PR，也不能通过编辑生成的 TeX 绕过。管理员 PR-only bypass 不豁免此门禁。
-这些命令默认以 `BOOK_TEMPLATE=ajbook` 使用 XeLaTeX、Biber 和 makeindex；
-`BOOK_TEMPLATE=springer` 只用于显式的旧模板兼容检查，并改用 BibTeX。
-
-`make pdf` 在最后一次 TeX 后、复制到输出目录前调用 `check-build-log`。本次最后
-一轮日志中的缺字、未定义引用/引用键或重复标签使命令失败，即使引擎返回 0。
-缺失、空白、不完整日志也失败；前几轮暂时的引用警告以最后轮结果为准。普通
-字体 shape 回退、坏盒或重跑提示不按引用错误处理。失败时输出目录原 PDF 保持。
-可以用 `make build-log-check MODEL=<lane>` 或
-`python3 -m stacks_zh check-build-log --log <path>` 只读检查已存在的最后轮日志；
-单独检查不证明日志来自当前修订，不能代替本次 render/pdf。该命令不编辑日志或
-PDF，也没有忽略错误的开关。
-
-CI 的 `tool-test` 包含日志解析和真实 Make recipe 的模拟编译器回归：引擎零退出
-但最终日志有错误时必须阻断复制，首轮警告而最后轮干净时必须通过。这些测试
-不安装或运行 TeX；当前 CI 仍未执行整书编译，本地完整构建声明仍是必需证据。
+章节构建隔离到章节 lane、build/chapter-preview 和 output/pdf/chapter-preview，
+集中渲染一次；必要 XeLaTeX/Biber/索引多轮属于一次逻辑构建。最终日志必须完整、非空，
+无缺字、未定义引用/引用键和重复标签；失败不复制新 PDF，保留原输出。默认不截图。
+公共模板/样式/渲染/Make 变更做必要集成构建；不再对每个候选 PR 追加无关整书构建。
+Python3.12 的针对性与适用完整工具测试证据可在实现未变时注明绑定复用。
 
 ## 2. 来源 checkout
 
@@ -185,13 +90,11 @@ Tag，两者不得同时出现。校验器会同时检查结构化记录的 `par
 - 翻译 PR 没有夹带 glossary、upstream lock 或 reviewed 汇总变更。
 
 当前自动化已经检查所有已跟踪候选的 Schema 相关字段、来源、run 溯源、
-selection/review/revision 链、候选覆盖率、占位符、英文残留、术语和状态。它通过
-`make qa-all` 全量遍历候选，而不是根据 diff 只遍历受影响 batch。
+selection/review/revision 链、候选覆盖率、占位符、英文残留、术语和状态。它按完整 diff 的可信分类检查全部受影响章节；公共变化执行当前全量。历史回放由显式审计保留。
 
 自动化已经阻断缺少 Issue、Issue/branch/path 不匹配和结构化 unit 超范围。语义边界
 是否合理、自然语言说明是否准确，以及非结构化文件的内容是否属于任务范围，仍由
-维护者人工核对。只运行一个手工指定的 `make qa` 不足以覆盖多文件 PR；合并到
-`main` 后的 workflow 仍会重新运行全量检查。
+维护者人工核对。只运行一个手工指定的 `make qa` 不足以覆盖多文件 PR；合并到 `main` 后按真实 push 提交范围执行同一分类规则。
 
 ## 4. Artifact 和权限
 
@@ -241,20 +144,7 @@ CODEOWNERS 必须与 `MAINTAINERS.md` 一致。CODEOWNERS 审批不能替代语�
 - TeX 失败：区分数据、渲染器、模板和环境责任；
 - 许可证不确定：阻断公开 Release，但不应由自动检查猜测授权。
 
-## 7. 当前状态
+## 7. 本地与远端结果
 
-本地 `make workflow-check`、`make tool-test`、`make harvest-check`、
-`make upstream-index-check`、`make schema-check`、`make provenance-check`、
-`make decision-check` 和全量
-`make qa-all` 已可执行，且同一组
-检查由 GitHub Actions 的 `policy-and-data` job 运行。CI 当前对全部已跟踪候选 batch
-执行 QA，不是按 PR changed-path 做增量筛选。
-
-优先级配置、计划生成器、计划文档、README 推荐区间或相关测试发生变化时，CI 另外
-执行 `make plan-check`。current unit、candidate 或 reviewed 数据合并后，计划像进度
-报告一样由独立更新任务运行 `make plan`，避免普通翻译 PR 夹带生成文档。
-
-`pr-contract` 已自动验证 Issue 生命周期、branch、changed paths 和结构化 unit 范围；
-PR 模板中的语义范围声明仍须由贡献者填写并由维护者核对。R1/R2/R3 所需的语言、数学和术语审校仍通过人工
-审校记录及 `make decision-check` 作为数据门禁，不是 GitHub 自动替代的批准。管理员
-的 PR-only bypass 只解决平台合并权限，不替代这些审校记录或许可证、发布门禁。
+本地源码部署前，既有远端 workflow 可能仍执行旧严格合同。本地 chapter-current 通过
+不能冒称已获得远端必需状态；远端写入、提交、合并与保护设置均须用户实际授权。

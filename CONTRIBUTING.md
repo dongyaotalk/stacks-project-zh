@@ -25,7 +25,7 @@ make repo-setup
 make workflow-check
 make harvest-check
 make upstream-index-check
-make schema-check
+make schema-check # 改动结构化数据时按相应当前范围检查 Schema
 make template
 make harness-check HARNESS_ID=codex
 ```
@@ -72,7 +72,7 @@ TeX 或手工发明 unit ID。
    `make qa-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>` 和
    `make render-batch BATCHES="<batch-a> <batch-b>" MODEL=<model-lane>`；文件仍按
    batch 独立保存；
-9. 执行完整 `make render MODEL=<model-lane>` 和 `make pdf MODEL=<model-lane>`，确认本次
+9. 执行章节联合 `make pdf-chapter CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main>`，确认本次
    候选所在模型通道的 LaTeX 编译无错误；
 10. 按 `.gitmessage` 写原子提交；
 11. 使用 PR 模板提交，不自行提升人工审校状态。
@@ -81,7 +81,7 @@ TeX 或手工发明 unit ID。
 300–1500 词偏好范围时要求显式确认不可拆分的语义边界。`assemble-batch` 会先验证
 所有 unit 与草稿的完整覆盖、重复和来源，再一次性写出各自 candidate；Harness 版本
 只解析一次。batch 只用于开发调度，不合并翻译事实、不改变 schema、不覆盖旧 run，
-也不提升人工审校状态。提交前的 `qa-all`、完整渲染、PDF 和 CI 门禁仍不可省略。
+也不提升人工审校状态。提交前执行适用章节联合构建和 CI 分类门禁；公共变化扩大检查，历史审计显式运行。
 
 ## 提交术语
 
@@ -99,29 +99,27 @@ TeX 或手工发明 unit ID。
 
 ## 提交前检查
 
-所有修改至少执行：
+所有修改执行 workflow/harvest 与 diff 检查，其他检查按 [CI 矩阵](docs/ci.md) 选择：
 
 ```bash
 make workflow-check
 make harvest-check
 make upstream-index-check
-make tool-test
-make schema-check
+make tool-test # 工具/政策/公共变化
+make schema-check # 改动结构化数据时按相应当前范围检查 Schema
 git diff --check
 ```
 
 在创建 Git 提交或 PR 前必须完成一次适用的本地 LaTeX 编译。翻译候选必须执行：
 
 ```bash
-make render MODEL=<model-lane>
-make pdf MODEL=<model-lane>
+make pdf-chapter CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main>
 ```
 
 其他文档、进度、政策和工具修改执行当前候选通道的编译：
 
 ```bash
-make render MODEL=openai-gpt-5.6-sol
-make pdf MODEL=openai-gpt-5.6-sol
+make pdf-chapter CHAPTER=<affected-chapter> MODEL=<affected-lane> BASE_REF=<accepted-main>
 ```
 
 只有修改模板、样式、Makefile 或渲染路径时才另外执行 `make template`。裸

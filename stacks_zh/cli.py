@@ -151,6 +151,15 @@ def build_parser() -> argparse.ArgumentParser:
     repository_check.add_argument('--root', type=Path, default=Path('.'))
     repository_check.add_argument('--harvest', type=Path)
 
+    for name in ('check-chapter', 'check-current-repository'):
+        daily = subparsers.add_parser(name, help='current inputs and direct relations; history audit is not run')
+        daily.add_argument('--root', type=Path, default=Path('.'))
+        daily.add_argument('--harvest', type=Path)
+        daily.add_argument('--base-ref', required=True)
+        daily.add_argument('--chapter', required=name == 'check-chapter')
+        daily.add_argument('--model-lane', required=name == 'check-chapter')
+        daily.add_argument('--report', type=Path)
+
     first_source = subparsers.add_parser('assemble-source-adoption',
         help='validate and atomically install complete first-source generation and history')
     first_source.add_argument('--root', type=Path, default=Path('.'))
@@ -265,6 +274,8 @@ def build_parser() -> argparse.ArgumentParser:
     render.add_argument("--chapter-source-dir", type=Path)
     render.add_argument("--tags-file", type=Path)
     render.add_argument("--output-dir", type=Path)
+    render.add_argument("--base-ref", help="accepted main commit required for chapter acceptance")
+    render.add_argument("--report", type=Path)
     render.add_argument("--chapter", help="preview one complete chapter in an isolated output lane")
     for current_entry in (validate, validate_many, validate_all, assemble, assemble_many, render):
         current_entry.add_argument('--harvest', type=Path, help='read-only locked English Git harvest')
@@ -478,6 +489,17 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             print(f"All candidate batches: PASS ({count} batch(es))")
             return 0
+        if args.command in {'check-chapter', 'check-current-repository'}:
+            from .chapter_validation import check_chapter, check_current_repository
+            if args.command == 'check-chapter':
+                result = check_chapter(args.root, args.harvest, args.chapter, args.model_lane, args.base_ref, report=print)
+                payload = result.report
+            else:
+                payload = check_current_repository(args.root, args.harvest, args.base_ref, report=print)
+            if args.report:
+                args.report.parent.mkdir(parents=True, exist_ok=True)
+                args.report.write_text(json.dumps(payload, ensure_ascii=False, indent=2)+'\n')
+            return 0
         if args.command == 'check-repository':
             count, errors = validate_repository(args.root.resolve(), args.harvest, report=print)
             for error in errors:
@@ -617,9 +639,16 @@ def main(argv: list[str] | None = None) -> int:
                 validation, current_errors = validate_batches_session(args.units, args.candidates,
                     args.lock, harvest, report=print)
                 current = validation.current if validation is not None else None
+            elif args.chapter is not None:
+                from .chapter_validation import check_chapter
+                validation = check_chapter(args.lock.resolve().parent, harvest, args.chapter, args.model_lane,
+                                           args.base_ref, report=print)
+                args.units = [u for u,c in validation.pairs]
+                args.candidates = [c for u,c in validation.pairs]
+                current, current_errors = validation.current, []
             else:
                 current = CurrentSourceQA(args.lock.resolve().parent, harvest)
-                _, current_errors = current.validate_pairs(args.units, args.candidates, chapter=args.chapter)
+                _, current_errors = current.validate_pairs(args.units, args.candidates)
             if current_errors:
                 raise RecordError('current preview source QA failed:\n' + '\n'.join(current_errors))
             output_dir = args.output_dir or DEFAULT_RENDER_ROOT / args.model_lane
@@ -640,8 +669,11 @@ def main(argv: list[str] | None = None) -> int:
                 _current=current,
             )
             if validation is not None:
-                print('Candidate batch QA: PASS '
+                print(('Chapter current QA: PASS ' if args.chapter is not None else 'Candidate batch QA: PASS ') +
                       f'({validation.count} unit(s) across {len(args.units)} batch(es))')
+            if args.report and args.chapter is not None:
+                args.report.parent.mkdir(parents=True, exist_ok=True)
+                args.report.write_text(json.dumps(validation.report, ensure_ascii=False, indent=2)+'\n')
             print(f"Rendered {len(written)} file(s): {output_dir}")
             return 0
         if args.command == "check-build-log":

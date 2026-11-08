@@ -1,5 +1,8 @@
 # Categories 剩余候选开发与验收记录（Issue #814）
 
+> 2026-11-08 验收入口修订：下文完整历史、全工具和整书命令保留为当时任务的记录或显式审计动作，不能作为普通每章/每 PR 的固定要求。日常章节、公共变化、历史审计和必要集成构建统一服从 [章节当前合同](chapter-current-validation.md) 与 [CI 矩阵](ci.md)。默认仅编译及最终日志门禁，不截图；原 raw/run/freeze、历史事实和批准记录保持。
+
+
 中文接受基线：`b33b9b37f1623d49d4030a11f1661dfc29fa2ce4`。英文锁定：`a04446e57ec1fbc252a871afcec7752fb2807b14`。
 
 本阶段不重开已完成F1–F8/S4/S5/S7，不重用已关闭Issue/PR。main与远端相等，工作区干净，当前GitHub无打开任务；当前账户dongyaotalk对既有origin公开仓库具有ADMIN权限。原8个stash和其他worktree原样保留。Python已解析为已安装3.12.6，XeLaTeX/Biber/Poppler可用。

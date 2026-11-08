@@ -38,27 +38,47 @@ def _safe_path(root: Path, value: str, pattern: str) -> Path:
 def _first_addition_is_immutable(root: Path, path: Path) -> None:
     """New evidence may be uncommitted; once added it cannot be rehashed away."""
     relative = path.relative_to(root).as_posix()
+    from .source_adoptions import _DAILY
+    daily = _DAILY.get()
+    key = ('immutable', str(path))
+    if daily is not None and key in daily.cache:
+        if _input_bytes(path) != daily.cache[key]:
+            raise RecordError('immutable input changed during direct validation')
+        return
+    if daily is not None:
+        # Accepted objects are the stopping boundary. New committed evidence is
+        # checked only within this change range, never across unrelated history.
+        if relative in daily.base.entries:
+            if not daily.base.accepted(relative):
+                raise RecordError('accepted immutable evidence changed: ' + relative)
+            daily.cache[key] = _input_bytes(path)
+            return
+        revision = daily.base.commit + '..' + daily.base.snapshot.head
+    else:
+        revision = 'HEAD'
     history = subprocess.run(
-        ['git', '-C', str(root), 'log', '--reverse', '--diff-filter=A', '--format=%H', 'HEAD', '--', relative],
+        ['git', '-C', str(root), 'log', '--reverse', '--diff-filter=A', '--format=%H', revision, '--', relative],
         capture_output=True, text=True,
     )
     if history.returncode:
         raise RecordError('immutable evidence requires a readable Git history')
     commits = history.stdout.splitlines()
     if not commits:
+        if daily is not None:daily.cache[key] = _input_bytes(path)
         return
     original = subprocess.run(['git', '-C', str(root), 'show', f'{commits[0]}:{relative}'], capture_output=True)
     if original.returncode or original.stdout != _input_bytes(path):
         raise RecordError(f'{relative}: immutable evidence differs from its first Git addition')
+    if daily is not None:daily.cache[key] = original.stdout
 
 
-def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[str, Any]], list[str]]:
+def load_repository_corrections(root: Path, *, identifiers=None) -> tuple[dict[tuple[str, str], dict[str, Any]], list[str]]:
     """Validate frozen revision inputs/output; run identity is also checked by provenance."""
     corrections: dict[tuple[str, str], dict[str, Any]] = {}
     errors: list[str] = []
     snapshots: set[str] = set()
     runs: set[str] = set()
-    for path in sorted(_input_glob(root / 'translation-data/model-corrections', '*.json')):
+    for path in (sorted(_input_glob(root / 'translation-data/model-corrections', '*.json')) if identifiers is None else [root/'translation-data/model-corrections'/(i+'.json') for i in sorted(identifiers)]):
         try:
             record = json.loads(_input_text(path, encoding='utf-8'))
             schema_errors = validate_named_schema(record, 'model-correction.schema.json', str(path))
@@ -173,7 +193,7 @@ def load_repository_corrections(root: Path) -> tuple[dict[tuple[str, str], dict[
                 }
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f'{path}: {exc}')
-    for path in sorted(_input_glob(root / 'translation-data/retired/model-corrections', '*/*.jsonl')):
+    for path in (sorted(_input_glob(root / 'translation-data/retired/model-corrections', '*/*.jsonl')) if identifiers is None else []):
         if path.relative_to(root).as_posix() not in snapshots:
             errors.append(f'{path}: orphaned raw model-correction snapshot')
     return corrections, errors

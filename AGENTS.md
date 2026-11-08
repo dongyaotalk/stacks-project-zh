@@ -140,22 +140,27 @@
 - Run `make workflow-check` and `make harvest-check` for all workflow work.
 - Run `make upstream-index-check` after changing the source lock, index, or sync history.
 - Run `make schema-check` after changing structured data or any JSON Schema.
-- Run `make qa-all` after changing shared Schema, QA, workflow, or policy that
-  can affect existing candidate records.
+- Ordinary chapter data uses `make qa-chapter CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main>`;
+  use `make pdf-chapter` directly when a PDF is needed (one check and one render).
+- Shared Schema, QA, workflow, source or policy changes require `make qa-current-all
+  BASE_REF=<accepted-main>` and applicable tool regressions. Unknown paths expand scope.
+- `make audit-history` explicitly replays complete history; `qa-all` remains its strict
+  compatibility alias. Neither is mandatory for every chapter/PR. See
+  `docs/chapter-current-validation.md` and `docs/ci.md`.
 - After current unit, candidate, reviewed, chapter, or source-Tag data merges to
   `main`, open a separate progress update before the next translation batch.
   Run `make progress`, then require `make progress-check` before committing it.
 - Run `git diff --check` before committing.
 - Run `make harness-check HARNESS_ID=<harness-id>` before creating any new run;
   the command must resolve a concrete version at run time.
-- Before any Git commit or PR, complete an applicable local LaTeX build with no
-  errors. For translation candidates, run `make render MODEL=<model-lane>` and
-  `make pdf MODEL=<model-lane>`; for other changes, run the same two commands
-  against the active candidate lane (`openai-gpt-5.6-sol`). Run `make template`
-  only when the template, styles, Makefile, or rendering path is changed. A bare
-  `make pdf` is invalid and must not silently select the template lane.
-  A missing TeX toolchain or failed build blocks committing, pushing, and opening
-  a PR.
+- Before a commit/PR, compile the affected chapter/lane using `make pdf-chapter
+  CHAPTER=<slug> MODEL=<lane> BASE_REF=<accepted-main>`. It includes current QA and
+  rendering once. Shared template/render/Make changes also need an applicable
+  integration build; choose its actual affected lane, rather than an unrelated book.
+  Keep zero engine exit and final TeX log gates. Default acceptance requires no
+  screenshots. Missing toolchain or a failed build blocks commit/PR.
+- Daily receipts say `chapter-current` and `history_audit=not_run`; they confer no
+  human review or publication approval. Old raw/run/freeze/approval records remain immutable.
 - A source revision mismatch, protected-node change, unresolved critical
   translation/workflow issue, or missing required human review is an error;
   never silently continue. Faithfully retained source limitations are recorded

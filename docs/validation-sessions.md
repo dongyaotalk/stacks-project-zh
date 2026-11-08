@@ -1,4 +1,8 @@
-# 同进程严格验证会话
+# 同进程验证会话
+
+日常章节接口见 [章节当前验收](chapter-current-validation.md)：检查一次、渲染一次，
+使用独立 `ChapterCheckResult`，明确 history_audit=not_run。下文的完整回放凭证只适用于
+保留的严格批次、整书渲染和 audit-history/qa-all；不能拿章节结果冒充 `_ProvenancePass`。
 
 `qa`、`qa-batch` 和 `render-batch` 使用同次真实验证的私有结果。独立命令仍自行
 验证；没有磁盘 PASS、跨进程成功缓存或 skip 参数。历史 v1/v2/v3/v4、修订、
@@ -26,8 +30,7 @@ Make 的 workflow、harvest、upstream-index 和 chapter-template 检查覆盖�
 
 原有 Make、CLI 与 Python 接口保持；`validate`/`validate-many` 默认仍只做严格的
 当前来源和候选定位，不额外升级为每次完整历史验收。独立 `decision-check` 或需要
-完整来源权限的独立 `render` 仍实际完整回放。普通 render/章节预览在同次调用内
-共享其真实采用结果。`qa-all` 遍历全部 lane、全部真实 run 和最后一个 batch，
+完整来源权限的独立 `render` 仍实际完整回放。普通整书 render 在同次调用内共享其真实采用结果。章节预览改用章节当前会话。`qa-all` 遍历全部 lane、全部真实 run 和最后一个 batch，
 不套用单 run 限制或 changed-path 筛选。
 
 ## 信任与依赖

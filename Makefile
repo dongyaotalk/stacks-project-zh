@@ -6,6 +6,8 @@ BOOK_TEMPLATE ?= ajbook
 PYTHON ?= python3
 BATCH ?=
 BATCHES ?=
+BASE_REF ?=
+CHAPTER_REPORT ?= build/chapter-validation/$(CHAPTER)-$(MODEL).json
 MODEL_DISPLAY_NAME ?= $(MODEL) 模型候选译文
 -include config/local.mk
 HARVEST_DIR ?= ../stacks-project
@@ -205,7 +207,9 @@ SOURCE_REVISION ?= $(shell printf '%s' '$(UPSTREAM_COMMIT)' | cut -c1-12)
 SOURCE_DATE ?= $(UPSTREAM_COMMIT_DATE)
 
 TEX_SEARCH_PATH := $(abspath $(TEMPLATE_DIR)):$(abspath $(TEMPLATE_DIR)/styles):
-BIB_SEARCH_PATH := $(abspath $(HARVEST_DIR)):$(abspath $(TEMPLATE_DIR)):
+# GNU make abspath tokenizes an absolute HARVEST_DIR containing spaces.
+# Resolve the existing read-only directory as one shell argument instead.
+BIB_SEARCH_PATH := $(shell cd "$(HARVEST_DIR)" 2>/dev/null && pwd -P):$(abspath $(TEMPLATE_DIR)):
 BST_SEARCH_PATH := $(abspath $(TEMPLATE_DIR)):$(abspath $(TEMPLATE_DIR)/styles):
 
 LATEX_COMMAND = cd "$(TEMPLATE_DIR)" && \
@@ -412,6 +416,17 @@ assemble-batch: validate-model
 		--run-id "$(RUN_ID)" --model-identity-confidence "$(MODEL_IDENTITY_CONFIDENCE)" \
 		$(if $(strip $(MODEL_SNAPSHOT)),--model-snapshot "$(MODEL_SNAPSHOT)",)
 
+.PHONY: qa-chapter qa-current-all audit-history
+qa-chapter: validate-model validate-preview-chapter workflow-check harvest-check
+	$(PYTHON) stacks_zh.py check-chapter --root . --harvest "$(HARVEST_DIR)" \
+		--chapter "$(CHAPTER)" --model-lane "$(MODEL)" --base-ref "$(BASE_REF)" --report "$(CHAPTER_REPORT)"
+
+qa-current-all: workflow-check harvest-check
+	$(PYTHON) stacks_zh.py check-current-repository --root . --harvest "$(HARVEST_DIR)" --base-ref "$(BASE_REF)"
+
+# Compatibility: qa-all/check-repository retain complete historical replay.
+audit-history: qa-all
+
 qa-all: workflow-check harvest-check upstream-index-check chapter-template-check
 	$(PYTHON) stacks_zh.py check-repository --root . --harvest "$(HARVEST_DIR)"
 
@@ -462,7 +477,7 @@ render-chapter: validate-model validate-preview-chapter validate-render workflow
 		--display-name "$(MODEL_DISPLAY_NAME)（$(CHAPTER) 章开发预览）" \
 		--chapter-manifest "$(CHAPTER_MANIFEST)" --chapter-title-map "$(CHAPTER_TITLE_MAP)" \
 		--chapter-source-dir "$(CHAPTER_SOURCE_DIR)" --tags-file "$(TAGS_FILE)" \
-		--chapter "$(CHAPTER)" --output-dir "$(CHAPTER_PREVIEW_DIR)"
+		--chapter "$(CHAPTER)" --base-ref "$(BASE_REF)" --report "$(CHAPTER_REPORT)" --output-dir "$(CHAPTER_PREVIEW_DIR)"
 
 # A separate manuscript, aux tree and PDF; never reuses full-book auxiliaries.
 pdf-chapter: render-chapter

@@ -118,6 +118,8 @@ PR 模板仍是贡献者的人工声明，但 `pr-contract` 会从 GitHub 原生
 - PR 必须通过 `pr-contract` 和 `policy-and-data`；前者检查 Issue→PR 合同，后者按
   [CI 矩阵](ci.md) 检查 workflow、harvest 和实际受影响章节的当前来源、直接关系及
   决策；公共或工具变化扩大为当前全量和适用工具回归，完整历史由显式审计执行；
+  纯生成 progress/plan 报告按该矩阵执行两个真实报告 check，保留 Issue/PR 合同，
+  不授予章节或人工审校通过；
 - 禁止删除和非快进更新；
 - 需要 CODEOWNER 审核的普通 PR 使用 `.github/CODEOWNERS`；
 - 仓库作者 `@dongyaotalk` 具有 PR-only administrator bypass，可以独立合并自己

@@ -9,6 +9,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from stacks_zh.ci_scope import classify
 from stacks_zh.chapter_validation import git, check_current_repository
 from stacks_zh.records import RecordError
+from stacks_zh.generated_reports import check_generated_reports
 
 
 def run():
@@ -19,10 +20,14 @@ def run():
     p.add_argument('--force-broad',action='store_true')
     args=p.parse_args()
     root=args.root.resolve()
-    dispatch=classify(root,args.base_ref)
-    if args.force_broad:dispatch.update(kind='current-all',reason='trusted base lacks dispatcher; migration/full current check')
-    print(json.dumps(dispatch,ensure_ascii=False),flush=True)
     out=root/'build/ci-current';out.mkdir(parents=True,exist_ok=True)
+    # A failed rerun must not leave an earlier report receipt looking current.
+    (out/'reports.json').unlink(missing_ok=True)
+    dispatch=classify(root,args.base_ref)
+    if args.force_broad:
+        dispatch.update(kind='current-all',reason='trusted base lacks dispatcher; migration/full current check')
+        dispatch.pop('validation_state',None)
+    print(json.dumps(dispatch,ensure_ascii=False),flush=True)
     (out/'dispatch.json').write_text(json.dumps(dispatch,ensure_ascii=False,indent=2)+'\n')
     def make(*commands):
         for command in commands:
@@ -31,7 +36,13 @@ def run():
     # Workflow validates repository policy, harvest and source-coordinate tables;
     # pr-contract independently verifies Issue/PR scope with its existing permissions.
     make('workflow-check','harvest-check')
-    if dispatch['kind']=='chapter-current':
+    if dispatch['kind']=='generated-reports':
+        payload=check_generated_reports(root,args.harvest,args.base_ref)
+        subprocess.run(['git','diff','--check',args.base_ref],cwd=root,check=True)
+        (out/'reports.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
+        print(json.dumps(payload,ensure_ascii=False),flush=True)
+        return
+    elif dispatch['kind']=='chapter-current':
         make('upstream-index-check','chapter-template-check')
         chapters=set(dispatch['chapters'])
         if len(chapters)>1:

@@ -45,6 +45,8 @@ source commit、chapter/lane、pairs/units、阶段实测时间、错误和退�
 `check-repository`、严格 batch/整书接口继续保持原语义，日常不必串行调用它们。
 
 纯章节 CI 与本地使用同一局部合同；公共变化执行当前全量，不固定重放全部祖先。
+纯生成 progress/plan 同步使用 [CI 合同](ci.md) 的独立 `generated-reports` 范围，
+不运行章节/当前全量或历史；这类报告结果不能称为 chapter-current。
 历史验证器或历史语义变化需要对应历史回归；任务明确要求全审计时才执行真实全历史。
 首次迁移尚未部署的远端 CI 可能继续使用旧合同，本地结果不能冒称远端状态成功。
 

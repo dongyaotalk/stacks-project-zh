@@ -59,7 +59,9 @@
 - [ ] 精确 scope_manifest 路径/hash、来源、文件和 IDs 完整；旧内联 batch 限制保持
 - [ ] 章节/适用集成编译零退出，最终日志无缺字、未定义引用/引用键或重复标签
 - [ ] 默认未截图；没有编辑生成 TeX/PDF/日志绕过失败
-- [ ] 结果明确 chapter-current/history_audit=not_run，没有冒称人工审校通过
+- [ ] 结果按实际范围标记；章节用 chapter-current/history_audit=not_run，纯生成报告用 generated-reports/data_qa=not_run/history_audit=not_run/tool_tests=not_run；没有冒称人工审校通过
+- [ ] 纯生成报告完成两个实际 check、workflow/harvest/diff，完整输入与可信 base 绑定；公共/混合变更扩大验证
+- [ ] 如复用编译证据，已按 docs/ci.md 核验相关渲染输入/行为未变以及原命令、hash、零退出和最终日志
 - [ ] progress/plan 变更已执行对应 check；远端必需状态据实记录
 
 ## 审校

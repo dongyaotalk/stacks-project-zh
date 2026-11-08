@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .records import RecordError, load_upstream_commit
+from .validation_io import read_text, read_bytes, glob_paths
 from .schema_validation import validate_named_schema
 
 
@@ -190,7 +191,7 @@ class TaskSelection:
 
 def _read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(read_text(path, encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise RecordError(f"cannot read JSON {path}: {exc}") from exc
     if not isinstance(value, dict):
@@ -201,7 +202,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _read_jsonl(paths: Iterable[Path]) -> Iterable[tuple[Path, int, dict[str, Any]]]:
     for path in sorted(paths):
         try:
-            lines = path.read_text(encoding="utf-8").splitlines()
+            lines = read_text(path, encoding="utf-8").splitlines()
         except OSError as exc:
             raise RecordError(f"cannot read JSONL {path}: {exc}") from exc
         for line_number, line in enumerate(lines, start=1):
@@ -219,7 +220,7 @@ def _read_jsonl(paths: Iterable[Path]) -> Iterable[tuple[Path, int, dict[str, An
 def _load_templates(root: Path, source_commit: str) -> list[dict[str, Any]]:
     templates = [
         _read_json(path)
-        for path in sorted((root / "translation-data/chapter-templates").glob("*.json"))
+        for path in sorted(glob_paths(root / "translation-data/chapter-templates", "*.json"))
     ]
     if not templates:
         raise RecordError("translation-data/chapter-templates: no chapter templates")
@@ -328,7 +329,7 @@ def _collect_repository_state(
     risk_by_unit: dict[str, str] = {}
     unit_location: dict[str, str] = {}
     units_root = root / "translation-data/units"
-    for path, line_number, unit in _read_jsonl(units_root.glob("*.jsonl")):
+    for path, line_number, unit in _read_jsonl(glob_paths(units_root, "*.jsonl")):
         if unit.get("source_commit") != source_commit or unit.get("source_status") != "CURRENT":
             continue
         unit_id = unit.get("unit_id")
@@ -348,7 +349,7 @@ def _collect_repository_state(
 
     candidate_units: set[str] = set()
     for path, line_number, candidate in _read_jsonl(
-        (root / "translation-data/candidates").glob("*/*.jsonl")
+        glob_paths(root / "translation-data/candidates", "*/*.jsonl")
     ):
         if (
             candidate.get("source_commit") == source_commit
@@ -362,7 +363,7 @@ def _collect_repository_state(
             candidate_units.add(unit_id)
 
     selection_reviews: dict[str, frozenset[str]] = {}
-    for path in sorted((root / "translation-data/selections").glob("*.json")):
+    for path in sorted(glob_paths(root / "translation-data/selections", "*.json")):
         selection = _read_json(path)
         selection_id = selection.get("selection_id")
         if not isinstance(selection_id, str) or not selection_id:
@@ -379,7 +380,7 @@ def _collect_repository_state(
         )
 
     revisions: dict[str, tuple[str, str, frozenset[str]]] = {}
-    for path in sorted((root / "translation-data/reviewed").rglob("*.json")):
+    for path in sorted(glob_paths(root / "translation-data/reviewed", "*.json", recursive=True)):
         revision = _read_json(path)
         if (
             revision.get("source_commit") != source_commit
@@ -817,7 +818,7 @@ def update_translation_plan(
 ) -> tuple[int, list[str]]:
     plan = build_translation_plan(root, priority_path)
     try:
-        readme_text = readme_path.read_text(encoding="utf-8")
+        readme_text = read_bytes(readme_path).decode("utf-8")
     except OSError as exc:
         raise RecordError(f"cannot read README {readme_path}: {exc}") from exc
     expected_readme = _replace_readme_block(readme_text, render_readme_plan(plan))
@@ -827,7 +828,7 @@ def update_translation_plan(
         if readme_text != expected_readme:
             errors.append(f"{readme_path}: translation plan is out of date; run make plan")
         try:
-            actual_report = output_path.read_text(encoding="utf-8")
+            actual_report = read_bytes(output_path).decode("utf-8")
         except OSError:
             actual_report = ""
         if actual_report != expected_report:

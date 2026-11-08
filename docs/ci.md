@@ -8,6 +8,7 @@
 | 变化 | policy-and-data |
 | --- | --- |
 | 纯章节 unit/candidate、run/raw/freeze/直接关系/相关决定 | 单章 chapter-current；多章/共享参与者明确扩大为 qa-current-all，纯数据不附加全工具测试 |
+| 纯生成 progress/plan 报告，完整 diff 和全部实际输入与可信主线绑定 | workflow-check、harvest-check、progress-check、plan-check、git diff --check；不附加工具测试、当前数据 QA、历史、render/pdf |
 | 明确列举的非规范说明文档 | workflow/harvest 与 diff 检查，报告数据验收未运行原因 |
 | 工具、Schema、公共政策/来源、共享或未知路径 | tool-test、qa-current-all、来源/index/模板及适用专项回归 |
 | 历史语义/验证器变化 | 对应历史回归；任务明确要求真实全审计时运行 audit-history |
@@ -40,6 +41,43 @@ render-batch 和普通整书 render 继续保持严格语义；不要把它们�
 无缺字、未定义引用/引用键和重复标签；失败不复制新 PDF，保留原输出。默认不截图。
 公共模板/样式/渲染/Make 变更做必要集成构建；不再对每个候选 PR 追加无关整书构建。
 Python3.12 的针对性与适用完整工具测试证据可在实现未变时注明绑定复用。
+
+### 纯生成报告
+
+允许路径只有 `README.md`、`docs/translation-progress.md` 和 `docs/translation-plan.md`。
+README 只能变更现有 progress/plan 生成标记内的内容；两对标记必须唯一、完整、有序，
+不得嵌套或重叠。标记外原字节必须等于可信 base。三个文件均须是 base 已有的普通
+100644 文件，删除、rename、symlink、类型或执行位变化不进入此路径。
+
+`stacks_zh/ci_scope.py` 只确认形状，报告有效性仍由可信 base 的两个实际生成器
+`--check` 证明。完整 Git diff、可见新路径和事实库存一并检查，不能用路径子集隐藏
+候选/政策/Makefile/Schema/工具/来源或未知变化。实际消费的非报告输入、加载工具
+及目录库存与接受主线绑定；检查过程中 HEAD、比较主线、英文身份、输入字节或路径
+变化均失败。错误、手改、过期或非确定性报告不得在 CI 自动覆盖后宣称通过。
+不接受磁盘 PASS 或用户自填结果。PR 与 main push 使用同一现有事件调度；本次工具
+迁移本身仍由旧可信 base 按工具/当前全量合同检查。
+
+本地复现同一入口（完整 root 的 diff 决定分类，不能手选快速路径）：
+
+```sh
+python3.12 <trusted-base-checkout>/scripts/ci-current.py \
+  --root <report-worktree> --harvest <locked-harvest> --base-ref <accepted-main>
+```
+
+workflow/harvest、两个报告 check、diff 和独立 pr-contract 均保留。报告 check 各一次，
+源码覆盖/容器统计沿用现有生成器。结果仅为 `generated-reports`，明确
+`data_qa=not_run`、`history_audit=not_run`、`tool_tests=not_run`，不是 chapter-current、
+全库验收或人工批准。输出 JSON 是本次证据，不具有跳过下次检查的权限；失败重跑
+删除旧报告结果。未知/混合/公共变化扩大，非法输入或无法确认 base 失败。
+
+### 本地编译证据复用
+
+提交/PR 仍须有适用的零退出和最终完整 TeX 日志证据。纯报告或其他不改变渲染输入
+与行为的任务可以复用：列明原命令、chapter/lane、来源锁、事实/模板/样式/渲染器/
+构建配置及工具链身份，核验相关输入 hash 未变、PDF/log hash 和原退出状态，说明
+本次修改为何不影响渲染。不能把报告 PASS 当作编译 PASS，也不能借复用免除本次
+报告检查或工具迁移的适用回归。输入改变或无法证明绑定时，运行实际受影响的
+章节/集成构建；默认不截图，生成物不提交。
 
 ## 2. 来源 checkout
 

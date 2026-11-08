@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 102 | 第 5-6、9-33、36-104、106-111 章 |
+| 未开始 | 101 | 第 5-6、9-33、36-40、42-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 14 | 第 1-4、7-8、34-35、105、112-116 章 |
+| 候选译文完成，待审校 | 15 | 第 1-4、7-8、34-35、41、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 252 / 3,299（7.6%） | 0 | 3,047 |
+| 模型候选译文 | 273 / 3,299（8.3%） | 0 | 3,026 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -76,7 +76,7 @@
 | 38 | 平坦性进阶（`flat`） | 未开始 | 0 / 44（0.0%） | 0 | 44 | 0 | 0 |
 | 39 | 群胚概形（`groupoids`） | 未开始 | 0 / 25（0.0%） | 0 | 25 | 0 | 0 |
 | 40 | 群胚概形进阶（`more-groupoids`） | 未开始 | 0 / 15（0.0%） | 0 | 15 | 0 | 0 |
-| 41 | 概形的平展态射（`etale`） | 未开始 | 0 / 21（0.0%） | 0 | 21 | 0 | 0 |
+| 41 | 概形的平展态射（`etale`） | 候选译文完成，待审校 | 21 / 21（100.0%） | 0 | 0 | 0 | 0 |
 | 42 | Chow 同调（`chow`） | 未开始 | 0 / 69（0.0%） | 0 | 69 | 0 | 0 |
 | 43 | 交叉理论（`intersection`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 44 | 曲线的 Picard 概形（`pic`） | 未开始 | 0 / 7（0.0%） | 0 | 7 | 0 | 0 |
@@ -391,6 +391,34 @@
 | 37 | `0244` | Descending affine morphisms | 完成 | 未开始 | 未开始 |
 | 38 | `0246` | Descending quasi-affine morphisms | 完成 | 未开始 | 未开始 |
 | 39 | `02W4` | Descent data in terms of sheaves | 完成 | 未开始 | 未开始 |
+
+### 第 41 章 概形的平展态射（`etale`）
+
+共 21 个 Section：候选完成 21，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `024K` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `039F` | Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `024L` | Unramified morphisms | 完成 | 未开始 | 未开始 |
+| 4 | `024O` | Three other characterizations of unramified morphisms | 完成 | 未开始 | 未开始 |
+| 5 | `024Q` | The functorial characterization of unramified morphisms | 完成 | 未开始 | 未开始 |
+| 6 | `024S` | Topological properties of unramified morphisms | 完成 | 未开始 | 未开始 |
+| 7 | `06ND` | Universally injective, unramified morphisms | 完成 | 未开始 | 未开始 |
+| 8 | `024W` | Examples of unramified morphisms | 完成 | 未开始 | 未开始 |
+| 9 | `0250` | Flat morphisms | 完成 | 未开始 | 未开始 |
+| 10 | `0254` | Topological properties of flat morphisms | 完成 | 未开始 | 未开始 |
+| 11 | `0257` | \'Etale morphisms | 完成 | 未开始 | 未开始 |
+| 12 | `025A` | The structure theorem | 完成 | 未开始 | 未开始 |
+| 13 | `039P` | \'Etale and smooth morphisms | 完成 | 未开始 | 未开始 |
+| 14 | `025F` | Topological properties of \'etale morphisms | 完成 | 未开始 | 未开始 |
+| 15 | `06NE` | Topological invariance of the \'etale topology | 完成 | 未开始 | 未开始 |
+| 16 | `025J` | The functorial characterization | 完成 | 未开始 | 未开始 |
+| 17 | `04HG` | \'Etale local structure of unramified morphisms | 完成 | 未开始 | 未开始 |
+| 18 | `04HK` | \'Etale local structure of \'etale morphisms | 完成 | 未开始 | 未开始 |
+| 19 | `025L` | Permanence properties | 完成 | 未开始 | 未开始 |
+| 20 | `0BTH` | Descending \'etale morphisms | 完成 | 未开始 | 未开始 |
+| 21 | `0CBN` | Normal crossings divisors | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

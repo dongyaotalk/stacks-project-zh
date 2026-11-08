@@ -29,7 +29,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 第 8 章 栈（`stacks`） | Section 1 / `0267` | `READY` | `REVIEW` |
 | P0 | 第 34 章 概形上的拓扑（`topologies`） | Section 1 / `020L` | `READY` | `REVIEW` |
 | P0 | 第 35 章 下降（`descent`） | Section 1 / `0239` | `READY` | `REVIEW` |
-| P0 | 第 41 章 概形的平展态射（`etale`） | Section 1 / `024K` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 41 章 概形的平展态射（`etale`） | Section 1 / `024K` | `READY` | `REVIEW` |
 | P0 | 第 21 章 位点上的上同调（`sites-cohomology`） | Section 1 / `01FR` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 59 章 平展上同调（`etale-cohomology`） | Section 1 / `03N2` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 65 章 代数空间（`spaces`） | Section 1 / `025S` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -54,7 +54,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 2 / 3 | 第 8 章 栈（`stacks`） | `scheme-to-stack` | Section 1 / `0267` | `REVIEW` | 进入代数栈的直接概念前置，系统中文材料稀缺 |
 | P0 | 2 / 4 | 第 34 章 概形上的拓扑（`topologies`） | `scheme-to-stack`, `etale-cohomology` | Section 1 / `020L` | `REVIEW` | étale、fppf、fpqc 主线共同基础，系统中文资料稀缺 |
 | P0 | 2 / 5 | 第 35 章 下降（`descent`） | `scheme-to-stack` | Section 1 / `0239` | `REVIEW` | 下降是核心通用技术，也是 Stacks Project 中文化边际价值最高的主题之一 |
-| P0 | 2 / 6 | 第 41 章 概形的平展态射（`etale`） | `scheme-to-stack`, `etale-cohomology` | Section 1 / `024K` | `PREPARE_SCOPE` | 概形的 étale 态射是 étale 几何主干，中文系统资料稀缺 |
+| P0 | 2 / 6 | 第 41 章 概形的平展态射（`etale`） | `scheme-to-stack`, `etale-cohomology` | Section 1 / `024K` | `REVIEW` | 概形的 étale 态射是 étale 几何主干，中文系统资料稀缺 |
 | P0 | 2 / 7 | 第 21 章 位点上的上同调（`sites-cohomology`） | `etale-cohomology` | Section 1 / `01FR` | `PREPARE_SCOPE` | 位点上的 étale、fppf 等上同调是核心主线，系统中文资料稀缺 |
 | P0 | 2 / 8 | 第 59 章 平展上同调（`etale-cohomology`） | `etale-cohomology` | Section 1 / `03N2` | `PREPARE_SCOPE` | 研究价值高且高质量系统中文资料稀缺 |
 | P0 | 2 / 9 | 第 65 章 代数空间（`spaces`） | `scheme-to-stack` | Section 1 / `025S` | `PREPARE_SCOPE` | 代数空间是从概形到栈的关键桥梁，系统中文资料稀缺 |

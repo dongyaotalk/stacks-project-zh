@@ -653,3 +653,26 @@ c8fec1e247860c00b55186215f777c29763b53e6ad3f4afef5e80165fd2c8e95。
 既有通用赋值识别器保持；数学set以及其他章、ID、hash或序号不继承例外。
 上述声明证据文件另存该完整Git proof、原始冻结绑定、分类前后要求和
 独立未采用来源核验，全部四项验证通过；synthetic诊断不代表模型候选QA。
+
+## 第21章完整声明与赋值边界（独立工具 #924）
+
+数学参数可把斜体定义短语分割成冠词、序数后缀、连接词和真正的数学词。
+仅对完整有界形式识别其词汇核心：第 p 个 cohomology group（可含实际
+abelian sheaf/object 说明）、第 p 个 higher direct image、morphism of pseudo
+数学参数-torsors，以及保留真实 caron 字节的 Čech complex/cohomology groups。
+保护后的来源投影及其坐标保持；真实 cohomology group、abelian sheaf、object、
+higher direct image、morphism、pseudo、torsor 的原词形和每次出现继续要求。
+未知修饰语、错误参数种类、重音或未完整匹配的声明沿用旧规则，不获得任意长句
+拆解或术语豁免。漏术语、次数/大小写错误和缺少 unknown_terms 上下文仍拒绝。
+
+既有 assignment-set 识别增加三个完整语法边界：句首 Namely, set 后接 MATH；
+句首 In the situation of Lemma REF set 后接 MATH；Set 前紧邻经实际 placeholder
+payload 验证的 medskip/noindent 段落边界，后接 MATH。这是赋值动词分类，不批准
+译法。真正的集合名词、错误引用种类、伪造结构边界和未知语境保持原要求。
+
+对 2947 个现有单元逐项比较，变化只有 04WG 完整证明的赋值 set 和 072S 完整
+正文段首赋值 Set 各一次；其余来源词形、位置、次数及 catalog hash 相等。
+完整原单元与前后 inventory 见
+[完整来源测试见证](../tests/fixtures/sites-cohomology21-source-text-tool-20261109.json)。
+来源文字或模型输出不因此修改，历史 raw/run/freeze 保持不可变。具体章节需在工具
+接受后重新冻结实际输入并由真实模型完整生成；工具诊断不能代替翻译候选验收。

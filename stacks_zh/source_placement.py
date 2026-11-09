@@ -33,7 +33,7 @@ def complete_prose_positions(batches: list[list[dict]], indices: set[int],
             raise RecordError('typed placement requires an actual complete adoption replay')
         _source_adoptions.assert_unchanged(root, harvest)
         adopted = _source_adoptions
-    elif any(u.get('schema_version') in {2,3} for i in indices for u in batches[i]):
+    elif any(u.get('schema_version') in {2,3,4} for i in indices for u in batches[i]):
         from .source_adoptions import load_repository_source_adoptions
         adopted, errors = load_repository_source_adoptions(root, harvest)
         if errors:
@@ -45,11 +45,11 @@ def complete_prose_positions(batches: list[list[dict]], indices: set[int],
             raise RecordError('unlabeled prose requires one complete canonical unit per batch')
         unit = batch[0]
         match = re.fullmatch(r'tag:([0-9A-Z]+):prose-([0-9]{4})', unit['unit_id'])
-        if (match is None or unit.get('schema_version') not in {1,2,3}
+        if (match is None or unit.get('schema_version') not in {1,2,3,4}
                 or unit.get('node_kind') != 'paragraph' or unit['chapter'] != chapter):
             raise RecordError('unlabeled batch is not a canonical complete ordinary prose unit')
         unit_policy = native.policy
-        if unit.get('schema_version') in {2,3}:
+        if unit.get('schema_version') in {2,3,4}:
             matches = [entry for entry in adopted.values() if entry['unit'] == clean(unit)]
             if len(matches) != 1:
                 raise RecordError('typed prose requires its validated complete first-source adoption')

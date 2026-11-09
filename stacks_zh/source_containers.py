@@ -854,6 +854,8 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 _first_addition_is_immutable(root, frozen_path)
                 frozen[role] = [clean(u) for u in load_jsonl(frozen_path)]
             units, candidates = frozen['input_units'], frozen['input_candidates']
+            if any(u.get('schema_version') == 4 for u in units + record['new_units']):
+                raise RecordError('historical source-container restoration cannot adopt unit-v4 references')
             if (not units or len({u['unit_id'] for u in units}) != len(units)
                     or [c['unit_id'] for c in candidates] != [u['unit_id'] for u in units]):
                 raise RecordError('source-container full frozen batch has inconsistent IDs/order')
@@ -1044,6 +1046,8 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                     raise RecordError('selected source containers overlap or reverse complete source order')
                 last_location[file] = location['byte_end']
                 new_units = lower_container(selected, containers.policy, layout=group['layout'])
+                if any(u.get('schema_version') == 4 for u in new_units):
+                    raise RecordError('historical source-container preparation cannot adopt unit-v4 references')
                 witnessed_version = None
                 if boundary:
                     anchor = boundary.get('paragraph_anchor')

@@ -791,3 +791,48 @@ before-projection历史fixture不回写，不跳过旧检查。
 批准。政策在main接受后，保全旧库存和所有旧冻结，按新政策准备当前完整
 来源库存/对应与章节计划；已有typed见证的policy hash不得回写到旧证据中。
 具体DATA仍使用同一集中任务的精确范围、当次真实身份和完整模型五字段。
+
+## 第21章有界框架与受保护引用（独立工具 #924）
+
+本合同属于独立工具开发。生产登记由 #925 另行承担；两项前置接受并进入 main
+后，具体 DATA #923 才能冻结新输入和实际生成。此处不采用事实或重写旧记录。
+
+新增两项纯参数 usage，沿用 unit-v2 的完整纯文字参数与双重 hash：
+
+- `sites-invertible-sheaf-matrices`：040E / parent040D / proof1 的完整双矩阵。
+  只暴露 `set of invertible sheaves on `、`set of `、`-torsors` 三个原参数。
+  完整赋环位点对、O-star 对象、矩阵边界、两处同构类限定与 longrightarrow
+  的所有非文字 token、depth、环境和间隔原字节必须匹配锁定来源。
+- `sites-naive-cup-arrow`：0FPK / parent0FPJ / lemma1 的完整杯积 xymatrix，
+  只允许实际向下箭头下标中的完整 `naive cup product`。所有操作数、derived
+  tensor、字体、箭头方向及 Tot 原记号保持；错位置或未知邻居阻断。
+
+另增 `locked_math_text_contexts` 的 `PAb / textit / sites-pab-shriek`，仅支持
+08PJ / parent08P7 / proof1 的完整
+`$\mathcal{F}_{U'} = j_{U'!}^{\textit{PAb}}\mathbf{Z}_{U'}$`。
+它直接引用既有 PAb/applied 条目，独立 context 只能列这一个 usage；既有 applied
+权限保持，不获得任意脚本或一般 symbol 权限。
+
+混合参数 `\text{Remark \ref{remark-cup-product}}` 使用独立 **unit-v4** 与
+`math-text-references.schema.json`，不是普通 v2 叶或 v3 组件。只暴露纯文字
+`Remark `，原完整 ref 留在后续 MATHSEG。`parameter_reference` 保存完整父参数
+原字节/UTF-8 span、ref 原字节/UTF-8 span、命令和键；完整图匹配及真实 Git
+见证同时验证其位置。目标前缀须为非空纯文字，不能插入 TeX、替换 ref、改变
+命令/键或移动边界。来源完整回放及译文 skeleton 独立检查；重算 hash 不免检。
+v4 可包含现有完整普通参数叶，至少含一个受保护引用参数，不能混入 v3 组件。
+
+政策须通过独立 `translatable_math_text_references` 章节明确列出 `literal`、
+`prefix`、`reference`、`command`、`usage`、`source_label`、`witness_kind`、
+`witness_ordinal`，全部为 JSON 值。当前只接受上述完整 literal/ref、命令 text、
+usage `sites-cup-remark-reference` 及实际 lemma1 见证。其他混合参数仍阻断，
+也不能借普通 context 继承此权限。
+
+首次活跃采用必须走独立 source-adoption-v6 的 accepted-origin 能力证明，见
+[source-adoption.md](source-adoption.md)。旧 unit-v1/v2/v3、首次采用 v1–v5 及
+全部历史原字节/政策语义保持。普通 assemble/assemble-many 和现有历史容器恢复、
+分组派生路径明确拒绝 unit-v4。渲染仅接受完整验证的活跃 v6 候选，再按既有规则
+把受保护引用展示为实际本地标签或永久 Tag 待译链接；展示转换不改变事实 ref。
+
+实际锁定来源和隔离试验政策见
+[完整来源测试见证](../tests/fixtures/sites-cohomology21-source-text-tool-20261109.json)。
+试验政策下全章无数学文字分类诊断不等于生产政策接受、模型候选完成或人审通过。

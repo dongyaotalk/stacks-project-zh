@@ -151,6 +151,7 @@ POLICIES = ('upstream.lock', 'config/workflow.yml', 'config/macro-policy.yml',
             'schema/math-text-regions.schema.json', 'schema/math-text-components.schema.json',
             'schema/run-manifest.schema.json', 'schema/translator-output.schema.json',
             'schema/task-scope.schema.json')
+REFERENCE_POLICIES = (*POLICIES, 'schema/math-text-references.schema.json')
 EVIDENCE = r'(?:docs/evidence|translation-data/source-adoption-inputs|translation-data/retired/source-adoptions/[A-Za-z0-9._-]+)/[A-Za-z0-9._-]+\.(?:json|jsonl)'
 
 
@@ -177,6 +178,24 @@ def _schema(value, name):
             and ('prior_adoptions' in value
                  or any(batch['prior_attempts'] for batch in value['batches']))):
         raise RecordError('chapter-header v4 cannot declare generation ancestry')
+    if (name == 'source-adoption-input.schema.json'
+            and value.get('tool_version') == 'source-adoption-input-v6'
+            and ('prior_adoptions' in value or any(b['prior_attempts'] for b in value['batches']))):
+        raise RecordError('protected-reference v6 only permits complete first generation')
+
+
+def _reference_origin(policy_bytes):
+    """Require an accepted, explicitly versioned capability, never old semantics."""
+    try:
+        schema = json.loads(policy_bytes['schema/unit.schema.json'])
+        versions = {b['properties']['schema_version']['const'] for b in schema['oneOf']}
+        if 4 not in versions:
+            raise RecordError('accepted origin does not permit unit-v4 references')
+        reference_schema = json.loads(policy_bytes['schema/math-text-references.schema.json'])
+        if reference_schema['$id'] != 'https://stacks-project-zh.invalid/schema/math-text-references.schema.json':
+            raise RecordError('accepted origin lacks the independent protected-reference Schema')
+    except (ValueError, KeyError, TypeError) as exc:
+        raise RecordError('accepted origin lacks the complete protected-reference contract') from exc
 
 
 def _relative_input(root, path):
@@ -671,7 +690,8 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
     if len(frozen['batches']) == 1 and not frozen['outside_preferred_reason']:
         raise RecordError('a single indivisible complete batch requires an explicit exception reason')
     policies = frozen['policies']
-    if len(policies) != len(POLICIES) or {e['path'] for e in policies} != set(POLICIES):
+    required_policies = REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else POLICIES
+    if len(policies) != len(required_policies) or {e['path'] for e in policies} != set(required_policies):
         raise RecordError('source adoption must freeze the complete explicit policy set')
     policy_bytes = {}
     for entry in policies:
@@ -681,7 +701,7 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
         policy_bytes[entry['path']] = payload
         if current and reads.snapshot.read(root / entry['path']) != payload:
             raise RecordError('generation policy drifted since its frozen origin')
-    if frozen['tool_version'] in {'source-adoption-input-v4', 'source-adoption-input-v5'}:
+    if frozen['tool_version'] in {'source-adoption-input-v4', 'source-adoption-input-v5', 'source-adoption-input-v6'}:
         version = frozen['tool_version']
         for name, allowed_version in [('schema/source-adoption-input.schema.json', version),
                                      ('schema/source-adoption.schema.json', version.replace('-input', ''))]:
@@ -692,6 +712,8 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
             if allowed_version not in allowed:
                 raise RecordError('accepted origin does not permit chapter-header adoption' if version == 'source-adoption-input-v4'
                                   else 'accepted origin does not permit ' + version)
+    if frozen['tool_version'] == 'source-adoption-input-v6':
+        _reference_origin(policy_bytes)
     if source not in policy_bytes['upstream.lock'].decode():
         raise RecordError('first adoption does not use the accepted English lock')
     seen_contexts = set()
@@ -748,6 +770,9 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
             if found.returncode or found.stdout:
                 raise RecordError('first adoption batch already exists at its accepted origin')
     ids = [u['unit_id'] for u in all_units]
+    reference_units = any(u['schema_version'] == 4 for u in all_units)
+    if reference_units != (frozen['tool_version'] == 'source-adoption-input-v6'):
+        raise RecordError('unit-v4 protected references require the independent first-adoption v6 contract')
     ordered_locations = sorted(locations)
     if any(left[0] == right[0] and right[1] < left[2]
            for left, right in zip(ordered_locations, ordered_locations[1:])):

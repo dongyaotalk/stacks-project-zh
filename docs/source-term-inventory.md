@@ -676,3 +676,34 @@ payload 验证的 medskip/noindent 段落边界，后接 MATH。这是赋值动�
 [完整来源测试见证](../tests/fixtures/sites-cohomology21-source-text-tool-20261109.json)。
 来源文字或模型输出不因此修改，历史 raw/run/freeze 保持不可变。具体章节需在工具
 接受后重新冻结实际输入并由真实模型完整生成；工具诊断不能代替翻译候选验收。
+
+## 第21章限定的完整来源词形（Issue #925，待验收）
+
+独立来源政策仅为 `sites-cohomology` 增加五个概念、六个实际词形：
+`quasi-isomorphisms`、`triangulated category` / `triangulated categories`、
+`homotopy category`、`derived pullback`、完整章节引用 `More on Algebra`。
+使用已有最长匹配规则；旧概念、词形、章节范围和每项证据保持。
+完整章节名称作为完整来源短语盘点，不排除其他数学意义的 algebra。
+目录登记不批准任何中文译法；逐次双语、待决上下文及所有结构门禁保持。
+
+每个词形均从锁定英文 Git 的完整容器独立选择并逐字核验，见
+[完整来源测试见证](../tests/fixtures/sites-cohomology21-source-terms-policy.json)。
+见证与合成 validator 显示列表只服务政策回归，不是模型译文或来源采用记录。
+现有全部当前单元的 inventory 除 catalog hash 外必须相等；后续完整章比较及
+政策最终验收仍待执行。该政策进入已接受 main 后，DATA #923 才以新 ID 重新
+冻结并实际生成，旧冻结、raw、run 保持不可变，不继承人工审校。
+
+来源政策开发回归已通过6项检查：原字节保留、已接受基线2947个单元的库存
+不变、完整复合词覆盖、缺项拒绝、其他章节范围保持，以及独立锁定Git见证和
+错误hash/selector/词形拒绝。基线是
+`8038ce359f8ecb4268632379080022038ca3c5a7`；测试从该不可变Git archive读取
+原单元，后续新数据不会被误当作本次政策开始前的旧库存。
+
+采用TOOL #924未接受实现及隔离完整宏政策的只读试验比较743条原生来源记录，
+50条库存记录把内部词形替换为完整短语，要求总数保持5964；source text和
+结构hash保持。这是开发证据，不能用来代替生产宏政策登记、当前全量QA、
+实际编译或来源采用。宏政策和工具accepted-main依赖仍须完成。
+
+#924 工具已由 PR #926 接受至 main
+`bc435c2a6f958f39b17a64fe3e7eb29b957c2bfb`。后续政策验收以该工具基线和
+独立实际输入绑定，不回写上述开发见证或原始输入；政策合并与DATA仍各自验收。

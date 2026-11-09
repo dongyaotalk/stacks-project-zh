@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import json
+import subprocess
 import unittest
 from pathlib import Path
 from stacks_zh.records import RecordError, stamp_unit_hashes
@@ -9,6 +10,10 @@ from stacks_zh.source_reextractions import source_tex
 from stacks_zh.source_terms import load_catalog, source_inventory, source_tex_hash, validate_source_terms
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = load_catalog(ROOT)
+# Immutable accepted four-classification catalog, not the moving full catalog.
+REGISTERED_COMMIT = '036c698422f981167cef3285c881546cf40b21c3'
+REGISTERED = json.loads(subprocess.check_output(
+    ['git', 'show', REGISTERED_COMMIT + ':config/source-terms.json'], cwd=ROOT))
 EVIDENCE = json.loads((ROOT/'docs/evidence/etale41-project-name-20261105.json').read_text())
 ENTRY = EVIDENCE['entry']
 DECLARATIONS = json.loads((ROOT/'docs/evidence/etale41-declaration-source-policy-20261105.json').read_text())
@@ -19,7 +24,10 @@ def words(unit, catalog):
 
 class EtaleProjectNamePolicyTests(unittest.TestCase):
     def test_only_four_exact_classifications_were_added(self):
-        before=copy.deepcopy(CATALOG)
+        registered_raw=(json.dumps(REGISTERED,ensure_ascii=False,indent=2)+'\n').encode()
+        self.assertEqual('sha256:'+hashlib.sha256(registered_raw).hexdigest(),
+                         DECLARATIONS['catalog_four_classifications_hash'])
+        before=copy.deepcopy(REGISTERED)
         for entry in NEW_ENTRIES:
             self.assertEqual(before['nonmathematical_occurrences'].count(entry),1)
             before['nonmathematical_occurrences'].remove(entry)
@@ -28,6 +36,11 @@ class EtaleProjectNamePolicyTests(unittest.TestCase):
         self.assertEqual((ENTRY['chapter'],ENTRY['unit_id'],ENTRY['source_term'],ENTRY['occurrence_index']),
                          ('etale','tag:024K:prose-0001','Stacks',0))
         self.assertEqual(ENTRY['source_tex_hash'],'sha256:52b67923c9f9767319e7c54a945167665032cd1ce58cf13b1eef79d6f3b89b63')
+
+    def test_current_catalog_retains_each_exact_registered_classification(self):
+        for entry in NEW_ENTRIES:
+            with self.subTest(unit=entry['unit_id'],term=entry['source_term']):
+                self.assertEqual(CATALOG['nonmathematical_occurrences'].count(entry),1)
 
     def test_complete_real_canonical_source_is_the_witness(self):
         unit=EVIDENCE['canonical_unit']

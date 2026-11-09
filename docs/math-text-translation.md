@@ -836,3 +836,39 @@ usage `sites-cup-remark-reference` 及实际 lemma1 见证。其他混合参数�
 实际锁定来源和隔离试验政策见
 [完整来源测试见证](../tests/fixtures/sites-cohomology21-source-text-tool-20261109.json)。
 试验政策下全章无数学文字分类诊断不等于生产政策接受、模型候选完成或人审通过。
+
+## 第21章来源政策登记（独立 POLICY #925）
+
+本任务只登记锁定英文来源的文字与记号用法，不生成或采用译文。依赖工具
+#924 的完整矩阵、杯积图、精确 PAb context 及独立 unit-v4/source-adoption-v6
+合同；这些工具进入 accepted main 后才启用本节生产登记。开发见证不授予
+工具接受、术语批准、语言/数学审校或发布资格。
+
+新增记号的精确命令/用法为 Comp（text/superscripted）、Tot（text/applied 与
+superscripted）、PMod（textit/applied）、LC（textit/symbol）、Im（text/applied）、
+hocolim（text/bare-symbol）和 pt（text/symbol）。Tor 保留原用法，只增补本章
+实际 bare-symbol。PAb 保留既有 applied，另以独立 context 登记 08PJ 的完整
+shriek 公式，不扩展普通脚本或 symbol 权限。锁定本章 Tot 共106处：102处
+applied、4处 superscripted，无 subscripted 见证，因此不登记下标用法。
+
+新增普通纯文字参数为 `" for "`、`" up to isomorphism"`、`"euclidean topology"`、
+`" and all "`、`" where "`、`" represents "`，分别绑定现有 root-phrase 或
+matrix-row-text 语法及真实完整容器。040E 的三个矩阵描述与 0FPK 的
+`"naive cup product"` 使用 #924 的完整有界框架；混合
+`\text{Remark \ref{remark-cup-product}}` 走独立受保护引用参数登记，原引用
+命令、键和其余数学字节保持。大小写、空格、命令和实际语法逐项匹配，未知
+文字或用法继续阻断。六个普通文字与五个框架/引用登记均不保存中文译法。
+
+[完整来源开发见证](../tests/fixtures/sites-cohomology21-math-text-policy-20261109.json)
+保存10类新增记号用法、11项文字规则及18个完整容器，分别绑定 locked Git
+blob、容器 selector、UTF-8 字节位置和原文 hash。该 fixture 中 unit 是只读
+preparation 数据，`actual_model_data=false`，不是 candidate/raw/run；其
+`tool_accepted_main=false` 记录准备时的依赖状态，不能作为生产启用证据。
+
+生产政策的最终回归、current-all QA 与适用编译验收单独绑定 accepted main
+及当次输入。DATA #923 在工具和政策接受后重新规划和冻结实际输入；旧冻结、
+raw、run 原字节保留，不能把开发降低后的 unit 当作模型生成事实。
+
+#924 已通过精确head两项必需CI并经 PR #926 合并；生产登记的工具基线为
+`bc435c2a6f958f39b17a64fe3e7eb29b957c2bfb`。本节政策在该工具基线上单独
+验证，开发fixture保留准备时的原状态；本地登记不等于政策PR已接受或DATA采用。

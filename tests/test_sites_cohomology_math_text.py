@@ -329,4 +329,28 @@ class LockedSourceWitnessTests(unittest.TestCase):
             self.assertFalse(any(o not in change['before']['occurrences'] for o in change['after']['occurrences']))
 
 
+class ReferencePreparationCurrentTests(unittest.TestCase):
+    def test_complete_v6_preparation_copies_reach_current_acceptance(self):
+        from test_chapter_validation import preparation_copy
+        from test_source_adoptions import write
+        from stacks_zh.chapter_validation import check_chapter
+        with tempfile.TemporaryDirectory() as tmp:
+            root,harvest,fp,rp,frozen,raw=adoption_fixture(Path(tmp))
+            mp,rt=preparation_copy(root,frozen,fp,rp)
+            assemble_source_adoption(root,fp,[rp],harvest)
+            result=check_chapter(root,harvest,'test','synthetic',frozen['origin_commit'],current_all=True)
+            self.assertEqual(result.report['preparations'][0]['status'],'adopted-input-copy-verified')
+            self.assertEqual(result.report['exit_status'],0)
+            original=mp.read_bytes();value=json.loads(original)
+            value['policy_files']=[e for e in value['policy_files'] if e['path']!='schema/math-text-references.schema.json']
+            write(mp,value)
+            with self.assertRaisesRegex(RecordError,'model-input evidence differs from its complete frozen inputs'):
+                check_chapter(root,harvest,'test','synthetic',frozen['origin_commit'],current_all=True)
+            mp.write_bytes(original)
+            runtime=json.loads(rt.read_bytes());runtime['turn_metadata']['model']='other-synthetic-model'
+            write(rt,runtime)
+            with self.assertRaisesRegex(RecordError,'runtime turn metadata differs from frozen identity'):
+                check_chapter(root,harvest,'test','synthetic',frozen['origin_commit'],current_all=True)
+
+
 if __name__=='__main__':unittest.main()

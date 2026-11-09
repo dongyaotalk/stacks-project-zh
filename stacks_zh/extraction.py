@@ -71,8 +71,8 @@ def _notation_context_registry(text, notations):
     result, seen_contexts = {}, set()
     for value in entries.values():
         base = value.get('base_notation')
-        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets'}:
-            raise RecordError('notation context requires its existing direct pr/-Sets base')
+        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb'}:
+            raise RecordError('notation context requires its existing direct pr/-Sets/PAb base')
         fields = {'base_notation', 'commands', 'usages', 'source_label'}
         if base == '-Sets':
             fields.add('prefix')
@@ -80,13 +80,16 @@ def _notation_context_registry(text, notations):
             raise RecordError('incomplete notation context')
         commands, usages = value['commands'], value['usages']
         expected_commands = ['text'] if base == 'pr' else ['textit']
-        allowed = ({'starred-subscripted', 'projection-declaration', 'descent-projection'} if base == 'pr' else
+        allowed = ({'sites-pab-shriek'} if base == 'PAb' else
+                   {'starred-subscripted', 'projection-declaration', 'descent-projection'} if base == 'pr' else
                    {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol'})
         if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
                 or not isinstance(usages, list) or not usages
                 or any(not isinstance(v, str) or v not in allowed for v in usages)
                 or len(usages) != len(set(usages))):
             raise RecordError('unsupported notation context command or usage')
+        if base == 'PAb' and (usages != ['sites-pab-shriek'] or notations[base]['usages'] != ['applied']):
+            raise RecordError('PAb shriek requires its sole finite context and existing applied base')
         if 'projection-declaration' in usages and (
                 usages != ['projection-declaration'] or 'symbol' in notations[base]['usages']):
             raise RecordError('projection declaration requires its sole context role and no primary symbol')
@@ -517,6 +520,9 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind == 'sites-pab-shriek':
+            from .math_text_sites_cohomology import notation_context
+            return notation_context(self.text, stream, index, value)
         if kind in {'descent-relative-proj', 'descent-projection'}:
             from .math_text_descent import notation_context
             return notation_context(self.text, stream, index, value, kind)
@@ -594,7 +600,8 @@ class Scanner:
         cursor = self.skip_space(closing)
         for usage in rule['usages']:
             if usage in {'starred-subscripted', 'projection-declaration', 'morphism-category-prefixed-symbol',
-                         'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection'}:
+                         'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection',
+                         'sites-pab-shriek'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']
@@ -785,6 +792,8 @@ class Scanner:
                         'anchor': self.policy.math_text_witnesses[slot['policy_entry']]}})
                 if 'parameter_components' in slot:
                     text_slots[-1]['parameter_components'] = slot['parameter_components']
+                if 'parameter_reference' in slot:
+                    text_slots[-1]['parameter_reference'] = slot['parameter_reference']
                 protected.extend([before, slot['value']])
                 cursor = slot['parameter_end']
             after = lock('MATHSEG', a + cursor, b)
@@ -983,7 +992,7 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
         for region in unit.get('math_text_regions', []):
             stream = nodes(region['source'])
             for slot in region['slots']:
-                parameter_start = slot.get('parameter_components', {}).get(
+                parameter_start = slot.get('parameter_reference', slot.get('parameter_components', {})).get(
                     'parameter_byte_span', slot['slot_byte_span'])['start']
                 node = next(n for n in stream if n.get('command') == slot['command'] and
                             len(region['source'][:n['parameter_start']].encode('utf-8')) == parameter_start)

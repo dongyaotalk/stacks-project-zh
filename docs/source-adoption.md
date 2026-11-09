@@ -230,3 +230,27 @@ lowering。前次采用及其 output 均须未曾独立加入 Git，首次共同
 该合同不允许来源修复、分段变化、章首 v4 后继或已独立 Git 采用事实的覆盖，
 不改变 v1/v2/v3/v4 及派生合同权限，不批准术语、critic、人工审校或发布。具体
 数据只能在本独立工具验收合并后于其声明的数据任务采用。
+
+## 受保护数学文字引用的首次生成（v6；独立工具 #924）
+
+`source-adoption-input-v6` / `source-adoption-v6` 仅用于至少包含一个 unit-v4
+受保护引用参数的完整首次生成包。包中其他普通 v1/v2 单元仍完整冻结并实际
+生成；不凭一个引用叶创建零模型或局部字段采用。精确任务范围、完整 locked-Git
+容器、所有相邻/引用上下文、唯一 writer、模型/Harness/runtime、六字段 raw
+（unit_id 加五个译者字段）、一次完整装配和不可变证据合同保持。
+
+v6 的政策集合是原 POLICIES 加 `schema/math-text-references.schema.json`。
+所有文件必须逐字等于真实 accepted origin；该 origin 的 unit Schema 必须
+明确包含 v4、独立引用 Schema 必须存在，两份首次采用 Schema 必须明确允许
+input-v6/v6。缺失任何能力或当前政策漂移即拒绝，不从工具分支或自报版本推断
+主线权限。旧 v1–v5 继续冻结原政策集合，不能采用 unit-v4 或重新解释旧来源。
+
+v6 不允许 prior_attempts、prior_adoptions 或 shared_run_histories。既有候选
+修订、首次 Git 采用前见证重绑定、旧分段恢复和组件共存都需要各自另行版本化
+合同；不得把 v6 当作扩大旧历史权限的入口。原 v1–v5 历史记录和 raw 不回写。
+当前 QA、完整溯源及 renderer 检查独立 v6 候选，普通装配、历史 source-container
+和 group-derivation v4 路径拒绝 unit-v4。模型不能批准术语、语言/数学审校或发布。
+
+该工具验收并进入 main 后，再接受独立 #925 的生产政策；DATA #923 重新冻结
+当次完整 source/context/runtime 并实际生成。测试中的 synthetic 冻结/raw/run
+仅为明确标注的独立回归样例，不能作为具体章节的模型输出或审校证据。

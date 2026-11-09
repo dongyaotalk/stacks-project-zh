@@ -21,6 +21,9 @@ def revision_group(record: dict[str, Any], group: dict[str, Any],
 
 def replay_groups(record, units, candidates, corrections, previous_outputs, restorations, tags):
     units, candidates = [clean(u) for u in units], [clean(c) for c in candidates]
+    if (any(u.get('schema_version') == 4 for u in units)
+            or any(u.get('schema_version') == 4 for g in record['unit_groups'] for u in g['output_units'])):
+        raise RecordError('group derivation v4 cannot adopt unit-v4 protected references')
     ids = [u['unit_id'] for u in units]
     if not ids or len(set(ids)) != len(ids) or [c['unit_id'] for c in candidates] != ids:
         raise RecordError('v4 requires unique equally ordered full-batch inputs')

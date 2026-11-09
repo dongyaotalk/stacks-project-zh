@@ -138,7 +138,8 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 or model_input['scope_manifest']!=dict(path=frozen['task']['scope_manifest'],hash=frozen['task']['scope_manifest_sha256'])):
             raise RecordError('model-input evidence differs from its complete frozen inputs')
         policies={e['path']:e for e in frozen['policies']}
-        if len(policies)!=len(a.POLICIES) or set(policies)!=set(a.POLICIES):
+        required_policies = a.REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else a.POLICIES
+        if len(policies)!=len(required_policies) or set(policies)!=set(required_policies):
             raise RecordError('preparation lacks complete frozen policies')
         policy_bytes={}
         for path,item in policies.items():

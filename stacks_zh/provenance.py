@@ -100,13 +100,15 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
         _source_adoptions=source_adoptions)
     errors.extend(derivation_errors)
     typed_active = {}
+    reference_active = {}
     typed_seen = set()
     for unit_file in sorted(_input_glob(root / 'translation-data/units', '*.jsonl')):
         try:
             rows = [json.loads(line) for line in _read_record_bytes(unit_file).decode('utf-8').splitlines() if line.strip()]
             if any(not isinstance(row, dict) for row in rows):
                 raise ProvenanceError('active unit records must be objects')
-            typed_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') in {2,3}}
+            typed_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') in {2,3,4}}
+            reference_active[unit_file.name] = {u['unit_id'] for u in rows if u.get('schema_version') == 4}
             if typed_active[unit_file.name]:
                 from .source_containers import safe_path
                 safe_path(root, unit_file.relative_to(root).as_posix(),
@@ -194,6 +196,8 @@ def _validate_repository_provenance(root: Path, harvest: Path | None = None):
                               r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
                     if adoption is not None and candidate == adoption['candidate']:
                         pass
+                    elif candidate['unit_id'] in reference_active.get(candidate_path.name, set()):
+                        raise ProvenanceError('active unit-v4 requires validated first-source v6 adoption')
                     elif (not isinstance(identifier, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', identifier)
                             or '..' in identifier or (candidate_path.relative_to(root).as_posix(), candidate['unit_id']) not in origins
                             or _read_json(root / 'translation-data/derivations' / (identifier + '.json'))['tool']['version'] != '4'):

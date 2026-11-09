@@ -22,6 +22,36 @@ def source_tex_hash(unit: dict[str, Any]) -> str:
     return sha256_value(unit["render"]["prefix"] + restore_placeholders(unit, unit["source_text"], _source_replay=True) + unit["render"]["suffix"])
 
 
+def _qualified_declaration_parts(body: str, unit: dict[str, Any]) -> list[str] | None:
+    """Recognize complete witnessed phrases, never arbitrary prose fragments.
+
+    A protected ordinal/object can split an italic noun phrase into articles,
+    suffixes and connectors. Those fragments are not independently named terms.
+    Keep the real lexical cores; all other declarations retain the old parser.
+    """
+    text = _space(body)
+    math = r'<MATH_[0-9]{4}>'
+    names = PLACEHOLDER_TOKEN_RE.findall(text)
+    if names and all(name in unit['placeholders'] for name in names):
+        if re.fullmatch(r'(?:the )?' + math + r'th cohomology group of the abelian sheaf '
+                        + math + r' over the object ' + math, text):
+            return ['cohomology group', 'abelian sheaf', 'object']
+        if re.fullmatch(r'(?:the )?' + math + r'th cohomology group of ' + math
+                        + r' (?:on|over) ' + math, text):
+            return ['cohomology group']
+        if re.fullmatch(r'(?:the )?' + math + r'th higher direct image of ' + math, text):
+            return ['higher direct image']
+        if re.fullmatch(r'morphism of pseudo ' + math + r'-torsors', text):
+            return ['morphism', 'pseudo', 'torsors']
+    # The caron and its group stay opaque in the source projection. Only this
+    # verified proper name prefix may precede these two named lexical cores.
+    accent = re.fullmatch(r'<(GROUPOPEN_([0-9]{4}))><(ACCENT_[0-9]{4})>'
+                          r'<(GROUPCLOSE_\2)>ech (complex|cohomology groups)', text)
+    if accent and [unit['placeholders'].get(accent[i]) for i in (1, 3, 4)] == ['{', r'\v C', '}']:
+        return [accent[5]]
+    return None
+
+
 def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
     """Expose prose through formatting wrappers without reading protected math."""
     source = unit["source_text"]
@@ -77,8 +107,13 @@ def source_projection(unit: dict[str, Any]) -> tuple[str, list[str]]:
                     visible_body = term_display_text(body, unit["placeholders"], unit=unit)
                     usage_clause = (re.match(r"^(?:let|assume|suppose)\b", _space(visible_body), re.IGNORECASE)
                                     and PLACEHOLDER_TOKEN_RE.search(visible_body))
+                    qualified_parts = (_qualified_declaration_parts(visible_body, unit)
+                                       if introduced and not usage_clause else None)
+                    if qualified_parts is not None:
+                        declarations.extend(qualified_parts)
                     # Math-qualified declarations still expose their prose parts.
-                    for phrase in ([] if usage_clause or not introduced else PLACEHOLDER_TOKEN_RE.split(visible_body)[::2]):
+                    for phrase in ([] if usage_clause or not introduced or qualified_parts is not None
+                                   else PLACEHOLDER_TOKEN_RE.split(visible_body)[::2]):
                         phrase = _space(phrase).strip(" -.,:;`'\"()")
                         if PLACEHOLDER_TOKEN_RE.search(visible_body):
                             # A formula can leave a connector as a whole prose
@@ -143,7 +178,7 @@ def _literal_mailto_spans(unit: dict[str, Any], projected_text: str) -> list[tup
     return spans
 
 
-def _assignment_set(text: str, match: re.Match[str]) -> bool:
+def _assignment_set(text: str, match: re.Match[str], unit: dict[str, Any] | None = None) -> bool:
     if match.group(0).casefold() != "set":
         return False
     before = text[:match.start()].rstrip()
@@ -156,6 +191,14 @@ def _assignment_set(text: str, match: re.Match[str]) -> bool:
         return True
     if not re.match(r"\s+<MATH_[0-9]{4}>", after):
         return False
+    if (re.search(r'(?:^|[.!?]\s+)namely,$', before, re.IGNORECASE)
+            or re.search(r'(?:^|[.!?]\s+)in the situation of lemma <REF_[0-9]{4}>$',
+                         before, re.IGNORECASE)):
+        return True
+    paragraph = re.search(r'<(STRUCT_[0-9]{4})>\s*<(STRUCT_[0-9]{4})>$', before)
+    if (paragraph and unit is not None
+            and [unit['placeholders'].get(paragraph[i]) for i in (1, 2)] == [r'\medskip', r'\noindent']):
+        return True
     return (not before or before[-1] in ".!?"
             or bool(re.search(r"\b(?:us|can|could|may|must|shall|will|and)\s*$", before, re.IGNORECASE))
             or bool(re.search(r"\bwe(?:\s+(?:now|first|then|finally|similarly))*\s*$", before, re.IGNORECASE))
@@ -224,7 +267,7 @@ def source_inventory(unit: dict[str, Any], catalog: dict[str, Any]) -> dict[str,
             continue
         for form in entry["forms"]:
             for match in _matches(text, form, ignore_case=True):
-                if (match.span() in excluded_spans or _assignment_set(text, match)
+                if (match.span() in excluded_spans or _assignment_set(text, match, unit)
                         or any(start <= match.start() and match.end() <= stop
                                for start, stop in literal_spans)):
                     continue

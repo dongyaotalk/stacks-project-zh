@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from test_math_text import BASE_POLICY
 from test_source_containers import fixture as english_fixture, selector, git
@@ -335,9 +336,17 @@ class ReferencePreparationCurrentTests(unittest.TestCase):
         from test_source_adoptions import write
         from stacks_zh.chapter_validation import check_chapter
         with tempfile.TemporaryDirectory() as tmp:
-            root,harvest,fp,rp,frozen,raw=adoption_fixture(Path(tmp))
+            # Exercise the detached/alternate-branch CI case explicitly. The
+            # synthetic accepted origin needs its own confirmed-main anchor.
+            with patch.dict(os.environ, {'GIT_CONFIG_COUNT':'1',
+                    'GIT_CONFIG_KEY_0':'init.defaultBranch','GIT_CONFIG_VALUE_0':'fixture-v6'}):
+                root,harvest,fp,rp,frozen,raw=adoption_fixture(Path(tmp))
+            self.assertEqual(git(root,'branch','--show-current'),'fixture-v6')
             mp,rt=preparation_copy(root,frozen,fp,rp)
             assemble_source_adoption(root,fp,[rp],harvest)
+            with self.assertRaisesRegex(RecordError,'base is not in confirmed main history'):
+                check_chapter(root,harvest,'test','synthetic',frozen['origin_commit'],current_all=True)
+            git(root,'update-ref','refs/heads/main',frozen['origin_commit'])
             result=check_chapter(root,harvest,'test','synthetic',frozen['origin_commit'],current_all=True)
             self.assertEqual(result.report['preparations'][0]['status'],'adopted-input-copy-verified')
             self.assertEqual(result.report['exit_status'],0)

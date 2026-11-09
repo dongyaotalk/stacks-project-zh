@@ -2,6 +2,7 @@
 import hashlib
 import json
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -18,6 +19,10 @@ from test_etale_math_text import FRAMES, UNRAMIFIED, SECTIONS, THICKENING, DESCE
 ROOT = Path(__file__).resolve().parents[1]
 BEFORE = (ROOT/'tests/fixtures/macro-policy-before-etale.yml').read_text()
 CURRENT = (ROOT/'config/macro-policy.yml').read_text()
+# Accepted etale registration, independent of later chapter policy additions.
+REGISTERED_COMMIT = 'a141a53c5114b26ab6b39c2884ea223945b490a1'
+REGISTERED = subprocess.check_output(
+    ['git', 'show', REGISTERED_COMMIT + ':config/macro-policy.yml'], cwd=ROOT, text=True)
 EVIDENCE = json.loads((ROOT/'docs/evidence/etale41-math-text-policy-20261106.json').read_text())
 BEFORE_HASH = '2762bd3987f6da68e373928da96eb653423d86d2bb52a1fb1599c98eec53a4ff'
 TEXT = {
@@ -66,9 +71,9 @@ def protected(text, raw=CURRENT):
 class EtalePolicyRegistrationTests(unittest.TestCase):
     def test_exact_only_declared_delta_reconstructs_accepted_policy_bytes(self):
         self.assertEqual(hashlib.sha256(BEFORE.encode()).hexdigest(), BEFORE_HASH)
-        restored = CURRENT
+        restored = REGISTERED
         for section, added in ADDED.items():
-            old, new = entries(BEFORE, section), entries(CURRENT, section)
+            old, new = entries(BEFORE, section), entries(REGISTERED, section)
             self.assertEqual(set(new), set(old) | added)
             for key in added:
                 self.assertEqual(restored.count(new[key]), 1)
@@ -124,7 +129,7 @@ class EtalePolicyRegistrationTests(unittest.TestCase):
                 self.assertTrue(protected(source)[0][2])
 
     def test_old_notation_and_descent_permissions_are_unchanged(self):
-        old, new = Policy(BEFORE), Policy(CURRENT)
+        old, new = Policy(BEFORE), Policy(REGISTERED)
         for source in [r'$\text{depth}_R(M)$', r'$\text{Mod}_R$', r'$\textit{Mod}(R)$',
                        r'$\text{Cov}$', r"$\text{Cov}'(S)$", r'$\textit{Aff}$',
                        PROJ, *PROJECTIONS, CHAIN, DATA, ARROW, SETS, REFERENCES]:
@@ -135,6 +140,21 @@ class EtalePolicyRegistrationTests(unittest.TestCase):
         for key, rule in old.math_text_notations.items():
             if key != 'depth':
                 self.assertEqual(new.math_text_notations[key], rule, key)
+
+    def test_current_policy_retains_registered_rules_and_notation_permissions(self):
+        registered, current = Policy(REGISTERED), Policy(CURRENT)
+        for key, rule in registered.math_text_rules.items():
+            self.assertEqual(current.math_text_rules[key], rule, key)
+        for key, rule in registered.math_text_notations.items():
+            actual = dict(current.math_text_notations[key])
+            # Later witnessed registrations may add usages; old permissions and
+            # every other field remain intact. Their exact delta has its own test.
+            self.assertTrue(set(rule['usages']) <= set(actual['usages']), key)
+            actual['usages'] = rule['usages']
+            self.assertEqual(actual, rule, key)
+        for key, contexts in registered.math_text_notation_contexts.items():
+            self.assertTrue(all(context in current.math_text_notation_contexts[key]
+                                for context in contexts), key)
 
     def test_each_registered_rule_and_context_is_required_in_its_frame(self):
         # Exercise actual slot membership. A bare Policy has no resolved Git
@@ -181,7 +201,7 @@ class EtalePolicyRegistrationTests(unittest.TestCase):
         self.assertEqual(EVIDENCE['chinese_origin'], '7e3988b59a81027796b776a9238a061368c81fd2')
         self.assertEqual(EVIDENCE['source_commit'], 'a04446e57ec1fbc252a871afcec7752fb2807b14')
         self.assertEqual(EVIDENCE['before_policy_sha256'], BEFORE_HASH)
-        self.assertEqual(EVIDENCE['production_policy_sha256'], hashlib.sha256(CURRENT.encode()).hexdigest())
+        self.assertEqual(EVIDENCE['production_policy_sha256'], hashlib.sha256(REGISTERED.encode()).hexdigest())
         expected = {'024L': 3, '024U': 6, '024Y': 0, '039R': 6, '039T': 0,
                     '025Q': 0, '0BTH': 8, '0BTP': 8, '0CBR': 1}
         self.assertEqual({r['selector']['owner_tag'] for r in EVIDENCE['after']}, set(expected))

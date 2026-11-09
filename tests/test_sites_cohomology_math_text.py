@@ -2,6 +2,7 @@
 import copy
 import json
 import os
+import re
 import shutil
 import tempfile
 import unittest
@@ -56,7 +57,11 @@ translatable_math_text_references:
 
 
 def synthetic_policy():
-    return BASE_POLICY + '''
+    # Tot is an independent synthetic witness, including after production
+    # registers the same notation with its locked chapter source label.
+    base, count = re.subn(r'(?m)^  Tot:\n(?:    .*\n)+', '', BASE_POLICY)
+    assert count <= 1
+    return base + '''
   Tot:
     commands: ["text"]
     usages: ["applied"]
@@ -76,6 +81,12 @@ def reference_fixture(base):
 
 
 class FrameTests(unittest.TestCase):
+    def test_synthetic_tot_has_one_independent_fixture_witness(self):
+        text=synthetic_policy()
+        self.assertEqual(text.count("\n  Tot:\n"),1)
+        self.assertEqual(Policy(text).math_text_notations["Tot"],dict(
+            commands=["text"],usages=["applied"],source_label="test-lemma-one"))
+
     def test_precise_cup_roles_and_protected_reference_metadata(self):
         slots = find_slots(CUP, Policy(synthetic_policy()).math_text_rules)
         self.assertEqual([s['value'] for s in slots], ['Remark ', 'naive cup product'])
@@ -324,7 +335,11 @@ class LockedSourceWitnessTests(unittest.TestCase):
         report=json.loads((ROOT/'tests/fixtures/sites-cohomology21-source-text-tool-20261109.json').read_text())
         words=load_catalog(ROOT)
         for change in report['source_terms']['changed_current']:
-            self.assertEqual(source_inventory(change['unit'],words),change['after'])
+            current=source_inventory(change['unit'],words)
+            expected=copy.deepcopy(change['after'])
+            self.assertEqual(current.pop('catalog_hash'),sha256_value(words))
+            expected.pop('catalog_hash')
+            self.assertEqual(current,expected)
             removed=[o for o in change['before']['occurrences'] if o not in change['after']['occurrences']]
             self.assertEqual([o['source_term'].casefold() for o in removed],['set'])
             self.assertFalse(any(o not in change['before']['occurrences'] for o in change['after']['occurrences']))

@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 101 | 第 5-6、9-33、36-40、42-104、106-111 章 |
+| 未开始 | 100 | 第 5-6、9-20、22-33、36-40、42-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 15 | 第 1-4、7-8、34-35、41、105、112-116 章 |
+| 候选译文完成，待审校 | 16 | 第 1-4、7-8、21、34-35、41、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 273 / 3,299（8.3%） | 0 | 3,026 |
+| 模型候选译文 | 326 / 3,299（9.9%） | 0 | 2,973 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -56,7 +56,7 @@
 | 18 | 位点上的模（`sites-modules`） | 未开始 | 0 / 45（0.0%） | 0 | 45 | 0 | 0 |
 | 19 | 内射对象（`injectives`） | 未开始 | 0 / 15（0.0%） | 0 | 15 | 0 | 0 |
 | 20 | 层上同调（`cohomology`） | 未开始 | 0 / 55（0.0%） | 0 | 55 | 0 | 0 |
-| 21 | 位点上的上同调（`sites-cohomology`） | 未开始 | 0 / 53（0.0%） | 0 | 53 | 0 | 0 |
+| 21 | 位点上的上同调（`sites-cohomology`） | 候选译文完成，待审校 | 53 / 53（100.0%） | 0 | 0 | 0 | 0 |
 | 22 | 微分分次代数（`dga`） | 未开始 | 0 / 38（0.0%） | 0 | 38 | 0 | 0 |
 | 23 | 除幂代数（`dpa`） | 未开始 | 0 / 12（0.0%） | 0 | 12 | 0 | 0 |
 | 24 | 微分分次层（`sdga`） | 未开始 | 0 / 35（0.0%） | 0 | 35 | 0 | 0 |
@@ -325,6 +325,66 @@
 | 11 | `06NY` | Gerbes | 完成 | 未开始 | 未开始 |
 | 12 | `04WA` | Functoriality for stacks | 完成 | 未开始 | 未开始 |
 | 13 | `04WT` | Stacks and localization | 完成 | 未开始 | 未开始 |
+
+### 第 21 章 位点上的上同调（`sites-cohomology`）
+
+共 53 个 Section：候选完成 53，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `01FR` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `01FT` | Cohomology of sheaves | 完成 | 未开始 | 未开始 |
+| 3 | `071J` | Derived functors | 完成 | 未开始 | 未开始 |
+| 4 | `03AG` | First cohomology and torsors | 完成 | 未开始 | 未开始 |
+| 5 | `03F0` | First cohomology and extensions | 完成 | 未开始 | 未开始 |
+| 6 | `040D` | First cohomology and invertible sheaves | 完成 | 未开始 | 未开始 |
+| 7 | `01FU` | Locality of cohomology | 完成 | 未开始 | 未开始 |
+| 8 | `03AK` | The {\v C}ech complex and {\v C}ech cohomology | 完成 | 未开始 | 未开始 |
+| 9 | `03AO` | {\v C}ech cohomology as a functor on presheaves | 完成 | 未开始 | 未开始 |
+| 10 | `03AV` | {\v C}ech cohomology and cohomology | 完成 | 未开始 | 未开始 |
+| 11 | `0CJZ` | Second cohomology and gerbes | 完成 | 未开始 | 未开始 |
+| 12 | `03FA` | Cohomology of modules | 完成 | 未开始 | 未开始 |
+| 13 | `079X` | Totally acyclic sheaves | 完成 | 未开始 | 未开始 |
+| 14 | `072X` | The Leray spectral sequence | 完成 | 未开始 | 未开始 |
+| 15 | `0735` | The base change map | 完成 | 未开始 | 未开始 |
+| 16 | `0737` | Cohomology and colimits | 完成 | 未开始 | 未开始 |
+| 17 | `06YL` | Flat resolutions | 完成 | 未开始 | 未开始 |
+| 18 | `06YV` | Derived pullback | 完成 | 未开始 | 未开始 |
+| 19 | `07A5` | Cohomology of unbounded complexes | 完成 | 未开始 | 未开始 |
+| 20 | `08FH` | Some properties of K-injective complexes | 完成 | 未开始 | 未开始 |
+| 21 | `0EYZ` | Localization and cohomology | 完成 | 未开始 | 未开始 |
+| 22 | `0GYP` | Inverse systems and cohomology | 完成 | 未开始 | 未开始 |
+| 23 | `0940` | Derived and homotopy limits | 完成 | 未开始 | 未开始 |
+| 24 | `070N` | Producing K-injective resolutions | 完成 | 未开始 | 未开始 |
+| 25 | `0D6Q` | Bounded cohomological dimension | 完成 | 未开始 | 未开始 |
+| 26 | `0EVX` | Mayer-Vietoris | 完成 | 未开始 | 未开始 |
+| 27 | `0EWK` | Comparing two topologies | 完成 | 未开始 | 未开始 |
+| 28 | `0D7N` | Formalities on cohomological descent | 完成 | 未开始 | 未开始 |
+| 29 | `0F17` | Comparing two topologies, II | 完成 | 未开始 | 未开始 |
+| 30 | `0EZ1` | Comparing cohomology | 完成 | 未开始 | 未开始 |
+| 31 | `09WY` | Cohomology on Hausdorff and locally quasi-compact spaces | 完成 | 未开始 | 未开始 |
+| 32 | `07A9` | Spectral sequences for Ext | 完成 | 未开始 | 未开始 |
+| 33 | `0FPJ` | Cup product | 完成 | 未开始 | 未开始 |
+| 34 | `0A8X` | Hom complexes | 完成 | 未开始 | 未开始 |
+| 35 | `08J7` | Internal hom in the derived category | 完成 | 未开始 | 未开始 |
+| 36 | `0B6E` | Global derived hom | 完成 | 未开始 | 未开始 |
+| 37 | `07AB` | Derived lower shriek | 完成 | 未开始 | 未开始 |
+| 38 | `08RV` | Derived lower shriek for fibred categories | 完成 | 未开始 | 未开始 |
+| 39 | `08RW` | Homology on a category | 完成 | 未开始 | 未开始 |
+| 40 | `08P7` | Calculating derived lower shriek | 完成 | 未开始 | 未开始 |
+| 41 | `09D0` | Simplicial modules | 完成 | 未开始 | 未开始 |
+| 42 | `08RY` | Cohomology on a category | 完成 | 未开始 | 未开始 |
+| 43 | `0GYU` | Modules on a category | 完成 | 未开始 | 未开始 |
+| 44 | `08FK` | Strictly perfect complexes | 完成 | 未开始 | 未开始 |
+| 45 | `08FS` | Pseudo-coherent modules | 完成 | 未开始 | 未开始 |
+| 46 | `08FY` | Tor dimension | 完成 | 未开始 | 未开始 |
+| 47 | `08G4` | Perfect complexes | 完成 | 未开始 | 未开始 |
+| 48 | `0FPP` | Duals | 完成 | 未开始 | 未开始 |
+| 49 | `0FPW` | Invertible objects in the derived category | 完成 | 未开始 | 未开始 |
+| 50 | `0943` | Projection formula | 完成 | 未开始 | 未开始 |
+| 51 | `0945` | Weakly contractible objects | 完成 | 未开始 | 未开始 |
+| 52 | `0948` | Compact objects | 完成 | 未开始 | 未开始 |
+| 53 | `094F` | Complexes with locally constant cohomology sheaves | 完成 | 未开始 | 未开始 |
 
 ### 第 34 章 概形上的拓扑（`topologies`）
 

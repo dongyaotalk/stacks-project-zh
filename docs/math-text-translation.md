@@ -1,5 +1,26 @@
 # 数学内自然语言的保护与翻译开发合同
 
+第59章完整数学帧的独立工具 Issue #932 复用既有 etale-scheme-diagrams 和
+etale-scheme-component 权限：仅对完整锁定数学帧的显式 text 参数开放纯文字或
+已列明的两段重音组件。所有数学 token、深度、环境、包装及间隔原字节必须匹配；
+普通既有角色已适用时不再产生竞争的 fallback 角色。生产字面量、来源见证和用途
+仍须通过独立政策登记；本工具不增加历史格式、翻译事实或任何术语/人审批准。
+
+同一 ` up to isomorphism as above` 参数在 fppf 公式中保留原 `root-phrase`，
+在已列举的完整平展公式中使用单独的有限 context；不扩大记号或其他数学帧。
+`pr_*` 只增加本章两条完整直像公式的有限投影 context；裸 `pr_*` 和改变原操作数的式子仍阻断。
+
+该工具还支持第59章实际出现的有限记号帧：pr 投影、can 下标、-Sets 范畴、
+F\'Et 与 red，以及单一完整 `$\textit{PAb}$`。PAb 使用独立有限 context，
+其现有 primary 仍只允许 applied；sites-pab-shriek 的完整帧合同保持。
+这些权限逐字匹配原公式与字体，不提供一般 bare-symbol 或任意上下标权限。
+既有 unit-v2 的完整纯文字 slot 增加一个有限 `textit` 用途：只允许
+04I7 原完整函子公式中的 `Locally ringed topoi`。Schema 将字体、原文字面量及
+`etale-locally-ringed-topoi` 用途绑定，保护器核验完整公式；翻译仅替换原参数，
+字体、公式、引用和其他字节不变。其他 textit/textbf 文字保持阻断，未登记生产来源前不采用。
+
+-Algebras 属于自然语言，只能走完整 typed text 帧，不能归为记号。
+
 完整来源没有旧候选时的独立首次采用及临时生成历史合同见
 [source-adoption.md](source-adoption.md)（Issue #819）。经完整锁定Git、实际run/raw、
 冻结上下文和来源不重叠重放的 `source-adoption-v1` 可采用 unit-v2/v3；普通

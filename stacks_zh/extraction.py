@@ -795,7 +795,7 @@ class Scanner:
                 pieces.append({'kind': 'locked', 'placeholder': name})
                 identifier = f'temporary/{ordinal:04d}'
                 pieces.append({'kind': 'text', 'slot_id': identifier})
-                text_slots.append({'slot_id': identifier, 'source': slot['value'], 'command': 'text',
+                text_slots.append({'slot_id': identifier, 'source': slot['value'], 'command': slot['command'],
                     'policy_entry': slot['policy_entry'],
                     'slot_byte_span': {'start': len(fragment[:slot['parameter_start']].encode('utf-8')),
                                        'end': len(fragment[:slot['parameter_end']].encode('utf-8'))},

@@ -10,6 +10,11 @@ from functools import lru_cache
 
 USAGES = {'etale-unramified-condition', 'etale-sections-correspondence',
           'etale-scheme-diagrams'}
+ITALIC_USAGE = 'etale-locally-ringed-topoi'
+ITALIC_LITERAL = 'Locally ringed topoi'
+ITALIC_FRAME = '$$\n\\Sch \\longrightarrow \\textit{Locally ringed topoi},\n\\quad\nX \\longrightarrow (X_\\etale, \\mathcal{O}_X)\n$$'
+USAGES = USAGES | {ITALIC_USAGE}
+
 COMPONENT_USAGE = 'etale-scheme-component'
 SEPARATOR = r"\'e"
 COMPONENT_LITERALS = (
@@ -105,6 +110,7 @@ COHOMOLOGY_LITERAL_EXCEPTIONS = frozenset({' up to isomorphism as above', 'actio
 COHOMOLOGY_LITERAL_EXCEPTIONS = COHOMOLOGY_LITERAL_EXCEPTIONS | {'-Algebras'}
 SCHEME_FRAMES += COHOMOLOGY_FRAMES
 COMPONENT_LITERALS += tuple(x for x in COHOMOLOGY_COMPONENT_LITERALS if x not in COMPONENT_LITERALS)
+COHOMOLOGY_EXISTING_ROLES[' up to isomorphism as above'] = ['root-phrase']
 CONTEXTS['etale-scheme-diagrams'].update((role, literal) for literal, roles in COHOMOLOGY_EXISTING_ROLES.items() for role in roles)
 
 
@@ -176,6 +182,20 @@ def _matches(source, stream, frame):
 
 
 def usage(source, stream, index, kind):
+    if kind == ITALIC_USAGE:
+        from .math_text import plain_text
+        expected = _frame_nodes(ITALIC_FRAME)
+        if len(stream) != len(expected) or not 0 <= index < len(stream):
+            return None
+        node, target = stream[index], expected[index]
+        if (node.get('command') != 'textit' or target.get('value') != ITALIC_LITERAL
+                or not plain_text(node['value']) or node['depth'] != target['depth']
+                or node['environments'] != target['environments']
+                or source[:node['parameter_start']] != ITALIC_FRAME[:target['parameter_start']]
+                or source[node['parameter_end']:] != ITALIC_FRAME[target['parameter_end']:]):
+            return None
+        return {'before':source[:node['parameter_start']],
+                'after':source[node['parameter_end']:], 'environments':node['environments']}
     frames = ((UNRAMIFIED,) if kind == 'etale-unramified-condition'
               else (SECTIONS,) if kind == 'etale-sections-correspondence'
               else SCHEME_FRAMES if kind in {'etale-scheme-diagrams', COMPONENT_USAGE}
@@ -226,6 +246,8 @@ def term_projection(unit, text):
 
 # Finite original notation contexts; changes to any byte remain blocked.
 COHOMOLOGY_NOTATION_FRAMES = {'pr': ['$$\n\\xymatrix{\nX \\ar[d]_f \\ar[r]_i & \\mathbf{A}^{n + m}_K \\ar[d]^{\\text{pr}} \\\\\nY \\ar[r]^j & \\mathbf{A}^n_K\n}\n$$', '$\\text{pr} : \\mathbf{A}^{n + m}_K \\to \\mathbf{A}^n_K$'], 'can': ["$$\n\\begin{matrix}\n\\varphi_\\text{can}: & N' \\otimes_A B & \\to & B \\otimes_A N' \\\\\n& b_0 \\otimes m \\otimes b_1 & \\mapsto & b_0 \\otimes b_1 \\otimes m.\n\\end{matrix}\n$$", '$(N, \\varphi) \\cong (B \\otimes_A M,\n\\varphi_\\text{can})$'], '-Sets': ['$$\n\\begin{matrix}\n\\rho : & G^{opp} & \\longrightarrow & \\text{Aut}_{G\\textit{-Sets}}({}_G G) \\\\\n& g & \\longmapsto & (h \\mapsto hg).\n\\end{matrix}\n$$', '$$\n\\begin{matrix}\n\\Sh(\\mathcal{T}_G) & \\longrightarrow & G\\textit{-Sets} \\\\\n\\mathcal{F} & \\longmapsto & \\mathcal{F}({}_G G)\n\\end{matrix}\n$$', '$$\n\\Sh(S_\\etale) \\longrightarrow\n\\text{Gal}_{\\kappa(s)}\\textit{-Sets},\n\\quad\n\\mathcal{F} \\longmapsto \\mathcal{F}_{\\overline{s}}\n$$', '\\begin{eqnarray*}\n\\Gamma(S, \\mathcal{F}) & = &\n\\Mor_{\\Sh(S_\\etale)}(h_{\\Spec(K)},  \\mathcal{F})\n\\\\\n& = & \\Mor_{G\\textit{-Sets}}(\\{*\\}, M) \\\\\n& = & M^G\n\\end{eqnarray*}']}
+
+COHOMOLOGY_NOTATION_FRAMES['pr'].extend(["$j_*R^qf_*\\mathcal{F} = R^q\\text{pr}_*i_*\\mathcal{F}$", "$$\n(R^q\\text{pr}_*\\mathcal{F})_{\\overline{y}} =\nH^q(\\mathbf{A}^{n + m}_K \\times_{A^n_K} \\Spec(\\mathcal{O}_{Y, y}^{sh}),\n\\mathcal{F}) =\nH^q(\\mathbf{A}^m_{\\mathcal{O}_{Y, y}^{sh}}, \\mathcal{F})\n$$"])
 
 def notation_context(source, stream, index, value, kind):
     roles = {"pr": "etale-projection", "can": "etale-canonical-map",

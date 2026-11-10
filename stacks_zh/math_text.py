@@ -122,7 +122,11 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         if literal in notations:
             raise ValueError('math text cannot be both notation and natural language')
         seen_literals.add(literal)
-        if (rule['command'] != 'text' or not isinstance(rule['usage'], str)
+        italic = (not component and rule['command'] == 'textit'
+                  and rule['usage'] == etale.ITALIC_USAGE and literal == etale.ITALIC_LITERAL)
+        if ((rule['command'] != 'text' and not italic)
+                or rule['usage'] == etale.ITALIC_USAGE and not italic
+                or not isinstance(rule['usage'], str)
                 or rule['usage'] not in ({COMPONENT_USAGE, descent.COMPONENT_USAGE, etale.COMPONENT_USAGE} if component else USAGES)):
             raise ValueError('unsupported natural math-text command or usage')
         if component and any(rule[name] != component_contract[name]
@@ -581,7 +585,7 @@ def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, 
         return []
     accepted = []
     for index, node in enumerate(stream):
-        if node.get('command') != 'text':
+        if node.get('command') not in {'text', 'textit'}:
             continue
         matched = False
         for key, rule in rules.items():
@@ -857,6 +861,10 @@ def _slot_node(source, stream, slot, version):
     if len(matches) != 1:
         raise ValueError('math slot lacks its complete real parent parameter')
     index,node = matches[0]
+    if (slot['command'] == 'textit' and (version != 2 or component or reference
+            or slot['source'] != etale.ITALIC_LITERAL
+            or slot['classification_witness']['usage'] != etale.ITALIC_USAGE)):
+        raise ValueError('italic math text requires its sole complete category phrase')
     if reference:
         start = span['start']
         if (version != 4 or component or node['value'] != sites.REFERENCE_LITERAL

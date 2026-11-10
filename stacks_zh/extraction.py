@@ -1130,8 +1130,16 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                         i += 1
                 if i <= start:
                     raise SyntaxProblem('source scanner made no progress', start)
+                diagnostic_start = len(diagnostics)
                 emit(start, i, 'paragraph', prose_owner())
-                cursor = i; previous_statement = None
+                cursor = i
+                # A complete native statement may have explanatory prose
+                # before its proof(s). Prose retains its own Section owner.
+                # Structural boundaries above still terminate the chain;
+                # preserve the older flat inventory semantics.
+                if not hierarchical_prose or any(
+                        d['severity'] == 'BLOCKED' for d in diagnostics[diagnostic_start:]):
+                    previous_statement = None
             except SyntaxProblem as exc:
                 # Keep every remaining byte and its cause, never silently drop a
                 # malformed tail or claim a partially scanned document is READY.

@@ -71,24 +71,26 @@ def _notation_context_registry(text, notations):
     result, seen_contexts = {}, set()
     for value in entries.values():
         base = value.get('base_notation')
-        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb'}:
-            raise RecordError('notation context requires its existing direct pr/-Sets/PAb base')
+        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb', 'can'}:
+            raise RecordError('notation context requires its existing direct pr/-Sets/PAb/can base')
         fields = {'base_notation', 'commands', 'usages', 'source_label'}
-        if base == '-Sets':
+        if base == '-Sets' and value.get('usages') != ['etale-set-category']:
             fields.add('prefix')
         if set(value) != fields:
             raise RecordError('incomplete notation context')
         commands, usages = value['commands'], value['usages']
-        expected_commands = ['text'] if base == 'pr' else ['textit']
-        allowed = ({'sites-pab-shriek'} if base == 'PAb' else
-                   {'starred-subscripted', 'projection-declaration', 'descent-projection'} if base == 'pr' else
-                   {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol'})
+        expected_commands = ['text'] if base in {'pr','can'} else ['textit']
+        allowed = ({'etale-canonical-map'} if base == 'can' else {'sites-pab-shriek', 'etale-pab-category'} if base == 'PAb' else
+                   {'starred-subscripted', 'projection-declaration', 'descent-projection', 'etale-projection'} if base == 'pr' else
+                   {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol', 'etale-set-category'})
         if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
                 or not isinstance(usages, list) or not usages
                 or any(not isinstance(v, str) or v not in allowed for v in usages)
                 or len(usages) != len(set(usages))):
             raise RecordError('unsupported notation context command or usage')
-        if base == 'PAb' and (usages != ['sites-pab-shriek'] or notations[base]['usages'] != ['applied']):
+        if any(role in usages for role in {'etale-projection', 'etale-canonical-map', 'etale-set-category', 'etale-pab-category'}) and (len(usages) != 1 or 'symbol' in notations[base]['usages']):
+            raise RecordError('etale notation context requires its sole finite role and no primary symbol')
+        if base == 'PAb' and (usages not in [['sites-pab-shriek'], ['etale-pab-category']] or notations[base]['usages'] != ['applied']):
             raise RecordError('PAb shriek requires its sole finite context and existing applied base')
         if 'projection-declaration' in usages and (
                 usages != ['projection-declaration'] or 'symbol' in notations[base]['usages']):
@@ -96,11 +98,11 @@ def _notation_context_registry(text, notations):
         if 'descent-projection' in usages and (
                 usages != ['descent-projection'] or 'symbol' in notations[base]['usages']):
             raise RecordError('descent projection requires its sole finite context and no primary symbol')
-        if base == '-Sets' and (not isinstance(value['prefix'], str) or value['prefix'] not in {'G', 'H'}):
+        if base == '-Sets' and usages != ['etale-set-category'] and (not isinstance(value['prefix'], str) or value['prefix'] not in {'G', 'H'}):
             raise RecordError('notation context requires an explicit witnessed G/H prefix')
-        if base == '-Sets' and value['prefix'] == 'G' and 'prefixed-symbol' in usages:
+        if base == '-Sets' and value.get('prefix') == 'G' and 'prefixed-symbol' in usages:
             raise RecordError('notation context duplicates the existing primary prefix rule')
-        if base == '-Sets' and 'diagram-category-prefixed-symbol' in usages and value['prefix'] != 'G':
+        if base == '-Sets' and 'diagram-category-prefixed-symbol' in usages and value.get('prefix') != 'G':
             raise RecordError('diagram category context requires its witnessed G prefix')
         if (not isinstance(value['source_label'], str)
                 or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', value['source_label'])):
@@ -144,7 +146,7 @@ class Policy:
                         raise RecordError('invalid or duplicate math-text notation policy section')
                     notation_section_seen = True
             elif section == 'locked_math_text_notations':
-                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|Ind-|Pro-):', line):
+                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|Ind-|Pro-):', line) or line == "  F\\'Et:":
                     group = line.strip()[:-1]
                     if group in self.math_text_notations:
                         raise RecordError('duplicate math-text notation policy entry')
@@ -202,7 +204,7 @@ class Policy:
                                  ('usages', {'symbol', 'bare-symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
                                              'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
-                                             'descent-relative-proj'})]:
+                                             'descent-relative-proj', 'etale-finite-etale-category', 'etale-reduced-norm'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -228,6 +230,13 @@ class Policy:
                     notation != 'Proj' or rule['commands'] != ['text']
                     or rule['usages'] != ['descent-relative-proj'] or 'contexts' in rule):
                 raise RecordError('relative Proj requires its sole explicit finite text role')
+            finite_roles = {"F\\'Et": ('textit', 'etale-finite-etale-category'),
+                            'red': ('text', 'etale-reduced-norm')}
+            for name, (font, role) in finite_roles.items():
+                if (notation == name or role in rule['usages']) and (
+                        notation != name or rule['commands'] != [font]
+                        or rule['usages'] != [role] or 'contexts' in rule):
+                    raise RecordError('etale notation requires its sole exact finite role')
             if prefixed and (not isinstance(rule['prefix'], str) or
                              not re.fullmatch(r'[A-Z]', rule['prefix'])):
                 raise RecordError('invalid math-text notation prefix')
@@ -520,6 +529,10 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind in {'etale-projection', 'etale-canonical-map', 'etale-set-category',
+                    'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category'}:
+            from .math_text_etale import notation_context
+            return notation_context(self.text, stream, index, value, kind)
         if kind == 'sites-pab-shriek':
             from .math_text_sites_cohomology import notation_context
             return notation_context(self.text, stream, index, value)
@@ -601,7 +614,8 @@ class Scanner:
         for usage in rule['usages']:
             if usage in {'starred-subscripted', 'projection-declaration', 'morphism-category-prefixed-symbol',
                          'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection',
-                         'sites-pab-shriek'}:
+                         'sites-pab-shriek', 'etale-projection', 'etale-canonical-map',
+                         'etale-set-category', 'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']

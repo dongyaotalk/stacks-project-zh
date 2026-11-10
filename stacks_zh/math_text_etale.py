@@ -71,6 +71,42 @@ V\text{ quasi-compact, separated, \'etale over }X
 $$"""
 SCHEME_FRAMES = (THICKENING, DESCENT, EFFECTIVE)
 
+# Exact complete locked-English frames for chapter 59; no wildcard math.
+COHOMOLOGY_FRAMES = (
+    '$$\nH_\\etale^q (\\mathbf{A}^1_\\mathbf{C} \\setminus \\{0\\}, \\Lambda) = \\left\\{\n\\begin{matrix}\n\\Lambda & \\text{ if }q = 1\\text{, and} \\\\\n0 & \\text{ for }q \\geq 2.\n\\end{matrix}\n\\right.\n$$',
+    "\\begin{eqnarray*}\nH_\\etale^1 (X, \\mathbf{Z}/n\\mathbf{Z}) = \\left\\{\n\\begin{matrix}\n\\text{sheaves of sets }\\mathcal{F}\\text{ on the \\'etale site }X_\\etale\n\\text{ endowed with an} \\\\\n\\text{action }\\mathbf{Z}/n\\mathbf{Z} \\times \\mathcal{F} \\to \\mathcal{F}\n\\text{ such that }\\mathcal{F}\\text{ is a }\\mathbf{Z}/n\\mathbf{Z}\\text{-torsor.}\n\\end{matrix}\n\\right\\}\n\\Big/ \\cong\n\\\\\n = \\left\\{\n\\begin{matrix}\n\\text{morphisms }Y \\to X\\text{ which are finite \\'etale together} \\\\\n\\text{ with a free }\\mathbf{Z}/n\\mathbf{Z}\\text{ action such that }\nX = Y/(\\mathbf{Z}/n\\mathbf{Z}).\n\\end{matrix}\n\\right\\}\n\\Big/ \\cong.\n\\end{eqnarray*}",
+    '$$\nU \\mapsto \\mathcal{F}^+(U) :=\n\\colim_{\\mathcal{U} \\text{ covering of }U}\n\\check H^0(\\mathcal{U}, \\mathcal{F})\n$$',
+    '\\begin{eqnarray*}\nb & \\mapsto & 1 \\otimes b - b \\otimes 1, \\\\\nb_0 \\otimes b_1 & \\mapsto & 1 \\otimes b_0 \\otimes b_1 - b_0 \\otimes 1 \\otimes\nb_1 + b_0 \\otimes b_1 \\otimes 1, \\\\\n& \\text{etc.}\n\\end{eqnarray*}',
+    "\\begin{equation}\n\\label{equation-isomorphisms-pairs}\n\\mathit{Isom}_S((\\mathcal{L}, \\alpha), (\\mathcal{L}', \\alpha'))\n=\n\\left\\{\n\\begin{matrix}\n\\emptyset & \\text{if} & \\text{they are not isomorphic} \\\\\nH^0(S, \\mu_{n, S})\\cdot \\varphi & \\text{if} &\n\\varphi \\text{ isomorphism of pairs}\n\\end{matrix}\n\\right.\n\\end{equation}",
+    '$$\nH_\\etale^1(S, \\mu_n) =\n\\text{group of pairs }(\\mathcal{L}, \\alpha)\\text{ up to isomorphism as above}\n$$',
+    "\\begin{align*}\nu : S_\\etale & \\longrightarrow \\textit{Sets}, \\\\\nU & \\longmapsto\n|U_{\\overline{s}}|\n=\n\\{\\overline{u} \\text{ such that }(U, \\overline{u})\n\\text{ is an \\'etale neighbourhood of }\\overline{s}\\}.\n\\end{align*}",
+    '$u(\\text{final object}) = \\text{final object}$',
+    "\\begin{equation}\n\\label{equation-descent-etale-forget}\n\\begin{matrix}\n\\text{descent data }(X', \\varphi')\\text{ relative to }S'/S \\\\\n\\text{ with }X'\\text{ \\'etale over }S'\n\\end{matrix}\n\\longrightarrow\n\\text{schemes }X'\\text{ \\'etale over }S'\n\\end{equation}",
+    "\\begin{equation}\n\\label{equation-descent-etale}\n\\text{schemes }X\\text{ \\'etale over }S \\longrightarrow\n\\begin{matrix}\n\\text{descent data }(X', \\varphi')\\text{ relative to }S'/S \\\\\n\\text{ with }X'\\text{ \\'etale over }S'\n\\end{matrix}\n\\end{equation}",
+    "\\begin{equation}\n\\label{equation-affine-etale}\n\\{\n\\text{affine schemes }V\\text{ \\'etale over }Y\n\\}\n\\leftrightarrow\n\\{\n\\text{affine schemes }U\\text{ \\'etale over }X\n\\}\n\\end{equation}",
+    '$$\n\\left\\{\n\\begin{matrix}\n\\text{finite locally constant}\\\\\n\\text{sheaves of sets on }X_\\etale\n\\end{matrix}\n\\right\\}\n\\longleftrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{finite }\\pi_1(X, \\overline{x})\\text{-sets}\n\\end{matrix}\n\\right\\}\n$$',
+    '$$\n\\left\\{\n\\begin{matrix}\n\\text{finite locally constant}\\\\\n\\text{sheaves of abelian groups on }X_\\etale\n\\end{matrix}\n\\right\\}\n\\longleftrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{finite }\\pi_1(X, \\overline{x})\\text{-modules}\n\\end{matrix}\n\\right\\}\n$$',
+    '$$\n\\left\\{\n\\begin{matrix}\n\\text{finite type, locally constant}\\\\\n\\text{sheaves of }\\Lambda\\text{-modules on }X_\\etale\n\\end{matrix}\n\\right\\}\n\\longleftrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{finite }\\pi_1(X, \\overline{x})\\text{-modules endowed}\\\\\n\\text{with commuting }\\Lambda\\text{-module structure}\n\\end{matrix}\n\\right\\}\n$$',
+    '$$\n\\left\\{\n\\begin{matrix}\n\\text{finite type, locally constant}\\\\\n\\text{sheaves of }\\Lambda\\text{-modules on }X_\\etale\n\\end{matrix}\n\\right\\}\n\\longleftrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{finite }\\Lambda\\text{-modules }M\\text{ endowed}\\\\\n\\text{with a continuous }\\pi_1(X, \\overline{x})\\text{-action}\n\\end{matrix}\n\\right\\}\n$$',
+    '$$\n\\xymatrix{\n\\text{finite locally constant sheaves of sets on }Y_\\etale\n\\ar[r] &\n\\text{finite }\\pi_1(Y, \\overline{y})\\text{-sets} \\\\\n\\text{finite locally constant sheaves of sets on }X_\\etale\n\\ar[r] \\ar[u]_{f^{-1}} &\n\\text{finite }\\pi_1(X, \\overline{x})\\text{-sets} \\ar[u]\n}\n$$',
+    '\\begin{eqnarray*}\n(R^q j_*\\mathbf{G}_{m, \\eta})_{\\bar \\eta}\n& = &\nH_\\etale^q(\\Spec(\\kappa(\\eta)^{sep}) \\times_X \\eta, \\mathbf{G}_m) \\\\\n& = & H_\\etale^q (\\Spec(\\kappa(\\eta)^{sep}), \\mathbf{G}_m) \\\\\n& = & 0 \\ \\ \\text{ for } q \\geq 1\n\\end{eqnarray*}',
+    "$\\emptyset = \\bigcap_{I' \\subset I\\text{ finite}} T_{I'}$",
+    '$$\n\\Sh(Y_\\etale) \\longrightarrow\n\\left\\{\n(\\mathcal{G}, \\mathcal{H}, \\alpha)\n\\middle|\n\\begin{matrix}\n\\mathcal{G} \\in \\Sh(X_\\etale),\\ \\mathcal{H} \\in \\Sh((\\Sch/Y)_{fppf}), \\\\\n\\alpha : a_X^{-1}\\mathcal{G} \\to f_{big, fppf}^{-1}\\mathcal{H}\n\\text{ an isomorphism}\n\\end{matrix}\n\\right\\}\n$$',
+    "$$\n\\{\n\\text{schemes }V\\text{ \\'etale over }Y\n\\}\n\\leftrightarrow\n\\{\n\\text{schemes }U\\text{ \\'etale over }X\n\\}\n$$",
+    "$$\n\\Sh(Y_\\etale)\n\\longrightarrow\n\\text{descent data for \\'etale sheaves wrt }\\{X \\to Y\\}\n$$",
+    "$$\n\\Sh(Z_\\etale)\n\\longrightarrow\n\\text{descent data for \\'etale sheaves wrt }\\{X \\times_Y Z \\to Z\\}\n$$",
+    "$$\n\\Sh((Z \\times_Y Z)_\\etale)\n\\longrightarrow\n\\text{descent data for \\'etale sheaves wrt }\n\\{X \\times_Y (Z \\times_Y Z) \\to Z \\times_Y Z\\}\n$$",
+    "$$\n\\Sh(X_\\etale)\n\\longrightarrow\n\\text{descent data for \\'etale sheaves wrt }\\{f_i : X_i \\to X\\}\n$$",
+    '$\\text{Aut}_{L\\text{-Algebras}}(\\text{Mat}_d(L))$',
+)
+COHOMOLOGY_COMPONENT_LITERALS = (" on the \\'etale site ", " which are finite \\'etale together", " is an \\'etale neighbourhood of ", " \\'etale over ", "descent data for \\'etale sheaves wrt ")
+COHOMOLOGY_EXISTING_ROLES = {' such that ': ['root-phrase'], ' relative to ': ['descent-data-matrices'], 'descent data ': ['descent-sheaf-set-matrices'], ' for ': ['root-phrase']}
+COHOMOLOGY_LITERAL_EXCEPTIONS = frozenset({' up to isomorphism as above', 'action ', ' endowed with an', 'etc.', 'sheaves of abelian groups on ', 'descent data ', ' with ', ' relative to ', 'with a continuous ', ' isomorphism of pairs', '-modules endowed', 'finite type, locally constant', '-modules', ' if ', 'they are not isomorphic', '-modules on ', 'finite ', " which are finite \\'etale together", 'sheaves of sets on ', " \\'etale over ", 'morphisms ', 'sheaves of sets ', 'group of pairs ', 'schemes ', '-torsor.', ' covering of ', ' action such that ', ' for ', '-module structure', ' is a ', " is an \\'etale neighbourhood of ", '-action', ', and', 'with commuting ', 'final object', '-sets', '-modules ', 'finite locally constant sheaves of sets on ', " on the \\'etale site ", 'finite locally constant', ' with a free ', 'affine schemes ', 'sheaves of ', ' an isomorphism', ' endowed', "descent data for \\'etale sheaves wrt ", ' finite', ' such that '})
+COHOMOLOGY_LITERAL_EXCEPTIONS = COHOMOLOGY_LITERAL_EXCEPTIONS | {'-Algebras'}
+SCHEME_FRAMES += COHOMOLOGY_FRAMES
+COMPONENT_LITERALS += tuple(x for x in COHOMOLOGY_COMPONENT_LITERALS if x not in COMPONENT_LITERALS)
+CONTEXTS['etale-scheme-diagrams'].update((role, literal) for literal, roles in COHOMOLOGY_EXISTING_ROLES.items() for role in roles)
+
 
 def component_contract(literal):
     return dict(literal=literal if literal in COMPONENT_LITERALS else None,
@@ -79,7 +115,8 @@ def component_contract(literal):
 
 
 def literal_exception(literal, role):
-    return role == 'etale-scheme-diagrams' and literal == 'schemes quasi-compact,'
+    return role == 'etale-scheme-diagrams' and (literal == 'schemes quasi-compact,'
+        or literal in COHOMOLOGY_LITERAL_EXCEPTIONS)
 
 
 def source_leaf(slot):
@@ -154,6 +191,12 @@ def usage(source, stream, index, kind):
                 or (target['value'] in COMPONENT_LITERALS) != (kind == COMPONENT_USAGE)
                 or kind == 'etale-unramified-condition' and target['value'] != ' finite separable'):
             continue
+        if frame in COHOMOLOGY_FRAMES and kind == 'etale-scheme-diagrams':
+            # Context fallback must not compete with an already valid role.
+            from .math_text import usage as ordinary_usage
+            if any(ordinary_usage(source, stream, index, role) is not None
+                   for role in COHOMOLOGY_EXISTING_ROLES.get(target['value'], ())):
+                continue
         node = stream[index]
         return {'before': source[stream[index-1]['start']:node['start']],
                 'after': source[node['end']:stream[index+1]['end']],
@@ -179,3 +222,25 @@ def term_projection(unit, text):
             raise RecordError('etale accent projection lacks its original protected separator')
         text = text.replace('<'+name+'>', 'é')
     return text
+
+
+# Finite original notation contexts; changes to any byte remain blocked.
+COHOMOLOGY_NOTATION_FRAMES = {'pr': ['$$\n\\xymatrix{\nX \\ar[d]_f \\ar[r]_i & \\mathbf{A}^{n + m}_K \\ar[d]^{\\text{pr}} \\\\\nY \\ar[r]^j & \\mathbf{A}^n_K\n}\n$$', '$\\text{pr} : \\mathbf{A}^{n + m}_K \\to \\mathbf{A}^n_K$'], 'can': ["$$\n\\begin{matrix}\n\\varphi_\\text{can}: & N' \\otimes_A B & \\to & B \\otimes_A N' \\\\\n& b_0 \\otimes m \\otimes b_1 & \\mapsto & b_0 \\otimes b_1 \\otimes m.\n\\end{matrix}\n$$", '$(N, \\varphi) \\cong (B \\otimes_A M,\n\\varphi_\\text{can})$'], '-Sets': ['$$\n\\begin{matrix}\n\\rho : & G^{opp} & \\longrightarrow & \\text{Aut}_{G\\textit{-Sets}}({}_G G) \\\\\n& g & \\longmapsto & (h \\mapsto hg).\n\\end{matrix}\n$$', '$$\n\\begin{matrix}\n\\Sh(\\mathcal{T}_G) & \\longrightarrow & G\\textit{-Sets} \\\\\n\\mathcal{F} & \\longmapsto & \\mathcal{F}({}_G G)\n\\end{matrix}\n$$', '$$\n\\Sh(S_\\etale) \\longrightarrow\n\\text{Gal}_{\\kappa(s)}\\textit{-Sets},\n\\quad\n\\mathcal{F} \\longmapsto \\mathcal{F}_{\\overline{s}}\n$$', '\\begin{eqnarray*}\n\\Gamma(S, \\mathcal{F}) & = &\n\\Mor_{\\Sh(S_\\etale)}(h_{\\Spec(K)},  \\mathcal{F})\n\\\\\n& = & \\Mor_{G\\textit{-Sets}}(\\{*\\}, M) \\\\\n& = & M^G\n\\end{eqnarray*}']}
+
+def notation_context(source, stream, index, value, kind):
+    roles = {"pr": "etale-projection", "can": "etale-canonical-map",
+             "-Sets": "etale-set-category", "F\\'Et": "etale-finite-etale-category",
+             "red": "etale-reduced-norm", "PAb": "etale-pab-category"}
+    if (roles.get(value) != kind or not 0 <= index < len(stream)
+            or stream[index].get("value") != value
+            or stream[index].get("command") != ("textit" if value in {"-Sets", "F\\'Et", "PAb"} else "text")
+            or source not in COHOMOLOGY_NOTATION_FRAMES.get(value, ())):
+        return None
+    return source[:stream[index]["start"]] + source[stream[index]["end"]:]
+
+COHOMOLOGY_NOTATION_FRAMES.update({
+    "F\\'Et": (r"$\textit{F\'Et}_S$",),
+    'red': ("$$\n\\det = N_\\text{red} : D \\longrightarrow K\n$$",
+            r'$N_\text{red}(x) = 0$'),
+    'PAb': (r'$\textit{PAb}$',),
+})

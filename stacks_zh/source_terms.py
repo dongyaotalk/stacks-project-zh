@@ -49,6 +49,10 @@ def _qualified_declaration_parts(body: str, unit: dict[str, Any]) -> list[str] |
                           r'<(GROUPCLOSE_\2)>ech (complex|cohomology groups)', text)
     if accent and [unit['placeholders'].get(accent[i]) for i in (1, 3, 4)] == ['{', r'\v C', '}']:
         return [accent[5]]
+    zeroth = re.fullmatch(r'zeroth <(GROUPOPEN_([0-9]{4}))><(ACCENT_[0-9]{4})>'
+                         r'<(GROUPCLOSE_\2)>ech cohomology group', text)
+    if zeroth and [unit['placeholders'].get(zeroth[i]) for i in (1, 3, 4)] == ['{', r'\v C', '}']:
+        return ['zeroth', 'cohomology group']
     return None
 
 

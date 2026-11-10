@@ -741,3 +741,60 @@ class ContainerPackageTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class NativeProseItemLabelTests(unittest.TestCase):
+    SOURCE = ('Before the list.\n\\begin{enumerate}\n'
+              '\\item\n\\label{item-one} First $x$.\n'
+              '\\item\n\\label{item-two} Second $y$.\n'
+              '\\end{enumerate}\nAfter the list.')
+
+    def labelled_fixture(self, temp, source):
+        root,harvest,_=fixture(Path(temp),other=source)
+        with (harvest/'tags/tags').open('a') as out:
+            out.write('0003,test-item-one\n0004,test-item-two\n0005,other-item-one\n')
+        git(harvest,'add','tags/tags')
+        git(harvest,'-c','user.name=Synthetic','-c','user.email=fixture@example.invalid',
+            'commit','-qm','synthetic item tags')
+        (root/'upstream.lock').write_text('commit = "'+git(harvest,'rev-parse','HEAD')+'"\n')
+        return root,harvest
+
+    def test_complete_native_item_labels_remain_protected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest=self.labelled_fixture(temp,self.SOURCE)
+            c=Containers(root,harvest)
+            selected=c.select(selector('prose_block',owner='0000'))
+            units=lower_container(selected,c.policy)
+            self.assertEqual(len(units),1)
+            self.assertEqual(source_tex(units[0]),selected['fragment'])
+            self.assertIn(self.SOURCE,selected['fragment'])
+            labels=[v for v in units[0]['placeholders'].values() if v.startswith(r'\label{')]
+            self.assertEqual(labels,[r'\label{item-one}',r'\label{item-two}'])
+            self.assertEqual(units[0]['parent_tag'],'0000')
+            self.assertEqual(units[0]['node_kind'],'paragraph')
+
+    def test_unclassified_or_forged_labels_stay_blocked(self):
+        sources=[self.SOURCE.replace('item-two','item-one'),
+                 self.SOURCE.replace('item-two','unknown-item'),
+                 self.SOURCE.replace('item-two','other-item-one'),
+                 self.SOURCE.replace('\\label{item-one} First', 'First \\label{item-one}'),
+                 '\\label{item-one} Outside.\n'+self.SOURCE,
+                 self.SOURCE.replace('\\item\n\\label{item-one}',
+                                     '{\\item\n\\label{item-one}}'),
+                 self.SOURCE.replace('enumerate','itemize')]
+        for source in sources:
+            with self.subTest(source=source),tempfile.TemporaryDirectory() as temp:
+                root,harvest=self.labelled_fixture(temp,source)
+                with self.assertRaises(RecordError):
+                    Containers(root,harvest).select(selector('prose_block',owner='0000'))
+
+    def test_comments_and_math_do_not_supply_an_item(self):
+        sources=[self.SOURCE.replace('\\item\n\\label{item-one}',
+                                     '% \\item\n\\label{item-one}'),
+                 self.SOURCE.replace('\\item\n\\label{item-one}',
+                                     '$\\item$\n\\label{item-one}')]
+        for source in sources:
+            with self.subTest(source=source),tempfile.TemporaryDirectory() as temp:
+                root,harvest=self.labelled_fixture(temp,source)
+                with self.assertRaises(RecordError):
+                    Containers(root,harvest).select(selector('prose_block',owner='0000'))

@@ -80,6 +80,7 @@ class Containers:
         self.documents: dict[str, tuple[bytes, list[dict[str, Any]], list[dict[str, Any]]]] = {}
         self.closings: dict[str, int] = {}
         self.native_document_footers: set[str] = set()
+        self.prose_item_label_counts: dict[str, Counter] = {}
         self.chapter_math_counts: dict[str, Counter] = {}
         self.chapter_math_text_counts: dict[tuple[str, str], int] = {}
 
@@ -116,6 +117,48 @@ class Containers:
                 daily.cache[key]=self._select(selector)
             return copy.deepcopy(daily.cache[key])
         return self._select(selector)
+
+    def _classified_prose_item_labels(self, chapter, fragment, labels):
+        """Classify only actual plain enumerate-item labels, never outer anchors."""
+        from .source_alignment import canonical_tokens
+        tags = self.english.tags
+        stream = canonical_tokens(fragment, chapter, tags, self.policy)
+        stack, previous, classified = [], None, []
+        for token in stream:
+            key = token.key
+            if key[0] == 'environment':
+                if key[1] == 'begin':
+                    stack.append(('environment', key[2]))
+                elif not stack or stack.pop() != ('environment', key[2]):
+                    return False
+            elif key == ('text', '{'):
+                stack.append(('group', ''))
+            elif key == ('text', '}'):
+                if not stack or stack.pop() != ('group', ''):
+                    return False
+            elif key[:2] == ('reference', 'label'):
+                source = fragment[token.start:token.end]
+                match = re.fullmatch(r'\\label\{([^{}\n]+)\}', source)
+                qualified = (match[1] if match and match[1] in tags else
+                             chapter + '-' + match[1] if match else '')
+                if (previous != ('command', r'\item')
+                        or not stack or stack[-1] != ('environment', 'enumerate')
+                        or not qualified.startswith(chapter + '-')
+                        or qualified not in tags
+                        or sum(value == tags[qualified] for value in tags.values()) != 1):
+                    return False
+                classified.append(source)
+            previous = key
+        if stack or classified != labels:
+            return False
+        if chapter not in self.prose_item_label_counts:
+            self.prose_item_label_counts[chapter] = Counter(token.key[2] for token in canonical_tokens(
+                self.document(chapter)[0].decode('utf-8'), chapter, tags, self.policy)
+                if token.key[:2] == ('reference', 'label'))
+        counts = self.prose_item_label_counts[chapter]
+        return all(counts[tags[label if label in tags else chapter + '-' + label]] == 1
+                   for source in classified
+                   for label in [source[len(r'\label{'):-1]])
 
     def _select(self, selector: dict[str, Any]) -> dict[str, Any]:
         if set(selector) != {'file', 'owner_tag', 'owner_label', 'parent_tag', 'kind', 'ordinal'}:
@@ -184,7 +227,8 @@ class Containers:
             text, tokens, local_problems = scanner.protect(0, len(fragment))
             if local_problems:
                 raise RecordError('prose-block adoption blocked: ' + '; '.join(p['message'] for p in local_problems))
-            if any(value.startswith(r'\label{') for value in tokens.values()):
+            labels = [value for value in tokens.values() if re.match(r'\\label\b', value)]
+            if labels and not self._classified_prose_item_labels(chapter, fragment, labels):
                 raise RecordError('prose block contains an unclassified real labelled boundary')
             location = {'file': file, 'byte_start': start, 'byte_end': end,
                 'line_start': raw[:start].count(b'\n') + 1,

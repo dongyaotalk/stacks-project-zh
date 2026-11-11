@@ -1281,7 +1281,7 @@ def _assemble_source_adoption(root: Path, input_path: Path, raw_paths: list[Path
     for batch in frozen['batches']:
         errors = validate_current_records(batch['units'], candidates[batch['candidates_path']],
             frozen['source_commit'], qa.catalog, native.english.tags, qa.approved,
-            native_containers=native)
+            native_containers=native, ownership_native=qa.containers)
         if errors:
             raise RecordError('first adoption current QA rejected:\n' + '\n'.join(errors))
     aid = frozen['adoption_id']

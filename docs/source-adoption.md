@@ -81,6 +81,19 @@ main 分类重新选择该英文见证。需独立核对 main ancestry 和整份
 
 ### 未安装候选的失败生成历史
 
+旧 `source-adoption-input-v1` 的完整只读证明 neighbor 可能来自“段落后清空
+proof owner”的已接受提取实现。该兼容只接受原 origin 属于接受主线，且原 Git
+`chapter_inventory` 函数精确匹配已知旧指纹的输入。既有 flat/opaque 模式从同一
+锁定 Git 和原宏政策完整重提取 Schema 1 证明；原字段、无 owner 的旧 ID、parent
+和位置全部必须相等。现行唯一完整证明也必须无损回放相同英文 span，包括当前
+typed IR 的完整源还原。仅本次已核验邻近覆盖集合采用现行证明 ID；冻结上下文、
+事实、模型输入输出和历史 ID 不写回，不新增历史格式或人工批准。其他版本、未知
+旧实现、截断、错位或字段篡改均拒绝；缓存同时绑定 origin 和工具版本。
+若同一完整 proof 是 prose_block 的前/后边界，原边界 owner/ordinal 也可能受影响。
+只有原冻结 neighbor 完整回放，且其物理端点恰好等于该完整 prose_block 的端点，
+才可在内存比较中使用原边界坐标。整个原/现行选择的每个其他字段和完整 lowering
+必须相等；不能改变来源范围、分段、公式、unit ID 或候选，原见证仍保留原字节。
+
 只读英文邻近/引用上下文可能保留自然数学文字启用前的完整 Schema 1 IR。
 现行同位置完整节点已是 typed IR 时，验证器从相同锁定 Git、原宏政策与既有
 `natural_text_enabled=False` 表示重新提取；原冻结节点的每个字段、位置、owner、

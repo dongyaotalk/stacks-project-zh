@@ -18,6 +18,7 @@ from stacks_zh.source_terms import (load_catalog, source_inventory,
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'tests/fixtures/sites-cohomology21-source-terms-policy.json'
 BASE = '8038ce359f8ecb4268632379080022038ca3c5a7'
+ACCEPTED_SITES_BOUNDARY = '5400f3d19bf86fc59807e8dfa3d69d4429910ad3'
 
 
 def normalized_inventory(unit, catalog):
@@ -44,7 +45,12 @@ class SitesSourceTermsPolicyTests(unittest.TestCase):
             ['git', 'show', BASE + ':config/source-terms.json'], cwd=ROOT, text=True))
 
     def test_only_appended_scoped_entries(self):
-        original = copy.deepcopy(self.current)
+        # The accepted sites delta is immutable; later scoped extensions retain it.
+        original = json.loads(subprocess.check_output(
+            ['git', 'show', ACCEPTED_SITES_BOUNDARY + ':config/source-terms.json'], cwd=ROOT, text=True))
+        current_by_id = {term['id']: term for term in self.current['terms']}
+        for entry in self.fixture['entries']:
+            self.assertEqual(current_by_id[entry['id']], entry)
         added = original['terms'][len(self.baseline['terms']):]
         self.assertEqual(added, self.fixture['entries'])
         self.assertEqual(len(added), 5)

@@ -713,3 +713,12 @@ payload 验证的 medskip/noindent 段落边界，后接 MATH。这是赋值动�
 #924 工具已由 PR #926 接受至 main
 `bc435c2a6f958f39b17a64fe3e7eb29b957c2bfb`。后续政策验收以该工具基线和
 独立实际输入绑定，不回写上述开发见证或原始输入；政策合并与DATA仍各自验收。
+
+## 第59章完整拟凝聚模词形（Issue #934）
+
+已有 `source-phrase-quasi-coherent-module` 概念增加 `etale-cohomology` 章节范围，
+保持两种精确词形与原 descent 见证。新增单数见证为 0DEW/0DEV/proof1，复数见证
+为 0DEW/0DEV/lemma1，均为 `etale-cohomology-lemma-review-quasi-coherent` 的完整
+锁定 Git 容器，详见[政策见证](../tests/fixtures/etale-cohomology59-source-policy.json)。
+完整词形覆盖不能冒称 coherent module(s) 或机械拆词；其他章节保留原要求。
+此目录只登记英文来源，中文候选仍逐次双语显示并保留待决上下文，不授予术语批准。

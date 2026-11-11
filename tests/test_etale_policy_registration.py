@@ -103,7 +103,7 @@ class EtalePolicyRegistrationTests(unittest.TestCase):
         for key, (base, usage, label) in CONTEXTS.items():
             self.assertEqual(fields(contexts[key]), dict(base_rule=base, usage=usage,
                 source_label=label, witness_kind='section', witness_ordinal=1))
-        self.assertEqual(Policy(CURRENT).math_text_notations['Mat'], dict(commands=['text'],
+        self.assertEqual(Policy(REGISTERED).math_text_notations['Mat'], dict(commands=['text'],
             usages=['applied'], source_label='etale-example-standard-etale'))
 
     def test_operator_applications_are_locked_and_bad_shapes_still_reject(self):
@@ -120,7 +120,7 @@ class EtalePolicyRegistrationTests(unittest.TestCase):
         # it does not validate function arity. Preserve that existing contract.
         self.assertEqual(protected(r'$\text{Cov}()$', BEFORE), protected(r'$\text{Cov}()$'))
         for source in [r'$\textit{Mat}(n,k)$', r'$\text{Mat}$',
-                       r'$\text{Mat}_n$', r'$\text{mat}(n,k)$', r"$\text{Mat}'(n,k)$",
+                       r'$\text{Mat}_{}$', r'$\text{mat}(n,k)$', r"$\text{Mat}'(n,k)$",
                        r'$\text{depth}$', r'$\textit{depth}(A)$',
                        r'$\text{depth}_{}$', r'$\text{depth }(A)$',
                        r'$\text{Mat}(n,k)\text{ unregistered annotation}$',

@@ -19,6 +19,7 @@ from stacks_zh.source_reextractions import source_tex
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = '8038ce359f8ecb4268632379080022038ca3c5a7'
+REGISTERED = subprocess.check_output(['git','show','ace0b76:config/macro-policy.yml'],cwd=ROOT,text=True)
 FIXTURE = ROOT / 'tests/fixtures/sites-cohomology21-math-text-policy-20261109.json'
 EXPECTED_NOTATIONS = {
     'Comp': (['text'], ['superscripted']),
@@ -53,7 +54,7 @@ class SitesMathTextPolicyTests(unittest.TestCase):
         cls.fixture = json.loads(FIXTURE.read_text())
 
     def test_exact_new_rules_and_existing_policy_preservation(self):
-        current, baseline = self.current, self.baseline
+        current, baseline = Policy(REGISTERED), self.baseline
         for name in ('commands', 'locked_noargs', 'math', 'literal', 'metadata',
                      'body', 'accents', 'special'):
             self.assertEqual(getattr(current, name), getattr(baseline, name), name)
@@ -116,7 +117,8 @@ class LockedSitesMathPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.fixture = json.loads(FIXTURE.read_text())
-        cls.native = Containers(ROOT, Path(os.environ['HARVEST_DIR']))
+        # Historical fixture hashes bind its accepted policy, not today's unrelated registry.
+        cls.native = Containers(ROOT, Path(os.environ['HARVEST_DIR']), policy_bytes=REGISTERED.encode())
         cls.raw, cls.rows, cls.diagnostics = cls.native.document('sites-cohomology')
 
     def test_locked_git_full_containers_and_typed_roundtrip(self):

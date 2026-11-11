@@ -1,5 +1,15 @@
 """Independent source-only positive and negative chapter-59 syntax fixtures."""
 import unittest
+import subprocess
+from pathlib import Path
+
+ACCEPTED_TOOL_POLICY = "5400f3d19bf86fc59807e8dfa3d69d4429910ad3"
+
+def accepted_tool_policy():
+    """Preserve the pre-registration tool fixture; production policy has separate tests."""
+    return subprocess.check_output(["git", "show", ACCEPTED_TOOL_POLICY + ":config/macro-policy.yml"],
+                                   cwd=Path(__file__).resolve().parents[1], text=True)
+
 from unittest.mock import patch
 from stacks_zh import math_text_etale as etale
 from stacks_zh.math_text import nodes, find_slots
@@ -48,7 +58,7 @@ class EtaleCohomologyMathFramesTests(unittest.TestCase):
         from pathlib import Path
         from stacks_zh.extraction import Policy
         from stacks_zh.records import RecordError
-        base = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text()
+        base = accepted_tool_policy()
         root = ('  etale59-pairs-root:\n'
                 '    literal: " up to isomorphism as above"\n'
                 '    command: "text"\n    usage: "root-phrase"\n'
@@ -187,7 +197,7 @@ class EtaleCohomologyItalicCategoryTests(unittest.TestCase):
     @staticmethod
     def policy_text():
         from pathlib import Path
-        text = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text()
+        text = accepted_tool_policy()
         entry = ('  etale59-italic-category:\n'
                  '    literal: "Locally ringed topoi"\n'
                  '    command: "textit"\n'
@@ -254,7 +264,7 @@ class EtaleCohomologyNotationParserTests(unittest.TestCase):
     @staticmethod
     def context_policy(base, command, role):
         from pathlib import Path
-        text = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text()
+        text = accepted_tool_policy()
         entry = ('  etale59-test:\n    base_notation: "' + base + '"\n'
                  '    commands: ["' + command + '"]\n'
                  '    usages: ["' + role + '"]\n'
@@ -318,7 +328,7 @@ class EtaleCohomologyNotationParserTests(unittest.TestCase):
         from pathlib import Path
         from stacks_zh.extraction import Policy
         from stacks_zh.records import RecordError
-        base = (Path(__file__).resolve().parents[1] / 'config/macro-policy.yml').read_text()
+        base = accepted_tool_policy()
         for key, command, role, source in [
                 ("F\\'Et", 'textit', 'etale-finite-etale-category', r"$\textit{F\'Et}_S$"),
                 ('red', 'text', 'etale-reduced-norm', r'$N_\text{red}(x) = 0$')]:

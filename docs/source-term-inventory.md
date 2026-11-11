@@ -722,3 +722,13 @@ payload 验证的 medskip/noindent 段落边界，后接 MATH。这是赋值动�
 锁定 Git 容器，详见[政策见证](../tests/fixtures/etale-cohomology59-source-policy.json)。
 完整词形覆盖不能冒称 coherent module(s) 或机械拆词；其他章节保留原要求。
 此目录只登记英文来源，中文候选仍逐次双语显示并保留待决上下文，不授予术语批准。
+
+### 第59章三个完整证明的赋值动词
+
+独立政策任务 [Issue #947](https://github.com/dongyaotalk/stacks-project-zh/issues/947)
+沿用逐次普通用法证据，登记完整 `tag:03OQ:proof` 中 `Set` 的第0次出现，
+以及 `tag:095N:proof`、`tag:0F1I:proof` 中 `set` 各自的第1次出现。
+它们分别引入复形分解、有限指标子集对应的像层、基变换证明中的两个模的赋值，
+是命令式动词。后两份证明中的真正指标集合及集合名词继续要求覆盖。证据绑定完整锁定
+英文证明的 TeX hash；其他同词出现、集合术语、完整数学及结构门禁保持。
+此登记不批准中文译法，也不修改候选或原模型历史；忠实候选另由第59章任务采用。

@@ -214,7 +214,7 @@ def _restored_container_tag_coverage(
 def _first_adoption_tag_coverage(root, harvest, units_by_file):
     """Verify source preparation only; candidate/history QA remains independent."""
     from .derivations import _git_origin_bytes
-    from .source_adoptions import POLICIES, Reads, _schema, _task_scope
+    from .source_adoptions import POLICIES, REFERENCE_POLICIES, Reads, _schema, _task_scope
 
     directory = root / 'translation-data/source-adoptions'
     paths = tuple(glob_paths(directory, '*.json'))
@@ -275,7 +275,8 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
             raise RecordError('progress first adoption has a different source identity')
         _task_scope(frozen, reads, record['input'], current=False)
         policies = frozen['policies']
-        if len(policies) != len(POLICIES) or {p['path'] for p in policies} != set(POLICIES):
+        required = REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else POLICIES
+        if len(policies) != len(required) or {p['path'] for p in policies} != set(required):
             raise RecordError('progress first adoption lacks its complete origin policy set')
         historical = {}
         for entry in policies:

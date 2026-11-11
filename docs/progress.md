@@ -134,3 +134,9 @@ check、workflow/harvest、diff 与 pr-contract 必须通过，不附加全工�
 `make template`。这里的验证要求引擎零退出及完整最终 LaTeX 日志门禁，包括硬错误、
 缺字、未定义引用/引用键和重复标签；不要求截图、逐页
 渲染或图像检查。构建产生的 TeX、PDF 和日志是临时产物，不得提交。
+
+首次采用v6的来源查询使用已接受的完整 `REFERENCE_POLICIES`，包括不可变的
+`schema/math-text-references.schema.json`；其他版本继续使用原 `POLICIES`。
+版本只选择对应完整集合，不允许缺失、额外或重复政策文件。每个文件仍逐字绑定
+原origin，完整来源lowering、unit顺序/hash、scope及原生Tag核验保持。该查询不
+授予模型生成或审校权限，v4恢复范围不变（Issue #943 的最终CI兼容性回归）。

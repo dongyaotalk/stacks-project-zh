@@ -1,5 +1,6 @@
 """Synthetic source fixtures only; no model generation or human approval."""
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,7 +11,7 @@ from test_source_containers import git
 from stacks_zh.extraction import Policy
 from stacks_zh.progress_coverage import container_tag_coverage, native_container_tag_coverage
 from stacks_zh.records import RecordError
-from stacks_zh.source_adoptions import POLICIES, load_repository_source_adoptions
+from stacks_zh.source_adoptions import POLICIES, REFERENCE_POLICIES, load_repository_source_adoptions
 from stacks_zh.source_containers import Containers, clean, lower_container
 from stacks_zh.source_reextractions import byte_hash
 
@@ -24,7 +25,7 @@ def selected(kind, text):
     return {'selector': {'file':'test.tex', 'kind':kind}, 'fragment':text}
 
 
-def native_adoption(base):
+def native_adoption(base, *, reference=False):
     root, harvest, record, frozen, path = adoption_setup(base)
     text = ('\\begin{document}\n\\section{Basics}\\label{section-basic}\n'
             '\\begin{remarks}\\label{remarks-one}Notes.\n' + LIST +
@@ -41,6 +42,14 @@ def native_adoption(base):
     # Prose's accepted selector requires labels immediately after real items.
     value = (harvest/'test.tex').read_text().replace(
         r'\item First \label{item-third} object.', r'\item\label{item-third} First object.')
+    if reference:
+        from test_sites_cohomology_math_text import CUP, synthetic_policy
+        value = value.replace('Claim.', 'Claim.\n' + CUP).replace('\\end{document}',
+            '\\begin{remark}\\label{remark-cup-product}Reference.\\end{remark}\n\\end{document}')
+        with (harvest/'tags/tags').open('a') as stream:
+            stream.write('0007,test-remark-cup-product\n')
+        (root/'config/macro-policy.yml').write_text(synthetic_policy().replace('test-lemma-one', 'test-lemma-two'))
+        shutil.copyfile(ROOT/'schema/math-text-references.schema.json', root/'schema/math-text-references.schema.json')
     (harvest/'test.tex').write_text(value); commit(harvest)
     source = git(harvest, 'rev-parse', 'HEAD')
     (root/'upstream.lock').write_text(f'commit = "{source}"\n')
@@ -50,6 +59,9 @@ def native_adoption(base):
              parent_tag='0000', kind='remarks', ordinal=1),
         dict(file='test.tex', owner_tag='0000', owner_label='test-section-basic',
              parent_tag='0000', kind='prose_block', ordinal=1)]
+    if reference:
+        coordinates.append(dict(file='test.tex', owner_tag='0002', owner_label='test-lemma-two',
+                                parent_tag='0000', kind='lemma', ordinal=1))
     groups = []
     for coordinate in coordinates:
         fragment = native.select(coordinate)
@@ -72,7 +84,11 @@ def native_adoption(base):
     commit(root)
     frozen.update(origin_commit=git(root,'rev-parse','HEAD'), source_commit=source,
         unit_ids=[u['unit_id'] for u in units], parent_tags=['0000'], contexts=[],
-        policies=[dict(path=p,hash=byte_hash((root/p).read_bytes())) for p in POLICIES])
+        policies=[dict(path=p,hash=byte_hash((root/p).read_bytes()))
+                  for p in (REFERENCE_POLICIES if reference else POLICIES)])
+    if reference:
+        frozen['tool_version'] = 'source-adoption-input-v6'
+        record['tool_version'] = 'source-adoption-v6'
     scope_path = root/frozen['task']['scope_manifest']
     scope = json.loads(scope_path.read_text())
     scope['source_commit'] = source
@@ -137,6 +153,28 @@ class NativeListTagTests(unittest.TestCase):
             (root/record['outputs'][0]['candidates']['path']).unlink()
             self.assertEqual(coverage,container_tag_coverage(root,harvest,current_units(root)))
             self.assertTrue(load_repository_source_adoptions(root,harvest)[1])
+
+    def test_v6_list_source_binds_complete_reference_policy_set(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _, frozen, _ = native_adoption(Path(tmp), reference=True)
+            self.assertTrue(any(u['schema_version'] == 4 for u in frozen['batches'][0]['units']))
+            coverage = container_tag_coverage(root, harvest, current_units(root))
+            self.assertEqual(set().union(*coverage.values()), {'0003', '0004', '0005', '0006'})
+        for failure in ('missing', 'extra', 'duplicate'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as tmp:
+                root, harvest, record, frozen, path = native_adoption(Path(tmp), reference=True)
+                if failure == 'missing':
+                    frozen['policies'] = [p for p in frozen['policies']
+                                          if p['path'] != 'schema/math-text-references.schema.json']
+                elif failure == 'extra':
+                    frozen['policies'].append(dict(path='docs/progress.md', hash='sha256:' + '0' * 64))
+                else:
+                    frozen['policies'].append(frozen['policies'][-1])
+                write(root / record['input']['path'], frozen)
+                record['input']['hash'] = byte_hash((root / record['input']['path']).read_bytes())
+                write(path, record)
+                with self.assertRaises(RecordError):
+                    container_tag_coverage(root, harvest, current_units(root))
 
     def test_rehashed_incomplete_current_source_and_frozen_bindings_fail(self):
         for fault in ['fragment','partial','source','bytes','order']:

@@ -676,6 +676,91 @@ def _prepare(root, input_entry, harvest=None, *, current=False, overrides=None, 
     return _prepare_full(root, input_entry, harvest, current=current, overrides=overrides, visiting=visiting)
 
 
+_SOURCE_SCHEMAS = {'schema/unit.schema.json', 'schema/math-text-regions.schema.json',
+                   'schema/math-text-components.schema.json'}
+_SOURCE_POLICY_UPDATES = {'config/macro-policy.yml', 'config/source-terms.json'} | _SOURCE_SCHEMAS
+
+
+def _accepted_source_policy_update(root, origin, policy_bytes, reads):
+    """Bind changed source policies to an actual main ancestor; never rewrite a freeze."""
+    current = {name: reads.snapshot.read(root / name) for name in policy_bytes}
+    changed = {name for name in policy_bytes if current[name] != policy_bytes[name]}
+    if not changed:
+        return None
+    if not changed <= _SOURCE_POLICY_UPDATES:
+        raise RecordError('generation policy drifted since its frozen origin')
+    for anchor in ('refs/remotes/origin/main', 'refs/heads/main'):
+        result = subprocess.run(['git', '-C', str(root), 'rev-parse', '--verify',
+                                 anchor + '^{commit}'], capture_output=True, text=True)
+        if result.returncode:
+            continue
+        commit = result.stdout.strip()
+        if any(subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', a, b],
+                              capture_output=True).returncode
+               for a, b in ((origin, commit), (commit, reads.snapshot.head))):
+            continue
+        if all(_git_origin_bytes(root, commit, name) == payload for name, payload in current.items()):
+            return current
+    raise RecordError('source policy update is not the exact accepted main policy set')
+
+
+def _validate_frozen_source_schemas(frozen, policy_bytes, current_bytes):
+    """Original objects must satisfy both accepted source contracts, without conversion."""
+    from .schema_validation import _validate
+    units = [u for batch in frozen['batches'] for u in batch['units']]
+    units += [item['value']['source_unit'] for item in frozen['contexts']
+              if 'source_unit' in item['value']]
+    for payloads in (policy_bytes, current_bytes):
+        schemas = {name: json.loads(payloads[name]) for name in _SOURCE_SCHEMAS if name in payloads}
+        for unit in units:
+            values = [('schema/unit.schema.json', unit)]
+            if 'math_text_regions' in unit:
+                values.append(('schema/math-text-components.schema.json' if unit['schema_version'] >= 3
+                               else 'schema/math-text-regions.schema.json', unit['math_text_regions']))
+            if 'math_text_components' in unit:
+                values.append(('schema/math-text-components.schema.json', unit['math_text_components']))
+            for name, value in values:
+                if name in schemas:
+                    errors = _validate(value, schemas[name], unit['unit_id'])
+                    if errors:
+                        raise RecordError('frozen source fails original or accepted current Schema: ' + '\n'.join(errors))
+
+
+def _unchanged_source_policy_units(old_units, new_units, old_hash, new_hash):
+    """Compare two complete lowerings, permitting only independently replayed witness hashes.
+
+    Local comparison copies are discarded. Original units, witnesses and model
+    fields retain their frozen identity; this grants no v5 revision permission.
+    """
+    expected = copy.deepcopy(old_units)
+    for unit in expected:
+        for region in unit.get('math_text_regions', []):
+            for slot in region['slots']:
+                witness = slot['classification_witness']
+                if witness['policy_hash'] != old_hash:
+                    raise RecordError('frozen math witness differs from its origin policy')
+                witness['policy_hash'] = new_hash
+    if [stamp_unit_hashes(unit) for unit in expected] != new_units:
+        raise RecordError('accepted source policy changed complete lowering beyond witness hashes')
+
+
+def _verify_unchanged_source_policy(frozen, native, current_native):
+    old_hash, new_hash = byte_hash(native.policy_bytes), byte_hash(current_native.policy_bytes)
+    for batch in frozen['batches']:
+        for group in batch['containers']:
+            old, new = native.select(group['selector']), current_native.select(group['selector'])
+            _unchanged_source_policy_units([old['inventory_unit']], [new['inventory_unit']], old_hash, new_hash)
+            comparison = copy.deepcopy(old)
+            comparison['macro_policy_hash'] = new_hash
+            comparison['inventory_unit'] = new['inventory_unit']
+            if comparison != new:
+                raise RecordError('accepted source policy changed complete Git selector or boundaries')
+            _unchanged_source_policy_units(
+                [clean(u) for u in lower_container(old, native.policy)],
+                [clean(u) for u in lower_container(new, current_native.policy)], old_hash, new_hash)
+    current_native.assert_unchanged()
+
+
 def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=None, visiting=None):
     reads = Reads(root, overrides)
     frozen = reads.json(input_entry)
@@ -699,8 +784,9 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
         if byte_hash(payload) != entry['hash']:
             raise RecordError('frozen policy differs from accepted origin: ' + entry['path'])
         policy_bytes[entry['path']] = payload
-        if current and reads.snapshot.read(root / entry['path']) != payload:
-            raise RecordError('generation policy drifted since its frozen origin')
+    current_policies = _accepted_source_policy_update(root, origin, policy_bytes, reads) if current else None
+    if current_policies is not None:
+        _validate_frozen_source_schemas(frozen, policy_bytes, current_policies)
     if frozen['tool_version'] in {'source-adoption-input-v4', 'source-adoption-input-v5', 'source-adoption-input-v6'}:
         version = frozen['tool_version']
         for name, allowed_version in [('schema/source-adoption-input.schema.json', version),
@@ -860,6 +946,9 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
             a, b = max(start, span['byte_start']), min(end, span['byte_end'])
             if a < b and native.document(chapter)[0][a:b].strip(b' \t\r\n'):
                 raise RecordError('first adoption overlaps accepted or other active source')
+    if current_policies is not None:
+        current_native = _daily_containers(root, harvest, current_policies['config/macro-policy.yml'])
+        _verify_unchanged_source_policy(frozen, native, current_native)
     native.assert_unchanged()
     alignment_native.assert_unchanged()
     complete_histories = dict(histories)

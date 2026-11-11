@@ -49,6 +49,25 @@ python3 stacks_zh.py assemble-source-adoption \
 所有 batch 完整验证后才安装全部候选、run 和最后的采用记录；安装故障恢复
 已替换的临时候选并移除新文件。
 
+### 已接受来源政策变化后的首次装配
+
+[Issue #942](https://github.com/dongyaotalk/stacks-project-zh/issues/942) 允许尚未首次
+Git 采用的完整冻结生成，在 `config/macro-policy.yml` 或 `config/source-terms.json`
+以及 `schema/unit.schema.json`、`schema/math-text-regions.schema.json`、
+`schema/math-text-components.schema.json` 后来通过主线接受时继续首次装配。
+所有原冻结 unit 和来源上下文对象必须同时通过原和当前来源 Schema，不转换对象。
+旧政策仍逐字等于冻结 origin；当前完整政策集合
+必须逐字等于可确认的 main 祖先，且 origin 到该祖先再到当前 HEAD 的关系成立。
+未接受或未提交的政策变化、其他政策/候选、运行、输入、采用 Schema/模型/Harness/提示/词表变化仍拒绝。
+
+先按原政策完整重选来源和上下文，再以当前政策独立重选全部目标完整容器。
+除完整 macro hash 引起的分类见证 policy hash 及相应结构 hash 比较差异外，
+来源、公式、typed slot/分类语义、包装、位置、边界和分段必须完全相同。
+比较副本只用于只读核验，采用的 unit 和候选仍保留原冻结见证和模型五字段，
+不重绑定已有候选，不扩大 v5 修订权限，不更改历史 Schema 或生成身份。
+来源重复/覆盖、完整 scope、真实模型输出及当前术语/保护/来源 QA 门禁继续执行。
+实际术语投影有新增要求而原模型输出不满足时仍拒绝，必须另行完整实际生成。
+
 ### 未安装候选的失败生成历史
 
 实际生成的 raw 在记录 Schema、完整覆盖或受保护候选装配阶段被拒绝时，可保留

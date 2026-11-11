@@ -16,16 +16,85 @@ from .source_integrity import STATEMENTS
 from .source_reextractions import byte_hash, source_tex
 from .validation_io import read_text, read_bytes, glob_paths
 
+FIRST_ADOPTION_LIST_KINDS = STATEMENTS | {'remarks', 'prose_block'}
+
+
+def _plain_container_item_tags(fragment, kind, policy, tags, chapter):
+    """Plain list labels, including labels after item prose; arguments stay opaque."""
+    scanner = Scanner(fragment, policy)
+    text, protected, errors = scanner.protect(0, len(fragment))
+    if errors:
+        raise RecordError('native item labels have unsupported source syntax')
+    stack, depth, found = [], 0, []
+    opened = kind == 'prose_block'
+    closed, cursor = False, 0
+    for match in re.finditer(r'<([A-Z]+_[0-9]{4})>', text):
+        if text[cursor:match.start()].strip() and (not opened or closed):
+            raise RecordError('native Tag coverage requires a complete remarks wrapper')
+        name = match[1]
+        value, role = protected[name], name.rsplit('_', 1)[0]
+        cursor = match.end()
+        if role == 'COMMENT':
+            continue
+        if closed:
+            raise RecordError('native Tag coverage has nodes after the remarks closing')
+        if role.endswith('OPEN'):
+            depth += 1
+        elif role.endswith('CLOSE') or role in {'ENVARGEND', 'ITEMCLOSE'}:
+            depth -= 1
+        if depth < 0:
+            raise RecordError('native list labels have unbalanced arguments')
+        environment = ENVIRONMENT.fullmatch(value) if role == 'STRUCT' and depth == 0 else None
+        if environment:
+            action, environment_kind = environment[1], environment[2]
+            if action == 'begin':
+                if not opened:
+                    if environment_kind != 'remarks' or match.start() != 0:
+                        raise RecordError('native Tag coverage requires the complete remarks opening')
+                    opened = True
+                stack.append([environment_kind, False])
+            elif not stack or stack.pop()[0] != environment_kind:
+                raise RecordError('native list labels have unbalanced environments')
+            elif kind == 'remarks' and not stack:
+                closed = True
+        if value == r'\item' and role == 'STRUCT' and depth == 0:
+            if stack and stack[-1][0] in {'enumerate', 'itemize'}:
+                stack[-1][1] = True
+        label = re.fullmatch(r'\\label\{([^{}\n]+)\}', value) if role == 'LOCKED' and depth == 0 else None
+        if label and stack and stack[-1][0] in {'enumerate', 'itemize'} and stack[-1][1]:
+            qualified = label[1] if label[1] in tags else chapter + '-' + label[1]
+            tag = tags.get(qualified)
+            if (not qualified.startswith(chapter + '-') or tag is None
+                    or sum(value == tag for value in tags.values()) != 1):
+                raise RecordError('native list item has no unique same-chapter permanent Tag')
+            found.append(tag)
+    if (stack or depth or not opened or (kind == 'remarks' and not closed)
+            or (kind == 'remarks' and text[cursor:].strip())):
+        raise RecordError('native Tag coverage requires a complete balanced container')
+    return found
+
 
 def native_container_tag_coverage(selected, policy, tags):
-    """Native item Tags of an already selected complete statement, without candidates.
+    """Native item Tags of an already selected complete container, without candidates.
 
     Callers retain authority for the actual locked selector/lowering. This helper
     grants neither current fact coverage nor candidate/review approval on its own.
     """
     kind = selected['selector']['kind']
-    if kind not in STATEMENTS:
+    if kind not in FIRST_ADOPTION_LIST_KINDS:
         return frozenset()
+    fragment = selected['fragment']
+    if kind in {'remarks', 'prose_block'}:
+        found = _plain_container_item_tags(fragment, kind, policy, tags, selected['selector']['file'][:-4])
+        if len(set(found)) != len(found):
+            raise RecordError('progress source container has duplicate native item Tags')
+        return frozenset(found)
+    return _statement_native_tag_coverage(selected, policy, tags)
+
+
+def _statement_native_tag_coverage(selected, policy, tags):
+    """Keep the existing v4 statement-boundary contract unchanged."""
+    kind = selected['selector']['kind']
     fragment = selected['fragment']
     opening = ENVIRONMENT.match(fragment)
     if opening is None or opening.group() != f'\\begin{{{kind}}}':
@@ -137,7 +206,7 @@ def _restored_container_tag_coverage(
         selected = restored['selected']
         if selected['selector']['kind'] not in STATEMENTS:
             raise RecordError('progress nested Tags require a complete statement container')
-        tags = native_container_tag_coverage(selected, restored['policy'], restored['tags'])
+        tags = _statement_native_tag_coverage(selected, restored['policy'], restored['tags'])
         coverage[group['output_unit_ids'][0]] = frozenset(tags)
     return coverage
 
@@ -192,8 +261,9 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
         if relative in consumed:
             continue
         relevant = [g for batch in frozen['batches'] for g in batch['containers']
-                    if g['selector']['kind'] in STATEMENTS
-                    and len(re.findall(r'\\label\{[^{}]+\}', g['selected']['fragment'])) >= 2]
+                    if g['selector']['kind'] in FIRST_ADOPTION_LIST_KINDS
+                    and len(re.findall(r'\\label\{[^{}]+\}', g['selected']['fragment']))
+                    >= (1 if g['selector']['kind'] == 'prose_block' else 2)]
         if not relevant:
             continue
         if (path.stem != record['adoption_id']

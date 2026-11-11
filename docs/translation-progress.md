@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 100 | 第 5-6、9-20、22-33、36-40、42-104、106-111 章 |
+| 未开始 | 99 | 第 5-6、9-20、22-33、36-40、42-58、60-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 16 | 第 1-4、7-8、21、34-35、41、105、112-116 章 |
+| 候选译文完成，待审校 | 17 | 第 1-4、7-8、21、34-35、41、59、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 326 / 3,299（9.9%） | 0 | 2,973 |
+| 模型候选译文 | 433 / 3,299（13.1%） | 0 | 2,866 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -94,7 +94,7 @@
 | 56 | 函子与态射（`functors`） | 未开始 | 0 / 7（0.0%） | 0 | 7 | 0 | 0 |
 | 57 | 簇的导出范畴（`equiv`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
 | 58 | 概形的基本群（`pione`） | 未开始 | 0 / 32（0.0%） | 0 | 32 | 0 | 0 |
-| 59 | 平展上同调（`etale-cohomology`） | 未开始 | 0 / 107（0.0%） | 0 | 107 | 0 | 0 |
+| 59 | 平展上同调（`etale-cohomology`） | 候选译文完成，待审校 | 107 / 107（100.0%） | 0 | 0 | 0 | 0 |
 | 60 | 晶体上同调（`crystalline`） | 未开始 | 0 / 26（0.0%） | 0 | 26 | 0 | 0 |
 | 61 | Pro-平展上同调（`proetale`） | 未开始 | 0 / 31（0.0%） | 0 | 31 | 0 | 0 |
 | 62 | 相对循环（`relative-cycles`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
@@ -479,6 +479,120 @@
 | 19 | `025L` | Permanence properties | 完成 | 未开始 | 未开始 |
 | 20 | `0BTH` | Descending \'etale morphisms | 完成 | 未开始 | 未开始 |
 | 21 | `0CBN` | Normal crossings divisors | 完成 | 未开始 | 未开始 |
+
+### 第 59 章 平展上同调（`etale-cohomology`）
+
+共 107 个 Section：候选完成 107，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `03N2` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `04JG` | Which sections to skip on a first reading? | 完成 | 未开始 | 未开始 |
+| 3 | `03N3` | Prologue | 完成 | 未开始 | 未开始 |
+| 4 | `03N4` | The \'etale topology | 完成 | 未开始 | 未开始 |
+| 5 | `03N7` | Feats of the \'etale topology | 完成 | 未开始 | 未开始 |
+| 6 | `03N8` | A computation | 完成 | 未开始 | 未开始 |
+| 7 | `03N9` | Nontorsion coefficients | 完成 | 未开始 | 未开始 |
+| 8 | `03NA` | Sheaf theory | 完成 | 未开始 | 未开始 |
+| 9 | `03NB` | Presheaves | 完成 | 未开始 | 未开始 |
+| 10 | `03NF` | Sites | 完成 | 未开始 | 未开始 |
+| 11 | `03NJ` | Sheaves | 完成 | 未开始 | 未开始 |
+| 12 | `03NP` | The example of G-sets | 完成 | 未开始 | 未开始 |
+| 13 | `03NQ` | Sheafification | 完成 | 未开始 | 未开始 |
+| 14 | `03NT` | Cohomology | 完成 | 未开始 | 未开始 |
+| 15 | `03NV` | The fpqc topology | 完成 | 未开始 | 未开始 |
+| 16 | `03O6` | Faithfully flat descent | 完成 | 未开始 | 未开始 |
+| 17 | `03OF` | Quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 18 | `03OK` | {\v C}ech cohomology | 完成 | 未开始 | 未开始 |
+| 19 | `03OU` | The {\v C}ech-to-cohomology spectral sequence | 完成 | 未开始 | 未开始 |
+| 20 | `03X7` | Big and small sites of schemes | 完成 | 未开始 | 未开始 |
+| 21 | `04HP` | The \'etale topos | 完成 | 未开始 | 未开始 |
+| 22 | `03OY` | Cohomology of quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 23 | `03YZ` | Examples of sheaves | 完成 | 未开始 | 未开始 |
+| 24 | `03P7` | Picard groups | 完成 | 未开始 | 未开始 |
+| 25 | `03P9` | The \'etale site | 完成 | 未开始 | 未开始 |
+| 26 | `03PA` | \'Etale morphisms | 完成 | 未开始 | 未开始 |
+| 27 | `03PF` | \'Etale coverings | 完成 | 未开始 | 未开始 |
+| 28 | `03PK` | Kummer theory | 完成 | 未开始 | 未开始 |
+| 29 | `03PN` | Neighborhoods, stalks and points | 完成 | 未开始 | 未开始 |
+| 30 | `06VW` | Points in other topologies | 完成 | 未开始 | 未开始 |
+| 31 | `04FQ` | Supports of abelian sheaves | 完成 | 未开始 | 未开始 |
+| 32 | `03QD` | Henselian rings | 完成 | 未开始 | 未开始 |
+| 33 | `04HW` | Stalks of the structure sheaf | 完成 | 未开始 | 未开始 |
+| 34 | `04I0` | Functoriality of small \'etale topos | 完成 | 未开始 | 未开始 |
+| 35 | `03PV` | Direct images | 完成 | 未开始 | 未开始 |
+| 36 | `03PZ` | Inverse image | 完成 | 未开始 | 未开始 |
+| 37 | `04DI` | Functoriality of big topoi | 完成 | 未开始 | 未开始 |
+| 38 | `04I4` | Functoriality and sheaves of modules | 完成 | 未开始 | 未开始 |
+| 39 | `09XL` | Comparing topologies | 完成 | 未开始 | 未开始 |
+| 40 | `04JH` | Recovering morphisms | 完成 | 未开始 | 未开始 |
+| 41 | `04C6` | Push and pull | 完成 | 未开始 | 未开始 |
+| 42 | `04DJ` | Property (A) | 完成 | 未开始 | 未开始 |
+| 43 | `04DN` | Property (B) | 完成 | 未开始 | 未开始 |
+| 44 | `04DS` | Property (C) | 完成 | 未开始 | 未开始 |
+| 45 | `04DY` | Topological invariance of the small \'etale site | 完成 | 未开始 | 未开始 |
+| 46 | `04E1` | Closed immersions and pushforward | 完成 | 未开始 | 未开始 |
+| 47 | `04FY` | Integral universally injective morphisms | 完成 | 未开始 | 未开始 |
+| 48 | `04E2` | Big sites and pushforward | 完成 | 未开始 | 未开始 |
+| 49 | `04CB` | Exactness of big lower shriek | 完成 | 未开始 | 未开始 |
+| 50 | `03Q3` | \'Etale cohomology | 完成 | 未开始 | 未开始 |
+| 51 | `03Q4` | Colimits | 完成 | 未开始 | 未开始 |
+| 52 | `0GIR` | Colimits and complexes | 完成 | 未开始 | 未开始 |
+| 53 | `03Q7` | Stalks of higher direct images | 完成 | 未开始 | 未开始 |
+| 54 | `03QA` | The Leray spectral sequence | 完成 | 未开始 | 未开始 |
+| 55 | `03QN` | Vanishing of finite higher direct images | 完成 | 未开始 | 未开始 |
+| 56 | `03QW` | Galois action on stalks | 完成 | 未开始 | 未开始 |
+| 57 | `0A2H` | Group cohomology | 完成 | 未开始 | 未开始 |
+| 58 | `0DVG` | Tate's continuous cohomology | 完成 | 未开始 | 未开始 |
+| 59 | `03QQ` | Cohomology of a point | 完成 | 未开始 | 未开始 |
+| 60 | `03R0` | Cohomology of curves | 完成 | 未开始 | 未开始 |
+| 61 | `03R1` | Brauer groups | 完成 | 未开始 | 未开始 |
+| 62 | `0A2J` | The Brauer group of a scheme | 完成 | 未开始 | 未开始 |
+| 63 | `0A3J` | The Artin-Schreier sequence | 完成 | 未开始 | 未开始 |
+| 64 | `09Y8` | Locally constant sheaves | 完成 | 未开始 | 未开始 |
+| 65 | `0DV4` | Locally constant sheaves and the fundamental group | 完成 | 未开始 | 未开始 |
+| 66 | `03SH` | M\'ethode de la trace | 完成 | 未开始 | 未开始 |
+| 67 | `0A2M` | Galois cohomology | 完成 | 未开始 | 未开始 |
+| 68 | `03RH` | Higher vanishing for the multiplicative group | 完成 | 未开始 | 未开始 |
+| 69 | `03RN` | Picard groups of curves | 完成 | 未开始 | 未开始 |
+| 70 | `03S2` | Extension by zero | 完成 | 未开始 | 未开始 |
+| 71 | `05BE` | Constructible sheaves | 完成 | 未开始 | 未开始 |
+| 72 | `095J` | Auxiliary lemmas on morphisms | 完成 | 未开始 | 未开始 |
+| 73 | `095M` | More on constructible sheaves | 完成 | 未开始 | 未开始 |
+| 74 | `03RY` | Constructible sheaves on Noetherian schemes | 完成 | 未开始 | 未开始 |
+| 75 | `0GJ2` | Specializations and \'etale sheaves | 完成 | 未开始 | 未开始 |
+| 76 | `095V` | Complexes with constructible cohomology | 完成 | 未开始 | 未开始 |
+| 77 | `0F4M` | Tor finite with constructible cohomology | 完成 | 未开始 | 未开始 |
+| 78 | `0DDB` | Torsion sheaves | 完成 | 未开始 | 未开始 |
+| 79 | `09XP` | Cohomology with support in a closed subscheme | 完成 | 未开始 | 未开始 |
+| 80 | `0EZN` | Schemes with strictly henselian local rings | 完成 | 未开始 | 未开始 |
+| 81 | `0GY1` | Absolutely integrally closed vanishing | 完成 | 未开始 | 未开始 |
+| 82 | `09Z8` | Affine analog of proper base change | 完成 | 未开始 | 未开始 |
+| 83 | `03SB` | Cohomology of torsion sheaves on curves | 完成 | 未开始 | 未开始 |
+| 84 | `0GJB` | Cohomology of torsion modules on curves | 完成 | 未开始 | 未开始 |
+| 85 | `0A5F` | First cohomology of proper schemes | 完成 | 未开始 | 未开始 |
+| 86 | `0EZQ` | Preliminaries on base change | 完成 | 未开始 | 未开始 |
+| 87 | `0EZW` | Base change for pushforward | 完成 | 未开始 | 未开始 |
+| 88 | `0F01` | Base change for higher direct images | 完成 | 未开始 | 未开始 |
+| 89 | `0EYQ` | Smooth base change | 完成 | 未开始 | 未开始 |
+| 90 | `0F0A` | Applications of smooth base change | 完成 | 未开始 | 未开始 |
+| 91 | `095S` | The proper base change theorem | 完成 | 未开始 | 未开始 |
+| 92 | `0A5I` | Applications of proper base change | 完成 | 未开始 | 未开始 |
+| 93 | `0GJM` | Local acyclicity | 完成 | 未开始 | 未开始 |
+| 94 | `0GJT` | The cospecialization map | 完成 | 未开始 | 未开始 |
+| 95 | `0F0P` | Cohomological dimension | 完成 | 未开始 | 未开始 |
+| 96 | `0F0Y` | Finite cohomological dimension | 完成 | 未开始 | 未开始 |
+| 97 | `0F13` | K\"unneth in \'etale cohomology | 完成 | 未开始 | 未开始 |
+| 98 | `0F1K` | Comparing chaotic and Zariski topologies | 完成 | 未开始 | 未开始 |
+| 99 | `0757` | Comparing big and small topoi | 完成 | 未开始 | 未开始 |
+| 100 | `0DDK` | Comparing fppf and \'etale topologies | 完成 | 未开始 | 未开始 |
+| 101 | `0DEV` | Comparing fppf and \'etale topologies: modules | 完成 | 未开始 | 未开始 |
+| 102 | `0DDV` | Comparing ph and \'etale topologies | 完成 | 未开始 | 未开始 |
+| 103 | `0EW7` | Comparing h and \'etale topologies | 完成 | 未开始 | 未开始 |
+| 104 | `0GEX` | Descending \'etale sheaves | 完成 | 未开始 | 未开始 |
+| 105 | `0EW4` | Blow up squares and \'etale cohomology | 完成 | 未开始 | 未开始 |
+| 106 | `0EWL` | Almost blow up squares and the h topology | 完成 | 未开始 | 未开始 |
+| 107 | `0EWS` | Cohomology of the structure sheaf in the h topology | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

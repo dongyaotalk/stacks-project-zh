@@ -7,6 +7,31 @@
 \RequirePackage[all]{xy}
 \xyoption{2cell}
 \UseAllTwocells
+
+% Xy-pic's dimension arithmetic can overflow on long bilingual text objects.
+% Limit only their typeset width inside a matrix; retain its original tokens,
+% setup/options and arrow structure. Short objects keep amsmath's normal text.
+\makeatletter
+\let\StacksOriginalText\text
+\newsavebox{\StacksDiagramTextBox}
+\newcommand{\StacksDiagramText}[1]{%
+  \begingroup
+  \sbox\StacksDiagramTextBox{$\m@th\StacksOriginalText{#1}$}%
+  \ifdim\wd\StacksDiagramTextBox>.28\linewidth
+    \StacksOriginalText{\parbox{.28\linewidth}{\raggedright #1}}%
+  \else
+    \StacksOriginalText{#1}%
+  \fi
+  \endgroup}
+\let\StacksOriginalXymatrix\xymatrix
+% Use Xy-pic's own setup/body delimiter, including @ options and quoted prefix.
+\def\xymatrix#1#{\StacksXymatrixBody{#1}}
+\long\def\StacksXymatrixBody#1#2{%
+  \begingroup
+  \let\text\StacksDiagramText
+  \StacksOriginalXymatrix#1{#2}%
+  \endgroup}
+\makeatother
 \RequirePackage{multicol}
 \RequirePackage{verbatim}
 

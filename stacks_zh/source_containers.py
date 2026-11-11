@@ -486,18 +486,70 @@ def lower_container(selected: dict[str, Any], policy: Policy, *, layout: str = '
     return rows
 
 
+def _proof_context_seeds(native, selector, ownership_native):
+    """Borrow accepted English classification only for a complete owner witness."""
+    try:
+        selected = native.select(selector)
+    except RecordError:
+        if ownership_native is None:
+            raise
+        chapter = selector['file'][:-4]
+        raw, rows, diagnostics = native.document(chapter)
+        matches = [r for r in rows if r['owner_tag'] == selector['owner_tag']
+                   and r['parent_tag'] == selector['parent_tag']
+                   and r['semantic_path'] == f"{selector['kind']}/{selector['ordinal']:04d}"]
+        if len(matches) != 1:
+            raise
+        row = matches[0]
+        problems = [d for d in diagnostics if d.get('inventory_id') == row['inventory_id']]
+        if (row['state'] != 'BLOCKED' or not problems
+                or any(d['kind'] != 'math-text' or d['message'] !=
+                       'explicit text inside locked math requires classification before adoption'
+                       for d in problems)):
+            raise
+        if (ownership_native.root != native.root
+                or ownership_native.english.commit != native.english.commit
+                or ownership_native.english.tags != native.english.tags
+                or ownership_native.policy_bytes != ownership_native.current_policy_bytes):
+            raise RecordError('proof ownership classification lacks the same current locked source')
+        accepted = False
+        for ref in ('refs/remotes/origin/main', 'refs/heads/main'):
+            result = subprocess.run(['git', '-C', str(native.root), 'show',
+                                     ref + ':config/macro-policy.yml'], capture_output=True)
+            ancestry = subprocess.run(['git', '-C', str(native.root), 'merge-base',
+                                       '--is-ancestor', ref, 'HEAD'], capture_output=True)
+            if not result.returncode and not ancestry.returncode and result.stdout == ownership_native.policy_bytes:
+                accepted = True
+                break
+        if not accepted:
+            raise RecordError('proof ownership classification is not accepted main policy')
+        selected = ownership_native.select(selector)
+        if (selected['location'] != row['location'] or selected['blob_hash'] != byte_hash(raw)
+                or selected['fragment'] != source_tex(row['unit'])):
+            raise RecordError('proof ownership classification changed complete English context')
+        ownership_native.assert_unchanged()
+        return lower_container(selected, ownership_native.policy)
+    return lower_container(selected, native.policy)
+
+
 def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, str],
-                                 native: Containers) -> list[dict[str, Any]]:
+                                 native: Containers, *, ownership_native=None) -> list[dict[str, Any]]:
     """Supply real English owners only for verified, complete orphan proofs.
 
     These temporary source rows are validation context, never output facts.
     Legacy wrapper migration keeps its original file-local semantics.
     """
+    recoverable = ('proof has no adjacent labelled statement owner',
+                   'permanent-Tag migration creates duplicate unit IDs')
+    def complete_proof(unit):
+        return unit['node_kind'] == 'proof' and re.fullmatch(
+            r'tag:([0-9A-Z]+):proof(?:-([0-9]{3}))?', unit['unit_id'])
     try:
-        permanent_tag_mapping(units, tags)
-        return units
+        mapping = permanent_tag_mapping(units, tags)
+        if all(not complete_proof(u) or mapping[u['unit_id']] == u['unit_id'] for u in units):
+            return units
     except RecordError as exc:
-        if 'proof has no adjacent labelled statement owner' not in str(exc):
+        if not any(message in str(exc) for message in recoverable):
             raise
     if tags != native.english.tags:
         raise RecordError('canonical proof context requires locked Git Tags')
@@ -507,14 +559,18 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
     padded = []
     seeded_owners = set()
     for unit in units:
+        needs_context = False
         try:
-            permanent_tag_mapping([*padded, unit], tags)
+            mapping = permanent_tag_mapping([*padded, unit], tags)
+            needs_context = bool(complete_proof(unit) and mapping[unit['unit_id']] != unit['unit_id'])
         except RecordError as exc:
-            if 'proof has no adjacent labelled statement owner' not in str(exc):
+            if not any(message in str(exc) for message in recoverable):
                 raise
-            match = re.fullmatch(r'tag:([0-9A-Z]+):proof(?:-([0-9]{3}))?', unit['unit_id'])
-            if unit['node_kind'] != 'proof' or match is None:
-                raise RecordError('orphan proof requires a complete canonical source unit') from exc
+            needs_context = True
+        if needs_context:
+            match = complete_proof(unit)
+            if not match:
+                raise RecordError('orphan proof requires a complete canonical source unit')
             if unit['source_commit'] != native.english.commit:
                 raise RecordError('canonical proof context uses a stale source commit')
             chapter, owner = unit['chapter'], match[1]
@@ -533,12 +589,10 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
                           if row['owner_tag'] == owner and row['unit']['node_kind'] in STATEMENTS]
             if len(owner_rows) != 1:
                 raise RecordError('canonical proof has no unique complete English statement')
-            statement = native.select({**selector, 'kind': owner_rows[0]['unit']['node_kind'],
-                                       'ordinal': 1})
-            seeds = lower_container(statement, native.policy)
+            seeds = _proof_context_seeds(native,
+                {**selector, 'kind': owner_rows[0]['unit']['node_kind'], 'ordinal': 1}, ownership_native)
             for index in range(1, ordinal):
-                previous = native.select({**selector, 'ordinal': index})
-                seeds.extend(lower_container(previous, native.policy))
+                seeds.extend(_proof_context_seeds(native, {**selector, 'ordinal': index}, ownership_native))
             seed_ids = {u['unit_id'] for u in seeds}
             if seed_ids & (original_ids | {u['unit_id'] for u in padded}):
                 raise RecordError('canonical proof context would duplicate or reorder a batch unit')
@@ -571,8 +625,9 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
 
 
 def canonical_proof_file_mapping(units: list[dict[str, Any]], tags: dict[str, str],
-                                 native: Containers | None = None) -> dict[str, str]:
-    context = units if native is None else canonical_proof_file_context(units, tags, native)
+                                 native: Containers | None = None, *, ownership_native=None) -> dict[str, str]:
+    context = units if native is None else canonical_proof_file_context(
+        units, tags, native, ownership_native=ownership_native)
     mapping = permanent_tag_mapping(context, tags)
     return {u['unit_id']: mapping[u['unit_id']] for u in units}
 

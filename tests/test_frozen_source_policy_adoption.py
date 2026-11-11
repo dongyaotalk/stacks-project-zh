@@ -1,13 +1,18 @@
 """Synthetic frozen/raw fixtures only; no real model generation or approval."""
 import json
+import copy
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from test_source_adoptions import synthetic_fixture, write, git
 from stacks_zh.source_adoptions import assemble_source_adoption, load_repository_source_adoptions
 from stacks_zh.records import RecordError, write_jsonl
 from stacks_zh.source_reextractions import byte_hash
+from stacks_zh.source_containers import Containers, lower_container, canonical_proof_file_mapping
+from test_source_containers import fixture as english_fixture, selector
+from test_math_text import BASE_POLICY
 
 
 def frozen_fixture(base):
@@ -33,6 +38,126 @@ def accepted_update(root, path='config/macro-policy.yml', content=None):
 
 
 class FrozenSourcePolicyAdoptionTests(unittest.TestCase):
+    def test_consecutive_complete_proofs_borrow_their_own_locked_statement(self):
+        other = ('\\begin{lemma}\\label{lemma-two}Take $z$.\\end{lemma}\n'
+                 '\\begin{proof}Use $z$.\\end{proof}')
+        with tempfile.TemporaryDirectory() as temp:
+            root, harvest, _ = english_fixture(Path(temp), other=other)
+            native = Containers(root, harvest)
+            first = lower_container(native.select(selector()), native.policy)[0]
+            second = lower_container(native.select(selector(owner='0002')), native.policy)[0]
+            before = copy.deepcopy([first, second])
+            self.assertEqual(canonical_proof_file_mapping([first, second], native.english.tags, native),
+                             {u['unit_id']: u['unit_id'] for u in before})
+            self.assertEqual([first, second], before)
+            # Also cover a wrong inherited owner that does not yet collide.
+            statement = lower_container(native.select(selector('lemma')), native.policy)
+            self.assertEqual(canonical_proof_file_mapping([*statement, second], native.english.tags, native),
+                             {u['unit_id']: u['unit_id'] for u in [*statement, second]})
+            for field, value in [('source_text', second['source_text'] + ' Added.'),
+                                 ('unit_id', 'tag:0002:proof-002'),
+                                 ('parent_tag', '0001')]:
+                changed = copy.deepcopy(second); changed[field] = value
+                with self.assertRaises(RecordError):
+                    canonical_proof_file_mapping([first, changed], native.english.tags, native)
+            with self.assertRaises(RecordError):
+                canonical_proof_file_mapping([first, second, copy.deepcopy(second)], native.english.tags, native)
+
+    def owner_fixture(self, base, *, previous=False, unknown=False):
+        statement = ('\\begin{lemma}\n\\label{lemma-one}\n'
+                     'Take $x\\quad\\text{and}\\quad y$.'
+                     + ('\\unsupported{value}' if unknown else '') + '\n\\end{lemma}')
+        proof = ('\\begin{proof}Use $u\\quad\\text{or}\\quad v$.\\end{proof}'
+                 if previous else '\\begin{proof}Use $u$.\\end{proof}')
+        root, harvest, _ = english_fixture(base, statement=statement, proof=proof)
+        (root / 'config/macro-policy.yml').write_text(BASE_POLICY)
+        git(root, 'init', '-q'); git(root, 'add', '.')
+        git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=fixture@example.invalid',
+            'commit', '-qm', 'Synthetic original owner policy')
+        old = Containers(root, harvest)
+        unit = lower_container(old.select(selector(ordinal=2 if previous else 1)), old.policy)[0]
+        policy = BASE_POLICY + '''
+translatable_math_text:
+  owner-and:
+    literal: "and"
+    command: "text"
+    usage: "quad-connector"
+    source_label: "test-lemma-one"
+    witness_kind: "lemma"
+    witness_ordinal: 1
+'''
+        if previous:
+            policy += '''
+  previous-and:
+    literal: "or"
+    command: "text"
+    usage: "quad-connector"
+    source_label: "test-lemma-one"
+    witness_kind: "proof"
+    witness_ordinal: 1
+'''
+        accepted_update(root, content=policy.encode())
+        # Old containers retain original policy while watching current file bytes.
+        old = Containers(root, harvest, policy_bytes=BASE_POLICY.encode())
+        return root, harvest, old, Containers(root, harvest), unit
+
+    def test_accepted_owner_and_previous_proof_are_read_only_context(self):
+        for previous in (False, True):
+            with self.subTest(previous=previous), tempfile.TemporaryDirectory() as temp:
+                root, harvest, old, current, unit = self.owner_fixture(Path(temp), previous=previous)
+                before = copy.deepcopy(unit)
+                with self.assertRaisesRegex(RecordError, 'classification'):
+                    canonical_proof_file_mapping([unit], old.english.tags, old)
+                self.assertEqual(canonical_proof_file_mapping([unit], old.english.tags, old,
+                    ownership_native=current), {unit['unit_id']: unit['unit_id']})
+                self.assertEqual(unit, before)
+                with self.assertRaisesRegex(RecordError, 'classification'):
+                    old.select(selector('lemma'))
+                self.assertFalse((root / 'translation-data').exists())
+
+    def test_unaccepted_or_missing_owner_classification_remains_blocked(self):
+        for failure in ('branch-only', 'dirty', 'missing'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temp:
+                root, harvest, old, current, unit = self.owner_fixture(Path(temp))
+                if failure == 'branch-only':
+                    git(root, 'update-ref', 'refs/remotes/origin/main', git(root, 'rev-parse', 'HEAD^'))
+                    git(root, 'branch', '-m', 'synthetic-unaccepted')
+                elif failure == 'dirty':
+                    p = root / 'config/macro-policy.yml'; p.write_bytes(p.read_bytes() + b'\n# dirty\n')
+                    current = Containers(root, harvest)
+                else:
+                    accepted_update(root, content=BASE_POLICY.encode())
+                    current = Containers(root, harvest)
+                with self.assertRaises(RecordError):
+                    canonical_proof_file_mapping([unit], old.english.tags, old, ownership_native=current)
+
+    def test_unknown_owner_syntax_and_tampered_proof_remain_blocked(self):
+        with tempfile.TemporaryDirectory() as temp:
+            _, _, old, current, unit = self.owner_fixture(Path(temp), unknown=True)
+            with self.assertRaises(RecordError):
+                canonical_proof_file_mapping([unit], old.english.tags, old, ownership_native=current)
+        with tempfile.TemporaryDirectory() as temp:
+            _, _, old, current, unit = self.owner_fixture(Path(temp))
+            for field, value in [('source_text', unit['source_text'] + ' Extra.'),
+                                 ('parent_tag', '0002'), ('unit_id', 'tag:0001:proof-002')]:
+                changed = copy.deepcopy(unit); changed[field] = value
+                with self.assertRaises(RecordError):
+                    canonical_proof_file_mapping([changed], old.english.tags, old, ownership_native=current)
+
+    def test_current_owner_fragment_or_location_forgery_is_rejected(self):
+        for field in ('fragment', 'location'):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as temp:
+                _, _, old, current, unit = self.owner_fixture(Path(temp))
+                original = current.select
+                def forged(coord):
+                    selected = original(coord)
+                    if field == 'fragment': selected[field] += 'extra'
+                    else: selected[field]['byte_end'] -= 1
+                    return selected
+                with patch.object(current, 'select', side_effect=forged), self.assertRaisesRegex(
+                        RecordError, 'changed complete English context'):
+                    canonical_proof_file_mapping([unit], old.english.tags, old, ownership_native=current)
+
     def test_complete_public_assembly_keeps_original_freeze_units_and_raw(self):
         for path in ['config/macro-policy.yml', 'config/source-terms.json']:
             with self.subTest(path=path), tempfile.TemporaryDirectory() as temp:

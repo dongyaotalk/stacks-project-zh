@@ -188,7 +188,8 @@ class InputSnapshot:
 
 def validate_current_records(units: list[dict[str, Any]], candidates: list[dict[str, Any]],
                              source_commit: str, catalog: dict[str, Any], tags: dict[str, str],
-                             approved: set[tuple[str, str]], *, native_containers=None) -> list[str]:
+                             approved: set[tuple[str, str]], *, native_containers=None,
+                             ownership_native=None) -> list[str]:
     """Current structural/term policy only; callers also verify source and provenance."""
     errors = validate_records(units, candidates, source_commit)
     if errors:
@@ -198,7 +199,8 @@ def validate_current_records(units: list[dict[str, Any]], candidates: list[dict[
     if not tags:
         return ['current source validation requires locked permanent Tags']
     from .source_containers import canonical_proof_file_mapping
-    mapping = canonical_proof_file_mapping(units, tags, native_containers)
+    mapping = canonical_proof_file_mapping(units, tags, native_containers,
+                                          ownership_native=ownership_native)
     errors.extend(f'wrong permanent Tag: {old} -> {new}' for old, new in mapping.items() if old != new)
     by_id = {c['unit_id']: c for c in candidates}
     for unit in units:

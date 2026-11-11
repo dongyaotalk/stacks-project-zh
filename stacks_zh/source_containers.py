@@ -486,6 +486,97 @@ def lower_container(selected: dict[str, Any], policy: Policy, *, layout: str = '
     return rows
 
 
+def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, str],
+                                 native: Containers) -> list[dict[str, Any]]:
+    """Supply real English owners only for verified, complete orphan proofs.
+
+    These temporary source rows are validation context, never output facts.
+    Legacy wrapper migration keeps its original file-local semantics.
+    """
+    try:
+        permanent_tag_mapping(units, tags)
+        return units
+    except RecordError as exc:
+        if 'proof has no adjacent labelled statement owner' not in str(exc):
+            raise
+    if tags != native.english.tags:
+        raise RecordError('canonical proof context requires locked Git Tags')
+    original_ids = {u['unit_id'] for u in units}
+    if len(original_ids) != len(units):
+        raise RecordError('canonical proof context has duplicate batch unit IDs')
+    padded = []
+    seeded_owners = set()
+    for unit in units:
+        try:
+            permanent_tag_mapping([*padded, unit], tags)
+        except RecordError as exc:
+            if 'proof has no adjacent labelled statement owner' not in str(exc):
+                raise
+            match = re.fullmatch(r'tag:([0-9A-Z]+):proof(?:-([0-9]{3}))?', unit['unit_id'])
+            if unit['node_kind'] != 'proof' or match is None:
+                raise RecordError('orphan proof requires a complete canonical source unit') from exc
+            if unit['source_commit'] != native.english.commit:
+                raise RecordError('canonical proof context uses a stale source commit')
+            chapter, owner = unit['chapter'], match[1]
+            ordinal = int(match[2] or '1')
+            labels = [label for label, tag in tags.items()
+                      if tag == owner and label.startswith(chapter + '-')]
+            if len(labels) != 1:
+                raise RecordError('canonical proof has no unique locked chapter owner')
+            selector = dict(file=chapter + '.tex', owner_tag=owner, owner_label=labels[0],
+                            parent_tag=unit['parent_tag'], kind='proof', ordinal=ordinal)
+            selected = native.select(selector)
+            expected = [clean(u) for u in lower_container(selected, native.policy)]
+            if expected != [clean(unit)]:
+                raise RecordError('orphan proof differs from its complete canonical Git lowering')
+            owner_rows = [row for row in native.document(chapter)[1]
+                          if row['owner_tag'] == owner and row['unit']['node_kind'] in STATEMENTS]
+            if len(owner_rows) != 1:
+                raise RecordError('canonical proof has no unique complete English statement')
+            statement = native.select({**selector, 'kind': owner_rows[0]['unit']['node_kind'],
+                                       'ordinal': 1})
+            seeds = lower_container(statement, native.policy)
+            for index in range(1, ordinal):
+                previous = native.select({**selector, 'ordinal': index})
+                seeds.extend(lower_container(previous, native.policy))
+            seed_ids = {u['unit_id'] for u in seeds}
+            if seed_ids & (original_ids | {u['unit_id'] for u in padded}):
+                raise RecordError('canonical proof context would duplicate or reorder a batch unit')
+            padded.extend(seeds)
+            seeded_owners.add(owner)
+            mapping = permanent_tag_mapping([*padded, unit], tags)
+            if mapping[unit['unit_id']] != unit['unit_id']:
+                raise RecordError('canonical proof context changed its permanent coordinate')
+        padded.append(unit)
+    # A later proof may inherit the temporary owner from an earlier orphan.
+    # Verify every such real group, including its ordinal and complete lowering.
+    groups, errors = proof_groups(padded, tags)
+    if errors:
+        raise RecordError('canonical proof context has invalid groups: ' + '; '.join(errors))
+    for group in groups:
+        owner = group['selector']
+        real = [u for u in group['units'] if u['unit_id'] in original_ids]
+        if owner is None or owner['statement_tag'] not in seeded_owners or not real:
+            continue
+        if len(real) != 1:
+            raise RecordError('borrowed canonical owner requires one complete proof unit')
+        unit = real[0]
+        selected = native.select(dict(file=owner['file'], owner_tag=owner['statement_tag'],
+            owner_label=unit['chapter'] + '-' + owner['statement_label'],
+            parent_tag=unit['parent_tag'], kind='proof', ordinal=owner['proof_index']))
+        if [clean(u) for u in lower_container(selected, native.policy)] != [clean(unit)]:
+            raise RecordError('borrowed proof differs from its complete canonical Git lowering')
+    native.assert_unchanged()
+    return padded
+
+
+def canonical_proof_file_mapping(units: list[dict[str, Any]], tags: dict[str, str],
+                                 native: Containers | None = None) -> dict[str, str]:
+    context = units if native is None else canonical_proof_file_context(units, tags, native)
+    mapping = permanent_tag_mapping(context, tags)
+    return {u['unit_id']: mapping[u['unit_id']] for u in units}
+
+
 def old_container_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
                          native_containers: Containers | None = None) -> list[dict[str, Any]]:
     """Recover full legacy wrapper chains before allowing replacement.

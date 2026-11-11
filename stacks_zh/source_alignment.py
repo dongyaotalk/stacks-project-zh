@@ -372,8 +372,10 @@ def align_batches(batches: dict[str, list[dict[str, Any]]], corpus: Corpus):
     result, maps = [], {}
     for batch, units in batches.items():
         try:
-            mapping = permanent_tag_mapping(units, corpus.tags)
-            groups, group_errors = proof_groups(units, corpus.tags)
+            from .source_containers import canonical_proof_file_mapping
+            mapping = canonical_proof_file_mapping(units, corpus.tags, corpus.source_containers)
+            groups, group_errors = proof_groups(units, corpus.tags,
+                                                native_containers=corpus.source_containers)
             if group_errors:
                 raise RecordError('; '.join(group_errors))
             selectors = {}

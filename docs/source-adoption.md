@@ -81,6 +81,18 @@ ID 或自报 hash 证明来源。origin 中目标文件及 unit ID 必须不存�
 同时采用完整正文块和其中的段落，或以其他重叠容器重复消费来源。
 完整陈述、证明、列表、脚注及 typed 数学文字不截断，未知语法仍阻断。
 
+完整 canonical proof 可以独立归入一个事实文件。文件外的归属见证只能从锁定
+English Git 重新选出：唯一真实 owner Tag/label、同章同 Section、真实 proof ordinal、
+完整陈述及此前各份完整证明。当前 proof 的全部 unit 对象必须等于该 selector 的
+完整现行 lowering；来源文字、数学、包装、hash 或 ID 任一变化均拒绝。
+这些英文陈述/证明只进入同次只读坐标及 proof 次序验证，不加入输出 facts、模型
+候选或进度，不重译、移动或覆盖另一文件已有的合格陈述。没有实际锁定来源时，
+旧文件级迁移及不完整 wrapper 检查保持原错误；任意调用者 ID、Tag 库存、跨度或
+相似证明不能代替完整 Git 选择。第二份证明必须核验此前的真实证明而非改称第一份。
+当前 QA、对齐、首次采用/重放与显式来源/证明审计使用同一见证。采用格式、原
+raw/run/freeze 和历史 Schema 均保持；未知宏、数学文字、完整生成、溯源和人工
+门禁不因此改变。对应工具任务为 [Issue #939](https://github.com/dongyaotalk/stacks-project-zh/issues/939)。
+
 新候选的 `source_adoption_id` 指向 `source-adoption-v1`。溯源逐项重放冻结输入、
 完整来源、实际 raw、run、五字段、context 和输出原字节，而非只检查 Schema。
 渲染先完成同一完整重放，再按锁定来源投影标签和引用；无标签 typed 正文还须

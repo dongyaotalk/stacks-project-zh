@@ -272,6 +272,7 @@ def _context_sources_full(frozen, native):
     """Context hashes bind real complete IR nodes or complete labelled math."""
     from .math_text import delimiter_kind
     observed = set()
+    opaque_native = None
     references = set()
     for item in frozen['contexts']:
         value = item['value']
@@ -289,6 +290,27 @@ def _context_sources_full(frozen, native):
         if 'source_unit' in value:
             matches = [row for row in rows if row['location'] == location
                        and clean(row['unit']) == value['source_unit']]
+            # Historical read-only contexts can have the original opaque-math
+            # inventory shape. Reconstruct that existing representation from
+            # the same locked Git and policy, never from the saved unit itself.
+            if not matches and value['source_unit'].get('schema_version') == 1:
+                from .source_reextractions import source_tex
+                current = [row for row in rows if row['location'] == location
+                           and row['unit'].get('schema_version', 1) > 1
+                           and source_tex(row['unit']).encode('utf-8') == raw[start:end]
+                           and all(value[key] == row[key] for key in ('owner_tag', 'parent_tag'))]
+                if len(current) == 1:
+                    if opaque_native is None:
+                        opaque_native = Containers(native.root, native.english.harvest,
+                            policy_bytes=native.policy_bytes, natural_text_enabled=False,
+                            hierarchical_prose=native.hierarchical_prose)
+                    old_raw, old_rows, _ = opaque_native.document(chapter)
+                    if old_raw != raw:
+                        raise RecordError('opaque English context changed locked Git bytes')
+                    matches = [row for row in old_rows if row['location'] == location
+                               and row['semantic_path'] == current[0]['semantic_path']
+                               and clean(row['unit']) == value['source_unit']]
+                    opaque_native.assert_unchanged()
             if len(matches) != 1 or any(value[key] != matches[0][key] for key in ('owner_tag', 'parent_tag')):
                 raise RecordError('English context is not its complete real semantic IR node')
             observed.add((chapter, value['source_unit']['unit_id']))

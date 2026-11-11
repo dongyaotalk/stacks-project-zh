@@ -81,6 +81,13 @@ main 分类重新选择该英文见证。需独立核对 main ancestry 和整份
 
 ### 未安装候选的失败生成历史
 
+只读英文邻近/引用上下文可能保留自然数学文字启用前的完整 Schema 1 IR。
+现行同位置完整节点已是 typed IR 时，验证器从相同锁定 Git、原宏政策与既有
+`natural_text_enabled=False` 表示重新提取；原冻结节点的每个字段、位置、owner、
+parent 和语义序号都必须精确匹配。现行完整节点也须无损还原同一英文片段。
+这一兼容仅核验只读上下文，不转换模型输入或事实，不允许目标 unit 使用旧式
+数学保护绕过现行采用门禁；修改、截断、错位或伪造的上下文仍拒绝。
+
 实际生成的 raw 在记录 Schema、完整覆盖或受保护候选装配阶段被拒绝时，可保留
 现有 run Schema 中 `inputs.settings.frozen_generation_input` 指向的完整原冻结输入。
 该失败 run 的 `context_hashes` 和 `accepted_records` 必须为空；实际生成的完整

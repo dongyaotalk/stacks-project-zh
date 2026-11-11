@@ -188,7 +188,7 @@ class InputSnapshot:
 
 def validate_current_records(units: list[dict[str, Any]], candidates: list[dict[str, Any]],
                              source_commit: str, catalog: dict[str, Any], tags: dict[str, str],
-                             approved: set[tuple[str, str]]) -> list[str]:
+                             approved: set[tuple[str, str]], *, native_containers=None) -> list[str]:
     """Current structural/term policy only; callers also verify source and provenance."""
     errors = validate_records(units, candidates, source_commit)
     if errors:
@@ -197,7 +197,8 @@ def validate_current_records(units: list[dict[str, Any]], candidates: list[dict[
         return ['source term catalog uses a different locked source commit']
     if not tags:
         return ['current source validation requires locked permanent Tags']
-    mapping = permanent_tag_mapping(units, tags)
+    from .source_containers import canonical_proof_file_mapping
+    mapping = canonical_proof_file_mapping(units, tags, native_containers)
     errors.extend(f'wrong permanent Tag: {old} -> {new}' for old, new in mapping.items() if old != new)
     by_id = {c['unit_id']: c for c in candidates}
     for unit in units:
@@ -329,7 +330,8 @@ class CurrentSourceQA:
                         raise RecordError('chapter QA cannot split a mixed-chapter batch')
                 candidates = self.snapshot.jsonl(cp)
                 problems = validate_current_records(units, candidates, self.source_commit, self.catalog,
-                                                    self.containers.english.tags, self.approved)
+                                                    self.containers.english.tags, self.approved,
+                                                    native_containers=self.containers)
                 errors.extend(f'{cp}: {error}' for error in problems)
                 batches[str(index)] = units
                 count += len(candidates)
@@ -368,7 +370,8 @@ class CurrentSourceQA:
             return ['translator outputs must exactly cover their current source units']
         by_id = {d['unit_id']: d for d in drafts}
         errors = self.source_errors(batches)
-        mapping = permanent_tag_mapping(units, self.containers.english.tags)
+        from .source_containers import canonical_proof_file_mapping
+        mapping = canonical_proof_file_mapping(units, self.containers.english.tags, self.containers)
         errors.extend(f'wrong permanent Tag: {old} -> {new}' for old, new in mapping.items() if old != new)
         for u in units:
             errors.extend(environment_title_errors(u))

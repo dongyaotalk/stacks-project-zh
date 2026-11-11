@@ -218,8 +218,24 @@ def _proof_index(text: str) -> dict[str, Any]:
     return {'proofs': proofs}
 
 
-def proof_groups(units: list[dict[str, Any]], tags: dict[str, str]) -> tuple[list[dict[str, Any]], list[str]]:
+def proof_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
+                 native_containers=None) -> tuple[list[dict[str, Any]], list[str]]:
     """Determine owners from complete frozen wrapper chains, never current IDs."""
+    if native_containers is not None:
+        from .source_containers import canonical_proof_file_context
+        padded = canonical_proof_file_context(units, tags, native_containers)
+        if padded is not units:
+            groups, errors = proof_groups(padded, tags)
+            ids = {u['unit_id'] for u in units}
+            current = []
+            for group in groups:
+                kept = [u for u in group['units'] if u['unit_id'] in ids]
+                if kept:
+                    current.append({**group, 'units': kept,
+                                    'mapped_ids': [u['unit_id'] for u in kept],
+                                    'tex': ''.join(source_tex(u) for u in kept),
+                                    '_canonical_file_context': True})
+            return current, errors
     mapping = permanent_tag_mapping(units, tags)
     groups, errors, active = [], [], None
     owner = None
@@ -367,12 +383,21 @@ def _comparison(tex: str) -> tuple[list[str], str]:
 
 def audit_repository_proofs(root: Path, harvest: Path | None = None) -> tuple[dict[str, Any], list[str]]:
     english = LockedEnglish(root, harvest)
+    native = None
     entries, errors, unit_count = [], [], 0
     batches = sorted(_input_glob(root / 'translation-data/units', '*.jsonl'))
     for path in batches:
         try:
             units = load_jsonl(path)
-            groups, group_errors = proof_groups(units, english.tags)
+            try:
+                groups, group_errors = proof_groups(units, english.tags)
+            except RecordError as exc:
+                if 'proof has no adjacent labelled statement owner' not in str(exc):
+                    raise
+                from .source_containers import Containers
+                if native is None:
+                    native = Containers(root, english.harvest)
+                groups, group_errors = proof_groups(units, english.tags, native_containers=native)
             errors.extend(f'{path.name}: {error}' for error in group_errors)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             errors.append(f'{path.name}: unable to inventory proof coverage: {exc}')
@@ -385,7 +410,15 @@ def audit_repository_proofs(root: Path, harvest: Path | None = None) -> tuple[di
             try:
                 if group['selector'] is None:
                     raise UnsupportedSource('current proof has no unambiguous statement owner')
-                fragment = english.select(group['selector'])
+                if group.get('_canonical_file_context'):
+                    owner = group['selector']
+                    selected = native.select(dict(file=owner['file'], owner_tag=owner['statement_tag'],
+                        owner_label=owner['file'][:-4] + '-' + owner['statement_label'],
+                        parent_tag=group['units'][0]['parent_tag'], kind='proof',
+                        ordinal=owner['proof_index']))
+                    fragment = selected['fragment']
+                else:
+                    fragment = english.select(group['selector'])
                 upstream_nodes, upstream_prose = _comparison(fragment)
                 current_nodes, current_prose = _comparison(group['tex'])
                 entry.update(english_fragment_hash=byte_hash(fragment), current_source_tex_hash=byte_hash(group['tex']),

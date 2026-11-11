@@ -259,6 +259,7 @@ def audit_repository_source(root: Path, tags_path: Path) -> tuple[dict[str, Any]
     tags = load_tags(tags_path)
     source_commit = load_upstream_commit(root / 'upstream.lock')
     errors, proposals = [], []
+    native = None
     statements = raw_nodes = hidden = hidden_titles = 0
     for path in sorted((root / 'translation-data/units').glob('*.jsonl')):
         units = load_jsonl(path)
@@ -266,7 +267,18 @@ def audit_repository_source(root: Path, tags_path: Path) -> tuple[dict[str, Any]
             if unit['source_commit'] != source_commit:
                 errors.append(f"{path}: {unit['unit_id']}: source commit differs from upstream.lock")
         try:
-            mapping = permanent_tag_mapping(units, tags)
+            try:
+                mapping = permanent_tag_mapping(units, tags)
+            except RecordError as exc:
+                if 'proof has no adjacent labelled statement owner' not in str(exc):
+                    raise
+                from .source_containers import Containers, canonical_proof_file_mapping
+                try:
+                    if native is None:
+                        native = Containers(root, tags_path.resolve().parent.parent)
+                    mapping = canonical_proof_file_mapping(units, tags, native)
+                except (OSError, ValueError, KeyError, TypeError):
+                    raise exc
         except RecordError as exc:
             errors.append(str(exc))
             mapping = {unit['unit_id']: unit['unit_id'] for unit in units}

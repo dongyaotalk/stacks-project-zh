@@ -60,6 +60,25 @@ rejected-unadopted-preparation，generation_validation=not_claimed。它不能�
 当前候选、祖先或生成成功凭证；当前候选错误、新实际 run/采用错误仍使章节失败。
 未知辅助资料仍触发未消费输入门禁，不通过泛化“证据文件”豁免。
 
+未采用准备的原 model_scope 若恰好只列 lane（可连同真实 model-record），遗漏同一具体
+requested/resolved model ID，库存可列为拒绝负结果，保留原 `scope_errors` 与
+`generation_validation=not_claimed`。原 scope 文件/冻结字节、唯一路径/unit所有权、
+run/章节/parent、接受 origin 的模型/Harness注册和其余来源/政策/runtime/raw检查
+全部保持；只支持无前继的原v1/v4准备。该原身份不得有 run、采用或当前候选。
+其他 scope 错误继续阻断；不改原 scope，不将负结果转为成功生成或祖先凭证。
+未采用准备保留的分片和局部重试输出沿用既有 `_raw_records`，按原预留路径顺序
+绑定每份原字节/hash和实际unit顺序；汇集后必须覆盖全部冻结unit，单份不得重复
+或越出原unit集合，五字段Schema仍检查。没有raw的库存不宣称模型生成。
+若同类无前继、无run/采用/该身份候选的原v1/v4准备误记 origin，只有三个既有
+来源Schema的hash可进入负结果：完整冻结政策集合必须精确匹配一个更晚的真实
+接受主线Git快照，来源/模型/Harness/提示/词表等其他政策保持原origin字节。保留
+原错误origin与policy_errors，匹配快照只用于验证库存，不能重新绑定生成身份。
+其他政策差异或不存在完整接受快照仍失败。
+无raw的纯准备可只读核验“zeroth”后保护caron前缀的原术语投影：原Git函数必须
+匹配已知指纹，保护的组/重音字节正确，完整元数据仅有恰好一处原`ech cohomology
+group`声明与现行词核范围差异。核验原范围并保留原元数据，不改变unit、词表或
+现行候选术语要求；未知旧实现、其他元数据变化或已有raw/run/采用继续拒绝。
+
 章节末尾与每个渲染安装边界先合并实际读取和快照声明，再一次读取依赖并核验原始
 内容 hash；保留各自 root/HEAD、路径、模式、实现、来源与发行声明检查。渲染内部不
 重复调用同一章节凭证的完整输入复核；安装前后仍分别检查，失败恢复旧输出。

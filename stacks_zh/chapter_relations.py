@@ -1,6 +1,7 @@
 """Direct derivation replay, stopping at unchanged accepted parent outputs."""
 import json
 import re
+import subprocess
 from .records import RecordError, load_jsonl
 from .source_containers import clean, safe_path, load_source_containers
 from .source_reextractions import byte_hash, load_source_reextractions
@@ -99,6 +100,133 @@ def check_derivations(root, harvest, pairs, base, snapshot, tags):
     return histories,corrections
 
 
+def _assert_unadopted_preparation(root, frozen, snapshot):
+    """Negative preparation diagnostics cannot belong to an installed identity."""
+    aid, run_id = frozen['adoption_id'], frozen['run_id']
+    if (frozen['tool_version'] not in {'source-adoption-input-v1','source-adoption-input-v4'}
+            or 'prior_adoptions' in frozen or 'shared_run_histories' in frozen
+            or any(b['prior_attempts'] for b in frozen['batches'])
+            or (root/f'translation-data/source-adoptions/{aid}.json').exists()
+            or (root/f'translation-data/runs/{run_id}.json').exists()):
+        raise RecordError('rejected preparation must have no run/adoption or predecessor')
+    task=frozen['task']
+    sp=safe_path(root,task['scope_manifest'],r'task-scopes/[A-Za-z0-9._-]+\.json')
+    if snapshot.read(sp)!=task['scope_bytes'].encode('utf-8'):
+        raise RecordError('rejected preparation original scope bytes changed')
+    for batch in frozen['batches']:
+        cp=safe_path(root,batch['candidates_path'],r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
+        if cp.exists() and any(c.get('run_id')==run_id or c.get('source_adoption_id')==aid
+                              for c in snapshot.jsonl(cp)):
+            raise RecordError('rejected preparation identity supplies a current candidate')
+    accepted=any(all(subprocess.run(['git','-C',str(root),'merge-base','--is-ancestor',x,y],
+                    capture_output=True).returncode==0
+                    for x,y in ((frozen['origin_commit'],anchor),(anchor,'HEAD')))
+                 for anchor in ('refs/remotes/origin/main','refs/heads/main'))
+    if not accepted:raise RecordError('rejected preparation origin is not accepted main ancestry')
+
+
+def _preparation_task_scope(root, frozen, entry, snapshot):
+    """Keep a known rejected lane/model-ID mix-up as negative inventory only."""
+    from . import source_adoptions as a
+    try:
+        return a._task_scope(frozen,a.Reads(root),entry,current=False), []
+    except RecordError as exc:
+        if str(exc) != 'first-source runtime or semantic coordinates escape the frozen task scope':
+            raise
+        original_error = str(exc)
+    _assert_unadopted_preparation(root,frozen,snapshot)
+    aid, run_id = frozen['adoption_id'], frozen['run_id']
+    task = frozen['task']
+    # The strict call already verified the complete manifest hash, structure,
+    # unique files/units and one owner; preserve its original model_scope.
+    scope=json.loads(task['scope_bytes'])
+    paths={entry['path'],f'translation-data/source-adoptions/{aid}.json',f'translation-data/runs/{run_id}.json'}
+    for batch in frozen['batches']:
+        paths.update((batch['units_path'],batch['candidates_path']))
+    owners=[c for c in scope['data_scopes'] if paths<=set(c['allowed_write_files'])
+            and set(frozen['unit_ids'])<=set(c['output_unit_ids'])]
+    if len(owners)!=1:raise RecordError(original_error)
+    child=owners[0];model=frozen['runtime']['model'];lane=frozen['runtime']['model_lane']
+    if (run_id not in child['run_scope'] or child['chapter']!=frozen['chapter']
+            or not set(frozen['parent_tags'])<=set(child['parent_tags'])
+            or set(child['model_scope']) not in ({lane},{lane,model['record_id']})
+            or model['requested_id']!=model['resolved_id']
+            or model['requested_id'] in child['model_scope']
+            or model['identity_confidence']=='unknown'):
+        raise RecordError(original_error)
+    return child,[original_error]
+
+
+def _rejected_preparation_registry(frozen, policy_bytes):
+    from .provenance import _parse_registry_section, _registry_scalar
+    runtime=frozen['runtime'];model=runtime['model'];harness=runtime['harness']
+    text=policy_bytes['config/models.yml'].decode('utf-8')
+    record=_parse_registry_section(text,'model_records').get(model['record_id'])
+    lane=_parse_registry_section(text,'lanes').get(runtime['model_lane'])
+    registered_harness=_parse_registry_section(policy_bytes['config/harnesses.yml'].decode('utf-8'),'harnesses').get(harness['id'])
+    if (record is None or lane is None or registered_harness is None
+            or harness['version'].lower() in {'auto','unknown','unavailable'}
+            or registered_harness.get('adapter_version')!=harness['adapter_version']
+            or any(expected is not None and _registry_scalar(model.get(key))!=expected
+                   for key,expected in record.items() if key in model)
+            or any(lane.get(key)!=actual for key,actual in [('model_id',model['resolved_id']),
+                ('model_record_id',model['record_id']),('harness_id',harness['id']),('prompt_version','translator-v2')])):
+        raise RecordError('rejected preparation identity differs from accepted registry')
+
+
+def _preparation_policy_bytes(root, frozen, snapshot):
+    from .source_adoptions import _SOURCE_SCHEMAS
+    original={e['path']:_git_origin_bytes(root,frozen['origin_commit'],e['path']) for e in frozen['policies']}
+    changed=[e['path'] for e in frozen['policies'] if byte_hash(original[e['path']])!=e['hash']]
+    if not changed:return original,[],None
+    _assert_unadopted_preparation(root,frozen,snapshot)
+    if not set(changed)<=_SOURCE_SCHEMAS:
+        raise RecordError('preparation policy differs from accepted origin')
+    # A wrong origin is retained as a rejection, never repaired into authority.
+    # Only the already-versioned source Schemas may differ, and one real later
+    # accepted Git snapshot must match the complete frozen policy set exactly.
+    for anchor in ('refs/remotes/origin/main','refs/heads/main'):
+        if any(subprocess.run(['git','-C',str(root),'merge-base','--is-ancestor',x,y],capture_output=True).returncode
+               for x,y in ((frozen['origin_commit'],anchor),(anchor,'HEAD'))):continue
+        revisions=subprocess.check_output(['git','-C',str(root),'rev-list','--reverse',
+            frozen['origin_commit']+'..'+anchor,'--',*changed],text=True).split()
+        for revision in revisions:
+            candidate={e['path']:_git_origin_bytes(root,revision,e['path']) for e in frozen['policies']}
+            if all(byte_hash(candidate[e['path']])==e['hash'] for e in frozen['policies']):
+                return candidate,['preparation policy differs from accepted origin'],revision
+    raise RecordError('rejected preparation source Schemas lack one complete accepted policy snapshot')
+
+
+_LEGACY_QUALIFIED_DECLARATION_SHA256='285702aa741be01ead31012ebcba1ea8fd3ea2f35e82b422b630bcef96383cae'
+
+
+def _legacy_zeroth_preparation_projection(root, frozen, units, expected, observed, reserved, snapshot):
+    """Compare the exact old pure-preparation caron-prefix projection as data."""
+    import ast
+    import copy
+    import hashlib
+    from .source_terms import source_projection
+    if any(safe_path(root,p,r'docs/evidence/[A-Za-z0-9._-]+\.jsonl').exists() for p in reserved):return False
+    _assert_unadopted_preparation(root,frozen,snapshot)
+    text=_git_origin_bytes(root,frozen['origin_commit'],'stacks_zh/source_terms.py').decode('utf-8')
+    functions=[n for n in ast.parse(text).body if isinstance(n,ast.FunctionDef) and n.name=='_qualified_declaration_parts']
+    if len(functions)!=1 or hashlib.sha256(ast.get_source_segment(text,functions[0]).encode()).hexdigest()!=_LEGACY_QUALIFIED_DECLARATION_SHA256:return False
+    comparison=copy.deepcopy(expected);changed=0
+    for unit,inventory in zip(units,comparison):
+        witnesses=list(re.finditer(r'zeroth <(GROUPOPEN_([0-9]{4}))><(ACCENT_[0-9]{4})><(GROUPCLOSE_\2)>ech cohomology group',unit['source_text']))
+        if len(witnesses)!=1:continue
+        witness=witnesses[0]
+        if [unit['placeholders'].get(witness[i]) for i in (1,3,4)]!=['{',r'\v C','}']:continue
+        projection=source_projection(unit)[0]
+        for row in inventory['occurrences']:
+            start,end=row['projection_start'],row['projection_end']
+            if (row['rule']=='source-declaration' and row['source_term']==row['concept']=='cohomology group'
+                    and start>=4 and projection[start-4:end]=='ech cohomology group'):
+                row.update(source_term='ech cohomology group',concept='ech cohomology group',projection_start=start-4)
+                changed+=1
+    return changed==1 and comparison==observed
+
+
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):
     """Check actual model-input/runtime copies, including never-adopted preparation.
 
@@ -129,7 +257,7 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
             raise RecordError('preparation identity/path/locked source mismatch')
         if byte_hash(snapshot.read(root/entry['path']))!=entry['hash']:
             raise RecordError('model-input differs from actual generation freeze')
-        scope=a._task_scope(frozen,a.Reads(root),entry,current=False)
+        scope,scope_errors=_preparation_task_scope(root,frozen,entry,snapshot)
         units=[u for b in frozen['batches'] for u in b['units']]
         if (model_input['runtime']!=frozen['runtime'] or model_input['source_units']!=units
                 or model_input['locked_english_contexts']!=frozen['contexts']
@@ -141,19 +269,19 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
         required_policies = a.REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else a.POLICIES
         if len(policies)!=len(required_policies) or set(policies)!=set(required_policies):
             raise RecordError('preparation lacks complete frozen policies')
-        policy_bytes={}
-        for path,item in policies.items():
-            payload=_git_origin_bytes(root,frozen['origin_commit'],path)
-            if byte_hash(payload)!=item['hash']:
-                raise RecordError('preparation policy differs from accepted origin')
-            policy_bytes[path]=payload
+        policy_bytes,policy_errors,schema_witness=_preparation_policy_bytes(root,frozen,snapshot)
         if frozen['source_commit'] not in policy_bytes['upstream.lock'].decode():
             raise RecordError('preparation differs from frozen English lock')
+        if scope_errors or policy_errors:_rejected_preparation_registry(frozen,policy_bytes)
         from .source_terms import source_inventory
+        legacy_projection=False
         if 'required_source_occurrences' in model_input:
             catalog=json.loads(policy_bytes['config/source-terms.json'])
-            if model_input['required_source_occurrences']!=[source_inventory(u,catalog) for u in units]:
-                raise RecordError('model-input term occurrences differ from frozen source')
+            expected=[source_inventory(u,catalog) for u in units]
+            if model_input['required_source_occurrences']!=expected:
+                legacy_projection=_legacy_zeroth_preparation_projection(root,frozen,units,expected,
+                    model_input['required_source_occurrences'],model_input['raw_output_paths_reserved'],snapshot)
+                if not legacy_projection:raise RecordError('model-input term occurrences differ from frozen source')
         previous=model_input.get('previous_complete_candidates',[])
         if not isinstance(previous,list) or not isinstance(model_input.get('regeneration_reason',''),str):
             raise RecordError('malformed preparation revision metadata')
@@ -194,15 +322,17 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 raise RecordError('preparation references an unchecked adopted node; expand scope')
             diagnostics.append(dict(input=entry['path'],status='adopted-input-copy-verified' if adopted.exists() else 'recorded-failed-run-input-copy-verified'))
             continue
-        # No run/adoption was created. Preserve this proposal as preparation,
-        # check the raw Schema/order, and do not label it actual accepted output.
+        # No run/adoption was created. Validate complete aggregate coverage with
+        # the existing raw parser, including independently frozen shards/retries.
+        # This inventory check does not claim actual accepted generation.
+        attempts=[]
         for p in model_input['raw_output_paths_reserved']:
             path=safe_path(root,p,r'docs/evidence/[A-Za-z0-9._-]+\.jsonl')
             if not path.exists():continue
-            rows=[json.loads(x) for x in snapshot.read(path).decode().splitlines() if x.strip()]
-            if [row.get('unit_id') for row in rows]!=frozen['unit_ids']:
-                raise RecordError('unadopted raw preparation does not cover frozen unit order')
-            for row in rows:a._schema(row,'translator-output.schema.json')
+            raw=snapshot.read(path)
+            rows=[json.loads(x) for x in raw.decode().splitlines() if x.strip()]
+            attempts.append(dict(path=p,hash=byte_hash(raw),unit_ids=[row.get('unit_id') for row in rows]))
+        if attempts:a._raw_records(a.Reads(root),attempts,frozen['unit_ids'],scope['allowed_write_files'])
         prep_native=a._daily_containers(root,harvest,policy_bytes['config/macro-policy.yml'])
         # Preparations are inventory, not successful generation. Check the
         # canonical lowered source and report non-native selector snapshots as
@@ -243,6 +373,6 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                     or value.get('failure_stage')!='complete-native-selector-freeze'
                     or not source_errors or value.get('observed_assembly_error')!='ERROR: '+source_errors[0]):
                 raise RecordError('preparation rejection does not reproduce at native selector gate')
-        diagnostics.append(dict(input=entry['path'],status='rejected-unadopted-preparation' if source_errors else 'unadopted-preparation',source_errors=sorted(set(source_errors)),run_created=run.exists(),
+        diagnostics.append(dict(input=entry['path'],status='rejected-unadopted-preparation' if source_errors or scope_errors or policy_errors else 'unadopted-preparation',source_errors=sorted(set(source_errors)),scope_errors=scope_errors,policy_errors=policy_errors,source_schema_witness=schema_witness,legacy_zeroth_projection=legacy_projection,run_created=run.exists(),
                                 generation_validation='not_claimed',history_audit='not_run'))
     return diagnostics

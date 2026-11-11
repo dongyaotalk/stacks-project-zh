@@ -1,5 +1,6 @@
 """Independent synthetic Git fixtures, real current/source/direct validators."""
 import copy
+import hashlib
 import json
 import os
 import tempfile
@@ -204,6 +205,174 @@ class ChapterTests(unittest.TestCase):
             self.assertTrue(result[0]['source_errors'])
             value['raw_attempts'][0]['hash']='sha256:'+'0'*64;write(rejection,value)
             with self.assertRaises(RecordError):check()
+
+    def rejected_model_scope_fixture(self, directory):
+        root,harvest,base,fp,rp,frozen=fixture(directory)
+        (root/'translation-data/source-adoptions/synthetic-first.json').unlink()
+        (root/'translation-data/runs/run-synthetic-first.json').unlink()
+        for batch in frozen['batches']:(root/batch['candidates_path']).unlink()
+        models=root/'config/models.yml'
+        models.write_text(models.read_text().replace('model_id: synthetic\n','model_id: synthetic-model\n')
+            .replace('requested_id: synthetic\n','requested_id: synthetic-model\n')
+            .replace('resolved_id: synthetic\n','resolved_id: synthetic-model\n'))
+        git(root,'add','config/models.yml')
+        git(root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','Synthetic accepted concrete model registry')
+        origin=git(root,'rev-parse','HEAD');git(root,'update-ref','refs/heads/main',origin)
+        frozen['origin_commit']=origin
+        frozen['runtime']['model'].update(requested_id='synthetic-model',resolved_id='synthetic-model')
+        frozen['policies']=[dict(path=e['path'],hash=byte_hash((root/e['path']).read_bytes())) for e in frozen['policies']]
+        scope=json.loads(frozen['task']['scope_bytes']);scope['data_scopes'][0]['model_scope']=['synthetic']
+        sp=root/frozen['task']['scope_manifest'];write(sp,scope)
+        frozen['task'].update(scope_bytes=sp.read_text(),scope_manifest_sha256=byte_hash(sp.read_bytes()))
+        mp,rt=preparation_copy(root,frozen,fp,rp)
+        return root,harvest,fp,rp,frozen,mp,rt
+
+    def test_rejected_unadopted_model_scope_is_negative_inventory_only(self):
+        from stacks_zh.chapter_relations import check_preparation_evidence
+        from stacks_zh.current_qa import InputSnapshot
+        from stacks_zh.validation_io import InputReads
+        from stacks_zh.source_adoptions import _task_scope,Reads
+        with tempfile.TemporaryDirectory() as d:
+            root,harvest,fp,rp,frozen,mp,rt=self.rejected_model_scope_fixture(Path(d))
+            before={p:p.read_bytes() for p in (fp,rp,mp,rt,root/frozen['task']['scope_manifest'])}
+            entry=json.loads(mp.read_text())['generation_freeze']
+            with self.assertRaises(RecordError):_task_scope(frozen,Reads(root),entry,current=False)
+            reads=InputReads()
+            with reads.activate():
+                result=check_preparation_evidence(root,harvest,InputSnapshot(root),[mp.relative_to(root).as_posix()],
+                    'test','synthetic',reads,Containers(root,harvest))
+            self.assertEqual(result[0]['status'],'rejected-unadopted-preparation')
+            self.assertEqual(result[0]['generation_validation'],'not_claimed')
+            self.assertEqual(result[0]['scope_errors'],['first-source runtime or semantic coordinates escape the frozen task scope'])
+            self.assertEqual(before,{p:p.read_bytes() for p in before})
+            self.assertFalse((root/'translation-data/runs/run-synthetic-first.json').exists())
+
+    def test_other_rejected_preparation_scope_or_identity_defects_still_fail(self):
+        from stacks_zh.chapter_relations import check_preparation_evidence
+        from stacks_zh.current_qa import InputSnapshot
+        from stacks_zh.validation_io import InputReads
+        for mutation in ('parent','chapter','run','model_scope','scope_file','registry','unknown','runtime','raw','installed_run','installed_adoption','installed_candidate','unaccepted_origin'):
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as d:
+                root,harvest,fp,rp,frozen,mp,rt=self.rejected_model_scope_fixture(Path(d))
+                sp=root/frozen['task']['scope_manifest'];scope=json.loads(sp.read_text());child=scope['data_scopes'][0]
+                if mutation=='parent':child['parent_tags']=['9999']
+                elif mutation=='chapter':child['chapter']='wrong'
+                elif mutation=='run':child['run_scope']=['wrong']
+                elif mutation=='model_scope':child['model_scope']=['unrelated-model']
+                elif mutation=='registry':frozen['runtime']['model'].update(requested_id='unregistered',resolved_id='unregistered')
+                elif mutation=='unknown':frozen['runtime']['model']['identity_confidence']='unknown'
+                if mutation in ('parent','chapter','run','model_scope'):
+                    write(sp,scope);frozen['task'].update(scope_bytes=sp.read_text(),scope_manifest_sha256=byte_hash(sp.read_bytes()))
+                mp,rt=preparation_copy(root,frozen,fp,rp)
+                if mutation=='scope_file':sp.write_bytes(sp.read_bytes()+b'\n')
+                elif mutation=='runtime':v=json.loads(rt.read_text());v['turn_metadata']['model']='wrong';write(rt,v)
+                elif mutation=='raw':rp.write_text('{}\n')
+                elif mutation=='installed_run':write(root/'translation-data/runs/run-synthetic-first.json',{})
+                elif mutation=='installed_adoption':write(root/'translation-data/source-adoptions/synthetic-first.json',{})
+                elif mutation=='installed_candidate':write_jsonl(root/frozen['batches'][0]['candidates_path'],[dict(run_id=frozen['run_id'])])
+                elif mutation=='unaccepted_origin':git(root,'update-ref','-d','refs/heads/main')
+                reads=InputReads()
+                with reads.activate():
+                    with self.assertRaises(RecordError):
+                        check_preparation_evidence(root,harvest,InputSnapshot(root),[mp.relative_to(root).as_posix()],
+                            'test','synthetic',reads,Containers(root,harvest))
+
+    def test_unadopted_shards_and_partial_retries_keep_complete_raw_union_gates(self):
+        from stacks_zh.chapter_relations import check_preparation_evidence
+        from stacks_zh.current_qa import InputSnapshot
+        from stacks_zh.validation_io import InputReads
+        for mutation in ('valid','missing','duplicate','outside','schema'):
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as d:
+                root,harvest,fp,rp,frozen,mp,rt=self.rejected_model_scope_fixture(Path(d))
+                records=[json.loads(x) for x in rp.read_text().splitlines() if x.strip()]
+                midpoint=len(records)//2
+                second=rp.with_name('synthetic-second-raw.jsonl');retry=rp.with_name('synthetic-retry-raw.jsonl')
+                write_jsonl(rp,records[:midpoint]);tail=copy.deepcopy(records[midpoint:])
+                if mutation=='missing':tail=tail[:-1]
+                elif mutation=='duplicate':tail.append(copy.deepcopy(tail[0]))
+                elif mutation=='outside':tail[0]['unit_id']='tag:9999:statement'
+                elif mutation=='schema':tail[0].pop('notes')
+                write_jsonl(second,tail);write_jsonl(retry,[records[0]])
+                scope=json.loads(frozen['task']['scope_bytes']);paths=[p.relative_to(root).as_posix() for p in (second,retry)]
+                scope['allowed_write_files']+=paths;scope['data_scopes'][0]['allowed_write_files']+=paths
+                sp=root/frozen['task']['scope_manifest'];write(sp,scope)
+                frozen['task'].update(scope_bytes=sp.read_text(),scope_manifest_sha256=byte_hash(sp.read_bytes()))
+                mp,rt=preparation_copy(root,frozen,fp,rp)
+                model_input=json.loads(mp.read_text());model_input['raw_output_paths_reserved']+=paths;write(mp,model_input)
+                reads=InputReads()
+                with reads.activate():
+                    def check():return check_preparation_evidence(root,harvest,InputSnapshot(root),[mp.relative_to(root).as_posix()],
+                        'test','synthetic',reads,Containers(root,harvest))
+                    if mutation=='valid':
+                        result=check();self.assertEqual(result[0]['generation_validation'],'not_claimed')
+                        self.assertEqual(result[0]['status'],'rejected-unadopted-preparation')
+                    else:
+                        with self.assertRaises(RecordError):check()
+
+    def test_rejected_preparation_schema_origin_requires_complete_accepted_policy_set(self):
+        from stacks_zh.chapter_relations import check_preparation_evidence
+        from stacks_zh.current_qa import InputSnapshot
+        from stacks_zh.validation_io import InputReads
+        for mutation in ('valid','unsupported_policy','unaccepted_schema','unknown_hash','scope_file'):
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as d:
+                root,harvest,fp,rp,frozen,mp,rt=self.rejected_model_scope_fixture(Path(d))
+                origin=frozen['origin_commit']
+                relative='config/glossary.yml' if mutation=='unsupported_policy' else 'schema/unit.schema.json'
+                path=root/relative;path.write_bytes(path.read_bytes()+b'\n')
+                if mutation!='unaccepted_schema':
+                    git(root,'add',relative)
+                    git(root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','Synthetic accepted policy bytes')
+                    git(root,'update-ref','refs/heads/main',git(root,'rev-parse','HEAD'))
+                for e in frozen['policies']:
+                    if e['path']==relative:e['hash']=byte_hash(path.read_bytes()) if mutation!='unknown_hash' else 'sha256:'+'0'*64
+                mp,rt=preparation_copy(root,frozen,fp,rp)
+                if mutation=='scope_file':
+                    sp=root/frozen['task']['scope_manifest'];sp.write_bytes(sp.read_bytes()+b'\n')
+                before=fp.read_bytes();reads=InputReads()
+                with reads.activate():
+                    def check():return check_preparation_evidence(root,harvest,InputSnapshot(root),[mp.relative_to(root).as_posix()],
+                        'test','synthetic',reads,Containers(root,harvest))
+                    if mutation=='valid':
+                        result=check()[0]
+                        self.assertEqual(result['policy_errors'],['preparation policy differs from accepted origin'])
+                        self.assertEqual(result['source_schema_witness'],git(root,'rev-parse','HEAD'))
+                        self.assertEqual(result['generation_validation'],'not_claimed')
+                        self.assertEqual(json.loads(fp.read_text())['origin_commit'],origin)
+                        self.assertEqual(fp.read_bytes(),before)
+                    else:
+                        with self.assertRaises(RecordError):check()
+
+    def test_pure_legacy_zeroth_projection_needs_exact_prefix_code_and_metadata(self):
+        from stacks_zh import chapter_relations as relations
+        from stacks_zh.current_qa import InputSnapshot
+        from stacks_zh.source_terms import source_inventory
+        from test_source_terms import unit as term_unit, catalog as term_catalog
+        function='def _qualified_declaration_parts(body, unit):\n    return None\n'
+        fingerprint=hashlib.sha256(function.rstrip('\n').encode()).hexdigest()
+        for mutation in ('valid','metadata','accent','unknown_code','raw_present','installed_run'):
+            with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as d:
+                root,harvest,fp,rp,frozen,mp,rt=self.rejected_model_scope_fixture(Path(d))
+                (root/'stacks_zh').mkdir(exist_ok=True)
+                (root/'stacks_zh/source_terms.py').write_text(function)
+                git(root,'add','stacks_zh/source_terms.py')
+                git(root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','Synthetic recognized original projection code')
+                frozen['origin_commit']=git(root,'rev-parse','HEAD');git(root,'update-ref','refs/heads/main',frozen['origin_commit'])
+                if mutation!='raw_present':rp.unlink()
+                row=term_unit('The <TEXTITOPEN_0001>zeroth <GROUPOPEN_0002><ACCENT_0003><GROUPCLOSE_0002>ech cohomology group<TEXTITCLOSE_0001>.',
+                    dict(TEXTITOPEN_0001='{\\it ',TEXTITCLOSE_0001='}',GROUPOPEN_0002='{',ACCENT_0003=r'\v C',GROUPCLOSE_0002='}'))
+                expected=[source_inventory(row,term_catalog(row))]
+                observed=copy.deepcopy(expected)
+                declaration=next(r for r in observed[0]['occurrences'] if r['source_term']=='cohomology group')
+                declaration.update(source_term='ech cohomology group',concept='ech cohomology group',projection_start=declaration['projection_start']-4)
+                if mutation=='metadata':observed[0]['source_text_hash']='sha256:'+'0'*64
+                elif mutation=='accent':row['placeholders']['ACCENT_0003']=r'\v D'
+                elif mutation=='installed_run':write(root/'translation-data/runs/run-synthetic-first.json',{})
+                with patch.object(relations,'_LEGACY_QUALIFIED_DECLARATION_SHA256',fingerprint if mutation!='unknown_code' else '0'*64):
+                    def check():return relations._legacy_zeroth_preparation_projection(root,frozen,[row],expected,observed,
+                        [rp.relative_to(root).as_posix()],InputSnapshot(root))
+                    if mutation=='installed_run':
+                        with self.assertRaises(RecordError):check()
+                    else:self.assertEqual(check(),mutation=='valid')
 
     def test_cached_input_bytes_still_reject_changed_and_restored_observed_reads(self):
         from stacks_zh.current_qa import InputSnapshot

@@ -68,6 +68,17 @@ Git 采用的完整冻结生成，在 `config/macro-policy.yml` 或 `config/sour
 来源重复/覆盖、完整 scope、真实模型输出及当前术语/保护/来源 QA 门禁继续执行。
 实际术语投影有新增要求而原模型输出不满足时仍拒绝，必须另行完整实际生成。
 
+[Issue #946](https://github.com/dongyaotalk/stacks-project-zh/issues/946) 处理这一边界
+内独立完整 proof 的只读英文归属见证。装配已完整验证原冻结及现行接受政策后，
+目标 proof 仍以原政策选择和 lowering，逐项等于原冻结 unit。若其真实陈述或此前
+完整 proof 在原政策下的唯一阻断是明确的未分类 `math-text`，可用现行已接受
+main 分类重新选择该英文见证。需独立核对 main ancestry 和整份宏政策原字节，
+现行选择必须 READY，完整英文片段、位置/hash、锁定 blob、owner/Section/ordinal
+须等于原库存，且两份来源与政策在检查结束时未变。英文见证只参加临时证明归属
+及次序验证，不加入事实、模型输出、run、进度或任何批准；普通 `Containers.select`
+和目标 proof 的未分类数学文字门禁不变。未知宏/语法、未接受或仍未分类的文字、
+来源/坐标变化及错误 proof 次序继续拒绝。历史冻结、raw 和回放合同均保持。
+
 ### 未安装候选的失败生成历史
 
 实际生成的 raw 在记录 Schema、完整覆盖或受保护候选装配阶段被拒绝时，可保留
@@ -108,6 +119,9 @@ English Git 重新选出：唯一真实 owner Tag/label、同章同 Section、�
 候选或进度，不重译、移动或覆盖另一文件已有的合格陈述。没有实际锁定来源时，
 旧文件级迁移及不完整 wrapper 检查保持原错误；任意调用者 ID、Tag 库存、跨度或
 相似证明不能代替完整 Git 选择。第二份证明必须核验此前的真实证明而非改称第一份。
+同一事实文件中连续出现不同 owner 的完整 canonical proof 时，也逐份核对真实
+owner；不得让后一份继承前一份的临时陈述而改变其永久坐标或造成重复 ID。
+补入见证仍不得重复、移动文件内实际已有的单元；伪造坐标或非完整 proof 仍拒绝。
 当前 QA、对齐、首次采用/重放与显式来源/证明审计使用同一见证。采用格式、原
 raw/run/freeze 和历史 Schema 均保持；未知宏、数学文字、完整生成、溯源和人工
 门禁不因此改变。对应工具任务为 [Issue #939](https://github.com/dongyaotalk/stacks-project-zh/issues/939)。

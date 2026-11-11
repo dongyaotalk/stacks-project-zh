@@ -33,14 +33,14 @@ def words(row, catalog=CATALOG):
 
 
 class DescentSourceTermPolicyTests(unittest.TestCase):
-    def test_exact_singular_plural_have_separate_locked_witnesses_and_only_descent_scope(self):
+    def test_exact_singular_plural_have_separate_locked_witnesses_and_original_descent_witnesses(self):
         entries=[item for item in CATALOG['terms'] if item['id']==CONCEPT]
         self.assertEqual(len(entries), 1)
         entry=entries[0]
         self.assertEqual(entry['forms'], FORMS)
-        self.assertEqual(entry['chapters'], ['descent'])
-        self.assertEqual([item['source_term'] for item in entry['evidence']], FORMS)
-        for witness, tag, parent in zip(entry['evidence'], ['0CDR','0GNB'], ['0CDQ','0GN9']):
+        self.assertEqual(entry['chapters'], ['descent', 'etale-cohomology'])
+        self.assertEqual([item['source_term'] for item in entry['evidence'][:2]], FORMS)
+        for witness, tag, parent in zip(entry['evidence'][:2], ['0CDR','0GNB'], ['0CDQ','0GN9']):
             self.assertEqual(witness['kind'], 'locked-source-container')
             self.assertEqual(witness['source_commit'], CATALOG['source_commit'])
             self.assertEqual(witness['chapter'], 'descent')

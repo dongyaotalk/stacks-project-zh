@@ -259,13 +259,115 @@ def _context_sources(frozen, native):
         return _context_sources_full(frozen,native)
     observed,references=set(),set()
     for item in frozen['contexts']:
-        key=('context-source',id(native),frozen['source_commit'],sha256_value(item))
+        key=('context-source',id(native),frozen['source_commit'],
+             frozen.get('origin_commit'),frozen.get('tool_version'),sha256_value(item))
         if key not in daily.cache:
-            nodes,labels=_context_sources_full(dict(contexts=[item],source_commit=frozen['source_commit']),native)
+            subset=dict(contexts=[item],source_commit=frozen['source_commit'])
+            subset.update({k:frozen[k] for k in ('origin_commit','tool_version') if k in frozen})
+            nodes,labels=_context_sources_full(subset,native)
             daily.cache[key]=(frozenset(nodes),frozenset(labels))
         nodes,labels=daily.cache[key]
         observed.update(nodes);references.update(labels)
     return observed,references
+
+
+_LEGACY_PROOF_RESET_FUNCTION_HASH = 'ea204352aebc25287b3e2cd6b0490c191b7e508f9a0cad0194404752a853d249'
+
+
+def _legacy_proof_inventory_origin(root, origin):
+    """Recognize accepted original code as data; never execute historical code."""
+    import ast
+    import hashlib
+    if not isinstance(origin, str) or not re.fullmatch(r'[0-9a-f]{40}', origin):
+        return False
+    accepted = False
+    for anchor in ('refs/remotes/origin/main', 'refs/heads/main'):
+        if all(subprocess.run(['git','-C',str(root),'merge-base','--is-ancestor',a,b],
+                              capture_output=True).returncode == 0
+               for a,b in ((origin,anchor),(anchor,'HEAD'))):
+            accepted = True
+            break
+    if not accepted:
+        return False
+    try:
+        text = _git_origin_bytes(root, origin, 'stacks_zh/extraction.py').decode('utf-8')
+        functions = [node for node in ast.parse(text).body
+                     if isinstance(node, ast.FunctionDef) and node.name == 'chapter_inventory']
+        if len(functions) != 1:
+            return False
+        source = ast.get_source_segment(text, functions[0])
+    except (RecordError, ValueError, UnicodeError, SyntaxError):
+        return False
+    return hashlib.sha256(source.encode('utf-8')).hexdigest() == _LEGACY_PROOF_RESET_FUNCTION_HASH
+
+
+def _legacy_proof_context(frozen, native, value, rows, raw):
+    """Exact original complete proof plus exact current span; observations only."""
+    from .source_reextractions import source_tex
+    unit = value['source_unit']
+    chapter = value['location']['file'][:-4]
+    if (frozen.get('tool_version') != 'source-adoption-input-v1'
+            or value.get('kind') != 'locked-English-neighbor' or value['owner_tag'] is not None
+            or unit.get('schema_version') != 1 or unit.get('node_kind') != 'proof'
+            or not re.fullmatch(r'inventory:' + re.escape(chapter) + r':untagged:proof/[0-9]{4}', unit.get('unit_id',''))
+            or not _legacy_proof_inventory_origin(native.root, frozen.get('origin_commit'))):
+        return None
+    location = value['location']
+    start, end = location['byte_start'], location['byte_end']
+    current = [row for row in rows if row['location'] == location
+               and row['unit'].get('node_kind') == 'proof' and row['owner_tag'] is not None
+               and row['parent_tag'] == value['parent_tag']
+               and source_tex(row['unit']).encode('utf-8') == raw[start:end]]
+    if len(current) != 1:
+        return None
+    # Existing flat/opaque modes reproduce the known original proof owner reset.
+    # Re-extraction is from locked Git, never from the saved context payload.
+    legacy = Containers(native.root, native.english.harvest, policy_bytes=native.policy_bytes,
+                        hierarchical_prose=False, natural_text_enabled=False)
+    old_raw, old_rows, _ = legacy.document(chapter)
+    if old_raw != raw:
+        raise RecordError('legacy proof context changed locked Git bytes')
+    matches = [row for row in old_rows if row['location'] == location
+               and row['owner_tag'] is None and row['parent_tag'] == value['parent_tag']
+               and clean(row['unit']) == unit
+               and source_tex(row['unit']).encode('utf-8') == raw[start:end]]
+    legacy.assert_unchanged()
+    return (matches[0], current[0]) if len(matches) == 1 else None
+
+
+def _legacy_prose_boundary_equal(frozen, native, original, current):
+    """Only a fully replayed neighbor may explain a legacy boundary coordinate."""
+    if original.get('selector',{}).get('kind') != 'prose_block':
+        return False
+    before, after = original.get('boundary_witness'), current.get('boundary_witness')
+    if not isinstance(before,dict) or not isinstance(after,dict):
+        return False
+    comparison = copy.deepcopy(current)
+    raw, rows, _ = native.document(current['selector']['file'][:-4])
+    def anchor(row):
+        return dict(kind=row['unit']['node_kind'],owner_tag=row['owner_tag'],
+                    ordinal=int(row['semantic_path'].rsplit('/',1)[1]))
+    for side in ('before','after'):
+        if before.get(side) == after.get(side):
+            continue
+        witnesses = []
+        for item in frozen['contexts']:
+            value = item['value']
+            if 'source_unit' not in value or value['location']['file'] != current['selector']['file']:
+                continue
+            edge = 'byte_end' if side == 'before' else 'byte_start'
+            boundary = 'byte_start' if side == 'before' else 'byte_end'
+            if value['location'][edge] != current['location'][boundary]:
+                continue
+            legacy = _legacy_proof_context(frozen,native,value,rows,raw)
+            if legacy is not None and anchor(legacy[0]) == before.get(side) and anchor(legacy[1]) == after.get(side):
+                witnesses.append(legacy)
+        if len(witnesses) != 1:
+            return False
+        comparison['boundary_witness'][side] = anchor(witnesses[0][0])
+    return (comparison == original
+            and [clean(u) for u in lower_container(original,native.policy)]
+                == [clean(u) for u in lower_container(current,native.policy)])
 
 
 def _context_sources_full(frozen, native):
@@ -288,8 +390,14 @@ def _context_sources_full(frozen, native):
                 or byte_hash(raw[start:end]) != location['fragment_hash']):
             raise RecordError('English context differs from locked Git bytes')
         if 'source_unit' in value:
+            observed_unit_id = None
             matches = [row for row in rows if row['location'] == location
                        and clean(row['unit']) == value['source_unit']]
+            if not matches:
+                legacy = _legacy_proof_context(frozen,native,value,rows,raw)
+                if legacy is not None:
+                    matches = [legacy[0]]
+                    observed_unit_id = legacy[1]['unit']['unit_id']
             # Historical read-only contexts can have the original opaque-math
             # inventory shape. Reconstruct that existing representation from
             # the same locked Git and policy, never from the saved unit itself.
@@ -313,7 +421,7 @@ def _context_sources_full(frozen, native):
                     opaque_native.assert_unchanged()
             if len(matches) != 1 or any(value[key] != matches[0][key] for key in ('owner_tag', 'parent_tag')):
                 raise RecordError('English context is not its complete real semantic IR node')
-            observed.add((chapter, value['source_unit']['unit_id']))
+            observed.add((chapter, observed_unit_id or value['source_unit']['unit_id']))
         elif 'source_math_node' in value:
             if value['source_math_node'].encode('utf-8') != raw[start:end]:
                 raise RecordError('math-reference context differs from its real complete node')
@@ -846,7 +954,8 @@ def _prepare_full(root, input_entry, harvest=None, *, current=False, overrides=N
         for group in batch['containers']:
             selected = native.select(group['selector'])
             expected = [clean(u) for u in lower_container(selected, native.policy)]
-            if selected != group['selected'] or [u['unit_id'] for u in expected] != group['unit_ids']:
+            if (selected != group['selected'] and not _legacy_prose_boundary_equal(frozen,native,group['selected'],selected)
+                    or [u['unit_id'] for u in expected] != group['unit_ids']):
                 raise RecordError('first adoption container differs from its real complete Git selector')
             start, end = selected['location']['byte_start'], selected['location']['byte_end']
             if previous is not None and start < previous:

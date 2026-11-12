@@ -83,8 +83,15 @@ class EtaleCohomologySourcePolicyTests(unittest.TestCase):
         before=json.loads(subprocess.check_output(['git','show',BASE+':config/source-terms.json'],cwd=ROOT))
         after=load_catalog(ROOT)
         count=0
-        for path in sorted((ROOT/'translation-data/units').glob('*.jsonl')):
-            for line in path.read_text().splitlines():
+        # The invariant belongs to the registration's original inputs. Later
+        # accepted chapter data may deliberately use the newly scoped compound;
+        # its current requirements are checked separately above and by data QA.
+        paths = subprocess.check_output(
+            ['git', 'ls-tree', '-rz', '--name-only', BASE, '--', 'translation-data/units'],
+            cwd=ROOT).decode().split('\0')
+        for path in sorted(path for path in paths if path.endswith('.jsonl')):
+            raw = subprocess.check_output(['git', 'show', BASE+':'+path], cwd=ROOT, text=True)
+            for line in raw.splitlines():
                 u=json.loads(line);a=source_inventory(u,before);b=source_inventory(u,after)
                 a.pop('catalog_hash');b.pop('catalog_hash');self.assertEqual(a,b,u['unit_id']);count+=1
         self.assertGreater(count,3000)

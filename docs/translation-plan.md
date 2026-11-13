@@ -32,9 +32,9 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 第 41 章 概形的平展态射（`etale`） | Section 1 / `024K` | `READY` | `REVIEW` |
 | P0 | 第 21 章 位点上的上同调（`sites-cohomology`） | Section 1 / `01FR` | `READY` | `REVIEW` |
 | P0 | 第 59 章 平展上同调（`etale-cohomology`） | Section 1 / `03N2` | `READY` | `REVIEW` |
-| P0 | 第 65 章 代数空间（`spaces`） | Section 1 / `025S` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | Section 1 / `03Y5` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 74 章 下降与代数空间（`spaces-descent`） | Section 1 / `03YF` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 65 章 代数空间（`spaces`） | Section 1 / `025S` | `READY` | `REVIEW` |
+| P0 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | Section 1 / `03Y5` | `READY` | `REVIEW` |
+| P0 | 第 74 章 下降与代数空间（`spaces-descent`） | Section 1 / `03YF` | `READY` | `REVIEW` |
 | P0 | 第 78 章 代数空间中的群胚（`spaces-groupoids`） | Section 1 / `0438` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 83 章 群胚的商（`groupoids-quotients`） | Section 1 / `048B` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 94 章 代数栈（`algebraic`） | Section 1 / `026L` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -57,9 +57,9 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 2 / 6 | 第 41 章 概形的平展态射（`etale`） | `scheme-to-stack`, `etale-cohomology` | Section 1 / `024K` | `REVIEW` | 概形的 étale 态射是 étale 几何主干，中文系统资料稀缺 |
 | P0 | 2 / 7 | 第 21 章 位点上的上同调（`sites-cohomology`） | `etale-cohomology` | Section 1 / `01FR` | `REVIEW` | 位点上的 étale、fppf 等上同调是核心主线，系统中文资料稀缺 |
 | P0 | 2 / 8 | 第 59 章 平展上同调（`etale-cohomology`） | `etale-cohomology` | Section 1 / `03N2` | `REVIEW` | 研究价值高且高质量系统中文资料稀缺 |
-| P0 | 2 / 9 | 第 65 章 代数空间（`spaces`） | `scheme-to-stack` | Section 1 / `025S` | `PREPARE_SCOPE` | 代数空间是从概形到栈的关键桥梁，系统中文资料稀缺 |
-| P0 | 2 / 10 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | `scheme-to-stack` | Section 1 / `03Y5` | `PREPARE_SCOPE` | 代数空间下降与栈理论的重要支撑，系统中文资料稀缺 |
-| P0 | 2 / 11 | 第 74 章 下降与代数空间（`spaces-descent`） | `scheme-to-stack` | Section 1 / `03YF` | `PREPARE_SCOPE` | 下降与代数空间的核心桥梁，系统中文资料稀缺 |
+| P0 | 2 / 9 | 第 65 章 代数空间（`spaces`） | `scheme-to-stack` | Section 1 / `025S` | `REVIEW` | 代数空间是从概形到栈的关键桥梁，系统中文资料稀缺 |
+| P0 | 2 / 10 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | `scheme-to-stack` | Section 1 / `03Y5` | `REVIEW` | 代数空间下降与栈理论的重要支撑，系统中文资料稀缺 |
+| P0 | 2 / 11 | 第 74 章 下降与代数空间（`spaces-descent`） | `scheme-to-stack` | Section 1 / `03YF` | `REVIEW` | 下降与代数空间的核心桥梁，系统中文资料稀缺 |
 | P0 | 2 / 12 | 第 78 章 代数空间中的群胚（`spaces-groupoids`） | `scheme-to-stack` | Section 1 / `0438` | `PREPARE_SCOPE` | 代数空间中的群胚直接通往商和栈，系统中文资料稀缺 |
 | P0 | 2 / 13 | 第 83 章 群胚的商（`groupoids-quotients`） | `scheme-to-stack` | Section 1 / `048B` | `PREPARE_SCOPE` | 群胚取商位于商空间和栈的概念链中心，系统中文资料稀缺 |
 | P0 | 2 / 14 | 第 94 章 代数栈（`algebraic`） | `stacks-moduli` | Section 1 / `026L` | `PREPARE_SCOPE` | 代数栈是项目核心，系统中文资料稀缺 |

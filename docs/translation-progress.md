@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 99 | 第 5-6、9-20、22-33、36-40、42-58、60-104、106-111 章 |
+| 未开始 | 96 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 17 | 第 1-4、7-8、21、34-35、41、59、105、112-116 章 |
+| 候选译文完成，待审校 | 20 | 第 1-4、7-8、21、34-35、41、59、65、73-74、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 433 / 3,299（13.1%） | 0 | 2,866 |
+| 模型候选译文 | 481 / 3,299（14.6%） | 0 | 2,818 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -100,7 +100,7 @@
 | 62 | 相对循环（`relative-cycles`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
 | 63 | 平展上同调进阶（`more-etale`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 64 | 迹公式（`trace`） | 未开始 | 0 / 35（0.0%） | 0 | 35 | 0 | 0 |
-| 65 | 代数空间（`spaces`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
+| 65 | 代数空间（`spaces`） | 候选译文完成，待审校 | 16 / 16（100.0%） | 0 | 0 | 0 | 0 |
 | 66 | 代数空间的性质（`spaces-properties`） | 未开始 | 0 / 34（0.0%） | 0 | 34 | 0 | 0 |
 | 67 | 代数空间的态射（`spaces-morphisms`） | 未开始 | 0 / 53（0.0%） | 0 | 53 | 0 | 0 |
 | 68 | 合宜代数空间（`decent-spaces`） | 未开始 | 0 / 25（0.0%） | 0 | 25 | 0 | 0 |
@@ -108,8 +108,8 @@
 | 70 | 代数空间的极限（`spaces-limits`） | 未开始 | 0 / 23（0.0%） | 0 | 23 | 0 | 0 |
 | 71 | 代数空间上的除子（`spaces-divisors`） | 未开始 | 0 / 19（0.0%） | 0 | 19 | 0 | 0 |
 | 72 | 域上的代数空间（`spaces-over-fields`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
-| 73 | 代数空间上的拓扑（`spaces-topologies`） | 未开始 | 0 / 9（0.0%） | 0 | 9 | 0 | 0 |
-| 74 | 下降与代数空间（`spaces-descent`） | 未开始 | 0 / 23（0.0%） | 0 | 23 | 0 | 0 |
+| 73 | 代数空间上的拓扑（`spaces-topologies`） | 候选译文完成，待审校 | 9 / 9（100.0%） | 0 | 0 | 0 | 0 |
+| 74 | 下降与代数空间（`spaces-descent`） | 候选译文完成，待审校 | 23 / 23（100.0%） | 0 | 0 | 0 | 0 |
 | 75 | 代数空间的导出范畴（`spaces-perfect`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 76 | 代数空间的态射进阶（`spaces-more-morphisms`） | 未开始 | 0 / 57（0.0%） | 0 | 57 | 0 | 0 |
 | 77 | 代数空间上的平坦性（`spaces-flat`） | 未开始 | 0 / 13（0.0%） | 0 | 13 | 0 | 0 |
@@ -593,6 +593,75 @@
 | 105 | `0EW4` | Blow up squares and \'etale cohomology | 完成 | 未开始 | 未开始 |
 | 106 | `0EWL` | Almost blow up squares and the h topology | 完成 | 未开始 | 未开始 |
 | 107 | `0EWS` | Cohomology of the structure sheaf in the h topology | 完成 | 未开始 | 未开始 |
+
+### 第 65 章 代数空间（`spaces`）
+
+共 16 个 Section：候选完成 16，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `025S` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `025T` | General remarks | 完成 | 未开始 | 未开始 |
+| 3 | `025U` | Representable morphisms of presheaves | 完成 | 未开始 | 未开始 |
+| 4 | `02WE` | Lists of useful properties of morphisms of schemes | 完成 | 未开始 | 未开始 |
+| 5 | `02WI` | Properties of representable morphisms of presheaves | 完成 | 未开始 | 未开始 |
+| 6 | `025X` | Algebraic spaces | 完成 | 未开始 | 未开始 |
+| 7 | `04T8` | Fibre products of algebraic spaces | 完成 | 未开始 | 未开始 |
+| 8 | `02WN` | Glueing algebraic spaces | 完成 | 未开始 | 未开始 |
+| 9 | `0261` | Presentations of algebraic spaces | 完成 | 未开始 | 未开始 |
+| 10 | `0264` | Algebraic spaces and equivalence relations | 完成 | 未开始 | 未开始 |
+| 11 | `02WX` | Algebraic spaces, retrofitted | 完成 | 未开始 | 未开始 |
+| 12 | `02YT` | Immersions and Zariski coverings of algebraic spaces | 完成 | 未开始 | 未开始 |
+| 13 | `02X3` | Separation conditions on algebraic spaces | 完成 | 未开始 | 未开始 |
+| 14 | `02Z0` | Examples of algebraic spaces | 完成 | 未开始 | 未开始 |
+| 15 | `03FO` | Change of big site | 完成 | 未开始 | 未开始 |
+| 16 | `03I3` | Change of base scheme | 完成 | 未开始 | 未开始 |
+
+### 第 73 章 代数空间上的拓扑（`spaces-topologies`）
+
+共 9 个 Section：候选完成 9，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `03Y5` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `03Y6` | The general procedure | 完成 | 未开始 | 未开始 |
+| 3 | `03YD` | Zariski topology | 完成 | 未开始 | 未开始 |
+| 4 | `03YC` | \'Etale topology | 完成 | 未开始 | 未开始 |
+| 5 | `03YB` | Smooth topology | 完成 | 未开始 | 未开始 |
+| 6 | `03YA` | Syntomic topology | 完成 | 未开始 | 未开始 |
+| 7 | `03Y7` | Fppf topology | 完成 | 未开始 | 未开始 |
+| 8 | `0DFF` | The ph topology | 完成 | 未开始 | 未开始 |
+| 9 | `03MP` | Fpqc topology | 完成 | 未开始 | 未开始 |
+
+### 第 74 章 下降与代数空间（`spaces-descent`）
+
+共 23 个 Section：候选完成 23，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `03YF` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `041I` | Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `04W2` | Descent data for quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 4 | `04W7` | Fpqc descent of quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 5 | `0H02` | Quasi-coherent modules and affines | 完成 | 未开始 | 未开始 |
+| 6 | `060T` | Descent of finiteness properties of modules | 完成 | 未开始 | 未开始 |
+| 7 | `04P0` | Fpqc coverings | 完成 | 未开始 | 未开始 |
+| 8 | `06NQ` | Descent of finiteness and smoothness properties of morphisms | 完成 | 未开始 | 未开始 |
+| 9 | `06DP` | Descending properties of spaces | 完成 | 未开始 | 未开始 |
+| 10 | `03YG` | Descending properties of morphisms | 完成 | 未开始 | 未开始 |
+| 11 | `041K` | Descending properties of morphisms in the fpqc topology | 完成 | 未开始 | 未开始 |
+| 12 | `042E` | Descending properties of morphisms in the fppf topology | 完成 | 未开始 | 未开始 |
+| 13 | `0D3B` | Application of descent of properties of morphisms | 完成 | 未开始 | 未开始 |
+| 14 | `06EN` | Properties of morphisms local on the source | 完成 | 未开始 | 未开始 |
+| 15 | `06ES` | Properties of morphisms local in the fpqc topology on the source | 完成 | 未开始 | 未开始 |
+| 16 | `06EU` | Properties of morphisms local in the fppf topology on the source | 完成 | 未开始 | 未开始 |
+| 17 | `06EZ` | Properties of morphisms local in the syntomic topology on the source | 完成 | 未开始 | 未开始 |
+| 18 | `06F1` | Properties of morphisms local in the smooth topology on the source | 完成 | 未开始 | 未开始 |
+| 19 | `06F3` | Properties of morphisms local in the \'etale topology on the source | 完成 | 未开始 | 未开始 |
+| 20 | `06F7` | Properties of morphisms smooth local on source-and-target | 完成 | 未开始 | 未开始 |
+| 21 | `0CFY` | Properties of morphisms \'etale-smooth local on source-and-target | 完成 | 未开始 | 未开始 |
+| 22 | `0ADF` | Descent data for spaces over spaces | 完成 | 未开始 | 未开始 |
+| 23 | `0ADS` | Descent data in terms of sheaves | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

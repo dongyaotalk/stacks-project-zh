@@ -15,15 +15,15 @@ TeX 和 PDF 都不是翻译事实来源。
 英文来源 commit：`a04446e57ec1fbc252a871afcec7752fb2807b14`。
 
 全书共 117 章，其中 116 章、3,299 个 Section 有可翻译正文；
-第 117 章为自动生成索引。当前有 433 个 Section 候选译文完成，0 个正在翻译，2,866 个尚未开始。
+第 117 章为自动生成索引。当前有 481 个 Section 候选译文完成，0 个正在翻译，2,818 个尚未开始。
 
 章节只归入一个当前阶段；模型候选、人工审校和正式发布严格分开：
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 99 | 第 5-6、9-20、22-33、36-40、42-58、60-104、106-111 章 |
+| 未开始 | 96 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 17 | 第 1-4、7-8、21、34-35、41、59、105、112-116 章 |
+| 候选译文完成，待审校 | 20 | 第 1-4、7-8、21、34-35、41、59、65、73-74、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -34,7 +34,7 @@ TeX 和 PDF 都不是翻译事实来源。
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 433 / 3,299（13.1%） | 0 | 2,866 |
+| 模型候选译文 | 481 / 3,299（14.6%） | 0 | 2,818 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -53,6 +53,9 @@ TeX 和 PDF 都不是翻译事实来源。
 | 35 | 下降（`descent`） | 候选译文完成，待审校 | 39 / 39（100.0%） | 0 | 0 | 0 | 0 |
 | 41 | 概形的平展态射（`etale`） | 候选译文完成，待审校 | 21 / 21（100.0%） | 0 | 0 | 0 | 0 |
 | 59 | 平展上同调（`etale-cohomology`） | 候选译文完成，待审校 | 107 / 107（100.0%） | 0 | 0 | 0 | 0 |
+| 65 | 代数空间（`spaces`） | 候选译文完成，待审校 | 16 / 16（100.0%） | 0 | 0 | 0 | 0 |
+| 73 | 代数空间上的拓扑（`spaces-topologies`） | 候选译文完成，待审校 | 9 / 9（100.0%） | 0 | 0 | 0 | 0 |
+| 74 | 下降与代数空间（`spaces-descent`） | 候选译文完成，待审校 | 23 / 23（100.0%） | 0 | 0 | 0 | 0 |
 | 105 | 代数栈导论（`stacks-introduction`） | 候选译文完成，待审校 | 7 / 7（100.0%） | 0 | 0 | 0 | 0 |
 | 112 | 文献指南（`guide`） | 候选译文完成，待审校 | 7 / 7（100.0%） | 0 | 0 | 0 | 0 |
 | 113 | 期望事项（`desirables`） | 候选译文完成，待审校 | 20 / 20（100.0%） | 0 | 0 | 0 | 0 |
@@ -72,9 +75,6 @@ TeX 和 PDF 都不是翻译事实来源。
 
 | 优先级 | 章 | 当前范围 | 准备状态 | 下一动作 |
 | --- | --- | --- | --- | --- |
-| P0 | 第 65 章 代数空间（`spaces`） | Section 1 / `025S` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | Section 1 / `03Y5` | `UNPREPARED` | `PREPARE_SCOPE` |
-| P0 | 第 74 章 下降与代数空间（`spaces-descent`） | Section 1 / `03YF` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 78 章 代数空间中的群胚（`spaces-groupoids`） | Section 1 / `0438` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 83 章 群胚的商（`groupoids-quotients`） | Section 1 / `048B` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 94 章 代数栈（`algebraic`） | Section 1 / `026L` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -82,6 +82,9 @@ TeX 和 PDF 都不是翻译事实来源。
 | P0 | 第 90 章 形式形变理论（`formal-defos`） | Section 1 / `06G8` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 91 章 形变理论（`defos`） | Section 1 / `08KX` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 92 章 余切复形（`cotangent`） | Section 1 / `08P6` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 52 章 代数几何与形式几何（`algebraization`） | Section 1 / `0EI6` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 98 章 Artin 公理（`artin`） | Section 1 / `07T0` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 100 章 代数栈的性质（`stacks-properties`） | Section 1 / `04X9` | `UNPREPARED` | `PREPARE_SCOPE` |
 
 运行 `make next-task` 获取当前自动任务；也可用
 `make next-task CHAPTER=4` 或 `make next-task CHAPTER=categories TAG=001L`

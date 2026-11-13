@@ -204,7 +204,8 @@ class Policy:
                                  ('usages', {'symbol', 'bare-symbol', 'applied', 'primed-applied', 'subscripted', 'superscripted',
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
                                              'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
-                                             'descent-relative-proj', 'etale-finite-etale-category', 'etale-reduced-norm'})]:
+                                             'descent-relative-proj', 'etale-finite-etale-category', 'etale-reduced-norm',
+                                             'spaces-category'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -231,7 +232,8 @@ class Policy:
                     or rule['usages'] != ['descent-relative-proj'] or 'contexts' in rule):
                 raise RecordError('relative Proj requires its sole explicit finite text role')
             finite_roles = {"F\\'Et": ('textit', 'etale-finite-etale-category'),
-                            'red': ('text', 'etale-reduced-norm')}
+                            'red': ('text', 'etale-reduced-norm'),
+                            'Spaces': ('textit', 'spaces-category')}
             for name, (font, role) in finite_roles.items():
                 if (notation == name or role in rule['usages']) and (
                         notation != name or rule['commands'] != [font]
@@ -529,6 +531,9 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind == 'spaces-category':
+            from .math_text_spaces import notation_context
+            return notation_context(self.text, stream, index, value, kind)
         if kind in {'etale-projection', 'etale-canonical-map', 'etale-set-category',
                     'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category'}:
             from .math_text_etale import notation_context
@@ -615,7 +620,8 @@ class Scanner:
             if usage in {'starred-subscripted', 'projection-declaration', 'morphism-category-prefixed-symbol',
                          'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection',
                          'sites-pab-shriek', 'etale-projection', 'etale-canonical-map',
-                         'etale-set-category', 'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category'}:
+                         'etale-set-category', 'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category',
+                         'spaces-category'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']

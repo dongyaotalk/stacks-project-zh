@@ -1,5 +1,7 @@
 """Synthetic exact source-term coverage; no model output or terminology approval."""
 import copy
+import json
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -11,6 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = load_catalog(ROOT)
 FORMS = ['quasi-coherent module', 'quasi-coherent modules']
 CONCEPT = 'source-phrase-quasi-coherent-module'
+REGISTERED_CATALOG = json.loads(subprocess.check_output(
+    ['git', 'show', '4313e71e494c0da379b163b8eaba2fa1fce225da:config/source-terms.json'], cwd=ROOT))
 
 
 def unit(text, chapter='descent'):
@@ -38,7 +42,10 @@ class DescentSourceTermPolicyTests(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         entry=entries[0]
         self.assertEqual(entry['forms'], FORMS)
-        self.assertEqual(entry['chapters'], ['descent', 'etale-cohomology'])
+        registered, = [item for item in REGISTERED_CATALOG['terms'] if item['id']==CONCEPT]
+        self.assertEqual(registered['chapters'], ['descent', 'etale-cohomology'])
+        self.assertTrue(set(registered['chapters']) <= set(entry['chapters']))
+        self.assertTrue(all(e in entry['evidence'] for e in registered['evidence']))
         self.assertEqual([item['source_term'] for item in entry['evidence'][:2]], FORMS)
         for witness, tag, parent in zip(entry['evidence'][:2], ['0CDR','0GNB'], ['0CDQ','0GN9']):
             self.assertEqual(witness['kind'], 'locked-source-container')

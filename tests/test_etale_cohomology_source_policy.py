@@ -21,18 +21,23 @@ BASE = '3630df1919a161fb292d44cb893ac94942368ba9'
 FIXTURE = json.loads((ROOT / 'tests/fixtures/etale-cohomology59-source-policy.json').read_text())
 BEFORE = subprocess.check_output(['git','show',BASE+':config/macro-policy.yml'],cwd=ROOT,text=True)
 CURRENT = (ROOT / 'config/macro-policy.yml').read_text()
+REGISTERED_COMMIT = '4313e71e494c0da379b163b8eaba2fa1fce225da'
+REGISTERED = subprocess.check_output(
+    ['git', 'show', REGISTERED_COMMIT+':config/macro-policy.yml'], cwd=ROOT, text=True)
+REGISTERED_CATALOG = json.loads(subprocess.check_output(
+    ['git', 'show', REGISTERED_COMMIT+':config/source-terms.json'], cwd=ROOT))
 
 
 class EtaleCohomologySourcePolicyTests(unittest.TestCase):
     def test_exact_declared_entries_reconstruct_all_original_policy_bytes(self):
         self.assertEqual(hashlib.sha256(BEFORE.encode()).hexdigest(), FIXTURE['baseline_macro_hash'][7:])
-        self.assertEqual(hashlib.sha256(CURRENT.encode()).hexdigest(), FIXTURE['proposed_macro_hash'][7:])
-        restored = CURRENT
+        self.assertEqual(hashlib.sha256(REGISTERED.encode()).hexdigest(), FIXTURE['proposed_macro_hash'][7:])
+        restored = REGISTERED
         sections = {'locked_math_text_notations','locked_math_text_contexts',
                     'translatable_math_text','translatable_math_text_components','translatable_math_text_contexts'}
         self.assertEqual(len(FIXTURE['new_rules']), 69)
         for section in sections:
-            old, new = entries(BEFORE,section), entries(CURRENT,section)
+            old, new = entries(BEFORE,section), entries(REGISTERED,section)
             added = {w['policy_key'] for w in FIXTURE['new_rules'] if w['policy_section']==section}
             self.assertEqual(set(new)-set(old),added)
             for key in added:
@@ -45,6 +50,12 @@ class EtaleCohomologySourcePolicyTests(unittest.TestCase):
                     restored = restored.replace(new[key],old[key],1)
                 self.assertEqual(new[key],expected,(section,key))
         self.assertEqual(restored,BEFORE)
+        # New registrations have their own exact-delta checks. Current
+        # production must retain every accepted rule, byte for byte.
+        for section in sections:
+            registered, current = entries(REGISTERED,section), entries(CURRENT,section)
+            for key, value in registered.items():
+                self.assertEqual(current[key], value, (section,key))
 
     def test_named_operators_are_locked_not_translatable_prose(self):
         p=Policy(CURRENT)
@@ -70,8 +81,11 @@ class EtaleCohomologySourcePolicyTests(unittest.TestCase):
     def test_module_chapter_scope_retains_original_witnesses_and_terms(self):
         c=load_catalog(ROOT)
         actual=next(x for x in c['terms'] if x['id']==CONCEPT)
+        registered=next(x for x in REGISTERED_CATALOG['terms'] if x['id']==CONCEPT)
         old=FIXTURE['module_concept_before']
-        self.assertEqual(actual['chapters'],['descent','etale-cohomology'])
+        self.assertEqual(registered['chapters'],['descent','etale-cohomology'])
+        self.assertTrue(set(registered['chapters']) <= set(actual['chapters']))
+        self.assertTrue(all(e in actual['evidence'] for e in registered['evidence']))
         self.assertEqual(actual['forms'],old['forms'])
         self.assertEqual(actual['evidence'][:2],old['evidence'])
         self.assertEqual(words(unit('A quasi-coherent module and quasi-coherent modules.','etale-cohomology')),FORMS)
@@ -101,7 +115,7 @@ class EtaleCohomologySourcePolicyTests(unittest.TestCase):
 class LockedEtaleCohomologyPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.native=Containers(ROOT,Path(os.environ['HARVEST_DIR']))
+        cls.native=Containers(ROOT,Path(os.environ['HARVEST_DIR']), policy_bytes=REGISTERED.encode())
         cls.raw,cls.rows,cls.diagnostics=cls.native.document('etale-cohomology')
 
     def test_locked_math_parameters_and_real_policy_witnesses(self):

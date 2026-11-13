@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import tempfile
 import unittest
 
@@ -20,7 +21,9 @@ from test_source_containers import fixture, selector
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = json.loads((ROOT/'tests/fixtures/spaces-wave-math-frames.json').read_text())
-BEFORE = (ROOT/'config/macro-policy.yml').read_text()
+BASELINE_COMMIT = 'f9367dd6619828a8b1612cfdff71c887d62dbf44'
+BEFORE = subprocess.check_output(
+    ['git', 'show', BASELINE_COMMIT+':config/macro-policy.yml'], cwd=ROOT, text=True)
 
 
 def synthetic_policy():
@@ -57,6 +60,8 @@ class SpacesWaveMathFramesTests(unittest.TestCase):
         cls.temp.cleanup()
 
     def test_independent_fixture_equals_exact_finite_frame_inventory(self):
+        self.assertEqual('sha256:'+hashlib.sha256(BEFORE.encode()).hexdigest(),
+                         FIXTURE['baseline_macro_hash'])
         natural, category = [], []
         for c in FIXTURE['containers']:
             for frame in c['frames']:
@@ -163,7 +168,9 @@ class SpacesWaveMathFramesTests(unittest.TestCase):
 @unittest.skipUnless(os.environ.get('HARVEST_DIR'),'requires explicit read-only locked harvest')
 class LockedSpacesWaveMathFramesTests(unittest.TestCase):
     def test_all_original_container_and_frame_bytes_match_locked_git(self):
-        native=Containers(ROOT,Path(os.environ['HARVEST_DIR']))
+        # These negative witnesses predate production registration. Current
+        # positive capabilities are exercised independently above.
+        native=Containers(ROOT,Path(os.environ['HARVEST_DIR']), policy_bytes=BEFORE.encode())
         self.assertEqual(native.english.commit,FIXTURE['source_commit'])
         for c in FIXTURE['containers']:
             raw=native.document(c['selector']['file'][:-4])[0];loc=c['location']

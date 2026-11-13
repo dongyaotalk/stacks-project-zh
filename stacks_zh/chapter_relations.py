@@ -2,6 +2,7 @@
 import json
 import re
 import subprocess
+from pathlib import Path
 from .records import RecordError, load_jsonl
 from .source_containers import clean, safe_path, load_source_containers
 from .source_reextractions import byte_hash, load_source_reextractions
@@ -242,6 +243,64 @@ def _model_policy_matches(field, value, raw, expected_hash):
         return False
 
 
+def _preparation_prior_snapshots(root, frozen, previous, snapshot):
+    """Inventory complete paired predecessor bytes, without replay authority."""
+    from . import source_adoptions as a
+    priors = frozen.get('prior_adoptions', [])
+    if not priors:
+        return
+    expected_previous, output_paths, all_ids, seen = [], [], [], set()
+    for prior in priors:
+        path = safe_path(root, prior['record']['path'],
+                         r'translation-data/source-adoptions/[A-Za-z0-9._-]+\.json')
+        payload = snapshot.read(path)
+        record = json.loads(payload)
+        a._schema(record, 'source-adoption.schema.json')
+        identifier = record['adoption_id']
+        if (byte_hash(payload) != prior['record']['hash'] or identifier in seen
+                or identifier == frozen['adoption_id']
+                or path.name != identifier + '.json'
+                or record['source_commit'] != frozen['source_commit']
+                or record['chapter'] != frozen['chapter']
+                or not a._time(record['created_at']) < a._time(frozen['created_at'])
+                or len(record['outputs']) != len(prior['outputs'])):
+            raise RecordError('preparation prior adoption identity/hash/complete outputs differ')
+        seen.add(identifier)
+        record_ids = []
+        for original, archive in zip(record['outputs'], prior['outputs'], strict=True):
+            rows = {}
+            for role in ('units', 'candidates'):
+                entry = archive[role]
+                expected_path = (f'translation-data/retired/source-adoptions/{frozen["adoption_id"]}-'
+                                 f'{identifier}-{Path(original[role]["path"]).stem}/{role}.jsonl')
+                saved = snapshot.read(safe_path(root, entry['path'],
+                    r'translation-data/retired/source-adoptions/.+/(?:units|candidates)\.jsonl'))
+                if (entry['path'] != expected_path or entry['hash'] != original[role]['hash']
+                        or byte_hash(saved) != entry['hash']):
+                    raise RecordError('preparation prior snapshot differs from complete original bytes')
+                rows[role] = a._rows(saved)
+                for row in rows[role]:
+                    a._schema(row, 'unit.schema.json' if role == 'units' else 'candidate.schema.json')
+                    if row['source_commit'] != frozen['source_commit']:
+                        raise RecordError('preparation prior snapshot source differs')
+            ids = [u['unit_id'] for u in rows['units']]
+            if (ids != [c['unit_id'] for c in rows['candidates']]
+                    or any(u['chapter'] != frozen['chapter'] for u in rows['units'])):
+                raise RecordError('preparation prior snapshot ordered unit/candidate scope differs')
+            record_ids.extend(ids)
+            output_paths.append((original['units']['path'], original['candidates']['path']))
+            expected_previous.append(dict(path=original['candidates']['path'],
+                archive_path=archive['candidates']['path'], hash=archive['candidates']['hash'],
+                records=rows['candidates']))
+        if record_ids != record['unit_ids']:
+            raise RecordError('preparation prior adoption complete ordered units differ')
+        all_ids.extend(record_ids)
+    if (output_paths != [(b['units_path'], b['candidates_path']) for b in frozen['batches']]
+            or all_ids != frozen['unit_ids'] or len(set(all_ids)) != len(all_ids)
+            or previous != expected_previous):
+        raise RecordError('preparation prior snapshots differ from full frozen/model-input scope')
+
+
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):
     """Check actual model-input/runtime copies, including never-adopted preparation.
 
@@ -300,6 +359,7 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
         previous=model_input.get('previous_complete_candidates',[])
         if not isinstance(previous,list) or not isinstance(model_input.get('regeneration_reason',''),str):
             raise RecordError('malformed preparation revision metadata')
+        _preparation_prior_snapshots(root, frozen, previous, snapshot)
         for item in previous:
             path=safe_path(root,item['archive_path'],r'translation-data/retired/source-adoptions/.+/candidates\.jsonl')
             payload=snapshot.read(path)

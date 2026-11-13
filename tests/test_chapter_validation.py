@@ -100,6 +100,78 @@ def preparation_copy(root, frozen, fp, rp):
 
 
 class ChapterTests(unittest.TestCase):
+    def test_unused_revision_inventories_complete_paired_prior_snapshots(self):
+        from stacks_zh.chapter_relations import _preparation_prior_snapshots
+        from stacks_zh.current_qa import InputSnapshot
+        with tempfile.TemporaryDirectory() as d:
+            root,harvest,base,fp,rp,frozen=fixture(Path(d))
+            prior_path=root/'translation-data/source-adoptions/synthetic-first.json'
+            record=json.loads(prior_path.read_bytes())
+            proposal=copy.deepcopy(frozen)
+            aid='synthetic-unused-revision'
+            proposal.update(adoption_id=aid,run_id='run-'+aid,
+                tool_version='source-adoption-input-v2',created_at='2026-10-20T00:00:00Z')
+            archives,previous=[],[]
+            for output in record['outputs']:
+                saved={}
+                for role in ('units','candidates'):
+                    p=root/f'translation-data/retired/source-adoptions/{aid}-synthetic-first-{Path(output[role]["path"]).stem}/{role}.jsonl'
+                    p.parent.mkdir(parents=True,exist_ok=True)
+                    p.write_bytes((root/output[role]['path']).read_bytes())
+                    saved[role]=dict(path=p.relative_to(root).as_posix(),hash=byte_hash(p.read_bytes()))
+                archives.append(saved)
+                previous.append(dict(path=output['candidates']['path'],archive_path=saved['candidates']['path'],
+                    hash=saved['candidates']['hash'],records=[json.loads(x) for x in
+                        (root/saved['candidates']['path']).read_text().splitlines()]))
+            proposal['prior_adoptions']=[dict(record=dict(path=prior_path.relative_to(root).as_posix(),
+                hash=byte_hash(prior_path.read_bytes())),outputs=archives)]
+            unused=root/f'translation-data/source-adoption-inputs/{aid}.json'
+            scope=json.loads(proposal['task']['scope_bytes'])
+            extra=[unused.relative_to(root).as_posix(),f'translation-data/source-adoptions/{aid}.json',
+                f'translation-data/runs/run-{aid}.json',*(e[r]['path'] for e in archives for r in ('units','candidates'))]
+            scope['allowed_write_files']+=extra;scope['data_scopes'][0]['allowed_write_files']+=extra
+            scope['data_scopes'][0]['run_scope'].append('run-'+aid)
+            sp=root/proposal['task']['scope_manifest'];write(sp,scope)
+            proposal['task'].update(scope_bytes=sp.read_text(),scope_manifest_sha256=byte_hash(sp.read_bytes()))
+            mp,rt=preparation_copy(root,proposal,unused,rp)
+            value=json.loads(mp.read_text());value['previous_complete_candidates']=previous;write(mp,value)
+            originals={p:p.read_bytes() for p in [unused,mp,rt,prior_path,*[root/e[r]['path'] for e in archives for r in ('units','candidates')]]}
+            result=check_chapter(root,harvest,'test','synthetic',base)
+            receipt=next(x for x in result.report['preparations'] if aid in x['input'])
+            self.assertEqual(receipt['generation_validation'],'not_claimed')
+            self.assertFalse(receipt['run_created'])
+            self.assertEqual(result.report['direct_nodes'],1)
+            self.assertEqual(originals,{p:p.read_bytes() for p in originals})
+            for mutation in ('missing','unit-hash','unit-schema','candidate-hash','pair-order',
+                             'record-hash','partial','output-order','path','scope','previous'):
+                with self.subTest(mutation=mutation):
+                    f=copy.deepcopy(proposal);prev=copy.deepcopy(previous)
+                    for p,raw in originals.items():p.write_bytes(raw)
+                    entry=f['prior_adoptions'][0]['outputs'][0]['units'];p=root/entry['path']
+                    if mutation=='missing':p.unlink()
+                    elif mutation=='unit-hash':p.write_bytes(p.read_bytes()+b'\n')
+                    elif mutation=='unit-schema':
+                        rows=[json.loads(x) for x in p.read_text().splitlines()];rows[0]['unexpected']=True
+                        write_jsonl(p,rows);entry['hash']=byte_hash(p.read_bytes())
+                        rec=json.loads(prior_path.read_text());rec['outputs'][0]['units']['hash']=entry['hash'];write(prior_path,rec)
+                        f['prior_adoptions'][0]['record']['hash']=byte_hash(prior_path.read_bytes())
+                    elif mutation=='candidate-hash':(root/f['prior_adoptions'][0]['outputs'][0]['candidates']['path']).write_bytes(b'{}\n')
+                    elif mutation=='pair-order':
+                        index=next(i for i,e in enumerate(archives) if len((root/e['units']['path']).read_text().splitlines())>1)
+                        entry=f['prior_adoptions'][0]['outputs'][index]['units'];p=root/entry['path']
+                        rows=[json.loads(x) for x in p.read_text().splitlines()];rows.reverse();write_jsonl(p,rows)
+                        entry['hash']=byte_hash(p.read_bytes());rec=json.loads(prior_path.read_text())
+                        rec['outputs'][index]['units']['hash']=entry['hash'];write(prior_path,rec)
+                        f['prior_adoptions'][0]['record']['hash']=byte_hash(prior_path.read_bytes())
+                    elif mutation=='record-hash':prior_path.write_bytes(prior_path.read_bytes()+b'\n')
+                    elif mutation=='partial':f['prior_adoptions'][0]['outputs'].pop()
+                    elif mutation=='output-order':f['prior_adoptions'][0]['outputs'].reverse()
+                    elif mutation=='path':entry['path']=entry['path'].replace(aid,'outside')
+                    elif mutation=='scope':f['unit_ids'].reverse()
+                    elif mutation=='previous':prev.pop()
+                    with self.assertRaises((RecordError,OSError)):
+                        _preparation_prior_snapshots(root,f,prev,InputSnapshot(root))
+
     def test_empty_glossary_inventory_is_bound_to_complete_locked_policy(self):
         from stacks_zh.chapter_relations import _model_policy_matches
         empty=b'entries: []\n'

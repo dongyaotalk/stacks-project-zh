@@ -1,0 +1,3433 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/spaces65-gpt61sol-p010-20261113-policy968.json",
+    "hash": "sha256:27a733f1be4d14203e0af85f35348b74cd9284ab2c32e7ee5a9b50a63d53d74e"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.167.2",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1d3c1-9df9-7d62-bade-4ed2b1eac1bf",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/spaces65-20261112.json",
+    "hash": "sha256:121f706339e0c23225086e86f1197b3ef38a01551830ccb6e8d982fef311a8de"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": [],
+  "source_units": [
+    {
+      "chapter": "spaces",
+      "math_text_regions": [
+        {
+          "delimiter_kind": "display-dollar",
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            }
+          ],
+          "region_id": "math/0001",
+          "slots": [
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "section",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 92246,
+                        "start": 92212
+                      },
+                      "command_hash": "sha256:c9ab44d7f804a9240b4b44d993b55ebb536dcb6e61a78688946d0f5e4c395494",
+                      "container_byte_span": {
+                        "end": 93475,
+                        "start": 90775
+                      },
+                      "container_hash": "sha256:e7491d974c7d834a68a919811175c8cef1699797c4bfc49292bee2575d732b97"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-section-examples",
+                  "owner_tag": "02Z0",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-section-examples",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "x",
+                  "before": "\\mid ",
+                  "environments": []
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-f05a8b353824",
+              "slot_byte_span": {
+                "end": 63,
+                "start": 36
+              },
+              "slot_id": "math/0001/text/0001",
+              "source": "all but a finite number of "
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "section",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 92265,
+                        "start": 92249
+                      },
+                      "command_hash": "sha256:62bc0d4c01d811a82e6dda3af9f2de6a0eb9b1e2bedb2d170ad5161f68638916",
+                      "container_byte_span": {
+                        "end": 93475,
+                        "start": 90775
+                      },
+                      "container_hash": "sha256:e7491d974c7d834a68a919811175c8cef1699797c4bfc49292bee2575d732b97"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-section-examples",
+                  "owner_tag": "02Z0",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-section-examples",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "\\}",
+                  "before": "n",
+                  "environments": []
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-4310f230b361",
+              "slot_byte_span": {
+                "end": 82,
+                "start": 73
+              },
+              "slot_id": "math/0001/text/0002",
+              "source": " are zero"
+            }
+          ],
+          "source": "$$\nI =\n\\{x = (x_n) \\in A \\mid \\text{all but a finite number of }x_n\\text{ are zero}\\}\n$$",
+          "source_byte_span": {
+            "end": 1495,
+            "start": 1407
+          },
+          "source_hash": "sha256:32a72a7daab54f30f3682764ceb693af32e433814dc79dd87e8109a113f18a13"
+        }
+      ],
+      "node_kind": "example",
+      "parent_tag": "02Z0",
+      "placeholders": {
+        "ACCENT_0001": "\\'e",
+        "MATHSEG_0001": "$$\nI =\n\\{x = (x_n) \\in A \\mid \\text{",
+        "MATHSEG_0002": "}x_n\\text{",
+        "MATHSEG_0003": "}\\}\n$$",
+        "MATH_0001": "$k$",
+        "MATH_0002": "$A = \\prod_{n \\in \\mathbf{N}} k$",
+        "MATH_0003": "$U = \\Spec(A)$",
+        "MATH_0004": "$S = \\Spec(k)$",
+        "MATH_0005": "$\\text{pr}_n : A \\to k$",
+        "MATH_0006": "$f_n : S \\to U$",
+        "MATH_0007": "$$\nR = U \\amalg \\coprod\\nolimits_{(n, m) \\in \\mathbf{N}^2, \\ n \\not = m} S\n$$",
+        "MATH_0008": "$j$",
+        "MATH_0009": "$\\Delta_{U/S}$",
+        "MATH_0010": "$U$",
+        "MATH_0011": "$j = (f_n, f_m)$",
+        "MATH_0012": "$S$",
+        "MATH_0013": "$(n, m)$",
+        "MATH_0014": "$s, t$",
+        "MATH_0015": "$j$",
+        "MATH_0016": "$$\nX = U/R.\n$$",
+        "MATH_0017": "$k$",
+        "MATH_0018": "$q$",
+        "MATH_0019": "$|U|$",
+        "MATH_0020": "$U$",
+        "MATH_0021": "$A$",
+        "MATH_0022": "$x^q = x$",
+        "MATH_0023": "$A$",
+        "MATH_0024": "$k$",
+        "MATH_0025": "$U$",
+        "MATH_0026": "$U$",
+        "MATH_0027": "$u_n \\in |U|$",
+        "MATH_0028": "$f_n$",
+        "MATH_0029": "$u_n$",
+        "MATH_0030": "$U$",
+        "MATH_0031": "$x$",
+        "MATH_0032": "$A$",
+        "MATH_0033": "$x = ue$",
+        "MATH_0034": "$u$",
+        "MATH_0035": "$e$",
+        "MATH_0036": "$A$",
+        "MATH_0037": "$|U|$",
+        "MATH_0038": "$\\{u_n\\}$",
+        "MATH_0039": "$|U|$",
+        "MATH_0040": "$|X|$",
+        "MATH_0041": "$X$",
+        "MATH_0042": "$|X|$",
+        "MATH_0043": "$|U| \\to |X|$",
+        "MATH_0044": "$u_n$",
+        "MATH_0045": "$x_0$",
+        "MATH_0046": "$|X|$",
+        "MATH_0047": "$\\{u_n\\}$",
+        "MATH_0048": "$|U|$",
+        "MATH_0049": "$x_0$",
+        "MATH_0050": "$|X|$",
+        "MATH_0051": "$|X|$",
+        "MATH_0052": "$|X|$",
+        "MATH_0053": "$x_0$",
+        "MATH_0054": "$|X|$",
+        "MATH_0055": "$x_0$",
+        "MATH_0056": "$S \\to X$",
+        "MATH_0057": "$X \\to S$",
+        "REF_0001": "\\ref{algebra-lemma-quasi-compact}",
+        "REF_0002": "\\ref{algebra-lemma-idempotent-spec}",
+        "REF_0003": "\\ref{spaces-properties-section-points}",
+        "REF_0004": "\\ref{morphisms-lemma-algebraic-residue-field-extension-closed-point-fibre}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{example}\n\\label{example-infinite-product}\n",
+        "suffix": "\\end{example}"
+      },
+      "risk_level": "R3",
+      "schema_version": 2,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:89a930b7c79deccfcba085c34b2024fdeb581447edf2654079697c0efc14e3ee",
+      "source_math_skeleton_hash": "sha256:a704b2ef486654953f4735e230994e1b8235e9e17c626cb6d3bc3a901e5fc2e4",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:4b0cd07758b08071e3c9fe933df51c01d6a53d9b3584a4413533b625df21e2e0",
+      "source_text": "Let <MATH_0001> be a field.\nLet <MATH_0002> be the infinite product.\nSet <MATH_0003> seen as a scheme over <MATH_0004>.\nNote that the projection maps <MATH_0005> define open\nand closed immersions <MATH_0006>. Set\n<MATH_0007>\nwith morphism <MATH_0008> equal to <MATH_0009> on the component <MATH_0010>\nand <MATH_0011> on the component <MATH_0012> corresponding to <MATH_0013>.\nIt is clear from the remark above that <MATH_0014> are <ACCENT_0001>tale.\nIt is also clear that <MATH_0015> is an equivalence relation. Hence we\nobtain an algebraic space\n<MATH_0016>\nTo see what this means we specialize to the case where\nthe field <MATH_0017> is finite with <MATH_0018> elements. Let us first\ndiscuss the topological space <MATH_0019> associated to the scheme <MATH_0020>\na little bit. All elements of <MATH_0021> satisfy <MATH_0022>.\nHence every residue field of <MATH_0023> is isomorphic to <MATH_0024>, and\nall points of <MATH_0025> are closed. But the topology on <MATH_0026> isn't\nthe discrete topology. Let <MATH_0027> be the point corresponding\nto <MATH_0028>. As mentioned above the points <MATH_0029> are\nthe open points (and hence isolated). This implies there have\nto be other points since we know <MATH_0030> is quasi-compact, see\nAlgebra, Lemma <REF_0001>\n(hence not equal to an infinite discrete set).\nAnother way to see this is because the (proper) ideal\n<MATHSEG_0001>all but a finite number of <MATHSEG_0002> are zero<MATHSEG_0003>\nis contained in a maximal ideal. Note also that every element\n<MATH_0031> of <MATH_0032> is of the form <MATH_0033> where <MATH_0034> is a unit and <MATH_0035> is an\nidempotent. Hence a basis for the topology of <MATH_0036> consists of open and\nclosed subsets (see Algebra, Lemma <REF_0002>.)\nSo the topology on <MATH_0037> is totally disconnected, but nontrivial.\nFinally, note that <MATH_0038> is dense in <MATH_0039>.\n\n<STRUCT_0001><STRUCT_0002>\nWe will later define a topological space <MATH_0040> associated to <MATH_0041>, see\nProperties of Spaces, Section <REF_0003>.\nWhat can we say about <MATH_0042>?\nIt turns out that the map <MATH_0043> is surjective and continuous.\nAll the points <MATH_0044> map to the same point <MATH_0045> of <MATH_0046>, and none of\nthe other points get identified. Since <MATH_0047> is dense in <MATH_0048> we\nconclude that the closure of <MATH_0049> in <MATH_0050> is <MATH_0051>. In other words\n<MATH_0052> is irreducible and <MATH_0053> is a generic point of <MATH_0054>. This seems\nbizarre since also <MATH_0055> is the image of a section\n<MATH_0056> of the structure morphism <MATH_0057> (and in the case of\nschemes this would imply it was a closed point, see\nMorphisms, Lemma\n<REF_0004>).\n",
+      "source_text_hash": "sha256:321b150dc076ce53a5a542505c352e8fe1d17cde3cfe2adcd543b5a2b7dcfd6f",
+      "unit_id": "tag:02Z8:statement"
+    },
+    {
+      "chapter": "spaces",
+      "math_text_regions": [
+        {
+          "delimiter_kind": "display-dollar",
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            }
+          ],
+          "region_id": "math/0001",
+          "slots": [
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "categories.tex",
+                  "kind": "section",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 242287,
+                        "start": 242277
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 242359,
+                        "start": 242149
+                      },
+                      "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe"
+                    },
+                    {
+                      "command_byte_span": {
+                        "end": 242783,
+                        "start": 242773
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 242847,
+                        "start": 242659
+                      },
+                      "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f"
+                    },
+                    {
+                      "command_byte_span": {
+                        "end": 243361,
+                        "start": 243351
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 243453,
+                        "start": 243199
+                      },
+                      "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "categories-section-inertia",
+                  "owner_tag": "04Z2",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "categories-section-inertia",
+                "usage": "quad-connector",
+                "usage_source": {
+                  "after": "\\quad",
+                  "before": "\\quad",
+                  "environments": []
+                }
+              },
+              "command": "text",
+              "policy_entry": "connective-and",
+              "slot_byte_span": {
+                "end": 38,
+                "start": 35
+              },
+              "slot_id": "math/0001/text/0001",
+              "source": "and"
+            }
+          ],
+          "source": "$$\nU \\longrightarrow X'\n\\quad\\text{and}\\quad\nR \\longrightarrow U \\times_{X'} U\n$$",
+          "source_byte_span": {
+            "end": 1218,
+            "start": 1137
+          },
+          "source_hash": "sha256:ab73a085752ae398b0489327b7731c9032a3feb7300d791990336b87e16e4a88"
+        }
+      ],
+      "node_kind": "lemma",
+      "parent_tag": "03FO",
+      "placeholders": {
+        "ACCENT_0001": "\\'e",
+        "FOOTNOTECLOSE_0001": "}",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATHSEG_0001": "$$\nU \\longrightarrow X'\n\\quad\\text{",
+        "MATHSEG_0002": "}\\quad\nR \\longrightarrow U \\times_{X'} U\n$$",
+        "MATH_0001": "$\\Sch_{fppf}$",
+        "MATH_0002": "$\\Sch'_{fppf}$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\Sch_{fppf}$",
+        "MATH_0005": "$\\textit{Spaces}/S$",
+        "MATH_0006": "$S$",
+        "MATH_0007": "$\\Sch_{fppf}$",
+        "MATH_0008": "$\\textit{Spaces}'/S$",
+        "MATH_0009": "$S$",
+        "MATH_0010": "$\\Sch'_{fppf}$",
+        "MATH_0011": "$$\n\\textit{Spaces}/S \\longrightarrow \\textit{Spaces}'/S\n$$",
+        "MATH_0012": "$X' \\in \\Ob(\\textit{Spaces}'/S)$",
+        "MATH_0013": "$U, R \\in \\Ob((\\Sch/S)_{fppf})$",
+        "MATH_0014": "$R$",
+        "MATH_0015": "$Bound$",
+        "MATH_0016": "$U \\times_{X'} U$",
+        "MATH_0017": "$Bound$",
+        "MATH_0018": "$U$",
+        "MATH_0019": "$S = \\Spec(A)$",
+        "MATH_0020": "$U = \\Spec(A[x_i, i \\in I])$",
+        "MATH_0021": "$R = \\coprod_{(\\lambda_i) \\in A^I} \\Spec(A[x_i, y_i]/(x_i - \\lambda_i y_i))$",
+        "MATH_0022": "$R$",
+        "MATH_0023": "$\\kappa^\\kappa$",
+        "MATH_0024": "$\\kappa$",
+        "MATH_0025": "$U$",
+        "MATH_0026": "$\\Sh((\\Sch'/S)_{fppf})$",
+        "REF_0001": "\\ref{lemma-change-big-site}",
+        "REF_0002": "\\ref{sets-equation-bound}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-fully-faithful}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 2,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:77996b0b6fede7f996d91dd872ead62b24515a13cf89eb659c13533feeb9e464",
+      "source_math_skeleton_hash": "sha256:5151c2952bf7a9bccfc2cb14e2abec883101e782d60f7f3024dc1de6bda4d417",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:619dbfd2e5183bcb58c04dcbd5016d4959c50c1230cc9bbea7cbc6c9cffb72ff",
+      "source_text": "Suppose <MATH_0001> is contained in <MATH_0002>.\nLet <MATH_0003> be an object of <MATH_0004>. Denote\n<MATH_0005> the category of algebraic spaces over <MATH_0006>\ndefined using <MATH_0007>. Similarly, denote\n<MATH_0008> the category of algebraic spaces over <MATH_0009>\ndefined using <MATH_0010>. The construction of\nLemma <REF_0001>\ndefines a fully faithful functor\n<MATH_0011>\nwhose essential image consists of those <MATH_0012>\nsuch that there exist <MATH_0013><FOOTNOTEOPEN_0001>Requiring the\nexistence of <MATH_0014> is necessary because of our choice of the function <MATH_0015> in\nSets, Equation (<REF_0002>). The size of the fibre product\n<MATH_0016> can grow faster than <MATH_0017> in terms of the size of <MATH_0018>. We\ncan illustrate this by setting <MATH_0019>, <MATH_0020> and\n<MATH_0021>.\nIn this case the size of <MATH_0022> grows like <MATH_0023> where <MATH_0024> is the\nsize of <MATH_0025>.<FOOTNOTECLOSE_0001> and morphisms\n<MATHSEG_0001>and<MATHSEG_0002>\nin <MATH_0026> which are surjective as maps of sheaves\n(for example if the displayed morphisms are surjective and <ACCENT_0001>tale).\n",
+      "source_text_hash": "sha256:fa37954f0e7220287e7d11b9c47b8f2c32d92622ef21ff15cab115e8e89459cb",
+      "unit_id": "tag:04W1:statement"
+    },
+    {
+      "chapter": "spaces",
+      "node_kind": "proof",
+      "parent_tag": "03FO",
+      "placeholders": {
+        "ACCENT_0001": "\\'e",
+        "ACCENT_0002": "\\'e",
+        "ACCENT_0003": "\\'e",
+        "ACCENT_0004": "\\'e",
+        "ACCENT_0005": "\\'e",
+        "ACCENT_0006": "\\'e",
+        "MATH_0001": "$f^{-1} : \\Sh((\\Sch/S)_{fppf}) \\to \\Sh((\\Sch'/S)_{fppf})$",
+        "MATH_0002": "$X' \\in \\Ob(\\textit{Spaces}'/S)$",
+        "MATH_0003": "$U \\in \\Ob((\\Sch/S)_{fppf})$",
+        "MATH_0004": "$U \\to X'$",
+        "MATH_0005": "$\\Sh((\\Sch'/S)_{fppf})$",
+        "MATH_0006": "$U' \\to X'$",
+        "MATH_0007": "$U' \\in \\Ob((\\Sch'/S)_{fppf})$",
+        "MATH_0008": "$\\kappa = \\text{size}(U)$",
+        "MATH_0009": "$U$",
+        "MATH_0010": "$U = \\bigcup_{i \\in I} U_i$",
+        "MATH_0011": "$|I| \\leq \\kappa$",
+        "MATH_0012": "$U' \\times_{X'} U \\to U$",
+        "MATH_0013": "$i$",
+        "MATH_0014": "$U'_i \\subset U'$",
+        "MATH_0015": "$U'_i \\times_{X'} U_i \\to U_i$",
+        "MATH_0016": "$U' \\times_{X'} U_i$",
+        "MATH_0017": "$W \\times_{X'} U_i$",
+        "MATH_0018": "$W \\subset U'$",
+        "MATH_0019": "$U' \\times_{X'} U_i \\to U_i$",
+        "MATH_0020": "$\\coprod_{i \\in I} U'_i \\to X$",
+        "MATH_0021": "$U \\to X$",
+        "MATH_0022": "$\\coprod U_i \\to X$",
+        "MATH_0023": "$U'_i \\times_{X'} U \\to U'_i$",
+        "MATH_0024": "$U'_i$",
+        "MATH_0025": "$W_i \\subset U'_i \\times_{X'} U$",
+        "MATH_0026": "$W_i \\to U'_i$",
+        "MATH_0027": "$W_i \\to U$",
+        "MATH_0028": "$\\text{size}(W_i) \\leq \\text{size}(U)$",
+        "MATH_0029": "$\\text{size}(U'_i) \\leq \\text{size}(U)$",
+        "MATH_0030": "$\\coprod_{i \\in I} U'_i$",
+        "MATH_0031": "$(\\Sch/S)_{fppf}$",
+        "MATH_0032": "$X'$",
+        "MATH_0033": "$U \\to X'$",
+        "MATH_0034": "$R \\to U \\times_{X'} U$",
+        "MATH_0035": "$U' \\in \\Ob((\\Sch/S)_{fppf})$",
+        "MATH_0036": "$U' \\to X'$",
+        "MATH_0037": "$\\Sh((\\Sch'/S)_{fppf})$",
+        "MATH_0038": "$U' \\times_{X'} U \\to U'$",
+        "MATH_0039": "$\\{U'_i \\to U'\\}$",
+        "MATH_0040": "$U'_i \\to U'$",
+        "MATH_0041": "$U' \\times_{X'} U \\to U'$",
+        "MATH_0042": "$\\tilde U \\to U'$",
+        "MATH_0043": "$\\text{size}(\\tilde U) \\leq \\text{size}(U')$",
+        "MATH_0044": "$\\tilde U \\to U'$",
+        "MATH_0045": "$U' \\times_{X'} U \\to U'$",
+        "MATH_0046": "$$\n\\xymatrix{\nU' \\times_{X'} U' \\ar[d] &\n\\tilde U \\times_{X'} \\tilde U  \\ar[l] \\ar[d] \\ar[r] &\nU \\times_{X'} U \\ar[d] \\\\\nU' \\times_S U' & \\tilde U \\times_S \\tilde U \\ar[l] \\ar[r] & U \\times_S U\n}\n$$",
+        "MATH_0047": "$(\\Sch/S)_{fppf}$",
+        "MATH_0048": "$U \\times_{X'} U$",
+        "MATH_0049": "$R \\to U \\times_{X'} U$",
+        "MATH_0050": "$(\\Sch/S)_{fppf}$",
+        "MATH_0051": "$\\tilde U \\times_{X'} \\tilde U$",
+        "MATH_0052": "$(\\Sch/S)_{fppf}$",
+        "MATH_0053": "$\\tilde U \\times_{X'} \\tilde U \\to U' \\times_{X'} U'$",
+        "MATH_0054": "$\\tilde U \\to U'$",
+        "MATH_0055": "$R' = U' \\times_{X'} U'$",
+        "MATH_0056": "$(\\Sch/S)_{fppf}$",
+        "MATH_0057": "$X = h_{U'}/h_{R'}$",
+        "MATH_0058": "$\\textit{Spaces}/S$",
+        "MATH_0059": "$f^{-1}X \\cong X'$",
+        "REF_0001": "\\ref{sites-lemma-bigger-site}",
+        "REF_0002": "\\ref{topologies-section-change-alpha}",
+        "REF_0003": "\\ref{sets-section-categories-schemes}",
+        "REF_0004": "\\ref{sets-lemma-bound-finite-type}",
+        "REF_0005": "\\ref{sets-lemma-bound-by-covering}",
+        "REF_0006": "\\ref{sets-lemma-bound-size}",
+        "REF_0007": "\\ref{sets-lemma-bound-fppf-covering}",
+        "REF_0008": "\\ref{lemma-space-presentation}",
+        "REF_0009": "\\ref{theorem-presentation}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:b102edec200b9d9c731162fa81a051e1dd191d46b26104075a6cea087024799f",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:0005283b2f7c3fa2ad0e523131d2c9baf96e1c8b4e6ff025647ea08ed2f4848f",
+      "source_text": "In Sites, Lemma <REF_0001> we have seen that the functor\n<MATH_0001>\nis fully faithful (see discussion in\nTopologies, Section <REF_0002>).\nHence we see that the displayed functor of the lemma is fully faithful.\n\n<STRUCT_0001><STRUCT_0002>\nSuppose that <MATH_0002> such that there exists\n<MATH_0003> and a map <MATH_0004> in\n<MATH_0005> which is surjective as a map of sheaves.\nLet <MATH_0006> be a surjective <ACCENT_0001>tale morphism with\n<MATH_0007>. Let <MATH_0008>, see\nSets, Section <REF_0003>.\nThen <MATH_0009> has an affine open covering <MATH_0010>\nwith <MATH_0011>. Observe that <MATH_0012> is <ACCENT_0002>tale\nand surjective. For each <MATH_0013> we can pick a quasi-compact\nopen <MATH_0014> such that <MATH_0015>\nis surjective (because the scheme <MATH_0016> is the\nunion of the Zariski opens <MATH_0017> for <MATH_0018>\naffine and because <MATH_0019> is <ACCENT_0003>tale hence open).\nThen <MATH_0020> is surjective <ACCENT_0004>tale\nbecause of our assumption that <MATH_0021> and hence <MATH_0022>\nis a surjection of sheaves (details omitted).\nBecause <MATH_0023> is a surjection of sheaves\nand because <MATH_0024> is quasi-compact,\nwe can find a quasi-compact open <MATH_0025>\nsuch that <MATH_0026> is surjective as a map of sheaves\n(details omitted). Then <MATH_0027> is <ACCENT_0005>tale and we conclude\nthat <MATH_0028>, see\nSets, Lemma <REF_0004>. By\nSets, Lemma <REF_0005> we conclude\nthat <MATH_0029>.\nHence <MATH_0030> is isomorphic to an object of\n<MATH_0031> by Sets, Lemma <REF_0006>.\n\n<STRUCT_0003><STRUCT_0004>\nNow let <MATH_0032>, <MATH_0033> and <MATH_0034> be as in the\nstatement of the lemma. In the previous paragraph we have seen that\nwe can find <MATH_0035> and a surjective <ACCENT_0006>tale morphism\n<MATH_0036> in <MATH_0037>. Then\n<MATH_0038> is a surjection of sheaves, i.e., we can find an fppf\ncovering <MATH_0039> such that <MATH_0040> factors through\n<MATH_0041>.\nBy Sets, Lemma <REF_0007>\nwe can find\n<MATH_0042>\nwhich is surjective, flat, and locally of finite presentation,\nwith <MATH_0043>,\nsuch that <MATH_0044> factors through\n<MATH_0045>. Then we consider\n<MATH_0046>\nThe squares are cartesian. We know the objects of the bottom row\nare represented by objects of <MATH_0047>. By the result of the\nargument of the previous paragraph, the same is true for <MATH_0048>\n(as we have the surjection of sheaves <MATH_0049>\nby assumption). Since <MATH_0050> is closed under fibre\nproducts (by construction), we see that <MATH_0051>\nis represented by an object of <MATH_0052>. Finally, the\nmap <MATH_0053> is\na surjection of fppf sheaves as <MATH_0054> is so.\nThus we can once more apply the result of the previous paragraph\nto conclude that <MATH_0055> is represented by an object\nof <MATH_0056>. At this point\nLemma <REF_0008> and\nTheorem <REF_0009> imply that <MATH_0057>\nis an object of <MATH_0058> such that <MATH_0059>\nas desired.\n",
+      "source_text_hash": "sha256:502b7d74bced0a04282f3bd879fee725e19e9496776801b3c5f3caf13e94679c",
+      "unit_id": "tag:04W1:proof"
+    },
+    {
+      "chapter": "spaces",
+      "math_text_regions": [
+        {
+          "delimiter_kind": "display-dollar",
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0004"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0005"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0005"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0006"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0006"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0007"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0007"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0008"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0008"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0009"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0009"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0010"
+            }
+          ],
+          "region_id": "math/0001",
+          "slots": [
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107094,
+                        "start": 107066
+                      },
+                      "command_hash": "sha256:7be1263af8d2a19abb117e1d86aaa888b1b1a0b38e6b283dcadbc18bc600b618",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "\\\\",
+                  "before": "\\begin{matrix}\n",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-32850cf749f9",
+              "slot_byte_span": {
+                "end": 53,
+                "start": 32
+              },
+              "slot_id": "math/0001/text/0001",
+              "source": "category of algebraic"
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107116,
+                        "start": 107097
+                      },
+                      "command_hash": "sha256:6e6d379c86f1081c8eb8c2ab54b7570087b549d0dc6aaee506821a2848e3fcf7",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "S",
+                  "before": "\\\\\n",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-3a04600e523f",
+              "slot_byte_span": {
+                "end": 75,
+                "start": 63
+              },
+              "slot_id": "math/0001/text/0002",
+              "source": "spaces over "
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107204,
+                        "start": 107179
+                      },
+                      "command_hash": "sha256:28d7916386f98d697bf2fdf7426bf2a1b07452fd612b1078a33eb8b18c9d5480",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "(",
+                  "before": "\\begin{matrix}\n",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-382339174bd5",
+              "slot_byte_span": {
+                "end": 163,
+                "start": 145
+              },
+              "slot_id": "math/0001/text/0003",
+              "source": "category of pairs "
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0004",
+                "MATHSEG_0005"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107236,
+                        "start": 107218
+                      },
+                      "command_hash": "sha256:d70d8cb9b2253df769c2fc64298c9cfe3813bb28fc303609510c282231ff9ed9",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "\\\\",
+                  "before": ")",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-46de9ccc7d96-context",
+              "slot_byte_span": {
+                "end": 195,
+                "start": 184
+              },
+              "slot_id": "math/0001/text/0004",
+              "source": " consisting"
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0005",
+                "MATHSEG_0006"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107268,
+                        "start": 107239
+                      },
+                      "command_hash": "sha256:c18e829dcc1afd6e817e6795837abfa04015c4c51850fb6858d1b3966ce37f6e",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "F",
+                  "before": "\\\\\n",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-bdfc12480523",
+              "slot_byte_span": {
+                "end": 227,
+                "start": 205
+              },
+              "slot_id": "math/0001/text/0005",
+              "source": "of an algebraic space "
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0006",
+                "MATHSEG_0007"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107283,
+                        "start": 107270
+                      },
+                      "command_hash": "sha256:1635df8c1b7cd3d54240320c9cd066d4fc8d5fd586e481c579c1570b3f27ed53",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "S",
+                  "before": "'",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-8a03c416814a-context",
+              "slot_byte_span": {
+                "end": 242,
+                "start": 236
+              },
+              "slot_id": "math/0001/text/0006",
+              "source": " over "
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0007",
+                "MATHSEG_0008"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107298,
+                        "start": 107285
+                      },
+                      "command_hash": "sha256:8d4fa5621bdac7cc11a9f1be0d720a229cbfdba8086d735bab0a5adb3315f76c",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "\\\\",
+                  "before": "'",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-746646a6cf78",
+              "slot_byte_span": {
+                "end": 257,
+                "start": 251
+              },
+              "slot_id": "math/0001/text/0007",
+              "source": " and a"
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0008",
+                "MATHSEG_0009"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107317,
+                        "start": 107301
+                      },
+                      "command_hash": "sha256:c0db03a4b8b9858571f40dd142211334bcac22ebf254467d69f4e6a29f619cb3",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "F",
+                  "before": "\\\\\n",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-1833c6482d9c",
+              "slot_byte_span": {
+                "end": 276,
+                "start": 267
+              },
+              "slot_id": "math/0001/text/0008",
+              "source": "morphism "
+            },
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0009",
+                "MATHSEG_0010"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "spaces.tex",
+                  "kind": "lemma",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 107358,
+                        "start": 107325
+                      },
+                      "command_hash": "sha256:7e7bb2c2ec30f0adfb320ed47aad467e45a39c8a912517971da5d1297b551285",
+                      "container_byte_span": {
+                        "end": 107397,
+                        "start": 106830
+                      },
+                      "container_hash": "sha256:22cb72830bc1489b39f77b4b3c199a6894ca6d0b9cb2d370d49ef3c8e5668af4"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                  "owner_tag": "04SG",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                "source_label": "spaces-lemma-category-of-spaces-over-smaller-base-scheme",
+                "usage": "spaces-source-frames",
+                "usage_source": {
+                  "after": "S",
+                  "before": "S",
+                  "environments": [
+                    "matrix"
+                  ]
+                }
+              },
+              "command": "text",
+              "policy_entry": "spaces-wave-d8f3bd2c6f21",
+              "slot_byte_span": {
+                "end": 317,
+                "start": 291
+              },
+              "slot_id": "math/0001/text/0009",
+              "source": " of algebraic spaces over "
+            }
+          ],
+          "source": "$$\n\\left\\{\n\\begin{matrix}\n\\text{category of algebraic}\\\\\n\\text{spaces over }S\n\\end{matrix}\n\\right\\}\n\\leftrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{category of pairs }(F', F' \\to S)\\text{ consisting}\\\\\n\\text{of an algebraic space }F'\\text{ over }S'\\text{ and a}\\\\\n\\text{morphism }F' \\to S\\text{ of algebraic spaces over }S'\n\\end{matrix}\n\\right\\}\n$$",
+          "source_byte_span": {
+            "end": 555,
+            "start": 210
+          },
+          "source_hash": "sha256:7466528fb43a421c6c5a73f7b252a5854571dc8df420f7493d4a067851fde1bf"
+        }
+      ],
+      "node_kind": "lemma",
+      "parent_tag": "03I3",
+      "placeholders": {
+        "MATHSEG_0001": "$$\n\\left\\{\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0002": "}\\\\\n\\text{",
+        "MATHSEG_0003": "}S\n\\end{matrix}\n\\right\\}\n\\leftrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0004": "}(F', F' \\to S)\\text{",
+        "MATHSEG_0005": "}\\\\\n\\text{",
+        "MATHSEG_0006": "}F'\\text{",
+        "MATHSEG_0007": "}S'\\text{",
+        "MATHSEG_0008": "}\\\\\n\\text{",
+        "MATHSEG_0009": "}F' \\to S\\text{",
+        "MATHSEG_0010": "}S'\n\\end{matrix}\n\\right\\}\n$$",
+        "MATH_0001": "$\\Sch_{fppf}$",
+        "MATH_0002": "$S \\to S'$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-category-of-spaces-over-smaller-base-scheme}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 2,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:add243d6dc8fff2ca0e3e44ba02f77872596077d65b70d23ae61db32e1ef1c2d",
+      "source_math_skeleton_hash": "sha256:12dac2b64669286153f731a0df3c52ef9bb3edff058c1e653c15cf06a3c6c3ea",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:39f67c1d7e513f2ed336bdf9ddb577cb63ce0488b48878c8a4825f580fbfe228",
+      "source_text": "Let <MATH_0001> be a big fppf site.\nLet <MATH_0002> be a morphism of this site.\nThe construction above give an equivalence of\ncategories\n<MATHSEG_0001>category of algebraic<MATHSEG_0002>spaces over <MATHSEG_0003>category of pairs <MATHSEG_0004> consisting<MATHSEG_0005>of an algebraic space <MATHSEG_0006> over <MATHSEG_0007> and a<MATHSEG_0008>morphism <MATHSEG_0009> of algebraic spaces over <MATHSEG_0010>\n",
+      "source_text_hash": "sha256:431342a3ad5cd920b3fcfe2c4669551af517d4be0f9921aa303e4f5a5dcc75f8",
+      "unit_id": "tag:04SG:statement"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:02Z8:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:321b150dc076ce53a5a542505c352e8fe1d17cde3cfe2adcd543b5a2b7dcfd6f",
+      "source_structure_hash": "sha256:4b0cd07758b08071e3c9fe933df51c01d6a53d9b3584a4413533b625df21e2e0",
+      "catalog_hash": "sha256:7102a23e0fbc9173140a42ee07314d49c337001ff13c3c5700753656580b3d40",
+      "occurrences": [
+        {
+          "source_term": "field",
+          "projection_start": 21,
+          "projection_end": 26,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "infinite",
+          "projection_start": 51,
+          "projection_end": 59,
+          "concept": "infinite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "product",
+          "projection_start": 60,
+          "projection_end": 67,
+          "concept": "product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 95,
+          "projection_end": 101,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 145,
+          "projection_end": 149,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed immersions",
+          "projection_start": 178,
+          "projection_end": 195,
+          "concept": "closed-immersion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 230,
+          "projection_end": 238,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 431,
+          "projection_end": 436,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence relation",
+          "projection_start": 478,
+          "projection_end": 498,
+          "concept": "equivalence-relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 519,
+          "projection_end": 534,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 606,
+          "projection_end": 611,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 627,
+          "projection_end": 633,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 651,
+          "projection_end": 659,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological space",
+          "projection_start": 686,
+          "projection_end": 703,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 734,
+          "projection_end": 740,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 771,
+          "projection_end": 779,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "residue field",
+          "projection_start": 828,
+          "projection_end": 841,
+          "concept": "residue-field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 860,
+          "projection_end": 870,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 937,
+          "projection_end": 945,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "discrete",
+          "projection_start": 971,
+          "projection_end": 979,
+          "concept": "discrete",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 980,
+          "projection_end": 988,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 1205,
+          "projection_end": 1218,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1224,
+          "projection_end": 1231,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "infinite",
+          "projection_start": 1273,
+          "projection_end": 1281,
+          "concept": "infinite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "discrete",
+          "projection_start": 1282,
+          "projection_end": 1290,
+          "concept": "discrete",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1291,
+          "projection_end": 1294,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "proper",
+          "projection_start": 1337,
+          "projection_end": 1343,
+          "concept": "proper",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1345,
+          "projection_end": 1350,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 1375,
+          "projection_end": 1381,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1456,
+          "projection_end": 1461,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 1484,
+          "projection_end": 1491,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "idempotent",
+          "projection_start": 1596,
+          "projection_end": 1606,
+          "concept": "idempotent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 1630,
+          "projection_end": 1638,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "closed subsets",
+          "projection_start": 1675,
+          "projection_end": 1689,
+          "concept": "closed-subset",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1695,
+          "projection_end": 1702,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topology",
+          "projection_start": 1730,
+          "projection_end": 1738,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological space",
+          "projection_start": 1901,
+          "projection_end": 1918,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2061,
+          "projection_end": 2064,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 2080,
+          "projection_end": 2090,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2134,
+          "projection_end": 2137,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "irreducible",
+          "projection_start": 2376,
+          "projection_end": 2387,
+          "concept": "irreducible",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 2488,
+          "projection_end": 2493,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 2526,
+          "projection_end": 2544,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 2577,
+          "projection_end": 2584,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 2629,
+          "projection_end": 2638,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04W1:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:fa37954f0e7220287e7d11b9c47b8f2c32d92622ef21ff15cab115e8e89459cb",
+      "source_structure_hash": "sha256:619dbfd2e5183bcb58c04dcbd5016d4959c50c1230cc9bbea7cbc6c9cffb72ff",
+      "catalog_hash": "sha256:7102a23e0fbc9173140a42ee07314d49c337001ff13c3c5700753656580b3d40",
+      "occurrences": [
+        {
+          "source_term": "object",
+          "projection_start": 71,
+          "projection_end": 77,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 117,
+          "projection_end": 125,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 129,
+          "projection_end": 145,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 224,
+          "projection_end": 232,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 236,
+          "projection_end": 252,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 344,
+          "projection_end": 358,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 359,
+          "projection_end": 366,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 395,
+          "projection_end": 400,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "function",
+          "projection_start": 564,
+          "projection_end": 572,
+          "concept": "function",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 588,
+          "projection_end": 592,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 633,
+          "projection_end": 646,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 935,
+          "projection_end": 944,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1002,
+          "projection_end": 1012,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 1016,
+          "projection_end": 1020,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1024,
+          "projection_end": 1031,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1062,
+          "projection_end": 1071,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1076,
+          "projection_end": 1086,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1091,
+          "projection_end": 1096,
+          "concept": "etale",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04W1:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:502b7d74bced0a04282f3bd879fee725e19e9496776801b3c5f3caf13e94679c",
+      "source_structure_hash": "sha256:0005283b2f7c3fa2ad0e523131d2c9baf96e1c8b4e6ff025647ea08ed2f4848f",
+      "catalog_hash": "sha256:7102a23e0fbc9173140a42ee07314d49c337001ff13c3c5700753656580b3d40",
+      "occurrences": [
+        {
+          "source_term": "Sites",
+          "projection_start": 3,
+          "projection_end": 8,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 49,
+          "projection_end": 56,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 72,
+          "projection_end": 86,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Topologies",
+          "projection_start": 106,
+          "projection_end": 116,
+          "concept": "topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 171,
+          "projection_end": 178,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 195,
+          "projection_end": 209,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 304,
+          "projection_end": 307,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 344,
+          "projection_end": 354,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 360,
+          "projection_end": 363,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 367,
+          "projection_end": 374,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 397,
+          "projection_end": 407,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 408,
+          "projection_end": 413,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 414,
+          "projection_end": 422,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 462,
+          "projection_end": 466,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine open",
+          "projection_start": 512,
+          "projection_end": 523,
+          "concept": "source-phrase-affine-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "covering",
+          "projection_start": 524,
+          "projection_end": 532,
+          "concept": "covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 591,
+          "projection_end": 596,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 601,
+          "projection_end": 611,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact open",
+          "projection_start": 648,
+          "projection_end": 666,
+          "concept": "source-phrase-quasi-compact-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 704,
+          "projection_end": 714,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 728,
+          "projection_end": 734,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 809,
+          "projection_end": 815,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 843,
+          "projection_end": 848,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 882,
+          "projection_end": 892,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 893,
+          "projection_end": 898,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 969,
+          "projection_end": 979,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 983,
+          "projection_end": 990,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 1035,
+          "projection_end": 1045,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1049,
+          "projection_end": 1056,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 1084,
+          "projection_end": 1097,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-compact open",
+          "projection_start": 1113,
+          "projection_end": 1131,
+          "concept": "source-phrase-quasi-compact-open",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1169,
+          "projection_end": 1179,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1185,
+          "projection_end": 1188,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1192,
+          "projection_end": 1199,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1239,
+          "projection_end": 1244,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 1283,
+          "projection_end": 1287,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 1310,
+          "projection_end": 1314,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 1384,
+          "projection_end": 1394,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 1401,
+          "projection_end": 1407,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 1426,
+          "projection_end": 1430,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1637,
+          "projection_end": 1647,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "étale",
+          "projection_start": 1648,
+          "projection_end": 1653,
+          "concept": "etale",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1654,
+          "projection_end": 1662,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 1713,
+          "projection_end": 1723,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1727,
+          "projection_end": 1734,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fppf covering",
+          "projection_start": 1757,
+          "projection_end": 1770,
+          "concept": "source-phrase-fppf-covering",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sets",
+          "projection_start": 1837,
+          "projection_end": 1841,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1893,
+          "projection_end": 1903,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 1905,
+          "projection_end": 1909,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "locally of finite presentation",
+          "projection_start": 1915,
+          "projection_end": 1945,
+          "concept": "locally-finite-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cartesian",
+          "projection_start": 2061,
+          "projection_end": 2070,
+          "concept": "cartesian",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 2084,
+          "projection_end": 2091,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 2129,
+          "projection_end": 2136,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 2259,
+          "projection_end": 2269,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 2273,
+          "projection_end": 2280,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 2343,
+          "projection_end": 2357,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 2422,
+          "projection_end": 2428,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2458,
+          "projection_end": 2461,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 2479,
+          "projection_end": 2489,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 2498,
+          "projection_end": 2505,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 2643,
+          "projection_end": 2649,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 2749,
+          "projection_end": 2755,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:04SG:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:431342a3ad5cd920b3fcfe2c4669551af517d4be0f9921aa303e4f5a5dcc75f8",
+      "source_structure_hash": "sha256:39f67c1d7e513f2ed336bdf9ddb577cb63ce0488b48878c8a4825f580fbfe228",
+      "catalog_hash": "sha256:7102a23e0fbc9173140a42ee07314d49c337001ff13c3c5700753656580b3d40",
+      "occurrences": [
+        {
+          "source_term": "site",
+          "projection_start": 30,
+          "projection_end": 34,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 57,
+          "projection_end": 65,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "site",
+          "projection_start": 74,
+          "projection_end": 78,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 111,
+          "projection_end": 136,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 151,
+          "projection_end": 159,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 212,
+          "projection_end": 220,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 275,
+          "projection_end": 290,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 345,
+          "projection_end": 353,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 372,
+          "projection_end": 388,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:02Z0:paragraph/0009",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:02Z0:paragraph/0009",
+          "parent_tag": "02Z0",
+          "chapter": "spaces",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001><STRUCT_0002>\nWe finish with a truly awful example.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\medskip",
+            "STRUCT_0002": "\\noindent"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:07e5a499057161b9460be0b2c3c9ceb5e49364e85aa290854b449e9297241a18",
+          "source_structure_hash": "sha256:80f91bb9f6611318cc6fc940b0ed220d58207297239eae9b4c2b9d5a202a24a8",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 90718,
+          "byte_end": 90773,
+          "line_start": 2476,
+          "line_end": 2477,
+          "fragment_hash": "sha256:24af6dc121de2b88770b58714f1023b7b89e51497943cfe78ca293bc5eca9e36"
+        },
+        "owner_tag": "02Z0",
+        "parent_tag": "02Z0"
+      },
+      "hash": "sha256:266cc7355a134e19ddc54b11b77748df48a32c21989a79707599d3d44a74d1f7"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:02Z0:paragraph/0010",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:02Z0:paragraph/0010",
+          "parent_tag": "02Z0",
+          "chapter": "spaces",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nWhatever you think is actually going on in this example, it certainly\nshows that some care has to be exercised when defining irreducible\ncomponents, connectedness, etc of algebraic spaces.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d4bbb029d3a2a361c829cab8d4fe137ff8bd9b02fbeb39cd9b1090b61b34fbdf",
+          "source_structure_hash": "sha256:c678a633739ce7bf0fc5a46512381f291ce3d28460025e87d944e6d83ed02250",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 93477,
+          "byte_end": 93675,
+          "line_start": 2537,
+          "line_end": 2540,
+          "fragment_hash": "sha256:58dd0a91be9bb59444d8a76665d1df753094db6a7105c69b632ab56915486f10"
+        },
+        "owner_tag": "02Z0",
+        "parent_tag": "02Z0"
+      },
+      "hash": "sha256:6adb0d639e0fac62682bdf517cab4e1f636ff069a0b28cb60415fb589c5abbe5"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:03FO:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:03FO:paragraph/0002",
+          "parent_tag": "03FO",
+          "chapter": "spaces",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nNote that this lemma is purely set theoretical and has virtually no content.\nMoreover, it is not true (in general) that the restriction of an algebraic\nspace over the bigger site is an algebraic space over the smaller site (simply\nby reasons of cardinality). Hence we can only ever use a simple lemma of this\nkind to enlarge the base category and never to shrink it.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:7751852b6889948f666dae4b965fd23afc3954fbc1fff9c9b2be39965a70173f",
+          "source_structure_hash": "sha256:4786739b94903ba19c58e757d903d6c99d490ad8a152ca7a43edb5e0df7aff66",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 95754,
+          "byte_end": 96130,
+          "line_start": 2601,
+          "line_end": 2606,
+          "fragment_hash": "sha256:49d2f55ff4a11158190f04149f0f7237240d3924163b46a5ef5e54c8fce39c52"
+        },
+        "owner_tag": "03FO",
+        "parent_tag": "03FO"
+      },
+      "hash": "sha256:836c4756418b564ee891a51da9614cf126d4a02ee87db609fe97b80fc94268ef"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:04W1:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:04W1:proof/0001",
+          "parent_tag": "03FO",
+          "chapter": "spaces",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nIn Sites, Lemma <REF_0001> we have seen that the functor\n<MATH_0001>\nis fully faithful (see discussion in\nTopologies, Section <REF_0002>).\nHence we see that the displayed functor of the lemma is fully faithful.\n\n<STRUCT_0002><STRUCT_0003>\nSuppose that <MATH_0002> such that there exists\n<MATH_0003> and a map <MATH_0004> in\n<MATH_0005> which is surjective as a map of sheaves.\nLet <MATH_0006> be a surjective <ACCENT_0001>tale morphism with\n<MATH_0007>. Let <MATH_0008>, see\nSets, Section <REF_0003>.\nThen <MATH_0009> has an affine open covering <MATH_0010>\nwith <MATH_0011>. Observe that <MATH_0012> is <ACCENT_0002>tale\nand surjective. For each <MATH_0013> we can pick a quasi-compact\nopen <MATH_0014> such that <MATH_0015>\nis surjective (because the scheme <MATH_0016> is the\nunion of the Zariski opens <MATH_0017> for <MATH_0018>\naffine and because <MATH_0019> is <ACCENT_0003>tale hence open).\nThen <MATH_0020> is surjective <ACCENT_0004>tale\nbecause of our assumption that <MATH_0021> and hence <MATH_0022>\nis a surjection of sheaves (details omitted).\nBecause <MATH_0023> is a surjection of sheaves\nand because <MATH_0024> is quasi-compact,\nwe can find a quasi-compact open <MATH_0025>\nsuch that <MATH_0026> is surjective as a map of sheaves\n(details omitted). Then <MATH_0027> is <ACCENT_0005>tale and we conclude\nthat <MATH_0028>, see\nSets, Lemma <REF_0004>. By\nSets, Lemma <REF_0005> we conclude\nthat <MATH_0029>.\nHence <MATH_0030> is isomorphic to an object of\n<MATH_0031> by Sets, Lemma <REF_0006>.\n\n<STRUCT_0004><STRUCT_0005>\nNow let <MATH_0032>, <MATH_0033> and <MATH_0034> be as in the\nstatement of the lemma. In the previous paragraph we have seen that\nwe can find <MATH_0035> and a surjective <ACCENT_0006>tale morphism\n<MATH_0036> in <MATH_0037>. Then\n<MATH_0038> is a surjection of sheaves, i.e., we can find an fppf\ncovering <MATH_0039> such that <MATH_0040> factors through\n<MATH_0041>.\nBy Sets, Lemma <REF_0007>\nwe can find\n<MATH_0042>\nwhich is surjective, flat, and locally of finite presentation,\nwith <MATH_0043>,\nsuch that <MATH_0044> factors through\n<MATH_0045>. Then we consider\n<MATH_0046>\nThe squares are cartesian. We know the objects of the bottom row\nare represented by objects of <MATH_0047>. By the result of the\nargument of the previous paragraph, the same is true for <MATH_0048>\n(as we have the surjection of sheaves <MATH_0049>\nby assumption). Since <MATH_0050> is closed under fibre\nproducts (by construction), we see that <MATH_0051>\nis represented by an object of <MATH_0052>. Finally, the\nmap <MATH_0053> is\na surjection of fppf sheaves as <MATH_0054> is so.\nThus we can once more apply the result of the previous paragraph\nto conclude that <MATH_0055> is represented by an object\nof <MATH_0056>. At this point\nLemma <REF_0008> and\nTheorem <REF_0009> imply that <MATH_0057>\nis an object of <MATH_0058> such that <MATH_0059>\nas desired.\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{sites-lemma-bigger-site}",
+            "MATH_0001": "$f^{-1} : \\Sh((\\Sch/S)_{fppf}) \\to \\Sh((\\Sch'/S)_{fppf})$",
+            "REF_0002": "\\ref{topologies-section-change-alpha}",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0002": "$X' \\in \\Ob(\\textit{Spaces}'/S)$",
+            "MATH_0003": "$U \\in \\Ob((\\Sch/S)_{fppf})$",
+            "MATH_0004": "$U \\to X'$",
+            "MATH_0005": "$\\Sh((\\Sch'/S)_{fppf})$",
+            "MATH_0006": "$U' \\to X'$",
+            "ACCENT_0001": "\\'e",
+            "MATH_0007": "$U' \\in \\Ob((\\Sch'/S)_{fppf})$",
+            "MATH_0008": "$\\kappa = \\text{size}(U)$",
+            "REF_0003": "\\ref{sets-section-categories-schemes}",
+            "MATH_0009": "$U$",
+            "MATH_0010": "$U = \\bigcup_{i \\in I} U_i$",
+            "MATH_0011": "$|I| \\leq \\kappa$",
+            "MATH_0012": "$U' \\times_{X'} U \\to U$",
+            "ACCENT_0002": "\\'e",
+            "MATH_0013": "$i$",
+            "MATH_0014": "$U'_i \\subset U'$",
+            "MATH_0015": "$U'_i \\times_{X'} U_i \\to U_i$",
+            "MATH_0016": "$U' \\times_{X'} U_i$",
+            "MATH_0017": "$W \\times_{X'} U_i$",
+            "MATH_0018": "$W \\subset U'$",
+            "MATH_0019": "$U' \\times_{X'} U_i \\to U_i$",
+            "ACCENT_0003": "\\'e",
+            "MATH_0020": "$\\coprod_{i \\in I} U'_i \\to X$",
+            "ACCENT_0004": "\\'e",
+            "MATH_0021": "$U \\to X$",
+            "MATH_0022": "$\\coprod U_i \\to X$",
+            "MATH_0023": "$U'_i \\times_{X'} U \\to U'_i$",
+            "MATH_0024": "$U'_i$",
+            "MATH_0025": "$W_i \\subset U'_i \\times_{X'} U$",
+            "MATH_0026": "$W_i \\to U'_i$",
+            "MATH_0027": "$W_i \\to U$",
+            "ACCENT_0005": "\\'e",
+            "MATH_0028": "$\\text{size}(W_i) \\leq \\text{size}(U)$",
+            "REF_0004": "\\ref{sets-lemma-bound-finite-type}",
+            "REF_0005": "\\ref{sets-lemma-bound-by-covering}",
+            "MATH_0029": "$\\text{size}(U'_i) \\leq \\text{size}(U)$",
+            "MATH_0030": "$\\coprod_{i \\in I} U'_i$",
+            "MATH_0031": "$(\\Sch/S)_{fppf}$",
+            "REF_0006": "\\ref{sets-lemma-bound-size}",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "MATH_0032": "$X'$",
+            "MATH_0033": "$U \\to X'$",
+            "MATH_0034": "$R \\to U \\times_{X'} U$",
+            "MATH_0035": "$U' \\in \\Ob((\\Sch/S)_{fppf})$",
+            "ACCENT_0006": "\\'e",
+            "MATH_0036": "$U' \\to X'$",
+            "MATH_0037": "$\\Sh((\\Sch'/S)_{fppf})$",
+            "MATH_0038": "$U' \\times_{X'} U \\to U'$",
+            "MATH_0039": "$\\{U'_i \\to U'\\}$",
+            "MATH_0040": "$U'_i \\to U'$",
+            "MATH_0041": "$U' \\times_{X'} U \\to U'$",
+            "REF_0007": "\\ref{sets-lemma-bound-fppf-covering}",
+            "MATH_0042": "$\\tilde U \\to U'$",
+            "MATH_0043": "$\\text{size}(\\tilde U) \\leq \\text{size}(U')$",
+            "MATH_0044": "$\\tilde U \\to U'$",
+            "MATH_0045": "$U' \\times_{X'} U \\to U'$",
+            "MATH_0046": "$$\n\\xymatrix{\nU' \\times_{X'} U' \\ar[d] &\n\\tilde U \\times_{X'} \\tilde U  \\ar[l] \\ar[d] \\ar[r] &\nU \\times_{X'} U \\ar[d] \\\\\nU' \\times_S U' & \\tilde U \\times_S \\tilde U \\ar[l] \\ar[r] & U \\times_S U\n}\n$$",
+            "MATH_0047": "$(\\Sch/S)_{fppf}$",
+            "MATH_0048": "$U \\times_{X'} U$",
+            "MATH_0049": "$R \\to U \\times_{X'} U$",
+            "MATH_0050": "$(\\Sch/S)_{fppf}$",
+            "MATH_0051": "$\\tilde U \\times_{X'} \\tilde U$",
+            "MATH_0052": "$(\\Sch/S)_{fppf}$",
+            "MATH_0053": "$\\tilde U \\times_{X'} \\tilde U \\to U' \\times_{X'} U'$",
+            "MATH_0054": "$\\tilde U \\to U'$",
+            "MATH_0055": "$R' = U' \\times_{X'} U'$",
+            "MATH_0056": "$(\\Sch/S)_{fppf}$",
+            "REF_0008": "\\ref{lemma-space-presentation}",
+            "REF_0009": "\\ref{theorem-presentation}",
+            "MATH_0057": "$X = h_{U'}/h_{R'}$",
+            "MATH_0058": "$\\textit{Spaces}/S$",
+            "MATH_0059": "$f^{-1}X \\cong X'$",
+            "STRUCT_0006": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c24a43d05868d9ec99738698f6fda082fffdca153eb4db52561937bf395a51fa",
+          "source_structure_hash": "sha256:9ccc3ee77a7884f978ef7304b0539d6963392c160c13882169c6296aa4c7454e",
+          "source_math_hash": "sha256:b102edec200b9d9c731162fa81a051e1dd191d46b26104075a6cea087024799f"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 97500,
+          "byte_end": 101333,
+          "line_start": 2639,
+          "line_end": 2714,
+          "fragment_hash": "sha256:06116ec18392c2bcbb84db5f7cdebe667dc52aac6df9425e2c0dd6ca0369c241"
+        },
+        "owner_tag": "04W1",
+        "parent_tag": "03FO"
+      },
+      "hash": "sha256:c5f3d093c5cee45e50e1b05671b0e22c5347f6834c72c5352ae9dc0867f8756b"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:04W1:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:spaces:04W1:lemma/0001",
+          "parent_tag": "03FO",
+          "chapter": "spaces",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose <MATH_0001> is contained in <MATH_0002>.\nLet <MATH_0003> be an object of <MATH_0004>. Denote\n<MATH_0005> the category of algebraic spaces over <MATH_0006>\ndefined using <MATH_0007>. Similarly, denote\n<MATH_0008> the category of algebraic spaces over <MATH_0009>\ndefined using <MATH_0010>. The construction of\nLemma <REF_0001>\ndefines a fully faithful functor\n<MATH_0011>\nwhose essential image consists of those <MATH_0012>\nsuch that there exist <MATH_0013><FOOTNOTEOPEN_0001>Requiring the\nexistence of <MATH_0014> is necessary because of our choice of the function <MATH_0015> in\nSets, Equation (<REF_0002>). The size of the fibre product\n<MATH_0016> can grow faster than <MATH_0017> in terms of the size of <MATH_0018>. We\ncan illustrate this by setting <MATH_0019>, <MATH_0020> and\n<MATH_0021>.\nIn this case the size of <MATH_0022> grows like <MATH_0023> where <MATH_0024> is the\nsize of <MATH_0025>.<FOOTNOTECLOSE_0001> and morphisms\n<MATHSEG_0001>and<MATHSEG_0002>\nin <MATH_0026> which are surjective as maps of sheaves\n(for example if the displayed morphisms are surjective and <ACCENT_0001>tale).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-fully-faithful}",
+            "MATH_0001": "$\\Sch_{fppf}$",
+            "MATH_0002": "$\\Sch'_{fppf}$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$\\Sch_{fppf}$",
+            "MATH_0005": "$\\textit{Spaces}/S$",
+            "MATH_0006": "$S$",
+            "MATH_0007": "$\\Sch_{fppf}$",
+            "MATH_0008": "$\\textit{Spaces}'/S$",
+            "MATH_0009": "$S$",
+            "MATH_0010": "$\\Sch'_{fppf}$",
+            "REF_0001": "\\ref{lemma-change-big-site}",
+            "MATH_0011": "$$\n\\textit{Spaces}/S \\longrightarrow \\textit{Spaces}'/S\n$$",
+            "MATH_0012": "$X' \\in \\Ob(\\textit{Spaces}'/S)$",
+            "MATH_0013": "$U, R \\in \\Ob((\\Sch/S)_{fppf})$",
+            "FOOTNOTEOPEN_0001": "\\footnote{",
+            "MATH_0014": "$R$",
+            "MATH_0015": "$Bound$",
+            "REF_0002": "\\ref{sets-equation-bound}",
+            "MATH_0016": "$U \\times_{X'} U$",
+            "MATH_0017": "$Bound$",
+            "MATH_0018": "$U$",
+            "MATH_0019": "$S = \\Spec(A)$",
+            "MATH_0020": "$U = \\Spec(A[x_i, i \\in I])$",
+            "MATH_0021": "$R = \\coprod_{(\\lambda_i) \\in A^I} \\Spec(A[x_i, y_i]/(x_i - \\lambda_i y_i))$",
+            "MATH_0022": "$R$",
+            "MATH_0023": "$\\kappa^\\kappa$",
+            "MATH_0024": "$\\kappa$",
+            "MATH_0025": "$U$",
+            "FOOTNOTECLOSE_0001": "}",
+            "MATHSEG_0001": "$$\nU \\longrightarrow X'\n\\quad\\text{",
+            "MATHSEG_0002": "}\\quad\nR \\longrightarrow U \\times_{X'} U\n$$",
+            "MATH_0026": "$\\Sh((\\Sch'/S)_{fppf})$",
+            "ACCENT_0001": "\\'e",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\nU \\longrightarrow X'\n\\quad\\text{and}\\quad\nR \\longrightarrow U \\times_{X'} U\n$$",
+              "source_hash": "sha256:ab73a085752ae398b0489327b7731c9032a3feb7300d791990336b87e16e4a88",
+              "source_byte_span": {
+                "start": 1137,
+                "end": 1218
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 35,
+                    "end": 38
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:5151c2952bf7a9bccfc2cb14e2abec883101e782d60f7f3024dc1de6bda4d417",
+          "source_text_hash": "sha256:144465bb76651af86ca925c5048eb488832e2667968767fec6d68bcef64943b9",
+          "source_structure_hash": "sha256:bde477f5993efd853dae7d9fbe46073676c0cdae9a589403a95c6ec9dbe6448b",
+          "source_math_hash": "sha256:77996b0b6fede7f996d91dd872ead62b24515a13cf89eb659c13533feeb9e464"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 96132,
+          "byte_end": 97498,
+          "line_start": 2608,
+          "line_end": 2637,
+          "fragment_hash": "sha256:e429cc32b084e3945c991eb969a043395df29960930b0100b303db1aa69c7af2"
+        },
+        "owner_tag": "04W1",
+        "parent_tag": "03FO"
+      },
+      "hash": "sha256:86e83d44c154b5cfb8082bd60bd65a735452a2e115e9b0a45f0b7c5e2e7d1028"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:03I3:section_title/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:03I3:section_title/0001",
+          "parent_tag": "03I3",
+          "chapter": "spaces",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Change of base scheme<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-change-base-scheme}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:08357cfbb5584b1a9b4f06f5476aa53cc4a995c468eeea4bf7418fd5b60f4c59",
+          "source_structure_hash": "sha256:5da5cac76dd34a8d1c5ca2d8c7c3e31a18cfb71e505ab7b1dfd6b47d49f086ff",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 101337,
+          "byte_end": 101403,
+          "line_start": 2718,
+          "line_end": 2719,
+          "fragment_hash": "sha256:d1e9f8a2d6880bfbf686463cfee0f0c57ffe589c715d76c6d7f8c3806bbbfe59"
+        },
+        "owner_tag": "03I3",
+        "parent_tag": "03I3"
+      },
+      "hash": "sha256:e6bd2ed2ed021d18a40b511ced9e70584a553088e1a42fbd21857dd23c178146"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:03I3:paragraph/0003",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:03I3:paragraph/0003",
+          "parent_tag": "03I3",
+          "chapter": "spaces",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe algebraic space <MATH_0001> comes equipped with a canonical morphism\n<MATH_0002> of algebraic spaces over <MATH_0003>. This is true simply\nbecause the sheaf <MATH_0004> maps to <MATH_0005> (see for example the\nexplicit description in\nLemma <REF_0001>).\nIn fact, in\nSites, Lemma <REF_0002>\nwe have seen that the category of sheaves on <MATH_0006>\nis equivalent to the category of pairs <MATH_0007>\nconsisting of a sheaf on <MATH_0008> and a map of sheaves\n<MATH_0009>. The equivalence assigns to the sheaf <MATH_0010>\nthe pair <MATH_0011>.\nThis, combined with the above, leads to the following\nresult for categories of algebraic spaces.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$j_!F$",
+            "MATH_0002": "$j_!F \\to S$",
+            "MATH_0003": "$S'$",
+            "MATH_0004": "$j_!F$",
+            "MATH_0005": "$h_S$",
+            "REF_0001": "\\ref{lemma-change-base-scheme}",
+            "REF_0002": "\\ref{sites-lemma-essential-image-j-shriek}",
+            "MATH_0006": "$(\\Sch/S)_{fppf}$",
+            "MATH_0007": "$(\\mathcal{F}', \\mathcal{F}' \\to h_S)$",
+            "MATH_0008": "$(\\Sch/S')_{fppf}$",
+            "MATH_0009": "$\\mathcal{F}' \\to h_S$",
+            "MATH_0010": "$\\mathcal{F}$",
+            "MATH_0011": "$(j_!\\mathcal{F}, j_!\\mathcal{F} \\to h_S)$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:aa7797ba0f30e06f2cb5fc53a30b4c4c331505df011bdb4bd92046c9ab13312f",
+          "source_structure_hash": "sha256:690f615b345b908d4b8814849544a03821a86fd86e342f3c1755d3a05bd76db6",
+          "source_math_hash": "sha256:a8afe73082abca9f47b8767215c17f841c19900ed0381f9bbf2bb73eeddbfd73"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 106065,
+          "byte_end": 106828,
+          "line_start": 2832,
+          "line_end": 2846,
+          "fragment_hash": "sha256:88724e1b2ad2737228b12006732abcc3dd30d3dc6286c3e04d3b393f5643286c"
+        },
+        "owner_tag": "03I3",
+        "parent_tag": "03I3"
+      },
+      "hash": "sha256:fb89df7165857b437c6e6a6b10fc23d6664c66da706cc21dee47ee123ea0333f"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces:inventory:spaces:04SG:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:04SG:proof/0001",
+          "parent_tag": "03I3",
+          "chapter": "spaces",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet <MATH_0001> be an algebraic space over <MATH_0002>. The functor from left to right\nassigns the pair <MATH_0003> to <MATH_0004>\nwhich is an object of the right hand side by\nLemma <REF_0001>.\nSince this defines an equivalence of categories of sheaves by\nSites, Lemma <REF_0002>\nto finish the proof it suffices to show:\nif <MATH_0005> is a sheaf and <MATH_0006> is an algebraic space, then <MATH_0007>\nis an algebraic space. To do this, write\n<MATH_0008> as in\nLemma <REF_0003>\nwith <MATH_0009>.\nThen the compositions <MATH_0010> and <MATH_0011>\nare morphisms of schemes over <MATH_0012>. Denote <MATH_0013> the corresponding\nobjects of <MATH_0014>. The two morphisms\n<MATH_0015> are morphisms over <MATH_0016> and hence correspond to\nmorphisms <MATH_0017>. Since these are simply the same\nmorphisms (but viewed over <MATH_0018>) we see that we get an <ACCENT_0001>tale\nequivalence relation over <MATH_0019>. As <MATH_0020> defines an equivalence of\ncategories of sheaves (see reference above) we see that\n<MATH_0021> and by\nTheorem <REF_0004>\nwe see that <MATH_0022> is an algebraic space.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$F$",
+            "MATH_0002": "$S$",
+            "MATH_0003": "$(j_!F, j_!F \\to S)$",
+            "MATH_0004": "$F$",
+            "REF_0001": "\\ref{lemma-change-base-scheme}",
+            "REF_0002": "\\ref{sites-lemma-essential-image-j-shriek}",
+            "MATH_0005": "$F$",
+            "MATH_0006": "$j_!F$",
+            "MATH_0007": "$F$",
+            "MATH_0008": "$j_!F = U'/R'$",
+            "REF_0003": "\\ref{lemma-space-presentation}",
+            "MATH_0009": "$U', R' \\in \\Ob((\\Sch/S')_{fppf})$",
+            "MATH_0010": "$U' \\to j_!F \\to S$",
+            "MATH_0011": "$R' \\to j_!F \\to S$",
+            "MATH_0012": "$S'$",
+            "MATH_0013": "$U, R$",
+            "MATH_0014": "$(\\Sch/S)_{fppf}$",
+            "MATH_0015": "$R' \\to U'$",
+            "MATH_0016": "$S$",
+            "MATH_0017": "$R \\to U$",
+            "MATH_0018": "$S$",
+            "ACCENT_0001": "\\'e",
+            "MATH_0019": "$S$",
+            "MATH_0020": "$j_!$",
+            "MATH_0021": "$F = U/R$",
+            "REF_0004": "\\ref{theorem-presentation}",
+            "MATH_0022": "$F$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d4163923d2258994bcdc9449bb6ecae8108be763c519f00884cbda43d6797102",
+          "source_structure_hash": "sha256:65431c0935e120c0fc83c9fabfe09963a4da28107af77f5338821cf1f3619edd",
+          "source_math_hash": "sha256:d1822d036e95184b8c8c6f45b0592ecd0d91d6878e260b3eab711f8cc7a91d91"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 107399,
+          "byte_end": 108552,
+          "line_start": 2872,
+          "line_end": 2896,
+          "fragment_hash": "sha256:701fc9f7c99e7daea2e09a7aff1d35d2710cb6d8cdb859c22c8c5b590b3cbf6b"
+        },
+        "owner_tag": "04SG",
+        "parent_tag": "03I3"
+      },
+      "hash": "sha256:c921b5ec6befd283f47fb23daa0df3465404123de5ad96c883f68ad9140176a9"
+    },
+    {
+      "context_id": "locked-English-reference:algebra:inventory:algebra:00EC:lemma/0001:algebra-lemma-idempotent-spec",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:algebra:00EC:lemma/0001",
+          "parent_tag": "04PN",
+          "chapter": "algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring. Let <MATH_0002> be an idempotent.\nIn this case\n<MATH_0003>\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-idempotent-spec}",
+            "MATH_0001": "$R$",
+            "MATH_0002": "$e \\in R$",
+            "MATH_0003": "$$\n\\Spec(R) = D(e) \\amalg D(1-e).\n$$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c738cb05f269e4012b72e52cbfa22c0c17a22986a4324096d510a0350678b8a1",
+          "source_structure_hash": "sha256:20c90a618eaf34c1af287956ba628641258156af2f73eecc28c5abd6de3d880e",
+          "source_math_hash": "sha256:84408e8e436cad913e8ee6c71afa36d357f530c44bbe120686dc9a839ed9bc73"
+        },
+        "location": {
+          "file": "algebra.tex",
+          "byte_start": 130648,
+          "byte_end": 130804,
+          "line_start": 3774,
+          "line_end": 3781,
+          "fragment_hash": "sha256:2cd3b263ed152abf2321f442f676b6d18f3495d2bb8b5d08dcbaa71abad6eef2"
+        },
+        "owner_tag": "00EC",
+        "parent_tag": "04PN",
+        "requested_label": "algebra-lemma-idempotent-spec",
+        "requested_tag": "00EC"
+      },
+      "hash": "sha256:b66c2693f5759183e86475f41d12abb048c022129cc0173a4dbe31520ec5c2b7"
+    },
+    {
+      "context_id": "locked-English-reference:algebra:inventory:algebra:00E8:lemma/0001:algebra-lemma-quasi-compact",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:algebra:00E8:lemma/0001",
+          "parent_tag": "00DY",
+          "chapter": "algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> be a ring. The space <MATH_0002> is quasi-compact.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-quasi-compact}",
+            "LOCKED_0002": "\\begin{slogan}\nThe spectrum of a ring is quasi-compact\n\\end{slogan}",
+            "MATH_0001": "$R$",
+            "MATH_0002": "$\\Spec(R)$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:f1993be22ad8c3bb0b6029c4b9d7f4705b6d4cf89a95daf8ae53b63e99dad820",
+          "source_structure_hash": "sha256:2766c90a8ec76806844b8a931983c46433d5a0126d68560655551420a812ca48",
+          "source_math_hash": "sha256:951e8e73fc3a31303a59fd8c04d353b210e0aa98c2e5884a27ad88de46225036"
+        },
+        "location": {
+          "file": "algebra.tex",
+          "byte_start": 111436,
+          "byte_end": 111615,
+          "line_start": 3251,
+          "line_end": 3257,
+          "fragment_hash": "sha256:aaf2adb458aa286d40c92134a2d37b186450da50f8a89b0c722415acdf80d138"
+        },
+        "owner_tag": "00E8",
+        "parent_tag": "00DY",
+        "requested_label": "algebra-lemma-quasi-compact",
+        "requested_tag": "00E8"
+      },
+      "hash": "sha256:69cd424a253a26fbef667833bd5cfac6ef53d1198e1fcdcd3854660056c0eb1a"
+    },
+    {
+      "context_id": "locked-English-reference:morphisms:inventory:morphisms:01TE:lemma/0001:morphisms-lemma-algebraic-residue-field-extension-closed-point-fibre",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:morphisms:01TE:lemma/0001",
+          "parent_tag": "01TC",
+          "chapter": "morphisms",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes.\nLet <MATH_0002> be a point. Set <MATH_0003>.\nIf <MATH_0004>\nis an algebraic field extension, then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a closed point of its fibre, and\n<STRUCT_0004> if in addition <MATH_0006> is a closed point of <MATH_0007>, then\n<MATH_0008> is a closed point of <MATH_0009>.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-algebraic-residue-field-extension-closed-point-fibre}",
+            "MATH_0001": "$f : X \\to S$",
+            "MATH_0002": "$x \\in X$",
+            "MATH_0003": "$s = f(x)$",
+            "MATH_0004": "$\\kappa(x)/\\kappa(s)$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0005": "$x$",
+            "STRUCT_0004": "\\item",
+            "MATH_0006": "$s$",
+            "MATH_0007": "$S$",
+            "MATH_0008": "$x$",
+            "MATH_0009": "$X$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:ab94f0526ef81b54f0aa6d77192d99a51aafb7ffd6c7d9260e8c6b55075fa052",
+          "source_structure_hash": "sha256:79dd6b4b6593dd0a538c352b5da76cb9b9d805824b1899a12c577a327c4f7466",
+          "source_math_hash": "sha256:c73d165f979f9ef3c0aed4c728b167c099c1ebf99765d9cc35d5ac54a29a93d1"
+        },
+        "location": {
+          "file": "morphisms.tex",
+          "byte_start": 129616,
+          "byte_end": 130023,
+          "line_start": 3564,
+          "line_end": 3575,
+          "fragment_hash": "sha256:958e54bcffa178f4f7f8cbce6271bfcd49d56d915bf1a4c249f828323a03be91"
+        },
+        "owner_tag": "01TE",
+        "parent_tag": "01TC",
+        "requested_label": "morphisms-lemma-algebraic-residue-field-extension-closed-point-fibre",
+        "requested_tag": "01TE"
+      },
+      "hash": "sha256:51b9e5b08b31fb75f50b2105462c418d7fbb66d2ee2966cf2428706367490a0c"
+    },
+    {
+      "context_id": "locked-English-math-reference:sets:sets-equation-bound",
+      "value": {
+        "kind": "locked-English-math-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_math_node": "\\begin{equation}\n\\label{equation-bound}\nBound(\\kappa) = \\max\\{\\kappa^{\\aleph_0}, \\kappa^+\\}.\n\\end{equation}",
+        "location": {
+          "file": "sets.tex",
+          "byte_start": 13352,
+          "byte_end": 13459,
+          "line_start": 345,
+          "line_end": 348,
+          "fragment_hash": "sha256:5371967fa666061542d8aad6f45df6105fe65417ed54b3c0a59af8517ae1b61c"
+        },
+        "requested_label": "sets-equation-bound",
+        "requested_tag": "046U"
+      },
+      "hash": "sha256:857803be3a4be77772732b5779bd255d316e2851722bb3c88cb2721807611f88"
+    },
+    {
+      "context_id": "locked-English-reference:sets:inventory:sets:0AHK:lemma/0001:sets-lemma-bound-by-covering",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sets:0AHK:lemma/0001",
+          "parent_tag": "000H",
+          "chapter": "sets",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of schemes. Assume there exists an\nfpqc covering <MATH_0002> such that <MATH_0003> factors\nthrough <MATH_0004>. Then <MATH_0005>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-bound-by-covering}",
+            "MATH_0001": "$f : X \\to Y$",
+            "MATH_0002": "$\\{g_j : Y_j \\to Y\\}_{j \\in J}$",
+            "MATH_0003": "$g_j$",
+            "MATH_0004": "$f$",
+            "MATH_0005": "$\\text{size}(Y) \\leq \\text{size}(X)$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:5499c2f4f4c2a220f6f6d198d7a6723775d2654ebc99b71cf32f068103d22953",
+          "source_structure_hash": "sha256:636fa3557f14ec8a036aefbea3d99c7cedcdef32eb99506edbfdfd54d3dc0973",
+          "source_math_hash": "sha256:8bb6b58451d46536e887484ddbbe8c3d5eb94b6693a1f1732db9889926a4bcb4"
+        },
+        "location": {
+          "file": "sets.tex",
+          "byte_start": 31741,
+          "byte_end": 31991,
+          "line_start": 793,
+          "line_end": 798,
+          "fragment_hash": "sha256:fe6a1a0b769b14f5e007000f6d0de763784f4ddc619624945a3a104b9e6adc8e"
+        },
+        "owner_tag": "0AHK",
+        "parent_tag": "000H",
+        "requested_label": "sets-lemma-bound-by-covering",
+        "requested_tag": "0AHK"
+      },
+      "hash": "sha256:bff6a6e12a991a60e9c66ac862bc672d0526d1fb666114563e162339d46938c5"
+    },
+    {
+      "context_id": "locked-English-reference:sets:inventory:sets:04T7:lemma/0001:sets-lemma-bound-finite-type",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sets:04T7:lemma/0001",
+          "parent_tag": "000H",
+          "chapter": "sets",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be locally of finite type with <MATH_0003> quasi-compact.\nThen <MATH_0004>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-bound-finite-type}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$f : X \\to S$",
+            "MATH_0003": "$X$",
+            "MATH_0004": "$\\text{size}(X) \\leq \\text{size}(S)$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3506f91f98813b79420c4261edabd721faedea6b0925ad2fb0db20ceca997524",
+          "source_structure_hash": "sha256:4fc5242b664f9de40d9a4023ba234afdddea29870f73a260643883b73b1022a0",
+          "source_math_hash": "sha256:bb5b7fb5287f957b50de365a54a00d4595117ecc4529b9387c80f001666c55d4"
+        },
+        "location": {
+          "file": "sets.tex",
+          "byte_start": 23878,
+          "byte_end": 24067,
+          "line_start": 609,
+          "line_end": 614,
+          "fragment_hash": "sha256:e09bfb00fa64eefa59e911fcbcca63e4d8d8574d2f7f711ad862442c0bde381f"
+        },
+        "owner_tag": "04T7",
+        "parent_tag": "000H",
+        "requested_label": "sets-lemma-bound-finite-type",
+        "requested_tag": "04T7"
+      },
+      "hash": "sha256:0f8931fec5b9456b5ee93dd5521e98869648f4375985de3ecab16512abb9351d"
+    },
+    {
+      "context_id": "locked-English-reference:sets:inventory:sets:0AHL:lemma/0001:sets-lemma-bound-fppf-covering",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sets:0AHL:lemma/0001",
+          "parent_tag": "000H",
+          "chapter": "sets",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an fppf covering of a scheme.\nThere exists an fppf covering <MATH_0002>\nwhich is a refinement of <MATH_0003> such that\n<MATH_0004>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-bound-fppf-covering}",
+            "MATH_0001": "$\\{f_i : X_i \\to X\\}_{i \\in I}$",
+            "MATH_0002": "$\\{W_j \\to X\\}_{j \\in J}$",
+            "MATH_0003": "$\\{X_i \\to X\\}_{i \\in I}$",
+            "MATH_0004": "$\\text{size}(\\coprod W_j) \\leq \\text{size}(X)$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:9e90bf03c769bca83c4c231096ecafb716051cf7a4275522630a89a96c06da46",
+          "source_structure_hash": "sha256:23b0e5375058dc4272cfd2f184d5a28174852c07cb0d2d183368193b11e7ca8d",
+          "source_math_hash": "sha256:a881cb3929683699916eaea75bec237ca9b0b3dc09b3c6c7e978266733290fe7"
+        },
+        "location": {
+          "file": "sets.tex",
+          "byte_start": 33447,
+          "byte_end": 33740,
+          "line_start": 832,
+          "line_end": 838,
+          "fragment_hash": "sha256:bac2c99a6f03c522b2f56f41324793bc4df181cf2a63012dfa01853918ef431b"
+        },
+        "owner_tag": "0AHL",
+        "parent_tag": "000H",
+        "requested_label": "sets-lemma-bound-fppf-covering",
+        "requested_tag": "0AHL"
+      },
+      "hash": "sha256:4ca0709ca99004e825b9eaa0451b9a9317671c3110e6a3a0bd25655d6fd19d92"
+    },
+    {
+      "context_id": "locked-English-reference:sets:inventory:sets:000Q:lemma/0001:sets-lemma-bound-size",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sets:000Q:lemma/0001",
+          "parent_tag": "000H",
+          "chapter": "sets",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be\nan open covering. Then\n<MATH_0003>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-bound-size}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$S = \\bigcup_{i \\in I} S_i$",
+            "MATH_0003": "$\\text{size}(S) \\leq \\max\\{|I|, \\sup_i\\{\\text{size}(S_i)\\}\\}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:920d763fdc52d5d05abbb1056ed3bdf167c653a8a9674db4d9e8320892373c33",
+          "source_structure_hash": "sha256:d80183ca81e020121f6da1633b2afa1000cc0e7dc60411683a48d0119b7e0b0a",
+          "source_math_hash": "sha256:147cb50f24ce788b689ccc9b4b423c3ee4a73a972b3319c93cda4f6a55caa6fd"
+        },
+        "location": {
+          "file": "sets.tex",
+          "byte_start": 21071,
+          "byte_end": 21263,
+          "line_start": 524,
+          "line_end": 529,
+          "fragment_hash": "sha256:d2f697f6e9add7f2accb76265acaba50c3a99022332ab8fe84eadfde53559986"
+        },
+        "owner_tag": "000Q",
+        "parent_tag": "000H",
+        "requested_label": "sets-lemma-bound-size",
+        "requested_tag": "000Q"
+      },
+      "hash": "sha256:2439b421ada537ac892e44944ae1d5e799fa72751541698ed8c10499cdf6b793"
+    },
+    {
+      "context_id": "locked-English-reference:sets:inventory:sets:000H:section_title/0001:sets-section-categories-schemes",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sets:000H:section_title/0001",
+          "parent_tag": "000H",
+          "chapter": "sets",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Constructing categories of schemes<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-categories-schemes}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:267c9f8a09ecbdb0034ee8db28ebb1fbd11eb69f4655d87494c700f49f018b63",
+          "source_structure_hash": "sha256:ef70bd2977694bc9809726397c29e16ced2b04a3c895995639353914b35e9353",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "sets.tex",
+          "byte_start": 12140,
+          "byte_end": 12219,
+          "line_start": 310,
+          "line_end": 311,
+          "fragment_hash": "sha256:bf9cbd36d18a4ed15a2726d289626fc6d06de51203fa87c51a6e4a501bb82040"
+        },
+        "owner_tag": "000H",
+        "parent_tag": "000H",
+        "requested_label": "sets-section-categories-schemes",
+        "requested_tag": "000H"
+      },
+      "hash": "sha256:0b5cf15520f183bcec95158a336560574f368979cbf9ed97f637e27835de21d3"
+    },
+    {
+      "context_id": "locked-English-reference:sites:inventory:sites:00XU:lemma/0001:sites-lemma-bigger-site",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sites:00XU:lemma/0001",
+          "parent_tag": "00XN",
+          "chapter": "sites",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous,\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> <MATH_0006> is fully faithful,\n<ITEMOPEN_0004>(d)<ITEMCLOSE_0004> fibre products exist in <MATH_0007> and <MATH_0008> commutes with them,\nand\n<ITEMOPEN_0005>(e)<ITEMCLOSE_0005> there exist final objects\n<MATH_0009>,\n<MATH_0010> such that\n<MATH_0011>.\n<STRUCT_0003>\nLet <MATH_0012> be as above. Then, <MATH_0013> defines a morphism of sites\n<MATH_0014> with <MATH_0015>, <MATH_0016>.\nThe composition\n<MATH_0017>\nis isomorphic to the identity morphism of the topos\n<MATH_0018>. Moreover, the functor <MATH_0019> is fully faithful.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-bigger-site}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "MATH_0002": "$\\mathcal{D}$",
+            "MATH_0003": "$u : \\mathcal{C} \\to \\mathcal{D}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "ITEMOPEN_0001": "\\item[",
+            "ITEMCLOSE_0001": "]",
+            "MATH_0004": "$u$",
+            "ITEMOPEN_0002": "\\item[",
+            "ITEMCLOSE_0002": "]",
+            "MATH_0005": "$u$",
+            "ITEMOPEN_0003": "\\item[",
+            "ITEMCLOSE_0003": "]",
+            "MATH_0006": "$u$",
+            "ITEMOPEN_0004": "\\item[",
+            "ITEMCLOSE_0004": "]",
+            "MATH_0007": "$\\mathcal{C}$",
+            "MATH_0008": "$u$",
+            "ITEMOPEN_0005": "\\item[",
+            "ITEMCLOSE_0005": "]",
+            "MATH_0009": "$e_\\mathcal{C} \\in \\Ob(\\mathcal{C})$",
+            "MATH_0010": "$e_\\mathcal{D} \\in \\Ob(\\mathcal{D})$",
+            "MATH_0011": "$u(e_\\mathcal{C}) = e_\\mathcal{D}$",
+            "STRUCT_0003": "\\end{enumerate}",
+            "MATH_0012": "$g_!, g^{-1}, g_*$",
+            "MATH_0013": "$u$",
+            "MATH_0014": "$f : \\mathcal{D} \\to \\mathcal{C}$",
+            "MATH_0015": "$f_* = g^{-1}$",
+            "MATH_0016": "$f^{-1} = g_!$",
+            "MATH_0017": "$$\n\\xymatrix{\n\\Sh(\\mathcal{C}) \\ar[r]^g &\n\\Sh(\\mathcal{D}) \\ar[r]^f &\n\\Sh(\\mathcal{C})\n}\n$$",
+            "MATH_0018": "$\\Sh(\\mathcal{C})$",
+            "MATH_0019": "$f^{-1}$",
+            "STRUCT_0004": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:357b73431f71f0320c9328f01b8764bac60f46817b7814ba41328eefed15e8eb",
+          "source_structure_hash": "sha256:4bf7199bebd1dc90dd8a56c752ac53b13ad7d50d97e9e72a1458bf911f841982",
+          "source_math_hash": "sha256:987c5347b2ce071c13b64e5520e97a3036c0fe898ad5a0229ff70456b607cd1b"
+        },
+        "location": {
+          "file": "sites.tex",
+          "byte_start": 171307,
+          "byte_end": 172212,
+          "line_start": 4729,
+          "line_end": 4757,
+          "fragment_hash": "sha256:88ab8f9b13dc91340d4ee42305b96519138ed031ab404e4bc0236664b95ed2b8"
+        },
+        "owner_tag": "00XU",
+        "parent_tag": "00XN",
+        "requested_label": "sites-lemma-bigger-site",
+        "requested_tag": "00XU"
+      },
+      "hash": "sha256:be0cd7648dfe10d16f64d04bee117dc9eeed073e5fcb94771b4b67694dbf0a32"
+    },
+    {
+      "context_id": "locked-English-reference:spaces:inventory:spaces:03FP:lemma/0001:spaces-lemma-change-big-site",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:03FP:lemma/0001",
+          "parent_tag": "03FO",
+          "chapter": "spaces",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose given big sites <MATH_0001> and <MATH_0002>.\nAssume that <MATH_0003> is contained in <MATH_0004>,\nsee Topologies, Section <REF_0001>.\nLet <MATH_0005> be an object of <MATH_0006>. Let\n<MATH_0007>\nbe the morphisms of topoi of\nTopologies, Lemma <REF_0002>.\nLet <MATH_0008> be a sheaf of sets on <MATH_0009>. Then\n<STRUCT_0002>\n<STRUCT_0003> if <MATH_0010> is representable by a scheme\n<MATH_0011> over <MATH_0012>,\nthen <MATH_0013> is representable too, in fact it is representable by the\nsame scheme <MATH_0014>, now viewed as an object of <MATH_0015>, and\n<STRUCT_0004> if <MATH_0016> is an algebraic space over <MATH_0017>, then <MATH_0018> is an algebraic\nspace over <MATH_0019> also.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-change-big-site}",
+            "MATH_0001": "$\\Sch_{fppf}$",
+            "MATH_0002": "$\\Sch'_{fppf}$",
+            "MATH_0003": "$\\Sch_{fppf}$",
+            "MATH_0004": "$\\Sch'_{fppf}$",
+            "REF_0001": "\\ref{topologies-section-change-alpha}",
+            "MATH_0005": "$S$",
+            "MATH_0006": "$\\Sch_{fppf}$",
+            "MATH_0007": "\\begin{align*}\ng : \\Sh((\\Sch/S)_{fppf})\n\\longrightarrow\n\\Sh((\\Sch'/S)_{fppf}), \\\\\nf : \\Sh((\\Sch'/S)_{fppf})\n\\longrightarrow\n\\Sh((\\Sch/S)_{fppf})\n\\end{align*}",
+            "REF_0002": "\\ref{topologies-lemma-change-alpha}",
+            "MATH_0008": "$F$",
+            "MATH_0009": "$(\\Sch/S)_{fppf}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0010": "$F$",
+            "MATH_0011": "$X \\in \\Ob((\\Sch/S)_{fppf})$",
+            "MATH_0012": "$S$",
+            "MATH_0013": "$f^{-1}F$",
+            "MATH_0014": "$X$",
+            "MATH_0015": "$(\\Sch'/S)_{fppf}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0016": "$F$",
+            "MATH_0017": "$S$",
+            "MATH_0018": "$f^{-1}F$",
+            "MATH_0019": "$S$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:56832de52ef08641c45825cfb9f027bf49b0cc6f4e647cd522a1dc1814a05112",
+          "source_structure_hash": "sha256:513557e7280e0fbd8bd1286998cc48c168722f09d312aeccc74a0881a16abfd6",
+          "source_math_hash": "sha256:133c01a0002a36fe8a6ec654648c109d6c45ee2382de9641dd7fc902e204b400"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 94072,
+          "byte_end": 94997,
+          "line_start": 2557,
+          "line_end": 2582,
+          "fragment_hash": "sha256:887a79d810e2b71855d8b69ccfd800e3435913fc2ab471b33761cedaac1698ea"
+        },
+        "owner_tag": "03FP",
+        "parent_tag": "03FO",
+        "requested_label": "spaces-lemma-change-big-site",
+        "requested_tag": "03FP"
+      },
+      "hash": "sha256:9effbf682079890eb94a0a868ccdd713f92cd5fb6766d7807737fc047ff6c82d"
+    },
+    {
+      "context_id": "locked-English-reference:spaces:inventory:spaces:0262:lemma/0001:spaces-lemma-space-presentation",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:0262:lemma/0001",
+          "parent_tag": "0261",
+          "chapter": "spaces",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be an algebraic space over <MATH_0002>. Let <MATH_0003> be a\nsurjective <ACCENT_0001>tale morphism from a scheme to <MATH_0004>. Set <MATH_0005>.\nThen\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0006> defines an equivalence relation on\n<MATH_0007> over <MATH_0008> (see\nGroupoids, Definition <REF_0001>).\n<STRUCT_0004> the morphisms <MATH_0009> are <ACCENT_0002>tale, and\n<STRUCT_0005> the diagram\n<MATH_0010>\nis a coequalizer diagram in <MATH_0011>.\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-space-presentation}",
+            "MATH_0001": "$F$",
+            "MATH_0002": "$S$",
+            "MATH_0003": "$f : U \\to F$",
+            "ACCENT_0001": "\\'e",
+            "MATH_0004": "$F$",
+            "MATH_0005": "$R = U \\times_F U$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0006": "$j : R \\to U \\times_S U$",
+            "MATH_0007": "$U$",
+            "MATH_0008": "$S$",
+            "REF_0001": "\\ref{groupoids-definition-equivalence-relation}",
+            "STRUCT_0004": "\\item",
+            "MATH_0009": "$s, t : R \\to U$",
+            "ACCENT_0002": "\\'e",
+            "STRUCT_0005": "\\item",
+            "MATH_0010": "$$\n\\xymatrix{\nR \\ar@<1ex>[r] \\ar@<-1ex>[r] &\nU \\ar[r] &\nF\n}\n$$",
+            "MATH_0011": "$\\Sh((\\Sch/S)_{fppf})$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:ef3f710e86c4d07bd8a657d6b94c0f31afd8c948acd7f02621755f3f76485c6d",
+          "source_structure_hash": "sha256:cd0cc0f5ca3c3884d2c464d9901c2d3cb7a8a9fe7a3d09c6faa8e466a851826a",
+          "source_math_hash": "sha256:f87d8f444bed18268334baef2ad8664c36c759bef7d62684e6622c86f9816f34"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 42766,
+          "byte_end": 43343,
+          "line_start": 1170,
+          "line_end": 1190,
+          "fragment_hash": "sha256:d30121075c0e92de62cff2ec6c77cbfaa15f3ce771b5bb894502e158696d1cce"
+        },
+        "owner_tag": "0262",
+        "parent_tag": "0261",
+        "requested_label": "spaces-lemma-space-presentation",
+        "requested_tag": "0262"
+      },
+      "hash": "sha256:bdac6b72914d205c05e7a192460aa1c6f7ae0e77ddc811e7f074c90f539c904f"
+    },
+    {
+      "context_id": "locked-English-reference:spaces-properties:inventory:spaces-properties:03BT:section_title/0001:spaces-properties-section-points",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-properties:03BT:section_title/0001",
+          "parent_tag": "03BT",
+          "chapter": "spaces-properties",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Points of algebraic spaces<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-points}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:48b167e7679c8db731442a445611950ad29264447a5e1f9be127055b45f787fc",
+          "source_structure_hash": "sha256:c6f69579bd7ec216879255a37671a66d5e461e7ff87687efad43704dac3dd915",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces-properties.tex",
+          "byte_start": 7699,
+          "byte_end": 7758,
+          "line_start": 217,
+          "line_end": 218,
+          "fragment_hash": "sha256:cb28f7c19ed5228cbdb8d40c2970c10fe86e1c18e7bf95d474be8c28040b95e8"
+        },
+        "owner_tag": "03BT",
+        "parent_tag": "03BT",
+        "requested_label": "spaces-properties-section-points",
+        "requested_tag": "03BT"
+      },
+      "hash": "sha256:8e99015e68c09c03506b4193c4302bb7cc00a9292a1ea723e78cf43cac024275"
+    },
+    {
+      "context_id": "locked-English-reference:spaces:inventory:spaces:02WW:theorem/0001:spaces-theorem-presentation",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces:02WW:theorem/0001",
+          "parent_tag": "0264",
+          "chapter": "spaces",
+          "node_kind": "theorem",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a scheme over <MATH_0003>.\nLet <MATH_0004>\nbe an <ACCENT_0001>tale equivalence relation on <MATH_0005> over <MATH_0006>.\nThen the quotient <MATH_0007> is an algebraic space,\nand <MATH_0008> is <ACCENT_0002>tale and surjective, in other words\n<MATH_0009> is a presentation of <MATH_0010>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{theorem}",
+            "LOCKED_0001": "\\label{theorem-presentation}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$U$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$j = (s, t) : R \\to U \\times_S U$",
+            "ACCENT_0001": "\\'e",
+            "MATH_0005": "$U$",
+            "MATH_0006": "$S$",
+            "MATH_0007": "$U/R$",
+            "MATH_0008": "$U \\to U/R$",
+            "ACCENT_0002": "\\'e",
+            "MATH_0009": "$(U, R, U \\to U/R)$",
+            "MATH_0010": "$U/R$",
+            "STRUCT_0002": "\\end{theorem}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:fe64fadf78692331efb9482771a29a77a60253e7040b41b07818061969c47c39",
+          "source_structure_hash": "sha256:8aebc02c352f70ab8a55c03eddc82eee8d241d81ab4c2161319e49b05590b006",
+          "source_math_hash": "sha256:06220b6e2edc6e21bef19edd21863ea93a5c731125d4593886dc1d04244a7821"
+        },
+        "location": {
+          "file": "spaces.tex",
+          "byte_start": 58200,
+          "byte_end": 58552,
+          "line_start": 1602,
+          "line_end": 1610,
+          "fragment_hash": "sha256:41479a358ea35652d8fadc767ee46fe47b8860e5b691496f0b62b7860ca37f06"
+        },
+        "owner_tag": "02WW",
+        "parent_tag": "0264",
+        "requested_label": "spaces-theorem-presentation",
+        "requested_tag": "02WW"
+      },
+      "hash": "sha256:bf708d857a1db83dd14610c8cb6451ad677cbdd5afa510c3e6ca66319232578b"
+    },
+    {
+      "context_id": "locked-English-reference:topologies:inventory:topologies:022I:section_title/0001:topologies-section-change-alpha",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:topologies:022I:section_title/0001",
+          "parent_tag": "022I",
+          "chapter": "topologies",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Change of big sites<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-change-alpha}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:a506e1a9ba514b68fa282235417c7e38f0d8d0435061fb7095d3921464315508",
+          "source_structure_hash": "sha256:c3412b945faab1a47d201896a7c831c5ec6f31d1fb59fe1ffd9c287eb0d69fa1",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "topologies.tex",
+          "byte_start": 145464,
+          "byte_end": 145522,
+          "line_start": 3985,
+          "line_end": 3986,
+          "fragment_hash": "sha256:a8e0d202c7c11ccd31ea3da2b7d2285ddb67b50aed7736526a56743ea119b954"
+        },
+        "owner_tag": "022I",
+        "parent_tag": "022I",
+        "requested_label": "topologies-section-change-alpha",
+        "requested_tag": "022I"
+      },
+      "hash": "sha256:db633a58233b04f036607505d5215327bb28b797d00a3e831c7f670f6a6a0572"
+    }
+  ],
+  "policy_git_origin": "8cd9dc4c752b346f3a9e549def3a59528230be5c",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:8041478908b37ecdcc8c1acf80b37d1345e89e805fe57c2b0b91848bf891ec05"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:98417d223373904b765f0d0dc049b3b84e382c80bb55db92dd19f0f381208db6"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:ec5b17a966e98938a05c0bce9b147fecfc9e1f2fbd47f03553e106c8ceb710cd"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a6316191122eb023480d7e4c142804536187e7796b1600769aec529c3e11ae68"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:6b629493d2ebce20ac589e6fcf33deb5a39dc7331a9680e4f6d5aec2c5c68df5"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-01.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-02.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-03.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-04.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-05.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-06.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-07.jsonl",
+    "docs/evidence/spaces65-gpt61sol-p010-20261113-policy968-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

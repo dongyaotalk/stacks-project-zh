@@ -1,0 +1,937 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01.json",
+    "hash": "sha256:358d5444d8b2efede4330cd50d6dded2a329de2fe454a23e62743b853918d95f"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.167.2",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1ce60-6992-7b83-a00a-ee48338360ee",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/spaces-topologies73-20261112.json",
+    "hash": "sha256:58c1d5845e165af2dc7c5d40e351a95397f703bce9e95ec7cdd48da9054229ff"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": [],
+  "source_units": [
+    {
+      "chapter": "spaces-topologies",
+      "node_kind": "proof",
+      "parent_tag": "0DFF",
+      "placeholders": {
+        "MATH_0001": "$u$",
+        "MATH_0002": "$f_{big}^{-1}$",
+        "MATH_0003": "$f_{big!}$",
+        "MATH_0004": "$v$",
+        "MATH_0005": "$U/T$",
+        "MATH_0006": "$V/X$",
+        "MATH_0007": "$\\Mor_X(u(U), V) = \\Mor_Y(U, V \\times_X Y)$",
+        "MATH_0008": "$f_{big, *}$",
+        "REF_0001": "\\ref{sites-lemma-when-shriek}",
+        "REF_0002": "\\ref{sites-lemma-preserve-equalizers}",
+        "REF_0003": "\\ref{sites-lemma-have-functor-other-way}",
+        "REF_0004": "\\ref{sites-lemma-have-functor-other-way-morphism}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:08fbd7d00b3ca42562e1fe62b4589f89a2c24e02df7d6b8e6efc3cfe48247c39",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:7111c365a93ee85af6a515390bf7bbb208479ed3cda3622b6992952c12952ed6",
+      "source_text": "The functor <MATH_0001> is cocontinuous, continuous, and commutes with fibre products\nand equalizers. Hence\nSites, Lemmas <REF_0001> and\n<REF_0002>\napply and we deduce the formula\nfor <MATH_0002> and the existence of <MATH_0003>. Moreover,\nthe functor <MATH_0004> is a right adjoint because given <MATH_0005> and <MATH_0006>\nwe have <MATH_0007>\nas desired. Thus we may apply\nSites, Lemmas <REF_0003> and\n<REF_0004> to get the\nformula for <MATH_0008>.\n",
+      "source_text_hash": "sha256:2a663295e642bc4f32ac4f07a2363bd80c7593def177190efa7101baf2afacf5",
+      "unit_id": "tag:0DFN:proof"
+    },
+    {
+      "chapter": "spaces-topologies",
+      "node_kind": "lemma",
+      "parent_tag": "0DFF",
+      "placeholders": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$f : X \\to Y$",
+        "MATH_0003": "$g : Y \\to Z$",
+        "MATH_0004": "$S$",
+        "MATH_0005": "$g_{big} \\circ f_{big} = (g \\circ f)_{big}$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-composition-ph}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:787569ad318452f494fd7e7afab6dc1e8e7c11dfe0726df218b92d218fb60f08",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:43b0c9218f122e0cec1a5b8f6e65f9bee904b9d24b3c605363cde17cbeb203ff",
+      "source_text": "Let <MATH_0001> be a scheme. Given morphisms <MATH_0002>, <MATH_0003>\nof algebraic spaces over <MATH_0004> we have\n<MATH_0005>.\n",
+      "source_text_hash": "sha256:bc43583dbfb6ae7bf00943bc6d314142dc6fd834d9ebe939e23f4542f4fc5cb1",
+      "unit_id": "tag:0DFP:statement"
+    },
+    {
+      "chapter": "spaces-topologies",
+      "node_kind": "proof",
+      "parent_tag": "0DFF",
+      "placeholders": {
+        "REF_0001": "\\ref{lemma-morphism-big-ph}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:f99bf72b8f542b9599256d8e5d1e1d2b71c144b74ca76ebe22525521d538c70e",
+      "source_text": "This follows from the simple description of pushforward\nand pullback for the functors on the big sites from\nLemma <REF_0001>.\n",
+      "source_text_hash": "sha256:e70d3f196348231079b06373958949b2df44fc026d436c5cf6f5201b6baf32a7",
+      "unit_id": "tag:0DFP:proof"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:0DFN:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:2a663295e642bc4f32ac4f07a2363bd80c7593def177190efa7101baf2afacf5",
+      "source_structure_hash": "sha256:7111c365a93ee85af6a515390bf7bbb208479ed3cda3622b6992952c12952ed6",
+      "catalog_hash": "sha256:2bf743b8655d507ab60de6aee9f76f368e244cf0939f7eacf6267b54ef2669e8",
+      "occurrences": [
+        {
+          "source_term": "functor",
+          "projection_start": 4,
+          "projection_end": 11,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutes",
+          "projection_start": 57,
+          "projection_end": 65,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre products",
+          "projection_start": 71,
+          "projection_end": 85,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equalizers",
+          "projection_start": 90,
+          "projection_end": 100,
+          "concept": "equalizer",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 108,
+          "projection_end": 113,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 244,
+          "projection_end": 251,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "right adjoint",
+          "projection_start": 269,
+          "projection_end": 282,
+          "concept": "right-adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sites",
+          "projection_start": 375,
+          "projection_end": 380,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0DFP:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:bc43583dbfb6ae7bf00943bc6d314142dc6fd834d9ebe939e23f4542f4fc5cb1",
+      "source_structure_hash": "sha256:43b0c9218f122e0cec1a5b8f6e65f9bee904b9d24b3c605363cde17cbeb203ff",
+      "catalog_hash": "sha256:2bf743b8655d507ab60de6aee9f76f368e244cf0939f7eacf6267b54ef2669e8",
+      "occurrences": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 35,
+          "projection_end": 44,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 73,
+          "projection_end": 89,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0DFP:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:e70d3f196348231079b06373958949b2df44fc026d436c5cf6f5201b6baf32a7",
+      "source_structure_hash": "sha256:f99bf72b8f542b9599256d8e5d1e1d2b71c144b74ca76ebe22525521d538c70e",
+      "catalog_hash": "sha256:2bf743b8655d507ab60de6aee9f76f368e244cf0939f7eacf6267b54ef2669e8",
+      "occurrences": [
+        {
+          "source_term": "pullback",
+          "projection_start": 60,
+          "projection_end": 68,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functors",
+          "projection_start": 77,
+          "projection_end": 85,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sites",
+          "projection_start": 97,
+          "projection_end": 102,
+          "concept": "site",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:spaces-topologies:inventory:spaces-topologies:0DFN:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-topologies:0DFN:lemma/0001",
+          "parent_tag": "0DFF",
+          "chapter": "spaces-topologies",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a morphism of algebraic spaces over <MATH_0003>.\nThe functor\n<MATH_0004>\nis cocontinuous, and has a continuous right adjoint\n<MATH_0005>\nThey induce the same morphism of topoi\n<MATH_0006>\nWe have <MATH_0007>.\nWe have <MATH_0008>.\nAlso, <MATH_0009> has a left adjoint <MATH_0010> which commutes with\nfibre products and equalizers.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-morphism-big-ph}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$f : Y \\to X$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$$\nu : (\\textit{Spaces}/Y)_{ph} \\longrightarrow (\\textit{Spaces}/X)_{ph},\n\\quad\nV/Y \\longmapsto V/X\n$$",
+            "MATH_0005": "$$\nv : (\\textit{Spaces}/X)_{ph} \\longrightarrow (\\textit{Spaces}/Y)_{ph},\n\\quad\n(U \\to Y) \\longmapsto (U \\times_X Y \\to Y).\n$$",
+            "MATH_0006": "$$\nf_{big} :\n\\Sh((\\textit{Spaces}/Y)_{ph})\n\\longrightarrow\n\\Sh((\\textit{Spaces}/X)_{ph})\n$$",
+            "MATH_0007": "$f_{big}^{-1}(\\mathcal{G})(U/Y) = \\mathcal{G}(U/X)$",
+            "MATH_0008": "$f_{big, *}(\\mathcal{F})(U/X) = \\mathcal{F}(U \\times_X Y/Y)$",
+            "MATH_0009": "$f_{big}^{-1}$",
+            "MATH_0010": "$f_{big!}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8b392e3378849ad1b93d477869f46ab7da596a60d9f17e77ee37d1ab53c3707f",
+          "source_structure_hash": "sha256:fa43265ff95a730601ed1978bca8162583c089c5e1d2c5e30ff68ffd58800d21",
+          "source_math_hash": "sha256:5b29d21f7627a6673018dcd3991797a4e8142f89e4592ad519b272b8173d7bba"
+        },
+        "location": {
+          "file": "spaces-topologies.tex",
+          "byte_start": 39551,
+          "byte_end": 40347,
+          "line_start": 1139,
+          "line_end": 1166,
+          "fragment_hash": "sha256:16c4d5764b565be0967fd1e857bb074deb0013f68bbc9becca46ac940c613b46"
+        },
+        "owner_tag": "0DFN",
+        "parent_tag": "0DFF"
+      },
+      "hash": "sha256:a15bf9333156415894fe7386fab9869dff7a24fd93e37085980d6f8e3a64df84"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces-topologies:inventory:spaces-topologies:0DFP:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-topologies:0DFP:lemma/0001",
+          "parent_tag": "0DFF",
+          "chapter": "spaces-topologies",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Given morphisms <MATH_0002>, <MATH_0003>\nof algebraic spaces over <MATH_0004> we have\n<MATH_0005>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-composition-ph}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$f : X \\to Y$",
+            "MATH_0003": "$g : Y \\to Z$",
+            "MATH_0004": "$S$",
+            "MATH_0005": "$g_{big} \\circ f_{big} = (g \\circ f)_{big}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:7a05e44f605eee312c482b7c1d139584b8858a7b4a473bdb458743bb0b8e430e",
+          "source_structure_hash": "sha256:bca2ae2178a9ddb37bfcdafa4fd3a508daf32c2bcc390a1e0a89065ef438130a",
+          "source_math_hash": "sha256:787569ad318452f494fd7e7afab6dc1e8e7c11dfe0726df218b92d218fb60f08"
+        },
+        "location": {
+          "file": "spaces-topologies.tex",
+          "byte_start": 40949,
+          "byte_end": 41151,
+          "line_start": 1183,
+          "line_end": 1188,
+          "fragment_hash": "sha256:f3efdafb1a83b5004681ea31a8c5c1fc81c1b9147aa422893c45aa25f7816d1f"
+        },
+        "owner_tag": "0DFP",
+        "parent_tag": "0DFF"
+      },
+      "hash": "sha256:a93f9d96fbd0d99cf7560807583d315abefad9da817d8fb0945bace1cea9a012"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces-topologies:inventory:spaces-topologies:0DFN:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-topologies:0DFN:proof/0001",
+          "parent_tag": "0DFF",
+          "chapter": "spaces-topologies",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe functor <MATH_0001> is cocontinuous, continuous, and commutes with fibre products\nand equalizers. Hence\nSites, Lemmas <REF_0001> and\n<REF_0002>\napply and we deduce the formula\nfor <MATH_0002> and the existence of <MATH_0003>. Moreover,\nthe functor <MATH_0004> is a right adjoint because given <MATH_0005> and <MATH_0006>\nwe have <MATH_0007>\nas desired. Thus we may apply\nSites, Lemmas <REF_0003> and\n<REF_0004> to get the\nformula for <MATH_0008>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$u$",
+            "REF_0001": "\\ref{sites-lemma-when-shriek}",
+            "REF_0002": "\\ref{sites-lemma-preserve-equalizers}",
+            "MATH_0002": "$f_{big}^{-1}$",
+            "MATH_0003": "$f_{big!}$",
+            "MATH_0004": "$v$",
+            "MATH_0005": "$U/T$",
+            "MATH_0006": "$V/X$",
+            "MATH_0007": "$\\Mor_X(u(U), V) = \\Mor_Y(U, V \\times_X Y)$",
+            "REF_0003": "\\ref{sites-lemma-have-functor-other-way}",
+            "REF_0004": "\\ref{sites-lemma-have-functor-other-way-morphism}",
+            "MATH_0008": "$f_{big, *}$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:b92f3bb1b769d9162908e65e096028743dbccd14a6186ffc5a137f92b02a4c21",
+          "source_structure_hash": "sha256:040091173ad4ff91453c62bd1af7a903b66dfea05e31c946767d5f2e42d9ec3c",
+          "source_math_hash": "sha256:08fbd7d00b3ca42562e1fe62b4589f89a2c24e02df7d6b8e6efc3cfe48247c39"
+        },
+        "location": {
+          "file": "spaces-topologies.tex",
+          "byte_start": 40349,
+          "byte_end": 40947,
+          "line_start": 1168,
+          "line_end": 1181,
+          "fragment_hash": "sha256:87842984d43d82b6bcaf63e0190b541f402e3c51abea8cf173a944a0d1bfa7fa"
+        },
+        "owner_tag": "0DFN",
+        "parent_tag": "0DFF"
+      },
+      "hash": "sha256:e9e2be17df8b170b91636d0750d2f642d9307af888f0e7432136fc0e1476106b"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces-topologies:inventory:spaces-topologies:0DFP:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-topologies:0DFP:proof/0001",
+          "parent_tag": "0DFF",
+          "chapter": "spaces-topologies",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThis follows from the simple description of pushforward\nand pullback for the functors on the big sites from\nLemma <REF_0001>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{lemma-morphism-big-ph}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:6b76ee1cfeb5c5d6c11f9ac8c3cd240eb9c3915b2be87f001178bf290a17a5bc",
+          "source_structure_hash": "sha256:2899a8f4b48fb85fc1d9b0e73c910c78f4d74bcf00563c6eda03f59457f0fd96",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces-topologies.tex",
+          "byte_start": 41153,
+          "byte_end": 41321,
+          "line_start": 1190,
+          "line_end": 1194,
+          "fragment_hash": "sha256:662973d128571d88634e91948f59749d5f0b789659071d54bbe3dd21616a703e"
+        },
+        "owner_tag": "0DFP",
+        "parent_tag": "0DFF"
+      },
+      "hash": "sha256:19f996a6d7537e286c8505d7873cc9e0dab37f24dbcf4a5a414f1de69371527b"
+    },
+    {
+      "context_id": "locked-English-neighbor:spaces-topologies:inventory:spaces-topologies:0DK6:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:spaces-topologies:0DK6:lemma/0001",
+          "parent_tag": "0DFF",
+          "chapter": "spaces-topologies",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be an algebraic space over <MATH_0003>.\nLet <MATH_0004> be a property of objects in <MATH_0005>\nsuch that whenever <MATH_0006> is a covering in\n<MATH_0007>, then\n<MATHSEG_0001> for all <MATHSEG_0002>\nIf <MATH_0008> for all <MATH_0009> affine and flat, locally of finite presentation over <MATH_0010>,\nthen <MATH_0011>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-cech-enough}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$X$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$P$",
+            "MATH_0005": "$(\\textit{Spaces}/X)_{fppf}$",
+            "MATH_0006": "$\\{U_i \\to U\\}$",
+            "MATH_0007": "$(\\textit{Spaces}/X)_{fppf}$",
+            "MATHSEG_0001": "$$\nP(U_{i_0} \\times_U \\ldots \\times_U U_{i_p})\n\\text{",
+            "MATHSEG_0002": "}\np \\geq 0,\\ i_0, \\ldots, i_p \\in I\n\\Rightarrow P(U)\n$$",
+            "MATH_0008": "$P(U)$",
+            "MATH_0009": "$U$",
+            "MATH_0010": "$X$",
+            "MATH_0011": "$P(X)$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\nP(U_{i_0} \\times_U \\ldots \\times_U U_{i_p})\n\\text{ for all }\np \\geq 0,\\ i_0, \\ldots, i_p \\in I\n\\Rightarrow P(U)\n$$",
+              "source_hash": "sha256:ea47a2ab5857ae72c80b0b638730e4cc8ec12a1ed063130438eb936d6543182e",
+              "source_byte_span": {
+                "start": 253,
+                "end": 370
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " for all ",
+                  "command": "text",
+                  "policy_entry": "etale-cohomology-d2d542eae20e",
+                  "slot_byte_span": {
+                    "start": 53,
+                    "end": 62
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "root-phrase",
+                    "usage_source": {
+                      "before": ")\n",
+                      "after": "\np",
+                      "environments": []
+                    },
+                    "source_label": "etale-cohomology-section-prologue",
+                    "policy_hash": "sha256:29d7a759bdc4d4411eb3aeccfe7fcce5603644085ae4365b37f9ec839e6a1ee7",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "etale-cohomology.tex",
+                      "owner_tag": "03N3",
+                      "owner_label": "etale-cohomology-section-prologue",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 2582,
+                            "end": 3397
+                          },
+                          "container_hash": "sha256:447a306a6c9f998ac184d1f9b3818b5cf4d35f5bc70b114d901d2f9fe9a666f3",
+                          "command_byte_span": {
+                            "start": 2919,
+                            "end": 2935
+                          },
+                          "command_hash": "sha256:5883f61bc805f2e842fa14af67c153861938f5e373b2ed6c2f14c1ab5606714c"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:7afd25f62955e54989259613a562e480179eece8b59be46f7ce7528ee04f6f3a",
+          "source_text_hash": "sha256:67cd322d96a014a3f4fae6c32a26cbc9545745a6a692335451a78ed03c450a88",
+          "source_structure_hash": "sha256:ec17a17dda07e3b43ce66e4f906c55e05fa002e6eb2ee503270dcd27367f3b33",
+          "source_math_hash": "sha256:338c642ab03b660904ff935a3097531d66f379325825bd5786492744b31a7e8f"
+        },
+        "location": {
+          "file": "spaces-topologies.tex",
+          "byte_start": 41323,
+          "byte_end": 41798,
+          "line_start": 1196,
+          "line_end": 1210,
+          "fragment_hash": "sha256:688a5c1e4627e17ca8ba4231616af4420df24a631bb60c334c387efc55fc4814"
+        },
+        "owner_tag": "0DK6",
+        "parent_tag": "0DFF"
+      },
+      "hash": "sha256:0da2101fd36c02b164313fca3ed26e9dd7359d16462a22c4dea321a9caef147c"
+    },
+    {
+      "context_id": "locked-English-reference:sites:inventory:sites:00XX:lemma/0001:sites-lemma-have-functor-other-way",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sites:00XX:lemma/0001",
+          "parent_tag": "00XW",
+          "chapter": "sites",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites. Let\n<MATH_0003>, and <MATH_0004>\nbe functors. Assume that <MATH_0005> is cocontinuous\nand that <MATH_0006> is a right adjoint to <MATH_0007>.\nLet <MATH_0008> be\nthe morphism of topoi associated to <MATH_0009>, see\nLemma <REF_0001>.\nThen\n<STRUCT_0002>\n<STRUCT_0003> for a sheaf <MATH_0010> on <MATH_0011> the sheaf\n<MATH_0012> is equal to the presheaf <MATH_0013>, in other words,\n<MATH_0014>, and\n<STRUCT_0004> for a sheaf <MATH_0015> on <MATH_0016> we have\n<MATH_0017>.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-have-functor-other-way}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "MATH_0002": "$\\mathcal{D}$",
+            "MATH_0003": "$u : \\mathcal{C} \\to \\mathcal{D}$",
+            "MATH_0004": "$v : \\mathcal{D} \\to \\mathcal{C}$",
+            "MATH_0005": "$u$",
+            "MATH_0006": "$v$",
+            "MATH_0007": "$u$",
+            "MATH_0008": "$g : \\Sh(\\mathcal{C}) \\to \\Sh(\\mathcal{D})$",
+            "MATH_0009": "$u$",
+            "REF_0001": "\\ref{lemma-cocontinuous-morphism-topoi}",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0010": "$\\mathcal{F}$",
+            "MATH_0011": "$\\mathcal{C}$",
+            "MATH_0012": "$g_*\\mathcal{F}$",
+            "MATH_0013": "$v^p\\mathcal{F}$",
+            "MATH_0014": "$(g_*\\mathcal{F})(V) = \\mathcal{F}(v(V))$",
+            "STRUCT_0004": "\\item",
+            "MATH_0015": "$\\mathcal{G}$",
+            "MATH_0016": "$\\mathcal{D}$",
+            "MATH_0017": "$g^{-1}\\mathcal{G} = (v_p\\mathcal{G})^\\#$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:df35052c36d011a5307332b4615c3a151a4e256aec8eafaa1505f40a6badc760",
+          "source_structure_hash": "sha256:40365a09e5f1fc92649c89bcffd22d4b691a6bc62e9ccbbd09c5acca820ec18c",
+          "source_math_hash": "sha256:9476af96c2d26039afc13057e4b2ef7366de693a2698487959ae46dd3ffe21b0"
+        },
+        "location": {
+          "file": "sites.tex",
+          "byte_start": 175164,
+          "byte_end": 175898,
+          "line_start": 4838,
+          "line_end": 4855,
+          "fragment_hash": "sha256:c5a0d0df925583bfd006d5ae46f95ea247053f984c0b7996e66ec0d003b5b9f0"
+        },
+        "owner_tag": "00XX",
+        "parent_tag": "00XW",
+        "requested_label": "sites-lemma-have-functor-other-way",
+        "requested_tag": "00XX"
+      },
+      "hash": "sha256:c2db22ef24ff2b19d43f3abcde3754ddd72699d7e452cd70ec0bfd6e7943c281"
+    },
+    {
+      "context_id": "locked-English-reference:sites:inventory:sites:00XY:lemma/0001:sites-lemma-have-functor-other-way-morphism",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sites:00XY:lemma/0001",
+          "parent_tag": "00XW",
+          "chapter": "sites",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nNotation and assumptions as in Lemma <REF_0001>.\nIf in addition <MATH_0001> is continuous then <MATH_0002> defines a morphism of sites\n<MATH_0003> whose associated morphism\nof topoi is equal to <MATH_0004>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-have-functor-other-way-morphism}",
+            "REF_0001": "\\ref{lemma-have-functor-other-way}",
+            "MATH_0001": "$v$",
+            "MATH_0002": "$v$",
+            "MATH_0003": "$f : \\mathcal{C} \\to \\mathcal{D}$",
+            "MATH_0004": "$g$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:fb65aba8a2c414a7ddb2d20da701337cfdabfee3618beeead7fba58d23cbc9d1",
+          "source_structure_hash": "sha256:f97b6f14f5fffde7c8aa93dd26831acd2dbe88b662c5e59f8056bff260d698b3",
+          "source_math_hash": "sha256:7910eb67ba5d3a7ec1ff1cdff027d153d22e409cd351c8074a3432238b009924"
+        },
+        "location": {
+          "file": "sites.tex",
+          "byte_start": 176578,
+          "byte_end": 176878,
+          "line_start": 4879,
+          "line_end": 4885,
+          "fragment_hash": "sha256:ee6f5a83cc5e1f75a90b7ef7d2ee660f50196e49e3d61c653af413602bfb5c17"
+        },
+        "owner_tag": "00XY",
+        "parent_tag": "00XW",
+        "requested_label": "sites-lemma-have-functor-other-way-morphism",
+        "requested_tag": "00XY"
+      },
+      "hash": "sha256:44f281a0220923ecc12de429ab705174dbda841a85f431013015e12cd86de587"
+    },
+    {
+      "context_id": "locked-English-reference:sites:inventory:sites:00XS:lemma/0001:sites-lemma-preserve-equalizers",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sites:00XS:lemma/0001",
+          "parent_tag": "00XN",
+          "chapter": "sites",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous, and\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> fibre products and equalizers exist in <MATH_0006> and\n<MATH_0007> commutes with them.\n<STRUCT_0003>\nIn this case the functor <MATH_0008> above commutes with fibre products and\nequalizers (and more generally with finite connected limits).\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-preserve-equalizers}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "MATH_0002": "$\\mathcal{D}$",
+            "MATH_0003": "$u : \\mathcal{C} \\to \\mathcal{D}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "ITEMOPEN_0001": "\\item[",
+            "ITEMCLOSE_0001": "]",
+            "MATH_0004": "$u$",
+            "ITEMOPEN_0002": "\\item[",
+            "ITEMCLOSE_0002": "]",
+            "MATH_0005": "$u$",
+            "ITEMOPEN_0003": "\\item[",
+            "ITEMCLOSE_0003": "]",
+            "MATH_0006": "$\\mathcal{C}$",
+            "MATH_0007": "$u$",
+            "STRUCT_0003": "\\end{enumerate}",
+            "MATH_0008": "$g_!$",
+            "STRUCT_0004": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:e27b00780e6ccee50b091ada6dd9df93e1b2b7da3a3d0e454aa53977c03d0f3a",
+          "source_structure_hash": "sha256:9704acef487593108c4153dce94604e481bd1913f87dba9e54635ec547b43760",
+          "source_math_hash": "sha256:3918b26e4d2d502a2647a2c7989a4c78f535e66a9f1db652c180a28709a96b15"
+        },
+        "location": {
+          "file": "sites.tex",
+          "byte_start": 166891,
+          "byte_end": 167384,
+          "line_start": 4626,
+          "line_end": 4639,
+          "fragment_hash": "sha256:3c55f9aa2cc5dad90a251b5f673b163ac2426315cc792fb91a773ebf09888ee0"
+        },
+        "owner_tag": "00XS",
+        "parent_tag": "00XN",
+        "requested_label": "sites-lemma-preserve-equalizers",
+        "requested_tag": "00XS"
+      },
+      "hash": "sha256:49ca087caf92905a19da2af21e42e54eef2eb94f1dca5d87e77cce171c13808c"
+    },
+    {
+      "context_id": "locked-English-reference:sites:inventory:sites:00XR:lemma/0001:sites-lemma-when-shriek",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sites:00XR:lemma/0001",
+          "parent_tag": "00XN",
+          "chapter": "sites",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\n<LOCKED_0002>\nLet <MATH_0001> and <MATH_0002> be sites.\nLet <MATH_0003> be a functor.\nAssume that\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0004> is cocontinuous, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0005> is continuous.\n<STRUCT_0003>\nLet <MATH_0006>\nbe the associated morphism of topoi. Then\n<STRUCT_0004>\n<STRUCT_0005> sheafification in the formula <MATH_0007> is\nunnecessary, in other words <MATH_0008>,\n<STRUCT_0006> <MATH_0009> has a left adjoint <MATH_0010>, and\n<STRUCT_0007> <MATH_0011> commutes with arbitrary limits and colimits.\n<STRUCT_0008>\n<STRUCT_0009>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-when-shriek}",
+            "LOCKED_0002": "\\begin{slogan}\nSheafification is redundant in topoi morphisms associated to simultaneously\ncontinuous and cocontinuous site functors.\n\\end{slogan}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "MATH_0002": "$\\mathcal{D}$",
+            "MATH_0003": "$u : \\mathcal{C} \\to \\mathcal{D}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "ITEMOPEN_0001": "\\item[",
+            "ITEMCLOSE_0001": "]",
+            "MATH_0004": "$u$",
+            "ITEMOPEN_0002": "\\item[",
+            "ITEMCLOSE_0002": "]",
+            "MATH_0005": "$u$",
+            "STRUCT_0003": "\\end{enumerate}",
+            "MATH_0006": "$g : \\Sh(\\mathcal{C}) \\to \\Sh(\\mathcal{D})$",
+            "STRUCT_0004": "\\begin{enumerate}",
+            "STRUCT_0005": "\\item",
+            "MATH_0007": "$g^{-1} = (u^p\\ )^\\#$",
+            "MATH_0008": "$g^{-1}(\\mathcal{G})(U) = \\mathcal{G}(u(U))$",
+            "STRUCT_0006": "\\item",
+            "MATH_0009": "$g^{-1}$",
+            "MATH_0010": "$g_{!} = (u_p\\ )^\\#$",
+            "STRUCT_0007": "\\item",
+            "MATH_0011": "$g^{-1}$",
+            "STRUCT_0008": "\\end{enumerate}",
+            "STRUCT_0009": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bc69b1a61c2b342ca92f9840fdc0135981469687a426ab632997785282f4c24a",
+          "source_structure_hash": "sha256:055c11fb2cde94c7832c0232c45c414449f5a1391af4060d6eb9d8b7e2f8d9a0",
+          "source_math_hash": "sha256:03620f997be58fc880dfc1e5e2012e3d898b8bd3f103a45aa07c7261cdd95a95"
+        },
+        "location": {
+          "file": "sites.tex",
+          "byte_start": 165010,
+          "byte_end": 165797,
+          "line_start": 4577,
+          "line_end": 4598,
+          "fragment_hash": "sha256:c83c9c7543f0af9bac2acada309d453960ad4fcc7746f6fe6494f3a9ddd5f292"
+        },
+        "owner_tag": "00XR",
+        "parent_tag": "00XN",
+        "requested_label": "sites-lemma-when-shriek",
+        "requested_tag": "00XR"
+      },
+      "hash": "sha256:4307aec6f850fe49517af45fcf76838582393750e6f1e37cdcc2f20752ae1396"
+    },
+    {
+      "context_id": "locked-English-reference:spaces-topologies:inventory:spaces-topologies:0DFN:lemma/0001:spaces-topologies-lemma-morphism-big-ph",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-topologies:0DFN:lemma/0001",
+          "parent_tag": "0DFF",
+          "chapter": "spaces-topologies",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme.\nLet <MATH_0002> be a morphism of algebraic spaces over <MATH_0003>.\nThe functor\n<MATH_0004>\nis cocontinuous, and has a continuous right adjoint\n<MATH_0005>\nThey induce the same morphism of topoi\n<MATH_0006>\nWe have <MATH_0007>.\nWe have <MATH_0008>.\nAlso, <MATH_0009> has a left adjoint <MATH_0010> which commutes with\nfibre products and equalizers.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-morphism-big-ph}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$f : Y \\to X$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$$\nu : (\\textit{Spaces}/Y)_{ph} \\longrightarrow (\\textit{Spaces}/X)_{ph},\n\\quad\nV/Y \\longmapsto V/X\n$$",
+            "MATH_0005": "$$\nv : (\\textit{Spaces}/X)_{ph} \\longrightarrow (\\textit{Spaces}/Y)_{ph},\n\\quad\n(U \\to Y) \\longmapsto (U \\times_X Y \\to Y).\n$$",
+            "MATH_0006": "$$\nf_{big} :\n\\Sh((\\textit{Spaces}/Y)_{ph})\n\\longrightarrow\n\\Sh((\\textit{Spaces}/X)_{ph})\n$$",
+            "MATH_0007": "$f_{big}^{-1}(\\mathcal{G})(U/Y) = \\mathcal{G}(U/X)$",
+            "MATH_0008": "$f_{big, *}(\\mathcal{F})(U/X) = \\mathcal{F}(U \\times_X Y/Y)$",
+            "MATH_0009": "$f_{big}^{-1}$",
+            "MATH_0010": "$f_{big!}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8b392e3378849ad1b93d477869f46ab7da596a60d9f17e77ee37d1ab53c3707f",
+          "source_structure_hash": "sha256:fa43265ff95a730601ed1978bca8162583c089c5e1d2c5e30ff68ffd58800d21",
+          "source_math_hash": "sha256:5b29d21f7627a6673018dcd3991797a4e8142f89e4592ad519b272b8173d7bba"
+        },
+        "location": {
+          "file": "spaces-topologies.tex",
+          "byte_start": 39551,
+          "byte_end": 40347,
+          "line_start": 1139,
+          "line_end": 1166,
+          "fragment_hash": "sha256:16c4d5764b565be0967fd1e857bb074deb0013f68bbc9becca46ac940c613b46"
+        },
+        "owner_tag": "0DFN",
+        "parent_tag": "0DFF",
+        "requested_label": "spaces-topologies-lemma-morphism-big-ph",
+        "requested_tag": "0DFN"
+      },
+      "hash": "sha256:13efa2c81f8fd5220e60eff01a8147bd1d04145f2bcfb398ed3989fe0f8ba82a"
+    }
+  ],
+  "policy_git_origin": "b085882bcc8bf31744c1e7e236f72c9e5ca2bf9b",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:29d7a759bdc4d4411eb3aeccfe7fcce5603644085ae4365b37f9ec839e6a1ee7"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:5a3043830703eb90aa577df0d386fc7a44859b151e4b84d2a5f10d7ee1a2b80b"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:b31b58e680f5c1d9c9851b56fdaa20e147639738b53bbcc44f749b2cf860e907"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:badad161bd460f986e7ad2640df6ef5973036f35679c0f27deda2564f405fd1a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:e44bcb7feb75828a17afc1dabbad520ac53f63dbaae0d325ff2d3d2bd928a837"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-01.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-02.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-03.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-04.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-05.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-06.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-07.jsonl",
+    "docs/evidence/spaces-topologies73-gpt61sol-p017-20261112-h1672-r01-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

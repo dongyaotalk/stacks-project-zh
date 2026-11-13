@@ -165,7 +165,7 @@ def usage(source, stream, index, kind):
 
 def notation_context(source, stream, index, value, kind):
     if kind == 'descent-relative-proj' and value == 'Proj':
-        frames = (RELATIVE_PROJ,)
+        frames = (RELATIVE_PROJ, RELATIVE_PROJ.replace('_S(', '_Y('))
     elif kind == 'descent-projection' and value == 'pr':
         frames = PROJECTION_FRAMES
     else:

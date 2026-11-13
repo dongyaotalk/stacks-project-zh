@@ -15,6 +15,7 @@ from typing import Any
 from . import math_text_descent as descent
 from . import math_text_etale as etale
 from . import math_text_sites_cohomology as sites
+from . import math_text_spaces as spaces
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
@@ -24,7 +25,7 @@ USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
           'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
           'matrix-row-statement', 'matrix-operator-compatibility',
-          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES
+          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -150,7 +151,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 or not ((base['usage'] == 'root-phrase'
                          and context['usage'] in expected
                          and base['literal'] in expected[context['usage']])
-                        or (base['usage'], base['literal']) in etale.CONTEXTS.get(context['usage'], set()))):
+                        or (base['usage'], base['literal']) in etale.CONTEXTS.get(context['usage'], set())
+                        or (base['usage'], base['literal']) in spaces.CONTEXTS.get(context['usage'], set()))):
             raise ValueError('natural context requires its exact ordinary root literal and new role')
         pair = (base['literal'], context['usage'])
         if pair in context_pairs:
@@ -468,6 +470,8 @@ def _context_usage(source, stream, index, kind):
 
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
+    if kind in spaces.USAGES:
+        return spaces.usage(source, stream, index, kind)
     if kind in sites.USAGES | {sites.REFERENCE_USAGE}:
         return sites.usage(source, stream, index, kind)
     if kind in etale.USAGES | {etale.COMPONENT_USAGE}:

@@ -146,6 +146,17 @@ owner；不得让后一份继承前一份的临时陈述而改变其永久坐标
 raw/run/freeze 和历史 Schema 均保持；未知宏、数学文字、完整生成、溯源和人工
 门禁不因此改变。对应工具任务为 [Issue #939](https://github.com/dongyaotalk/stacks-project-zh/issues/939)。
 
+[Issue #970](https://github.com/dongyaotalk/stacks-project-zh/issues/970) 补足完整 typed
+proof 的原政策回放。当前 lowering 与原 unit 仅因整份宏政策 hash 不同时，从原
+classification witness 的唯一 hash 查找可达、已接受 main 的真实宏政策 Git 快照；
+按该原政策从同一锁定 Git 完整 selector 重选并 lowering，原 unit 必须逐字段相等。
+原/当前完整 inventory、selector、边界及 lowering 再独立比较，仅允许分类见证的
+policy hash 与由此产生的 structure hash 差异。全部文字、公式、slot、分类语义、
+包装、坐标和其他字段保持；无快照、伪造 hash 或任一其他变化均拒绝。原来源记录、
+run/raw/freeze 和模型字段不重写，原/当前政策、Git 来源及 main ancestry 在结束时
+再次核验。第二证明及借用临时 owner 的后续证明仍逐份独立验证，不扩大采用、
+修订、人审或发布权限。
+
 新候选的 `source_adoption_id` 指向 `source-adoption-v1`。溯源逐项重放冻结输入、
 完整来源、实际 raw、run、五字段、context 和输出原字节，而非只检查 Schema。
 渲染先完成同一完整重放，再按锁定来源投影标签和引用；无标签 typed 正文还须

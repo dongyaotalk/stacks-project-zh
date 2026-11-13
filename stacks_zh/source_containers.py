@@ -343,6 +343,12 @@ class Containers:
                     for value in complete_math_nodes(row['unit'])}}
 
     def assert_unchanged(self) -> None:
+        if hasattr(self, '_proof_policy_refs'):
+            for ref, commit in self._proof_policy_refs.items():
+                result = subprocess.run(['git', '-C', str(self.root), 'rev-parse', '--verify',
+                                         ref + '^{commit}'], capture_output=True, text=True)
+                if result.returncode or result.stdout.strip() != commit:
+                    raise RecordError('accepted proof policy ancestry changed during validation')
         if _input_bytes(self.root / 'config/macro-policy.yml') != self.current_policy_bytes:
             raise RecordError('macro policy changed during container generation')
         current = LockedEnglish(self.root, self.english.harvest)
@@ -532,6 +538,73 @@ def _proof_context_seeds(native, selector, ownership_native):
     return lower_container(selected, native.policy)
 
 
+def _original_proof_policy(native: Containers, policy_hash: str) -> bytes:
+    """Find exact original bytes in immutable, accepted main ancestry."""
+    if not hasattr(native, '_proof_policy_refs'):
+        native._proof_policy_refs = {}
+        for ref in ('HEAD', 'refs/remotes/origin/main', 'refs/heads/main'):
+            result = subprocess.run(['git', '-C', str(native.root), 'rev-parse', '--verify',
+                                     ref + '^{commit}'], capture_output=True, text=True)
+            if not result.returncode:
+                native._proof_policy_refs[ref] = result.stdout.strip()
+        native._proof_policy_cache = {}
+    native.assert_unchanged()
+    if policy_hash in native._proof_policy_cache:
+        return native._proof_policy_cache[policy_hash]
+    head = native._proof_policy_refs.get('HEAD')
+    seen = set()
+    for ref, main in native._proof_policy_refs.items():
+        if ref == 'HEAD' or not head:
+            continue
+        if subprocess.run(['git', '-C', str(native.root), 'merge-base', '--is-ancestor',
+                           main, head], capture_output=True).returncode:
+            continue
+        commits = subprocess.run(['git', '-C', str(native.root), 'log', '--format=%H',
+                                  main, '--', 'config/macro-policy.yml'],
+                                 capture_output=True, text=True, check=True).stdout.splitlines()
+        for commit in commits:
+            if commit in seen:
+                continue
+            seen.add(commit)
+            result = subprocess.run(['git', '-C', str(native.root), 'show',
+                                     commit + ':config/macro-policy.yml'], capture_output=True)
+            if not result.returncode and byte_hash(result.stdout) == policy_hash:
+                native._proof_policy_cache[policy_hash] = result.stdout
+                native.assert_unchanged()
+                return result.stdout
+    raise RecordError('complete proof has no exact original accepted main policy')
+
+
+def _verify_complete_proof_lowering(unit, selector, selected, native):
+    expected = [clean(u) for u in lower_container(selected, native.policy)]
+    original = [clean(unit)]
+    if expected == original:
+        return
+    hashes = {slot['classification_witness']['policy_hash']
+              for region in unit.get('math_text_regions', []) for slot in region['slots']}
+    if len(hashes) != 1:
+        raise RecordError('orphan proof differs from its complete canonical Git lowering')
+    old_hash, = hashes
+    original_bytes = _original_proof_policy(native, old_hash)
+    prior = Containers(native.root, native.english.harvest, policy_bytes=original_bytes,
+                       hierarchical_prose=native.hierarchical_prose)
+    old = prior.select(selector)
+    if [clean(u) for u in lower_container(old, prior.policy)] != original:
+        raise RecordError('orphan proof differs from its complete original canonical Git lowering')
+    from .source_adoptions import _unchanged_source_policy_units
+    new_hash = byte_hash(native.policy_bytes)
+    _unchanged_source_policy_units([old['inventory_unit']], [selected['inventory_unit']],
+                                  old_hash, new_hash)
+    comparison = copy.deepcopy(old)
+    comparison['macro_policy_hash'] = new_hash
+    comparison['inventory_unit'] = selected['inventory_unit']
+    if comparison != selected:
+        raise RecordError('accepted proof policy changed complete Git selector or boundaries')
+    _unchanged_source_policy_units(original, expected, old_hash, new_hash)
+    prior.assert_unchanged()
+    native.assert_unchanged()
+
+
 def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, str],
                                  native: Containers, *, ownership_native=None) -> list[dict[str, Any]]:
     """Supply real English owners only for verified, complete orphan proofs.
@@ -582,9 +655,7 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
             selector = dict(file=chapter + '.tex', owner_tag=owner, owner_label=labels[0],
                             parent_tag=unit['parent_tag'], kind='proof', ordinal=ordinal)
             selected = native.select(selector)
-            expected = [clean(u) for u in lower_container(selected, native.policy)]
-            if expected != [clean(unit)]:
-                raise RecordError('orphan proof differs from its complete canonical Git lowering')
+            _verify_complete_proof_lowering(unit, selector, selected, native)
             owner_rows = [row for row in native.document(chapter)[1]
                           if row['owner_tag'] == owner and row['unit']['node_kind'] in STATEMENTS]
             if len(owner_rows) != 1:
@@ -615,11 +686,11 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
         if len(real) != 1:
             raise RecordError('borrowed canonical owner requires one complete proof unit')
         unit = real[0]
-        selected = native.select(dict(file=owner['file'], owner_tag=owner['statement_tag'],
+        selector = dict(file=owner['file'], owner_tag=owner['statement_tag'],
             owner_label=unit['chapter'] + '-' + owner['statement_label'],
-            parent_tag=unit['parent_tag'], kind='proof', ordinal=owner['proof_index']))
-        if [clean(u) for u in lower_container(selected, native.policy)] != [clean(unit)]:
-            raise RecordError('borrowed proof differs from its complete canonical Git lowering')
+            parent_tag=unit['parent_tag'], kind='proof', ordinal=owner['proof_index'])
+        selected = native.select(selector)
+        _verify_complete_proof_lowering(unit, selector, selected, native)
     native.assert_unchanged()
     return padded
 

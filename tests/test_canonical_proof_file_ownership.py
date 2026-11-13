@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from test_source_containers import fixture, selector
+from test_source_containers import fixture, selector, git
 from test_source_adoptions import synthetic_fixture, write
 from stacks_zh.records import RecordError, stamp_unit_hashes, write_jsonl
 from stacks_zh.source_containers import (Containers, lower_container,
@@ -17,6 +17,74 @@ from stacks_zh.source_alignment import align_batches
 
 
 class CanonicalProofFileOwnershipTests(unittest.TestCase):
+    def policy_change_fixture(self, base):
+        proof = r'\begin{proof}Use $u\quad\text{and}\quad v$.\end{proof}'
+        root, harvest, _ = fixture(base, proof=proof+'\n'+proof)
+        policy = (root/'config/macro-policy.yml').read_text()+'''
+translatable_math_text:
+  conjunction:
+    literal: "and"
+    command: "text"
+    usage: "quad-connector"
+    source_label: "test-lemma-one"
+    witness_kind: "proof"
+    witness_ordinal: 1
+'''
+        (root/'config/macro-policy.yml').write_text(policy)
+        git(root, 'init', '-q', '-b', 'main')
+        git(root, 'add', '.')
+        git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=fixture@example.invalid',
+            'commit', '-qm', 'original accepted policy')
+        native = Containers(root, harvest)
+        units = [lower_container(native.select(selector(ordinal=i)),native.policy)[0]
+                 for i in (1,2)]
+        (root/'config/macro-policy.yml').write_text(policy+'\n# Independent new source registration.\n')
+        git(root, 'add', '.')
+        git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=fixture@example.invalid',
+            'commit', '-qm', 'later accepted policy')
+        return root, harvest, units
+
+    def test_original_typed_proofs_replay_both_policies_without_rewriting_units(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root, harvest, units = self.policy_change_fixture(Path(temp))
+            original = copy.deepcopy(units)
+            native = Containers(root,harvest)
+            self.assertNotEqual(lower_container(native.select(selector()),native.policy)[0],units[0])
+            self.assertEqual(canonical_proof_file_mapping(units,native.english.tags,native),
+                             {u['unit_id']:u['unit_id'] for u in units})
+            self.assertEqual(units,original)
+
+    def test_original_policy_replay_rejects_tampering_and_unknown_policy_hash(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest,units=self.policy_change_fixture(Path(temp))
+            for alteration in ('source','slot','wrapper','policy','witness'):
+                unit=copy.deepcopy(units[0])
+                if alteration=='source':unit['source_text']+=' Extra.'
+                elif alteration=='wrapper':unit['render']['suffix']+=' Extra.'
+                elif alteration=='slot':unit['math_text_regions'][0]['slots'][0]['source']='other'
+                elif alteration=='policy':
+                    unit['math_text_regions'][0]['slots'][0]['classification_witness']['policy_hash']='sha256:'+'0'*64
+                else:
+                    unit['math_text_regions'][0]['slots'][0]['classification_witness']['source_tex_hash']='sha256:'+'0'*64
+                unit=stamp_unit_hashes(unit)
+                native=Containers(root,harvest)
+                with self.subTest(alteration=alteration),self.assertRaises(RecordError):
+                    canonical_proof_file_mapping([unit],native.english.tags,native)
+
+    def test_original_policy_requires_accepted_main_and_stable_ancestry(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root,harvest,units=self.policy_change_fixture(Path(temp))
+            git(root,'branch','-m','task')
+            native=Containers(root,harvest)
+            with self.assertRaisesRegex(RecordError,'accepted main policy'):
+                canonical_proof_file_mapping([units[0]],native.english.tags,native)
+            git(root,'branch','main')
+            native=Containers(root,harvest)
+            canonical_proof_file_mapping([units[0]],native.english.tags,native)
+            git(root,'update-ref','refs/heads/main','HEAD~1')
+            with self.assertRaisesRegex(RecordError,'ancestry changed'):
+                native.assert_unchanged()
+
     def test_complete_first_and_second_proofs_use_real_owner_and_ordinal(self):
         with tempfile.TemporaryDirectory() as temp:
             root, harvest, _ = fixture(Path(temp))

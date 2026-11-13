@@ -100,6 +100,38 @@ def preparation_copy(root, frozen, fp, rp):
 
 
 class ChapterTests(unittest.TestCase):
+    def test_empty_glossary_inventory_is_bound_to_complete_locked_policy(self):
+        from stacks_zh.chapter_relations import _model_policy_matches
+        empty=b'entries: []\n'
+        nonempty='entries:\n  - source_term: space\n    target_term: 空间\n    status: proposed\n'.encode('utf-8')
+        # A proposed entry must not be discarded as though only approvals matter.
+        for raw in (empty, nonempty):
+            self.assertTrue(_model_policy_matches('glossary',raw.decode(),raw,byte_hash(raw)))
+        self.assertTrue(_model_policy_matches('glossary',[],empty,byte_hash(empty)))
+        for raw in (nonempty,b'entries:\n',b'entries: []\nentries: []\n',b'entries: {}\n'):
+            with self.subTest(raw=raw):
+                self.assertFalse(_model_policy_matches('glossary',[],raw,byte_hash(raw)))
+        for field,value in [('prompt',[]),('style',[]),('glossary',{}),('glossary',None),
+                            ('glossary','[]'),('glossary',[{}])]:
+            with self.subTest(field=field,value=value):
+                self.assertFalse(_model_policy_matches(field,value,empty,byte_hash(empty)))
+        for value in ([],empty.decode()):
+            self.assertFalse(_model_policy_matches('glossary',value,empty,byte_hash(nonempty)))
+
+    def test_chapter_accepts_empty_glossary_copy_without_changing_generation(self):
+        with tempfile.TemporaryDirectory() as d:
+            root,harvest,base,fp,rp,frozen=fixture(Path(d))
+            mp,rt=preparation_copy(root,frozen,fp,rp)
+            for p in [root/'translation-data/source-adoptions/synthetic-first.json',root/'translation-data/runs/run-synthetic-first.json']:
+                p.unlink()
+            for b in frozen['batches']:(root/b['candidates_path']).unlink()
+            value=json.loads(mp.read_text());value['glossary']=[];write(mp,value)
+            assemble_source_adoption(root,fp,[rp],harvest)
+            before={p:p.read_bytes() for p in (mp,rt,fp,rp)}
+            result=check_chapter(root,harvest,'test','synthetic',base)
+            self.assertEqual(result.report['preparations'][0]['status'],'adopted-input-copy-verified')
+            self.assertEqual(before,{p:p.read_bytes() for p in before})
+
     def test_current_all_rejects_unpaired_unit_schema_and_missing_candidate(self):
         from stacks_zh.chapter_validation import check_current_repository
         with tempfile.TemporaryDirectory() as d:

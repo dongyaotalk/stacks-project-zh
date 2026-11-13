@@ -227,6 +227,21 @@ def _legacy_zeroth_preparation_projection(root, frozen, units, expected, observe
     return changed==1 and comparison==observed
 
 
+def _model_policy_matches(field, value, raw, expected_hash):
+    """Accept an empty entry inventory only against the complete locked glossary."""
+    if byte_hash(raw) != expected_hash:
+        return False
+    if value == raw.decode('utf-8'):
+        return True
+    if field != 'glossary' or not isinstance(value, list) or value:
+        return False
+    from .terminology import _yaml_entries
+    try:
+        return _yaml_entries(raw.decode('utf-8')) == []
+    except ValueError:
+        return False
+
+
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):
     """Check actual model-input/runtime copies, including never-adopted preparation.
 
@@ -293,7 +308,7 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 raise RecordError('model-input previous candidates differ from immutable snapshot')
         for field,path in [('prompt','prompts/translator-v2.md'),('style','config/style-guide.md'),('glossary','config/glossary.yml')]:
             raw=_git_origin_bytes(root,frozen['origin_commit'],path)
-            if model_input[field]!=raw.decode() or byte_hash(raw)!=policies[path]['hash']:
+            if not _model_policy_matches(field,model_input[field],raw,policies[path]['hash']):
                 raise RecordError('model-input prompt/style/glossary differs from locked origin')
         runtime_path=relative.removesuffix('-model-input.json')+'-runtime.json'
         runtime=json.loads(snapshot.read(root/runtime_path))

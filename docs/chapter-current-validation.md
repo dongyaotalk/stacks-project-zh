@@ -60,6 +60,12 @@ rejected-unadopted-preparation，generation_validation=not_claimed。它不能�
 当前候选、祖先或生成成功凭证；当前候选错误、新实际 run/采用错误仍使章节失败。
 未知辅助资料仍触发未消费输入门禁，不通过泛化“证据文件”豁免。
 
+准备中的 `prior_adoptions` 必须库存完整上一采用的有序 units/candidates 快照：
+逐项核验原 record 的身份/hash/Schema、所有输出的精确归档路径、原字节/hash、
+Schema、来源和配对 ID 顺序，并与整个冻结 batch/unit 范围及模型输入的
+`previous_complete_candidates` 完全对应。未采用准备仍只作库存，不能提供
+生成或祖先成功凭证；完整实际采用的历史继续由直接关系门禁核验。
+
 模型输入的 prompt/style 和字符串 glossary 保持锁定 origin 原字节比较。glossary
 也可保存精确空词条列表 `[]`，但必须先核验完整锁定 Git glossary 原字节/hash，
 再用既有词表解析器确认全部 entries 确实为空；不能只检查 approved 子集。

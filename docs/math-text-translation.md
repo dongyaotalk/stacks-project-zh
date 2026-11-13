@@ -926,3 +926,29 @@ raw、run 原字节保留，不能把开发降低后的 unit 当作模型生成�
 批准。独立政策任务在工具接受后登记精确文字和真实 Git witness，DATA 再
 按现有 source-adoption 合同冻结受影响完整范围并实际生成。旧 freeze/raw/run
 保持原字节；本节及 fixture 不构成模型生成、人工审校或来源采用证据。
+
+## 第65/73/74章精确来源登记（Issue #968）
+
+有限框架工具 #964 已由 PR #967 接受到 main
+`bc04aeb01da41a31c738634992efcceeb95d04b7`。本次独立来源政策在该接受基线上
+登记 `Spaces` 的 `textit/spaces-category`，以及五个完整框架实际需要的13条
+新纯文字规则和12条已有文字的有限 context。其他已适用的原角色优先；不新增
+一般文字、字体、商范畴或任意数学操作数权限。
+
+有限支撑条件的两条文字用真实 Section 02Z0
+`spaces-section-examples` 作 `section/1` 见证，其完整例子为02Z8。自然文字
+合同不以例子环境类型冒充 `lemma` 或新增 `example` 角色。其余文字见证为
+04SG/lemma1、06ER/proof1、0ADK/lemma1、0ADT/lemma1，均在锁定英文
+`a04446e57ec1fbc252a871afcec7752fb2807b14` 中独立选取完整容器并核验实际语法。
+
+[完整政策与来源 fixture](../tests/fixtures/spaces-wave-source-policy.json) 保留
+原宏政策及其hash、精确新增字段、登记后的快照和全部32个完整原生容器。
+新政策下 spaces 的4个、spaces-topologies 的24个、spaces-descent 的4个
+容器均能无损 lowering 并逐字恢复锁定Git原片段；相对Proj的Y基底已由接受工具
+支持。原政策阻断与全部34条范畴公式、自然文字叶、框架/字体/词形变体的拒绝
+分别回归，不把来源READY视为候选验收。
+
+具体DATA在政策接受后才按现有来源采用合同消费；新的文字输入须重新冻结并
+由实际模型完整生成。旧freeze/raw/run保持原字节，已有合法输入的兼容采用
+由现行合同证明。目录、来源分类与自动检查不授予术语批准、selection、人审
+或正式发布。

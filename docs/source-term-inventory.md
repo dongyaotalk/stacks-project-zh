@@ -732,3 +732,25 @@ payload 验证的 medskip/noindent 段落边界，后接 MATH。这是赋值动�
 是命令式动词。后两份证明中的真正指标集合及集合名词继续要求覆盖。证据绑定完整锁定
 英文证明的 TeX hash；其他同词出现、集合术语、完整数学及结构门禁保持。
 此登记不批准中文译法，也不修改候选或原模型历史；忠实候选另由第59章任务采用。
+
+## 第65/73/74章完整词形与精确普通用法（Issue #968）
+
+本来源目录登记仅扩到 `spaces-descent`：完整 `locally finite type` 与
+`locally finite presentation` 以06NR完整lemma1为见证；独立形容词
+`quasi-coherent` 和既有 `quasi-coherent module(s)` 的新增章节证据来自0H04
+完整proof1。完整性质不能误拆为较短的 `locally finite`，完整拟凝聚模不能
+误认成 `coherent module(s)`；原章节、旧词形与旧证据保持，独立的模、层、
+凝聚模及其他词形仍各自盘点。最长短语匹配沿用已有工具，无中文词表批准。
+
+另登记四个有完整source TeX hash的普通出现，各仅排除零起始序数0：
+spaces/02YT/prose0001的 `At this point` 中 `point`，两个
+spaces-topologies完整证明0DFJ及03MR中条件句 `then set` 的赋值动词，
+以及spaces-descent/0H04完整证明中 `Namely, for ... in ..., set ...` 的
+赋值动词。02YT后面的数学点继续要求覆盖；集合名词及其他章节、unit ID、
+hash或出现序数不继承例外。精确来源、完整canonical unit、前后盘点及原目录
+快照见[政策 fixture](../tests/fixtures/spaces-wave-source-policy.json)。
+
+原主线4831个当前单元的逐次库存保持，只改变目录hash；三章507个已冻结READY
+输入的差异独立列明，不修改输入或模型字段。新目录采用和需要的模型修订须在
+政策接受后通过各章任务进行，旧freeze/raw/run全部保留。来源文字与术语待决、
+候选验收、人工语言/数学审校和正式发布各自保持原门禁。

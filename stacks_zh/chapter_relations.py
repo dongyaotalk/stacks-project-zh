@@ -301,6 +301,50 @@ def _preparation_prior_snapshots(root, frozen, previous, snapshot):
         raise RecordError('preparation prior snapshots differ from full frozen/model-input scope')
 
 
+def _adopted_unselected_raw_inventory(root, frozen, model_input, entry, scope, snapshot):
+    """Inventory earlier frozen attempts without changing selected run history."""
+    from . import source_adoptions as a
+    record = json.loads(snapshot.read(root/'translation-data/source-adoptions'/
+                                      f"{frozen['adoption_id']}.json"))
+    reserved = model_input['raw_output_paths_reserved']
+    chosen = [item['path'] for item in record['raw_attempts']]
+    if (not set(chosen) <= set(reserved)
+            or chosen != [path for path in reserved if path in set(chosen)]):
+        raise RecordError('adopted raw sequence differs from frozen model-input reservations')
+    extras = [path for path in reserved if path not in chosen and (root/path).exists()]
+    if not extras:
+        return []
+    rank = {path:index for index,path in enumerate(reserved)}
+    attempts = []
+    for relative in reserved:
+        path = safe_path(root,relative,r'docs/evidence/[A-Za-z0-9._-]+\.jsonl')
+        if not path.exists():
+            continue
+        payload = snapshot.read(path)
+        rows = a._rows(payload)
+        if not rows:
+            raise RecordError('frozen raw inventory contains an empty attempt')
+        attempts.append(dict(path=relative,hash=byte_hash(payload),
+                             unit_ids=[row.get('unit_id') for row in rows]))
+    reader = a.Reads(root)
+    selected = a._raw_records(reader,record['raw_attempts'],frozen['unit_ids'],scope['allowed_write_files'])
+    aggregate = a._raw_records(reader,attempts,frozen['unit_ids'],scope['allowed_write_files'])
+    for attempt in attempts:
+        if attempt['path'] not in extras:
+            continue
+        for uid in attempt['unit_ids']:
+            if rank[attempt['path']] >= rank[selected[uid][1]['path']]:
+                raise RecordError('unselected raw must precede its actually selected unit output')
+    if any(aggregate[uid][0] != selected[uid][0] for uid in frozen['unit_ids']):
+        raise RecordError('unselected raw changes the complete selected translator fields')
+    # Both sets use the same immutable input. This is a read-only prediction,
+    # not a replacement manifest or an accepted run for discarded output.
+    if a._generated(frozen,aggregate,entry)[0] != a._generated(frozen,selected,entry)[0]:
+        raise RecordError('unselected raw changes the selected candidate')
+    return [dict(item,status='unselected-raw-inventory',generation_validation='not_claimed')
+            for item in attempts if item['path'] in extras]
+
+
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):
     """Check actual model-input/runtime copies, including never-adopted preparation.
 
@@ -395,7 +439,12 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
             required=adopted if adopted.exists() else run
             if required.resolve() not in reads.hashes:
                 raise RecordError('preparation references an unchecked adopted node; expand scope')
-            diagnostics.append(dict(input=entry['path'],status='adopted-input-copy-verified' if adopted.exists() else 'recorded-failed-run-input-copy-verified'))
+            detail = dict(input=entry['path'],status='adopted-input-copy-verified' if adopted.exists() else 'recorded-failed-run-input-copy-verified')
+            if adopted.exists():
+                unused = _adopted_unselected_raw_inventory(root,frozen,model_input,entry,scope,snapshot)
+                if unused:
+                    detail['unselected_raw_attempts'] = unused
+            diagnostics.append(detail)
             continue
         # No run/adoption was created. Validate complete aggregate coverage with
         # the existing raw parser, including independently frozen shards/retries.

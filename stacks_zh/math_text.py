@@ -16,6 +16,7 @@ from . import math_text_descent as descent
 from . import math_text_etale as etale
 from . import math_text_sites_cohomology as sites
 from . import math_text_spaces as spaces
+from . import math_text_groupoids as groupoids
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
@@ -25,7 +26,7 @@ USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
           'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
           'matrix-row-statement', 'matrix-operator-compatibility',
-          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES
+          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES | groupoids.USAGES
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -117,16 +118,18 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         if (not isinstance(literal, str) or not (literal == component_contract['literal'] if component else
                 literal == '-isomorphism' if rule.get('usage') == 'numeric-isomorphism-suffix'
                 else module_suffix or etale.literal_exception(literal, rule.get('usage'))
-                or sites.literal_exception(literal, rule.get('usage')) or re.fullmatch(literal_pattern, literal))
+                or sites.literal_exception(literal, rule.get('usage'))
+                or groupoids.literal_exception(literal, rule.get('usage')) or re.fullmatch(literal_pattern, literal))
                 or not re.search(r'[A-Za-z]{2,}', literal) or literal in seen_literals):
             raise ValueError('invalid or duplicate natural math-text literal')
         if literal in notations:
             raise ValueError('math text cannot be both notation and natural language')
         seen_literals.add(literal)
         italic = (not component and rule['command'] == 'textit'
-                  and rule['usage'] == etale.ITALIC_USAGE and literal == etale.ITALIC_LITERAL)
+                  and ((rule['usage'] == etale.ITALIC_USAGE and literal == etale.ITALIC_LITERAL)
+                       or groupoids.italic_contract(rule['command'], literal, rule['usage'])))
         if ((rule['command'] != 'text' and not italic)
-                or rule['usage'] == etale.ITALIC_USAGE and not italic
+                or rule['usage'] in {etale.ITALIC_USAGE, groupoids.ITALIC_USAGE} and not italic
                 or not isinstance(rule['usage'], str)
                 or rule['usage'] not in ({COMPONENT_USAGE, descent.COMPONENT_USAGE, etale.COMPONENT_USAGE} if component else USAGES)):
             raise ValueError('unsupported natural math-text command or usage')
@@ -152,7 +155,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                          and context['usage'] in expected
                          and base['literal'] in expected[context['usage']])
                         or (base['usage'], base['literal']) in etale.CONTEXTS.get(context['usage'], set())
-                        or (base['usage'], base['literal']) in spaces.CONTEXTS.get(context['usage'], set()))):
+                        or (base['usage'], base['literal']) in spaces.CONTEXTS.get(context['usage'], set())
+                        or (base['usage'], base['literal']) in groupoids.CONTEXTS.get(context['usage'], set()))):
             raise ValueError('natural context requires its exact ordinary root literal and new role')
         pair = (base['literal'], context['usage'])
         if pair in context_pairs:
@@ -470,6 +474,11 @@ def _context_usage(source, stream, index, kind):
 
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
+    qualified = groupoids.qualified_usage(source, stream, index, kind)
+    if qualified is not None:
+        return qualified
+    if kind in groupoids.USAGES:
+        return groupoids.usage(source, stream, index, kind)
     if kind in spaces.USAGES:
         return spaces.usage(source, stream, index, kind)
     if kind in sites.USAGES | {sites.REFERENCE_USAGE}:
@@ -866,9 +875,11 @@ def _slot_node(source, stream, slot, version):
         raise ValueError('math slot lacks its complete real parent parameter')
     index,node = matches[0]
     if (slot['command'] == 'textit' and (version != 2 or component or reference
-            or slot['source'] != etale.ITALIC_LITERAL
-            or slot['classification_witness']['usage'] != etale.ITALIC_USAGE)):
-        raise ValueError('italic math text requires its sole complete category phrase')
+            or not ((slot['source'] == etale.ITALIC_LITERAL
+                     and slot['classification_witness']['usage'] == etale.ITALIC_USAGE)
+                    or groupoids.italic_contract(slot['command'], slot['source'],
+                        slot['classification_witness']['usage'])))):
+        raise ValueError('italic math text requires an exact complete category phrase')
     if reference:
         start = span['start']
         if (version != 4 or component or node['value'] != sites.REFERENCE_LITERAL

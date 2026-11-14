@@ -952,3 +952,42 @@ raw、run 原字节保留，不能把开发降低后的 unit 当作模型生成�
 由实际模型完整生成。旧freeze/raw/run保持原字节，已有合法输入的兼容采用
 由现行合同证明。目录、来源分类与自动检查不授予术语批准、selection、人审
 或正式发布。
+
+## 第78/83/94章有限数学框架工具（独立 Issue #990）
+
+`math_text_groupoids.py` 以锁定英文完整容器为来源见证，支持12条完整自然文字
+数学框架：仿射开集与约束、商栈下降资料的态射矩阵、轨道条件、域扩张存在式、
+生成等价关系的商集、两条2-态射等式及2-范畴对象对矩阵。普通纯文字参数使用
+`groupoids-wave-source-frames`；原字体、括号、操作数、标签、引用、环境、深度
+和每处间隔保持原字节。未登记自然文字仍阻断，不能把它们归为数学记号。
+
+两条2-态射等式的 `-isomorphism` 沿用 `numeric-isomorphism-suffix`；对象对
+矩阵中的两个2-范畴前缀沿用 `matrix-numeric-category-prefix`。仅增加完整帧的
+语法识别，不改变原有词汇投影：原数字2仍在锁定片段中，而术语投影保留真实
+`2-isomorphism` 与 `2-category`。旧格式、历史输入及其原政策语义不变。
+
+既有文字的context仅允许模块列出的原角色/精确literal对；已有角色在原位置
+适用时优先，新的fallback不与其竞争。纯文字Schema同步允许新框架角色，仍
+保持unit-v2/v3/v4各自的组件与引用限制，不新增历史格式。
+
+unit-v2的有限 `textit` 自然文字能力另支持 `Algebraic-Stacks`，用途为
+`algebraic-stack-category-phrase`，只覆盖四条完整原式中的范畴名称参数。
+Schema和工具共同绑定字体、原文字面量、用途及完整数学框架。原数字、素号、
+基底、Hom参数和箭头等字节保持；其他textit文字不因此解锁。
+`Locally ringed topoi` 的原用途与限制继续保留。
+
+`Spaces` 沿用已登记的 `textit/spaces-category`，增加四条完整原式，包括B上
+的范畴、fppf范畴、商预层矩阵和U/R对象式；原34帧tuple及见证不回写。
+原文的符号缩写 `CQC` 使用独立 `textit/groupoids-cqc-category`，仅支持
+`CQC(X)` 与从QCoh到CQC(X)的两条完整原式，不提供一般applied、symbol、
+任意基底或上下标权限。记号仍完整锁定；范畴名称中的自然文字与记号分类分开。
+
+[独立锁定来源fixture](../tests/fixtures/groupoids-wave-math-frames.json) 保存17个
+完整容器的原始阻断、selector、Git字节跨度/片段hash和全部原数学帧。隔离试验
+政策用于检验17个容器的无损回放及typed skeleton，合成Git测试另验证完整首次
+采用、两代历史、不可变输入绑定、渲染和篡改拒绝；这些均不是真实模型输出。
+
+本任务不登记生产自然文字、不采用翻译事实、不修改来源锁、词表或历史raw/run。
+工具接受并合并后，由独立政策任务登记精确文字与实际Git见证；具体DATA再按
+既有来源采用合同重新冻结受影响范围并实际生成。来源能力通过不代表政策接受、
+术语批准、独立critic、人工语言/数学审校或正式发布。

@@ -347,3 +347,13 @@ v6 不允许 prior_attempts、prior_adoptions 或 shared_run_histories。既有�
 该工具验收并进入 main 后，再接受独立 #925 的生产政策；DATA #923 重新冻结
 当次完整 source/context/runtime 并实际生成。测试中的 synthetic 冻结/raw/run
 仅为明确标注的独立回归样例，不能作为具体章节的模型输出或审校证据。
+
+## 原冻结输入中的早期未选输出库存（独立工具 #995）
+
+`assemble-source-adoption --raw <first.jsonl> <retry.jsonl>` 使用一次 `--raw` 和多个
+有序路径；重复选项会由 CLI 只保留最后一组。已经生成的 run/采用记录仍不可回写。
+同次冻结 model-input 预留的早期未选输出可由当前输入副本验证器完整读取，按
+[当前章节合同](chapter-current-validation.md) 核验来源范围、原 Schema、尝试顺序、
+原字节 hash 和最终结果一致性。它们不改变原选择，只保存未选输出库存；不会被
+重新称为原 run 的已接受记录、实际修订或祖先。新的实际装配继续传入全部有序 raw，
+未知或未声明辅助数据、当前来源/候选/运行错误和全部历史不可变门禁保持。

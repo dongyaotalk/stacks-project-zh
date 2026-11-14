@@ -205,7 +205,7 @@ class Policy:
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
                                              'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
                                              'descent-relative-proj', 'etale-finite-etale-category', 'etale-reduced-norm',
-                                             'spaces-category'})]:
+                                             'spaces-category', 'groupoids-cqc-category'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -233,7 +233,8 @@ class Policy:
                 raise RecordError('relative Proj requires its sole explicit finite text role')
             finite_roles = {"F\\'Et": ('textit', 'etale-finite-etale-category'),
                             'red': ('text', 'etale-reduced-norm'),
-                            'Spaces': ('textit', 'spaces-category')}
+                            'Spaces': ('textit', 'spaces-category'),
+                            'CQC': ('textit', 'groupoids-cqc-category')}
             for name, (font, role) in finite_roles.items():
                 if (notation == name or role in rule['usages']) and (
                         notation != name or rule['commands'] != [font]
@@ -533,6 +534,11 @@ class Scanner:
         node = stream[index]
         if kind == 'spaces-category':
             from .math_text_spaces import notation_context
+            context = notation_context(self.text, stream, index, value, kind)
+            if context is not None:
+                return context
+        if kind in {'spaces-category', 'groupoids-cqc-category'}:
+            from .math_text_groupoids import notation_context
             return notation_context(self.text, stream, index, value, kind)
         if kind in {'etale-projection', 'etale-canonical-map', 'etale-set-category',
                     'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category'}:
@@ -621,7 +627,7 @@ class Scanner:
                          'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection',
                          'sites-pab-shriek', 'etale-projection', 'etale-canonical-map',
                          'etale-set-category', 'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category',
-                         'spaces-category'}:
+                         'spaces-category', 'groupoids-cqc-category'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']

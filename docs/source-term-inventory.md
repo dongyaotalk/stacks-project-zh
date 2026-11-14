@@ -1,5 +1,24 @@
 # 来源侧术语出现清单
 
+## Spaces-groupoids 中完整拟凝聚模词形（Issue #988）
+
+已有 `source-phrase-quasi-coherent-module` 概念新增 `spaces-groupoids` 章节范围，
+保留精确单复数词形及原章节证据，复用既有最长词形规则。独立的
+`coherent module(s)` 用法保持；来源目录不批准中文，也不采用候选数据。
+
+完整来源由锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 独立选择：
+单数见证为077W / Section0440 / lemma1，label
+`spaces-groupoids-lemma-isomorphism`，完整容器hash
+`sha256:f36b03772e688784b2d8015b645099ec8d4f13fa9e6e0e77540795a44da88e01`；
+复数见证为077X / Section0440 / lemma1，label
+`spaces-groupoids-lemma-colimits`，完整容器hash
+`sha256:1c25f4f19a055883f734d70cbeaa58dc67c6089dfba91f8dcec34830a2aaf3c1`。
+完整选择及lowering与本章预检单元逐字段相等，独立见证保存于
+[来源fixture](../tests/fixtures/groupoids-quasi-coherent-source-policy.json)。
+
+本政策不修改宏政策、工具、Schema、词表或原freeze/raw/run。接受合并后，第78章
+另行冻结并实际生成；旧未启动准备保留，来源完整性、溯源和人审门禁继续适用。
+
 第59章工具 #932 补足完整 `zeroth {\v C}ech cohomology group` 声明：
 仅在编号配对及 `{`、`\v C`、`}` 原 payload 全部精确时，盘点真实的
 `zeroth` 和 `cohomology group` 词汇核心。Čech 专名的重音及包装保持不透明；

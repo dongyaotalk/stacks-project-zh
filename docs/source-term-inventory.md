@@ -773,3 +773,20 @@ hash或出现序数不继承例外。精确来源、完整canonical unit、前�
 输入的差异独立列明，不修改输入或模型字段。新目录采用和需要的模型修订须在
 政策接受后通过各章任务进行，旧freeze/raw/run全部保留。来源文字与术语待决、
 候选验收、人工语言/数学审校和正式发布各自保持原门禁。
+
+
+## 第78/94章两处精确普通用法（Issue #987）
+
+沿用现有 `nonmathematical_occurrences` 合同，集中登记两处普通措辞：
+第94章 `tag:0400:prose-0001` 中 `small case letters` 的 `small` 指小写字母；
+第78章 `tag:06PB:statement` 中 `Set ... and set` 的小写 `set` 引入
+`enumerate` 列表，对源、靶和复合映射赋值，不是集合名词。两项均仅登记
+大小写精确匹配的零起始出现序数0，并绑定各自完整锁定 source TeX hash：
+`sha256:f9c1c9a647904a3a486817b8d99256d02eb1106c101565c1caca5fccf5954126`、
+`sha256:a10bd155084f1e75c29b18493b13f016fab2c77777c29d2101bfd91e5b15bd76`。
+
+完整容器、canonical unit 与逐次前后库存见
+[政策 fixture](../tests/fixtures/algebraic-ordinary-source-policy.json)。源列表边界、
+数学对象与公式保持；其他章节、unit ID、source hash 或出现序数不继承例外。
+数学意义的小范畴与集合名词仍须覆盖，不放宽通用赋值语法、不批准中文词表。
+旧输入及失败记录不改写；政策接受合并后，两章分别冻结新实际模型生成并采用。

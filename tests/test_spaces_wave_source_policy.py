@@ -181,7 +181,7 @@ class SpacesWaveMathPolicyTests(unittest.TestCase):
     def test_all_32_full_original_containers_are_ready_and_roundtrip_without_source_changes(self):
         from stacks_zh.source_containers import Containers, clean, lower_container
         harvest=Path(os.environ['HARVEST_DIR'])
-        native=Containers(ROOT,harvest)
+        native=Containers(ROOT,harvest,policy_bytes=FIXTURE['macro_after'].encode())
         before=Containers(ROOT,harvest,policy_bytes=FIXTURE['macro_before'].encode())
         self.assertEqual(len(FIXTURE['math_source_preparations']),32)
         counts={}

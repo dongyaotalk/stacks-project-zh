@@ -43,6 +43,23 @@ python3 stacks_zh.py assemble-source-adoption \
   --harvest <locked-English-checkout>
 ```
 
+### 同一章节任务追加范围后的首次装配
+
+[Issue #986](https://github.com/dongyaotalk/stacks-project-zh/issues/986) 将章节执行规范的
+清单更新落实到首次装配：原冻结清单仍按原字节/hash验证；当前同路径清单重新通过
+完整Schema、任务身份、精确文件及所有权检查。任务、owner、branch和来源提交保持，
+原data scope的章、Tag、输入/输出ID、模型范围和数据输出路径不得更改或移除。
+原scope仅可追加source-adoption-inputs/source-adoptions/runs JSON及docs/evidence
+JSON/JSONL辅助预留和run ID；新scope必须属于同一章和模型，完整输入/输出ID集合
+相等，ID、run及文件均独立归属。新scope只声明unit JSONL、原候选lane中的JSONL及
+上述辅助文件。全局清单只追加这些已归属路径或该章的chapter-template路径。
+
+更新清单的Issue/hash必须在后续生成前声明，并由最终PR的原生closing关系核验。
+旧生成的来源、raw路径、run和模型权限仍只来自原冻结scope，不借用新scope的权限；
+增加的新范围不会变成旧run的输出。原freeze/raw/run不写回，历史回放继续验证原
+清单；分支、来源不重叠、完整上下文、当前QA、模型身份及所有其他门禁保持。
+该入口不授予事实采用、人审或发布状态；具体DATA只在独立工具验收合并后消费。
+
 多次实际原输出按先后次序传入 `--raw`。装配动态解析注册 Harness，并再次核对
 冻结的具体版本；model record、模型通道和身份置信度须匹配当前注册表。工具写出
 独立 `translation` run，名称为 `run-<adoption-id>`，不将首次生成称为 revision。

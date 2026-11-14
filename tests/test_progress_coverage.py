@@ -260,6 +260,20 @@ def adoption_setup(base, *, named=False, extra=''):
 
 
 class FirstAdoptionProgressTests(unittest.TestCase):
+    def test_native_statement_coverage_accepts_a_label_after_item_prose(self):
+        from stacks_zh.progress_coverage import native_container_tag_coverage, _statement_native_tag_coverage
+        from stacks_zh.source_containers import Containers
+        with tempfile.TemporaryDirectory() as tmp:
+            root, harvest, _, frozen, _ = adoption_setup(Path(tmp), named=True)
+            selected = copy.deepcopy(frozen['batches'][0]['containers'][0]['selected'])
+            selected['fragment'] = selected['fragment'].replace(
+                '\\label{item-second}\nSecond object.',
+                'Second object.\n\\footnote{\\label{lemma-two}}\n\\label{item-second}')
+            native = Containers(root, harvest)
+            args = (selected, native.policy, native.english.tags)
+            self.assertEqual(native_container_tag_coverage(*args), frozenset({'0003', '0004'}))
+            self.assertEqual(_statement_native_tag_coverage(*args), frozenset({'0003'}))
+
     def test_complete_native_adoption_adds_scope_without_model_or_review_approval(self):
         from stacks_zh.source_adoptions import load_repository_source_adoptions
         with tempfile.TemporaryDirectory() as tmp:

@@ -30,14 +30,14 @@ def _plain_container_item_tags(fragment, kind, policy, tags, chapter):
     closed, cursor = False, 0
     for match in re.finditer(r'<([A-Z]+_[0-9]{4})>', text):
         if text[cursor:match.start()].strip() and (not opened or closed):
-            raise RecordError('native Tag coverage requires a complete remarks wrapper')
+            raise RecordError('native Tag coverage requires a complete container wrapper')
         name = match[1]
         value, role = protected[name], name.rsplit('_', 1)[0]
         cursor = match.end()
         if role == 'COMMENT':
             continue
         if closed:
-            raise RecordError('native Tag coverage has nodes after the remarks closing')
+            raise RecordError('native Tag coverage has nodes after the container closing')
         if role.endswith('OPEN'):
             depth += 1
         elif role.endswith('CLOSE') or role in {'ENVARGEND', 'ITEMCLOSE'}:
@@ -49,13 +49,13 @@ def _plain_container_item_tags(fragment, kind, policy, tags, chapter):
             action, environment_kind = environment[1], environment[2]
             if action == 'begin':
                 if not opened:
-                    if environment_kind != 'remarks' or match.start() != 0:
-                        raise RecordError('native Tag coverage requires the complete remarks opening')
+                    if environment_kind != kind or match.start() != 0:
+                        raise RecordError('native Tag coverage requires the complete container opening')
                     opened = True
                 stack.append([environment_kind, False])
             elif not stack or stack.pop()[0] != environment_kind:
                 raise RecordError('native list labels have unbalanced environments')
-            elif kind == 'remarks' and not stack:
+            elif kind != 'prose_block' and not stack:
                 closed = True
         if value == r'\item' and role == 'STRUCT' and depth == 0:
             if stack and stack[-1][0] in {'enumerate', 'itemize'}:
@@ -68,8 +68,8 @@ def _plain_container_item_tags(fragment, kind, policy, tags, chapter):
                     or sum(value == tag for value in tags.values()) != 1):
                 raise RecordError('native list item has no unique same-chapter permanent Tag')
             found.append(tag)
-    if (stack or depth or not opened or (kind == 'remarks' and not closed)
-            or (kind == 'remarks' and text[cursor:].strip())):
+    if (stack or depth or not opened
+            or (kind != 'prose_block' and (not closed or text[cursor:].strip()))):
         raise RecordError('native Tag coverage requires a complete balanced container')
     return found
 
@@ -83,17 +83,15 @@ def native_container_tag_coverage(selected, policy, tags):
     kind = selected['selector']['kind']
     if kind not in FIRST_ADOPTION_LIST_KINDS:
         return frozenset()
-    fragment = selected['fragment']
-    if kind in {'remarks', 'prose_block'}:
-        found = _plain_container_item_tags(fragment, kind, policy, tags, selected['selector']['file'][:-4])
-        if len(set(found)) != len(found):
-            raise RecordError('progress source container has duplicate native item Tags')
-        return frozenset(found)
-    return _statement_native_tag_coverage(selected, policy, tags)
+    fragment = _plain_statement(selected, policy) if kind in STATEMENTS else selected['fragment']
+    found = _plain_container_item_tags(fragment, kind, policy, tags, selected['selector']['file'][:-4])
+    if len(set(found)) != len(found):
+        raise RecordError('progress source container has duplicate native item Tags')
+    return frozenset(found)
 
 
-def _statement_native_tag_coverage(selected, policy, tags):
-    """Keep the existing v4 statement-boundary contract unchanged."""
+def _plain_statement(selected, policy):
+    """Remove the scanner-validated optional statement title before finding item tags."""
     kind = selected['selector']['kind']
     fragment = selected['fragment']
     opening = ENVIRONMENT.match(fragment)
@@ -102,7 +100,13 @@ def _statement_native_tag_coverage(selected, policy, tags):
     scanner = Scanner(fragment, policy)
     position = scanner.skip_space(opening.end())
     if fragment[position:position + 1] == '[':
-        fragment = fragment[:opening.end()] + fragment[scanner.argument_end(position):]
+        return fragment[:opening.end()] + fragment[scanner.argument_end(position):]
+    return fragment
+
+
+def _statement_native_tag_coverage(selected, policy, tags):
+    """Keep the existing v4 statement-boundary contract unchanged."""
+    fragment = _plain_statement(selected, policy)
     found = _item_tags(fragment, policy, tags, selected['selector']['file'][:-4])
     if len(set(found)) != len(found):
         raise RecordError('progress source container has duplicate native item Tags')

@@ -206,6 +206,71 @@ def _relative_input(root, path):
     return relative
 
 
+def _verify_task_scope_extension(original, updated):
+    """Allow future reservations without lending their permissions to old runs."""
+    message = 'first-source task scope drifted beyond a monotonic chapter extension'
+    for key in ('schema_version', 'task_id', 'owner', 'branch', 'source_commit'):
+        if original[key] != updated[key]:
+            raise RecordError(message + ': ' + key)
+    original_files = set(original['allowed_write_files'])
+    if not original_files <= set(updated['allowed_write_files']):
+        raise RecordError(message + ': removed task file')
+    old = {child['scope_id']: child for child in original['data_scopes']}
+    new = {child['scope_id']: child for child in updated['data_scopes']}
+    chapters = {child['chapter'] for child in old.values()}
+    if len(chapters) != 1 or not old.keys() <= new.keys():
+        raise RecordError(message + ': changed chapter or removed data scope')
+    chapter = next(iter(chapters))
+    model_scopes = {tuple(child['model_scope']) for child in old.values()}
+    if len(model_scopes) != 1:
+        raise RecordError(message + ': original task has multiple model scopes')
+    allowed_additions = set()
+    auxiliary_path = (r'(?:translation-data/(?:source-adoption-inputs|source-adoptions|runs)/'
+                      r'[A-Za-z0-9._-]+\.json|docs/evidence/[A-Za-z0-9._-]+\.(?:json|jsonl))')
+    candidate_lanes = {path.split('/')[2] for path in original_files
+                       if re.fullmatch(r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl', path)}
+    for identity, previous in old.items():
+        present = new[identity]
+        for key in previous.keys() - {'allowed_write_files', 'run_scope'}:
+            if previous[key] != present[key]:
+                raise RecordError(message + ': changed frozen coordinate ' + key)
+        if (not set(previous['allowed_write_files']) <= set(present['allowed_write_files'])
+                or not set(previous['run_scope']) <= set(present['run_scope'])):
+            raise RecordError(message + ': removed frozen file or run')
+        additions = set(present['allowed_write_files']) - set(previous['allowed_write_files'])
+        for path in additions:
+            if not re.fullmatch(auxiliary_path, path):
+                raise RecordError(message + ': changed data output ownership')
+        allowed_additions.update(additions)
+    for identity in new.keys() - old.keys():
+        child = new[identity]
+        if child['chapter'] != chapter or tuple(child['model_scope']) not in model_scopes:
+            raise RecordError(message + ': new scope changes chapter or model')
+        ids = set(child['output_unit_ids'])
+        if (not ids or not child['run_scope'] or ids != set(child['input_unit_ids'])
+                or ids != set(child['unit_ids'])):
+            raise RecordError(message + ': new scope lacks complete first-source IDs or runs')
+        for path in child['allowed_write_files']:
+            if re.fullmatch(auxiliary_path, path) or re.fullmatch(r'translation-data/units/[A-Za-z0-9._-]+\.jsonl', path):
+                continue
+            candidate = re.fullmatch(r'translation-data/candidates/([A-Za-z0-9._-]+)/[A-Za-z0-9._-]+\.jsonl', path)
+            if candidate is None or candidate[1] not in candidate_lanes:
+                raise RecordError(message + ': new scope has an unrelated data path or lane')
+        allowed_additions.update(child['allowed_write_files'])
+    # An extension cannot reserve a second writer for an existing output or run,
+    # even when the proposed file paths are distinct.
+    unit_owners, run_owners = set(), set()
+    for child in new.values():
+        ids, runs = set(child['output_unit_ids']), set(child['run_scope'])
+        if ids & unit_owners or runs & run_owners:
+            raise RecordError(message + ': overlapping output IDs or runs')
+        unit_owners.update(ids)
+        run_owners.update(runs)
+    allowed_additions.add(f'translation-data/chapter-templates/{chapter}.json')
+    if not set(updated['allowed_write_files']) - original_files <= allowed_additions:
+        raise RecordError(message + ': unrelated task file')
+
+
 def _task_scope(frozen, reads, input_entry, *, current):
     from .pr_contract import _scope_manifest
     task = frozen['task']
@@ -218,8 +283,14 @@ def _task_scope(frozen, reads, input_entry, *, current):
     scope = _scope_manifest(body, {task['scope_manifest']:task['scope_bytes']})
     if current:
         path = safe_path(reads.root, task['scope_manifest'], r'task-scopes/[A-Za-z0-9._-]+\.json')
-        if reads.snapshot.read(path) != task['scope_bytes'].encode('utf-8'):
-            raise RecordError('first-source task scope drifted since actual generation freeze')
+        payload = reads.snapshot.read(path)
+        if payload != task['scope_bytes'].encode('utf-8'):
+            current_body = body.replace(task['scope_manifest_sha256'], byte_hash(payload))
+            try:
+                updated = _scope_manifest(current_body, {task['scope_manifest']:payload.decode('utf-8')})
+            except ValueError as exc:
+                raise RecordError('first-source current task scope is invalid: ' + str(exc)) from exc
+            _verify_task_scope_extension(scope, updated)
         branch = subprocess.check_output(['git','-C',str(reads.root),'branch','--show-current'], text=True).strip()
         if branch != task['branch']:
             raise RecordError('first-source generation branch differs from its frozen task')

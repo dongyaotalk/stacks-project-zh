@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 94 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-104、106-111 章 |
+| 未开始 | 93 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-93、95-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 22 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、105、112-116 章 |
+| 候选译文完成，待审校 | 23 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、94、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 520 / 3,299（15.8%） | 0 | 2,779 |
+| 模型候选译文 | 539 / 3,299（16.3%） | 0 | 2,760 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -129,7 +129,7 @@
 | 91 | 形变理论（`defos`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 92 | 余切复形（`cotangent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 93 | 形变问题（`examples-defos`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
-| 94 | 代数栈（`algebraic`） | 未开始 | 0 / 19（0.0%） | 0 | 19 | 0 | 0 |
+| 94 | 代数栈（`algebraic`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
 | 95 | 栈的例子（`examples-stacks`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
 | 96 | 代数栈上的层（`stacks-sheaves`） | 未开始 | 0 / 26（0.0%） | 0 | 26 | 0 | 0 |
 | 97 | 可表性判据（`criteria`） | 未开始 | 0 / 19（0.0%） | 0 | 19 | 0 | 0 |
@@ -715,6 +715,32 @@
 | 8 | `04A9` | Invariant functions | 完成 | 未开始 | 未开始 |
 | 9 | `04AB` | Good quotients | 完成 | 未开始 | 未开始 |
 | 10 | `04AD` | Geometric quotients | 完成 | 未开始 | 未开始 |
+
+### 第 94 章 代数栈（`algebraic`）
+
+共 19 个 Section：候选完成 19，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `026L` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `026M` | Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `0400` | Notation | 完成 | 未开始 | 未开始 |
+| 4 | `02ZQ` | Representable categories fibred in groupoids | 完成 | 未开始 | 未开始 |
+| 5 | `04SS` | The 2-Yoneda lemma | 完成 | 未开始 | 未开始 |
+| 6 | `04ST` | Representable morphisms of categories fibred in groupoids | 完成 | 未开始 | 未开始 |
+| 7 | `04SU` | Split categories fibred in groupoids | 完成 | 未开始 | 未开始 |
+| 8 | `02ZV` | Categories fibred in groupoids representable by algebraic spaces | 完成 | 未开始 | 未开始 |
+| 9 | `04SX` | Morphisms representable by algebraic spaces | 完成 | 未开始 | 未开始 |
+| 10 | `03YJ` | Properties of morphisms representable by algebraic spaces | 完成 | 未开始 | 未开始 |
+| 11 | `0304` | Stacks in groupoids | 完成 | 未开始 | 未开始 |
+| 12 | `026N` | Algebraic stacks | 完成 | 未开始 | 未开始 |
+| 13 | `03YR` | Algebraic stacks and algebraic spaces | 完成 | 未开始 | 未开始 |
+| 14 | `04TD` | 2-Fibre products of algebraic stacks | 完成 | 未开始 | 未开始 |
+| 15 | `04T0` | Algebraic stacks, overhauled | 完成 | 未开始 | 未开始 |
+| 16 | `04T3` | From an algebraic stack to a presentation | 完成 | 未开始 | 未开始 |
+| 17 | `04TJ` | The algebraic stack associated to a smooth groupoid | 完成 | 未开始 | 未开始 |
+| 18 | `04X1` | Change of big site | 完成 | 未开始 | 未开始 |
+| 19 | `04X4` | Change of base scheme | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

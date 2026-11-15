@@ -36,7 +36,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | Section 1 / `03Y5` | `READY` | `REVIEW` |
 | P0 | 第 74 章 下降与代数空间（`spaces-descent`） | Section 1 / `03YF` | `READY` | `REVIEW` |
 | P0 | 第 78 章 代数空间中的群胚（`spaces-groupoids`） | Section 1 / `0438` | `READY` | `REVIEW` |
-| P0 | 第 83 章 群胚的商（`groupoids-quotients`） | Section 1 / `048B` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 83 章 群胚的商（`groupoids-quotients`） | Section 1 / `048B` | `READY` | `REVIEW` |
 | P0 | 第 94 章 代数栈（`algebraic`） | Section 1 / `026L` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 97 章 可表性判据（`criteria`） | Section 1 / `05XF` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 90 章 形式形变理论（`formal-defos`） | Section 1 / `06G8` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -61,7 +61,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 2 / 10 | 第 73 章 代数空间上的拓扑（`spaces-topologies`） | `scheme-to-stack` | Section 1 / `03Y5` | `REVIEW` | 代数空间下降与栈理论的重要支撑，系统中文资料稀缺 |
 | P0 | 2 / 11 | 第 74 章 下降与代数空间（`spaces-descent`） | `scheme-to-stack` | Section 1 / `03YF` | `REVIEW` | 下降与代数空间的核心桥梁，系统中文资料稀缺 |
 | P0 | 2 / 12 | 第 78 章 代数空间中的群胚（`spaces-groupoids`） | `scheme-to-stack` | Section 1 / `0438` | `REVIEW` | 代数空间中的群胚直接通往商和栈，系统中文资料稀缺 |
-| P0 | 2 / 13 | 第 83 章 群胚的商（`groupoids-quotients`） | `scheme-to-stack` | Section 1 / `048B` | `PREPARE_SCOPE` | 群胚取商位于商空间和栈的概念链中心，系统中文资料稀缺 |
+| P0 | 2 / 13 | 第 83 章 群胚的商（`groupoids-quotients`） | `scheme-to-stack` | Section 1 / `048B` | `REVIEW` | 群胚取商位于商空间和栈的概念链中心，系统中文资料稀缺 |
 | P0 | 2 / 14 | 第 94 章 代数栈（`algebraic`） | `stacks-moduli` | Section 1 / `026L` | `PREPARE_SCOPE` | 代数栈是项目核心，系统中文资料稀缺 |
 | P0 | 2 / 15 | 第 97 章 可表性判据（`criteria`） | `representability`, `stacks-moduli` | Section 1 / `05XF` | `PREPARE_SCOPE` | 可表性判据是模问题核心，系统中文资料稀缺 |
 | P0 | 2 / 16 | 第 90 章 形式形变理论（`formal-defos`） | `representability`, `moduli` | Section 1 / `06G8` | `PREPARE_SCOPE` | Artin 与 Schlessinger 路线的核心前置，系统中文资料稀缺 |

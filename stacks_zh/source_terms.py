@@ -33,6 +33,34 @@ def _qualified_declaration_parts(body: str, unit: dict[str, Any]) -> list[str] |
     math = r'<MATH_[0-9]{4}>'
     names = PLACEHOLDER_TOKEN_RE.findall(text)
     if names and all(name in unit['placeholders'] for name in names):
+        # Only complete source-witnessed inline-parameter declarations gain this
+        # decomposition. A connector separated from its noun by a formula is
+        # not a name in its own right; the real noun phrases remain required.
+        frames = [
+            (r'category ' + math + r' of formal objects of ' + math,
+             ['category', 'formal objects']),
+            (r'formal object ' + math + r' of ' + math, ['formal object']),
+            (r'morphism ' + math + r' of formal objects', ['morphism', 'formal objects']),
+            (r'tangent space of ' + math + r' at ' + math, ['tangent space']),
+            (r'differential ' + math + r' of ' + math + r' at ' + math, ['differential']),
+            (r'lift of ' + math + r' along ' + math, ['lift']),
+            (r'category of groupoids in functors on ' + math,
+             ['category of groupoids in functors']),
+            (r'groupoid in functors on ' + math, ['groupoid in functors']),
+            (r'morphism ' + math + r' of groupoids in functors on ' + math,
+             ['morphism', 'groupoids in functors']),
+            (r'presentation of ' + math + r' by ' + math, ['presentation']),
+        ]
+        for frame, cores in frames:
+            if not re.fullmatch(frame, text):
+                continue
+            from .math_text import delimiter_kind
+            try:
+                if all(delimiter_kind(unit['placeholders'][name]) in
+                       {'inline-dollar', 'inline-paren'} for name in names):
+                    return cores
+            except ValueError:
+                pass
         if re.fullmatch(r'(?:the )?' + math + r'th cohomology group of the abelian sheaf '
                         + math + r' over the object ' + math, text):
             return ['cohomology group', 'abelian sheaf', 'object']

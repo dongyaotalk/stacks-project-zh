@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 96 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-104、106-111 章 |
+| 未开始 | 95 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 20 | 第 1-4、7-8、21、34-35、41、59、65、73-74、105、112-116 章 |
+| 候选译文完成，待审校 | 21 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 481 / 3,299（14.6%） | 0 | 2,818 |
+| 模型候选译文 | 510 / 3,299（15.5%） | 0 | 2,789 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -113,7 +113,7 @@
 | 75 | 代数空间的导出范畴（`spaces-perfect`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 76 | 代数空间的态射进阶（`spaces-more-morphisms`） | 未开始 | 0 / 57（0.0%） | 0 | 57 | 0 | 0 |
 | 77 | 代数空间上的平坦性（`spaces-flat`） | 未开始 | 0 / 13（0.0%） | 0 | 13 | 0 | 0 |
-| 78 | 代数空间中的群胚（`spaces-groupoids`） | 未开始 | 0 / 29（0.0%） | 0 | 29 | 0 | 0 |
+| 78 | 代数空间中的群胚（`spaces-groupoids`） | 候选译文完成，待审校 | 29 / 29（100.0%） | 0 | 0 | 0 | 0 |
 | 79 | 代数空间中的群胚进阶（`spaces-more-groupoids`） | 未开始 | 0 / 15（0.0%） | 0 | 15 | 0 | 0 |
 | 80 | 自举（`bootstrap`） | 未开始 | 0 / 12（0.0%） | 0 | 12 | 0 | 0 |
 | 81 | 代数空间的推出（`spaces-pushouts`） | 未开始 | 0 / 14（0.0%） | 0 | 14 | 0 | 0 |
@@ -662,6 +662,42 @@
 | 21 | `0CFY` | Properties of morphisms \'etale-smooth local on source-and-target | 完成 | 未开始 | 未开始 |
 | 22 | `0ADF` | Descent data for spaces over spaces | 完成 | 未开始 | 未开始 |
 | 23 | `0ADS` | Descent data in terms of sheaves | 完成 | 未开始 | 未开始 |
+
+### 第 78 章 代数空间中的群胚（`spaces-groupoids`）
+
+共 29 个 Section：候选完成 29，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `0438` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `0439` | Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `043A` | Notation | 完成 | 未开始 | 未开始 |
+| 4 | `043B` | Equivalence relations | 完成 | 未开始 | 未开始 |
+| 5 | `043G` | Group algebraic spaces | 完成 | 未开始 | 未开始 |
+| 6 | `06P5` | Properties of group algebraic spaces | 完成 | 未开始 | 未开始 |
+| 7 | `06P7` | Examples of group algebraic spaces | 完成 | 未开始 | 未开始 |
+| 8 | `043P` | Actions of group algebraic spaces | 完成 | 未开始 | 未开始 |
+| 9 | `04TV` | Principal homogeneous spaces | 完成 | 未开始 | 未开始 |
+| 10 | `043S` | Equivariant quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 11 | `043V` | Groupoids in algebraic spaces | 完成 | 未开始 | 未开始 |
+| 12 | `0440` | Quasi-coherent sheaves on groupoids | 完成 | 未开始 | 未开始 |
+| 13 | `0GPN` | Colimits of quasi-coherent modules | 完成 | 未开始 | 未开始 |
+| 14 | `077Y` | Crystals in quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 15 | `0443` | Groupoids and group spaces | 完成 | 未开始 | 未开始 |
+| 16 | `0446` | The stabilizer group algebraic space | 完成 | 未开始 | 未开始 |
+| 17 | `044A` | Restricting groupoids | 完成 | 未开始 | 未开始 |
+| 18 | `044E` | Invariant subspaces | 完成 | 未开始 | 未开始 |
+| 19 | `044H` | Quotient sheaves | 完成 | 未开始 | 未开始 |
+| 20 | `044O` | Quotient stacks | 完成 | 未开始 | 未开始 |
+| 21 | `04Y3` | Functoriality of quotient stacks | 完成 | 未开始 | 未开始 |
+| 22 | `04M8` | The 2-cartesian square of a quotient stack | 完成 | 未开始 | 未开始 |
+| 23 | `04MA` | The 2-coequalizer property of a quotient stack | 完成 | 未开始 | 未开始 |
+| 24 | `04MB` | Explicit description of quotient stacks | 完成 | 未开始 | 未开始 |
+| 25 | `046R` | Restriction and quotient stacks | 完成 | 未开始 | 未开始 |
+| 26 | `06PA` | Inertia and quotient stacks | 完成 | 未开始 | 未开始 |
+| 27 | `06PD` | Gerbes and quotient stacks | 完成 | 未开始 | 未开始 |
+| 28 | `04WW` | Quotient stacks and change of big site | 完成 | 未开始 | 未开始 |
+| 29 | `0453` | Separation conditions | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

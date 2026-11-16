@@ -1,4 +1,4 @@
-"""Opt-in plain leaves and five operators in complete locked source frames.
+"""Opt-in plain leaves and six mathematical names in complete locked source frames.
 
 No production policy registration, translation or adoption occurs here. Only
 plain natural parameters vary; every symbol, operand and other byte is exact.
@@ -7,7 +7,7 @@ from .math_text_descent import _frame_nodes
 
 USAGE = 'deformations-source-frames'
 USAGES = {USAGE}
-OPERATORS = {'Res', 'Cof', 'CofSet', 'Mod', 'Inf'}
+OPERATORS = {'Res', 'Cof', 'CofSet', 'Mod', 'Inf', '-Alg'}
 SYMBOLS = OPERATORS | {'Aut', 'Der', 'Lift', 'id', 'Sets'}
 NOTATION_USAGE = 'deformations-symbol-frame'
 CONTEXTS = {USAGE: {
@@ -20,7 +20,7 @@ CONTEXTS = {USAGE: {
     ('root-phrase', ' over '),
     ('root-phrase', ' for '),
 }}
-LITERAL_EXCEPTIONS = {'-Alg', '-dimensional algebras ', '-orbits.', 'resp.'}
+LITERAL_EXCEPTIONS = {'-dimensional algebras ', '-orbits.', 'resp.'}
 
 
 def literal_exception(literal, role):
@@ -398,8 +398,6 @@ NATURAL_FRAMES = ('$$\n'
  '}\n'
  '}\n'
  '$$',
- '$\\text{Mod}_R \\to S\\text{-Alg}/R$',
- '$S\\text{-Alg}/R$',
  '$$\n'
  '\\vcenter{\n'
  '\\xymatrix{\n'
@@ -757,4 +755,5 @@ NOTATION_FRAMES = ('\\begin{equation}\n'
  '\\text{Inf}(\\mathcal{F}_{l/k})\n'
  '$$',
  '$\\text{Inf}(\\mathcal{F}) = \\text{Inf}_{x_0}(\\mathcal{F})$',
- '$\\text{Inf}(\\mathcal{F}_{l/k}) = \\text{Inf}_{x_{l, 0}}(\\mathcal{F}_{l/k})$')
+ '$\\text{Inf}(\\mathcal{F}_{l/k}) = \\text{Inf}_{x_{l, 0}}(\\mathcal{F}_{l/k})$',
+ '$S\\text{-Alg}/R$')

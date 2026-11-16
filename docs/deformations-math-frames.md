@@ -11,23 +11,31 @@ literal、来源标签与有限 context；每章随后按自己的来源采用/�
 来源固定为 `a04446e57ec1fbc252a871afcec7752fb2807b14`。独立
 [fixture](../tests/fixtures/deformations-math-frames.json) 核验三个完整 Git blob、
 166条诊断的所在库存片段、完整数学帧和各自原字节 hash。112个不同完整帧中，
-47帧含纯文字自然参数，69帧含新有限算子上下文，四帧重叠。
+45帧含纯文字自然参数，70帧含新有限记号上下文，三帧重叠。
 真实容器 selector、原生产选择失败和隔离试验的完整选择/lowering另在同一
 fixture保存。试验政策只在测试内构造，不写生产或用作事实采用的接受基线。
 
 `deformations-source-frames` 只允许完整帧中预先声明的 `text` 自然参数取
 纯文字值。公式操作数、箭头、括号、引用、环境、嵌套深度、字体/命令包装及
-所有参数外间隔逐字匹配。`resp.`、`-Alg`、`-orbits.`和
+所有参数外间隔逐字匹配。`resp.`、`-orbits.`和
 `-dimensional algebras `是该角色的精确标点词形，不构成一般正则放宽。
 已有普通角色在适用的完整帧中继续优先；继承 context 只接受实现列出的
 精确旧角色/literal配对。其他 literal、命令、参数或帧继续拒绝。
 
-`Res`、`Cof`、`CofSet`只能登记为 `text` 的独占
+`Res`、`Cof`、`CofSet`、`-Alg`只能登记为 `text` 的独占
 `deformations-symbol-frame`角色。`Mod`、`Inf`的既有直接角色与字体合同
-保持，可另外声明有限 context；新角色同样只接受这五个名字的 `text`参数。
+保持，可另外声明有限 context；新角色同样只接受这六个名字的 `text`参数。
 这些符号及旧 `Aut`、`Der`、`Lift`、`id`、`Sets`在所有帧内均为不透明
 原字节，绝不能成为可译槽。改变算子名字、字体、操作数或数学间隔不能借用
 新角色。自然槽在术语投影中保持可见，译文仍接受原数学 skeleton校验。
+
+锁定 formal-defos 06I2 的完整 `prose_block/3` 明确把 `S\text{-Alg}/R` 定义为
+S-代数在 R 上的范畴。该缩写后缀的七条见证只使用两条完整原式：
+`$S\text{-Alg}/R$` 和 `$\text{Mod}_R \to S\text{-Alg}/R$`。
+两条公式均完整锁定，`-Alg` 不产生自然文字槽或术语投影。
+这不扩展其他缩写、基底、字体或间隔；已接受的自然文字 `-Algebras` 仍须
+按完整 typed text 帧翻译。原错误分类的 fixture 与实现保存在本地前置证据中，
+全部166条锁定来源见证和完整原字节保持。
 
 ## 继续阻断的来源
 

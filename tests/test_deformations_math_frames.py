@@ -117,7 +117,8 @@ class DeformationsMathFramesTests(unittest.TestCase):
         self.assertTrue(FIXTURE['source_only']);self.assertFalse(FIXTURE['actual_model_data'])
         self.assertEqual(tuple(FIXTURE['natural_frames']),wave.NATURAL_FRAMES)
         self.assertEqual(tuple(FIXTURE['notation_frames']),wave.NOTATION_FRAMES)
-        self.assertEqual((len(FRAMES),len(wave.NATURAL_FRAMES),len(wave.NOTATION_FRAMES)),(112,47,69))
+        self.assertEqual((len(FRAMES),len(wave.NATURAL_FRAMES),len(wave.NOTATION_FRAMES)),(112,45,70))
+        self.assertEqual(len(set(wave.NATURAL_FRAMES) & set(wave.NOTATION_FRAMES)),3)
         self.assertEqual(len(FIXTURE['excluded_reference_frames']),6)
         self.assertEqual(len(FIXTURE['excluded_reference_literals']),2)
         self.assertEqual(len(FIXTURE['excluded_macro_diagnostics']),4)
@@ -185,6 +186,31 @@ class DeformationsMathFramesTests(unittest.TestCase):
             self.assertTrue(Scanner(f,self.policy).protect(0,len(f))[2])
         for f in [r'$\text{Res}(Q)$',r'$\text{Cof}$',r'$\text{CofSet}$']:
             self.assertTrue(Scanner(f,self.policy).protect(0,len(f))[2])
+
+    def test_alg_category_suffix_has_no_translatable_leaf(self):
+        from stacks_zh.source_terms import source_projection
+        frames=(r'$S\text{-Alg}/R$',r'$\text{Mod}_R \to S\text{-Alg}/R$')
+        for frame in frames:
+            with self.subTest(frame=frame):
+                self.assertEqual(find_slots(frame,self.policy.math_text_rules),[])
+                text,protected,errors=Scanner(frame,self.policy).protect(0,len(frame))
+                self.assertFalse(errors)
+                self.assertEqual(len(protected),1)
+                self.assertEqual(list(protected.values()),[frame])
+                self.assertNotIn('-Alg',text)
+        unit=lower_container(Containers(self.root,self.harvest).select(selector()),self.policy)[0]
+        self.assertNotIn('-Alg',source_projection(unit)[0])
+        self.assertIn(frames[0],source_tex(unit))
+        for frame in frames:
+            for changed in (frame.replace('S','T'),frame.replace('/R','/Q'),
+                            frame.replace('text{','textit{'),frame.replace('-Alg','-ALG'),
+                            frame.replace('-Alg','-Algebras'),frame.replace('/R',' /R')):
+                self.assertTrue(Scanner(changed,self.policy).protect(0,len(changed))[2])
+                self.assertFalse(any(wave.notation_context(changed,nodes(changed),i,n.get('value'),wave.NOTATION_USAGE)
+                                     for i,n in enumerate(nodes(changed))))
+        for name in ('-ALG','-Other'):
+            with self.assertRaises(RecordError):
+                Policy(trial_policy().replace('  -Alg:\n','  '+name+':\n',1))
 
     def test_locked_git_native_source_witnesses_and_full_container_trials(self):
         harvest=Path(os.environ.get('HARVEST_DIR',str(ROOT.parent/'stacks-project')))

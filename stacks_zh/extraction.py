@@ -147,7 +147,7 @@ class Policy:
                         raise RecordError('invalid or duplicate math-text notation policy section')
                     notation_section_seen = True
             elif section == 'locked_math_text_notations':
-                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|Ind-|Pro-):', line) or line == "  F\\'Et:":
+                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|-Alg|Ind-|Pro-):', line) or line == "  F\\'Et:":
                     group = line.strip()[:-1]
                     if group in self.math_text_notations:
                         raise RecordError('duplicate math-text notation policy entry')
@@ -236,9 +236,9 @@ class Policy:
                             'red': ('text', 'etale-reduced-norm'),
                             'Spaces': ('textit', 'spaces-category'),
                             'CQC': ('textit', 'groupoids-cqc-category')}
-            if (notation in {'Res', 'Cof', 'CofSet'}
+            if (notation in {'Res', 'Cof', 'CofSet', '-Alg'}
                     or 'deformations-symbol-frame' in rule['usages']) and (
-                    notation not in {'Res', 'Cof', 'CofSet', 'Mod', 'Inf'}
+                    notation not in {'Res', 'Cof', 'CofSet', 'Mod', 'Inf', '-Alg'}
                     or rule['commands'] != ['text']
                     or rule['usages'] != ['deformations-symbol-frame'] or 'contexts' in rule):
                 raise RecordError('deformations operator requires its sole exact finite text role')

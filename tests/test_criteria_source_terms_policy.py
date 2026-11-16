@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = json.loads((ROOT / 'tests/fixtures/criteria-source-terms-policy.json').read_text())
 ORIGINAL = json.loads(subprocess.check_output(
     ['git', 'show', FIXTURE['accepted_base'] + ':config/source-terms.json'], cwd=ROOT))
+ORIGINAL_MACRO = subprocess.check_output(
+    ['git', 'show', FIXTURE['accepted_base'] + ':config/macro-policy.yml'], cwd=ROOT)
 CATALOG = load_catalog(ROOT)
 
 
@@ -126,16 +128,19 @@ class CriteriaSourceTermsPolicyTests(unittest.TestCase):
     @unittest.skipUnless(os.environ.get('HARVEST_DIR'), 'requires explicit read-only locked harvest')
     def test_independent_locked_git_select_and_canonical_lowering(self):
         from stacks_zh.source_containers import Containers
-        native = Containers(ROOT, Path(os.environ['HARVEST_DIR']))
+        native = Containers(ROOT, Path(os.environ['HARVEST_DIR']), policy_bytes=ORIGINAL_MACRO)
         checked = {}
         for case in FIXTURE['witnesses']:
             key = json.dumps(case['selector'], sort_keys=True)
             if key not in checked:
+                self.assertEqual(case['selected']['macro_policy_hash'],
+                                 'sha256:' + hashlib.sha256(ORIGINAL_MACRO).hexdigest())
                 selected = native.select(case['selector'])
                 self.assertEqual(clean(selected), clean(case['selected']))
                 checked[key] = lower_container(selected, native.policy, layout='whole')
             unit, = [u for u in checked[key] if u['unit_id'] == case['unit']['unit_id']]
             self.assertEqual(clean(unit), case['unit'])
+        native.assert_unchanged()
 
 
 if __name__ == '__main__':

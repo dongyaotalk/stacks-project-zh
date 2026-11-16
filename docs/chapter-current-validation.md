@@ -79,8 +79,19 @@ run/章节/parent、接受 origin 的模型/Harness注册和其余来源/政策/
 全部保持；只支持无前继的原v1/v4准备。该原身份不得有 run、采用或当前候选。
 其他 scope 错误继续阻断；不改原 scope，不将负结果转为成功生成或祖先凭证。
 未采用准备保留的分片和局部重试输出沿用既有 `_raw_records`，按原预留路径顺序
-绑定每份原字节/hash和实际unit顺序；汇集后必须覆盖全部冻结unit，单份不得重复
+绑定每份原字节/hash和实际unit顺序；通常汇集后必须覆盖全部冻结unit，单份不得重复
 或越出原unit集合，五字段Schema仍检查。没有raw的库存不宣称模型生成。
+独立工具 #1022 另保存完整有效原v1/v4准备的部分输出库存：仅在原解析器完成
+全部路径、hash、ID、顺序及unit_id加五字段Schema检查后，因完整聚合覆盖缺失
+而拒绝时适用。原scope/runtime/模型注册/政策必须有效，不借用上述错误scope或
+policy负结果兼容；原身份不得有run、采用、前继或当前候选，origin须属于接受
+主线祖先。完整锁定来源、上下文与输入复核继续执行，不增加来源/数学权限。
+报告raw_inventory的expected/present/missing IDs及全部尝试原字节hash和顺序，
+标记partial-output-inventory、generation_validation=not_claimed、run_created=false、
+adoption_created=false。它不是完整生成、已验证失败run或祖先凭证，也不免除当前
+unit/candidate覆盖门禁。原冻结scope由既有current=False合同核验；同一任务后来
+授权扩范围时不回写旧scope快照。实际装配、失败run重放及完整raw聚合解析器保持
+严格；范围外、重复、Schema或其他输入错误仍失败，空输出不冒称实际生成。
 若同类无前继、无run/采用/该身份候选的原v1/v4准备误记 origin，只有三个既有
 来源Schema的hash可进入负结果：完整冻结政策集合必须精确匹配一个更晚的真实
 接受主线Git快照，来源/模型/Harness/提示/词表等其他政策保持原origin字节。保留

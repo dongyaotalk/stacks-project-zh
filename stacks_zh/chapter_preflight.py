@@ -163,6 +163,8 @@ def _prepared(entry, native, section_by_tag):
                         automatic_adoption_permission=False),
                     covered_tags=sorted(covered), source_word_count=sum(_source_word_count(u['source_text']) for u in units),
                     source_contract='source-adoption-v4' if selector['kind'] == 'title_title' else
+                                    'source-adoption-v7; complete first generation only, no historical restoration/revision permission'
+                                    if first_adoption and any(u.get('schema_version') == 5 for u in units) else
                                     'source-adoption-v1/v2/v3; existing-source replacement requires complete v4 restoration' if first_adoption else
                                     'complete-v4-existing-source-restoration; no first-adoption contract for a non-Section prose parent',
                     capabilities=dict(complete_container=True, protected_roundtrip=True,

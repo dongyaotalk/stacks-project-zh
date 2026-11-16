@@ -218,7 +218,7 @@ def _restored_container_tag_coverage(
 def _first_adoption_tag_coverage(root, harvest, units_by_file):
     """Verify source preparation only; candidate/history QA remains independent."""
     from .derivations import _git_origin_bytes
-    from .source_adoptions import POLICIES, REFERENCE_POLICIES, Reads, _schema, _task_scope
+    from .source_adoptions import POLICIES, REFERENCE_POLICIES, INTERNAL_REFERENCE_POLICIES, Reads, _schema, _task_scope, _internal_reference_origin, _first_reference_contract
 
     directory = root / 'translation-data/source-adoptions'
     paths = tuple(glob_paths(directory, '*.json'))
@@ -279,7 +279,8 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
             raise RecordError('progress first adoption has a different source identity')
         _task_scope(frozen, reads, record['input'], current=False)
         policies = frozen['policies']
-        required = REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else POLICIES
+        required = (INTERNAL_REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v7'
+                    else REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else POLICIES)
         if len(policies) != len(required) or {p['path'] for p in policies} != set(required):
             raise RecordError('progress first adoption lacks its complete origin policy set')
         historical = {}
@@ -288,6 +289,9 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
             if byte_hash(raw) != entry['hash']:
                 raise RecordError('progress first adoption origin policy hash differs')
             historical[entry['path']] = raw
+        if frozen['tool_version'] == 'source-adoption-input-v7':
+            _internal_reference_origin(historical)
+            _first_reference_contract([u for b in frozen['batches'] for u in b['units']], frozen['tool_version'])
         if commit not in historical['upstream.lock'].decode('utf-8'):
             raise RecordError('progress first adoption origin has a different English lock')
         native = Containers(root, harvest, policy_bytes=historical['config/macro-policy.yml'])

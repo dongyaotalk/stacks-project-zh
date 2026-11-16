@@ -384,10 +384,14 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 or model_input['scope_manifest']!=dict(path=frozen['task']['scope_manifest'],hash=frozen['task']['scope_manifest_sha256'])):
             raise RecordError('model-input evidence differs from its complete frozen inputs')
         policies={e['path']:e for e in frozen['policies']}
-        required_policies = a.REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else a.POLICIES
+        required_policies = (a.INTERNAL_REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v7'
+                             else a.REFERENCE_POLICIES if frozen['tool_version'] == 'source-adoption-input-v6' else a.POLICIES)
         if len(policies)!=len(required_policies) or set(policies)!=set(required_policies):
             raise RecordError('preparation lacks complete frozen policies')
         policy_bytes,policy_errors,schema_witness=_preparation_policy_bytes(root,frozen,snapshot)
+        if frozen['tool_version'] == 'source-adoption-input-v7':
+            a._internal_reference_origin(policy_bytes)
+            a._first_reference_contract(units, frozen['tool_version'])
         if frozen['source_commit'] not in policy_bytes['upstream.lock'].decode():
             raise RecordError('preparation differs from frozen English lock')
         if scope_errors or policy_errors:_rejected_preparation_registry(frozen,policy_bytes)

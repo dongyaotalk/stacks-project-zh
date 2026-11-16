@@ -17,6 +17,7 @@ from . import math_text_etale as etale
 from . import math_text_sites_cohomology as sites
 from . import math_text_spaces as spaces
 from . import math_text_groupoids as groupoids
+from . import math_text_deformations as deformations
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
@@ -26,7 +27,7 @@ USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
           'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
           'matrix-row-statement', 'matrix-operator-compatibility',
-          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES | groupoids.USAGES
+          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES | groupoids.USAGES | deformations.USAGES
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -119,7 +120,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 literal == '-isomorphism' if rule.get('usage') == 'numeric-isomorphism-suffix'
                 else module_suffix or etale.literal_exception(literal, rule.get('usage'))
                 or sites.literal_exception(literal, rule.get('usage'))
-                or groupoids.literal_exception(literal, rule.get('usage')) or re.fullmatch(literal_pattern, literal))
+                or groupoids.literal_exception(literal, rule.get('usage'))
+                or deformations.literal_exception(literal, rule.get('usage')) or re.fullmatch(literal_pattern, literal))
                 or not re.search(r'[A-Za-z]{2,}', literal) or literal in seen_literals):
             raise ValueError('invalid or duplicate natural math-text literal')
         if literal in notations:
@@ -156,7 +158,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                          and base['literal'] in expected[context['usage']])
                         or (base['usage'], base['literal']) in etale.CONTEXTS.get(context['usage'], set())
                         or (base['usage'], base['literal']) in spaces.CONTEXTS.get(context['usage'], set())
-                        or (base['usage'], base['literal']) in groupoids.CONTEXTS.get(context['usage'], set()))):
+                        or (base['usage'], base['literal']) in groupoids.CONTEXTS.get(context['usage'], set())
+                        or (base['usage'], base['literal']) in deformations.CONTEXTS.get(context['usage'], set()))):
             raise ValueError('natural context requires its exact ordinary root literal and new role')
         pair = (base['literal'], context['usage'])
         if pair in context_pairs:
@@ -474,6 +477,8 @@ def _context_usage(source, stream, index, kind):
 
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
+    if kind in deformations.USAGES:
+        return deformations.usage(source, stream, index, kind)
     qualified = groupoids.qualified_usage(source, stream, index, kind)
     if qualified is not None:
         return qualified

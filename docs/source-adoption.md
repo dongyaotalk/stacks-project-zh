@@ -138,6 +138,25 @@ context hash 顺序另存于 `generation_context_hashes`。`raw_attempts` 保存
 不新增当前 adoption、候选、进度或渲染正文，不消费当前前继，不获得任何审校、
 术语或发布状态。失败证据变化或新增/移除 run 文件会使同次凭证失效。
 
+### 未采用的部分输出库存（独立工具 #1022）
+
+来源门禁中止一个模型包时，完整冻结的原v1/v4准备可能保存了部分实际输出而没有
+run或采用。当前章节检查可将其列为负结果库存，前提是原scope/runtime/模型/政策
+及接受origin均有效、没有前继或该身份当前候选，全部现存预留raw原字节/hash、
+文件顺序、unit IDs与完整五字段Schema已由原解析器核验；唯一覆盖拒绝必须是
+缺少某些冻结unit的完整记录。原source/context检查及所有输入变化门禁仍适用。
+
+报告精确expected/present/missing IDs和原尝试绑定，声明
+`partial-output-inventory`、`generation_validation=not_claimed`、
+`run_created=false`、`adoption_created=false`。不创建新的历史run格式，不把部分
+输出转为成功生成、已验证失败run、来源采用或祖先，不重写旧raw/run/freeze/
+model-input/runtime/scope快照。原完整聚合解析器、实际装配及失败run重放保持
+严格；其他路径/hash/ID/Schema/身份或政策缺陷不能进入此部分库存路径。
+
+具体数据仍须在工具接受后独立声明范围。后来需要完整候选时，按已接受来源合同
+冻结新的完整模型包并实际生成；旧部分库存不替代来源/术语/保护/完整生成门禁。
+精确细则见 [当前章节验收](chapter-current-validation.md)。
+
 ## 来源权限
 
 从锁定 English Git 重新选择完整容器，验证真实 owner、Section、kind、ordinal、

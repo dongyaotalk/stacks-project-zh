@@ -345,6 +345,54 @@ def _adopted_unselected_raw_inventory(root, frozen, model_input, entry, scope, s
             for item in attempts if item['path'] in extras]
 
 
+def _partial_unadopted_raw_inventory(root, frozen, attempts, scope, snapshot,
+                                   scope_errors, policy_errors):
+    """Keep a valid partial preparation as inventory, never an adopted run.
+
+    The complete parser and all actual assembly/history paths stay unchanged.
+    Its exact missing-coverage failure proves every present row passed the
+    original path, duplicate, ID, order, hash and five-field Schema checks.
+    """
+    from . import source_adoptions as a
+    try:
+        a._raw_records(a.Reads(root), attempts, frozen['unit_ids'], scope['allowed_write_files'])
+        return None
+    except RecordError as exc:
+        if str(exc) != 'raw output lacks a complete model record for every unit':
+            raise
+        if scope_errors or policy_errors:
+            raise
+    aid, run_id = frozen['adoption_id'], frozen['run_id']
+    if (frozen['tool_version'] not in {'source-adoption-input-v1', 'source-adoption-input-v4'}
+            or 'prior_adoptions' in frozen or 'shared_run_histories' in frozen
+            or any(b['prior_attempts'] for b in frozen['batches'])
+            or (root/f'translation-data/source-adoptions/{aid}.json').exists()
+            or (root/f'translation-data/runs/{run_id}.json').exists()):
+        raise RecordError('partial preparation must have no run/adoption or predecessor')
+    for batch in frozen['batches']:
+        path=safe_path(root,batch['candidates_path'],r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
+        if path.exists() and any(c.get('run_id')==run_id or c.get('source_adoption_id')==aid
+                                 for c in snapshot.jsonl(path)):
+            raise RecordError('partial preparation identity supplies a current candidate')
+    accepted=any(all(subprocess.run(['git','-C',str(root),'merge-base','--is-ancestor',x,y],
+                    capture_output=True).returncode==0
+                    for x,y in ((frozen['origin_commit'],anchor),(anchor,'HEAD')))
+                 for anchor in ('refs/remotes/origin/main','refs/heads/main'))
+    if not accepted:
+        raise RecordError('partial preparation origin is not accepted main ancestry')
+    # _task_scope(current=False) already validated the historical frozen scope.
+    # A later authorized scope expansion never rewrites that original snapshot.
+    present={uid for attempt in attempts for uid in attempt['unit_ids']}
+    ordered=[uid for uid in frozen['unit_ids'] if uid in present]
+    missing=[uid for uid in frozen['unit_ids'] if uid not in present]
+    if not ordered or not missing:
+        raise RecordError('partial preparation requires a nonempty proper output subset')
+    a._raw_records(a.Reads(root), attempts, ordered, scope['allowed_write_files'])
+    return dict(disposition='partial-output-inventory',expected_unit_ids=frozen['unit_ids'],
+                present_unit_ids=ordered,missing_unit_ids=missing,raw_attempts=attempts,
+                generation_validation='not_claimed',run_created=False,adoption_created=False)
+
+
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):
     """Check actual model-input/runtime copies, including never-adopted preparation.
 
@@ -460,7 +508,8 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
             raw=snapshot.read(path)
             rows=[json.loads(x) for x in raw.decode().splitlines() if x.strip()]
             attempts.append(dict(path=p,hash=byte_hash(raw),unit_ids=[row.get('unit_id') for row in rows]))
-        if attempts:a._raw_records(a.Reads(root),attempts,frozen['unit_ids'],scope['allowed_write_files'])
+        partial_inventory=(_partial_unadopted_raw_inventory(root,frozen,attempts,scope,snapshot,
+                           scope_errors,policy_errors) if attempts else None)
         prep_native=a._daily_containers(root,harvest,policy_bytes['config/macro-policy.yml'])
         # Preparations are inventory, not successful generation. Check the
         # canonical lowered source and report non-native selector snapshots as
@@ -501,6 +550,9 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                     or value.get('failure_stage')!='complete-native-selector-freeze'
                     or not source_errors or value.get('observed_assembly_error')!='ERROR: '+source_errors[0]):
                 raise RecordError('preparation rejection does not reproduce at native selector gate')
-        diagnostics.append(dict(input=entry['path'],status='rejected-unadopted-preparation' if source_errors or scope_errors or policy_errors else 'unadopted-preparation',source_errors=sorted(set(source_errors)),scope_errors=scope_errors,policy_errors=policy_errors,source_schema_witness=schema_witness,legacy_zeroth_projection=legacy_projection,run_created=run.exists(),
-                                generation_validation='not_claimed',history_audit='not_run'))
+        detail=dict(input=entry['path'],status='rejected-unadopted-preparation' if source_errors or scope_errors or policy_errors else 'unadopted-preparation',source_errors=sorted(set(source_errors)),scope_errors=scope_errors,policy_errors=policy_errors,source_schema_witness=schema_witness,legacy_zeroth_projection=legacy_projection,run_created=run.exists(),
+                    generation_validation='not_claimed',history_audit='not_run')
+        if partial_inventory is not None:
+            detail['raw_inventory']=partial_inventory
+        diagnostics.append(detail)
     return diagnostics

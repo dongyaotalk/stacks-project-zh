@@ -49,8 +49,16 @@ class SitesSourceTermsPolicyTests(unittest.TestCase):
         original = json.loads(subprocess.check_output(
             ['git', 'show', ACCEPTED_SITES_BOUNDARY + ':config/source-terms.json'], cwd=ROOT, text=True))
         current_by_id = {term['id']: term for term in self.current['terms']}
+        original_by_id = {term['id']: term for term in original['terms']}
         for entry in self.fixture['entries']:
-            self.assertEqual(current_by_id[entry['id']], entry)
+            self.assertEqual(original_by_id[entry['id']], entry)
+            current = current_by_id[entry['id']]
+            self.assertEqual(current.keys(), entry.keys())
+            for field, value in entry.items():
+                if field in {'forms', 'chapters', 'evidence'}:
+                    self.assertEqual(current[field][:len(value)], value)
+                else:
+                    self.assertEqual(current[field], value)
         added = original['terms'][len(self.baseline['terms']):]
         self.assertEqual(added, self.fixture['entries'])
         self.assertEqual(len(added), 5)

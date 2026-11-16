@@ -71,7 +71,7 @@ def _notation_context_registry(text, notations):
     result, seen_contexts = {}, set()
     for value in entries.values():
         base = value.get('base_notation')
-        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb', 'can'}:
+        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb', 'can', 'Mod', 'Inf'}:
             raise RecordError('notation context requires its existing direct pr/-Sets/PAb/can base')
         fields = {'base_notation', 'commands', 'usages', 'source_label'}
         if base == '-Sets' and value.get('usages') != ['etale-set-category']:
@@ -79,8 +79,9 @@ def _notation_context_registry(text, notations):
         if set(value) != fields:
             raise RecordError('incomplete notation context')
         commands, usages = value['commands'], value['usages']
-        expected_commands = ['text'] if base in {'pr','can'} else ['textit']
-        allowed = ({'etale-canonical-map'} if base == 'can' else {'sites-pab-shriek', 'etale-pab-category'} if base == 'PAb' else
+        expected_commands = ['text'] if base in {'pr','can','Mod','Inf'} else ['textit']
+        allowed = ({'deformations-symbol-frame'} if base in {'Mod','Inf'} else
+                   {'etale-canonical-map'} if base == 'can' else {'sites-pab-shriek', 'etale-pab-category'} if base == 'PAb' else
                    {'starred-subscripted', 'projection-declaration', 'descent-projection', 'etale-projection'} if base == 'pr' else
                    {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol', 'etale-set-category'})
         if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
@@ -146,7 +147,7 @@ class Policy:
                         raise RecordError('invalid or duplicate math-text notation policy section')
                     notation_section_seen = True
             elif section == 'locked_math_text_notations':
-                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|Ind-|Pro-):', line) or line == "  F\\'Et:":
+                if re.fullmatch(r'  (?:[A-Za-z]{2,}|-Sets|-Alg|Ind-|Pro-):', line) or line == "  F\\'Et:":
                     group = line.strip()[:-1]
                     if group in self.math_text_notations:
                         raise RecordError('duplicate math-text notation policy entry')
@@ -205,7 +206,7 @@ class Policy:
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
                                              'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
                                              'descent-relative-proj', 'etale-finite-etale-category', 'etale-reduced-norm',
-                                             'spaces-category', 'groupoids-cqc-category'})]:
+                                             'spaces-category', 'groupoids-cqc-category', 'deformations-symbol-frame'})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -235,6 +236,12 @@ class Policy:
                             'red': ('text', 'etale-reduced-norm'),
                             'Spaces': ('textit', 'spaces-category'),
                             'CQC': ('textit', 'groupoids-cqc-category')}
+            if (notation in {'Res', 'Cof', 'CofSet', '-Alg'}
+                    or 'deformations-symbol-frame' in rule['usages']) and (
+                    notation not in {'Res', 'Cof', 'CofSet', 'Mod', 'Inf', '-Alg'}
+                    or rule['commands'] != ['text']
+                    or rule['usages'] != ['deformations-symbol-frame'] or 'contexts' in rule):
+                raise RecordError('deformations operator requires its sole exact finite text role')
             for name, (font, role) in finite_roles.items():
                 if (notation == name or role in rule['usages']) and (
                         notation != name or rule['commands'] != [font]
@@ -532,6 +539,9 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind == 'deformations-symbol-frame':
+            from .math_text_deformations import notation_context
+            return notation_context(self.text, stream, index, value, kind)
         if kind == 'spaces-category':
             from .math_text_spaces import notation_context
             context = notation_context(self.text, stream, index, value, kind)
@@ -627,7 +637,7 @@ class Scanner:
                          'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection',
                          'sites-pab-shriek', 'etale-projection', 'etale-canonical-map',
                          'etale-set-category', 'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category',
-                         'spaces-category', 'groupoids-cqc-category'}:
+                         'spaces-category', 'groupoids-cqc-category', 'deformations-symbol-frame'}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']

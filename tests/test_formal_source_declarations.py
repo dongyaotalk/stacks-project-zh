@@ -1,7 +1,9 @@
 """Finite locked-source frames; connectors never become mathematical names."""
 import copy
+import hashlib
 import json
 import os
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -10,6 +12,8 @@ from stacks_zh.source_terms import _qualified_declaration_parts, source_projecti
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = json.loads((ROOT/'tests/fixtures/formal-source-declarations.json').read_text())
+ORIGINAL_MACRO = subprocess.check_output(
+    ['git', 'show', FIXTURE['accepted_base'] + ':config/macro-policy.yml'], cwd=ROOT)
 
 
 class FormalSourceDeclarationsTests(unittest.TestCase):
@@ -73,14 +77,17 @@ class FormalSourceDeclarationsTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get('HARVEST_DIR'), 'requires explicit read-only locked harvest')
     def test_independent_locked_git_select_and_whole_canonical_lowering(self):
-        native = Containers(ROOT, Path(os.environ['HARVEST_DIR']))
+        native = Containers(ROOT, Path(os.environ['HARVEST_DIR']), policy_bytes=ORIGINAL_MACRO)
         self.assertEqual(native.english.commit, FIXTURE['source_commit'])
         for case in FIXTURE['cases']:
+            self.assertEqual(case['selected']['macro_policy_hash'],
+                             'sha256:' + hashlib.sha256(ORIGINAL_MACRO).hexdigest())
             selected = native.select(case['selected']['selector'])
             self.assertEqual(clean(selected), case['selected'])
             unit, = [u for u in lower_container(selected,native.policy,layout='whole')
                      if u['unit_id']==case['unit']['unit_id']]
             self.assertEqual(clean(unit), case['unit'])
+        native.assert_unchanged()
 
 
 if __name__ == '__main__':

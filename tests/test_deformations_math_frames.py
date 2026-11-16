@@ -215,7 +215,7 @@ class DeformationsMathFramesTests(unittest.TestCase):
     def test_locked_git_native_source_witnesses_and_full_container_trials(self):
         harvest=Path(os.environ.get('HARVEST_DIR',str(ROOT.parent/'stacks-project')))
         if not (harvest/'.git').exists():self.skipTest('locked harvest unavailable')
-        native=Containers(ROOT,harvest)
+        native=Containers(ROOT,harvest,policy_bytes=BEFORE.encode())
         blobs={}
         for w in FIXTURE['witnesses']:
             chapter=w['chapter']

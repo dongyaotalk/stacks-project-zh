@@ -133,6 +133,9 @@ class Policy:
         self.special: set[str] = set()
         self.math_text_notations: dict[str, dict[str, Any]] = {}
         self.raw = text
+        from .numeric_item_labels import policy_registry
+        self.numeric_item_rules = policy_registry(text)
+        self.numeric_item_witnesses: dict[str, dict[str, Any]] = {}
         self.math_text_witnesses: dict[str, dict[str, Any]] = {}
         notation_section_seen = False
         section = group = command = ''
@@ -844,6 +847,7 @@ class Scanner:
 
         def walk(a: int, b: int) -> str:
             out: list[str] = []
+            numeric_environments: list[str] = []
             i = a
             while i < b:
                 c = self.text[i]
@@ -886,6 +890,14 @@ class Scanner:
                             stop = self.environment_end(i) if action == 'begin' else environment.end()
                             issue('unknown-environment', i, stop, 'environment is not a supported translatable body')
                             out.append(lock('UNKNOWN', i, stop)); i = stop; continue
+                        # A complete label is enabled only in the locally walked enumerate body.
+                        # Recursive text/optional arguments and partial item slices have no permission.
+                        if action == 'begin':
+                            numeric_environments.append(name)
+                        elif numeric_environments and numeric_environments[-1] == name:
+                            numeric_environments.pop()
+                        else:
+                            numeric_environments.clear()
                         out.append(lock('STRUCT', i, environment.end())); i = environment.end()
                         if action == 'begin' and self.text[self.skip_space(i):self.skip_space(i) + 1] == '[':
                             opening = self.skip_space(i); stop = self.argument_end(opening)
@@ -905,10 +917,24 @@ class Scanner:
                     elif name in {' ', '\t', '\r', '\n', ',', ';', ':', '!', '/', '\\', '%', '#', '$', '&', '_', '{', '}'}:
                         out.append(lock('SPACE' if name.isspace() else 'STRUCT', i, stop))
                     elif name in SCAFFOLD:
+                        if (name == 'item' and numeric_environments
+                                and numeric_environments[-1] == 'enumerate'
+                                and self.policy.numeric_item_rules
+                                and set(self.policy.numeric_item_witnesses)
+                                == set(self.policy.numeric_item_rules)):
+                            from .numeric_item_labels import label_end
+                            allowed = next(iter(self.policy.numeric_item_rules.values()))['literals']
+                            numeric_stop = label_end(self.text, i, end=b, allowed=allowed)
+                            if numeric_stop is not None:
+                                out.append(lock('STRUCT', i, numeric_stop))
+                                i = numeric_stop
+                                continue
                         if name in {'bibliography', 'bibliographystyle'}:
                             stop, _ = self.command_arguments(i)
                         elif name == 'item' and self.text[self.skip_space(stop):self.skip_space(stop) + 1] == '[':
                             opening = self.skip_space(stop); stop = self.argument_end(opening)
+                            if stop > b:
+                                raise SyntaxProblem('item label crosses source unit boundary', i)
                             out.extend([lock('ITEMOPEN', i, opening + 1), walk(opening + 1, stop - 1), lock('ITEMCLOSE', stop - 1, stop)])
                             i = stop; continue
                         out.append(lock('STRUCT', i, stop))
@@ -1220,6 +1246,8 @@ def _current_index(root: Path, tags: dict[str, str]):
 
 def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> None:
     """Validate source anchors independently of natural-text acceptance/cache."""
+    from .numeric_item_labels import resolve_policy_witnesses
+    resolve_policy_witnesses(policy, english)
     if not policy.math_text_rules:
         return
     from .math_text import find_slots, restore

@@ -96,6 +96,14 @@ defos 的 `tag:08U8:proof` / Set / index 0、`tag:08MM:statement` / Set / index 
 最终字节 hash 为 `sha256:1c2bcce41979b5c282eac775e823e7c797aefdcd0fa0faa28a061c24674c6e7e`。80 项见证中包括八次精确普通
 排除，全部旧概念、词形、证据及其他章节权限保持；不批准任何中文译法。
 
+该来源 fixture 的前后库存使用已接受的声明核心实现 #1015（main
+`666dfe82ddd62973ca092679f44686841378f888`）。集成时仅重新绑定
+06H3、06JE、06K3、06KX 四个完整单元的库存：删除见证的 `along`/`by`
+连接片段，从两个完整名词核心去掉 `of`，并识别第三处完整 `formal objects`。
+预期变换逐项核验；全部 unit、selector 和所选来源对象保持原字节，目录 hash
+不变。fixture 保存旧基线与旧 fixture hash；此测试基线修订不改写任何原模型
+freeze、raw、run 或候选库存。
+
 ## Spaces-groupoids 中完整拟凝聚模词形（Issue #988）
 
 已有 `source-phrase-quasi-coherent-module` 概念新增 `spaces-groupoids` 章节范围，

@@ -1,5 +1,109 @@
 # 来源侧术语出现清单
 
+## 第97/90/91章完整词形和精确普通用法（Issue #1012）
+
+锁定英文 `a04446e57ec1fbc252a871afcec7752fb2807b14` 的完整容器经独立
+select/whole lower 后，与未变整章预检准备逐字比较，并核对已有的实际冻结输入。现有 presheaf、Hilbert stack
+和 algebra-homomorphism 概念分别增加精确 `pre-sheaves`、`Hilbert stacks`、
+`algebra homomorphisms`；原 forms、chapters 和 evidence 保持。
+
+仅在 formal-defos 登记完整 `maximal ideal`、`base category`、
+`predeformation functor`、`algebra isomorphism`、`cofibered categories`、
+`base ring`、`principal ideal`。仅在 defos 登记 `left inverse`、
+`structure sheaves`、`ideal sheaves`、`inverse image`、`left derived functor`。使用既有最长词形规则，不把完整名称
+替换为内部短词；其他章节及未见证词形保留原要求，不修改通用匹配算法。
+
+沿用 `nonmathematical_occurrences`，登记八处精确普通用法：
+criteria 完整 06PK proof 的 `one small observation`，绑定
+`tag:06PK:proof` / small / occurrence_index 0；formal-defos 完整 06G8 引言的
+项目专名 `Stacks project`，绑定 `tag:06G8:prose-0001` / Stacks / index 0；
+defos 完整 08LF remark 的后一次赋值动词 `Set`，绑定
+`tag:08LF:statement` / Set / index 1。各项均绑定完整来源 TeX hash，分别为
+`sha256:82aef9ef2657c9713a9cd249b94a1632a0e96e476170847271bb6054b4092554`、
+`sha256:7f5f61abb4c65c2f7cf1aab5e63c0eb789e6290cd758ceb68cf7730e13f64df8`、
+`sha256:510c78bdeac2e48df600c564ddcdfbaf86ebc09524748f51a06fab8a3715d2fc`。
+另五处赋值动词绑定 formal-defos 的 `tag:06SE:proof` / Set / index 0，
+defos 的 `tag:08U8:proof` / Set / index 0、`tag:08MM:statement` / Set / index 1、
+`tag:08UG:proof` / Set / index 0，以及 `tag:0DIT:proof` / set / index 1。
+前四处引入所示对象或为已有层赋予模结构；最后一处原文为 `Then we set to put`，
+按来源语法疑点留档，不把赋值动词当作集合名词；同一证明的两个真正 set 继续要求。
+完整 hash 和 selector 均在下述 fixture 中逐项冻结。
+不同章节、ID、hash、大小写或出现序数均不能借用；真正的 small、stacks、
+集合名词和其他赋值语境保留既有规则。
+
+全部80份完整见证、真实 selector/Tag、Git blob 与容器 hash、canonical unit、
+未变冻结输入比较及逐次前后库存见
+[来源 fixture](../tests/fixtures/criteria-source-terms-policy.json)。完整来源回归要求
+只发生所声明的覆盖替换和八次排除，独立数学用法与其他章节不变；公共验收仍需
+对 accepted main 的全部当前单元逐项比较，并执行适用回归与 qa-current-all。
+
+本政策不修改中文词表、宏政策、工具、Schema、来源锁或模型历史，不批准译法。
+接受合并后，三章各自按现行来源采用/修订合同重新冻结并实际生成完整五字段，
+旧 freeze/raw/run 和失败历史全部保留；候选、人类审校和正式发布分别守门。
+
+
+### 完整来源定义的词汇及其实际出现词形
+
+相同来源审计另登记以下真实数学名称在见证章节中的词形；仅增加从完整 READY
+容器独立核验的单复数实际拼写，不猜测未出现同义词。
+
+| 章节 | 完整数学名称 | 来源见证 |
+| --- | --- | --- |
+| criteria | `limit preserving on objects` | `tag:06CT:prose-0001` |
+| criteria | `solution` | `tag:06CT:prose-0001` |
+| criteria | `formally smooth on objects` | `tag:06CZ:prose-0001` |
+| criteria | `surjective on objects` | `tag:06D4:prose-0001` |
+| criteria | `algebraic` | `tag:06CF:statement` |
+| formal-defos | `deformation category` | `tag:06G8:prose-0001` |
+| formal-defos | `minimal` | `tag:06G8:prose-0001` |
+| formal-defos | `predeformation category` | `tag:06G8:prose-0001` |
+| formal-defos | `classical case` | `tag:06GC:statement` |
+| formal-defos | `small extension` | `tag:06GD:statement` |
+| formal-defos | `relative cotangent space` | `tag:06GY:statement` |
+| formal-defos | `essential surjection` | `tag:06GF:statement` |
+| formal-defos | `category cofibered in groupoids` | `tag:06GJ:statement` |
+| formal-defos | `prorepresentable` | `tag:06GX:statement` |
+| formal-defos | `morphism of predeformation categories` | `tag:06GS:statement` |
+| formal-defos | `formal object` | `tag:06H3:statement` |
+| formal-defos | `versal` | `tag:06HR:statement` |
+| formal-defos | `unobstructed` | `tag:06HP:statement` |
+| formal-defos | `tangent space` | `tag:06IB:statement` |
+| formal-defos | `differential` | `tag:06II:statement` |
+| formal-defos | `miniversal` | `tag:06T4:statement` |
+| formal-defos | `deformation functor` | `tag:06JA:statement` |
+| formal-defos | `lift` | `tag:06JE:statement` |
+| formal-defos | `morphism of lifts` | `tag:06JE:statement` |
+| formal-defos | `automorphism functor` | `tag:06JT:statement` |
+| formal-defos | `category of groupoids in functors` | `tag:06K3:statement` |
+| formal-defos | `groupoid in functors` | `tag:06K3:statement` |
+| formal-defos | `restriction` | `tag:06K9:statement` |
+| formal-defos | `quotient category cofibered in groupoids` | `tag:06KB:statement` |
+| formal-defos | `quotient morphism` | `tag:06KB:statement` |
+| formal-defos | `presentation` | `tag:06KX:statement` |
+| formal-defos | `normalized` | `tag:06KM:statement` |
+| formal-defos | `formal homotopy` | `tag:0DQA:prose-0001` |
+| formal-defos | `formally homotopic` | `tag:0DQA:prose-0001` |
+| defos | `solution` | `tag:08S3:prose-0001` |
+| defos | `morphisms of thickenings` | `tag:08KY:prose-0001` |
+| defos | `morphisms of thickenings over a base ringed space` | `tag:08KY:prose-0001` |
+| defos | `strict morphism of thickenings` | `tag:08L1:statement` |
+| defos | `trivial` | `tag:08L9:statement` |
+| defos | `trivialization` | `tag:08L9:statement` |
+| defos | `morphisms of thickenings of ringed topoi` | `tag:08M6:prose-0001` |
+| defos | `morphisms of thickenings of ringed topoi over a base ringed topos` | `tag:08M6:prose-0001` |
+
+保护参数分割的连接片段由独立工具 #1013 处理，不登记为数学名称。本目录的
+最终字节 hash 为 `sha256:1c2bcce41979b5c282eac775e823e7c797aefdcd0fa0faa28a061c24674c6e7e`。80 项见证中包括八次精确普通
+排除，全部旧概念、词形、证据及其他章节权限保持；不批准任何中文译法。
+
+该来源 fixture 的前后库存使用已接受的声明核心实现 #1015（main
+`666dfe82ddd62973ca092679f44686841378f888`）。集成时仅重新绑定
+06H3、06JE、06K3、06KX 四个完整单元的库存：删除见证的 `along`/`by`
+连接片段，从两个完整名词核心去掉 `of`，并识别第三处完整 `formal objects`。
+预期变换逐项核验；全部 unit、selector 和所选来源对象保持原字节，目录 hash
+不变。fixture 保存旧基线与旧 fixture hash；此测试基线修订不改写任何原模型
+freeze、raw、run 或候选库存。
+
 ## Spaces-groupoids 中完整拟凝聚模词形（Issue #988）
 
 已有 `source-phrase-quasi-coherent-module` 概念新增 `spaces-groupoids` 章节范围，

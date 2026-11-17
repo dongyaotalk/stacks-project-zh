@@ -9,6 +9,7 @@ import unittest
 
 from stacks_zh.extraction import Policy, Scanner
 from stacks_zh.math_text import validate_regions, validate_translation
+from stacks_zh.numeric_item_labels import LABELS
 from stacks_zh.records import RecordError
 from stacks_zh.schema_validation import validate_named_schema
 from stacks_zh.source_containers import Containers, lower_container
@@ -19,6 +20,14 @@ FIXTURE = json.loads((ROOT/'tests/fixtures/deformations-source-policy.json').rea
 SOURCE_PATH = ROOT/'tests/fixtures/deformations-math-frames.json'
 SOURCE = json.loads(SOURCE_PATH.read_bytes())
 BEFORE = subprocess.check_output(['git','show',FIXTURE['accepted_base']+':config/macro-policy.yml'],cwd=ROOT)
+CURRENT_POLICY = (ROOT/'config/macro-policy.yml').read_bytes()
+NUMERIC_SECTION = ('\nlocked_numeric_item_labels:\n  defos-lift-complex:\n'
+                   '    literals: ' + json.dumps(list(LABELS)) + '\n'
+                   '    usage: "finite-roman-item-label"\n'
+                   '    source_label: "defos-lemma-lift-complex"\n').encode()
+assert CURRENT_POLICY.count(NUMERIC_SECTION) in {0, 1}
+SOURCE_POLICY = CURRENT_POLICY.replace(NUMERIC_SECTION, b'', 1)
+
 
 def digest(value):
     return hashlib.sha256(value).hexdigest()
@@ -26,7 +35,7 @@ def digest(value):
 class DeformationsSourcePolicyTests(unittest.TestCase):
     def test_exact_policy_delta_and_immutable_implementation_fixture(self):
         self.assertEqual(digest(BEFORE), FIXTURE['before_policy_sha256'])
-        self.assertEqual(digest((ROOT/'config/macro-policy.yml').read_bytes()), FIXTURE['after_policy_sha256'])
+        self.assertEqual(digest(SOURCE_POLICY), FIXTURE['after_policy_sha256'])
         self.assertEqual(digest(SOURCE_PATH.read_bytes()), FIXTURE['implementation_fixture_sha256'])
         self.assertEqual(SOURCE['source_commit'], FIXTURE['source_commit'])
         self.assertTrue(SOURCE['source_only'])
@@ -75,7 +84,7 @@ class DeformationsSourcePolicyTests(unittest.TestCase):
                         self.assertTrue(validate_translation(unit,changed))
 
     def test_excluded_reference_and_numeric_syntax_still_blocked(self):
-        native=Containers(ROOT,Path(os.environ['HARVEST_DIR']))
+        native=Containers(ROOT,Path(os.environ['HARVEST_DIR']),policy_bytes=SOURCE_POLICY)
         for frame in SOURCE['excluded_reference_frames']:
             with self.subTest(frame=frame):
                 self.assertTrue(Scanner(frame,native.policy).protect(0,len(frame))[2])

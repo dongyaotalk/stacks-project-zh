@@ -119,7 +119,11 @@ class FormalSourceTermBoundariesTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get('HARVEST_DIR'), 'requires explicit locked read-only harvest')
     def test_complete_locked_git_selection_and_lowering_equal_frozen_units(self):
-        native = Containers(ROOT, Path(os.environ['HARVEST_DIR']))
+        policy_bytes = subprocess.check_output(
+            ['git', 'show', FIXTURE['accepted_base'] + ':config/macro-policy.yml'], cwd=ROOT)
+        policy_hash = 'sha256:' + hashlib.sha256(policy_bytes).hexdigest()
+        self.assertEqual({c['selected']['macro_policy_hash'] for c in FIXTURE['cases']}, {policy_hash})
+        native = Containers(ROOT, Path(os.environ['HARVEST_DIR']), policy_bytes=policy_bytes)
         self.assertEqual(native.english.commit, FIXTURE['source_commit'])
         for c in FIXTURE['cases']:
             selected = native.select(c['selector'])

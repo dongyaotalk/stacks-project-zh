@@ -1,0 +1,935 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p009-20261116.json",
+    "hash": "sha256:8ccb82b33747ee1e073ce80c590f07d3100653dd4f50346d00e2a03aa42d1565"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:d40fe5b82932cf19dbd78ec917a3194914dac4097993e390fdebc3990e313a74"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06HV",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\overline{\\mathcal{F}}$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\overline{\\mathcal{F}}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "MATH_0008": "$\\mathcal{F}(k)$",
+        "MATH_0009": "$x_\\epsilon \\to x_0$",
+        "MATH_0010": "$\\mathcal{F}$",
+        "MATH_0011": "$k[\\epsilon] \\to k$",
+        "MATH_0012": "$\\text{Aut}_{k[\\epsilon]}(x_\\epsilon) \\to \\text{Aut}_k(x_0)$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\begin{enumerate}",
+        "STRUCT_0005": "\\item",
+        "STRUCT_0006": "\\item",
+        "STRUCT_0007": "\\item",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-S1-S2-associated-functor}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:9cfb8d01c1970673d29e9fea6654d37056295fc6f1c9d0b6123eb9e6b7bde81a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:48680d0669851b992598f3006a2672e3b53a816d5cdd6cd93b17faf707281a54",
+      "source_text": "Let <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002>.\n<STRUCT_0001>\n<STRUCT_0002> If <MATH_0003> satisfies (S1), then so does\n<MATH_0004>.\n<STRUCT_0003> If <MATH_0005> satisfies (S2), then so does\n<MATH_0006> provided at least one of the following conditions is\nsatisfied\n<STRUCT_0004>\n<STRUCT_0005> <MATH_0007> is a predeformation category,\n<STRUCT_0006> the category <MATH_0008> is a set or a setoid, or\n<STRUCT_0007> for any morphism <MATH_0009> of <MATH_0010>\nlying over <MATH_0011> the pushforward map\n<MATH_0012>\nis surjective.\n<STRUCT_0008>\n<STRUCT_0009>\n",
+      "source_text_hash": "sha256:0e404a07917362b37fa9dd32125fe914f1e22de309442c791e704a64790d3692",
+      "unit_id": "tag:06I0:statement"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:06I0:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:0e404a07917362b37fa9dd32125fe914f1e22de309442c791e704a64790d3692",
+      "source_structure_hash": "sha256:48680d0669851b992598f3006a2672e3b53a816d5cdd6cd93b17faf707281a54",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "category",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 43,
+          "projection_end": 52,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 349,
+          "projection_end": 357,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 377,
+          "projection_end": 385,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 403,
+          "projection_end": 406,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "setoid",
+          "projection_start": 412,
+          "projection_end": 418,
+          "concept": "setoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 445,
+          "projection_end": 453,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 520,
+          "projection_end": 523,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 539,
+          "projection_end": 549,
+          "concept": "surjective",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06HZ:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:formal-defos:06HZ:proof/0001",
+          "parent_tag": "06HV",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nIn the case that <MATH_0001> is cofibred in sets, i.e., corresponds\nto a functor <MATH_0002> this follows\nfrom the description of (S2) for <MATH_0003> in\nRemark <REF_0001>\nand the fact that\n<MATH_0004>\nwith <MATH_0005> factors. The case of functors is what we will use in\nthe rest of this chapter.\n\n<STRUCT_0002><STRUCT_0003>\nWe prove the general case by induction on <MATH_0006>. If <MATH_0007>, then\n<MATH_0008> and the result holds by assumption.\nIf <MATH_0009> we write <MATH_0010>. Pick a diagram\n<MATH_0011>\nChoose a morphism <MATH_0012> lying over <MATH_0013>\nand a morphism <MATH_0014> lying over <MATH_0015>.\nNote that the morphism <MATH_0016> factors as\n<MATH_0017> and as <MATH_0018>.\nBy induction hypothesis we can find a diagram\n<MATH_0019>\nThis gives us a commutative diagram\n<MATH_0020>\nHence by (S2) we get a commutative diagram\n<MATH_0021>\nNote that\n<MATH_0022>. We claim that <MATH_0023> fits into the correct commutative\ndiagram. To see this we let <MATH_0024> be a morphism lying over\n<MATH_0025>. We can factor the morphisms\n<MATH_0026> and <MATH_0027> through the morphism\n<MATH_0028> (by the axioms of categories cofibred in groupoids).\nHence we see that both <MATH_0029> and <MATH_0030> fit into commutative diagrams\n<MATHSEG_0001>and<MATHSEG_0002>\nand hence by the second part of (S2) there exists an isomorphism\n<MATH_0031> compatible with <MATH_0032> and <MATH_0033>\nand in particular compatible with the maps to <MATH_0034>.\nThe composition <MATH_0035> then fits into the required commutative\ndiagram\n<MATH_0036>\nIn this way we see that the first part of <MATH_0037> holds with <MATH_0038>\nreplaced by <MATH_0039>.\n\n<STRUCT_0004><STRUCT_0005>\nTo prove the second part suppose given two commutative\ndiagrams\n<MATHSEG_0003>and<MATHSEG_0004>\nWe will use the morphisms <MATH_0040> and\n<MATH_0041> introduced in the first paragraph of the proof.\nChoose morphisms <MATH_0042> and <MATH_0043>\nlying over <MATH_0044>. The axioms of a\ncofibred category imply we can find commutative diagrams\n<MATHSEG_0005>and<MATHSEG_0006>\nBy induction hypothesis we obtain an isomorphism\n<MATH_0045>\ncompatible with the morphisms <MATH_0046> and <MATH_0047>,\nin particular compatible with the morphisms to <MATH_0048>.\nThen we have commutative diagrams\n<MATHSEG_0007>and<MATHSEG_0008>\nwhere the morphism <MATH_0049> is the composition\n<MATH_0050> and where the morphisms\n<MATH_0051> and <MATH_0052> are the compositions of\nthe maps <MATH_0053> and <MATH_0054> with the morphism <MATH_0055>.\nThen the second part of (S2) guarantees the existence of an isomorphism\n<MATH_0056> compatible with the maps to <MATH_0057>, in particular compatible\nwith the maps to <MATH_0058> (because <MATH_0059> was compatible with the maps to <MATH_0060>).\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$F : \\mathcal{C}_\\Lambda \\to \\textit{Sets}$",
+            "MATH_0003": "$F$",
+            "REF_0001": "\\ref{remark-compare-S1-S2-schlessinger}",
+            "MATH_0004": "$k[V] \\cong k[\\epsilon] \\times_k \\ldots \\times_k k[\\epsilon]$",
+            "MATH_0005": "$\\dim_k V$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0006": "$\\dim(V)$",
+            "MATH_0007": "$\\dim(V) = 1$",
+            "MATH_0008": "$k[V] \\cong k[\\epsilon]$",
+            "MATH_0009": "$\\dim(V) > 1$",
+            "MATH_0010": "$V = V' \\oplus k\\epsilon$",
+            "MATH_0011": "$$\n\\vcenter{\n\\xymatrix{\n& x_V \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\n& k[V] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0012": "$x_V \\to x_{V'}$",
+            "MATH_0013": "$k[V] \\to k[V']$",
+            "MATH_0014": "$x_V \\to x_\\epsilon$",
+            "MATH_0015": "$k[V] \\to k[\\epsilon]$",
+            "MATH_0016": "$x_V \\to x_0$",
+            "MATH_0017": "$x_V \\to x_{V'} \\to x_0$",
+            "MATH_0018": "$x_V \\to x_\\epsilon \\to x_0$",
+            "MATH_0019": "$$\n\\vcenter{\n\\xymatrix{\ny' \\ar[d] \\ar[r] & x_{V'} \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[V'] \\ar[d] \\ar[r] & k[V'] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0020": "$$\n\\vcenter{\n\\xymatrix{\n& x_\\epsilon \\ar[d] \\\\\ny' \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\n& k[\\epsilon] \\ar[d] \\\\\nA \\times_k k[V'] \\ar[r] & k\n}\n}\n$$",
+            "MATH_0021": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[d] \\ar[r] & x_\\epsilon \\ar[d] \\\\\ny' \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\n(A \\times_k k[V']) \\times_k k[\\epsilon] \\ar[d] \\ar[r] & k[\\epsilon] \\ar[d] \\\\\nA \\times_k k[V'] \\ar[r] & k\n}\n}\n$$",
+            "MATH_0022": "$(A \\times_k k[V']) \\times_k k[\\epsilon] = A \\times_k k[V' \\oplus k\\epsilon]\n= A \\times_k k[V]$",
+            "MATH_0023": "$y$",
+            "MATH_0024": "$y \\to y_V$",
+            "MATH_0025": "$A \\times_k k[V] \\to k[V]$",
+            "MATH_0026": "$y \\to y' \\to x_{V'}$",
+            "MATH_0027": "$y \\to x_\\epsilon$",
+            "MATH_0028": "$y \\to y_V$",
+            "MATH_0029": "$y_V$",
+            "MATH_0030": "$x_V$",
+            "MATHSEG_0001": "$$\n\\vcenter{\n\\xymatrix{\ny_V \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\nx_{V'} \\ar[r]          & x_0\n}\n}\n\\quad\\text{",
+            "MATHSEG_0002": "}\\quad\n\\vcenter{\n\\xymatrix{\nx_V \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\nx_{V'} \\ar[r]                 & x_0\n}\n}\n$$",
+            "MATH_0031": "$y_V \\to x_V$",
+            "MATH_0032": "$y_V \\to x_{V'}$",
+            "MATH_0033": "$x_V \\to x_{V'}$",
+            "MATH_0034": "$x_0$",
+            "MATH_0035": "$y \\to y_V \\to x_V$",
+            "MATH_0036": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r] \\ar[d] & x_V \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[V] \\ar[d] \\ar[r] & k[V] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0037": "$(S2)$",
+            "MATH_0038": "$k[\\epsilon]$",
+            "MATH_0039": "$k[V]$",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "MATHSEG_0003": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r] \\ar[d] & x_V \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{",
+            "MATHSEG_0004": "}\\quad\n\\vcenter{\n\\xymatrix{\ny' \\ar[r] \\ar[d] & x_V \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[V] \\ar[d] \\ar[r] & k[V] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0040": "$x_V \\to x_{V'} \\to x_0$",
+            "MATH_0041": "$x_V \\to x_\\epsilon \\to x_0$",
+            "MATH_0042": "$y \\to y_{V'}$",
+            "MATH_0043": "$y' \\to y'_{V'}$",
+            "MATH_0044": "$A \\times_k k[V] \\to A \\times_k k[V']$",
+            "MATHSEG_0005": "$$\n\\vcenter{\n\\xymatrix{\ny_{V'} \\ar[r] \\ar[d] & x_{V'} \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{",
+            "MATHSEG_0006": "}\\quad\n\\vcenter{\n\\xymatrix{\ny'_{V'} \\ar[r] \\ar[d] & x_{V'} \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[V'] \\ar[d] \\ar[r] & k[V'] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0045": "$b : y_{V'} \\to y'_{V'}$",
+            "MATH_0046": "$y_{V'} \\to x$",
+            "MATH_0047": "$y'_{V'} \\to x$",
+            "MATH_0048": "$x_0$",
+            "MATHSEG_0007": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\ny'_{V'} \\ar[r] & x_0\n}\n}\n\\quad\\text{",
+            "MATHSEG_0008": "}\\quad\n\\vcenter{\n\\xymatrix{\ny' \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\ny'_{V'} \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[\\epsilon] \\ar[d] \\ar[r] & k[\\epsilon] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0049": "$y \\to y'_{V'}$",
+            "MATH_0050": "$y \\to y_{V'} \\xrightarrow{b} y'_{V'}$",
+            "MATH_0051": "$y \\to x_\\epsilon$",
+            "MATH_0052": "$y' \\to x_\\epsilon$",
+            "MATH_0053": "$y \\to x_V$",
+            "MATH_0054": "$y' \\to x_V$",
+            "MATH_0055": "$x_V \\to x_\\epsilon$",
+            "MATH_0056": "$y \\to y'$",
+            "MATH_0057": "$y'_{V'}$",
+            "MATH_0058": "$x$",
+            "MATH_0059": "$b$",
+            "MATH_0060": "$x$",
+            "STRUCT_0006": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\vcenter{\n\\xymatrix{\ny_V \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\nx_{V'} \\ar[r]          & x_0\n}\n}\n\\quad\\text{and}\\quad\n\\vcenter{\n\\xymatrix{\nx_V \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\nx_{V'} \\ar[r]                 & x_0\n}\n}\n$$",
+              "source_hash": "sha256:816a4d0c005f8e2e585a7e199a9539f1ff1af26bb307a8ee8f05d53338cab913",
+              "source_byte_span": {
+                "start": 2251,
+                "end": 2474
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 109,
+                    "end": 112
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "region_id": "math/0002",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r] \\ar[d] & x_V \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{and}\\quad\n\\vcenter{\n\\xymatrix{\ny' \\ar[r] \\ar[d] & x_V \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[V] \\ar[d] \\ar[r] & k[V] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+              "source_hash": "sha256:9cf8b6d1042a4ea92df90c3e437f8c9061ffa327c58f8cc98de0ab2cd8cb5031",
+              "source_byte_span": {
+                "start": 3113,
+                "end": 3397
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0002/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0004"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0002/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 86,
+                    "end": 89
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0003",
+                    "MATHSEG_0004"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "region_id": "math/0003",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\vcenter{\n\\xymatrix{\ny_{V'} \\ar[r] \\ar[d] & x_{V'} \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{and}\\quad\n\\vcenter{\n\\xymatrix{\ny'_{V'} \\ar[r] \\ar[d] & x_{V'} \\ar[d] \\\\\nx \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[V'] \\ar[d] \\ar[r] & k[V'] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+              "source_hash": "sha256:1ac907cfb7be23b3c4a24f9caf2f7f4045fdde4b66d0ffa28a1fc1bf0f018c35",
+              "source_byte_span": {
+                "start": 3707,
+                "end": 4009
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0005"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0003/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0006"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0003/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 94,
+                    "end": 97
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0005",
+                    "MATHSEG_0006"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "region_id": "math/0004",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\ny'_{V'} \\ar[r] & x_0\n}\n}\n\\quad\\text{and}\\quad\n\\vcenter{\n\\xymatrix{\ny' \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\ny'_{V'} \\ar[r] & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[\\epsilon] \\ar[d] \\ar[r] & k[\\epsilon] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+              "source_hash": "sha256:2fdc534a81de7d8cdb5088df60266868cdf7d0eeaeb69810f1a69ab8b9911464",
+              "source_byte_span": {
+                "start": 4238,
+                "end": 4562
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0007"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0004/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0008"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0004/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 99,
+                    "end": 102
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0007",
+                    "MATHSEG_0008"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:a41ca159f739d48f72685fc833fdfbfa87a1aa385aabd2a93af709096731aeb4",
+          "source_text_hash": "sha256:b24e116fd70058e77502d813415ec96f0168c121e02740410fd41c539472f07c",
+          "source_structure_hash": "sha256:7ea5921b9fff999eb5182dbc3687b64f44b53a6c70d0f4b42ab01b42b834a4a5",
+          "source_math_hash": "sha256:ecff9d4db35c33a93138895c492c9ef5973058512e7abc84521976f2df5163ac"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 110099,
+          "byte_end": 115154,
+          "line_start": 2662,
+          "line_end": 2875,
+          "fragment_hash": "sha256:36f40ece4abb79859934e1759bd6cc2959602f4b938dffb35b655bb60c1aa2b3"
+        },
+        "owner_tag": "06HZ",
+        "parent_tag": "06HV"
+      },
+      "hash": "sha256:027e4470dd8481a55921e3984535d994756d70c6bf5bbc6aaad479235d04eb5f"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06I0:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:formal-defos:06I0:proof/0001",
+          "parent_tag": "06HV",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nAssume <MATH_0001> has (S1).\nSuppose we have ring maps <MATH_0002> in <MATH_0003>\nwith <MATH_0004> surjective. Let <MATH_0005> such that\nthe pushforwards <MATH_0006> and <MATH_0007> are isomorphic.\nThen we can denote <MATH_0008> an object of <MATH_0009> over <MATH_0010> isomorphic\nto both of these and we obtain a diagram as in (S1). Hence we find\nan object <MATH_0011> of <MATH_0012> over <MATH_0013> whose pushforward\nto <MATH_0014>, resp.<SPACE_0001><MATH_0015> is isomorphic to <MATH_0016>, resp.<SPACE_0002><MATH_0017>. In this way\nwe see that (S1) holds for <MATH_0018>.\n\n<STRUCT_0002><STRUCT_0003>\nAssume <MATH_0019> has (S2).\nThe first part of (S2) for <MATH_0020> follows as in\nthe argument above. The second part of (S2) for\n<MATH_0021> signifies that the map\n<MATH_0022>\nis injective for any ring <MATH_0023> in <MATH_0024>. Suppose that\n<MATH_0025>. Using the axioms\nof cofibred categories we can choose commutative diagrams\n<MATHSEG_0001>and<MATHSEG_0002>\nAssume that there exist isomorphisms\n<MATH_0026> in <MATH_0027> and\n<MATH_0028> in <MATH_0029>.\nThis also means there exists an isomorphism <MATH_0030>\ncompatible with <MATH_0031>. To prove (S2) for <MATH_0032>\nwe have to show that there exists an isomorphism <MATH_0033> in\n<MATH_0034>.\nBy (S2) for <MATH_0035> such a morphism will exist if we can\nchoose the isomorphisms <MATH_0036> and <MATH_0037> and <MATH_0038> such that\n<MATH_0039>\nis commutative (because then we can replace <MATH_0040> by <MATH_0041> and <MATH_0042>\nby <MATH_0043> in the previous displayed diagram). The left hand square\ncommutes by our choice of <MATH_0044>. We can factor <MATH_0045> as\n<MATH_0046> for some second map\n<MATH_0047>. Now the question is whether we can arrange it so\nthat <MATH_0048>? This is clear if <MATH_0049> is a set, or a\nsetoid. Moreover, if\n<MATH_0050>\nis surjective, then we can adjust the choice of <MATH_0051> by precomposing\nwith an automorphism of <MATH_0052> whose image is\n<MATH_0053> to make things work.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$f_i : A_i \\to A$",
+            "MATH_0003": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0004": "$f_2$",
+            "MATH_0005": "$x_i \\in \\mathcal{F}(A_i)$",
+            "MATH_0006": "$f_{1, *}(x_1)$",
+            "MATH_0007": "$f_{2, *}(x_2)$",
+            "MATH_0008": "$x$",
+            "MATH_0009": "$\\mathcal{F}$",
+            "MATH_0010": "$A$",
+            "MATH_0011": "$y$",
+            "MATH_0012": "$\\mathcal{F}$",
+            "MATH_0013": "$A_1 \\times_A A_2$",
+            "MATH_0014": "$A_1$",
+            "SPACE_0001": "\\ ",
+            "MATH_0015": "$A_2$",
+            "MATH_0016": "$x_1$",
+            "SPACE_0002": "\\ ",
+            "MATH_0017": "$x_2$",
+            "MATH_0018": "$\\overline{\\mathcal{F}}$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0019": "$\\mathcal{F}$",
+            "MATH_0020": "$\\overline{\\mathcal{F}}$",
+            "MATH_0021": "$\\overline{\\mathcal{F}}$",
+            "MATH_0022": "$$\n\\overline{\\mathcal{F}}(A \\times_k k[\\epsilon]) \\to\n\\overline{\\mathcal{F}}(A)\n\\times_{\\overline{\\mathcal{F}}(k)} \\overline{\\mathcal{F}}(k[\\epsilon])\n$$",
+            "MATH_0023": "$A$",
+            "MATH_0024": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0025": "$y, y' \\in \\mathcal{F}(A \\times_k k[\\epsilon])$",
+            "MATHSEG_0001": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r]_c \\ar[d]_a & x_\\epsilon \\ar[d]^e \\\\\nx \\ar[r]^d          & x_0\n}\n}\n\\quad\\text{",
+            "MATHSEG_0002": "}\\quad\n\\vcenter{\n\\xymatrix{\ny' \\ar[r]_{c'} \\ar[d]_{a'} & x'_\\epsilon \\ar[d]^{e'} \\\\\nx' \\ar[r]^{d'}                 & x'_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[\\epsilon] \\ar[d] \\ar[r] & k[\\epsilon] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+            "MATH_0026": "$\\alpha : x \\to x'$",
+            "MATH_0027": "$\\mathcal{F}(A)$",
+            "MATH_0028": "$\\beta : x_\\epsilon \\to x'_\\epsilon$",
+            "MATH_0029": "$\\mathcal{F}(k[\\epsilon])$",
+            "MATH_0030": "$\\gamma : x_0 \\to x'_0$",
+            "MATH_0031": "$\\alpha$",
+            "MATH_0032": "$\\overline{\\mathcal{F}}$",
+            "MATH_0033": "$y \\to y'$",
+            "MATH_0034": "$\\mathcal{F}(A \\times_k k[\\epsilon])$",
+            "MATH_0035": "$\\mathcal{F}$",
+            "MATH_0036": "$\\alpha$",
+            "MATH_0037": "$\\beta$",
+            "MATH_0038": "$\\gamma$",
+            "MATH_0039": "$$\n\\xymatrix{\nx \\ar[d]^\\alpha \\ar[r] & x_0 \\ar[d]^\\gamma &\nx_\\epsilon \\ar[d]^\\beta \\ar[l]^e \\\\\nx' \\ar[r] & x'_0 & x'_\\epsilon \\ar[l]_{e'}\n}\n$$",
+            "MATH_0040": "$x$",
+            "MATH_0041": "$x'$",
+            "MATH_0042": "$x_\\epsilon$",
+            "MATH_0043": "$x'_\\epsilon$",
+            "MATH_0044": "$\\gamma$",
+            "MATH_0045": "$e' \\circ \\beta$",
+            "MATH_0046": "$\\gamma' \\circ e$",
+            "MATH_0047": "$\\gamma' : x_0 \\to x'_0$",
+            "MATH_0048": "$\\gamma = \\gamma'$",
+            "MATH_0049": "$\\mathcal{F}(k)$",
+            "MATH_0050": "$\\text{Aut}_{k[\\epsilon]}(x_\\epsilon) \\to \\text{Aut}_k(x_0)$",
+            "MATH_0051": "$\\beta$",
+            "MATH_0052": "$x_\\epsilon$",
+            "MATH_0053": "$\\gamma^{-1} \\circ \\gamma'$",
+            "STRUCT_0004": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r]_c \\ar[d]_a & x_\\epsilon \\ar[d]^e \\\\\nx \\ar[r]^d          & x_0\n}\n}\n\\quad\\text{and}\\quad\n\\vcenter{\n\\xymatrix{\ny' \\ar[r]_{c'} \\ar[d]_{a'} & x'_\\epsilon \\ar[d]^{e'} \\\\\nx' \\ar[r]^{d'}                 & x'_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nA \\times_k k[\\epsilon] \\ar[d] \\ar[r] & k[\\epsilon] \\ar[d] \\\\\nA \\ar[r] & k\n}\n}\n$$",
+              "source_hash": "sha256:2b9b69b101a337ce1401dcaa54f00c3576145c989ebe2a5e00c56a03536d0ce0",
+              "source_byte_span": {
+                "start": 1142,
+                "end": 1510
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 110,
+                    "end": 113
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:21f1b19d9d31ecd5bc1917f82dbfb6ad68119b7a72661b7d29e259a46d07eb3b",
+          "source_text_hash": "sha256:609346ce03987a72f2f5534400f9f5c187b8e2e19860b986ff89c43787bdd43d",
+          "source_structure_hash": "sha256:cd53911c0c8341e737665040d654b1aff0d3e666b477bacb42a20a631201a05f",
+          "source_math_hash": "sha256:6cf6f451cb1aa749fe3fc52163234a6766463d85c1a39006bd331fcf98c6b67d"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 115890,
+          "byte_end": 118733,
+          "line_start": 2898,
+          "line_end": 2971,
+          "fragment_hash": "sha256:7a553009089f0491bc1ee06236cde6263b2102d9ebbaef6a438cb087672618a7"
+        },
+        "owner_tag": "06I0",
+        "parent_tag": "06HV"
+      },
+      "hash": "sha256:5dbbe5dba5a468fcab84024aa2397ca05234460cc2fd44fbdccc68c0b625e5fa"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p009-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

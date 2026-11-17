@@ -352,7 +352,7 @@ class InternalReferenceFullSourceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.native = containers.Containers(
-            ROOT, Path(os.environ['HARVEST_DIR']), policy_bytes=internal_probe_policy().encode())
+            ROOT, Path(os.environ['HARVEST_DIR']))
         cls.units = []
         # Canonical selectors remain actual complete locked-Git containers.
         selectors = [c['selector'] for c in FIXTURE['containers']]

@@ -504,13 +504,19 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
         if scope_errors or policy_errors:_rejected_preparation_registry(frozen,policy_bytes)
         from .source_terms import source_inventory
         legacy_projection=False
+        original_term_inventory=None
         if 'required_source_occurrences' in model_input:
             catalog=json.loads(policy_bytes['config/source-terms.json'])
             expected=[source_inventory(u,catalog) for u in units]
             if model_input['required_source_occurrences']!=expected:
-                legacy_projection=_legacy_zeroth_preparation_projection(root,frozen,units,expected,
-                    model_input['required_source_occurrences'],model_input['raw_output_paths_reserved'],snapshot)
-                if not legacy_projection:raise RecordError('model-input term occurrences differ from frozen source')
+                if not scope_errors and not policy_errors:
+                    from .preparation_terms import original_inventory
+                    original_term_inventory=original_inventory(root,frozen,units,catalog,
+                        model_input['required_source_occurrences'],snapshot)
+                if original_term_inventory is None:
+                    legacy_projection=_legacy_zeroth_preparation_projection(root,frozen,units,expected,
+                        model_input['required_source_occurrences'],model_input['raw_output_paths_reserved'],snapshot)
+                    if not legacy_projection:raise RecordError('model-input term occurrences differ from frozen source')
         previous=model_input.get('previous_complete_candidates',[])
         if not isinstance(previous,list) or not isinstance(model_input.get('regeneration_reason',''),str):
             raise RecordError('malformed preparation revision metadata')
@@ -610,6 +616,8 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
         detail=dict(input=entry['path'],status='rejected-unadopted-preparation' if source_errors or scope_errors or policy_errors else 'unadopted-preparation',source_errors=sorted(set(source_errors)),scope_errors=scope_errors,policy_errors=policy_errors,source_schema_witness=schema_witness,legacy_zeroth_projection=legacy_projection,run_created=run.exists(),
                     generation_validation='not_claimed',history_audit='not_run')
         detail['runtime_copy_binding'] = runtime_binding
+        if original_term_inventory is not None:
+            detail['original_term_inventory'] = original_term_inventory
         if partial_inventory is not None:
             detail['raw_inventory']=partial_inventory
         diagnostics.append(detail)

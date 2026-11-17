@@ -80,7 +80,7 @@ class RuntimePublicCopyTests(unittest.TestCase):
             private = json.dumps(original).encode()
             public = project_runtime_copy(frozen, private, (root/'config/harnesses.yml').read_bytes())
             self.assertEqual(public['harness_check']['stdout'],
-                             'synthetic: 3.12.6\ncommand: python3 --version\n')
+                             'synthetic: ' + frozen['runtime']['harness']['version'] + '\ncommand: python3 --version\n')
             self.assertEqual(public[PROJECTION]['source_capture_sha256'], byte_hash(private))
             self.assertEqual(original['harness_check']['stdout'].encode(), json.loads(private)['harness_check']['stdout'].encode())
 

@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 92 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-93、95-96、98-104、106-111 章 |
+| 未开始 | 91 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、91-93、95-96、98-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 24 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、94、97、105、112-116 章 |
+| 候选译文完成，待审校 | 25 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90、94、97、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 558 / 3,299（16.9%） | 0 | 2,741 |
+| 模型候选译文 | 587 / 3,299（17.8%） | 0 | 2,712 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -125,7 +125,7 @@
 | 87 | 形式代数空间（`formal-spaces`） | 未开始 | 0 / 38（0.0%） | 0 | 38 | 0 | 0 |
 | 88 | 形式空间的代数化（`restricted`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 89 | 曲面解消再论（`spaces-resolve`） | 未开始 | 0 / 9（0.0%） | 0 | 9 | 0 | 0 |
-| 90 | 形式形变理论（`formal-defos`） | 未开始 | 0 / 29（0.0%） | 0 | 29 | 0 | 0 |
+| 90 | 形式形变理论（`formal-defos`） | 候选译文完成，待审校 | 29 / 29（100.0%） | 0 | 0 | 0 | 0 |
 | 91 | 形变理论（`defos`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 92 | 余切复形（`cotangent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 93 | 形变问题（`examples-defos`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
@@ -715,6 +715,42 @@
 | 8 | `04A9` | Invariant functions | 完成 | 未开始 | 未开始 |
 | 9 | `04AB` | Good quotients | 完成 | 未开始 | 未开始 |
 | 10 | `04AD` | Geometric quotients | 完成 | 未开始 | 未开始 |
+
+### 第 90 章 形式形变理论（`formal-defos`）
+
+共 29 个 Section：候选完成 29，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `06G8` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `06G9` | Notation and Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `06GB` | The base category | 完成 | 未开始 | 未开始 |
+| 4 | `06GV` | The completed base category | 完成 | 未开始 | 未开始 |
+| 5 | `06GA` | Categories cofibered in groupoids | 完成 | 未开始 | 未开始 |
+| 6 | `06GI` | Prorepresentable functors and predeformation categories | 完成 | 未开始 | 未开始 |
+| 7 | `06H2` | Formal objects and completion categories | 完成 | 未开始 | 未开始 |
+| 8 | `06HF` | Smooth morphisms | 完成 | 未开始 | 未开始 |
+| 9 | `0DYK` | Smooth or unobstructed categories | 完成 | 未开始 | 未开始 |
+| 10 | `06HV` | Schlessinger's conditions | 完成 | 未开始 | 未开始 |
+| 11 | `06I2` | Tangent spaces of functors | 完成 | 未开始 | 未开始 |
+| 12 | `06I1` | Tangent spaces of predeformation categories | 完成 | 未开始 | 未开始 |
+| 13 | `06SX` | Versal formal objects | 完成 | 未开始 | 未开始 |
+| 14 | `06T0` | Minimal versal formal objects | 完成 | 未开始 | 未开始 |
+| 15 | `06IL` | Miniversal formal objects and tangent spaces | 完成 | 未开始 | 未开始 |
+| 16 | `06J1` | Rim-Schlessinger conditions and deformation categories | 完成 | 未开始 | 未开始 |
+| 17 | `06JD` | Lifts of objects | 完成 | 未开始 | 未开始 |
+| 18 | `06JK` | Schlessinger's theorem on prorepresentable functors | 完成 | 未开始 | 未开始 |
+| 19 | `06JN` | Infinitesimal automorphisms | 完成 | 未开始 | 未开始 |
+| 20 | `0DYM` | Applications | 完成 | 未开始 | 未开始 |
+| 21 | `06K2` | Groupoids in functors on an arbitrary category | 完成 | 未开始 | 未开始 |
+| 22 | `06KC` | Groupoids in functors on the base category | 完成 | 未开始 | 未开始 |
+| 23 | `06KH` | Smooth groupoids in functors on the base category | 完成 | 未开始 | 未开始 |
+| 24 | `06KS` | Deformation categories as quotients of groupoids in functors | 完成 | 未开始 | 未开始 |
+| 25 | `06KW` | Presentations of categories cofibered in groupoids | 完成 | 未开始 | 未开始 |
+| 26 | `06L0` | Presentations of deformation categories | 完成 | 未开始 | 未开始 |
+| 27 | `06TD` | Remarks regarding minimality | 完成 | 未开始 | 未开始 |
+| 28 | `0DQA` | Uniqueness of versal rings | 完成 | 未开始 | 未开始 |
+| 29 | `07W7` | Change of residue field | 完成 | 未开始 | 未开始 |
 
 ### 第 94 章 代数栈（`algebraic`）
 

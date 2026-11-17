@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 93 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-93、95-104、106-111 章 |
+| 未开始 | 92 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-93、95-96、98-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 23 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、94、105、112-116 章 |
+| 候选译文完成，待审校 | 24 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、94、97、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 539 / 3,299（16.3%） | 0 | 2,760 |
+| 模型候选译文 | 558 / 3,299（16.9%） | 0 | 2,741 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -132,7 +132,7 @@
 | 94 | 代数栈（`algebraic`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
 | 95 | 栈的例子（`examples-stacks`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
 | 96 | 代数栈上的层（`stacks-sheaves`） | 未开始 | 0 / 26（0.0%） | 0 | 26 | 0 | 0 |
-| 97 | 可表性判据（`criteria`） | 未开始 | 0 / 19（0.0%） | 0 | 19 | 0 | 0 |
+| 97 | 可表性判据（`criteria`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
 | 98 | Artin 公理（`artin`） | 未开始 | 0 / 27（0.0%） | 0 | 27 | 0 | 0 |
 | 99 | Quot 空间与 Hilbert 空间（`quot`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 100 | 代数栈的性质（`stacks-properties`） | 未开始 | 0 / 14（0.0%） | 0 | 14 | 0 | 0 |
@@ -741,6 +741,32 @@
 | 17 | `04TJ` | The algebraic stack associated to a smooth groupoid | 完成 | 未开始 | 未开始 |
 | 18 | `04X1` | Change of big site | 完成 | 未开始 | 未开始 |
 | 19 | `04X4` | Change of base scheme | 完成 | 未开始 | 未开始 |
+
+### 第 97 章 可表性判据（`criteria`）
+
+共 19 个 Section：候选完成 19，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `05XF` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `05XG` | Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `05XH` | What we already know | 完成 | 未开始 | 未开始 |
+| 4 | `05XJ` | Morphisms of stacks in groupoids | 完成 | 未开始 | 未开始 |
+| 5 | `06CT` | Limit preserving on objects | 完成 | 未开始 | 未开始 |
+| 6 | `06CZ` | Formally smooth on objects | 完成 | 未开始 | 未开始 |
+| 7 | `06D4` | Surjective on objects | 完成 | 未开始 | 未开始 |
+| 8 | `05XX` | Algebraic morphisms | 完成 | 未开始 | 未开始 |
+| 9 | `05XZ` | Spaces of sections | 完成 | 未开始 | 未开始 |
+| 10 | `05Y0` | Relative morphisms | 完成 | 未开始 | 未开始 |
+| 11 | `05Y8` | Restriction of scalars | 完成 | 未开始 | 未开始 |
+| 12 | `05XM` | Finite Hilbert stacks | 完成 | 未开始 | 未开始 |
+| 13 | `05YL` | The finite Hilbert stack of a point | 完成 | 未开始 | 未开始 |
+| 14 | `05YR` | Finite Hilbert stacks of spaces | 完成 | 未开始 | 未开始 |
+| 15 | `06CJ` | LCI locus in the Hilbert stack | 完成 | 未开始 | 未开始 |
+| 16 | `06DB` | Bootstrapping algebraic stacks | 完成 | 未开始 | 未开始 |
+| 17 | `06FG` | Applications | 完成 | 未开始 | 未开始 |
+| 18 | `06PI` | When is a quotient stack algebraic? | 完成 | 未开始 | 未开始 |
+| 19 | `076U` | Algebraic stacks in the \'etale topology | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

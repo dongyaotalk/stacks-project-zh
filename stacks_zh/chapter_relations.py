@@ -405,6 +405,10 @@ def _partial_unadopted_raw_inventory(root, frozen, attempts, scope, snapshot,
 
 def _runtime_copy_binding(frozen, runtime, registry_bytes):
     """Verify original captures without adding summaries to immutable evidence."""
+    public_binding = None
+    if 'execution_capture_projection' in runtime:
+        from .runtime_public_copies import validate_public_capture
+        public_binding = validate_public_capture(frozen, runtime, registry_bytes)
     expected = frozen['runtime']
     capture = runtime.get('harness_check', {})
     if runtime.get('runtime') != expected or capture.get('exit_code') != 0:
@@ -446,9 +450,10 @@ def _runtime_copy_binding(frozen, runtime, registry_bytes):
             and (not isinstance(runtime['provider'], str)
                  or runtime['provider'].lower() != expected['model']['provider'].lower())):
         raise RecordError('runtime turn metadata differs from frozen identity')
-    return dict(version_binding=version_mode,
+    return dict(version_binding=version_mode if public_binding is None else public_binding['version_binding'],
                 provider_binding='explicit-summary' if 'provider' in runtime else 'exact-frozen-runtime',
-                runtime_changed=False)
+                runtime_changed=False, **({} if public_binding is None else
+                    {key: value for key, value in public_binding.items() if key != 'version_binding'}))
 
 
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):

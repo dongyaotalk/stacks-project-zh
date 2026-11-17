@@ -39,7 +39,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 第 83 章 群胚的商（`groupoids-quotients`） | Section 1 / `048B` | `READY` | `REVIEW` |
 | P0 | 第 94 章 代数栈（`algebraic`） | Section 1 / `026L` | `READY` | `REVIEW` |
 | P0 | 第 97 章 可表性判据（`criteria`） | Section 1 / `05XF` | `READY` | `REVIEW` |
-| P0 | 第 90 章 形式形变理论（`formal-defos`） | Section 1 / `06G8` | `UNPREPARED` | `PREPARE_SCOPE` |
+| P0 | 第 90 章 形式形变理论（`formal-defos`） | Section 1 / `06G8` | `READY` | `REVIEW` |
 | P0 | 第 91 章 形变理论（`defos`） | Section 1 / `08KX` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 92 章 余切复形（`cotangent`） | Section 1 / `08P6` | `UNPREPARED` | `PREPARE_SCOPE` |
 | P0 | 第 52 章 代数几何与形式几何（`algebraization`） | Section 1 / `0EI6` | `UNPREPARED` | `PREPARE_SCOPE` |
@@ -64,7 +64,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 2 / 13 | 第 83 章 群胚的商（`groupoids-quotients`） | `scheme-to-stack` | Section 1 / `048B` | `REVIEW` | 群胚取商位于商空间和栈的概念链中心，系统中文资料稀缺 |
 | P0 | 2 / 14 | 第 94 章 代数栈（`algebraic`） | `stacks-moduli` | Section 1 / `026L` | `REVIEW` | 代数栈是项目核心，系统中文资料稀缺 |
 | P0 | 2 / 15 | 第 97 章 可表性判据（`criteria`） | `representability`, `stacks-moduli` | Section 1 / `05XF` | `REVIEW` | 可表性判据是模问题核心，系统中文资料稀缺 |
-| P0 | 2 / 16 | 第 90 章 形式形变理论（`formal-defos`） | `representability`, `moduli` | Section 1 / `06G8` | `PREPARE_SCOPE` | Artin 与 Schlessinger 路线的核心前置，系统中文资料稀缺 |
+| P0 | 2 / 16 | 第 90 章 形式形变理论（`formal-defos`） | `representability`, `moduli` | Section 1 / `06G8` | `REVIEW` | Artin 与 Schlessinger 路线的核心前置，系统中文资料稀缺 |
 | P0 | 2 / 17 | 第 91 章 形变理论（`defos`） | `representability`, `moduli` | Section 1 / `08KX` | `PREPARE_SCOPE` | 形变理论是模空间核心工具，系统中文资料稀缺 |
 | P0 | 2 / 18 | 第 92 章 余切复形（`cotangent`） | `representability`, `moduli` | Section 1 / `08P6` | `PREPARE_SCOPE` | 余切复形是现代形变理论核心，系统中文资料稀缺 |
 | P0 | 2 / 19 | 第 52 章 代数几何与形式几何（`algebraization`） | `representability` | Section 1 / `0EI6` | `PREPARE_SCOPE` | 形式几何、代数化与模问题之间的核心桥梁，系统中文资料稀缺 |

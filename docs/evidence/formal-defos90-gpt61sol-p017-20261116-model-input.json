@@ -1,0 +1,786 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p017-20261116.json",
+    "hash": "sha256:7aaf09f7cbe7e433ef818fbd2fc00934faed0ec75cfc31a738ec7b5693d56a18"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:d40fe5b82932cf19dbd78ec917a3194914dac4097993e390fdebc3990e313a74"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06SX",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{J}$",
+        "MATH_0002": "$I \\in \\mathcal{J}$",
+        "MATH_0003": "$J \\in \\mathcal{J}$",
+        "MATH_0004": "$J \\subset J' \\subset I$",
+        "MATH_0005": "$J' \\in \\mathcal{J}$",
+        "MATH_0006": "$y$",
+        "MATH_0007": "$y'$",
+        "MATH_0008": "$B/J'$",
+        "MATH_0009": "$J$",
+        "MATH_0010": "$K$",
+        "MATH_0011": "$J \\cap K \\in \\mathcal{J}$",
+        "MATH_0012": "$I$",
+        "MATH_0013": "$k$",
+        "MATH_0014": "$J \\subset J' \\subset I$",
+        "MATH_0015": "$J \\cap K = J' \\cap K$",
+        "MATH_0016": "$J' + K = I$",
+        "MATH_0017": "$J$",
+        "MATH_0018": "$J'$",
+        "MATH_0019": "$J + K = I$",
+        "MATH_0020": "$$\nA/(J \\cap K) = A/J \\times_{A/I} A/K.\n$$",
+        "MATH_0021": "$z \\in \\mathcal{F}(A/(J \\cap K))$",
+        "MATH_0022": "$x$",
+        "MATH_0023": "$A/J$",
+        "MATH_0024": "$A/K$"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:3c19fb4ac0297fa5a7c9b24e4049a8dce894a7c69072e459a869bc77caee28f4",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:7ff3e0b76454d3bf228b306b3ba821bede08420974d07e4b8892fa7e170746a3",
+      "source_text": "Note that <MATH_0001> is nonempty as <MATH_0002>.\nAlso, if <MATH_0003> and <MATH_0004> then\n<MATH_0005> because we can pushforward the object <MATH_0006> to an\nobject <MATH_0007> over <MATH_0008>. Let <MATH_0009> and <MATH_0010> be elements of the displayed set.\nWe claim that <MATH_0011> which will prove the lemma.\nSince <MATH_0012> is a <MATH_0013>-vector space we can find an ideal <MATH_0014>\nsuch that <MATH_0015> and such that <MATH_0016>. By the above\nwe may replace <MATH_0017> by <MATH_0018> and assume that <MATH_0019>. In this case\n<MATH_0020>\nHence the existence of an element <MATH_0021>\nmapping to <MATH_0022> follows, via (S1), from the existence of the elements we have\nassumed exist over <MATH_0023> and <MATH_0024>.\n",
+      "source_text_hash": "sha256:ea9cba577b08b33311a29f9550cbfaf9eb9e8b326ce409048c2002e3c5f52d4f",
+      "unit_id": "tag:06SZ:proof"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "parent_tag": "06SX",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "risk_level": "R2",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:dedd8e6f0ec7d6f5ace0e02ece4f7a390ed65247ea32f2479cfcd4564817a41c",
+      "source_text": "\n\n<STRUCT_0001>\nWe will improve on the following result later.\n\n",
+      "source_text_hash": "sha256:fbe687cd41e30a7158ec1def6f7d8b94880cfbcbd9448a545368eb0dd90bc0a6",
+      "unit_id": "tag:06SX:prose-0004"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06SX",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+        "MATH_0007": "$\\mathcal{F}$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\item",
+        "STRUCT_0006": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-versal-object-existence}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:1f0b6b9ea8b0e5b948ecf8935fc58eb5e41c89e3a023fe6cce454ef2710aec95",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:7f2e7a1fceefbb72a57227927765356ce5a60e067934b462779f682a0624568d",
+      "source_text": "Let <MATH_0001> be a category cofibred in groupoids over\n<MATH_0002>. Assume the following conditions hold:\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0003> is a predeformation category.\n<STRUCT_0003> <MATH_0004> satisfies (S1).\n<STRUCT_0004> <MATH_0005> satisfies (S2).\n<STRUCT_0005> <MATH_0006> is finite.\n<STRUCT_0006>\nThen <MATH_0007> has a versal formal object.\n",
+      "source_text_hash": "sha256:ce1d30084278b927bffe16786aff2e111e2516344fc048fc76ba2bd9b1512f41",
+      "unit_id": "tag:06IW:statement"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:06SZ:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:ea9cba577b08b33311a29f9550cbfaf9eb9e8b326ce409048c2002e3c5f52d4f",
+      "source_structure_hash": "sha256:7ff3e0b76454d3bf228b306b3ba821bede08420974d07e4b8892fa7e170746a3",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "nonempty",
+          "projection_start": 25,
+          "projection_end": 33,
+          "concept": "nonempty",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 135,
+          "projection_end": 141,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 160,
+          "projection_end": 166,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 232,
+          "projection_end": 240,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 258,
+          "projection_end": 261,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "vector space",
+          "projection_start": 352,
+          "projection_end": 364,
+          "concept": "vector-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 380,
+          "projection_end": 385,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 582,
+          "projection_end": 589,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "elements",
+          "projection_start": 670,
+          "projection_end": 678,
+          "concept": "element",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06SX:prose-0004",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:fbe687cd41e30a7158ec1def6f7d8b94880cfbcbd9448a545368eb0dd90bc0a6",
+      "source_structure_hash": "sha256:dedd8e6f0ec7d6f5ace0e02ece4f7a390ed65247ea32f2479cfcd4564817a41c",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": []
+    },
+    {
+      "unit_id": "tag:06IW:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:ce1d30084278b927bffe16786aff2e111e2516344fc048fc76ba2bd9b1512f41",
+      "source_structure_hash": "sha256:7f2e7a1fceefbb72a57227927765356ce5a60e067934b462779f682a0624568d",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "category",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 42,
+          "projection_end": 51,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 168,
+          "projection_end": 176,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 291,
+          "projection_end": 297,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 350,
+          "projection_end": 356,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06SZ:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:formal-defos:06SZ:lemma/0001",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibred in groupoids over\n<MATH_0002> which has (S1). Let <MATH_0003> be a surjection\nin <MATH_0004> with kernel <MATH_0005> annihilated by <MATH_0006>.\nLet <MATH_0007>. The set of ideals\n<MATHSEG_0001> lying over <MATHSEG_0002>\nhas a smallest element.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-largest-closed-where-lift}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$B \\to A$",
+            "MATH_0004": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0005": "$I$",
+            "MATH_0006": "$\\mathfrak m_B$",
+            "MATH_0007": "$x \\in \\mathcal{F}(A)$",
+            "MATHSEG_0001": "$$\n\\mathcal{J} = \\{ J \\subset I \\mid\n\\text{there exists an }y \\to x\\text{",
+            "MATHSEG_0002": "}B/J \\to A\\}\n$$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\mathcal{J} = \\{ J \\subset I \\mid\n\\text{there exists an }y \\to x\\text{ lying over }B/J \\to A\\}\n$$",
+              "source_hash": "sha256:3103168ba8e9636ffdc10e2364fea78a4dcbf0272a6b537af1701ee69d5e39c2",
+              "source_byte_span": {
+                "start": 300,
+                "end": 400
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " lying over ",
+                  "command": "text",
+                  "policy_entry": "root-lying-over",
+                  "slot_byte_span": {
+                    "start": 73,
+                    "end": 85
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "root-phrase",
+                    "usage_source": {
+                      "before": "x",
+                      "after": "B",
+                      "environments": []
+                    },
+                    "source_label": "obsolete-lemma-infinite-sequence",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "obsolete.tex",
+                      "owner_tag": "0CXS",
+                      "owner_label": "obsolete-lemma-infinite-sequence",
+                      "kind": "lemma",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 84066,
+                            "end": 85258
+                          },
+                          "container_hash": "sha256:980d38f8d733055b852b5ba6f1cec75a6430fe383ffd0522b535b6880d682fc1",
+                          "command_byte_span": {
+                            "start": 84568,
+                            "end": 84587
+                          },
+                          "command_hash": "sha256:7a32ad7022540efa7b01cd4c4117995e2cd42edef4e951cb53bb0ee8bab8d920"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:431f0a55c3c17541aee31e0b47d7b353744839930524d56c202f260f45e620d4",
+          "source_text_hash": "sha256:c8b76a8d0f021ebaedcc4afe4b601afcdcf4f611eccdff9eefc7aea12a18e399",
+          "source_structure_hash": "sha256:f53efab20c7e54ea24f0f7aa1360c4c5c0baa8fcd7ae640a6d0a9cfb6e459da5",
+          "source_math_hash": "sha256:ec72c65114032ac98aca4b1981f0adf0784e3d7f6800a5489328dc103573e242"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 148041,
+          "byte_end": 148477,
+          "line_start": 3833,
+          "line_end": 3844,
+          "fragment_hash": "sha256:90da8008b2d720706d42e4646c0e189f45254d19f7e9d0e1ab2db4b5ed92b7be"
+        },
+        "owner_tag": "06SZ",
+        "parent_tag": "06SX"
+      },
+      "hash": "sha256:cfc4d6588a4bfc70260d807ce090cf3538949b8b900d6d1710dfc50a84ea82ef"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06SX:paragraph/0004",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06SX:paragraph/0004",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nWe will improve on the following result later.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:fbe687cd41e30a7158ec1def6f7d8b94880cfbcbd9448a545368eb0dd90bc0a6",
+          "source_structure_hash": "sha256:dedd8e6f0ec7d6f5ace0e02ece4f7a390ed65247ea32f2479cfcd4564817a41c",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 149287,
+          "byte_end": 149343,
+          "line_start": 3863,
+          "line_end": 3864,
+          "fragment_hash": "sha256:08f42813a42a54382a76ded1949f7e76502ee09d4a8cc046e7b411b692291e5f"
+        },
+        "owner_tag": "06SX",
+        "parent_tag": "06SX"
+      },
+      "hash": "sha256:b994462d68c996900da5570ddab734fa55cab6506b08f6b945e74cedfc09098a"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06SZ:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06SZ:proof/0001",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nNote that <MATH_0001> is nonempty as <MATH_0002>.\nAlso, if <MATH_0003> and <MATH_0004> then\n<MATH_0005> because we can pushforward the object <MATH_0006> to an\nobject <MATH_0007> over <MATH_0008>. Let <MATH_0009> and <MATH_0010> be elements of the displayed set.\nWe claim that <MATH_0011> which will prove the lemma.\nSince <MATH_0012> is a <MATH_0013>-vector space we can find an ideal <MATH_0014>\nsuch that <MATH_0015> and such that <MATH_0016>. By the above\nwe may replace <MATH_0017> by <MATH_0018> and assume that <MATH_0019>. In this case\n<MATH_0020>\nHence the existence of an element <MATH_0021>\nmapping to <MATH_0022> follows, via (S1), from the existence of the elements we have\nassumed exist over <MATH_0023> and <MATH_0024>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\mathcal{J}$",
+            "MATH_0002": "$I \\in \\mathcal{J}$",
+            "MATH_0003": "$J \\in \\mathcal{J}$",
+            "MATH_0004": "$J \\subset J' \\subset I$",
+            "MATH_0005": "$J' \\in \\mathcal{J}$",
+            "MATH_0006": "$y$",
+            "MATH_0007": "$y'$",
+            "MATH_0008": "$B/J'$",
+            "MATH_0009": "$J$",
+            "MATH_0010": "$K$",
+            "MATH_0011": "$J \\cap K \\in \\mathcal{J}$",
+            "MATH_0012": "$I$",
+            "MATH_0013": "$k$",
+            "MATH_0014": "$J \\subset J' \\subset I$",
+            "MATH_0015": "$J \\cap K = J' \\cap K$",
+            "MATH_0016": "$J' + K = I$",
+            "MATH_0017": "$J$",
+            "MATH_0018": "$J'$",
+            "MATH_0019": "$J + K = I$",
+            "MATH_0020": "$$\nA/(J \\cap K) = A/J \\times_{A/I} A/K.\n$$",
+            "MATH_0021": "$z \\in \\mathcal{F}(A/(J \\cap K))$",
+            "MATH_0022": "$x$",
+            "MATH_0023": "$A/J$",
+            "MATH_0024": "$A/K$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:a7e8a17cfa4eb6b89fd7b26409d0e31dc6382e292a92b7d59ae8eb10c2d5358a",
+          "source_structure_hash": "sha256:cf3ed974a54343a15b24a31d8344098d2c375d324c4b7d66a7c2ba6ab3100a58",
+          "source_math_hash": "sha256:3c19fb4ac0297fa5a7c9b24e4049a8dce894a7c69072e459a869bc77caee28f4"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 148479,
+          "byte_end": 149285,
+          "line_start": 3846,
+          "line_end": 3861,
+          "fragment_hash": "sha256:b907169a2404e9979a8d01106cbfdac0910bb8a440cb5ad6c6b430104b61ddf7"
+        },
+        "owner_tag": "06SZ",
+        "parent_tag": "06SX"
+      },
+      "hash": "sha256:d22a04556e79a4a91c7c245282f6accc8be682356da689b1ca545afd5d022bbb"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06IW:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IW:lemma/0001",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibred in groupoids over\n<MATH_0002>. Assume the following conditions hold:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is a predeformation category.\n<STRUCT_0004> <MATH_0004> satisfies (S1).\n<STRUCT_0005> <MATH_0005> satisfies (S2).\n<STRUCT_0006> <MATH_0006> is finite.\n<STRUCT_0007>\nThen <MATH_0007> has a versal formal object.\n<STRUCT_0008>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-versal-object-existence}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0005": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0006": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0007": "\\end{enumerate}",
+            "MATH_0007": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:44d42869be4272aebf7ca805392f2fa2a6a555ca64dab86b3839b22c9bb47e7a",
+          "source_structure_hash": "sha256:8c7a56f652d10448650f3a44ed828a23ce50550cd57e918d5a5390e338236be1",
+          "source_math_hash": "sha256:1f0b6b9ea8b0e5b948ecf8935fc58eb5e41c89e3a023fe6cce454ef2710aec95"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 149345,
+          "byte_end": 149770,
+          "line_start": 3866,
+          "line_end": 3877,
+          "fragment_hash": "sha256:15899ae6f58ce7cb9db5798b7a17f41a9c406a481e8fff2639cdb353acee6244"
+        },
+        "owner_tag": "06IW",
+        "parent_tag": "06SX"
+      },
+      "hash": "sha256:1e6f1a2281d88776cb7df0b857fa58a8e1293e879600e358efd83f76200679d8"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06IW:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IW:proof/0001",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nAssume (1), (2), (3), and (4) hold. Choose an object\n<MATH_0001>\nsuch that <MATH_0002> is smooth.\nSee Lemma <REF_0001>.\nLet <MATH_0003> and put <MATH_0004>.\n\n<STRUCT_0002><STRUCT_0003>\nWe are going to inductively construct for <MATH_0005> pairs\n<MATH_0006>\nwhere <MATH_0007> is an decreasing sequence of ideals and\n<MATH_0008> is a morphism of\n<MATH_0009> lying over the projection <MATH_0010>.\n\n<STRUCT_0004><STRUCT_0005>\nStep 1. Let <MATH_0011>. Let <MATH_0012> be the unique\n(up to unique isomorphism) object of <MATH_0013> over\n<MATH_0014>\n\n<STRUCT_0006><STRUCT_0007>\nStep 2. Let\n<MATH_0015>. Then\n<MATH_0016> with <MATH_0017>\nBy (S2) for <MATH_0018> we get a bijection\n<MATH_0019>\nsee\nLemmas <REF_0002> and\n<REF_0003>.\nChoose a basis <MATH_0020> for <MATH_0021> and set\n<MATH_0022>.\nThe point of this choice is that\n<MATH_0023>\nis surjective. Let <MATH_0024> be the unique morphism.\n\n<STRUCT_0008><STRUCT_0009>\nInduction step. Assume <MATH_0025> has been\nconstructed for some <MATH_0026>. There is a minimal element <MATH_0027> of\nthe set of ideals <MATH_0028> satisfying:\n(a) <MATH_0029> and\n(b) there exists a morphism <MATH_0030> lying over\n<MATH_0031>, see\nLemma <REF_0004>.\nLet <MATH_0032> be any morphism of <MATH_0033>\nlying over <MATH_0034>.\n\n<STRUCT_0010><STRUCT_0011>\nSet <MATH_0035>. Set <MATH_0036>. Set <MATH_0037>.\nBy\nLemma <REF_0005>\nthe sequence of ideals <MATH_0038> induces the\n<MATH_0039>-adic topology on <MATH_0040>.\nSince <MATH_0041> is an object of\n<MATH_0042>, where <MATH_0043>\nis the filtration <MATH_0044> of <MATH_0045>,\nwe see that <MATH_0046>\ninduces an object <MATH_0047> of <MATH_0048>.\nsee\nLemma <REF_0006>.\n\n<STRUCT_0012><STRUCT_0013>\nWe prove <MATH_0049> is versal. For versality it suffices to check\nconditions (1) and (2) of\nLemma <REF_0007>.\nCondition (1) follows from our choice of <MATH_0050> in Step 2 above.\nSuppose given a diagram in <MATH_0051>\n<MATH_0052>\nin <MATH_0053> with <MATH_0054> a small extension\nof Artinian rings. We have to show there is a map <MATH_0055> fitting\ninto the diagram on the right. Choose <MATH_0056> such that\n<MATH_0057> factors through <MATH_0058>. This is\npossible as the sequence <MATH_0059> induces the\n<MATH_0060>-adic topology as we saw above.\nThe pushforward of <MATH_0061> along <MATH_0062> is <MATH_0063>.\nWe may factor <MATH_0064> as <MATH_0065> hence we get a diagram\nin <MATH_0066>\n<MATH_0067>\nTo check condition (2) of\nLemma <REF_0008>\nit suffices to complete the diagram\n<MATH_0068>\nor equivalently, to complete the diagram\n<MATH_0069>\nIf <MATH_0070> has a section we are done. If not, by\nLemma <REF_0009> (2)\n<MATH_0071> is a small extension, so by\nLemma <REF_0010> (4)\n<MATH_0072> is an essential surjection. Recall that <MATH_0073>\nand that we chose <MATH_0074> such that <MATH_0075>\nis smooth. Hence there exists a map <MATH_0076> lifting the map\n<MATH_0077>. By the universal property of a power series\nring there is an <MATH_0078>-algebra map <MATH_0079>\nlifting the given map <MATH_0080>. This induces a map\n<MATH_0081> making the solid square in the diagram\n<MATH_0082>\ncommute. Then <MATH_0083> is a surjection since <MATH_0084> is an essential surjection.\nWe claim the ideal <MATH_0085> of <MATH_0086> satisfies conditions (a) and\n(b) of the construction of <MATH_0087> in the induction step above.\nNamely, <MATH_0088> is clear and <MATH_0089> as <MATH_0090>\nis a small extension; this proves (a). By (S1) applied to\n<MATH_0091>\nthere exists a lifting of <MATH_0092> to <MATH_0093>, so (b)\nholds. Since <MATH_0094> was the minimal ideal with properties (a) and (b)\nthis implies <MATH_0095>. Thus the desired map\n<MATH_0096> exists.\n<STRUCT_0014>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_\\Lambda)$",
+            "MATH_0002": "$\\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "REF_0001": "\\ref{lemma-exists-smooth}",
+            "MATH_0003": "$r = \\dim_k T\\mathcal{F}$",
+            "MATH_0004": "$S = R[[X_1, \\ldots, X_r]]$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0005": "$n \\geq 2$",
+            "MATH_0006": "$(J_n, f_{n - 1} : \\xi_n \\to \\xi_{n - 1})$",
+            "MATH_0007": "$J_n \\subset S$",
+            "MATH_0008": "$f_{n - 1} : \\xi_n \\to \\xi_{n - 1}$",
+            "MATH_0009": "$\\mathcal{F}$",
+            "MATH_0010": "$S/J_n \\to S/J_{n - 1}$",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "MATH_0011": "$J_1 = \\mathfrak m_S$",
+            "MATH_0012": "$\\xi_1$",
+            "MATH_0013": "$\\mathcal{F}$",
+            "MATH_0014": "$k = S/J_1 = S/\\mathfrak m_S$",
+            "STRUCT_0006": "\\medskip",
+            "STRUCT_0007": "\\noindent",
+            "MATH_0015": "$J_2 = \\mathfrak m_S^2 + \\mathfrak{m}_R S$",
+            "MATH_0016": "$S/J_2 = k[V]$",
+            "MATH_0017": "$V = kX_1 \\oplus \\ldots \\oplus kX_r$",
+            "MATH_0018": "$\\overline{\\mathcal{F}}$",
+            "MATH_0019": "$$\n\\overline{\\mathcal{F}}(S/J_2)\n\\longrightarrow\nT\\mathcal{F} \\otimes_k V,\n$$",
+            "REF_0002": "\\ref{lemma-S1-S2-associated-functor}",
+            "REF_0003": "\\ref{lemma-tangent-space-vector-space}",
+            "MATH_0020": "$\\theta_1, \\ldots, \\theta_r$",
+            "MATH_0021": "$T\\mathcal{F}$",
+            "MATH_0022": "$\\xi_2 = \\sum \\theta_i \\otimes X_i \\in \\Ob(\\mathcal{F}(S/J_2))$",
+            "MATH_0023": "$$\nd\\xi_2 :\n\\Mor_{\\mathcal{C}_\\Lambda}(S/J_2, k[\\epsilon])\n\\longrightarrow\nT\\mathcal{F}\n$$",
+            "MATH_0024": "$f_1 : \\xi_2 \\to \\xi_1$",
+            "STRUCT_0008": "\\medskip",
+            "STRUCT_0009": "\\noindent",
+            "MATH_0025": "$(J_n, f_{n - 1} : \\xi_n \\to \\xi_{n - 1})$",
+            "MATH_0026": "$n \\geq 2$",
+            "MATH_0027": "$J_{n + 1}$",
+            "MATH_0028": "$J \\subset S$",
+            "MATH_0029": "$\\mathfrak m_S J_n \\subset J \\subset J_n$",
+            "MATH_0030": "$\\xi_{n + 1} \\to \\xi_n$",
+            "MATH_0031": "$S/J \\to S/J_n$",
+            "REF_0004": "\\ref{lemma-largest-closed-where-lift}",
+            "MATH_0032": "$f_n : \\xi_{n + 1} \\to \\xi_n$",
+            "MATH_0033": "$\\mathcal{F}$",
+            "MATH_0034": "$S/J_{n + 1} \\to S/J_n$",
+            "STRUCT_0010": "\\medskip",
+            "STRUCT_0011": "\\noindent",
+            "MATH_0035": "$J = \\bigcap J_n$",
+            "MATH_0036": "$\\overline{S} = S/J$",
+            "MATH_0037": "$\\overline{J}_n = J_n/J$",
+            "REF_0005": "\\ref{lemma-m-adic-topology}",
+            "MATH_0038": "$(\\overline{J}_n)$",
+            "MATH_0039": "$\\mathfrak m_{\\overline{S}}$",
+            "MATH_0040": "$\\overline{S}$",
+            "MATH_0041": "$(\\xi_n, f_n)$",
+            "MATH_0042": "$\\widehat{\\mathcal{F}}_\\mathcal{I}(\\overline{S})$",
+            "MATH_0043": "$\\mathcal{I}$",
+            "MATH_0044": "$(\\overline{J}_n)$",
+            "MATH_0045": "$\\overline{S}$",
+            "MATH_0046": "$(\\xi_n, f_n)$",
+            "MATH_0047": "$\\xi$",
+            "MATH_0048": "$\\widehat{\\mathcal{F}}(\\overline{S})$",
+            "REF_0006": "\\ref{lemma-formal-objects-different-filtration}",
+            "STRUCT_0012": "\\medskip",
+            "STRUCT_0013": "\\noindent",
+            "MATH_0049": "$\\xi$",
+            "REF_0007": "\\ref{lemma-versal-criterion}",
+            "MATH_0050": "$\\xi_2$",
+            "MATH_0051": "$\\widehat{\\mathcal{F}}$",
+            "MATH_0052": "$$\n\\vcenter{\n\\xymatrix{\n            &  y \\ar[d] \\\\\n\\xi \\ar[r]  &  x\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\n         &   B  \\ar[d]^{f} \\\\\n\\overline{S} \\ar[r] &   A\n}\n}\n$$",
+            "MATH_0053": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0054": "$f: B \\to A$",
+            "MATH_0055": "$\\overline{S} \\to B$",
+            "MATH_0056": "$n$",
+            "MATH_0057": "$\\overline{S} \\to A$",
+            "MATH_0058": "$\\overline{S} \\to S/J_n$",
+            "MATH_0059": "$(\\overline{J}_n)$",
+            "MATH_0060": "$\\mathfrak m_{\\overline{S}}$",
+            "MATH_0061": "$\\xi$",
+            "MATH_0062": "$\\overline{S} \\to S/J_n$",
+            "MATH_0063": "$\\xi_n$",
+            "MATH_0064": "$\\xi \\to x$",
+            "MATH_0065": "$\\xi \\to \\xi_n \\to x$",
+            "MATH_0066": "$\\mathcal{F}$",
+            "MATH_0067": "$$\n\\vcenter{\n\\xymatrix{\n            &  y \\ar[d] \\\\\n\\xi_n \\ar[r]  &  x\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\n         &   B  \\ar[d]^{f} \\\\\nS/J_n \\ar[r] &   A .\n}\n}\n$$",
+            "REF_0008": "\\ref{lemma-versal-criterion}",
+            "MATH_0068": "$$\n\\xymatrix{\nS/J_{n + 1} \\ar[d] \\ar@{-->}[r] & B \\ar[d]^{f} \\\\\nS/J_n   \\ar[r] & A\n}\n$$",
+            "MATH_0069": "$$\n\\xymatrix{\n  &  S/J_n \\times_A B \\ar[d]^{p_1} \\\\\nS/J_{n + 1} \\ar@{-->}[ur] \\ar[r] &  S/J_n.\n}\n$$",
+            "MATH_0070": "$p_1$",
+            "REF_0009": "\\ref{lemma-fiber-product-CLambda}",
+            "MATH_0071": "$p_1$",
+            "REF_0010": "\\ref{lemma-essential-surjection}",
+            "MATH_0072": "$p_1$",
+            "MATH_0073": "$S = R[[X_1, \\ldots, X_r]]$",
+            "MATH_0074": "$R$",
+            "MATH_0075": "$\\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0076": "$h : R \\to B$",
+            "MATH_0077": "$R \\to S \\to S/J_n \\to A$",
+            "MATH_0078": "$R$",
+            "MATH_0079": "$h : S = R[[X_1, \\ldots, X_r]] \\to B$",
+            "MATH_0080": "$S \\to S/J_n \\to A$",
+            "MATH_0081": "$g: S \\to S/J_n \\times_A B$",
+            "MATH_0082": "$$\n\\xymatrix{\nS \\ar[d] \\ar[r]_-g  &  S/J_n \\times_A B \\ar[d]^{p_1} \\\\\nS/J_{n + 1} \\ar@{-->}[ur] \\ar[r] &  S/J_n\n}\n$$",
+            "MATH_0083": "$g$",
+            "MATH_0084": "$p_1$",
+            "MATH_0085": "$K = \\Ker(g)$",
+            "MATH_0086": "$S$",
+            "MATH_0087": "$J_{n + 1}$",
+            "MATH_0088": "$K \\subset J_n$",
+            "MATH_0089": "$\\mathfrak m_SJ_n \\subset K$",
+            "MATH_0090": "$p_1$",
+            "MATH_0091": "$$\n\\xymatrix{\n            &  y \\ar[d] \\\\\n\\xi_n \\ar[r]  &  x,\n}\n$$",
+            "MATH_0092": "$\\xi_n$",
+            "MATH_0093": "$S/K \\cong S/J_n \\times_A B$",
+            "MATH_0094": "$J_{n + 1}$",
+            "MATH_0095": "$J_{n + 1} \\subset K$",
+            "MATH_0096": "$S/J_{n+1} \\to S/K \\cong S/J_n \\times_A B$",
+            "STRUCT_0014": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c5f585733b1c63c0eea7f3998b0e128981ef2ede7a127703935507c836a7c054",
+          "source_structure_hash": "sha256:6868f939521ccf57823a8698348d6480f9b20459db75c0785b6d51b8da67f02a",
+          "source_math_hash": "sha256:bf6cf46d6bc1feabc21758e83b2c2d76b613e6162b509ac2d7033295cb440325"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 149772,
+          "byte_end": 155208,
+          "line_start": 3879,
+          "line_end": 4040,
+          "fragment_hash": "sha256:d3ca6f16d348f79c707ec5457fa2da00413d09c84fe5a1d596ceedfde716f4c1"
+        },
+        "owner_tag": "06IW",
+        "parent_tag": "06SX"
+      },
+      "hash": "sha256:26dba428ee65eaad38f7e3b949da280f00c4fc5f934105ca0f74930842ff3014"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p017-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

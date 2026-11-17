@@ -1,0 +1,2989 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p034-r02-20261116.json",
+    "hash": "sha256:37bc4d6d35ea6765cf944b16cef86f5985412cb124e516fc3df8988f9197195d"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e388-c533-7013-9623-5df1073e40fb",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:1f52e97f167a056e40ed4f10bf7e09c9b8f993d5c835b038750b3d1fc0b67a4a"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "formal-defos",
+      "node_kind": "definition",
+      "parent_tag": "06KC",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$(U, R, s, t, c)^{\\wedge}$",
+        "MATH_0004": "$(U, R, s, t, c)$",
+        "MATH_0005": "$(\\widehat{U}, \\widehat{R}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+        "MATH_0006": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0001": "{\\it "
+      },
+      "render": {
+        "prefix": "\\begin{definition}\n\\label{definition-completion-groupoid-in-functors}\n",
+        "suffix": "\\end{definition}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:952d9fbdca70772cba43c4a3da8c1024749fcad4973f9e7ff7d3987af4269864",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:e9368685557b7aa01f2dc8a3a136e1623d2300573132d5c34e295f69dbb0a630",
+      "source_text": "Let <MATH_0001> be a groupoid in functors on <MATH_0002>.\nThe <TEXTITOPEN_0001>completion <MATH_0003> of <MATH_0004><TEXTITCLOSE_0001> is the\ngroupoid in functors\n<MATH_0005>\non <MATH_0006> described above.\n",
+      "source_text_hash": "sha256:6a76611678d75c40a4538fdc60ec0141753c112a648fa7d534cfd838ece8548d",
+      "unit_id": "tag:06KE:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "remark",
+      "parent_tag": "06KC",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$(U, R, s, t, c)^{\\wedge}|_{\\mathcal{C}_\\Lambda} \\cong (U, R, s, t, c)$",
+        "MATH_0004": "$(U, R, s, t, c)$",
+        "MATH_0005": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+        "MATH_0006": "$U, R : \\widehat{\\mathcal{C}}_\\Lambda \\to \\textit{Sets}$",
+        "MATH_0007": "$U, R$",
+        "MATH_0008": "$((U, R, s, t, c)|_{\\mathcal{C}_\\Lambda})^{\\wedge} \\cong (U, R, s, t, c)$",
+        "REF_0001": "\\ref{remark-restrict-completion}",
+        "REF_0002": "\\ref{remark-restrict-complete-continuous-functor}",
+        "SPACE_0001": "\\ "
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-groupoid-in-functors-complete-restrict}\n",
+        "suffix": "\\end{remark}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:4c63d8e0dd2eff3df540f588c33333243cd895b68eeaa0f60c5f167838ec92f9",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:bd7df0878c218587a4d9b816b2121b3e51a2a6df9a37155ec5bb24cb23e5dbbd",
+      "source_text": "Let <MATH_0001> be a groupoid in functors on <MATH_0002>.\nThen there is a canonical isomorphism\n<MATH_0003>, see\nRemark <REF_0001>.\nOn the other hand, let <MATH_0004> be a groupoid in functors on\n<MATH_0005> such that\n<MATH_0006>\nboth commute with limits, e.g.<SPACE_0001>if <MATH_0007> are representable.\nThen there is a canonical isomorphism\n<MATH_0008>.\nThis follows from\nRemark <REF_0002>.\n",
+      "source_text_hash": "sha256:ebaebb5cece35aaf457b157ace5807d02705ad4786517cad27e2021ffd08ae34",
+      "unit_id": "tag:06KF:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06KC",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$(U, R, s, t, c)$",
+        "MATH_0004": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+        "MATH_0005": "$(U, R, s, t, c)$",
+        "MATH_0006": "$U$",
+        "MATH_0007": "$R$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-groupoid-in-functors-prorep-equivalences}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:1a25285a052f6abf8f58a99bd96065edcaa8a4632e311d0563d2cf0fe8623a50",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:b9888a503f3dd3ec555515b11d83393cd2464337e9096d089174b208b1e6359b",
+      "source_text": "Let <MATH_0001> be a groupoid in functors on <MATH_0002>.\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0003> is prorepresentable if and only if its completion is\nrepresentable as a groupoid in functors on <MATH_0004>.\n<STRUCT_0003> <MATH_0005> is prorepresentable if and only if <MATH_0006> and <MATH_0007> are\nprorepresentable.\n<STRUCT_0004>\n",
+      "source_text_hash": "sha256:9f0bdc264f9814cde72362fed3ea3d08807336e671008dcb6830813341d8f489",
+      "unit_id": "tag:06KG:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06KC",
+      "placeholders": {
+        "MATH_0001": "$U$",
+        "MATH_0002": "$R$",
+        "MATH_0003": "$U \\cong \\underline{R_0}|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0004": "$R \\cong \\underline{R_1}|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0005": "$R_0$",
+        "MATH_0006": "$R_1$",
+        "MATH_0007": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+        "MATH_0008": "$\\underline{R_0} \\cong \\widehat{\\underline{R_0}|_{\\mathcal{C}_\\Lambda}}$",
+        "MATH_0009": "$\\underline{R_1} \\cong \\widehat{\\underline{R_1}|_{\\mathcal{C}_\\Lambda}}$",
+        "MATH_0010": "$(U, R, s, t, c)^\\wedge$",
+        "MATH_0011": "$(\\underline{R_0}, \\underline{R_1}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+        "MATH_0012": "$\\underline{R_1} \\times_{\\widehat{s}, \\underline{R_1}, \\widehat{t}}\n\\underline{R_1}$",
+        "MATH_0013": "$(\\underline{R_0}, \\underline{R_1}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+        "MATH_0014": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+        "MATH_0015": "$(\\underline{R_0}, \\underline{R_1}, s, t, c)|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0016": "$(U, R, s, t, c)$",
+        "MATH_0017": "$(U, R, s, t, c)$",
+        "REF_0001": "\\ref{remark-groupoid-in-functors-complete-restrict}",
+        "REF_0002": "\\ref{remark-restrict-complete-continuous-functor}",
+        "REF_0003": "\\ref{lemma-CLambdahat-pushouts}",
+        "REF_0004": "\\ref{remark-groupoid-in-functors-complete-restrict}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:87048a85edf70e245537d09529e65ac06a178cb8d2d3f091f8a536523d92dd22",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:a33118199720ad72af3a3524ce851789684b5a6abedde1df9b720678de5f335c",
+      "source_text": "Part (1) follows from\nRemark <REF_0001>.\nFor (2), the ``only if'' direction is clear from the definition\nof a prorepresentable groupoid in functors. Conversely, assume <MATH_0001> and <MATH_0002>\nare prorepresentable, say <MATH_0003>\nand <MATH_0004> for objects <MATH_0005> and\n<MATH_0006> of <MATH_0007>.\nSince <MATH_0008>\nand <MATH_0009>\nby\nRemark <REF_0002>\nwe see that the completion <MATH_0010> is a groupoid in\nfunctors of the form\n<MATH_0011>.\nBy\nLemma <REF_0003>\nthe pushout\n<MATH_0012> exists. Hence\n<MATH_0013>\nis a representable groupoid in functors on <MATH_0014>.\nFinally, the restriction\n<MATH_0015>\ngives back <MATH_0016> by\nRemark <REF_0004>\nhence <MATH_0017> is prorepresentable by definition.\n",
+      "source_text_hash": "sha256:35194450d7d1ade7aefd64d90200dcff0d363ffaf11b14993b636c8a6baa1a13",
+      "unit_id": "tag:06KG:proof"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "section_title",
+      "parent_tag": "06KH",
+      "placeholders": {},
+      "render": {
+        "prefix": "\\section{",
+        "suffix": "}\n\\label{section-smooth-minimal-groupoids-in-functors}"
+      },
+      "risk_level": "R1",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:233be9fa673c9cb85ce6922765d941fc706191dc7de143f99648969d23957bbe",
+      "source_text": "Smooth groupoids in functors on the base category",
+      "source_text_hash": "sha256:47c0b63c866705c2c5979a4a3bc9038c6074414d0c4c044d5f1a63cde2b72974",
+      "unit_id": "tag:06KH:title"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "parent_tag": "06KH",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{C}_\\Lambda$",
+        "STRUCT_0001": "\\noindent"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "risk_level": "R2",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:fb6ad280346362a580dd3b1ba5464da5eea3146f40ecf0a8f3a682476d6fa006",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:d81f4e123247c0fd5b17e7c5bef790c3dd27a7eafea54c8bb7f24e3baf21a77a",
+      "source_text": "\n\n<STRUCT_0001>\nThe notion of smoothness for groupoids in functors on <MATH_0001> is\ndefined as follows.\n\n",
+      "source_text_hash": "sha256:751cfcc7df618344bf5b0169c8c72cf059dcf688230502e6ec344281948131c6",
+      "unit_id": "tag:06KH:prose-0001"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "definition",
+      "parent_tag": "06KH",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$(U, R, s, t, c)$",
+        "MATH_0004": "$s, t: R \\to U$",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0001": "{\\it "
+      },
+      "render": {
+        "prefix": "\\begin{definition}\n\\label{definition-smooth-groupoid-in-functors}\n",
+        "suffix": "\\end{definition}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:f7968e37ec624d70d98856276ecb33c445c340753d3fffefd4eddbe76f5049b4",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:759ca0bb18fb295a4da38964ccf7151aae95db7b5abcc8702e44f4f4f9447366",
+      "source_text": "Let <MATH_0001> be a groupoid in functors on <MATH_0002>. We\nsay <MATH_0003> is <TEXTITOPEN_0001>smooth<TEXTITCLOSE_0001> if <MATH_0004> are smooth.\n",
+      "source_text_hash": "sha256:9c5f6e0d30f2c3ae9c4c26b30c771b13c0fbda2b9200f8511b41aa016a6bfc64",
+      "unit_id": "tag:06KI:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "remark",
+      "parent_tag": "06KH",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$[U/R]$",
+        "MATH_0003": "$(U, R, s, t, c)$",
+        "MATH_0004": "$U \\to [U/R]$",
+        "REF_0001": "\\ref{definition-cofibered-groupoid-projection-smooth}",
+        "REF_0002": "\\ref{lemma-smooth-quotient-morphism}"
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-smooth-groupoid-in-functors-warning}\n",
+        "suffix": "\\end{remark}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:a0530e081ced6b838c80b595a72f9672ba888c0c7f4061d3661a1fdfb761019e",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:8d126ff8fe047e7ae1d1f0d8437670f60572ff3441236badcea4deae3cda6a84",
+      "source_text": "We note that this terminology is potentially confusing:\nif <MATH_0001> is a smooth groupoid in functors, then the quotient\n<MATH_0002> need not be a smooth category cofibred in groupoids as defined in\nDefinition <REF_0001>.\nHowever smoothness of <MATH_0003> does imply (in fact is equivalent to)\nsmoothness of the quotient morphism <MATH_0004> as we shall\nsee in\nLemma <REF_0002>.\n",
+      "source_text_hash": "sha256:61d164eb455be54a77ec205a9a2f09c6127214bc44c97b45a0bb1c94171add67",
+      "unit_id": "tag:06KJ:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "remark",
+      "parent_tag": "06KH",
+      "placeholders": {
+        "MATH_0001": "$(\\underline{R_0}, \\underline{R_1}, s, t, c)|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$(\\underline{R_0}, \\underline{R_1}, s, t, c)|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0004": "$R_1$",
+        "MATH_0005": "$R_0$",
+        "MATH_0006": "$s$",
+        "MATH_0007": "$t$",
+        "REF_0001": "\\ref{lemma-smooth-morphism-power-series}"
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-smooth-power-series-prorepresentable-smooth-groupoid-in-functors}\n",
+        "suffix": "\\end{remark}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:bad781cd984c94344efa09b47a8ef028915e0b05e03883142ee7e7fa048a2191",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:19576d7177d6f9f816755640a49076b50b48f305d3a82cb943bb04501dd1cc1d",
+      "source_text": "Let <MATH_0001>\nbe a prorepresentable groupoid in functors on <MATH_0002>.\nThen <MATH_0003>\nis smooth if and only if <MATH_0004> is a power series over <MATH_0005> via both <MATH_0006>\nand <MATH_0007>. This follows from\nLemma <REF_0001>.\n",
+      "source_text_hash": "sha256:430413f73c848364764d74fa0456de88359f493985ef363580081637dfd299bd",
+      "unit_id": "tag:06KK:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06KH",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$(U, R, s, t, c)$",
+        "MATH_0004": "$s : R \\to U$",
+        "MATH_0005": "$t : R \\to U$",
+        "MATH_0006": "$U \\to [U/R]$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\item",
+        "STRUCT_0006": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-smooth-quotient-morphism}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:dd1e8158c53fd62d7a5939e4e0008e126e43e93071be2e557fb0b44b7a439a0a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:83e1e074af7c4de9f21287cf68693cbc2a2dbb5e6d2c9eaa17af55e1a6b05052",
+      "source_text": "Let <MATH_0001> be a groupoid in functors on <MATH_0002>.\nThe following are equivalent:\n<STRUCT_0001>\n<STRUCT_0002> The groupoid in functors <MATH_0003> is smooth.\n<STRUCT_0003> The morphism <MATH_0004> is smooth.\n<STRUCT_0004> The morphism <MATH_0005> is smooth.\n<STRUCT_0005> The quotient morphism <MATH_0006> is smooth.\n<STRUCT_0006>\n",
+      "source_text_hash": "sha256:62ae28721b448ff879a16764483f09f7ebbf957da90fe4e26e2d2613500b7621",
+      "unit_id": "tag:06KL:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06KH",
+      "placeholders": {
+        "ITEMCLOSE_0001": "]",
+        "ITEMCLOSE_0002": "]",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMOPEN_0002": "\\item[",
+        "MATH_0001": "$i: R \\to R$",
+        "MATH_0002": "$(U, R, s, t, c)$",
+        "MATH_0003": "$t = s \\circ i$",
+        "MATH_0004": "$s: R \\to U$",
+        "MATH_0005": "$f: B \\to A$",
+        "MATH_0006": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0007": "$a \\in R(A)$",
+        "MATH_0008": "$y \\in U(B)$",
+        "MATH_0009": "$s(a) = U(f)(y)$",
+        "MATH_0010": "$a' \\in R(B)$",
+        "MATH_0011": "$R(f)(a') = a$",
+        "MATH_0012": "$s(a') = y$",
+        "MATH_0013": "$U \\to [U/R]$",
+        "MATH_0014": "$f: B \\to A$",
+        "MATH_0015": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0016": "$(f, a) : (B, y) \\to (A, x)$",
+        "MATH_0017": "$[U/R]$",
+        "MATH_0018": "$x' \\in U(B)$",
+        "MATH_0019": "$b \\in R(B)$",
+        "MATH_0020": "$s(b) = x'$",
+        "MATH_0021": "$t(b) = y$",
+        "MATH_0022": "$c(a, R(f)(b)) = e(x)$",
+        "MATH_0023": "$e : U \\to R$",
+        "MATH_0024": "$(f, a)$",
+        "MATH_0025": "$a \\in R(A)$",
+        "MATH_0026": "$s(a) = U(f)(y)$",
+        "MATH_0027": "$t(a) = x$",
+        "MATH_0028": "$f, a, y$",
+        "MATH_0029": "$x = t(a)$",
+        "MATH_0030": "$(f, a): (B, y) \\to (A, x)$",
+        "MATH_0031": "$x'$",
+        "MATH_0032": "$b$",
+        "MATH_0033": "$a' = i(b)$",
+        "MATH_0034": "$(f, a): (B, y) \\to (A, x)$",
+        "MATH_0035": "$a' \\in R(B)$",
+        "MATH_0036": "$x' = t(a')$",
+        "MATH_0037": "$b = i(a')$",
+        "REF_0001": "\\ref{remarks-cofibered-groupoids}",
+        "REF_0002": "\\ref{item-construction-associated-cofibered-groupoid}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "STRUCT_0003": "\\begin{enumerate}",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:79c335d50332c00275b55c2f1bf6797dc60f2643c701ae51393ec885b66b44b0",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:9f62e51a6262afc3665afcee0ddf7850512259e6c289402b0ba4948dbec15231",
+      "source_text": "Statement (2) is equivalent to (3) since the inverse <MATH_0001> of\n<MATH_0002> is an isomorphism and <MATH_0003>. By definition (1) is\nequivalent to (2) and (3) together, hence it is equivalent to either of them\nindividually.\n\n<STRUCT_0001><STRUCT_0002>\nFinally we prove (2) is equivalent to (4). Unwinding the definitions:\n<STRUCT_0003>\n<ITEMOPEN_0001>(2)<ITEMCLOSE_0001> Smoothness of <MATH_0004> amounts to the following\ncondition: If <MATH_0005> is a surjective ring map in\n<MATH_0006>, <MATH_0007>, and <MATH_0008> such that\n<MATH_0009>, then there exists <MATH_0010> such that\n<MATH_0011> and <MATH_0012>.\n<ITEMOPEN_0002>(4)<ITEMCLOSE_0002> Smoothness of <MATH_0013> amounts to the following\ncondition: If <MATH_0014> is a surjective ring map in\n<MATH_0015> and <MATH_0016>\nis a morphism of <MATH_0017>, then there exists <MATH_0018> and\n<MATH_0019> with <MATH_0020>, <MATH_0021>\nsuch that <MATH_0022>.  Here <MATH_0023> denotes the\nidentity and the notation <MATH_0024> is as in Remarks\n<REF_0001>\n(<REF_0002>);\nin particular <MATH_0025> with <MATH_0026> and <MATH_0027>.\n<STRUCT_0004>\nIf (4) holds and <MATH_0028> as in (2) are given, let <MATH_0029> so that\nwe have a morphism <MATH_0030>.\nThen (4) produces <MATH_0031> and <MATH_0032>, and <MATH_0033> satisfies the requirements\nof (2). Conversely, assume (2) holds and let <MATH_0034>\nas in (4) be given. Then (2) produces <MATH_0035>, and <MATH_0036> and\n<MATH_0037> satisfy the requirements of (4).\n",
+      "source_text_hash": "sha256:b956b64cad38666ac3f4a705420a1655e0a817fec367b11405bd2d5bdf947e20",
+      "unit_id": "tag:06KL:proof"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "section_title",
+      "parent_tag": "06KS",
+      "placeholders": {},
+      "render": {
+        "prefix": "\\section{",
+        "suffix": "}\n\\label{section-deformation-categories-as-quotients}"
+      },
+      "risk_level": "R1",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:5b5f27aa8d3888b95bb963c240f2f7c4be6f2c2c8a97c8c9c5bf54e6a799fd15",
+      "source_text": "Deformation categories as quotients of groupoids in functors",
+      "source_text_hash": "sha256:f1c0479f442f6bb023712e8912defbc6e02a015d05e48869dd14310223fdc3df",
+      "unit_id": "tag:06KS:title"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "parent_tag": "06KS",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{C}_\\Lambda$",
+        "STRUCT_0001": "\\noindent"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "risk_level": "R2",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:fb6ad280346362a580dd3b1ba5464da5eea3146f40ecf0a8f3a682476d6fa006",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:20b2f49090156d54bd8d489b293b7180e91b06d5ee660b9bb7dc4e4c4c6a0ad5",
+      "source_text": "\n\n<STRUCT_0001>\nWe discuss conditions on a groupoid in functors on <MATH_0001> which\nguarantee that the quotient is a deformation category, and we calculate the\ntangent and infinitesimal automorphism spaces of such a quotient.\n\n",
+      "source_text_hash": "sha256:1ab573f289b79372246881c75eea5a80ad54e9c8a8ea9fbf30e90dd58df6414b",
+      "unit_id": "tag:06KS:prose-0001"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06KS",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$U$",
+        "MATH_0004": "$R$",
+        "MATH_0005": "$[U/R]$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-smooth-RS-groupoid-in-functors-quotient}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:28b9dc018acd2654ae8173fda7ba698d4e1610af14183ce13278a3e8403ad8d0",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:1491122ba7ce43b83dcb18611326a763e769d2cb2e5f01b6048ce7dd3ac5d9b0",
+      "source_text": "Let <MATH_0001> be a smooth groupoid in functors on <MATH_0002>.\nAssume <MATH_0003> and <MATH_0004> satisfy (RS). Then <MATH_0005> satisfies (RS).\n",
+      "source_text_hash": "sha256:02d2803041e8af2536c1864a70d76ba43c8e057f6ede3821a54e481eca4eb50b",
+      "unit_id": "tag:06KT:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06KS",
+      "placeholders": {
+        "MATH_0001": "$$\n\\xymatrix{\n                           &     (A_2, x_2) \\ar[d]^{(f_2, a_2)} \\\\\n(A_1, x_1) \\ar[r]^{(f_1, a_1)} &     (A, x)\n}\n$$",
+        "MATH_0002": "$[U/R]$",
+        "MATH_0003": "$f_2: A_2 \\to A$",
+        "MATH_0004": "$f_1: A_1 \\to A, f_2: A_2 \\to A$",
+        "MATH_0005": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0006": "$x \\in U(A)$",
+        "MATH_0007": "$x_1 \\in U(A_1)$",
+        "MATH_0008": "$x_2 \\in U(A_2)$",
+        "MATH_0009": "$a_1, a_2 \\in R(A)$",
+        "MATH_0010": "$s(a_1) = U(f_1)(x_1)$",
+        "MATH_0011": "$t(a_1) = x$",
+        "MATH_0012": "$s(a_2) = U(f_2)(x_2)$",
+        "MATH_0013": "$t(a_2) = x$",
+        "MATH_0014": "$A_1 \\times_A A_2$",
+        "MATH_0015": "$[U/R]$",
+        "MATH_0016": "$a = c(i(a_1), a_2)$",
+        "MATH_0017": "$i: R \\to R$",
+        "MATH_0018": "$a \\in R(A)$",
+        "MATH_0019": "$x_2 \\in U(A_2)$",
+        "MATH_0020": "$s(a) = U(f_2)(x_2)$",
+        "MATH_0021": "$(a, x_2) \\in R(A) \\times_{s, U(A), U(f_2)} U(A_2)$",
+        "MATH_0022": "$s : R \\to U$",
+        "MATH_0023": "$\\widetilde{a} \\in R(A_2)$",
+        "MATH_0024": "$R(f_2)(\\widetilde{a}) = a$",
+        "MATH_0025": "$s(\\widetilde{a}) = x_2$",
+        "MATH_0026": "$U(f_2)(t(\\widetilde{a})) = t(a) = U(f_1)(x_1)$",
+        "MATH_0027": "$x_1$",
+        "MATH_0028": "$t(\\widetilde{a})$",
+        "MATH_0029": "$$\n(x_1, t(\\widetilde{a})) \\in U(A_1) \\times_{U(A)} U(A_2).\n$$",
+        "MATH_0030": "$U$",
+        "MATH_0031": "$U(A_1) \\times_{U(A)} U(A_2) = U(A_1 \\times_A A_2)$",
+        "MATH_0032": "$x_1 \\times t(\\widetilde{a}) \\in U(A_1 \\times_A A_2)$",
+        "MATH_0033": "$(x_1, t(\\widetilde{a})) \\in U(A_1) \\times_{U(A)} U(A_2)$",
+        "MATH_0034": "$p_1, p_2$",
+        "MATH_0035": "$A_1 \\times_A A_2$",
+        "MATH_0036": "$$\n\\xymatrix{\n(A_1 \\times_A A_2, x_1 \\times t(\\widetilde{a})) \\ar[d]_{(p_1, e(x_1))}\n\\ar[rr]_-{(p_2, i(\\widetilde{a}))} & & (A_2, x_2) \\ar[d]^{(f_2, a_2)} \\\\\n(A_1, x_1) \\ar[rr]^{(f_1, a_1)} & & (A, x)\n}\n$$",
+        "MATH_0037": "$[U/R]$",
+        "MATH_0038": "$e: U \\to R$",
+        "MATH_0039": "$c(a_2, R(f_2)(i(\\widetilde{a}))) = c(a_2, i(a)) = a_1$",
+        "MATH_0040": "$$\n\\xymatrix{\n(B, z) \\ar[d]_{(g_1, b_1)} \\ar[rr]_{(g_2, b_2)} & & (A_2, x_2)\n\\ar[d]^{(f_2, a_2)} \\\\\n(A_1, x_1) \\ar[rr]^{(f_1, a_1)} & & (A, x)\n}\n$$",
+        "MATH_0041": "$[U/R]$",
+        "MATH_0042": "$(g, b) : (B, z) \\to (A_1 \\times_A A_2, x_1 \\times t(\\widetilde{a}))$",
+        "MATH_0043": "$(A_1, x_1)$",
+        "MATH_0044": "$(A_2, x_2)$",
+        "MATH_0045": "$g = (g_1, g_2) : B \\to A_1 \\times_A A_2$",
+        "MATH_0046": "$R$",
+        "MATH_0047": "$R(A_1 \\times_A A_2) = R(A_1) \\times_{R(A)} R(A_2)$",
+        "MATH_0048": "$b = (b'_1, b'_2)$",
+        "MATH_0049": "$b'_1 \\in R(A_1)$",
+        "MATH_0050": "$b'_2 \\in R(A_2)$",
+        "MATH_0051": "$R(A)$",
+        "MATH_0052": "$((g_1, g_2), (b'_1, b'_2)) : (B, z) \\to\n(A_1 \\times_A A_2, x_1 \\times t(\\widetilde{a}))$",
+        "MATH_0053": "$b'_1 = b_1$",
+        "MATH_0054": "$b'_2 = c(\\widetilde{a}, b_2)$",
+        "REF_0001": "\\ref{remarks-cofibered-groupoids}",
+        "REF_0002": "\\ref{item-construction-associated-cofibered-groupoid}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:347d74261276b1cf9fcbd07caeb2611df235f8c93a7afb010f9484b66d4b85a3",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:0b35d45993b82facda13503a2b208b141f2fa2231a8594987dc813e74fd86bd6",
+      "source_text": "Let\n<MATH_0001>\nbe a diagram in <MATH_0002> such that <MATH_0003> is surjective. The\nnotation is as in\nRemarks <REF_0001>\n(<REF_0002>).\nHence <MATH_0004> are maps in\n<MATH_0005>, <MATH_0006>, <MATH_0007>, <MATH_0008>,\nand <MATH_0009> with <MATH_0010>,\n<MATH_0011> and <MATH_0012>, <MATH_0013>.\nWe construct a fiber product lying over <MATH_0014>\nfor this diagram in <MATH_0015> as follows.\n\n<STRUCT_0001><STRUCT_0002>\nLet <MATH_0016>, where <MATH_0017> is the inverse morphism.\nThen <MATH_0018>, <MATH_0019> and <MATH_0020>.\nHence an element <MATH_0021>.\nBy smoothness of <MATH_0022> there is an element\n<MATH_0023> with <MATH_0024> and\n<MATH_0025>. In particular\n<MATH_0026>. Thus <MATH_0027> and\n<MATH_0028> define an element\n<MATH_0029>\nBy the assumption that <MATH_0030> satisfies (RS), we have an identification\n<MATH_0031>. Let us denote\n<MATH_0032> the element\ncorresponding to <MATH_0033>.\nLet <MATH_0034> be the projections of <MATH_0035>.  We claim\n<MATH_0036>\nis a fiber square in <MATH_0037>. (Note <MATH_0038> denotes the identity.)\n\n<STRUCT_0003><STRUCT_0004>\nThe diagram is commutative because\n<MATH_0039>.\nTo check it is a fiber square, let\n<MATH_0040>\nbe a commutative diagram in <MATH_0041>. We will show there is a unique morphism\n<MATH_0042>\ncompatible with the morphisms to <MATH_0043> and <MATH_0044>.\nWe must take <MATH_0045>.\nSince by assumption <MATH_0046> satisfies (RS), we have an identification\n<MATH_0047>.\nHence we can write <MATH_0048> for some\n<MATH_0049>, <MATH_0050> which agree in <MATH_0051>.\nThen\n<MATH_0052>\nwill commute with the projections if and only if\n<MATH_0053> and <MATH_0054> proving unicity and\nexistence.\n",
+      "source_text_hash": "sha256:3b797359603b7811dc19524f9788ee837cdd55e74034e0ae8b2ec38594711826",
+      "unit_id": "tag:06KT:proof"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:06KE:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:6a76611678d75c40a4538fdc60ec0141753c112a648fa7d534cfd838ece8548d",
+      "source_structure_hash": "sha256:e9368685557b7aa01f2dc8a3a136e1623d2300573132d5c34e295f69dbb0a630",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 21,
+          "projection_end": 41,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "completion",
+          "projection_start": 62,
+          "projection_end": 72,
+          "concept": "completion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 107,
+          "projection_end": 127,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KF:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:ebaebb5cece35aaf457b157ace5807d02705ad4786517cad27e2021ffd08ae34",
+      "source_structure_hash": "sha256:bd7df0878c218587a4d9b816b2121b3e51a2a6df9a37155ec5bb24cb23e5dbbd",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 21,
+          "projection_end": 41,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical isomorphism",
+          "projection_start": 74,
+          "projection_end": 95,
+          "concept": "source-phrase-canonical-isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 172,
+          "projection_end": 192,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commute",
+          "projection_start": 235,
+          "projection_end": 242,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "limits",
+          "projection_start": 248,
+          "projection_end": 254,
+          "concept": "limit",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 291,
+          "projection_end": 304,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical isomorphism",
+          "projection_start": 322,
+          "projection_end": 343,
+          "concept": "source-phrase-canonical-isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KG:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:9f0bdc264f9814cde72362fed3ea3d08807336e671008dcb6830813341d8f489",
+      "source_structure_hash": "sha256:b9888a503f3dd3ec555515b11d83393cd2464337e9096d089174b208b1e6359b",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 21,
+          "projection_end": 41,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 101,
+          "projection_end": 117,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "completion",
+          "projection_start": 137,
+          "projection_end": 147,
+          "concept": "completion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 151,
+          "projection_end": 164,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 170,
+          "projection_end": 190,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 236,
+          "projection_end": 252,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 300,
+          "projection_end": 316,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KG:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:35194450d7d1ade7aefd64d90200dcff0d363ffaf11b14993b636c8a6baa1a13",
+      "source_structure_hash": "sha256:a33118199720ad72af3a3524ce851789684b5a6abedde1df9b720678de5f335c",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 110,
+          "projection_end": 126,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 127,
+          "projection_end": 147,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 200,
+          "projection_end": 216,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 254,
+          "projection_end": 261,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "completion",
+          "projection_start": 377,
+          "projection_end": 387,
+          "concept": "completion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 405,
+          "projection_end": 425,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 475,
+          "projection_end": 482,
+          "concept": "pushout",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 526,
+          "projection_end": 539,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 540,
+          "projection_end": 560,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "restriction",
+          "projection_start": 590,
+          "projection_end": 601,
+          "concept": "source-phrase-restriction",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 679,
+          "projection_end": 695,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KH:title",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:47c0b63c866705c2c5979a4a3bc9038c6074414d0c4c044d5f1a63cde2b72974",
+      "source_structure_hash": "sha256:233be9fa673c9cb85ce6922765d941fc706191dc7de143f99648969d23957bbe",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "Smooth",
+          "projection_start": 0,
+          "projection_end": 6,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids in functors",
+          "projection_start": 7,
+          "projection_end": 28,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base category",
+          "projection_start": 36,
+          "projection_end": 49,
+          "concept": "source-phrase-base-category",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KH:prose-0001",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:751cfcc7df618344bf5b0169c8c72cf059dcf688230502e6ec344281948131c6",
+      "source_structure_hash": "sha256:d81f4e123247c0fd5b17e7c5bef790c3dd27a7eafea54c8bb7f24e3baf21a77a",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoids in functors",
+          "projection_start": 43,
+          "projection_end": 64,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KI:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:9c5f6e0d30f2c3ae9c4c26b30c771b13c0fbda2b9200f8511b41aa016a6bfc64",
+      "source_structure_hash": "sha256:759ca0bb18fb295a4da38964ccf7151aae95db7b5abcc8702e44f4f4f9447366",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 21,
+          "projection_end": 41,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 80,
+          "projection_end": 86,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 106,
+          "projection_end": 112,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KJ:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:61d164eb455be54a77ec205a9a2f09c6127214bc44c97b45a0bb1c94171add67",
+      "source_structure_hash": "sha256:8d126ff8fe047e7ae1d1f0d8437670f60572ff3441236badcea4deae3cda6a84",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "smooth",
+          "projection_start": 76,
+          "projection_end": 82,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 83,
+          "projection_end": 103,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quotient",
+          "projection_start": 114,
+          "projection_end": 122,
+          "concept": "quotient",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 149,
+          "projection_end": 155,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 156,
+          "projection_end": 164,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 177,
+          "projection_end": 186,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 281,
+          "projection_end": 291,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quotient morphism",
+          "projection_start": 314,
+          "projection_end": 331,
+          "concept": "source-phrase-quotient-morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KK:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:430413f73c848364764d74fa0456de88359f493985ef363580081637dfd299bd",
+      "source_structure_hash": "sha256:19576d7177d6f9f816755640a49076b50b48f305d3a82cb943bb04501dd1cc1d",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 21,
+          "projection_end": 37,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 38,
+          "projection_end": 58,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 95,
+          "projection_end": 101,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KL:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:62ae28721b448ff879a16764483f09f7ebbf957da90fe4e26e2d2613500b7621",
+      "source_structure_hash": "sha256:83e1e074af7c4de9f21287cf68693cbc2a2dbb5e6d2c9eaa17af55e1a6b05052",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 21,
+          "projection_end": 41,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 76,
+          "projection_end": 86,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 120,
+          "projection_end": 140,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 156,
+          "projection_end": 162,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 182,
+          "projection_end": 190,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 206,
+          "projection_end": 212,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 232,
+          "projection_end": 240,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 256,
+          "projection_end": 262,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quotient morphism",
+          "projection_start": 282,
+          "projection_end": 299,
+          "concept": "source-phrase-quotient-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 315,
+          "projection_end": 321,
+          "concept": "smooth",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KL:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:b956b64cad38666ac3f4a705420a1655e0a817fec367b11405bd2d5bdf947e20",
+      "source_structure_hash": "sha256:9f62e51a6262afc3665afcee0ddf7850512259e6c289402b0ba4948dbec15231",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "equivalent",
+          "projection_start": 17,
+          "projection_end": 27,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 45,
+          "projection_end": 52,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 86,
+          "projection_end": 97,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 136,
+          "projection_end": 146,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 184,
+          "projection_end": 194,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 278,
+          "projection_end": 288,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 455,
+          "projection_end": 465,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 466,
+          "projection_end": 474,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 729,
+          "projection_end": 739,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 740,
+          "projection_end": 748,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 785,
+          "projection_end": 793,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1176,
+          "projection_end": 1184,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KS:title",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:f1c0479f442f6bb023712e8912defbc6e02a015d05e48869dd14310223fdc3df",
+      "source_structure_hash": "sha256:5b5f27aa8d3888b95bb963c240f2f7c4be6f2c2c8a97c8c9c5bf54e6a799fd15",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "Deformation categories",
+          "projection_start": 0,
+          "projection_end": 22,
+          "concept": "source-phrase-deformation-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quotients",
+          "projection_start": 26,
+          "projection_end": 35,
+          "concept": "quotient",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids in functors",
+          "projection_start": 39,
+          "projection_end": 60,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KS:prose-0001",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:1ab573f289b79372246881c75eea5a80ad54e9c8a8ea9fbf30e90dd58df6414b",
+      "source_structure_hash": "sha256:20b2f49090156d54bd8d489b293b7180e91b06d5ee660b9bb7dc4e4c4c6a0ad5",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 41,
+          "projection_end": 61,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quotient",
+          "projection_start": 102,
+          "projection_end": 110,
+          "concept": "quotient",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "deformation category",
+          "projection_start": 116,
+          "projection_end": 136,
+          "concept": "source-phrase-deformation-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "automorphism",
+          "projection_start": 185,
+          "projection_end": 197,
+          "concept": "automorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quotient",
+          "projection_start": 215,
+          "projection_end": 223,
+          "concept": "quotient",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KT:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:02d2803041e8af2536c1864a70d76ba43c8e057f6ede3821a54e481eca4eb50b",
+      "source_structure_hash": "sha256:1491122ba7ce43b83dcb18611326a763e769d2cb2e5f01b6048ce7dd3ac5d9b0",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "smooth",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 28,
+          "projection_end": 48,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KT:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:3b797359603b7811dc19524f9788ee837cdd55e74034e0ae8b2ec38594711826",
+      "source_structure_hash": "sha256:0b35d45993b82facda13503a2b208b141f2fa2231a8594987dc813e74fd86bd6",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "diagram",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 69,
+          "projection_end": 79,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 158,
+          "projection_end": 162,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fiber product",
+          "projection_start": 309,
+          "projection_end": 322,
+          "concept": "fiber-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 355,
+          "projection_end": 362,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "inverse",
+          "projection_start": 459,
+          "projection_end": 466,
+          "concept": "inverse",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 467,
+          "projection_end": 475,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 533,
+          "projection_end": 540,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 595,
+          "projection_end": 602,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 719,
+          "projection_end": 726,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 859,
+          "projection_end": 866,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1075,
+          "projection_end": 1082,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 1086,
+          "projection_end": 1097,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 1171,
+          "projection_end": 1190,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 1238,
+          "projection_end": 1246,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 1279,
+          "projection_end": 1288,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commute",
+          "projection_start": 1549,
+          "projection_end": 1556,
+          "concept": "commutes",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KC:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KC:paragraph/0002",
+          "parent_tag": "06KC",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a groupoid in functors on <MATH_0002>.\nTaking completions, we get a quintuple\n<MATH_0003>. By\nRemark <REF_0001>\ncompletion as a functor on <MATH_0004> is a right\nadjoint, so it commutes with limits. In particular, there is a canonical\nisomorphism\n<MATH_0005>\nso <MATH_0006> can be regarded as a functor\n<MATH_0007>. Then\n<MATH_0008>\nis a groupoid in functors on <MATH_0009>, with\nidentity and inverse morphisms being the completions of those of\n<MATH_0010>.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$(\\widehat{U}, \\widehat{R}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+            "REF_0001": "\\ref{remark-completion-restriction-cofset-adjoint}",
+            "MATH_0004": "$\\text{CofSet}(\\mathcal{C}_\\Lambda)$",
+            "MATH_0005": "$$\n\\widehat{R \\times_{s, U, t} R}\n\\longrightarrow\n\\widehat{R} \\times_{\\widehat{s}, \\widehat{U}, \\widehat{t}} \\widehat{R},\n$$",
+            "MATH_0006": "$\\widehat{c}$",
+            "MATH_0007": "$\\widehat{R} \\times_{\\widehat{s}, \\widehat{U}, \\widehat{t}} \\widehat{R} \\to\n\\widehat{R}$",
+            "MATH_0008": "$(\\widehat{U}, \\widehat{R}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+            "MATH_0009": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0010": "$(U, R, s, t, c)$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c437fa4bb5de694795ea95df1e633a581701fe3e1a8d2c8715d64704e7070724",
+          "source_structure_hash": "sha256:43d6ea8cc0a7b3978812373f8eca5b2099213e2e1148e366794721646601d191",
+          "source_math_hash": "sha256:d54b2a3cb2ce60be60fcd9cec5a085e39bf4b552fa7268aae6932244a4e2bc55"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 237811,
+          "byte_end": 238708,
+          "line_start": 6313,
+          "line_end": 6332,
+          "fragment_hash": "sha256:f5366ebfe5b21a4545c75be39ebd0c89dd35bea5bf7dd9299b87072bd7bd7946"
+        },
+        "owner_tag": "06KC",
+        "parent_tag": "06KC"
+      },
+      "hash": "sha256:ff3575e5a127d825b864439a3fd4d5abc7a5baf4ffd3ac0139714fb6b8ee5d92"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KF:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KF:remark/0001",
+          "parent_tag": "06KC",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a groupoid in functors on <MATH_0002>.\nThen there is a canonical isomorphism\n<MATH_0003>, see\nRemark <REF_0001>.\nOn the other hand, let <MATH_0004> be a groupoid in functors on\n<MATH_0005> such that\n<MATH_0006>\nboth commute with limits, e.g.<SPACE_0001>if <MATH_0007> are representable.\nThen there is a canonical isomorphism\n<MATH_0008>.\nThis follows from\nRemark <REF_0002>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-groupoid-in-functors-complete-restrict}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$(U, R, s, t, c)^{\\wedge}|_{\\mathcal{C}_\\Lambda} \\cong (U, R, s, t, c)$",
+            "REF_0001": "\\ref{remark-restrict-completion}",
+            "MATH_0004": "$(U, R, s, t, c)$",
+            "MATH_0005": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0006": "$U, R : \\widehat{\\mathcal{C}}_\\Lambda \\to \\textit{Sets}$",
+            "SPACE_0001": "\\ ",
+            "MATH_0007": "$U, R$",
+            "MATH_0008": "$((U, R, s, t, c)|_{\\mathcal{C}_\\Lambda})^{\\wedge} \\cong (U, R, s, t, c)$",
+            "REF_0002": "\\ref{remark-restrict-complete-continuous-functor}",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2be6a5a65685036582bc935b3409a551cab74daed07d0ad6db64fdee533626ee",
+          "source_structure_hash": "sha256:014487ff68b9a850bc978176b088af07d0149d21107494e7ca0442e474864cc2",
+          "source_math_hash": "sha256:4c63d8e0dd2eff3df540f588c33333243cd895b68eeaa0f60c5f167838ec92f9"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 239089,
+          "byte_end": 239819,
+          "line_start": 6343,
+          "line_end": 6357,
+          "fragment_hash": "sha256:806c5f6356af247029de456ff58adca8e30223bace5659e01c33e28528637444"
+        },
+        "owner_tag": "06KF",
+        "parent_tag": "06KC"
+      },
+      "hash": "sha256:bdc468d22786cb50801d823d42efc7e741496efb84d8280a631005845a8bc6cb"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KE:definition/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KE:definition/0001",
+          "parent_tag": "06KC",
+          "chapter": "formal-defos",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a groupoid in functors on <MATH_0002>.\nThe <TEXTITOPEN_0001>completion <MATH_0003> of <MATH_0004><TEXTITCLOSE_0001> is the\ngroupoid in functors\n<MATH_0005>\non <MATH_0006> described above.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-completion-groupoid-in-functors}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "MATH_0003": "$(U, R, s, t, c)^{\\wedge}$",
+            "MATH_0004": "$(U, R, s, t, c)$",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0005": "$(\\widehat{U}, \\widehat{R}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+            "MATH_0006": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "STRUCT_0002": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:71013a36b7b1d1501c0ce31cda63e94f5d6b97d7e2cb719b433501b4805ba583",
+          "source_structure_hash": "sha256:f30ba2a84f9d293c78752fc252cdd735092259d57649603eae89891358e90db4",
+          "source_math_hash": "sha256:952d9fbdca70772cba43c4a3da8c1024749fcad4973f9e7ff7d3987af4269864"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 238710,
+          "byte_end": 239087,
+          "line_start": 6334,
+          "line_end": 6341,
+          "fragment_hash": "sha256:ec5eca2fdc7a77cfd5ba684f062cc9c5fd38c203c6867ff9b4cf7f92f6c9d585"
+        },
+        "owner_tag": "06KE",
+        "parent_tag": "06KC"
+      },
+      "hash": "sha256:5614166cae4c3597a762fd6ee9bffffe4d66c2f2e4bf1f793c0fdfad0b1cd294"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KG:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KG:lemma/0001",
+          "parent_tag": "06KC",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a groupoid in functors on <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is prorepresentable if and only if its completion is\nrepresentable as a groupoid in functors on <MATH_0004>.\n<STRUCT_0004> <MATH_0005> is prorepresentable if and only if <MATH_0006> and <MATH_0007> are\nprorepresentable.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-groupoid-in-functors-prorep-equivalences}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$(U, R, s, t, c)$",
+            "MATH_0004": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "STRUCT_0004": "\\item",
+            "MATH_0005": "$(U, R, s, t, c)$",
+            "MATH_0006": "$U$",
+            "MATH_0007": "$R$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:86b1e6230dec214e767020ff36562b18b73ad908d578398ee07b903037c5fd28",
+          "source_structure_hash": "sha256:259d114c108c1c1ead8ab7d6b0108efd7c6fe3ba5a371dafbce2b2c532674c1f",
+          "source_math_hash": "sha256:1a25285a052f6abf8f58a99bd96065edcaa8a4632e311d0563d2cf0fe8623a50"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 239821,
+          "byte_end": 240255,
+          "line_start": 6359,
+          "line_end": 6368,
+          "fragment_hash": "sha256:dbca603b151d0472aa30356e845a0dda02d75dce6af4883435ec2185dc8cb356"
+        },
+        "owner_tag": "06KG",
+        "parent_tag": "06KC"
+      },
+      "hash": "sha256:12e1b3fe09220e0d08b38ed3018e96614c4feaaf64dce03ae8dd0677e3df8c79"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KG:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KG:proof/0001",
+          "parent_tag": "06KC",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nPart (1) follows from\nRemark <REF_0001>.\nFor (2), the ``only if'' direction is clear from the definition\nof a prorepresentable groupoid in functors. Conversely, assume <MATH_0001> and <MATH_0002>\nare prorepresentable, say <MATH_0003>\nand <MATH_0004> for objects <MATH_0005> and\n<MATH_0006> of <MATH_0007>.\nSince <MATH_0008>\nand <MATH_0009>\nby\nRemark <REF_0002>\nwe see that the completion <MATH_0010> is a groupoid in\nfunctors of the form\n<MATH_0011>.\nBy\nLemma <REF_0003>\nthe pushout\n<MATH_0012> exists. Hence\n<MATH_0013>\nis a representable groupoid in functors on <MATH_0014>.\nFinally, the restriction\n<MATH_0015>\ngives back <MATH_0016> by\nRemark <REF_0004>\nhence <MATH_0017> is prorepresentable by definition.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{remark-groupoid-in-functors-complete-restrict}",
+            "MATH_0001": "$U$",
+            "MATH_0002": "$R$",
+            "MATH_0003": "$U \\cong \\underline{R_0}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0004": "$R \\cong \\underline{R_1}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0005": "$R_0$",
+            "MATH_0006": "$R_1$",
+            "MATH_0007": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0008": "$\\underline{R_0} \\cong \\widehat{\\underline{R_0}|_{\\mathcal{C}_\\Lambda}}$",
+            "MATH_0009": "$\\underline{R_1} \\cong \\widehat{\\underline{R_1}|_{\\mathcal{C}_\\Lambda}}$",
+            "REF_0002": "\\ref{remark-restrict-complete-continuous-functor}",
+            "MATH_0010": "$(U, R, s, t, c)^\\wedge$",
+            "MATH_0011": "$(\\underline{R_0}, \\underline{R_1}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+            "REF_0003": "\\ref{lemma-CLambdahat-pushouts}",
+            "MATH_0012": "$\\underline{R_1} \\times_{\\widehat{s}, \\underline{R_1}, \\widehat{t}}\n\\underline{R_1}$",
+            "MATH_0013": "$(\\underline{R_0}, \\underline{R_1}, \\widehat{s}, \\widehat{t}, \\widehat{c})$",
+            "MATH_0014": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0015": "$(\\underline{R_0}, \\underline{R_1}, s, t, c)|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0016": "$(U, R, s, t, c)$",
+            "REF_0004": "\\ref{remark-groupoid-in-functors-complete-restrict}",
+            "MATH_0017": "$(U, R, s, t, c)$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:fc8f3bcefc82686159f391832399423a1f3a077d7c78bcdb5782d7312ba38d0b",
+          "source_structure_hash": "sha256:0c665a35393277fc6607f3458312936df90a717f687589de651cad5548cb77e1",
+          "source_math_hash": "sha256:87048a85edf70e245537d09529e65ac06a178cb8d2d3f091f8a536523d92dd22"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 240257,
+          "byte_end": 241626,
+          "line_start": 6370,
+          "line_end": 6397,
+          "fragment_hash": "sha256:4a7c080d319edbafb4b4c1123906cac2201571a04ef763a73a3a59e2a43f67d5"
+        },
+        "owner_tag": "06KG",
+        "parent_tag": "06KC"
+      },
+      "hash": "sha256:1e206b94d858f3ed7f98dd24241ed49a0a526e23673a329953c6d0f18b3bbddb"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KH:section_title/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KH:section_title/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Smooth groupoids in functors on the base category<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-smooth-minimal-groupoids-in-functors}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:7e1b9628e85d1390185fad2f7567d2a17847fdcd22c702b0afa8c4f0d2fd9163",
+          "source_structure_hash": "sha256:7beaff1abdae97983a2e428cb565395ba1bbe57b931de2a2162eec1d5ce1012b",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 241633,
+          "byte_end": 241745,
+          "line_start": 6404,
+          "line_end": 6405,
+          "fragment_hash": "sha256:dcc494174effdcac1d9cb176e386fb7d61968637e52d5cacc8d1ac02ac287e07"
+        },
+        "owner_tag": "06KH",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:cae6385137709612d838acab15b3262547be716b7a2b3474635840edb3594052"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KH:paragraph/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KH:paragraph/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe notion of smoothness for groupoids in functors on <MATH_0001> is\ndefined as follows.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$\\mathcal{C}_\\Lambda$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:751cfcc7df618344bf5b0169c8c72cf059dcf688230502e6ec344281948131c6",
+          "source_structure_hash": "sha256:d81f4e123247c0fd5b17e7c5bef790c3dd27a7eafea54c8bb7f24e3baf21a77a",
+          "source_math_hash": "sha256:fb6ad280346362a580dd3b1ba5464da5eea3146f40ecf0a8f3a682476d6fa006"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 241747,
+          "byte_end": 241855,
+          "line_start": 6407,
+          "line_end": 6409,
+          "fragment_hash": "sha256:f1ee04f9760a2e74d86c003ac7f83d18fcc6a4f3887c96b535212f0aec890c1b"
+        },
+        "owner_tag": "06KH",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:4857a8c3c0e30996429a40f70ab5696c4ec299052c8d14638cb10840dca73c99"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KI:definition/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KI:definition/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a groupoid in functors on <MATH_0002>. We\nsay <MATH_0003> is <TEXTITOPEN_0001>smooth<TEXTITCLOSE_0001> if <MATH_0004> are smooth.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-smooth-groupoid-in-functors}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$(U, R, s, t, c)$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0004": "$s, t: R \\to U$",
+            "STRUCT_0002": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1ad8135be52d1a76e8f444e60d50b23a74869a5836fc8a7c3bf8b229905cfb0b",
+          "source_structure_hash": "sha256:a1065467a3f377b50a0336a93f6deccbb6c423def45abfe14918d55d19c9aecb",
+          "source_math_hash": "sha256:f7968e37ec624d70d98856276ecb33c445c340753d3fffefd4eddbe76f5049b4"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 241857,
+          "byte_end": 242085,
+          "line_start": 6411,
+          "line_end": 6415,
+          "fragment_hash": "sha256:fc1de1987d777e13d0f00a4658264ecf4f8ca241ab9ceb424f18ea16440a22b7"
+        },
+        "owner_tag": "06KI",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:2f747954d104de86140a481277fb8adba439670fce6a4fadc1d228ca398ce68a"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KJ:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KJ:remark/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe note that this terminology is potentially confusing:\nif <MATH_0001> is a smooth groupoid in functors, then the quotient\n<MATH_0002> need not be a smooth category cofibred in groupoids as defined in\nDefinition <REF_0001>.\nHowever smoothness of <MATH_0003> does imply (in fact is equivalent to)\nsmoothness of the quotient morphism <MATH_0004> as we shall\nsee in\nLemma <REF_0002>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-smooth-groupoid-in-functors-warning}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$[U/R]$",
+            "REF_0001": "\\ref{definition-cofibered-groupoid-projection-smooth}",
+            "MATH_0003": "$(U, R, s, t, c)$",
+            "MATH_0004": "$U \\to [U/R]$",
+            "REF_0002": "\\ref{lemma-smooth-quotient-morphism}",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:b1d5db752c58657642071d79bb49339f857747504f7177973ea54a0ca72cbcf8",
+          "source_structure_hash": "sha256:0e5844976702257d280ccf3b22245cb5aaf562284655e71a32af69c7407c5ca2",
+          "source_math_hash": "sha256:a0530e081ced6b838c80b595a72f9672ba888c0c7f4061d3661a1fdfb761019e"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 242087,
+          "byte_end": 242625,
+          "line_start": 6417,
+          "line_end": 6427,
+          "fragment_hash": "sha256:9e78e57fb570b49dadc446b5c654d081070995fb05c481c83d2905be95acf9cc"
+        },
+        "owner_tag": "06KJ",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:fe3855f603702fcc1b72d17e34480c36aea4d00966b48ad2dc3c098ca7411dc7"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KK:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KK:remark/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>\nbe a prorepresentable groupoid in functors on <MATH_0002>.\nThen <MATH_0003>\nis smooth if and only if <MATH_0004> is a power series over <MATH_0005> via both <MATH_0006>\nand <MATH_0007>. This follows from\nLemma <REF_0001>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-smooth-power-series-prorepresentable-smooth-groupoid-in-functors}",
+            "MATH_0001": "$(\\underline{R_0}, \\underline{R_1}, s, t, c)|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$(\\underline{R_0}, \\underline{R_1}, s, t, c)|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0004": "$R_1$",
+            "MATH_0005": "$R_0$",
+            "MATH_0006": "$s$",
+            "MATH_0007": "$t$",
+            "REF_0001": "\\ref{lemma-smooth-morphism-power-series}",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:57eed31c48aaf8d629035297f4a7be8722a48b66679c58b167b8a27350a258f2",
+          "source_structure_hash": "sha256:92070a12456471bc0b5f651a8998421f7cb45fe09e469b280e620e35b72fc48b",
+          "source_math_hash": "sha256:bad781cd984c94344efa09b47a8ef028915e0b05e03883142ee7e7fa048a2191"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 242627,
+          "byte_end": 243098,
+          "line_start": 6429,
+          "line_end": 6437,
+          "fragment_hash": "sha256:88e3a1aa54407d2ba145efc994f6b5a6d172c99999e34bbd7db8a09ab9d4ec9d"
+        },
+        "owner_tag": "06KK",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:0c0b87b2003286224521c7b1b59770035540e458b57afb74228483ecbdf09157"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KL:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KL:lemma/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a groupoid in functors on <MATH_0002>.\nThe following are equivalent:\n<STRUCT_0002>\n<STRUCT_0003> The groupoid in functors <MATH_0003> is smooth.\n<STRUCT_0004> The morphism <MATH_0004> is smooth.\n<STRUCT_0005> The morphism <MATH_0005> is smooth.\n<STRUCT_0006> The quotient morphism <MATH_0006> is smooth.\n<STRUCT_0007>\n<STRUCT_0008>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-smooth-quotient-morphism}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$(U, R, s, t, c)$",
+            "STRUCT_0004": "\\item",
+            "MATH_0004": "$s : R \\to U$",
+            "STRUCT_0005": "\\item",
+            "MATH_0005": "$t : R \\to U$",
+            "STRUCT_0006": "\\item",
+            "MATH_0006": "$U \\to [U/R]$",
+            "STRUCT_0007": "\\end{enumerate}",
+            "STRUCT_0008": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8096207e9548580e8243f874469be8c3c9ca2f5ab78b3c74f7c5a25351cfedcd",
+          "source_structure_hash": "sha256:92c5d32069f78729172a7766092564436a3cff51a272b57ddfbd30396c66c0a2",
+          "source_math_hash": "sha256:dd1e8158c53fd62d7a5939e4e0008e126e43e93071be2e557fb0b44b7a439a0a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 243100,
+          "byte_end": 243503,
+          "line_start": 6439,
+          "line_end": 6449,
+          "fragment_hash": "sha256:ff432351ff8acb7027e7bdf412a4b7f21c8631221f1ba82e84119846a521eec5"
+        },
+        "owner_tag": "06KL",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:f6685cc3c99ad66cb3eee5c51f21d8f7b72349756e919b2aeb2e5cf6c9f8b30e"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KL:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KL:proof/0001",
+          "parent_tag": "06KH",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nStatement (2) is equivalent to (3) since the inverse <MATH_0001> of\n<MATH_0002> is an isomorphism and <MATH_0003>. By definition (1) is\nequivalent to (2) and (3) together, hence it is equivalent to either of them\nindividually.\n\n<STRUCT_0002><STRUCT_0003>\nFinally we prove (2) is equivalent to (4). Unwinding the definitions:\n<STRUCT_0004>\n<ITEMOPEN_0001>(2)<ITEMCLOSE_0001> Smoothness of <MATH_0004> amounts to the following\ncondition: If <MATH_0005> is a surjective ring map in\n<MATH_0006>, <MATH_0007>, and <MATH_0008> such that\n<MATH_0009>, then there exists <MATH_0010> such that\n<MATH_0011> and <MATH_0012>.\n<ITEMOPEN_0002>(4)<ITEMCLOSE_0002> Smoothness of <MATH_0013> amounts to the following\ncondition: If <MATH_0014> is a surjective ring map in\n<MATH_0015> and <MATH_0016>\nis a morphism of <MATH_0017>, then there exists <MATH_0018> and\n<MATH_0019> with <MATH_0020>, <MATH_0021>\nsuch that <MATH_0022>.  Here <MATH_0023> denotes the\nidentity and the notation <MATH_0024> is as in Remarks\n<REF_0001>\n(<REF_0002>);\nin particular <MATH_0025> with <MATH_0026> and <MATH_0027>.\n<STRUCT_0005>\nIf (4) holds and <MATH_0028> as in (2) are given, let <MATH_0029> so that\nwe have a morphism <MATH_0030>.\nThen (4) produces <MATH_0031> and <MATH_0032>, and <MATH_0033> satisfies the requirements\nof (2). Conversely, assume (2) holds and let <MATH_0034>\nas in (4) be given. Then (2) produces <MATH_0035>, and <MATH_0036> and\n<MATH_0037> satisfy the requirements of (4).\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$i: R \\to R$",
+            "MATH_0002": "$(U, R, s, t, c)$",
+            "MATH_0003": "$t = s \\circ i$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "STRUCT_0004": "\\begin{enumerate}",
+            "ITEMOPEN_0001": "\\item[",
+            "ITEMCLOSE_0001": "]",
+            "MATH_0004": "$s: R \\to U$",
+            "MATH_0005": "$f: B \\to A$",
+            "MATH_0006": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0007": "$a \\in R(A)$",
+            "MATH_0008": "$y \\in U(B)$",
+            "MATH_0009": "$s(a) = U(f)(y)$",
+            "MATH_0010": "$a' \\in R(B)$",
+            "MATH_0011": "$R(f)(a') = a$",
+            "MATH_0012": "$s(a') = y$",
+            "ITEMOPEN_0002": "\\item[",
+            "ITEMCLOSE_0002": "]",
+            "MATH_0013": "$U \\to [U/R]$",
+            "MATH_0014": "$f: B \\to A$",
+            "MATH_0015": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0016": "$(f, a) : (B, y) \\to (A, x)$",
+            "MATH_0017": "$[U/R]$",
+            "MATH_0018": "$x' \\in U(B)$",
+            "MATH_0019": "$b \\in R(B)$",
+            "MATH_0020": "$s(b) = x'$",
+            "MATH_0021": "$t(b) = y$",
+            "MATH_0022": "$c(a, R(f)(b)) = e(x)$",
+            "MATH_0023": "$e : U \\to R$",
+            "MATH_0024": "$(f, a)$",
+            "REF_0001": "\\ref{remarks-cofibered-groupoids}",
+            "REF_0002": "\\ref{item-construction-associated-cofibered-groupoid}",
+            "MATH_0025": "$a \\in R(A)$",
+            "MATH_0026": "$s(a) = U(f)(y)$",
+            "MATH_0027": "$t(a) = x$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "MATH_0028": "$f, a, y$",
+            "MATH_0029": "$x = t(a)$",
+            "MATH_0030": "$(f, a): (B, y) \\to (A, x)$",
+            "MATH_0031": "$x'$",
+            "MATH_0032": "$b$",
+            "MATH_0033": "$a' = i(b)$",
+            "MATH_0034": "$(f, a): (B, y) \\to (A, x)$",
+            "MATH_0035": "$a' \\in R(B)$",
+            "MATH_0036": "$x' = t(a')$",
+            "MATH_0037": "$b = i(a')$",
+            "STRUCT_0006": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:9b086c09dac274a5fa83659dac627daf08fa821797aeddeaa15b9645f4746b31",
+          "source_structure_hash": "sha256:95e3163ec981619869e74998d98a163ee5381704bee5aab5c555a54df7d1bbd9",
+          "source_math_hash": "sha256:79c335d50332c00275b55c2f1bf6797dc60f2643c701ae51393ec885b66b44b0"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 243505,
+          "byte_end": 245103,
+          "line_start": 6451,
+          "line_end": 6482,
+          "fragment_hash": "sha256:095048f6f1542452ead3bc990049078d747aabce656359cd9abcd567bfc33158"
+        },
+        "owner_tag": "06KL",
+        "parent_tag": "06KH"
+      },
+      "hash": "sha256:c1ea907db13710a72297fcd8ad7f0f06e67043d280647775b675fc86cc551a8b"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KS:section_title/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KS:section_title/0001",
+          "parent_tag": "06KS",
+          "chapter": "formal-defos",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Deformation categories as quotients of groupoids in functors<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-deformation-categories-as-quotients}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:80dc378c2297b84d1157064d3d008a14715b757107964f15e9ed262b7c0119b7",
+          "source_structure_hash": "sha256:8028cfc3378c4cde50a0c8f92ec5f66104c30ae5316ea2fb7ed2f0c552373711",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 245109,
+          "byte_end": 245231,
+          "line_start": 6488,
+          "line_end": 6489,
+          "fragment_hash": "sha256:c069922234843d868494cd2fc89a979d6b482a320b8cae8c8fd75045b734f964"
+        },
+        "owner_tag": "06KS",
+        "parent_tag": "06KS"
+      },
+      "hash": "sha256:79379fdffdd11b02f00885d39614db5abdaa9a34a68db116c9c28367091e4b2b"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KS:paragraph/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KS:paragraph/0001",
+          "parent_tag": "06KS",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nWe discuss conditions on a groupoid in functors on <MATH_0001> which\nguarantee that the quotient is a deformation category, and we calculate the\ntangent and infinitesimal automorphism spaces of such a quotient.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$\\mathcal{C}_\\Lambda$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1ab573f289b79372246881c75eea5a80ad54e9c8a8ea9fbf30e90dd58df6414b",
+          "source_structure_hash": "sha256:20b2f49090156d54bd8d489b293b7180e91b06d5ee660b9bb7dc4e4c4c6a0ad5",
+          "source_math_hash": "sha256:fb6ad280346362a580dd3b1ba5464da5eea3146f40ecf0a8f3a682476d6fa006"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 245233,
+          "byte_end": 245463,
+          "line_start": 6491,
+          "line_end": 6494,
+          "fragment_hash": "sha256:713d2036634d0e248851afe2f30e2346a48451ba2dd6aa95198706cb58b78bee"
+        },
+        "owner_tag": "06KS",
+        "parent_tag": "06KS"
+      },
+      "hash": "sha256:f71c375d27d1cf24252fc175a284a81f07142e00d83c67f665ddaac32eb305c2"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KT:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KT:lemma/0001",
+          "parent_tag": "06KS",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a smooth groupoid in functors on <MATH_0002>.\nAssume <MATH_0003> and <MATH_0004> satisfy (RS). Then <MATH_0005> satisfies (RS).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-smooth-RS-groupoid-in-functors-quotient}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$U$",
+            "MATH_0004": "$R$",
+            "MATH_0005": "$[U/R]$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8bbbf9cb5e12d9c8ed91906f81a200d91a4a591e1ba8f18e84a848a658c5e31a",
+          "source_structure_hash": "sha256:cb06d63f785c3a6655117704876c0d3eae02f3f088e8cc0d5df11375877dcf09",
+          "source_math_hash": "sha256:28b9dc018acd2654ae8173fda7ba698d4e1610af14183ce13278a3e8403ad8d0"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 245465,
+          "byte_end": 245687,
+          "line_start": 6496,
+          "line_end": 6500,
+          "fragment_hash": "sha256:36b1fe89843dfbee333be38e1ba9a2e593fe80bb82c687b3f4e014d731cbb694"
+        },
+        "owner_tag": "06KT",
+        "parent_tag": "06KS"
+      },
+      "hash": "sha256:1e9b1cbcad21a5d6d0b67e18a1c8ab1b4ea282c735dbdedd200b6849920dfb80"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KT:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KT:proof/0001",
+          "parent_tag": "06KS",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet\n<MATH_0001>\nbe a diagram in <MATH_0002> such that <MATH_0003> is surjective. The\nnotation is as in\nRemarks <REF_0001>\n(<REF_0002>).\nHence <MATH_0004> are maps in\n<MATH_0005>, <MATH_0006>, <MATH_0007>, <MATH_0008>,\nand <MATH_0009> with <MATH_0010>,\n<MATH_0011> and <MATH_0012>, <MATH_0013>.\nWe construct a fiber product lying over <MATH_0014>\nfor this diagram in <MATH_0015> as follows.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0016>, where <MATH_0017> is the inverse morphism.\nThen <MATH_0018>, <MATH_0019> and <MATH_0020>.\nHence an element <MATH_0021>.\nBy smoothness of <MATH_0022> there is an element\n<MATH_0023> with <MATH_0024> and\n<MATH_0025>. In particular\n<MATH_0026>. Thus <MATH_0027> and\n<MATH_0028> define an element\n<MATH_0029>\nBy the assumption that <MATH_0030> satisfies (RS), we have an identification\n<MATH_0031>. Let us denote\n<MATH_0032> the element\ncorresponding to <MATH_0033>.\nLet <MATH_0034> be the projections of <MATH_0035>.  We claim\n<MATH_0036>\nis a fiber square in <MATH_0037>. (Note <MATH_0038> denotes the identity.)\n\n<STRUCT_0004><STRUCT_0005>\nThe diagram is commutative because\n<MATH_0039>.\nTo check it is a fiber square, let\n<MATH_0040>\nbe a commutative diagram in <MATH_0041>. We will show there is a unique morphism\n<MATH_0042>\ncompatible with the morphisms to <MATH_0043> and <MATH_0044>.\nWe must take <MATH_0045>.\nSince by assumption <MATH_0046> satisfies (RS), we have an identification\n<MATH_0047>.\nHence we can write <MATH_0048> for some\n<MATH_0049>, <MATH_0050> which agree in <MATH_0051>.\nThen\n<MATH_0052>\nwill commute with the projections if and only if\n<MATH_0053> and <MATH_0054> proving unicity and\nexistence.\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$$\n\\xymatrix{\n                           &     (A_2, x_2) \\ar[d]^{(f_2, a_2)} \\\\\n(A_1, x_1) \\ar[r]^{(f_1, a_1)} &     (A, x)\n}\n$$",
+            "MATH_0002": "$[U/R]$",
+            "MATH_0003": "$f_2: A_2 \\to A$",
+            "REF_0001": "\\ref{remarks-cofibered-groupoids}",
+            "REF_0002": "\\ref{item-construction-associated-cofibered-groupoid}",
+            "MATH_0004": "$f_1: A_1 \\to A, f_2: A_2 \\to A$",
+            "MATH_0005": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0006": "$x \\in U(A)$",
+            "MATH_0007": "$x_1 \\in U(A_1)$",
+            "MATH_0008": "$x_2 \\in U(A_2)$",
+            "MATH_0009": "$a_1, a_2 \\in R(A)$",
+            "MATH_0010": "$s(a_1) = U(f_1)(x_1)$",
+            "MATH_0011": "$t(a_1) = x$",
+            "MATH_0012": "$s(a_2) = U(f_2)(x_2)$",
+            "MATH_0013": "$t(a_2) = x$",
+            "MATH_0014": "$A_1 \\times_A A_2$",
+            "MATH_0015": "$[U/R]$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0016": "$a = c(i(a_1), a_2)$",
+            "MATH_0017": "$i: R \\to R$",
+            "MATH_0018": "$a \\in R(A)$",
+            "MATH_0019": "$x_2 \\in U(A_2)$",
+            "MATH_0020": "$s(a) = U(f_2)(x_2)$",
+            "MATH_0021": "$(a, x_2) \\in R(A) \\times_{s, U(A), U(f_2)} U(A_2)$",
+            "MATH_0022": "$s : R \\to U$",
+            "MATH_0023": "$\\widetilde{a} \\in R(A_2)$",
+            "MATH_0024": "$R(f_2)(\\widetilde{a}) = a$",
+            "MATH_0025": "$s(\\widetilde{a}) = x_2$",
+            "MATH_0026": "$U(f_2)(t(\\widetilde{a})) = t(a) = U(f_1)(x_1)$",
+            "MATH_0027": "$x_1$",
+            "MATH_0028": "$t(\\widetilde{a})$",
+            "MATH_0029": "$$\n(x_1, t(\\widetilde{a})) \\in U(A_1) \\times_{U(A)} U(A_2).\n$$",
+            "MATH_0030": "$U$",
+            "MATH_0031": "$U(A_1) \\times_{U(A)} U(A_2) = U(A_1 \\times_A A_2)$",
+            "MATH_0032": "$x_1 \\times t(\\widetilde{a}) \\in U(A_1 \\times_A A_2)$",
+            "MATH_0033": "$(x_1, t(\\widetilde{a})) \\in U(A_1) \\times_{U(A)} U(A_2)$",
+            "MATH_0034": "$p_1, p_2$",
+            "MATH_0035": "$A_1 \\times_A A_2$",
+            "MATH_0036": "$$\n\\xymatrix{\n(A_1 \\times_A A_2, x_1 \\times t(\\widetilde{a})) \\ar[d]_{(p_1, e(x_1))}\n\\ar[rr]_-{(p_2, i(\\widetilde{a}))} & & (A_2, x_2) \\ar[d]^{(f_2, a_2)} \\\\\n(A_1, x_1) \\ar[rr]^{(f_1, a_1)} & & (A, x)\n}\n$$",
+            "MATH_0037": "$[U/R]$",
+            "MATH_0038": "$e: U \\to R$",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "MATH_0039": "$c(a_2, R(f_2)(i(\\widetilde{a}))) = c(a_2, i(a)) = a_1$",
+            "MATH_0040": "$$\n\\xymatrix{\n(B, z) \\ar[d]_{(g_1, b_1)} \\ar[rr]_{(g_2, b_2)} & & (A_2, x_2)\n\\ar[d]^{(f_2, a_2)} \\\\\n(A_1, x_1) \\ar[rr]^{(f_1, a_1)} & & (A, x)\n}\n$$",
+            "MATH_0041": "$[U/R]$",
+            "MATH_0042": "$(g, b) : (B, z) \\to (A_1 \\times_A A_2, x_1 \\times t(\\widetilde{a}))$",
+            "MATH_0043": "$(A_1, x_1)$",
+            "MATH_0044": "$(A_2, x_2)$",
+            "MATH_0045": "$g = (g_1, g_2) : B \\to A_1 \\times_A A_2$",
+            "MATH_0046": "$R$",
+            "MATH_0047": "$R(A_1 \\times_A A_2) = R(A_1) \\times_{R(A)} R(A_2)$",
+            "MATH_0048": "$b = (b'_1, b'_2)$",
+            "MATH_0049": "$b'_1 \\in R(A_1)$",
+            "MATH_0050": "$b'_2 \\in R(A_2)$",
+            "MATH_0051": "$R(A)$",
+            "MATH_0052": "$((g_1, g_2), (b'_1, b'_2)) : (B, z) \\to\n(A_1 \\times_A A_2, x_1 \\times t(\\widetilde{a}))$",
+            "MATH_0053": "$b'_1 = b_1$",
+            "MATH_0054": "$b'_2 = c(\\widetilde{a}, b_2)$",
+            "STRUCT_0006": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:71d7c542171e644eecbbc0dc3e93b21f91c6b192b91516e987f690144ca57d70",
+          "source_structure_hash": "sha256:253abef8f97a419e8dfb31520b4ddc3240aff9440d2b73a8211c216362c4e1e9",
+          "source_math_hash": "sha256:347d74261276b1cf9fcbd07caeb2611df235f8c93a7afb010f9484b66d4b85a3"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 245689,
+          "byte_end": 248539,
+          "line_start": 6502,
+          "line_end": 6572,
+          "fragment_hash": "sha256:d8317c4fca532862f2a0ec797e78b1a2ea6a61dd0e032debb3c3e87e25873176"
+        },
+        "owner_tag": "06KT",
+        "parent_tag": "06KS"
+      },
+      "hash": "sha256:f751652ad164cc56518b74abd5585e4ca05393bf64cc2bce3d62216fff255ad2"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KU:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KU:lemma/0001",
+          "parent_tag": "06KS",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a smooth groupoid in functors on <MATH_0002>.\nAssume <MATH_0003> and <MATH_0004> are deformation functors. Then:\n<STRUCT_0002>\n<STRUCT_0003> The quotient <MATH_0005> is a deformation category.\n<STRUCT_0004> The tangent space of <MATH_0006> is\n<MATH_0007>\n<STRUCT_0005> The space of infinitesimal automorphisms of <MATH_0008> is\n<MATH_0009>\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-deformation-groupoid-quotient}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$U$",
+            "MATH_0004": "$R$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0005": "$[U/R]$",
+            "STRUCT_0004": "\\item",
+            "MATH_0006": "$[U/R]$",
+            "MATH_0007": "$$\nT[U/R] = \\Coker(ds-dt: TR \\to TU).\n$$",
+            "STRUCT_0005": "\\item",
+            "MATH_0008": "$[U/R]$",
+            "MATH_0009": "$$\n\\text{Inf}([U/R]) =\n\\Ker(ds \\oplus dt : TR \\to TU \\oplus TU).\n$$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:82880ed8a9c9c50d1ca99d0e4848774364db362f24adb4e6e73d958894770832",
+          "source_structure_hash": "sha256:f9c63c3cfb04b648391834a3df05145aeaec1fe6e9dd4610008f46c2effa012d",
+          "source_math_hash": "sha256:d58d88131411aba2b799ca5608ec65a71c0653b14edb39427c054749e4e74fae"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 248541,
+          "byte_end": 249038,
+          "line_start": 6574,
+          "line_end": 6590,
+          "fragment_hash": "sha256:43cdaee432c7597b5aee7d4bb2ceb9eb4b7ee7e44232a3c67c2966802f6dae56"
+        },
+        "owner_tag": "06KU",
+        "parent_tag": "06KS"
+      },
+      "hash": "sha256:063baf077f32c6cd9ddac108ec0a5c280ea5a871fd4c2d341c01c17195ae8b04"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06HP:definition/0001:formal-defos-definition-cofibered-groupoid-projection-smooth",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06HP:definition/0001",
+          "parent_tag": "0DYK",
+          "chapter": "formal-defos",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in\ngroupoids. We say <MATH_0002> is <TEXTITOPEN_0001>smooth<TEXTITCLOSE_0001> or <TEXTITOPEN_0002>unobstructed<TEXTITCLOSE_0002>\nif its structure morphism <MATH_0003> is smooth\nin the sense of Definition <REF_0001>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-cofibered-groupoid-projection-smooth}",
+            "MATH_0001": "$p : \\mathcal{F} \\to \\mathcal{C}_\\Lambda$",
+            "MATH_0002": "$\\mathcal{F}$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "TEXTITOPEN_0002": "{\\it ",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0003": "$p$",
+            "REF_0001": "\\ref{definition-smooth-morphism}",
+            "STRUCT_0002": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:7ded44c9b52e18dc1f81194e8f61f1139bc8d22cca268f5930cb9759eb6203cd",
+          "source_structure_hash": "sha256:2e1d306fbee28e4ce9d4d6f090cf63054c6b866b51eac80d099f064c31fc41ca",
+          "source_math_hash": "sha256:24d6265113a7f44dee3b85f15d7eaf523dbab2121b2c522f51b3540dd1aa8a62"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 95463,
+          "byte_end": 95798,
+          "line_start": 2263,
+          "line_end": 2269,
+          "fragment_hash": "sha256:75872bafea73eb1beab35ba92cf05d079c994b3c0cc94510e2f599cdc947abfd"
+        },
+        "owner_tag": "06HP",
+        "parent_tag": "0DYK",
+        "requested_label": "formal-defos-definition-cofibered-groupoid-projection-smooth",
+        "requested_tag": "06HP"
+      },
+      "hash": "sha256:7589ef577b84f874ee8a394ebb9101f8166b3b362d0ca25cc29f49fca1568f11"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06GK:remarks/0001:formal-defos-item-construction-associated-cofibered-groupoid",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06GK:remarks/0001",
+          "parent_tag": "06GA",
+          "chapter": "formal-defos",
+          "node_kind": "remarks",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nEverything about categories fibered in groupoids translates directly to the\ncofibered setting. The following remarks are meant to fix notation.\nLet <MATH_0001> be a category.\n<STRUCT_0002>\n<STRUCT_0003> We often omit the functor <MATH_0002> from the\nnotation.\n<STRUCT_0004> The fiber category over an object <MATH_0003> in <MATH_0004> is denoted by\n<MATH_0005>. Its objects are those of <MATH_0006> lying over <MATH_0007> and its\nmorphisms are those of <MATH_0008> lying over <MATH_0009>.\nIf <MATH_0010>  are objects of <MATH_0011>, we sometimes write\n<MATH_0012> for <MATH_0013>.\n<STRUCT_0005> The fibre categories <MATH_0014> are groupoids, see\nCategories, Lemma <REF_0001>.\nHence the morphisms in <MATH_0015> are all isomorphisms.\nWe sometimes write <MATH_0016> for <MATH_0017>.\n<STRUCT_0006>\n<LOCKED_0002>\nLet <MATH_0018> be a category cofibered in groupoids over\n<MATH_0019>, let <MATH_0020> be a morphism in <MATH_0021>, and\nlet <MATH_0022>.\nA <TEXTITOPEN_0001>pushforward<TEXTITCLOSE_0001> of <MATH_0023> along <MATH_0024> is a morphism\n<MATH_0025> of <MATH_0026> lying over <MATH_0027>. A pushforward\nis unique up to unique isomorphism (see the discussion following\nCategories, Definition <REF_0002>).\nWe sometimes write <MATH_0028> for ``the'' pushforward of <MATH_0029>\nalong <MATH_0030>.\n<STRUCT_0007> A <TEXTITOPEN_0002>choice of pushforwards for <MATH_0031><TEXTITCLOSE_0002> is the choice of\na pushforward of <MATH_0032> along <MATH_0033> for every pair <MATH_0034> as above. We can make\nsuch a choice of pushforwards for <MATH_0035> by the axiom of choice.\n<STRUCT_0008> Let <MATH_0036> be a category cofibered in groupoids over\n<MATH_0037>. Given a choice of pushforwards for <MATH_0038>, there\nis an associated pseudo-functor <MATH_0039>.\nWe will never use this construction so we give no details.\n<STRUCT_0009>\n<LOCKED_0003>\nA morphism of categories cofibered in groupoids over <MATH_0040> is a\nfunctor commuting with the projections to <MATH_0041>. If <MATH_0042>\nand <MATH_0043> are categories cofibered in groupoids over\n<MATH_0044>, we denote the morphisms from <MATH_0045> to <MATH_0046>\nby <MATH_0047>.\n<STRUCT_0010>\n<LOCKED_0004>\nCategories cofibered in groupoids form a <MATH_0048>-category\n<MATH_0049>. Its 1-morphisms are the morphisms described in\n(<REF_0003>). If <MATH_0050> and\n<MATH_0051> are categories cofibered in groupoids\nand <MATH_0052> are <MATH_0053>-morphisms, then\na 2-morphism <MATH_0054> is a morphism of functors such that\n<MATH_0055> for all <MATH_0056>.\n<STRUCT_0011>\n<LOCKED_0005>\nLet <MATH_0057> be a functor. There\nis a category cofibered in groupoids <MATH_0058>\nassociated to <MATH_0059> as follows. An object of <MATH_0060> is a pair <MATH_0061>\nwhere <MATH_0062> and <MATH_0063>. A\nmorphism <MATH_0064> is a pair <MATH_0065> where\n<MATH_0066> and\n<MATH_0067>.\nThe functor <MATH_0068> sends <MATH_0069> to <MATH_0070>. See\nCategories, Section <REF_0004>.\n<STRUCT_0012>\n<LOCKED_0006>\nLet <MATH_0071> be cofibered in groupoids over <MATH_0072>.\nFor <MATH_0073> set <MATH_0074> equal to\nthe set of isomorphisms classes of the category <MATH_0075>.\nIf <MATH_0076> is a morphism of <MATH_0077>, then we obtain a\nmap of sets <MATH_0078> by\nmapping the isomorphism class of <MATH_0079> to the isomorphism class of a pushforward\n<MATH_0080> of <MATH_0081> see (<REF_0005>). Then\n<MATH_0082> is a\nfunctor. Similarly, if <MATH_0083> is a\nmorphism of cofibered categories, we denote by\n<MATH_0084>\nthe associated morphism of functors.\n<STRUCT_0013>\n<LOCKED_0007>\nLet <MATH_0085> be a functor. We can think of a\nset as a discrete category, i.e., as a groupoid with only identity morphisms.\nThen the construction (<REF_0006>)\nassociates to <MATH_0086> a category cofibered in sets. This defines a fully\nfaithful embedding of the category of functors <MATH_0087>\nto the category of categories cofibered in groupoids over <MATH_0088>.\nWe identify the category of functors with its image under this embedding.\nHence if <MATH_0089> is a functor, we denote the\nassociated category cofibered in sets also by <MATH_0090>; and if\n<MATH_0091> is a morphism of functors, we denote still by <MATH_0092>\nthe corresponding morphism of categories cofibered in sets, and vice-versa.\nSee Categories, Section <REF_0007>.\n<STRUCT_0014>\n<LOCKED_0008>\nLet <MATH_0093> be an object of <MATH_0094>.  We write <MATH_0095> for the\nfunctor\n<MATH_0096>.  This defines a fully faithful embedding of <MATH_0097> into the category of functors <MATH_0098>. Hence, if <MATH_0099> is a morphism, we are\njustified in denoting still by <MATH_0100> the induced morphism <MATH_0101>, and vice-versa.\n<STRUCT_0015>\n<LOCKED_0009>\nFiber products of categories cofibered in groupoids: If <MATH_0102> and <MATH_0103> are morphisms\nof categories cofibered in groupoids over <MATH_0104>, then a\nconstruction of their 2-fiber product is given by the construction for their\n2-fiber product as categories over <MATH_0105>, as described in\nCategories, Lemma <REF_0008>.\n<STRUCT_0016>\n<LOCKED_0010>\nProducts of categories cofibered in groupoids: If <MATH_0106> and\n<MATH_0107> are categories cofibered in groupoids over\n<MATH_0108> then their product is defined to be the <MATH_0109>-fiber product\n<MATH_0110> as described in\nCategories, Lemma <REF_0009>.\n<STRUCT_0017>\n<LOCKED_0011>\nRestricting the base category: Let <MATH_0111> be a\ncategory cofibered in groupoids, and let <MATH_0112> be a full\nsubcategory of <MATH_0113>. The restriction <MATH_0114>\nis the full subcategory of <MATH_0115> whose objects lie over\nobjects of <MATH_0116>. It is a category cofibered in groupoids via\nthe functor\n<MATH_0117>.\n<STRUCT_0018>\n<STRUCT_0019>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remarks}",
+            "LOCKED_0001": "\\label{remarks-cofibered-groupoids}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$p: \\mathcal{F} \\to \\mathcal{C}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0003": "$U$",
+            "MATH_0004": "$\\mathcal{C}$",
+            "MATH_0005": "$\\mathcal{F}(U)$",
+            "MATH_0006": "$\\mathcal{F}$",
+            "MATH_0007": "$U$",
+            "MATH_0008": "$\\mathcal{F}$",
+            "MATH_0009": "$\\text{id}_U$",
+            "MATH_0010": "$x, y$",
+            "MATH_0011": "$\\mathcal{F}(U)$",
+            "MATH_0012": "$\\Mor_U(x, y)$",
+            "MATH_0013": "$\\Mor_{\\mathcal{F}(U)}(x, y)$",
+            "STRUCT_0005": "\\item",
+            "MATH_0014": "$\\mathcal{F}(U)$",
+            "REF_0001": "\\ref{categories-lemma-fibred-groupoids}",
+            "MATH_0015": "$\\mathcal{F}(U)$",
+            "MATH_0016": "$\\text{Aut}_U(x)$",
+            "MATH_0017": "$\\Mor_{\\mathcal{F}(U)}(x, x)$",
+            "STRUCT_0006": "\\item",
+            "LOCKED_0002": "\\label{item-pushforward}",
+            "MATH_0018": "$\\mathcal{F}$",
+            "MATH_0019": "$\\mathcal{C}$",
+            "MATH_0020": "$f: U \\to V$",
+            "MATH_0021": "$\\mathcal{C}$",
+            "MATH_0022": "$x \\in \\Ob(\\mathcal{F}(U))$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0023": "$x$",
+            "MATH_0024": "$f$",
+            "MATH_0025": "$x \\to y$",
+            "MATH_0026": "$\\mathcal{F}$",
+            "MATH_0027": "$f$",
+            "REF_0002": "\\ref{categories-definition-cartesian-over-C}",
+            "MATH_0028": "$x \\to f_*x$",
+            "MATH_0029": "$x$",
+            "MATH_0030": "$f$",
+            "STRUCT_0007": "\\item",
+            "TEXTITOPEN_0002": "{\\it ",
+            "MATH_0031": "$\\mathcal{F}$",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0032": "$x$",
+            "MATH_0033": "$f$",
+            "MATH_0034": "$(x, f)$",
+            "MATH_0035": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\item",
+            "MATH_0036": "$\\mathcal{F}$",
+            "MATH_0037": "$\\mathcal{C}$",
+            "MATH_0038": "$\\mathcal{F}$",
+            "MATH_0039": "$\\mathcal{C} \\to \\textit{Groupoids}$",
+            "STRUCT_0009": "\\item",
+            "LOCKED_0003": "\\label{item-cofibered-morphism}",
+            "MATH_0040": "$\\mathcal{C}$",
+            "MATH_0041": "$\\mathcal{C}$",
+            "MATH_0042": "$\\mathcal{F}$",
+            "MATH_0043": "$\\mathcal{F}'$",
+            "MATH_0044": "$\\mathcal{C}$",
+            "MATH_0045": "$\\mathcal{F}$",
+            "MATH_0046": "$\\mathcal{F}'$",
+            "MATH_0047": "$\\Mor_\\mathcal{C}(\\mathcal{F}, \\mathcal{F}')$",
+            "STRUCT_0010": "\\item",
+            "LOCKED_0004": "\\label{item-definition-cofibered-groupoids-2-category}",
+            "MATH_0048": "$(2, 1)$",
+            "MATH_0049": "$\\text{Cof}(\\mathcal{C})$",
+            "REF_0003": "\\ref{item-cofibered-morphism}",
+            "MATH_0050": "$p : \\mathcal{F} \\to C$",
+            "MATH_0051": "$p': \\mathcal{F}' \\to \\mathcal{C}$",
+            "MATH_0052": "$\\varphi, \\psi : \\mathcal{F} \\to \\mathcal{F}'$",
+            "MATH_0053": "$1$",
+            "MATH_0054": "$t : \\varphi \\to \\psi$",
+            "MATH_0055": "$p'(t_x) = \\text{id}_{p(x)}$",
+            "MATH_0056": "$x \\in \\Ob(\\mathcal{F})$",
+            "STRUCT_0011": "\\item",
+            "LOCKED_0005": "\\label{item-construction-associated-cofibered-groupoid}",
+            "MATH_0057": "$F : \\mathcal{C} \\to \\textit{Groupoids}$",
+            "MATH_0058": "$\\mathcal{F} \\to \\mathcal{C}$",
+            "MATH_0059": "$F$",
+            "MATH_0060": "$\\mathcal{F}$",
+            "MATH_0061": "$(U, x)$",
+            "MATH_0062": "$U \\in \\Ob(\\mathcal{C})$",
+            "MATH_0063": "$x \\in \\Ob(F(U))$",
+            "MATH_0064": "$(U, x) \\to (V, y)$",
+            "MATH_0065": "$(f, a)$",
+            "MATH_0066": "$f \\in \\Mor_\\mathcal{C}(U, V)$",
+            "MATH_0067": "$a \\in \\Mor_{F(V)}(F(f)(x), y)$",
+            "MATH_0068": "$\\mathcal{F} \\to \\mathcal{C}$",
+            "MATH_0069": "$(U, x)$",
+            "MATH_0070": "$U$",
+            "REF_0004": "\\ref{categories-section-presheaves-groupoids}",
+            "STRUCT_0012": "\\item",
+            "LOCKED_0006": "\\label{item-associated-functor-isomorphism-classes}",
+            "MATH_0071": "$\\mathcal{F}$",
+            "MATH_0072": "$\\mathcal{C}$",
+            "MATH_0073": "$U \\in \\Ob(\\mathcal{C})$",
+            "MATH_0074": "$\\overline{\\mathcal{F}}(U)$",
+            "MATH_0075": "$\\mathcal{F}(U)$",
+            "MATH_0076": "$f : U \\to V$",
+            "MATH_0077": "$\\mathcal{C}$",
+            "MATH_0078": "$\\overline{\\mathcal{F}}(U) \\to \\overline{\\mathcal{F}}(V)$",
+            "MATH_0079": "$x$",
+            "MATH_0080": "$f_*x$",
+            "MATH_0081": "$x$",
+            "REF_0005": "\\ref{item-pushforward}",
+            "MATH_0082": "$\\overline{\\mathcal{F}} : \\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0083": "$\\varphi : \\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0084": "$\\overline{\\varphi}: \\overline{\\mathcal{F}} \\to  \\overline{\\mathcal{G}}$",
+            "STRUCT_0013": "\\item",
+            "LOCKED_0007": "\\label{item-convention-cofibered-sets}",
+            "MATH_0085": "$F: \\mathcal{C} \\to \\textit{Sets}$",
+            "REF_0006": "\\ref{item-construction-associated-cofibered-groupoid}",
+            "MATH_0086": "$F$",
+            "MATH_0087": "$\\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0088": "$\\mathcal{C}$",
+            "MATH_0089": "$F : \\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0090": "$F$",
+            "MATH_0091": "$\\varphi : F \\to G$",
+            "MATH_0092": "$\\varphi$",
+            "REF_0007": "\\ref{categories-section-fibred-in-sets}",
+            "STRUCT_0014": "\\item",
+            "LOCKED_0008": "\\label{item-definition-yoneda}",
+            "MATH_0093": "$U$",
+            "MATH_0094": "$\\mathcal{C}$",
+            "MATH_0095": "$\\underline{U}$",
+            "MATH_0096": "$\\Mor_\\mathcal{C}(U, -): \\mathcal{C} \\to\n\\textit{Sets}$",
+            "MATH_0097": "$\\mathcal\nC^{opp}$",
+            "MATH_0098": "$\\mathcal{C} \\to\n\\textit{Sets}$",
+            "MATH_0099": "$f : U \\to V$",
+            "MATH_0100": "$f$",
+            "MATH_0101": "$\\underline{V}\n\\to \\underline{U}$",
+            "STRUCT_0015": "\\item",
+            "LOCKED_0009": "\\label{item-fibre-product}",
+            "MATH_0102": "$\\mathcal{F}\n\\to \\mathcal{H}$",
+            "MATH_0103": "$\\mathcal{G} \\to \\mathcal{H}$",
+            "MATH_0104": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0105": "$\\mathcal{C}_\\Lambda$",
+            "REF_0008": "\\ref{categories-lemma-2-product-categories-over-C}",
+            "STRUCT_0016": "\\item",
+            "LOCKED_0010": "\\label{item-product}",
+            "MATH_0106": "$\\mathcal{F}$",
+            "MATH_0107": "$\\mathcal{G}$",
+            "MATH_0108": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0109": "$2$",
+            "MATH_0110": "$\\mathcal{F} \\times_{\\mathcal{C}_\\Lambda} \\mathcal{G}$",
+            "REF_0009": "\\ref{categories-lemma-2-product-categories-over-C}",
+            "STRUCT_0017": "\\item",
+            "LOCKED_0011": "\\label{item-definition-restricting-base-category}",
+            "MATH_0111": "$p : \\mathcal{F} \\to \\mathcal{C}$",
+            "MATH_0112": "$\\mathcal{C}'$",
+            "MATH_0113": "$\\mathcal{C}$",
+            "MATH_0114": "$\\mathcal{F}|_{\\mathcal{C}'}$",
+            "MATH_0115": "$\\mathcal{F}$",
+            "MATH_0116": "$\\mathcal{C}'$",
+            "MATH_0117": "$p|_{\\mathcal{C}'}: \\mathcal{F}|_{\\mathcal{C}'} \\to \\mathcal{C}'$",
+            "STRUCT_0018": "\\end{enumerate}",
+            "STRUCT_0019": "\\end{remarks}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1d659faadd9efe4ffad9eaacd0daffbf71fbb801006a0de1a938232601ec6fa6",
+          "source_structure_hash": "sha256:72c7763e6ce797e4a40d5bf8f173486f7410491383e71fc83d558ac7c4fd70b5",
+          "source_math_hash": "sha256:1b7287d520705f1557e089797e4e403784f55f7026072ddc750bf9a63878093b"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 49474,
+          "byte_end": 56414,
+          "line_start": 1163,
+          "line_end": 1288,
+          "fragment_hash": "sha256:8b2f75316fe40a02ec53abddcd849018af2ec81b11ae6e9ad882382f4c78e7f0"
+        },
+        "owner_tag": "06GK",
+        "parent_tag": "06GA",
+        "requested_label": "formal-defos-item-construction-associated-cofibered-groupoid",
+        "requested_tag": "06GN"
+      },
+      "hash": "sha256:fdb9bdbaba82501f3e27bb7f8e68c25fea4576d415a0b0d35177244072dcd41b"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06SB:lemma/0001:formal-defos-lemma-CLambdahat-pushouts",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06SB:lemma/0001",
+          "parent_tag": "06GV",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe category <MATH_0001> admits pushouts.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-CLambdahat-pushouts}",
+            "MATH_0001": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1ff9be85e4e72fe9d11895bce468b1f718fc2f87a545a801f21596d631134757",
+          "source_structure_hash": "sha256:e80a94cc891dbbb470c83ef51217b88c8dc96e3658c166c530a593673c1b4ed8",
+          "source_math_hash": "sha256:736ee340e97acaca61cbd8ef366c444d29f2e9b432732abf011a0add51947ef1"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 38336,
+          "byte_end": 38457,
+          "line_start": 905,
+          "line_end": 908,
+          "fragment_hash": "sha256:e865b5ac62c87a7e5f2f2c8a5db190ad37ca9e2de4d6b9f5a49440b9383c72bb"
+        },
+        "owner_tag": "06SB",
+        "parent_tag": "06GV",
+        "requested_label": "formal-defos-lemma-CLambdahat-pushouts",
+        "requested_tag": "06SB"
+      },
+      "hash": "sha256:c35c9908ea5c4029fff5b008fbe4f55a77de6ae187ca6c313fa40c8ab183cb79"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06HL:lemma/0001:formal-defos-lemma-smooth-morphism-power-series",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06HL:lemma/0001",
+          "parent_tag": "06HF",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map in <MATH_0002>. Then\nthe induced morphism\n<MATH_0003>\nis smooth if and only if <MATH_0004> is a power series ring over <MATH_0005>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-smooth-morphism-power-series}",
+            "MATH_0001": "$R \\to S$",
+            "MATH_0002": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0003": "$\\underline{S}|_{\\mathcal{C}_\\Lambda} \\to \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0004": "$S$",
+            "MATH_0005": "$R$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:06c6c0077836e8d6bdf6ad5b661dc2a0614655801b1a96651b144eeaefeca633",
+          "source_structure_hash": "sha256:940d73124c7706875c1ae69efec5124fd90408680502286b9b8be8bca9ef8ce8",
+          "source_math_hash": "sha256:ec5d41ddce87cd60b1679217b28c1d60fafb1df46e8c4932724fa062e9a1d742"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 86037,
+          "byte_end": 86337,
+          "line_start": 2024,
+          "line_end": 2030,
+          "fragment_hash": "sha256:8955c0c2f2964902302c23aa7b1957af87eb9348601fbc0d0c18f498c942ab11"
+        },
+        "owner_tag": "06HL",
+        "parent_tag": "06HF",
+        "requested_label": "formal-defos-lemma-smooth-morphism-power-series",
+        "requested_tag": "06HL"
+      },
+      "hash": "sha256:0124c54c4f5a7549b3c2f12428a6dd3c8e34a68db2fedba42731605b11cc165e"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06HE:remark/0001:formal-defos-remark-restrict-complete-continuous-functor",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06HE:remark/0001",
+          "parent_tag": "06H2",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>\nbe a functor that commutes with limits.\nThen the map <MATH_0002> described in\nRemark <REF_0001>\nis an isomorphism. Indeed, if <MATH_0003> is  an object of\n<MATH_0004>, then we have canonical bijections\n<MATH_0005>\nIn particular, if <MATH_0006> is an object of <MATH_0007> then\n<MATH_0008> because\nthe representable functor <MATH_0009> commutes with limits by definition\nof limits.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-restrict-complete-continuous-functor}",
+            "MATH_0001": "$G : \\widehat{\\mathcal{C}}_\\Lambda \\to \\textit{Sets}$",
+            "MATH_0002": "$G \\to \\widehat{G|_{\\mathcal{C}_\\Lambda}}$",
+            "REF_0001": "\\ref{remark-completion-restriction-adjoint}",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0005": "$$\n\\widehat{G|_{\\mathcal{C}_\\Lambda}}(S) =\n\\lim_n G(S/\\mathfrak{m}_S^n) =\nG(\\lim_n S/\\mathfrak{m}_S^n) = G(S).\n$$",
+            "MATH_0006": "$R$",
+            "MATH_0007": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0008": "$\\underline{R} = \\widehat{\\underline{R}|_{\\mathcal{C}_\\Lambda}}$",
+            "MATH_0009": "$\\underline{R}$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:ece7082722581e2b0f277960ab9b75abb20a6082fcd14035f88aa403818f8f3e",
+          "source_structure_hash": "sha256:74513f2dee1ec09136346596982f1c86288e7a49723fbe737aed472b56332d3b",
+          "source_math_hash": "sha256:6c61872f0480d225dbb5a31882b9e4cb63e077569593661f18e0f19e29ff79e5"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 73751,
+          "byte_end": 74516,
+          "line_start": 1715,
+          "line_end": 1732,
+          "fragment_hash": "sha256:3c7ff4f49700f52448c888db72570f7f83908836b711af2affa9119c1ebd0f37"
+        },
+        "owner_tag": "06HE",
+        "parent_tag": "06H2",
+        "requested_label": "formal-defos-remark-restrict-complete-continuous-functor",
+        "requested_tag": "06HE"
+      },
+      "hash": "sha256:0a063cb45b945576a3778691b2dcd9ef659c37207b18b76659429b3e7da525e0"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06SJ:remark/0001:formal-defos-remark-restrict-completion",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06SJ:remark/0001",
+          "parent_tag": "06H2",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibred in groupoids over\n<MATH_0002>. We claim that there is a canonical\nequivalence\n<MATH_0003>\nNamely, let <MATH_0004> and let\n<MATH_0005> be an object of\n<MATH_0006>.\nSince <MATH_0007> is Artinian there is a minimal <MATH_0008>\nsuch that <MATH_0009>. Then <MATH_0010> sends <MATH_0011> to <MATH_0012>.\nThis functor is an equivalence of categories cofibered in groupoids by\nCategories, Lemma <REF_0001>\nbecause it is an equivalence on all fibre categories by\nLemma <REF_0002>\nand the fact that the <MATH_0013>-adic topology on a local\nArtinian ring <MATH_0014> comes from the zero ideal. We will frequently identify\n<MATH_0015> with a full subcategory of <MATH_0016> via a\nquasi-inverse to the functor <MATH_0017>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-restrict-completion}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$$\ncan :\n\\widehat{\\mathcal{F}}|_{\\mathcal{C}_\\Lambda}\n\\longrightarrow\n\\mathcal{F}.\n$$",
+            "MATH_0004": "$A \\in \\Ob(\\mathcal{C}_\\Lambda)$",
+            "MATH_0005": "$(A, \\xi_n, f_n)$",
+            "MATH_0006": "$\\widehat{\\mathcal{F}}|_{\\mathcal{C}_\\Lambda}(A)$",
+            "MATH_0007": "$A$",
+            "MATH_0008": "$m \\in \\mathbf{N}$",
+            "MATH_0009": "$\\mathfrak m_A^m = 0$",
+            "MATH_0010": "$can$",
+            "MATH_0011": "$(A, \\xi_n, f_n)$",
+            "MATH_0012": "$\\xi_m$",
+            "REF_0001": "\\ref{categories-lemma-equivalence-fibred-categories}",
+            "REF_0002": "\\ref{lemma-formal-objects-different-filtration}",
+            "MATH_0013": "$\\mathfrak m_A$",
+            "MATH_0014": "$A$",
+            "MATH_0015": "$\\mathcal{F}$",
+            "MATH_0016": "$\\widehat{\\mathcal{F}}$",
+            "MATH_0017": "$can$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:58c161874eeff6daac1b67fc88d31db79d88296d09759598b1bdd3c979ed73a1",
+          "source_structure_hash": "sha256:c40e2bd0a31a80b6c7199456c33c958a77f5504a7dee69d44fb6567c1cbf83e7",
+          "source_math_hash": "sha256:67a7e3cc3c231c082b3cbff5a7f75e4a96de56f6f66e401250a44281e1077d8d"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 67528,
+          "byte_end": 68578,
+          "line_start": 1566,
+          "line_end": 1590,
+          "fragment_hash": "sha256:b2d6c39d34b69278edf5096dc5e28d6492e357029f8f9178911c060d7e5014bd"
+        },
+        "owner_tag": "06SJ",
+        "parent_tag": "06H2",
+        "requested_label": "formal-defos-remark-restrict-completion",
+        "requested_tag": "06SJ"
+      },
+      "hash": "sha256:28da169c7a79cf286d532e59ef1c83333f397f8b661daf72fcb0711bcc5823b4"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06GK:remarks/0001:formal-defos-remarks-cofibered-groupoids",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06GK:remarks/0001",
+          "parent_tag": "06GA",
+          "chapter": "formal-defos",
+          "node_kind": "remarks",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nEverything about categories fibered in groupoids translates directly to the\ncofibered setting. The following remarks are meant to fix notation.\nLet <MATH_0001> be a category.\n<STRUCT_0002>\n<STRUCT_0003> We often omit the functor <MATH_0002> from the\nnotation.\n<STRUCT_0004> The fiber category over an object <MATH_0003> in <MATH_0004> is denoted by\n<MATH_0005>. Its objects are those of <MATH_0006> lying over <MATH_0007> and its\nmorphisms are those of <MATH_0008> lying over <MATH_0009>.\nIf <MATH_0010>  are objects of <MATH_0011>, we sometimes write\n<MATH_0012> for <MATH_0013>.\n<STRUCT_0005> The fibre categories <MATH_0014> are groupoids, see\nCategories, Lemma <REF_0001>.\nHence the morphisms in <MATH_0015> are all isomorphisms.\nWe sometimes write <MATH_0016> for <MATH_0017>.\n<STRUCT_0006>\n<LOCKED_0002>\nLet <MATH_0018> be a category cofibered in groupoids over\n<MATH_0019>, let <MATH_0020> be a morphism in <MATH_0021>, and\nlet <MATH_0022>.\nA <TEXTITOPEN_0001>pushforward<TEXTITCLOSE_0001> of <MATH_0023> along <MATH_0024> is a morphism\n<MATH_0025> of <MATH_0026> lying over <MATH_0027>. A pushforward\nis unique up to unique isomorphism (see the discussion following\nCategories, Definition <REF_0002>).\nWe sometimes write <MATH_0028> for ``the'' pushforward of <MATH_0029>\nalong <MATH_0030>.\n<STRUCT_0007> A <TEXTITOPEN_0002>choice of pushforwards for <MATH_0031><TEXTITCLOSE_0002> is the choice of\na pushforward of <MATH_0032> along <MATH_0033> for every pair <MATH_0034> as above. We can make\nsuch a choice of pushforwards for <MATH_0035> by the axiom of choice.\n<STRUCT_0008> Let <MATH_0036> be a category cofibered in groupoids over\n<MATH_0037>. Given a choice of pushforwards for <MATH_0038>, there\nis an associated pseudo-functor <MATH_0039>.\nWe will never use this construction so we give no details.\n<STRUCT_0009>\n<LOCKED_0003>\nA morphism of categories cofibered in groupoids over <MATH_0040> is a\nfunctor commuting with the projections to <MATH_0041>. If <MATH_0042>\nand <MATH_0043> are categories cofibered in groupoids over\n<MATH_0044>, we denote the morphisms from <MATH_0045> to <MATH_0046>\nby <MATH_0047>.\n<STRUCT_0010>\n<LOCKED_0004>\nCategories cofibered in groupoids form a <MATH_0048>-category\n<MATH_0049>. Its 1-morphisms are the morphisms described in\n(<REF_0003>). If <MATH_0050> and\n<MATH_0051> are categories cofibered in groupoids\nand <MATH_0052> are <MATH_0053>-morphisms, then\na 2-morphism <MATH_0054> is a morphism of functors such that\n<MATH_0055> for all <MATH_0056>.\n<STRUCT_0011>\n<LOCKED_0005>\nLet <MATH_0057> be a functor. There\nis a category cofibered in groupoids <MATH_0058>\nassociated to <MATH_0059> as follows. An object of <MATH_0060> is a pair <MATH_0061>\nwhere <MATH_0062> and <MATH_0063>. A\nmorphism <MATH_0064> is a pair <MATH_0065> where\n<MATH_0066> and\n<MATH_0067>.\nThe functor <MATH_0068> sends <MATH_0069> to <MATH_0070>. See\nCategories, Section <REF_0004>.\n<STRUCT_0012>\n<LOCKED_0006>\nLet <MATH_0071> be cofibered in groupoids over <MATH_0072>.\nFor <MATH_0073> set <MATH_0074> equal to\nthe set of isomorphisms classes of the category <MATH_0075>.\nIf <MATH_0076> is a morphism of <MATH_0077>, then we obtain a\nmap of sets <MATH_0078> by\nmapping the isomorphism class of <MATH_0079> to the isomorphism class of a pushforward\n<MATH_0080> of <MATH_0081> see (<REF_0005>). Then\n<MATH_0082> is a\nfunctor. Similarly, if <MATH_0083> is a\nmorphism of cofibered categories, we denote by\n<MATH_0084>\nthe associated morphism of functors.\n<STRUCT_0013>\n<LOCKED_0007>\nLet <MATH_0085> be a functor. We can think of a\nset as a discrete category, i.e., as a groupoid with only identity morphisms.\nThen the construction (<REF_0006>)\nassociates to <MATH_0086> a category cofibered in sets. This defines a fully\nfaithful embedding of the category of functors <MATH_0087>\nto the category of categories cofibered in groupoids over <MATH_0088>.\nWe identify the category of functors with its image under this embedding.\nHence if <MATH_0089> is a functor, we denote the\nassociated category cofibered in sets also by <MATH_0090>; and if\n<MATH_0091> is a morphism of functors, we denote still by <MATH_0092>\nthe corresponding morphism of categories cofibered in sets, and vice-versa.\nSee Categories, Section <REF_0007>.\n<STRUCT_0014>\n<LOCKED_0008>\nLet <MATH_0093> be an object of <MATH_0094>.  We write <MATH_0095> for the\nfunctor\n<MATH_0096>.  This defines a fully faithful embedding of <MATH_0097> into the category of functors <MATH_0098>. Hence, if <MATH_0099> is a morphism, we are\njustified in denoting still by <MATH_0100> the induced morphism <MATH_0101>, and vice-versa.\n<STRUCT_0015>\n<LOCKED_0009>\nFiber products of categories cofibered in groupoids: If <MATH_0102> and <MATH_0103> are morphisms\nof categories cofibered in groupoids over <MATH_0104>, then a\nconstruction of their 2-fiber product is given by the construction for their\n2-fiber product as categories over <MATH_0105>, as described in\nCategories, Lemma <REF_0008>.\n<STRUCT_0016>\n<LOCKED_0010>\nProducts of categories cofibered in groupoids: If <MATH_0106> and\n<MATH_0107> are categories cofibered in groupoids over\n<MATH_0108> then their product is defined to be the <MATH_0109>-fiber product\n<MATH_0110> as described in\nCategories, Lemma <REF_0009>.\n<STRUCT_0017>\n<LOCKED_0011>\nRestricting the base category: Let <MATH_0111> be a\ncategory cofibered in groupoids, and let <MATH_0112> be a full\nsubcategory of <MATH_0113>. The restriction <MATH_0114>\nis the full subcategory of <MATH_0115> whose objects lie over\nobjects of <MATH_0116>. It is a category cofibered in groupoids via\nthe functor\n<MATH_0117>.\n<STRUCT_0018>\n<STRUCT_0019>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remarks}",
+            "LOCKED_0001": "\\label{remarks-cofibered-groupoids}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$p: \\mathcal{F} \\to \\mathcal{C}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0003": "$U$",
+            "MATH_0004": "$\\mathcal{C}$",
+            "MATH_0005": "$\\mathcal{F}(U)$",
+            "MATH_0006": "$\\mathcal{F}$",
+            "MATH_0007": "$U$",
+            "MATH_0008": "$\\mathcal{F}$",
+            "MATH_0009": "$\\text{id}_U$",
+            "MATH_0010": "$x, y$",
+            "MATH_0011": "$\\mathcal{F}(U)$",
+            "MATH_0012": "$\\Mor_U(x, y)$",
+            "MATH_0013": "$\\Mor_{\\mathcal{F}(U)}(x, y)$",
+            "STRUCT_0005": "\\item",
+            "MATH_0014": "$\\mathcal{F}(U)$",
+            "REF_0001": "\\ref{categories-lemma-fibred-groupoids}",
+            "MATH_0015": "$\\mathcal{F}(U)$",
+            "MATH_0016": "$\\text{Aut}_U(x)$",
+            "MATH_0017": "$\\Mor_{\\mathcal{F}(U)}(x, x)$",
+            "STRUCT_0006": "\\item",
+            "LOCKED_0002": "\\label{item-pushforward}",
+            "MATH_0018": "$\\mathcal{F}$",
+            "MATH_0019": "$\\mathcal{C}$",
+            "MATH_0020": "$f: U \\to V$",
+            "MATH_0021": "$\\mathcal{C}$",
+            "MATH_0022": "$x \\in \\Ob(\\mathcal{F}(U))$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0023": "$x$",
+            "MATH_0024": "$f$",
+            "MATH_0025": "$x \\to y$",
+            "MATH_0026": "$\\mathcal{F}$",
+            "MATH_0027": "$f$",
+            "REF_0002": "\\ref{categories-definition-cartesian-over-C}",
+            "MATH_0028": "$x \\to f_*x$",
+            "MATH_0029": "$x$",
+            "MATH_0030": "$f$",
+            "STRUCT_0007": "\\item",
+            "TEXTITOPEN_0002": "{\\it ",
+            "MATH_0031": "$\\mathcal{F}$",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0032": "$x$",
+            "MATH_0033": "$f$",
+            "MATH_0034": "$(x, f)$",
+            "MATH_0035": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\item",
+            "MATH_0036": "$\\mathcal{F}$",
+            "MATH_0037": "$\\mathcal{C}$",
+            "MATH_0038": "$\\mathcal{F}$",
+            "MATH_0039": "$\\mathcal{C} \\to \\textit{Groupoids}$",
+            "STRUCT_0009": "\\item",
+            "LOCKED_0003": "\\label{item-cofibered-morphism}",
+            "MATH_0040": "$\\mathcal{C}$",
+            "MATH_0041": "$\\mathcal{C}$",
+            "MATH_0042": "$\\mathcal{F}$",
+            "MATH_0043": "$\\mathcal{F}'$",
+            "MATH_0044": "$\\mathcal{C}$",
+            "MATH_0045": "$\\mathcal{F}$",
+            "MATH_0046": "$\\mathcal{F}'$",
+            "MATH_0047": "$\\Mor_\\mathcal{C}(\\mathcal{F}, \\mathcal{F}')$",
+            "STRUCT_0010": "\\item",
+            "LOCKED_0004": "\\label{item-definition-cofibered-groupoids-2-category}",
+            "MATH_0048": "$(2, 1)$",
+            "MATH_0049": "$\\text{Cof}(\\mathcal{C})$",
+            "REF_0003": "\\ref{item-cofibered-morphism}",
+            "MATH_0050": "$p : \\mathcal{F} \\to C$",
+            "MATH_0051": "$p': \\mathcal{F}' \\to \\mathcal{C}$",
+            "MATH_0052": "$\\varphi, \\psi : \\mathcal{F} \\to \\mathcal{F}'$",
+            "MATH_0053": "$1$",
+            "MATH_0054": "$t : \\varphi \\to \\psi$",
+            "MATH_0055": "$p'(t_x) = \\text{id}_{p(x)}$",
+            "MATH_0056": "$x \\in \\Ob(\\mathcal{F})$",
+            "STRUCT_0011": "\\item",
+            "LOCKED_0005": "\\label{item-construction-associated-cofibered-groupoid}",
+            "MATH_0057": "$F : \\mathcal{C} \\to \\textit{Groupoids}$",
+            "MATH_0058": "$\\mathcal{F} \\to \\mathcal{C}$",
+            "MATH_0059": "$F$",
+            "MATH_0060": "$\\mathcal{F}$",
+            "MATH_0061": "$(U, x)$",
+            "MATH_0062": "$U \\in \\Ob(\\mathcal{C})$",
+            "MATH_0063": "$x \\in \\Ob(F(U))$",
+            "MATH_0064": "$(U, x) \\to (V, y)$",
+            "MATH_0065": "$(f, a)$",
+            "MATH_0066": "$f \\in \\Mor_\\mathcal{C}(U, V)$",
+            "MATH_0067": "$a \\in \\Mor_{F(V)}(F(f)(x), y)$",
+            "MATH_0068": "$\\mathcal{F} \\to \\mathcal{C}$",
+            "MATH_0069": "$(U, x)$",
+            "MATH_0070": "$U$",
+            "REF_0004": "\\ref{categories-section-presheaves-groupoids}",
+            "STRUCT_0012": "\\item",
+            "LOCKED_0006": "\\label{item-associated-functor-isomorphism-classes}",
+            "MATH_0071": "$\\mathcal{F}$",
+            "MATH_0072": "$\\mathcal{C}$",
+            "MATH_0073": "$U \\in \\Ob(\\mathcal{C})$",
+            "MATH_0074": "$\\overline{\\mathcal{F}}(U)$",
+            "MATH_0075": "$\\mathcal{F}(U)$",
+            "MATH_0076": "$f : U \\to V$",
+            "MATH_0077": "$\\mathcal{C}$",
+            "MATH_0078": "$\\overline{\\mathcal{F}}(U) \\to \\overline{\\mathcal{F}}(V)$",
+            "MATH_0079": "$x$",
+            "MATH_0080": "$f_*x$",
+            "MATH_0081": "$x$",
+            "REF_0005": "\\ref{item-pushforward}",
+            "MATH_0082": "$\\overline{\\mathcal{F}} : \\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0083": "$\\varphi : \\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0084": "$\\overline{\\varphi}: \\overline{\\mathcal{F}} \\to  \\overline{\\mathcal{G}}$",
+            "STRUCT_0013": "\\item",
+            "LOCKED_0007": "\\label{item-convention-cofibered-sets}",
+            "MATH_0085": "$F: \\mathcal{C} \\to \\textit{Sets}$",
+            "REF_0006": "\\ref{item-construction-associated-cofibered-groupoid}",
+            "MATH_0086": "$F$",
+            "MATH_0087": "$\\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0088": "$\\mathcal{C}$",
+            "MATH_0089": "$F : \\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0090": "$F$",
+            "MATH_0091": "$\\varphi : F \\to G$",
+            "MATH_0092": "$\\varphi$",
+            "REF_0007": "\\ref{categories-section-fibred-in-sets}",
+            "STRUCT_0014": "\\item",
+            "LOCKED_0008": "\\label{item-definition-yoneda}",
+            "MATH_0093": "$U$",
+            "MATH_0094": "$\\mathcal{C}$",
+            "MATH_0095": "$\\underline{U}$",
+            "MATH_0096": "$\\Mor_\\mathcal{C}(U, -): \\mathcal{C} \\to\n\\textit{Sets}$",
+            "MATH_0097": "$\\mathcal\nC^{opp}$",
+            "MATH_0098": "$\\mathcal{C} \\to\n\\textit{Sets}$",
+            "MATH_0099": "$f : U \\to V$",
+            "MATH_0100": "$f$",
+            "MATH_0101": "$\\underline{V}\n\\to \\underline{U}$",
+            "STRUCT_0015": "\\item",
+            "LOCKED_0009": "\\label{item-fibre-product}",
+            "MATH_0102": "$\\mathcal{F}\n\\to \\mathcal{H}$",
+            "MATH_0103": "$\\mathcal{G} \\to \\mathcal{H}$",
+            "MATH_0104": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0105": "$\\mathcal{C}_\\Lambda$",
+            "REF_0008": "\\ref{categories-lemma-2-product-categories-over-C}",
+            "STRUCT_0016": "\\item",
+            "LOCKED_0010": "\\label{item-product}",
+            "MATH_0106": "$\\mathcal{F}$",
+            "MATH_0107": "$\\mathcal{G}$",
+            "MATH_0108": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0109": "$2$",
+            "MATH_0110": "$\\mathcal{F} \\times_{\\mathcal{C}_\\Lambda} \\mathcal{G}$",
+            "REF_0009": "\\ref{categories-lemma-2-product-categories-over-C}",
+            "STRUCT_0017": "\\item",
+            "LOCKED_0011": "\\label{item-definition-restricting-base-category}",
+            "MATH_0111": "$p : \\mathcal{F} \\to \\mathcal{C}$",
+            "MATH_0112": "$\\mathcal{C}'$",
+            "MATH_0113": "$\\mathcal{C}$",
+            "MATH_0114": "$\\mathcal{F}|_{\\mathcal{C}'}$",
+            "MATH_0115": "$\\mathcal{F}$",
+            "MATH_0116": "$\\mathcal{C}'$",
+            "MATH_0117": "$p|_{\\mathcal{C}'}: \\mathcal{F}|_{\\mathcal{C}'} \\to \\mathcal{C}'$",
+            "STRUCT_0018": "\\end{enumerate}",
+            "STRUCT_0019": "\\end{remarks}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1d659faadd9efe4ffad9eaacd0daffbf71fbb801006a0de1a938232601ec6fa6",
+          "source_structure_hash": "sha256:72c7763e6ce797e4a40d5bf8f173486f7410491383e71fc83d558ac7c4fd70b5",
+          "source_math_hash": "sha256:1b7287d520705f1557e089797e4e403784f55f7026072ddc750bf9a63878093b"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 49474,
+          "byte_end": 56414,
+          "line_start": 1163,
+          "line_end": 1288,
+          "fragment_hash": "sha256:8b2f75316fe40a02ec53abddcd849018af2ec81b11ae6e9ad882382f4c78e7f0"
+        },
+        "owner_tag": "06GK",
+        "parent_tag": "06GA",
+        "requested_label": "formal-defos-remarks-cofibered-groupoids",
+        "requested_tag": "06GK"
+      },
+      "hash": "sha256:f89ea411d9786ec46fb02b0bc42ec5ee9d6fe68b30d9d943ac6215acedc3e245"
+    }
+  ],
+  "policy_git_origin": "8ae3350b71ee1d7433964054f2ceb8f691fc16fd",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:1c2bcce41979b5c282eac775e823e7c797aefdcd0fa0faa28a061c24674c6e7e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p034-r02-20261116-raw-08.jsonl"
+  ],
+  "rules": "Actual model generates unit_id plus all five fields. Preserve exact protected token order/count and trailing whitespace. No raw TeX. Every mathematical term occurrence has provisional bilingual form and metadata; glossary entries are empty. Preserve original source limitations."
+}

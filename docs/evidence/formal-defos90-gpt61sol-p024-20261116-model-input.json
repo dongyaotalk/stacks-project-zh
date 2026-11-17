@@ -1,0 +1,768 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p024-20261116.json",
+    "hash": "sha256:330597d91064bebc5379d867b0c20b3ce49f47e37a9545b0bd7430c7dcb5b856"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:d40fe5b82932cf19dbd78ec917a3194914dac4097993e390fdebc3990e313a74"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "formal-defos",
+      "node_kind": "theorem",
+      "parent_tag": "06IL",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$\\mathcal{F}$",
+        "MATH_0004": "$\\mathcal{F}$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+        "MATH_0007": "$$\n(1) \\Rightarrow (3) \\Rightarrow (2).\n$$",
+        "MATH_0008": "$k' \\subset k$",
+        "REF_0001": "\\ref{equation-bijective}",
+        "REF_0002": "\\ref{equation-bijective-orbits}",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\item",
+        "STRUCT_0005": "\\begin{enumerate}",
+        "STRUCT_0006": "\\item",
+        "STRUCT_0007": "\\item",
+        "STRUCT_0008": "\\item",
+        "STRUCT_0009": "\\end{enumerate}",
+        "STRUCT_0010": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{theorem}\n\\label{theorem-miniversal-object-existence}\n",
+        "suffix": "\\end{theorem}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:bec83be64564e516efab93c43b9512678ffad3ecf139609cf1b3f130b918d0fe",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:dbc632192fb403f9f4f5309b98e971ca9e1c14bd7040def2a3c55c134c0cbbf2",
+      "source_text": "Let <MATH_0001> be a predeformation category.\nConsider the following conditions\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0002> has a minimal versal formal object satisfying\n(<REF_0001>),\n<STRUCT_0003> <MATH_0003> has a minimal versal formal object satisfying\n(<REF_0002>),\n<STRUCT_0004> the following conditions hold:\n<STRUCT_0005>\n<STRUCT_0006> <MATH_0004> satisfies (S1).\n<STRUCT_0007> <MATH_0005> satisfies (S2).\n<STRUCT_0008> <MATH_0006> is finite.\n<STRUCT_0009>\n<STRUCT_0010>\nWe always have\n<MATH_0007>\nIf <MATH_0008> is separable, then all three are equivalent.\n",
+      "source_text_hash": "sha256:21f74ac545a2a5f348c3dcfc62a1869e21f222af2d277a588a6731178fe9d5df",
+      "unit_id": "tag:06IX:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06IL",
+      "placeholders": {
+        "MATH_0001": "$\\Rightarrow$",
+        "MATH_0002": "$\\Rightarrow$",
+        "MATH_0003": "$k' \\subset k$",
+        "MATH_0004": "$\\text{Der}_\\Lambda(k, k) = 0$",
+        "MATH_0005": "$=$",
+        "MATH_0006": "$\\Rightarrow$",
+        "REF_0001": "\\ref{lemma-miniversal-object-existence-1}",
+        "REF_0002": "\\ref{lemma-versal-object-existence}",
+        "REF_0003": "\\ref{lemma-construct-bijective-orbits}",
+        "REF_0004": "\\ref{equation-bijective}",
+        "REF_0005": "\\ref{equation-bijective-orbits}",
+        "REF_0006": "\\ref{lemma-versal-object-existence}",
+        "REF_0007": "\\ref{equation-bijective}",
+        "REF_0008": "\\ref{lemma-versal-object-existence}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:d912bacbd6eadbf6b8d6bcd114df613ff4a2db4050b5507042707a3f629b593a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:3d1f140ad6a52eb67b2de40f2fb7554d498827d8d3a503d3930bc179d2191c14",
+      "source_text": "Lemma <REF_0001>\nshows that (1) <MATH_0001> (3).\nLemmas <REF_0002> and\n<REF_0003>\nshow that (3) <MATH_0002> (2). If <MATH_0003> is separable\nthen <MATH_0004> and we see that\n(<REF_0004>) <MATH_0005> (<REF_0005>), i.e.,\n(1) is the same as (2).\n\n<STRUCT_0001><STRUCT_0002>\nAn alternative proof of (3) <MATH_0006> (1) in the classical case\nis to add a few words to the proof of\nLemma <REF_0006>\nto see that one can right away construct a versal object which\nsatisfies (<REF_0007>) in this case. This avoids the use of\nLemma <REF_0008>\nin the classical case. Details omitted.\n",
+      "source_text_hash": "sha256:146d7ee2d161d976073eb0c2effeba7c14beb381212d22b5a6a64bcf45627b88",
+      "unit_id": "tag:06IX:proof"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:06IX:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:21f74ac545a2a5f348c3dcfc62a1869e21f222af2d277a588a6731178fe9d5df",
+      "source_structure_hash": "sha256:dbc632192fb403f9f4f5309b98e971ca9e1c14bd7040def2a3c55c134c0cbbf2",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "category",
+          "projection_start": 36,
+          "projection_end": 44,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 148,
+          "projection_end": 154,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 234,
+          "projection_end": 240,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite",
+          "projection_start": 438,
+          "projection_end": 444,
+          "concept": "finite",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 549,
+          "projection_end": 559,
+          "concept": "equivalent",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06IX:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:146d7ee2d161d976073eb0c2effeba7c14beb381212d22b5a6a64bcf45627b88",
+      "source_structure_hash": "sha256:3d1f140ad6a52eb67b2de40f2fb7554d498827d8d3a503d3930bc179d2191c14",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "object",
+          "projection_start": 441,
+          "projection_end": 447,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06T8:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06T8:proof/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a minimal versal formal object for <MATH_0002>, see\nLemma <REF_0001>.\nSay <MATH_0003> lies over <MATH_0004>.\nIn order to parse (<REF_0002>) we point out\nthat <MATH_0005> has a natural <MATH_0006>-vector space structure\n(see\nLemma <REF_0003>),\nthat <MATH_0007>\nis linear (see\nLemma <REF_0004>),\nand that the action of <MATH_0008> is\ngiven by addition (see\nLemma <REF_0005>).\nConsider the diagram\n<MATH_0009>\nThe vector space <MATH_0010> is the kernel of <MATH_0011>.\nNote that the middle column is exact in the middle as it is dual to the\nsequence (<REF_0006>). If (<REF_0007>)\nfails, then we can find a nonzero element <MATH_0012> which\ndoes not map to zero in <MATH_0013>.\nThis means there exists an <MATH_0014> such that\n<MATH_0015>. Set <MATH_0016>. As <MATH_0017> is a derivation\nthis is a subring of <MATH_0018>. Since <MATH_0019> we see that <MATH_0020>\nis surjective (compare with the proof of\nLemma <REF_0008>).\nNote that <MATH_0021>\nis an ideal of <MATH_0022> and <MATH_0023>. Hence\n<MATH_0024>\nwhich implies that the map\n<MATH_0025>\nsending <MATH_0026> to <MATH_0027> is an isomorphism. In particular\nthere is a map <MATH_0028>.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0029> be a morphism lying over <MATH_0030>.\nLet <MATH_0031> be a morphism lying over\n<MATH_0032>.\nLet <MATH_0033> be a morphism lying over\n<MATH_0034>. Let <MATH_0035> be the unique (up to unique\nisomorphism) object of <MATH_0036> over <MATH_0037>.\nBy the axioms of a category cofibred in groupoids we obtain\na commutative diagram\n<MATH_0038>\nBecause <MATH_0039> we see that <MATH_0040> is isomorphic\nto <MATH_0041>, i.e., <MATH_0042> is\nthe pushforward of <MATH_0043> via <MATH_0044>.\nHence by\nLemma <REF_0009>\nwe see that there exists a morphism <MATH_0045>. Since\n<MATH_0046>\nthe corresponding ring map <MATH_0047>\nis not surjective. This contradicts the minimality of\n<MATH_0048>, see part (1) of\nLemma <REF_0010>.\nThis contradiction shows that such a <MATH_0049> cannot exist, hence\nwe win.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\xi$",
+            "MATH_0002": "$\\mathcal{F}$",
+            "REF_0001": "\\ref{lemma-minimal-versal}",
+            "MATH_0003": "$\\xi$",
+            "MATH_0004": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_\\Lambda)$",
+            "REF_0002": "\\ref{equation-bijective-orbits}",
+            "MATH_0005": "$T\\mathcal{F}$",
+            "MATH_0006": "$k$",
+            "REF_0003": "\\ref{lemma-tangent-space-vector-space}",
+            "MATH_0007": "$d\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F}$",
+            "REF_0004": "\\ref{lemma-k-linear-differential}",
+            "MATH_0008": "$\\text{Der}_\\Lambda(k, k)$",
+            "REF_0005": "\\ref{lemma-action-linear}",
+            "MATH_0009": "$$\n\\xymatrix{\n& \\Hom_k(\\mathfrak m_R/\\mathfrak m_R^2, k) \\\\\nK \\ar[r] & \\text{Der}_\\Lambda(R, k) \\ar[r]^{d\\underline{\\xi}} \\ar[u] &\nT\\mathcal{F} \\\\\n& \\text{Der}_\\Lambda(k, k) \\ar[u] \\ar[ru]\n}\n$$",
+            "MATH_0010": "$K$",
+            "MATH_0011": "$d\\underline{\\xi}$",
+            "REF_0006": "\\ref{equation-sequence}",
+            "REF_0007": "\\ref{equation-bijective-orbits}",
+            "MATH_0012": "$D \\in K$",
+            "MATH_0013": "$\\Hom_k(\\mathfrak m_R/\\mathfrak m_R^2, k)$",
+            "MATH_0014": "$t \\in \\mathfrak m_R$",
+            "MATH_0015": "$D(t) = 1$",
+            "MATH_0016": "$R' = \\{a \\in R \\mid D(a) = 0\\}$",
+            "MATH_0017": "$D$",
+            "MATH_0018": "$R$",
+            "MATH_0019": "$D(t) = 1$",
+            "MATH_0020": "$R' \\to k$",
+            "REF_0008": "\\ref{lemma-essential-surjection}",
+            "MATH_0021": "$\\mathfrak m_{R'} = \\Ker(D : \\mathfrak m_R \\to k)$",
+            "MATH_0022": "$R$",
+            "MATH_0023": "$\\mathfrak m_R^2 \\subset \\mathfrak m_{R'}$",
+            "MATH_0024": "$$\n\\mathfrak m_R/\\mathfrak m_R^2 =\n\\mathfrak m_{R'}/\\mathfrak m_R^2 + k\\overline{t}\n$$",
+            "MATH_0025": "$$\nR'/\\mathfrak m_R^2 \\times_k k[\\epsilon] \\to R/\\mathfrak m_R^2\n$$",
+            "MATH_0026": "$\\epsilon$",
+            "MATH_0027": "$\\overline{t}$",
+            "MATH_0028": "$R/\\mathfrak m_R^2 \\to R'/\\mathfrak m_R^2$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0029": "$\\xi \\to y$",
+            "MATH_0030": "$R \\to R/\\mathfrak m_R^2$",
+            "MATH_0031": "$y \\to x$",
+            "MATH_0032": "$R/\\mathfrak m_R^2 \\to R'/\\mathfrak m_R^2$",
+            "MATH_0033": "$y \\to x_\\epsilon$",
+            "MATH_0034": "$R/\\mathfrak m_R^2 \\to k[\\epsilon]$",
+            "MATH_0035": "$x_0$",
+            "MATH_0036": "$\\mathcal{F}$",
+            "MATH_0037": "$k$",
+            "MATH_0038": "$$\n\\vcenter{\n\\xymatrix{\ny \\ar[r] \\ar[d] & x_\\epsilon \\ar[d] \\\\\nx \\ar[r]   & x_0\n}\n}\n\\quad\\text{lying over}\\quad\n\\vcenter{\n\\xymatrix{\nR'/\\mathfrak m_R^2 \\times_k k[\\epsilon] \\ar[r] \\ar[d] & k[\\epsilon] \\ar[d] \\\\\nR'/\\mathfrak m_R^2 \\ar[r] & k.\n}\n}\n$$",
+            "MATH_0039": "$D \\in K$",
+            "MATH_0040": "$x_\\epsilon$",
+            "MATH_0041": "$0 \\in \\mathcal{F}(k[\\epsilon])$",
+            "MATH_0042": "$x_\\epsilon$",
+            "MATH_0043": "$x_0$",
+            "MATH_0044": "$k \\to k[\\epsilon], a \\mapsto a$",
+            "REF_0009": "\\ref{lemma-lifting-section}",
+            "MATH_0045": "$x \\to y$",
+            "MATH_0046": "$\\text{length}_\\Lambda(R'/\\mathfrak m_R^2) <\n\\text{length}_\\Lambda(R/\\mathfrak m_R^2)$",
+            "MATH_0047": "$R'/\\mathfrak m_R^2 \\to R/\\mathfrak m_R^2$",
+            "MATH_0048": "$\\xi/R$",
+            "REF_0010": "\\ref{lemma-smallest-where-descends-versal}",
+            "MATH_0049": "$D$",
+            "STRUCT_0004": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1c24ad81a49f545dceeba95df9b79408acb3b46d43a8159d6c497e9a8eb144e7",
+          "source_structure_hash": "sha256:7a347822117c3478407506a85e84c4cef3373e9586c04ea29f65a355d0eecc90",
+          "source_math_hash": "sha256:dcc13eee2759d8690215e5e2be2560b4fec19e1d7b2576855a256f3b757d8c4b"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 172890,
+          "byte_end": 176063,
+          "line_start": 4533,
+          "line_end": 4617,
+          "fragment_hash": "sha256:7251b634a40b04f0a862f5fbe97136e607a43d133e8afba36006bc0eda97d9a6"
+        },
+        "owner_tag": "06T8",
+        "parent_tag": "06IL"
+      },
+      "hash": "sha256:97ee7d83d18079afb886a765fc36787151f79a9b74641ec1393590dd618acae1"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06IX:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IX:proof/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLemma <REF_0001>\nshows that (1) <MATH_0001> (3).\nLemmas <REF_0002> and\n<REF_0003>\nshow that (3) <MATH_0002> (2). If <MATH_0003> is separable\nthen <MATH_0004> and we see that\n(<REF_0004>) <MATH_0005> (<REF_0005>), i.e.,\n(1) is the same as (2).\n\n<STRUCT_0002><STRUCT_0003>\nAn alternative proof of (3) <MATH_0006> (1) in the classical case\nis to add a few words to the proof of\nLemma <REF_0006>\nto see that one can right away construct a versal object which\nsatisfies (<REF_0007>) in this case. This avoids the use of\nLemma <REF_0008>\nin the classical case. Details omitted.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{lemma-miniversal-object-existence-1}",
+            "MATH_0001": "$\\Rightarrow$",
+            "REF_0002": "\\ref{lemma-versal-object-existence}",
+            "REF_0003": "\\ref{lemma-construct-bijective-orbits}",
+            "MATH_0002": "$\\Rightarrow$",
+            "MATH_0003": "$k' \\subset k$",
+            "MATH_0004": "$\\text{Der}_\\Lambda(k, k) = 0$",
+            "REF_0004": "\\ref{equation-bijective}",
+            "MATH_0005": "$=$",
+            "REF_0005": "\\ref{equation-bijective-orbits}",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0006": "$\\Rightarrow$",
+            "REF_0006": "\\ref{lemma-versal-object-existence}",
+            "REF_0007": "\\ref{equation-bijective}",
+            "REF_0008": "\\ref{lemma-versal-object-existence}",
+            "STRUCT_0004": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:4918e3d1d4b57b13871b995642e81c1d41c699d572e6f0c8ad48d46837290e53",
+          "source_structure_hash": "sha256:c33f8f0c5328055152f308011e5e57df1e6c65870781309fcec94fbf97fa05cc",
+          "source_math_hash": "sha256:d912bacbd6eadbf6b8d6bcd114df613ff4a2db4050b5507042707a3f629b593a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 176754,
+          "byte_end": 177545,
+          "line_start": 4642,
+          "line_end": 4660,
+          "fragment_hash": "sha256:26c96a1f35e3d3f85ceb0ffe31eefb0e75b9567e11eca76ae2c8ec0c3afdc44a"
+        },
+        "owner_tag": "06IX",
+        "parent_tag": "06IL"
+      },
+      "hash": "sha256:79d10a04107c2e603f2d4c83f55cb5187c3195e50c76b2bf79926e31cc5a364e"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06IX:theorem/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IX:theorem/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "theorem",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a predeformation category.\nConsider the following conditions\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> has a minimal versal formal object satisfying\n(<REF_0001>),\n<STRUCT_0004> <MATH_0003> has a minimal versal formal object satisfying\n(<REF_0002>),\n<STRUCT_0005> the following conditions hold:\n<STRUCT_0006>\n<STRUCT_0007> <MATH_0004> satisfies (S1).\n<STRUCT_0008> <MATH_0005> satisfies (S2).\n<STRUCT_0009> <MATH_0006> is finite.\n<STRUCT_0010>\n<STRUCT_0011>\nWe always have\n<MATH_0007>\nIf <MATH_0008> is separable, then all three are equivalent.\n<STRUCT_0012>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{theorem}",
+            "LOCKED_0001": "\\label{theorem-miniversal-object-existence}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$\\mathcal{F}$",
+            "REF_0001": "\\ref{equation-bijective}",
+            "STRUCT_0004": "\\item",
+            "MATH_0003": "$\\mathcal{F}$",
+            "REF_0002": "\\ref{equation-bijective-orbits}",
+            "STRUCT_0005": "\\item",
+            "STRUCT_0006": "\\begin{enumerate}",
+            "STRUCT_0007": "\\item",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0009": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0010": "\\end{enumerate}",
+            "STRUCT_0011": "\\end{enumerate}",
+            "MATH_0007": "$$\n(1) \\Rightarrow (3) \\Rightarrow (2).\n$$",
+            "MATH_0008": "$k' \\subset k$",
+            "STRUCT_0012": "\\end{theorem}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c78adacae1256ed463bbebeca3a569c2569c82ef92c50e4963ddfd7c20a44b61",
+          "source_structure_hash": "sha256:76feb24f54be4d11fee51274e7656905fc2562cb48194031d62cf51e850d0677",
+          "source_math_hash": "sha256:bec83be64564e516efab93c43b9512678ffad3ecf139609cf1b3f130b918d0fe"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 176065,
+          "byte_end": 176752,
+          "line_start": 4619,
+          "line_end": 4640,
+          "fragment_hash": "sha256:daf50f6770746f726ac94dc3751448f65151bab3e7cb080e5c43a23f87f4f372"
+        },
+        "owner_tag": "06IX",
+        "parent_tag": "06IL"
+      },
+      "hash": "sha256:ae63ab58cc3ddecb78c4fcc7637866cf154ed0f80a241d3631c388d87d731087"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06IY:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IY:remark/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a predeformation functor\nsatisfying (S1) and (S2) and <MATH_0002>.\nRecall that these conditions correspond to the conditions\n(H1), (H2), and (H3) from Schlessinger's paper, see\nRemark <REF_0001>.\nNow, in the classical case (or if <MATH_0003> is separable)\nfollowing Schlessinger we introduce the notion of a hull: a <TEXTITOPEN_0001>hull<TEXTITCLOSE_0001>\nis a versal formal object <MATH_0004> such that\n<MATH_0005>\nis an isomorphism, i.e., (<REF_0002>) holds.\nThus Theorem <REF_0003> tells us\n<MATH_0006>\nin the classical case. In other words, our theorem\nrecovers Schlessinger's theorem on the existence of hulls.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-compare-schlessinger-H3}",
+            "MATH_0001": "$F : \\mathcal{C}_\\Lambda \\to \\textit{Sets}$",
+            "MATH_0002": "$\\dim_k TF < \\infty$",
+            "REF_0001": "\\ref{remark-compare-schlessinger-H3-pre}",
+            "MATH_0003": "$k' \\subset k$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0004": "$\\xi \\in \\widehat{F}(R)$",
+            "MATH_0005": "$d\\underline{\\xi} : T\\underline{R}|_{\\mathcal{C}_\\Lambda} \\to TF$",
+            "REF_0002": "\\ref{equation-bijective}",
+            "REF_0003": "\\ref{theorem-miniversal-object-existence}",
+            "MATH_0006": "$$\n(H1) + (H2) + (H3)\n\\Rightarrow\n\\text{ there exists a hull}\n$$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:61cbe3e0eedcd894deca13064b7d4fecc68ce47de67a855e7b0f5bb6e7cc5537",
+          "source_structure_hash": "sha256:4404489e21dda55372ac520ca2e7c691e146b4f4ac865927dc7dcecec9792cdb",
+          "source_math_hash": "sha256:4c8cd6505ff3aa51a8fc04c24a72db9b2752ee954c78e4f73a79e9deb4b445a5"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 177547,
+          "byte_end": 178458,
+          "line_start": 4662,
+          "line_end": 4682,
+          "fragment_hash": "sha256:93e5870eabaa280c7f50097f81ef6b7eb391a5ca46c192f435b49487f925677b"
+        },
+        "owner_tag": "06IY",
+        "parent_tag": "06IL"
+      },
+      "hash": "sha256:7e830cdf53d97f3db180b46bcee245dff0e68fc9967b5a68422dc1b4b4f640f3"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IL:equation/0001:formal-defos-equation-bijective",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IL:equation/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "equation",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<MATH_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "MATH_0001": "\\begin{equation}\n\\label{equation-bijective}\nd\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F} \n\\text{ is bijective}\n\\end{equation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:f624e62d0a08cb4d4f7609fd8d992c88c0c527d3d910b8338b5f898e6261de67",
+          "source_structure_hash": "sha256:6ce8b93673d2210076822c08d26862e52b434c7a0e022bd2aa653d30ea19e859",
+          "source_math_hash": "sha256:dcd60f9c2e2582d228d4cd6f6838298d3071ee431bf99b6477d788c15ba9cb52"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 168214,
+          "byte_end": 168355,
+          "line_start": 4399,
+          "line_end": 4403,
+          "fragment_hash": "sha256:c2f6af7287476b7c813986f6161cb416cae3124e4b0d9663eca094268d6eec44"
+        },
+        "owner_tag": "06IL",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-equation-bijective",
+        "requested_tag": "06IM"
+      },
+      "hash": "sha256:401ee9abc6ec216e818d6a797be8fbb85ebc46d07c1c8c40906880987b99985f"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IL:equation/0002:formal-defos-equation-bijective-orbits",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IL:equation/0002",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "equation",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<MATH_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "MATH_0001": "\\begin{equation}\n\\label{equation-bijective-orbits}\nd\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F} \n\\text{ is bijective on }\\text{Der}_\\Lambda(k, k)\\text{-orbits.}\n\\end{equation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:f624e62d0a08cb4d4f7609fd8d992c88c0c527d3d910b8338b5f898e6261de67",
+          "source_structure_hash": "sha256:9b3d7eecd6fff8760de37ff3b4568641c4b7b807b6b4f37b69030177758d1957",
+          "source_math_hash": "sha256:86dc2e8f8907c4ce3c5864035c0be823f826a95dfeb5f7e249bbf303798a7d92"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 168374,
+          "byte_end": 168565,
+          "line_start": 4405,
+          "line_end": 4409,
+          "fragment_hash": "sha256:01f7ac665ce9ae222003b3c5adc47664718eb4b0bc84281f10c0cf6915f431a3"
+        },
+        "owner_tag": "06IL",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-equation-bijective-orbits",
+        "requested_tag": "06T6"
+      },
+      "hash": "sha256:b8fe863e86522bcd20952f1545f88e84f14f047f5e5f2e11cbf1e5ffde8c8dfc"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06T8:lemma/0001:formal-defos-lemma-construct-bijective-orbits",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06T8:lemma/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a predeformation category satisfying\n(S2) which has a versal formal object. Then its minimal versal\nformal object satisfies (<REF_0001>).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-construct-bijective-orbits}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "REF_0001": "\\ref{equation-bijective-orbits}",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:a6aec9850674dc70fa8c217fb0e49fa41167984f53c77b4dcd1c23b61d260cad",
+          "source_structure_hash": "sha256:1a3b8df96dc19330e5aa46fa768796d3e51fd76d0b3aaadadea6cd27701cfc63",
+          "source_math_hash": "sha256:5407f3381e3c59fb1dafb63aa5ce9f34521fbfecefbfaecbd978d086d68efb5c"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 172642,
+          "byte_end": 172888,
+          "line_start": 4526,
+          "line_end": 4531,
+          "fragment_hash": "sha256:47badd7461227eee73bd4f57e9467fdf859009a81c1414a54fa77b0fb809d964"
+        },
+        "owner_tag": "06T8",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-lemma-construct-bijective-orbits",
+        "requested_tag": "06T8"
+      },
+      "hash": "sha256:e8286bae6c64fadb8b4ed082fad950474f20bd18cbc6b8be18cd95d9de6c9f18"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IV:lemma/0001:formal-defos-lemma-miniversal-object-existence-1",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IV:lemma/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a predeformation category.\nLet <MATH_0002> be a versal formal object of <MATH_0003> such that\n(<REF_0001>) holds. Then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0004> satisfies (S1).\n<STRUCT_0004> <MATH_0005> satisfies (S2).\n<STRUCT_0005> <MATH_0006> is finite.\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-miniversal-object-existence-1}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\xi$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "REF_0001": "\\ref{equation-bijective}",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0005": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:7cb594713ebea961da7ca44fb2b93020668db669bb9135d6f6c5868ad90a073a",
+          "source_structure_hash": "sha256:8fb884e8204d35856183c5aede5a88e7b2730c6535fb2877248d2d6cef310907",
+          "source_math_hash": "sha256:7ce286f5b673f805e1d6eb4790801fea42642f032b99eee47789d65aa18ff24c"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 170094,
+          "byte_end": 170458,
+          "line_start": 4447,
+          "line_end": 4457,
+          "fragment_hash": "sha256:67d7d0457f58c6e0d5bbbbdea4c4074eaa54571a9d17dcafe73f1e32fc4b68b5"
+        },
+        "owner_tag": "06IV",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-lemma-miniversal-object-existence-1",
+        "requested_tag": "06IV"
+      },
+      "hash": "sha256:8af3415929938d2c732c7a77d4e62a805c8f84e56098bd341d1e72fdce4c6281"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IW:lemma/0001:formal-defos-lemma-versal-object-existence",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IW:lemma/0001",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibred in groupoids over\n<MATH_0002>. Assume the following conditions hold:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is a predeformation category.\n<STRUCT_0004> <MATH_0004> satisfies (S1).\n<STRUCT_0005> <MATH_0005> satisfies (S2).\n<STRUCT_0006> <MATH_0006> is finite.\n<STRUCT_0007>\nThen <MATH_0007> has a versal formal object.\n<STRUCT_0008>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-versal-object-existence}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0005": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0006": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0007": "\\end{enumerate}",
+            "MATH_0007": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:44d42869be4272aebf7ca805392f2fa2a6a555ca64dab86b3839b22c9bb47e7a",
+          "source_structure_hash": "sha256:8c7a56f652d10448650f3a44ed828a23ce50550cd57e918d5a5390e338236be1",
+          "source_math_hash": "sha256:1f0b6b9ea8b0e5b948ecf8935fc58eb5e41c89e3a023fe6cce454ef2710aec95"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 149345,
+          "byte_end": 149770,
+          "line_start": 3866,
+          "line_end": 3877,
+          "fragment_hash": "sha256:15899ae6f58ce7cb9db5798b7a17f41a9c406a481e8fff2639cdb353acee6244"
+        },
+        "owner_tag": "06IW",
+        "parent_tag": "06SX",
+        "requested_label": "formal-defos-lemma-versal-object-existence",
+        "requested_tag": "06IW"
+      },
+      "hash": "sha256:fe72fda4242d84a357bf4d3756bdaac402777036f2a4d362b56f99876e60d589"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p024-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

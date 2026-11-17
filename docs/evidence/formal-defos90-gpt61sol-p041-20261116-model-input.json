@@ -1,0 +1,1414 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p041-20261116.json",
+    "hash": "sha256:93cb53d435757cbc85cb16734f8fe060edcc3e3bc954a73d2c08fc26388a7506"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:d40fe5b82932cf19dbd78ec917a3194914dac4097993e390fdebc3990e313a74"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "07W7",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F} \\to \\mathcal{G}$",
+        "MATH_0002": "$\\mathcal{C}_{\\Lambda, k}$",
+        "MATH_0003": "$\\mathcal{F}_{l/k} \\to \\mathcal{G}_{l/k}$",
+        "MATH_0004": "$\\mathcal{C}_{\\Lambda, l}$",
+        "REF_0001": "\\ref{situation-change-of-fields}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-change-of-fields-smooth}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:f2db76e37bd560c6474e8026b903f84b2b31d6dff2774757357c12ef4463a935",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:3c006d96158bedb5aa538cc45e60c5dce7366902c349121c7fab37f32b4f9df7",
+      "source_text": "With notation and assumptions as in Situation <REF_0001>.\nIf <MATH_0001> is a smooth morphism of categories cofibred\nin groupoids over <MATH_0002>, then\n<MATH_0003> is a smooth morphism of categories\ncofibred in groupoids over <MATH_0004>.\n",
+      "source_text_hash": "sha256:0a0ca6af1f0b023eede9c561bebf6b98f77520c9a4c85f4dcc6868929c0dcd82",
+      "unit_id": "tag:07WD:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "07W7",
+      "placeholders": {
+        "REF_0001": "\\ref{equation-comparison}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:736156c15580554e7e81b3df9908f017e8edb161c314a516821af6138ac69f20",
+      "source_text": "This follows immediately from the definitions and the fact that\n(<REF_0001>) preserves surjections.\n",
+      "source_text_hash": "sha256:4f547f8c525a422274f75efc9974393c30b14ce50f29fe9018ead04f1ca4a1f2",
+      "unit_id": "tag:07WD:proof"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "parent_tag": "07W7",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{F}_{l/k}$",
+        "STRUCT_0001": "\\noindent"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "risk_level": "R2",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:d73f827d5892ee67942bdffa749c5fa5c6891264815db973d0887312c05f3fe9",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:60bf3bda799c16329a19c57fa3c39286b65286e06aee0af2ce9433ee6ac962f2",
+      "source_text": "\n\n<STRUCT_0001>\nThere are many more things you can say about the relationship between\n<MATH_0001> and <MATH_0002> (in particular about the relationship\nbetween versal deformations) and we will add these here as needed.\n\n",
+      "source_text_hash": "sha256:dfc27b7ef473d9670b6619acca1f56702e199dd9cb9b54bad2bd3981bc8fcdbd",
+      "unit_id": "tag:07W7:prose-0004"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "07W7",
+      "placeholders": {
+        "MATH_0001": "$\\xi$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "MATH_0003": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_{\\Lambda, k})$",
+        "MATH_0004": "$S \\in \\Ob(\\widehat{\\mathcal{C}}_{\\Lambda, l})$",
+        "MATH_0005": "$\\Lambda$",
+        "MATH_0006": "$R \\to S$",
+        "MATH_0007": "$\\mathfrak m_S$",
+        "MATH_0008": "$l/k$",
+        "MATH_0009": "$\\mathcal{F}_{l/k}$",
+        "MATH_0010": "$S$",
+        "REF_0001": "\\ref{situation-change-of-fields}",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-change-of-field-versal-ring}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:3ef4ab464ae9475a96ff8f6b7dc777ac68bf208125eb8b5d91c209c7a17c2b67",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:a3146202a168da34ce33f61094933480c4cb4ff399e6e0f24953e635b33023e4",
+      "source_text": "With notation and assumptions as in Situation <REF_0001>.\nLet <MATH_0001> be a versal formal object for <MATH_0002> lying over\n<MATH_0003>. Then there exist\n<STRUCT_0001>\n<STRUCT_0002> an <MATH_0004>\nand a local <MATH_0005>-algebra homomorphism <MATH_0006> which is\nformally smooth in the <MATH_0007>-adic topology and induces\nthe given field extension <MATH_0008> on residue fields, and\n<STRUCT_0003> a versal formal object of <MATH_0009> lying over <MATH_0010>.\n<STRUCT_0004>\n",
+      "source_text_hash": "sha256:86f4af0afe5380c6a5111f5677d36bb7a8cee4d52c9caf60e4347a56f583e2ad",
+      "unit_id": "tag:0DQF:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "07W7",
+      "placeholders": {
+        "MATH_0001": "$S$",
+        "MATH_0002": "$R[x_1, \\ldots, x_n] \\to l$",
+        "MATH_0003": "$R$",
+        "MATH_0004": "$\\mathfrak m$",
+        "MATH_0005": "$S$",
+        "MATH_0006": "$\\mathfrak m$",
+        "MATH_0007": "$R[x_1, \\ldots, x_n]$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$\\widehat{\\mathcal{C}}_{\\Lambda, l}$",
+        "MATH_0010": "$R \\to S$",
+        "MATH_0011": "$\\mathfrak m_S$",
+        "MATH_0012": "$R \\to R[x_1, \\ldots, x_n]$",
+        "MATH_0013": "$\\xi$",
+        "MATH_0014": "$\\underline{\\xi} : \\underline{R}|_{\\mathcal{C}_{\\Lambda, k}} \\to \\mathcal{F}$",
+        "MATH_0015": "$$\n(\\underline{R}|_{\\mathcal{C}_{\\Lambda, k}})_{l/k}\n\\longrightarrow\n\\mathcal{F}_{l/k}\n$$",
+        "MATH_0016": "$\\underline{S}|_{\\mathcal{C}_{\\Lambda, l}} \\to\n(\\underline{R}|_{\\mathcal{C}_{\\Lambda, k}})_{l/k}$",
+        "MATH_0017": "$B$",
+        "MATH_0018": "$\\mathcal{C}_{\\Lambda, l}$",
+        "MATH_0019": "$$\n\\Mor_{\\widehat{\\mathcal{C}}_{\\Lambda, l}}(S, B)\n\\longrightarrow\n\\Mor_{\\widehat{\\mathcal{C}}_{\\Lambda, k}}(R, B \\times_l k)\n$$",
+        "MATH_0020": "$B$",
+        "MATH_0021": "$\\varphi : S \\to B$",
+        "MATH_0022": "$R \\to S \\to B$",
+        "MATH_0023": "$\\Lambda$",
+        "MATH_0024": "$B \\times_l k$",
+        "MATH_0025": "$B' \\to B$",
+        "MATH_0026": "$$\n\\xymatrix{\nS \\ar[r] & B \\ar@{=}[r] & B \\\\\nR \\ar[u] \\ar[r] & B' \\times_l k \\ar[u] \\ar[r] & B' \\ar[u]\n}\n$$",
+        "MATH_0027": "$S \\to B'$",
+        "MATH_0028": "$R \\to S$",
+        "MATH_0029": "$\\mathfrak m_S$",
+        "REF_0001": "\\ref{algebra-lemma-completion-Noetherian-Noetherian}",
+        "REF_0002": "\\ref{more-algebra-lemma-formally-smooth}",
+        "REF_0003": "\\ref{more-algebra-lemma-formally-smooth-completion}",
+        "REF_0004": "\\ref{lemma-exists-smooth}",
+        "REF_0005": "\\ref{lemma-change-of-fields-smooth}",
+        "REF_0006": "\\ref{more-algebra-lemma-lift-continuous}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:69f0c6aecfe9f7449a4858dced3268cd0a5e96c6b68560c1c0d904e437381d4e",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:168546c934ca9e695c37df8ae40fba4bb4da596b80a4628f0e1ab25833b694b7",
+      "source_text": "Construction of <MATH_0001>. Choose a surjection <MATH_0002>\nof <MATH_0003>-algebras. The kernel is a maximal ideal <MATH_0004>.\nSet <MATH_0005> equal to the <MATH_0006>-adic completion of the Noetherian ring\n<MATH_0007>. Then <MATH_0008> is in <MATH_0009>\nby Algebra, Lemma <REF_0001>.\nThe map <MATH_0010> is formally smooth in the <MATH_0011>-adic topology by\nMore on Algebra, Lemmas\n<REF_0002> and\n<REF_0003>\nand the fact that <MATH_0012> is formally smooth.\n(Compare with the proof Lemma <REF_0004>.)\n\n<STRUCT_0001><STRUCT_0002>\nSince <MATH_0013> is versal, the transformation\n<MATH_0014>\nis smooth. By Lemma <REF_0005> the induced map\n<MATH_0015>\nis smooth. Thus it suffices to construct a smooth morphism\n<MATH_0016>.\nTo give such a map means for every object <MATH_0017> of <MATH_0018>\na map of sets\n<MATH_0019>\nfunctorial in <MATH_0020>. Given an element <MATH_0021>\non the left hand side we send it to the composition <MATH_0022>\nwhose image is contained in the sub <MATH_0023>-algebra <MATH_0024>.\nSmoothness of the map means that given a surjection\n<MATH_0025> and a commutative diagram\n<MATH_0026>\nwe have to find a ring map <MATH_0027> fitting into the outer rectangle.\nThe existence of this map is guaranteed as we chose <MATH_0028> to be\nformally smooth in the <MATH_0029>-adic topology, see\nMore on Algebra, Lemma <REF_0006>.\n",
+      "source_text_hash": "sha256:3851ab03877354166e129073735efcd53dd4bc2ba12ff9a182d07e1bc7665362",
+      "unit_id": "tag:0DQF:proof"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:07WD:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:0a0ca6af1f0b023eede9c561bebf6b98f77520c9a4c85f4dcc6868929c0dcd82",
+      "source_structure_hash": "sha256:3c006d96158bedb5aa538cc45e60c5dce7366902c349121c7fab37f32b4f9df7",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "smooth",
+          "projection_start": 78,
+          "projection_end": 84,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 85,
+          "projection_end": 93,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 97,
+          "projection_end": 107,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 120,
+          "projection_end": 129,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 170,
+          "projection_end": 176,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 177,
+          "projection_end": 185,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 189,
+          "projection_end": 199,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 212,
+          "projection_end": 221,
+          "concept": "groupoid",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:07WD:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:4f547f8c525a422274f75efc9974393c30b14ce50f29fe9018ead04f1ca4a1f2",
+      "source_structure_hash": "sha256:736156c15580554e7e81b3df9908f017e8edb161c314a516821af6138ac69f20",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "surjections",
+          "projection_start": 87,
+          "projection_end": 98,
+          "concept": "surjection",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:07W7:prose-0004",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:dfc27b7ef473d9670b6619acca1f56702e199dd9cb9b54bad2bd3981bc8fcdbd",
+      "source_structure_hash": "sha256:60bf3bda799c16329a19c57fa3c39286b65286e06aee0af2ce9433ee6ac962f2",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "versal deformations",
+          "projection_start": 158,
+          "projection_end": 177,
+          "concept": "versal-deformation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0DQF:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:86f4af0afe5380c6a5111f5677d36bb7a8cee4d52c9caf60e4347a56f583e2ad",
+      "source_structure_hash": "sha256:a3146202a168da34ce33f61094933480c4cb4ff399e6e0f24953e635b33023e4",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "object",
+          "projection_start": 93,
+          "projection_end": 99,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra homomorphism",
+          "projection_start": 224,
+          "projection_end": 244,
+          "concept": "source-phrase-algebra-homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "formally smooth",
+          "projection_start": 266,
+          "projection_end": 281,
+          "concept": "source-phrase-formally-smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "adic topology",
+          "projection_start": 301,
+          "projection_end": 314,
+          "concept": "source-phrase-adic-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "field",
+          "projection_start": 337,
+          "projection_end": 342,
+          "concept": "field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "residue fields",
+          "projection_start": 368,
+          "projection_end": 382,
+          "concept": "residue-field",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 418,
+          "projection_end": 424,
+          "concept": "object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0DQF:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:3851ab03877354166e129073735efcd53dd4bc2ba12ff9a182d07e1bc7665362",
+      "source_structure_hash": "sha256:168546c934ca9e695c37df8ae40fba4bb4da596b80a4628f0e1ab25833b694b7",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "surjection",
+          "projection_start": 38,
+          "projection_end": 48,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 76,
+          "projection_end": 84,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 90,
+          "projection_end": 96,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 110,
+          "projection_end": 115,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "completion",
+          "projection_start": 175,
+          "projection_end": 185,
+          "concept": "completion",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian ring",
+          "projection_start": 193,
+          "projection_end": 208,
+          "concept": "source-phrase-noetherian-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 260,
+          "projection_end": 267,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 291,
+          "projection_end": 294,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "formally smooth",
+          "projection_start": 310,
+          "projection_end": 325,
+          "concept": "source-phrase-formally-smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "adic topology",
+          "projection_start": 345,
+          "projection_end": 358,
+          "concept": "source-phrase-adic-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 370,
+          "projection_end": 377,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "formally smooth",
+          "projection_start": 445,
+          "projection_end": 460,
+          "concept": "source-phrase-formally-smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 595,
+          "projection_end": 601,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "induced map",
+          "projection_start": 627,
+          "projection_end": 638,
+          "concept": "source-phrase-induced-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 654,
+          "projection_end": 660,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 694,
+          "projection_end": 700,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 701,
+          "projection_end": 709,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 738,
+          "projection_end": 741,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 758,
+          "projection_end": 764,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 794,
+          "projection_end": 797,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 801,
+          "projection_end": 805,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 854,
+          "projection_end": 861,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 914,
+          "projection_end": 925,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 944,
+          "projection_end": 949,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 986,
+          "projection_end": 993,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1025,
+          "projection_end": 1028,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 1048,
+          "projection_end": 1058,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 1077,
+          "projection_end": 1096,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 1127,
+          "projection_end": 1135,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1204,
+          "projection_end": 1207,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "formally smooth",
+          "projection_start": 1252,
+          "projection_end": 1267,
+          "concept": "source-phrase-formally-smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "adic topology",
+          "projection_start": 1287,
+          "projection_end": 1300,
+          "concept": "source-phrase-adic-topology",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 1314,
+          "projection_end": 1321,
+          "concept": "algebra",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:07WC:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07WC:proof/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet <MATH_0001> and denote <MATH_0002> the corresponding\nobject of <MATH_0003> over <MATH_0004>. Recall that\n<MATH_0005> and\n<MATH_0006>,\nsee Remark <REF_0001>.\nRecall that the vector space structure on\n<MATH_0007> comes from identifying it with the tangent\nspace of the functor <MATH_0008> which is defined on\nthe category <MATH_0009> of Artinian local <MATH_0010>-algebras with\nresidue field <MATH_0011>. Similarly, <MATH_0012>\nis the tangent space of <MATH_0013> which is defined on the\ncategory <MATH_0014> of Artinian local <MATH_0015>-algebras with residue\nfield <MATH_0016>. Unwinding the definitions we see that\n<MATH_0017> is the restriction of <MATH_0018>\n(which lives on <MATH_0019>) to <MATH_0020>. Since\nthere is no difference between the tangent space of\n<MATH_0021> seen as a functor on <MATH_0022> or\n<MATH_0023>, the lemma follows from \nLemma <REF_0002>\nand the fact that <MATH_0024> satisfies (RS) by\nLemma <REF_0003> (whence we have (S2) by\nLemma <REF_0004>).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+            "MATH_0002": "$x_{l, 0}$",
+            "MATH_0003": "$\\mathcal{F}_{l/k}$",
+            "MATH_0004": "$l$",
+            "MATH_0005": "$\\text{Inf}(\\mathcal{F}) = \\text{Inf}_{x_0}(\\mathcal{F})$",
+            "MATH_0006": "$\\text{Inf}(\\mathcal{F}_{l/k}) = \\text{Inf}_{x_{l, 0}}(\\mathcal{F}_{l/k})$",
+            "REF_0001": "\\ref{remark-trivial-aut-point}",
+            "MATH_0007": "$\\text{Inf}_{x_0}(\\mathcal{F})$",
+            "MATH_0008": "$\\mathit{Aut}(x_0)$",
+            "MATH_0009": "$\\mathcal{C}_{k, k}$",
+            "MATH_0010": "$k$",
+            "MATH_0011": "$k$",
+            "MATH_0012": "$\\text{Inf}_{x_{l, 0}}(\\mathcal{F}_{l/k})$",
+            "MATH_0013": "$\\mathit{Aut}(x_{l, 0})$",
+            "MATH_0014": "$\\mathcal{C}_{l, l}$",
+            "MATH_0015": "$l$",
+            "MATH_0016": "$l$",
+            "MATH_0017": "$\\mathit{Aut}(x_{l, 0})$",
+            "MATH_0018": "$\\mathit{Aut}(x_0)_{l/k}$",
+            "MATH_0019": "$\\mathcal{C}_{k, l}$",
+            "MATH_0020": "$\\mathcal{C}_{l, l}$",
+            "MATH_0021": "$\\mathit{Aut}(x_0)_{l/k}$",
+            "MATH_0022": "$\\mathcal{C}_{k, l}$",
+            "MATH_0023": "$\\mathcal{C}_{l, l}$",
+            "REF_0002": "\\ref{lemma-tangent-space-change-of-field}",
+            "MATH_0024": "$\\mathit{Aut}(x_0)$",
+            "REF_0003": "\\ref{lemma-Aut-functor-RS}",
+            "REF_0004": "\\ref{lemma-RS-implies-S1-S2}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c8edf34072781a5a125070b6060c9c1b3e4424875a7dad171ec91b13a3ab5e66",
+          "source_structure_hash": "sha256:3b80aea775157300be9e71ede857bcf2b79ad75edfcde5b06e051e1bbf9b758e",
+          "source_math_hash": "sha256:7744829436eb8e2bc2135fc6921ffc410f92869185daabfe9b77c4a7817c78c6"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 280285,
+          "byte_end": 281643,
+          "line_start": 7431,
+          "line_end": 7454,
+          "fragment_hash": "sha256:3a16e93ed3a709da86000719273ed9c4f38aaec1d0339b7f15757d562f985b44"
+        },
+        "owner_tag": "07WC",
+        "parent_tag": "07W7"
+      },
+      "hash": "sha256:54b1d797e18155546faf41b4afbc80d15c6d11bcfdca5ce80a1f6850c97a088f"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:07WD:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07WD:proof/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThis follows immediately from the definitions and the fact that\n(<REF_0001>) preserves surjections.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{equation-comparison}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:a1c58950bfe21a2167f9164b2667542a5e802e04af9adaabfed81ba29582173b",
+          "source_structure_hash": "sha256:cf731a029bc2f874945cb6bcc813baecb1c028d3e5a6d41fcec3264a7eb19028",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 282050,
+          "byte_end": 282190,
+          "line_start": 7465,
+          "line_end": 7468,
+          "fragment_hash": "sha256:3089fd1f635b29f5349fced0e9de8696931898019f231c7de1b881e9e1bd3f22"
+        },
+        "owner_tag": "07WD",
+        "parent_tag": "07W7"
+      },
+      "hash": "sha256:6cb6d885c2531c452c6a170fcdb761bfd4afd7b4244200922d59901fc1f55dd6"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:07WD:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07WD:lemma/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notation and assumptions as in Situation <REF_0001>.\nIf <MATH_0001> is a smooth morphism of categories cofibred\nin groupoids over <MATH_0002>, then\n<MATH_0003> is a smooth morphism of categories\ncofibred in groupoids over <MATH_0004>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-change-of-fields-smooth}",
+            "REF_0001": "\\ref{situation-change-of-fields}",
+            "MATH_0001": "$\\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0002": "$\\mathcal{C}_{\\Lambda, k}$",
+            "MATH_0003": "$\\mathcal{F}_{l/k} \\to \\mathcal{G}_{l/k}$",
+            "MATH_0004": "$\\mathcal{C}_{\\Lambda, l}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:145b26db387e3d12c8a2a5a6d4b419a81464c83ddc0d32f0b332870d0d08a83a",
+          "source_structure_hash": "sha256:eace9ec60a78d4e08d973e3721ea95f49a6a1b19111e25fb03c01e3861e55669",
+          "source_math_hash": "sha256:f2db76e37bd560c6474e8026b903f84b2b31d6dff2774757357c12ef4463a935"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 281645,
+          "byte_end": 282048,
+          "line_start": 7456,
+          "line_end": 7463,
+          "fragment_hash": "sha256:d24b3337b336c94f023256d7365a6210e7b1d48b25e78b2469fc3a39b2c678f4"
+        },
+        "owner_tag": "07WD",
+        "parent_tag": "07W7"
+      },
+      "hash": "sha256:27fc6f1a1b7766b23567dc5d79ecb5fbb4db31f562baeac84904277f2b77f562"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:07W7:paragraph/0005",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07W7:paragraph/0005",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThere are many more things you can say about the relationship between\n<MATH_0001> and <MATH_0002> (in particular about the relationship\nbetween versal deformations) and we will add these here as needed.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{F}_{l/k}$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:dfc27b7ef473d9670b6619acca1f56702e199dd9cb9b54bad2bd3981bc8fcdbd",
+          "source_structure_hash": "sha256:60bf3bda799c16329a19c57fa3c39286b65286e06aee0af2ce9433ee6ac962f2",
+          "source_math_hash": "sha256:d73f827d5892ee67942bdffa749c5fa5c6891264815db973d0887312c05f3fe9"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 282192,
+          "byte_end": 282414,
+          "line_start": 7470,
+          "line_end": 7473,
+          "fragment_hash": "sha256:462ad58d4f4b6801cf943b818cdfcc7e6126ab530f836677f298ac652255f51e"
+        },
+        "owner_tag": "07W7",
+        "parent_tag": "07W7"
+      },
+      "hash": "sha256:a8bbfdf19d343d83196c1036ddd709ccfba405f27b32ee4fd2452f1239a4bd56"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:0DQF:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:0DQF:lemma/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWith notation and assumptions as in Situation <REF_0001>.\nLet <MATH_0001> be a versal formal object for <MATH_0002> lying over\n<MATH_0003>. Then there exist\n<STRUCT_0002>\n<STRUCT_0003> an <MATH_0004>\nand a local <MATH_0005>-algebra homomorphism <MATH_0006> which is\nformally smooth in the <MATH_0007>-adic topology and induces\nthe given field extension <MATH_0008> on residue fields, and\n<STRUCT_0004> a versal formal object of <MATH_0009> lying over <MATH_0010>.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-change-of-field-versal-ring}",
+            "REF_0001": "\\ref{situation-change-of-fields}",
+            "MATH_0001": "$\\xi$",
+            "MATH_0002": "$\\mathcal{F}$",
+            "MATH_0003": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_{\\Lambda, k})$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0004": "$S \\in \\Ob(\\widehat{\\mathcal{C}}_{\\Lambda, l})$",
+            "MATH_0005": "$\\Lambda$",
+            "MATH_0006": "$R \\to S$",
+            "MATH_0007": "$\\mathfrak m_S$",
+            "MATH_0008": "$l/k$",
+            "STRUCT_0004": "\\item",
+            "MATH_0009": "$\\mathcal{F}_{l/k}$",
+            "MATH_0010": "$S$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2e06cec42551ee30cee5718b5e882d7621e31cd870fd5c2021aa952014b41c62",
+          "source_structure_hash": "sha256:dc4032075b6d2370fddf733e138dd796ed08232fe210d0c5498be64b543c1231",
+          "source_math_hash": "sha256:3ef4ab464ae9475a96ff8f6b7dc777ac68bf208125eb8b5d91c209c7a17c2b67"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 282416,
+          "byte_end": 283035,
+          "line_start": 7475,
+          "line_end": 7487,
+          "fragment_hash": "sha256:15cbb2fca33b51b12379838d49c8b1a31b7763eeb710815d7c3dcbdd6f8ecc24"
+        },
+        "owner_tag": "0DQF",
+        "parent_tag": "07W7"
+      },
+      "hash": "sha256:3eaacfb2053ce02574cb9238c4a97a337b507c6b5b0ae720c7dc905740e3ead7"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:0DQF:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:0DQF:proof/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nConstruction of <MATH_0001>. Choose a surjection <MATH_0002>\nof <MATH_0003>-algebras. The kernel is a maximal ideal <MATH_0004>.\nSet <MATH_0005> equal to the <MATH_0006>-adic completion of the Noetherian ring\n<MATH_0007>. Then <MATH_0008> is in <MATH_0009>\nby Algebra, Lemma <REF_0001>.\nThe map <MATH_0010> is formally smooth in the <MATH_0011>-adic topology by\nMore on Algebra, Lemmas\n<REF_0002> and\n<REF_0003>\nand the fact that <MATH_0012> is formally smooth.\n(Compare with the proof Lemma <REF_0004>.)\n\n<STRUCT_0002><STRUCT_0003>\nSince <MATH_0013> is versal, the transformation\n<MATH_0014>\nis smooth. By Lemma <REF_0005> the induced map\n<MATH_0015>\nis smooth. Thus it suffices to construct a smooth morphism\n<MATH_0016>.\nTo give such a map means for every object <MATH_0017> of <MATH_0018>\na map of sets\n<MATH_0019>\nfunctorial in <MATH_0020>. Given an element <MATH_0021>\non the left hand side we send it to the composition <MATH_0022>\nwhose image is contained in the sub <MATH_0023>-algebra <MATH_0024>.\nSmoothness of the map means that given a surjection\n<MATH_0025> and a commutative diagram\n<MATH_0026>\nwe have to find a ring map <MATH_0027> fitting into the outer rectangle.\nThe existence of this map is guaranteed as we chose <MATH_0028> to be\nformally smooth in the <MATH_0029>-adic topology, see\nMore on Algebra, Lemma <REF_0006>.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$R[x_1, \\ldots, x_n] \\to l$",
+            "MATH_0003": "$R$",
+            "MATH_0004": "$\\mathfrak m$",
+            "MATH_0005": "$S$",
+            "MATH_0006": "$\\mathfrak m$",
+            "MATH_0007": "$R[x_1, \\ldots, x_n]$",
+            "MATH_0008": "$S$",
+            "MATH_0009": "$\\widehat{\\mathcal{C}}_{\\Lambda, l}$",
+            "REF_0001": "\\ref{algebra-lemma-completion-Noetherian-Noetherian}",
+            "MATH_0010": "$R \\to S$",
+            "MATH_0011": "$\\mathfrak m_S$",
+            "REF_0002": "\\ref{more-algebra-lemma-formally-smooth}",
+            "REF_0003": "\\ref{more-algebra-lemma-formally-smooth-completion}",
+            "MATH_0012": "$R \\to R[x_1, \\ldots, x_n]$",
+            "REF_0004": "\\ref{lemma-exists-smooth}",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0013": "$\\xi$",
+            "MATH_0014": "$\\underline{\\xi} : \\underline{R}|_{\\mathcal{C}_{\\Lambda, k}} \\to \\mathcal{F}$",
+            "REF_0005": "\\ref{lemma-change-of-fields-smooth}",
+            "MATH_0015": "$$\n(\\underline{R}|_{\\mathcal{C}_{\\Lambda, k}})_{l/k}\n\\longrightarrow\n\\mathcal{F}_{l/k}\n$$",
+            "MATH_0016": "$\\underline{S}|_{\\mathcal{C}_{\\Lambda, l}} \\to\n(\\underline{R}|_{\\mathcal{C}_{\\Lambda, k}})_{l/k}$",
+            "MATH_0017": "$B$",
+            "MATH_0018": "$\\mathcal{C}_{\\Lambda, l}$",
+            "MATH_0019": "$$\n\\Mor_{\\widehat{\\mathcal{C}}_{\\Lambda, l}}(S, B)\n\\longrightarrow\n\\Mor_{\\widehat{\\mathcal{C}}_{\\Lambda, k}}(R, B \\times_l k)\n$$",
+            "MATH_0020": "$B$",
+            "MATH_0021": "$\\varphi : S \\to B$",
+            "MATH_0022": "$R \\to S \\to B$",
+            "MATH_0023": "$\\Lambda$",
+            "MATH_0024": "$B \\times_l k$",
+            "MATH_0025": "$B' \\to B$",
+            "MATH_0026": "$$\n\\xymatrix{\nS \\ar[r] & B \\ar@{=}[r] & B \\\\\nR \\ar[u] \\ar[r] & B' \\times_l k \\ar[u] \\ar[r] & B' \\ar[u]\n}\n$$",
+            "MATH_0027": "$S \\to B'$",
+            "MATH_0028": "$R \\to S$",
+            "MATH_0029": "$\\mathfrak m_S$",
+            "REF_0006": "\\ref{more-algebra-lemma-lift-continuous}",
+            "STRUCT_0004": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:6c414f8477f1e2f88dc8ea9634846efcb201e95ddead9b89808287a89c9d57a4",
+          "source_structure_hash": "sha256:54da1db8ae280ed2575ffaea08ab14eefa04ca66019889045281e1831898fc81",
+          "source_math_hash": "sha256:69f0c6aecfe9f7449a4858dced3268cd0a5e96c6b68560c1c0d904e437381d4e"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 283037,
+          "byte_end": 285068,
+          "line_start": 7489,
+          "line_end": 7536,
+          "fragment_hash": "sha256:29e4504a8a049b2f1e4f87f0e5626900d42b94bb36d65751457373b29d578ed4"
+        },
+        "owner_tag": "0DQF",
+        "parent_tag": "07W7"
+      },
+      "hash": "sha256:0316578d606b141aad248170bf596f10e44a38d40c2ac5a5c02baa16e05c30d4"
+    },
+    {
+      "context_id": "locked-English-reference:algebra:inventory:algebra:0316:lemma/0001:algebra-lemma-completion-Noetherian-Noetherian",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:algebra:0316:lemma/0001",
+          "parent_tag": "0BNH",
+          "chapter": "algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a Noetherian ring.\nLet <MATH_0002> be an ideal of <MATH_0003>.\nThe completion <MATH_0004> of <MATH_0005> with respect to <MATH_0006> is\nNoetherian.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-completion-Noetherian-Noetherian}",
+            "MATH_0001": "$R$",
+            "MATH_0002": "$I$",
+            "MATH_0003": "$R$",
+            "MATH_0004": "$R^\\wedge$",
+            "MATH_0005": "$R$",
+            "MATH_0006": "$I$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:96d6870a77b4a65ee8b6e3011d825402d9247bf95ab89b3958ca610a788e3152",
+          "source_structure_hash": "sha256:ef57a0871d23ef8cc4c9e11e5710bf822db2482a8d1efa603b99cdc0605a079c",
+          "source_math_hash": "sha256:6403efadb1d03209cd6a5479271db0926128c40e1f851f0f9722d45356ebb7af"
+        },
+        "location": {
+          "file": "algebra.tex",
+          "byte_start": 838997,
+          "byte_end": 839195,
+          "line_start": 23064,
+          "line_end": 23070,
+          "fragment_hash": "sha256:aa28910e726918c0e51a84a264fd914f4d6eb512b62cb4a2353dcfdd03ffb96c"
+        },
+        "owner_tag": "0316",
+        "parent_tag": "0BNH",
+        "requested_label": "algebra-lemma-completion-Noetherian-Noetherian",
+        "requested_tag": "0316"
+      },
+      "hash": "sha256:47d760faa5d7af11a53c2f4342317bf27397c3f0458df79d0f766c47d69ad7c8"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:07W8:situation/0001:formal-defos-equation-comparison",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07W8:situation/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "situation",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a Noetherian ring and let <MATH_0002> be a finite\nring maps where <MATH_0003> and <MATH_0004> are fields. Thus <MATH_0005> is a finite\nextensions of fields. A typical object of <MATH_0006> will be\ndenoted <MATH_0007> and a typical object of <MATH_0008> will be\ndenoted <MATH_0009>. We define\n<MATH_0010>\nGiven a category cofibred in groupoids\n<MATH_0011> we obtain\nan associated category cofibred in groupoids\n<MATH_0012>\nby setting <MATH_0013>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{situation}",
+            "LOCKED_0001": "\\label{situation-change-of-fields}",
+            "MATH_0001": "$\\Lambda$",
+            "MATH_0002": "$\\Lambda \\to k \\to l$",
+            "MATH_0003": "$k$",
+            "MATH_0004": "$l$",
+            "MATH_0005": "$l/k$",
+            "MATH_0006": "$\\mathcal{C}_{\\Lambda, l}$",
+            "MATH_0007": "$B$",
+            "MATH_0008": "$\\mathcal{C}_{\\Lambda, k}$",
+            "MATH_0009": "$A$",
+            "MATH_0010": "\\begin{equation}\n\\label{equation-comparison}\n\\mathcal{C}_{\\Lambda, l} \\longrightarrow \\mathcal{C}_{\\Lambda, k},\n\\quad\nB \\longmapsto B \\times_l k\n\\end{equation}",
+            "MATH_0011": "$p : \\mathcal{F} \\to \\mathcal{C}_{\\Lambda, k}$",
+            "MATH_0012": "$$\np_{l/k} : \\mathcal{F}_{l/k} \\longrightarrow \\mathcal{C}_{\\Lambda, l}\n$$",
+            "MATH_0013": "$\\mathcal{F}_{l/k}(B) = \\mathcal{F}(B \\times_l k)$",
+            "STRUCT_0002": "\\end{situation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3ff21b747ef5548c73c6b36772eebf54fdb473b727334c73dd03954ea1ccd0ed",
+          "source_structure_hash": "sha256:1f090850e3171dea9974f58cb1e973dd9c9eabc08d527561b250a1b44689f80b",
+          "source_math_hash": "sha256:892a8ae8ecd54773a9c23c03a3f884a97e820dd05b8ffd67eeb509aa418cdf38"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 274675,
+          "byte_end": 275493,
+          "line_start": 7276,
+          "line_end": 7296,
+          "fragment_hash": "sha256:b53c5f8f0e4149c54c1b6fb52949d84654d036372fc9b5aaa07e95c09e4289a2"
+        },
+        "owner_tag": "07W8",
+        "parent_tag": "07W7",
+        "requested_label": "formal-defos-equation-comparison",
+        "requested_tag": "07W9"
+      },
+      "hash": "sha256:2e2495478d926ef549fdff6197be709b8ef4c9404681b4194b096b87171150ba"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06SM:lemma/0001:formal-defos-lemma-exists-smooth",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06SM:lemma/0001",
+          "parent_tag": "0DYK",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThere exists an <MATH_0001>\nsuch that the equivalent conditions of Lemma <REF_0001>\nhold and moreover <MATH_0002>\nand <MATH_0003>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-exists-smooth}",
+            "MATH_0001": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_\\Lambda)$",
+            "REF_0001": "\\ref{lemma-smooth}",
+            "MATH_0002": "$H_1(L_{k/\\Lambda}) = \\mathfrak m_R/\\mathfrak m_R^2$",
+            "MATH_0003": "$\\Omega_{R/\\Lambda} \\otimes_R k = \\Omega_{k/\\Lambda}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1f91f07daac622f28cfdca53a8dbd6a7d86ff7daef6b971dc2019aa80247a102",
+          "source_structure_hash": "sha256:3cf5e64c12f76d6118012c533c8eabac2ee7f059a9079537d7ac9bcf245842b0",
+          "source_math_hash": "sha256:32214d1890b6a12f2459c0c4999f019d9ee47e201f0df88f86cc22ca0639b30d"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 99900,
+          "byte_end": 100206,
+          "line_start": 2380,
+          "line_end": 2386,
+          "fragment_hash": "sha256:864e637e8ef3d14b18ffbd2d87a320694e84c5465a64c343a34fba56a99ce284"
+        },
+        "owner_tag": "06SM",
+        "parent_tag": "0DYK",
+        "requested_label": "formal-defos-lemma-exists-smooth",
+        "requested_tag": "06SM"
+      },
+      "hash": "sha256:a17a2c8aa8f0b6e69ba6dca34b30236216cf8b9c2eb48233fb1e35fe97f727a9"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:07W8:situation/0001:formal-defos-situation-change-of-fields",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07W8:situation/0001",
+          "parent_tag": "07W7",
+          "chapter": "formal-defos",
+          "node_kind": "situation",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a Noetherian ring and let <MATH_0002> be a finite\nring maps where <MATH_0003> and <MATH_0004> are fields. Thus <MATH_0005> is a finite\nextensions of fields. A typical object of <MATH_0006> will be\ndenoted <MATH_0007> and a typical object of <MATH_0008> will be\ndenoted <MATH_0009>. We define\n<MATH_0010>\nGiven a category cofibred in groupoids\n<MATH_0011> we obtain\nan associated category cofibred in groupoids\n<MATH_0012>\nby setting <MATH_0013>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{situation}",
+            "LOCKED_0001": "\\label{situation-change-of-fields}",
+            "MATH_0001": "$\\Lambda$",
+            "MATH_0002": "$\\Lambda \\to k \\to l$",
+            "MATH_0003": "$k$",
+            "MATH_0004": "$l$",
+            "MATH_0005": "$l/k$",
+            "MATH_0006": "$\\mathcal{C}_{\\Lambda, l}$",
+            "MATH_0007": "$B$",
+            "MATH_0008": "$\\mathcal{C}_{\\Lambda, k}$",
+            "MATH_0009": "$A$",
+            "MATH_0010": "\\begin{equation}\n\\label{equation-comparison}\n\\mathcal{C}_{\\Lambda, l} \\longrightarrow \\mathcal{C}_{\\Lambda, k},\n\\quad\nB \\longmapsto B \\times_l k\n\\end{equation}",
+            "MATH_0011": "$p : \\mathcal{F} \\to \\mathcal{C}_{\\Lambda, k}$",
+            "MATH_0012": "$$\np_{l/k} : \\mathcal{F}_{l/k} \\longrightarrow \\mathcal{C}_{\\Lambda, l}\n$$",
+            "MATH_0013": "$\\mathcal{F}_{l/k}(B) = \\mathcal{F}(B \\times_l k)$",
+            "STRUCT_0002": "\\end{situation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3ff21b747ef5548c73c6b36772eebf54fdb473b727334c73dd03954ea1ccd0ed",
+          "source_structure_hash": "sha256:1f090850e3171dea9974f58cb1e973dd9c9eabc08d527561b250a1b44689f80b",
+          "source_math_hash": "sha256:892a8ae8ecd54773a9c23c03a3f884a97e820dd05b8ffd67eeb509aa418cdf38"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 274675,
+          "byte_end": 275493,
+          "line_start": 7276,
+          "line_end": 7296,
+          "fragment_hash": "sha256:b53c5f8f0e4149c54c1b6fb52949d84654d036372fc9b5aaa07e95c09e4289a2"
+        },
+        "owner_tag": "07W8",
+        "parent_tag": "07W7",
+        "requested_label": "formal-defos-situation-change-of-fields",
+        "requested_tag": "07W8"
+      },
+      "hash": "sha256:964417168e44ded2165d8227d2192f2584a08fc77c6761b9c288442c05e59cc7"
+    },
+    {
+      "context_id": "locked-English-reference:more-algebra:inventory:more-algebra:07EC:lemma/0001:more-algebra-lemma-formally-smooth",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:more-algebra:07EC:lemma/0001",
+          "parent_tag": "07EA",
+          "chapter": "more-algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map.\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0002> is formally smooth in\nthe sense of Algebra, Definition <REF_0001>,\nthen <MATH_0003> is formally smooth for any linear topology on <MATH_0004> and\nany pre-adic topology on <MATH_0005> such that <MATH_0006> is continuous.\n<STRUCT_0004> Let <MATH_0007> and <MATH_0008>\nideals such that <MATH_0009> is continuous for the <MATH_0010>-adic\ntopology on <MATH_0011> and the <MATH_0012>-adic topology\non <MATH_0013>. Then the following are equivalent\n<STRUCT_0005>\n<STRUCT_0006> <MATH_0014> is formally smooth for the <MATH_0015>-adic topology on\n<MATH_0016> and the <MATH_0017>-adic topology on <MATH_0018>, and\n<STRUCT_0007> <MATH_0019> is formally smooth for the discrete topology\non <MATH_0020> and the <MATH_0021>-adic topology on <MATH_0022>.\n<STRUCT_0008>\n<STRUCT_0009>\n<STRUCT_0010>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-formally-smooth}",
+            "MATH_0001": "$\\varphi : R \\to S$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$R \\to S$",
+            "REF_0001": "\\ref{algebra-definition-formally-smooth}",
+            "MATH_0003": "$R \\to S$",
+            "MATH_0004": "$R$",
+            "MATH_0005": "$S$",
+            "MATH_0006": "$R \\to S$",
+            "STRUCT_0004": "\\item",
+            "MATH_0007": "$\\mathfrak n \\subset S$",
+            "MATH_0008": "$\\mathfrak m \\subset R$",
+            "MATH_0009": "$\\varphi$",
+            "MATH_0010": "$\\mathfrak m$",
+            "MATH_0011": "$R$",
+            "MATH_0012": "$\\mathfrak n$",
+            "MATH_0013": "$S$",
+            "STRUCT_0005": "\\begin{enumerate}",
+            "STRUCT_0006": "\\item",
+            "MATH_0014": "$\\varphi$",
+            "MATH_0015": "$\\mathfrak m$",
+            "MATH_0016": "$R$",
+            "MATH_0017": "$\\mathfrak n$",
+            "MATH_0018": "$S$",
+            "STRUCT_0007": "\\item",
+            "MATH_0019": "$\\varphi$",
+            "MATH_0020": "$R$",
+            "MATH_0021": "$\\mathfrak n$",
+            "MATH_0022": "$S$",
+            "STRUCT_0008": "\\end{enumerate}",
+            "STRUCT_0009": "\\end{enumerate}",
+            "STRUCT_0010": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d2916b08d8128ea6081ec6641a16bf59a61cf6c9615640cba649b2c2a963378f",
+          "source_structure_hash": "sha256:f75c6b463160e1e89c49e1903143bd0082bb882ba9416f8a79e6006d21293bf1",
+          "source_math_hash": "sha256:c68f8ebb8399c1a2a79bf4c3de942383477e09d57c4b94bcb80c8786410cf74c"
+        },
+        "location": {
+          "file": "more-algebra.tex",
+          "byte_start": 344363,
+          "byte_end": 345236,
+          "line_start": 9164,
+          "line_end": 9183,
+          "fragment_hash": "sha256:c6a86243446da7e64af32b3991c4a07bf78dac3307e87d86f4bf5bf3170dd157"
+        },
+        "owner_tag": "07EC",
+        "parent_tag": "07EA",
+        "requested_label": "more-algebra-lemma-formally-smooth",
+        "requested_tag": "07EC"
+      },
+      "hash": "sha256:f3652c991bebc972969b979d92be532cfd31e40bfcf3f52a6b4f55e598d52e12"
+    },
+    {
+      "context_id": "locked-English-reference:more-algebra:inventory:more-algebra:07ED:lemma/0001:more-algebra-lemma-formally-smooth-completion",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:more-algebra:07ED:lemma/0001",
+          "parent_tag": "07EA",
+          "chapter": "more-algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002> be rings endowed\nwith finitely generated ideals. Endow <MATH_0003> and <MATH_0004> with the\n<MATH_0005>-adic and <MATH_0006>-adic topologies.\nLet <MATH_0007> be a homomorphism of topological rings.\nThe following are equivalent\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0008> is formally smooth for the <MATH_0009>-adic topology,\n<STRUCT_0004> <MATH_0010> is formally smooth for the <MATH_0011>-adic\ntopology,\n<STRUCT_0005> <MATH_0012> is formally smooth for the\n<MATH_0013>-adic topology.\n<STRUCT_0006>\nHere <MATH_0014> and <MATH_0015> are the <MATH_0016>-adic and\n<MATH_0017>-adic completions of <MATH_0018> and <MATH_0019>.\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-formally-smooth-completion}",
+            "MATH_0001": "$(R, \\mathfrak m)$",
+            "MATH_0002": "$(S, \\mathfrak n)$",
+            "MATH_0003": "$R$",
+            "MATH_0004": "$S$",
+            "MATH_0005": "$\\mathfrak m$",
+            "MATH_0006": "$\\mathfrak n$",
+            "MATH_0007": "$R \\to S$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0008": "$R \\to S$",
+            "MATH_0009": "$\\mathfrak n$",
+            "STRUCT_0004": "\\item",
+            "MATH_0010": "$R \\to S^\\wedge$",
+            "MATH_0011": "$\\mathfrak n^\\wedge$",
+            "STRUCT_0005": "\\item",
+            "MATH_0012": "$R^\\wedge \\to S^\\wedge$",
+            "MATH_0013": "$\\mathfrak n^\\wedge$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "MATH_0014": "$R^\\wedge$",
+            "MATH_0015": "$S^\\wedge$",
+            "MATH_0016": "$\\mathfrak m$",
+            "MATH_0017": "$\\mathfrak n$",
+            "MATH_0018": "$R$",
+            "MATH_0019": "$S$",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:e387cecd77be7af8bbcbccf65fc149c3f8cfccfd49fbd5d86fa3ce2766b0549b",
+          "source_structure_hash": "sha256:ad3812c9b88fb3d3cd6f8b7db399de143791e46d20fb829c52afb6a75e85aef7",
+          "source_math_hash": "sha256:f06e0ceda586f2663cd470700e078b3028c15bb19fb23a0b39ae86c60b139cc7"
+        },
+        "location": {
+          "file": "more-algebra.tex",
+          "byte_start": 347049,
+          "byte_end": 347768,
+          "line_start": 9223,
+          "line_end": 9239,
+          "fragment_hash": "sha256:3fcda59ef73618a16190cdc4baaee9be71d4b6e9a44f6582965d9c763c71e6d4"
+        },
+        "owner_tag": "07ED",
+        "parent_tag": "07EA",
+        "requested_label": "more-algebra-lemma-formally-smooth-completion",
+        "requested_tag": "07ED"
+      },
+      "hash": "sha256:7eab6aa863719793dacfd595878dfa8823407871127c355b5c2529bf0ebe116a"
+    },
+    {
+      "context_id": "locked-English-reference:more-algebra:inventory:more-algebra:07NJ:lemma/0001:more-algebra-lemma-lift-continuous",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:more-algebra:07NJ:lemma/0001",
+          "parent_tag": "07EA",
+          "chapter": "more-algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ring map. Let <MATH_0002> be an ideal of <MATH_0003>.\nAssume that <MATH_0004> is formally smooth in the <MATH_0005>-adic\ntopology. Consider a solid commutative diagram\n<MATH_0006>\nof homomorphisms of topological rings where <MATH_0007> is adic\nand <MATH_0008> is the quotient (as topological ring) of <MATH_0009> by a closed ideal\n<MATH_0010> such that <MATH_0011> is contained in an ideal of definition\nof <MATH_0012> for some <MATH_0013>. Then there exists a dotted arrow in the category of\ntopological rings which makes the diagram commute.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-lift-continuous}",
+            "MATH_0001": "$R \\to S$",
+            "MATH_0002": "$\\mathfrak n$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$R \\to S$",
+            "MATH_0005": "$\\mathfrak n$",
+            "MATH_0006": "$$\n\\xymatrix{\nS \\ar[r]_\\psi \\ar@{-->}[rd] & A/J \\\\\nR \\ar[r] \\ar[u] & A \\ar[u]\n}\n$$",
+            "MATH_0007": "$A$",
+            "MATH_0008": "$A/J$",
+            "MATH_0009": "$A$",
+            "MATH_0010": "$J \\subset A$",
+            "MATH_0011": "$J^t$",
+            "MATH_0012": "$A$",
+            "MATH_0013": "$t \\geq 1$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:48cc30bc1036b960e49cdcfb514bda3ea5e4604e740e1bb56d39e88569766225",
+          "source_structure_hash": "sha256:bb029750774746d68606575dfcb656c47c8bdde72a2c6504d2f62627b1ccb829",
+          "source_math_hash": "sha256:5ece5411b06aec0e9c571c5e73c479ea48dc7432a3625074a143ee299cc54957"
+        },
+        "location": {
+          "file": "more-algebra.tex",
+          "byte_start": 348385,
+          "byte_end": 349033,
+          "line_start": 9256,
+          "line_end": 9272,
+          "fragment_hash": "sha256:5f47eabd7839f599bb2fee80070e2ddd54bc9ad58ec7a198b5aedfbee5becdbf"
+        },
+        "owner_tag": "07NJ",
+        "parent_tag": "07EA",
+        "requested_label": "more-algebra-lemma-lift-continuous",
+        "requested_tag": "07NJ"
+      },
+      "hash": "sha256:953ad3757af10d2577e4fd461e40788821e9a176700e746c6283743a4c9bf5bb"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p041-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

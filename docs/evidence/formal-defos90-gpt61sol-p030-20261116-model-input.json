@@ -1,0 +1,808 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p030-20261116.json",
+    "hash": "sha256:56ec83759d97403f7212feb91cdecb4544917e781590ea22100cfb0ab683893a"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:d40fe5b82932cf19dbd78ec917a3194914dac4097993e390fdebc3990e313a74"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06JN",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F}$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+        "MATH_0004": "$\\text{Inf}_{x_0}(\\mathcal{F})$",
+        "MATH_0005": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x_0)$",
+        "MATH_0006": "$k$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-infaut-vector-space}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:b74ee9737acbb70c4e3bc800b2df5d453a490a03cfb7079bab1c718473f4e870",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:97687cc3bfba41b520c95992d01c89e9536f459e25259700f90b599f5b5a35f6",
+      "source_text": "Let <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002> satisfying (RS). Let <MATH_0003>.\nThen <MATH_0004> is equal as a set to\n<MATH_0005>, and so has a natural <MATH_0006>-vector\nspace structure such that addition agrees with composition of automorphisms.\n",
+      "source_text_hash": "sha256:a37829b9c1f8e28b29b8d321a4e799d65d2d0cb3b942149c114b1c41205e601e",
+      "unit_id": "tag:06JX:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06JN",
+      "placeholders": {
+        "REF_0001": "\\ref{remark-infaut-lifting-equalities}",
+        "REF_0002": "\\ref{lemma-Aut-functor-tangent-space}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:dcd8e92dcea944fbc7212d2781b36df6c06de7ddbf05a4be7607ec0e0ceeb95e",
+      "source_text": "The equality of sets is as in the end of\nRemark <REF_0001>\nand the statement about the vector space structure follows from\nLemma <REF_0002>.\n",
+      "source_text_hash": "sha256:745edb0886ba4a8d775b8c1537ddb675c7e94afd3c6b6f24d78f30e93f2f2e30",
+      "unit_id": "tag:06JX:proof"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "parent_tag": "06JN",
+      "placeholders": {
+        "MATH_0001": "$\\varphi : \\mathcal{F} \\to \\mathcal{G}$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+        "MATH_0004": "$\\varphi$",
+        "MATH_0005": "$k$",
+        "MATH_0006": "$\\text{Inf}_{x_0}(\\mathcal{F}) \\to \\text{Inf}_{\\varphi(x_0)}(\\mathcal{G})$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-k-linear-infaut}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:299c301434551909c57bd2b392f03300cd5239e8866a6993819c555a99a290b2",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:8199c58e264a85327a0641c28fb03dbb3254d9d6093765a234a29e25139894af",
+      "source_text": "Let <MATH_0001> be a morphism of categories\ncofibred in groupoids over <MATH_0002> satisfying (RS).\nLet <MATH_0003>. Then <MATH_0004> induces a <MATH_0005>-linear\nmap <MATH_0006>.\n",
+      "source_text_hash": "sha256:8b8bdc9f5602b00055ca6f907c6b2e451ad22f63a782d5a448dfa54476a08434",
+      "unit_id": "tag:07W6:statement"
+    },
+    {
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "parent_tag": "06JN",
+      "placeholders": {
+        "MATH_0001": "$\\varphi$",
+        "MATH_0002": "$\\mathit{Aut}(x_0) \\to \\mathit{Aut}(\\varphi(x_0))$",
+        "REF_0001": "\\ref{lemma-k-linear-differential}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:c81501638d98511e841cced12ae5ebb590451ddcd771929337002e318920ba6b",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:b6fc0c09e558803550aea64237a635888c22997b4955580221d61a4bc00c851a",
+      "source_text": "It is clear that <MATH_0001> induces a morphism from\n<MATH_0002>\nwhich maps the identity to the identity. Hence this follows from\nthe result for tangent spaces, see\nLemma <REF_0001>.\n",
+      "source_text_hash": "sha256:86bbe25883506b27876df149cddf1e484d7893977a00e4154532525315ab8e6a",
+      "unit_id": "tag:07W6:proof"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:06JX:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:a37829b9c1f8e28b29b8d321a4e799d65d2d0cb3b942149c114b1c41205e601e",
+      "source_structure_hash": "sha256:97687cc3bfba41b520c95992d01c89e9536f459e25259700f90b599f5b5a35f6",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "category",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 43,
+          "projection_end": 52,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 135,
+          "projection_end": 138,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "vector space",
+          "projection_start": 188,
+          "projection_end": 200,
+          "concept": "vector-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 242,
+          "projection_end": 253,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "automorphisms",
+          "projection_start": 257,
+          "projection_end": 270,
+          "concept": "automorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06JX:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:745edb0886ba4a8d775b8c1537ddb675c7e94afd3c6b6f24d78f30e93f2f2e30",
+      "source_structure_hash": "sha256:dcd8e92dcea944fbc7212d2781b36df6c06de7ddbf05a4be7607ec0e0ceeb95e",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "sets",
+          "projection_start": 16,
+          "projection_end": 20,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "vector space",
+          "projection_start": 87,
+          "projection_end": 99,
+          "concept": "vector-space",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:07W6:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:8b8bdc9f5602b00055ca6f907c6b2e451ad22f63a782d5a448dfa54476a08434",
+      "source_structure_hash": "sha256:8199c58e264a85327a0641c28fb03dbb3254d9d6093765a234a29e25139894af",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "morphism",
+          "projection_start": 21,
+          "projection_end": 29,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 33,
+          "projection_end": 43,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 56,
+          "projection_end": 65,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 156,
+          "projection_end": 162,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 163,
+          "projection_end": 166,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:07W6:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:86bbe25883506b27876df149cddf1e484d7893977a00e4154532525315ab8e6a",
+      "source_structure_hash": "sha256:b6fc0c09e558803550aea64237a635888c22997b4955580221d61a4bc00c851a",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "morphism",
+          "projection_start": 39,
+          "projection_end": 47,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 71,
+          "projection_end": 75,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06JW:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JW:remark/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe point out some basic relationships between infinitesimal automorphism\ngroups, liftings, and tangent spaces to automorphism functors. Let\n<MATH_0001> be a category cofibered in groupoids over <MATH_0002>.\nLet <MATH_0003> be a morphism lying over a ring map <MATH_0004>.\nThen from the definitions we have an equality\n<MATH_0005>\nwhere the liftings are of <MATH_0006> as an object of\n<MATH_0007>.  If <MATH_0008> and <MATH_0009>\nis the pushforward to <MATH_0010>, then applying this to\n<MATH_0011> we get\n<MATH_0012>\nthe last equality following directly from the definitions.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-infaut-lifting-equalities}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$x' \\to x$",
+            "MATH_0004": "$A' \\to A$",
+            "MATH_0005": "$$\n\\text{Inf}(x'/x) = \\text{Lift}(\\text{id}_x, A')\n$$",
+            "MATH_0006": "$\\text{id}_x$",
+            "MATH_0007": "$\\mathit{Aut}(x')$",
+            "MATH_0008": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+            "MATH_0009": "$x'_0$",
+            "MATH_0010": "$\\mathcal{F}(k[\\epsilon])$",
+            "MATH_0011": "$x'_0 \\to x_0$",
+            "MATH_0012": "$$\n\\text{Inf}_{x_0}(\\mathcal{F}) =\n\\text{Lift}(\\text{id}_{x_0}, k[\\epsilon]) =\nT_{\\text{id}_{x_0}} \\mathit{Aut}(x_0),\n$$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bf0e9b50de6d096b26f1fa9a6c94b8dfd3a154b595967d0bd16e27ef7af44341",
+          "source_structure_hash": "sha256:b87414eb63a5e838953a9447b201f4fe1994191bc1b50d02b422c1cfdc7c8fff",
+          "source_math_hash": "sha256:36359fbe82c6019ec2fe2b5e6eed870dfe57836afc94043d77e4f94d323c4725"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 216262,
+          "byte_end": 217107,
+          "line_start": 5783,
+          "line_end": 5803,
+          "fragment_hash": "sha256:c5d75a3804305a7b0b386339e6e5b7e1ff334b4ed1846e240b582ef94554d313"
+        },
+        "owner_tag": "06JW",
+        "parent_tag": "06JN"
+      },
+      "hash": "sha256:0193c7b45e469cf827f98c0734ce64694f0f75b1612bc175ce350e7887db2752"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06JX:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JX:proof/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe equality of sets is as in the end of\nRemark <REF_0001>\nand the statement about the vector space structure follows from\nLemma <REF_0002>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{remark-infaut-lifting-equalities}",
+            "REF_0002": "\\ref{lemma-Aut-functor-tangent-space}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:03e99c609423b96693ec9c38ca5486d986108dd9a19e6805975778ffdcdeb2aa",
+          "source_structure_hash": "sha256:d6fcae2c0b2bfbc11b0a2c282c5823224f693e5a746b67deb49aa74ae2c3705b",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 217512,
+          "byte_end": 217733,
+          "line_start": 5814,
+          "line_end": 5819,
+          "fragment_hash": "sha256:29500a339fbf8562813ee877afc8343943bc57c276e6a2ff313e4bf949372cd3"
+        },
+        "owner_tag": "06JX",
+        "parent_tag": "06JN"
+      },
+      "hash": "sha256:aacf0e1af1f00e04e9afee49b4ec7f161253b05e15798dcbb29e30330d31b9f0"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06JX:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JX:lemma/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002> satisfying (RS). Let <MATH_0003>.\nThen <MATH_0004> is equal as a set to\n<MATH_0005>, and so has a natural <MATH_0006>-vector\nspace structure such that addition agrees with composition of automorphisms.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-infaut-vector-space}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+            "MATH_0004": "$\\text{Inf}_{x_0}(\\mathcal{F})$",
+            "MATH_0005": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x_0)$",
+            "MATH_0006": "$k$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:791de814f60d2e439e34421a601fe14e3eef6595f187614e5a5306498402e973",
+          "source_structure_hash": "sha256:0c611e161e5ca0f667e88e01e2ac3f198dd064a11fdb48079590b300d3bbabd9",
+          "source_math_hash": "sha256:b74ee9737acbb70c4e3bc800b2df5d453a490a03cfb7079bab1c718473f4e870"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 217109,
+          "byte_end": 217510,
+          "line_start": 5805,
+          "line_end": 5812,
+          "fragment_hash": "sha256:b86de7cbc986b392722631340f456887a478815cb63bdef571a3b3f4a47d94e5"
+        },
+        "owner_tag": "06JX",
+        "parent_tag": "06JN"
+      },
+      "hash": "sha256:0b7c2510b02bd334b2195084a7a20f3503391fec80436b4a83037c09ba68c0a6"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:07W6:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07W6:lemma/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of categories\ncofibred in groupoids over <MATH_0002> satisfying (RS).\nLet <MATH_0003>. Then <MATH_0004> induces a <MATH_0005>-linear\nmap <MATH_0006>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-k-linear-infaut}",
+            "MATH_0001": "$\\varphi : \\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+            "MATH_0004": "$\\varphi$",
+            "MATH_0005": "$k$",
+            "MATH_0006": "$\\text{Inf}_{x_0}(\\mathcal{F}) \\to \\text{Inf}_{\\varphi(x_0)}(\\mathcal{G})$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:82240a70d5df92733981b5e3a1c9851f2d7a6030d19612f60cc62bf8c369f319",
+          "source_structure_hash": "sha256:de93cd31283b8b5057ea411d85293e13113a25e0e1b130b9bb695fc6f602f828",
+          "source_math_hash": "sha256:299c301434551909c57bd2b392f03300cd5239e8866a6993819c555a99a290b2"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 217735,
+          "byte_end": 218079,
+          "line_start": 5821,
+          "line_end": 5827,
+          "fragment_hash": "sha256:34e248cabe4ac776dd57a59ca98b6ebde8fe86bfd2c877349e2355638b65883e"
+        },
+        "owner_tag": "07W6",
+        "parent_tag": "06JN"
+      },
+      "hash": "sha256:6f777c8acaff2ae2a68d476474e3e562299e813fbbb93d4168f87e3847e65a34"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:07W6:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:07W6:proof/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nIt is clear that <MATH_0001> induces a morphism from\n<MATH_0002>\nwhich maps the identity to the identity. Hence this follows from\nthe result for tangent spaces, see\nLemma <REF_0001>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\varphi$",
+            "MATH_0002": "$\\mathit{Aut}(x_0) \\to \\mathit{Aut}(\\varphi(x_0))$",
+            "REF_0001": "\\ref{lemma-k-linear-differential}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:5b5a85f400488eca5c669499307a5cfd87f63843b3b2c1d5d2363c0868b54606",
+          "source_structure_hash": "sha256:932dbd753dbe371b29e4fdebb9727f02ef9e81158cf8f51c6f9910f4e917641d",
+          "source_math_hash": "sha256:c81501638d98511e841cced12ae5ebb590451ddcd771929337002e318920ba6b"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 218081,
+          "byte_end": 218349,
+          "line_start": 5829,
+          "line_end": 5835,
+          "fragment_hash": "sha256:8b7f6c9b1fcc12889deb22f004dec9a183555e7e52b2f8f29f38b2115012b8ff"
+        },
+        "owner_tag": "07W6",
+        "parent_tag": "06JN"
+      },
+      "hash": "sha256:b4bf50321b1d5cccd580b81d2d09c6ee76d04d0630d5b2d22e7dcebe9182320b"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06JY:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JY:lemma/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002> satisfying (RS). Let <MATH_0003> be a\nmorphism lying over a surjective ring map <MATH_0004> with kernel <MATH_0005>\nannihilated by <MATH_0006>. Let <MATH_0007> be a pushforward of <MATH_0008> to\n<MATH_0009>. Then <MATH_0010> has a free and transitive action by\n<MATH_0011>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-lifted-automorphisms-torsor}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$x' \\to x$",
+            "MATH_0004": "$A' \\to A$",
+            "MATH_0005": "$I$",
+            "MATH_0006": "$\\mathfrak m_{A'}$",
+            "MATH_0007": "$x_0$",
+            "MATH_0008": "$x$",
+            "MATH_0009": "$\\mathcal{F}(k)$",
+            "MATH_0010": "$\\text{Inf}(x'/x)$",
+            "MATH_0011": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x') \\otimes_k I\n= \\text{Inf}_{x_0}(\\mathcal{F}) \\otimes_k I$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:5d33e01b28bfd136ce2572c238c3b122ed956463351ba4099175c4797967d9cf",
+          "source_structure_hash": "sha256:353e5071a64d521eb049b7f1173a7a24e53ddaf3f84ccd6e772a284d8936d411",
+          "source_math_hash": "sha256:f5b1ca8220423d49b5bf3ce0572e8d4793bc7c3b625e23a4595f90ea6c7fccef"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 218351,
+          "byte_end": 218852,
+          "line_start": 5837,
+          "line_end": 5846,
+          "fragment_hash": "sha256:6c1ac5b16a8da1147efe6d36b84a316c1fc8744e16df9014440527c6803250d7"
+        },
+        "owner_tag": "06JY",
+        "parent_tag": "06JN"
+      },
+      "hash": "sha256:7907f18683b428e119e15a1d22c309b9db689fcb678475c841fe1583b4ff890c"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06JV:lemma/0001:formal-defos-lemma-Aut-functor-tangent-space",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JV:lemma/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002> satisfying (RS). Let\n<MATH_0003>. Let <MATH_0004> be a pushforward of <MATH_0005> to\n<MATH_0006>.\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> has a natural <MATH_0008>-vector\nspace structure such that addition agrees with composition in\n<MATH_0009>. In particular, composition in\n<MATH_0010> is commutative.\n<STRUCT_0004> There is a canonical isomorphism\n<MATH_0011>\nof <MATH_0012>-vector spaces.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-Aut-functor-tangent-space}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$x \\in \\Ob(\\mathcal{F}(A))$",
+            "MATH_0004": "$x_0$",
+            "MATH_0005": "$x$",
+            "MATH_0006": "$\\mathcal{F}(k)$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0007": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x)$",
+            "MATH_0008": "$k$",
+            "MATH_0009": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x)$",
+            "MATH_0010": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x)$",
+            "STRUCT_0004": "\\item",
+            "MATH_0011": "$T_{\\text{id}_{x_0}} \\mathit{Aut}(x) \\to\nT_{\\text{id}_{x_0}} \\mathit{Aut}(x_0)$",
+            "MATH_0012": "$k$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:003c3a37aa81567346877fbe0b3ae3911407cb861dc4d70c2c814319f46491dc",
+          "source_structure_hash": "sha256:62657bcedb87c4e84e41f09284eac65d4112fe935f623f19cfc7967cd0a2e485",
+          "source_math_hash": "sha256:f4bcadc6eda9a2ab9703b871a2eb5c8045ae8e955180d4a3fbfcc85d21046137"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 213138,
+          "byte_end": 213819,
+          "line_start": 5711,
+          "line_end": 5727,
+          "fragment_hash": "sha256:d84bf756dc04c82862fd7260611b09e866bb1863e730effe90c230de913ad61e"
+        },
+        "owner_tag": "06JV",
+        "parent_tag": "06JN",
+        "requested_label": "formal-defos-lemma-Aut-functor-tangent-space",
+        "requested_tag": "06JV"
+      },
+      "hash": "sha256:00987481bdfdc292cd60d5995a939418ad6dff17a6c07eebe50dedebd09f8755"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IJ:lemma/0001:formal-defos-lemma-k-linear-differential",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IJ:lemma/0001",
+          "parent_tag": "06I1",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of predeformation\ncategories. Assume <MATH_0002> and <MATH_0003> both\nsatisfy (S2). Then <MATH_0004> is <MATH_0005>-linear.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-k-linear-differential}",
+            "MATH_0001": "$\\varphi : \\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0002": "$\\overline{\\mathcal{F}}$",
+            "MATH_0003": "$\\overline{\\mathcal{G}}$",
+            "MATH_0004": "$d \\varphi : T \\mathcal{F} \\to T \\mathcal{G}$",
+            "MATH_0005": "$k$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:6049d9dcf41ff52b0673aaffbfccd50852ac4c90031b205aaf7f367fd23f7242",
+          "source_structure_hash": "sha256:0555fbb8ac10175297fc4007c2f63eda888fe59cde914a9247d8e2d257323633",
+          "source_math_hash": "sha256:9511ce92ada773fa62c8eeded6ad35f2527023253563b17a114af520bcaf2cbe"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 137269,
+          "byte_end": 137564,
+          "line_start": 3498,
+          "line_end": 3503,
+          "fragment_hash": "sha256:3e63da137d02ae6ff338a9f3b1221788edb5aa9469953a0ecf72e5048a437bd8"
+        },
+        "owner_tag": "06IJ",
+        "parent_tag": "06I1",
+        "requested_label": "formal-defos-lemma-k-linear-differential",
+        "requested_tag": "06IJ"
+      },
+      "hash": "sha256:8182dc71ac68822fe8b2d643b1bdd7682f17d51c6573c62d51738b6a9077c070"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06JW:remark/0001:formal-defos-remark-infaut-lifting-equalities",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JW:remark/0001",
+          "parent_tag": "06JN",
+          "chapter": "formal-defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe point out some basic relationships between infinitesimal automorphism\ngroups, liftings, and tangent spaces to automorphism functors. Let\n<MATH_0001> be a category cofibered in groupoids over <MATH_0002>.\nLet <MATH_0003> be a morphism lying over a ring map <MATH_0004>.\nThen from the definitions we have an equality\n<MATH_0005>\nwhere the liftings are of <MATH_0006> as an object of\n<MATH_0007>.  If <MATH_0008> and <MATH_0009>\nis the pushforward to <MATH_0010>, then applying this to\n<MATH_0011> we get\n<MATH_0012>\nthe last equality following directly from the definitions.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-infaut-lifting-equalities}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$x' \\to x$",
+            "MATH_0004": "$A' \\to A$",
+            "MATH_0005": "$$\n\\text{Inf}(x'/x) = \\text{Lift}(\\text{id}_x, A')\n$$",
+            "MATH_0006": "$\\text{id}_x$",
+            "MATH_0007": "$\\mathit{Aut}(x')$",
+            "MATH_0008": "$x_0 \\in \\Ob(\\mathcal{F}(k))$",
+            "MATH_0009": "$x'_0$",
+            "MATH_0010": "$\\mathcal{F}(k[\\epsilon])$",
+            "MATH_0011": "$x'_0 \\to x_0$",
+            "MATH_0012": "$$\n\\text{Inf}_{x_0}(\\mathcal{F}) =\n\\text{Lift}(\\text{id}_{x_0}, k[\\epsilon]) =\nT_{\\text{id}_{x_0}} \\mathit{Aut}(x_0),\n$$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bf0e9b50de6d096b26f1fa9a6c94b8dfd3a154b595967d0bd16e27ef7af44341",
+          "source_structure_hash": "sha256:b87414eb63a5e838953a9447b201f4fe1994191bc1b50d02b422c1cfdc7c8fff",
+          "source_math_hash": "sha256:36359fbe82c6019ec2fe2b5e6eed870dfe57836afc94043d77e4f94d323c4725"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 216262,
+          "byte_end": 217107,
+          "line_start": 5783,
+          "line_end": 5803,
+          "fragment_hash": "sha256:c5d75a3804305a7b0b386339e6e5b7e1ff334b4ed1846e240b582ef94554d313"
+        },
+        "owner_tag": "06JW",
+        "parent_tag": "06JN",
+        "requested_label": "formal-defos-remark-infaut-lifting-equalities",
+        "requested_tag": "06JW"
+      },
+      "hash": "sha256:30432f1ee161278714566e51651c5eabdd4d557fa89fd29c9181107e1e105d29"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p030-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

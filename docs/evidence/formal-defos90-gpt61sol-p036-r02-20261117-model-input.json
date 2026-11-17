@@ -1,0 +1,2833 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/formal-defos90-gpt61sol-p036-r02-20261117.json",
+    "hash": "sha256:0ed23f606922e8e07e91484e9115dd9dac314c9e85ed29493ec66f1fcaf3ff0e"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e4cd-25ac-7c40-b79c-c86891503420",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/formal-defos90-20261116.json",
+    "hash": "sha256:2f8c590f3906680ea0595ff9c8b86c90ea1497ab45c0c7d0ceae2cbd31be05c9"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06L8:proof",
+      "parent_tag": "06L0",
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Recall that a prorepresentable functor is a deformation functor, see\nExample <REF_0001>. Thus\nif <MATH_0001> is equivalent to a smooth prorepresentable groupoid in\nfunctors, then conditions (1), (2), and (3) follow from\nLemma <REF_0002> (1), (2), and (3).\n\n<STRUCT_0001><STRUCT_0002>\nConversely, assume conditions (1), (2), and (3) hold. Condition (1)\nimplies that (S1) and (S2) are satisfied, see\nLemma <REF_0003>.\nBy\nLemma <REF_0004>\nthere exists a versal formal object <MATH_0002>. Setting\n<MATH_0003> the\nassociated map <MATH_0004> is smooth (this is\nthe definition of a versal formal object).\nLet <MATH_0005> be the groupoid in functors constructed in\nLemma <REF_0005>\nfrom the map <MATH_0006>. By\nLemma <REF_0006>\nwe see that <MATH_0007> is a smooth groupoid in functors and that\n<MATH_0008> is an equivalence. By\nLemma <REF_0007>\nwe see that <MATH_0009> is prorepresentable.\nHence <MATH_0010> is the desired presentation of <MATH_0011>.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "REF_0001": "\\ref{example-prorepresentable-deformation-functor}",
+        "MATH_0001": "$\\mathcal{F}$",
+        "REF_0002": "\\ref{lemma-deformation-groupoid-quotient}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "REF_0003": "\\ref{lemma-RS-implies-S1-S2}",
+        "REF_0004": "\\ref{lemma-versal-object-existence}",
+        "MATH_0002": "$\\xi$",
+        "MATH_0003": "$U = \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0004": "$\\underline{\\xi} : U \\to \\mathcal{F}$",
+        "MATH_0005": "$(U, R, s, t, c)$",
+        "REF_0005": "\\ref{lemma-presentation-construction}",
+        "MATH_0006": "$\\underline{\\xi}$",
+        "REF_0006": "\\ref{lemma-smooth-groupoid-in-functors-construction}",
+        "MATH_0007": "$(U, R, s, t, c)$",
+        "MATH_0008": "$[U/R] \\to \\mathcal{F}$",
+        "REF_0007": "\\ref{lemma-prorepresentable-groupoid-in-functors-construction}",
+        "MATH_0009": "$(U, R, s, t, c)$",
+        "MATH_0010": "$[U/R] \\to \\mathcal{F}$",
+        "MATH_0011": "$\\mathcal{F}$"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "source_text_hash": "sha256:7301833484407a67a183311698bb24b880a128d304064a2a4167f427443a0433",
+      "source_structure_hash": "sha256:3726cf053febc25e5a075af930aac7c503fb1876170e1a65c20ecdc4ce1dd0dc",
+      "source_math_hash": "sha256:8c1649765967bb8600a9f4f2a88f62ac224aa9d7f357531ec64fa495bc00291b"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06TD:title",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "section_title",
+      "risk_level": "R1",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Remarks regarding minimality",
+      "source_status": "CURRENT",
+      "placeholders": {},
+      "render": {
+        "prefix": "\\section{",
+        "suffix": "}\n\\label{section-minimality}"
+      },
+      "source_text_hash": "sha256:59fa54ae28d24047e2263aaaf6b4fd2ceb2aa8c84ae118c081af3d6486a47ecb",
+      "source_structure_hash": "sha256:b75cb29cb1f65ad4d3c2cd675800e38b1454abcb8ba5333edd8010a52b1ac16d",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06TD:prose-0001",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "risk_level": "R2",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "\n\n<STRUCT_0001>\nThe main theorem of this chapter is\nTheorem <REF_0001>\nabove. It describes completely those categories cofibred in groupoids\nover <MATH_0001> which have a presentation by a\nsmooth prorepresentable groupoid in functors. In this section we briefly\ndiscuss how the minimality discussed in\nSections <REF_0002> and\n<REF_0003>\ncan be used to obtain a ``minimal'' smooth prorepresentable presentation.\n\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{theorem-presentation-deformation-groupoid}",
+        "MATH_0001": "$\\mathcal{C}_\\Lambda$",
+        "REF_0002": "\\ref{section-minimal-versal}",
+        "REF_0003": "\\ref{section-miniversal-objects-existence}"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "source_text_hash": "sha256:2206f71c809f64291427f9c0988db4ba9684d24091b31db2ad6ef3f4f415cf37",
+      "source_structure_hash": "sha256:ec3dcefe330057fe28b171f4532ff35bd0f95449680aff9230fa2142c1c85950",
+      "source_math_hash": "sha256:fb6ad280346362a580dd3b1ba5464da5eea3146f40ecf0a8f3a682476d6fa006"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06KM:statement",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "definition",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a smooth prorepresentable groupoid in functors\non <MATH_0002>.\n<STRUCT_0001>\n<STRUCT_0002> We say <MATH_0003> is <TEXTITOPEN_0001>normalized<TEXTITCLOSE_0001> if the groupoid\n<MATH_0004> is totally disconnected,\ni.e., there are no morphisms between distinct objects.\n<STRUCT_0003> We say <MATH_0005> is <TEXTITOPEN_0002>minimal<TEXTITCLOSE_0002> if the <MATH_0006>\nis given by a minimal versal formal object of <MATH_0007>.\n<STRUCT_0004>\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0003": "$(U, R, s, t, c)$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0004": "$(U(k[\\epsilon]), R(k[\\epsilon]), s, t, c)$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$(U, R, s, t, c)$",
+        "TEXTITOPEN_0002": "{\\it ",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0006": "$U \\to [U/R]$",
+        "MATH_0007": "$[U/R]$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{definition}\n\\label{definition-minimal-groupoid-in-functors}\n",
+        "suffix": "\\end{definition}"
+      },
+      "source_text_hash": "sha256:fc2d43ce6c52d19e0b4cbe2b24990ab5c5832840cea948c5b302c975741e72e3",
+      "source_structure_hash": "sha256:422bed1d460b108363d889d0b8e63a03c6ca1e22ab7b63e06ddd253274dee49c",
+      "source_math_hash": "sha256:2d963953d90c3bf9040e2a2f7ea768b1db9785b109e03f91b8ca61ad13c82d1e"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06TD:prose-0002",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "risk_level": "R2",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "\n\n<STRUCT_0001>\nThe difference between the two notions is related to the difference between\nconditions (<REF_0001>) and (<REF_0002>)\nand disappears when <MATH_0001> is separable. Also a\nnormalized smooth prorepresentable groupoid in functors is minimal\nas the following lemma shows. Here is a precise statement.\n\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent",
+        "REF_0001": "\\ref{equation-bijective}",
+        "REF_0002": "\\ref{equation-bijective-orbits}",
+        "MATH_0001": "$k' \\subset k$"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "source_text_hash": "sha256:9e12a1b7f2547eb3920e956e23ad41155a7acece1d3010d34e514a42785507ff",
+      "source_structure_hash": "sha256:4aea7f985923851a3ce4eaa8070a4ace39009a286d586c390f0411decff3dbd7",
+      "source_math_hash": "sha256:d012609d04f3650f5a5489156f4762b92df28b31e6d2d64b6a21fe125d6164a0"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06KN:statement",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a smooth prorepresentable groupoid in\nfunctors on <MATH_0002>.\n<STRUCT_0001>\n<STRUCT_0002> <MATH_0003> is normalized if and only if the morphism\n<MATH_0004> induces an isomorphism on tangent spaces, and\n<STRUCT_0003> <MATH_0005> is minimal if and only if the kernel of\n<MATH_0006> is contained in the image of\n<MATH_0007>.\n<STRUCT_0004>\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0003": "$(U, R, s, t, c)$",
+        "MATH_0004": "$U \\to [U/R]$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$(U, R, s, t, c)$",
+        "MATH_0006": "$TU \\to T[U/R]$",
+        "MATH_0007": "$\\text{Der}_\\Lambda(k, k) \\to TU$",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-characterize-minimal-groupoid-in-functors}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "source_text_hash": "sha256:3f9b6975d54bee888240986feafdc1a9bab40b26de38bec09ab8bb4837b7aae5",
+      "source_structure_hash": "sha256:154ab98e815f17fc6b5e1e11437559eac409b37773400593e4f109cd42530380",
+      "source_math_hash": "sha256:ccbee746606de860aff75be07d1ad361169dbceaf077bd6d5b0d74d3c9cecf0a"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06KN:proof",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Part (1) follows immediately from the definitions.\nTo see part (2) set <MATH_0001>. Since <MATH_0002>\nhas a presentation it is a deformation category, see\nTheorem <REF_0001>.\nIn particular it satisfies (RS), (S1), and (S2), see\nLemma <REF_0002>.\nRecall that minimal versal formal objects are unique up to isomorphism, see\nLemma <REF_0003>.\nBy\nTheorem <REF_0004>\na minimal versal object induces a map\n<MATH_0003>\nsatisfying (<REF_0005>). Since\n<MATH_0004> over <MATH_0005>\nwe see that <MATH_0006> satisfies the property\nas stated in the lemma.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{F} = [U/R]$",
+        "MATH_0002": "$\\mathcal{F}$",
+        "REF_0001": "\\ref{theorem-presentation-deformation-groupoid}",
+        "REF_0002": "\\ref{lemma-RS-implies-S1-S2}",
+        "REF_0003": "\\ref{lemma-minimal-versal}",
+        "REF_0004": "\\ref{theorem-miniversal-object-existence}",
+        "MATH_0003": "$\\underline{\\xi} : \\underline{R}|_{\\mathcal{C}_\\Lambda} \\to \\mathcal{F}$",
+        "REF_0005": "\\ref{equation-bijective-orbits}",
+        "MATH_0004": "$U \\cong \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0005": "$\\mathcal{F}$",
+        "MATH_0006": "$TU \\to T\\mathcal{F} = T[U/R]$"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "source_text_hash": "sha256:76c7434a8b4d4237096ec7f24b3035a961cc35fe8eb336783adadd342a7c6853",
+      "source_structure_hash": "sha256:69ab66d8bb9de35167487cdda3cd58b65231a6d89aeed6f5f65f488ddf20453b",
+      "source_math_hash": "sha256:d76b0c99ec5064b7595ffcff99678c49323853dde6a63daec7ee9c462192b63a"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06TD:prose-0003",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "paragraph",
+      "risk_level": "R2",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "\n\n<STRUCT_0001>\nThe quotient of a minimal prorepresentable groupoid in functors on <MATH_0001> does not admit autoequivalences which are not automorphisms.  To\nprove this, we first note the following lemma.\n\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$\\mathcal\nC_\\Lambda$"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "source_text_hash": "sha256:5d1e4de00d1f7aa9cc2e05911520cfa45c920f74442692c508f3999fb452afda",
+      "source_structure_hash": "sha256:ccd8ff3823a96b5f05d73ac99d5abed7ab2eef66b8d0884a8b43250d7939e06c",
+      "source_math_hash": "sha256:3036a24565a93abf1c8c699c7b8492de873c6823e29841a4a645cbccf96ff9f3"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06KP:statement",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a\nprorepresentable functor. Let <MATH_0002> be a morphism such\nthat <MATH_0003> is an isomorphism.  Then <MATH_0004> is an\nisomorphism.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$U: \\mathcal{C}_\\Lambda \\to \\textit{Sets}$",
+        "MATH_0002": "$\\varphi : U \\to U$",
+        "MATH_0003": "$d\\varphi : TU \\to TU$",
+        "MATH_0004": "$\\varphi$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-surjective-morphism-prorepresentable-functor}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "source_text_hash": "sha256:d60e5bb71dcb46aaeaeb7c7019b1ca104d0cb0922416ea4317cc81dd3b7649d7",
+      "source_structure_hash": "sha256:ef869dfeb821b787629dec88d73b8252422ab8b66187ed0eea23f60834a334b2",
+      "source_math_hash": "sha256:8db9331666a87556414c23052289375bc77c444129a4d515b3cd72a6d1717265"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06KP:proof",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "proof",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "If <MATH_0001> for some\n<MATH_0002>,\nthen completing <MATH_0003> gives a morphism <MATH_0004>.\nIf <MATH_0005> is the corresponding morphism in\n<MATH_0006>, then <MATH_0007> induces an isomorphism\n<MATH_0008>, see\nExample <REF_0001>.\nIn particular <MATH_0009> is a surjection by\nLemma <REF_0002>.\nAs a surjective endomorphism of a Noetherian ring is an isomorphism (see\nAlgebra, Lemma <REF_0003>)\nwe conclude <MATH_0010>, hence <MATH_0011>, hence <MATH_0012>\nis an isomorphism.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$U \\cong \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+        "MATH_0002": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_\\Lambda)$",
+        "MATH_0003": "$\\varphi$",
+        "MATH_0004": "$\\underline{R} \\to \\underline{R}$",
+        "MATH_0005": "$f: R \\to R$",
+        "MATH_0006": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+        "MATH_0007": "$f$",
+        "MATH_0008": "$\\text{Der}_\\Lambda(R, k) \\to \\text{Der}_\\Lambda(R, k)$",
+        "REF_0001": "\\ref{example-tangent-space-map-prorepresentable-functor}",
+        "MATH_0009": "$f$",
+        "REF_0002": "\\ref{lemma-derivations-surjective}",
+        "REF_0003": "\\ref{algebra-lemma-surjective-endo-noetherian-ring-is-iso}",
+        "MATH_0010": "$f$",
+        "MATH_0011": "$\\underline{R}\n\\to \\underline{R}$",
+        "MATH_0012": "$\\varphi : U \\to U$"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "source_text_hash": "sha256:33627110e584c4c1bae782b816b56e3840cb0bbfeba47e212b086f371211fe77",
+      "source_structure_hash": "sha256:e138f28b412d99f5223d140089e412d2edb8c1733bfda9eeae03b3a94f8cc444",
+      "source_math_hash": "sha256:bb3381e1e5f71b264b4c81cd4b070b0b459c56a8776dc2f89d3a68ba3c3c9ec2"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:06KQ:statement",
+      "parent_tag": "06TD",
+      "chapter": "formal-defos",
+      "node_kind": "lemma",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a minimal smooth prorepresentable groupoid in\nfunctors on <MATH_0002>. If <MATH_0003> is an\nequivalence of categories cofibered in groupoids, then <MATH_0004> is an\nisomorphism.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$(U, R, s, t, c)$",
+        "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+        "MATH_0003": "$\\varphi : [U/R] \\to [U/R]$",
+        "MATH_0004": "$\\varphi$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-minimal-prorepresentable-groupoid-autoequivalence}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "source_text_hash": "sha256:b498c06743c7f23039b61df73f7080765be4b54fa1e98b7252d10137159e75c0",
+      "source_structure_hash": "sha256:8b3332fc37e047f50720914406f87cd6a9ad6f5c4c1ec9803940abb02cbdc44d",
+      "source_math_hash": "sha256:97631266e98cb13494757aa017e614cea02adc47d1c8b8d457399ba079d7f244"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:06L8:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:7301833484407a67a183311698bb24b880a128d304064a2a4167f427443a0433",
+      "source_structure_hash": "sha256:3726cf053febc25e5a075af930aac7c503fb1876170e1a65c20ecdc4ce1dd0dc",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "prorepresentable functor",
+          "projection_start": 14,
+          "projection_end": 38,
+          "concept": "wave979091-formal-defos-prorepresentable-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "deformation functor",
+          "projection_start": 44,
+          "projection_end": 63,
+          "concept": "source-phrase-deformation-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalent",
+          "projection_start": 112,
+          "projection_end": 122,
+          "concept": "equivalent",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 128,
+          "projection_end": 134,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 135,
+          "projection_end": 151,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 152,
+          "projection_end": 172,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "versal formal object",
+          "projection_start": 450,
+          "projection_end": 470,
+          "concept": "wave979091-formal-defos-versal-formal-object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 519,
+          "projection_end": 522,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 538,
+          "projection_end": 544,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "versal formal object",
+          "projection_start": 574,
+          "projection_end": 594,
+          "concept": "wave979091-formal-defos-versal-formal-object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 620,
+          "projection_end": 640,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 682,
+          "projection_end": 685,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 748,
+          "projection_end": 754,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 755,
+          "projection_end": 775,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence",
+          "projection_start": 803,
+          "projection_end": 814,
+          "concept": "equivalence",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 863,
+          "projection_end": 879,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presentation",
+          "projection_start": 914,
+          "projection_end": 926,
+          "concept": "source-phrase-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06TD:title",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:59fa54ae28d24047e2263aaaf6b4fd2ceb2aa8c84ae118c081af3d6486a47ecb",
+      "source_structure_hash": "sha256:b75cb29cb1f65ad4d3c2cd675800e38b1454abcb8ba5333edd8010a52b1ac16d",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": []
+    },
+    {
+      "unit_id": "tag:06TD:prose-0001",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:2206f71c809f64291427f9c0988db4ba9684d24091b31db2ad6ef3f4f415cf37",
+      "source_structure_hash": "sha256:ec3dcefe330057fe28b171f4532ff35bd0f95449680aff9230fa2142c1c85950",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "categories cofibred in groupoids",
+          "projection_start": 106,
+          "projection_end": 138,
+          "concept": "source-phrase-category-cofibered-in-groupoids",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presentation",
+          "projection_start": 169,
+          "projection_end": 181,
+          "concept": "source-phrase-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 187,
+          "projection_end": 193,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 194,
+          "projection_end": 210,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 211,
+          "projection_end": 231,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal",
+          "projection_start": 361,
+          "projection_end": 368,
+          "concept": "source-phrase-minimal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 371,
+          "projection_end": 377,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 378,
+          "projection_end": 394,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presentation",
+          "projection_start": 395,
+          "projection_end": 407,
+          "concept": "source-phrase-presentation",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KM:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:fc2d43ce6c52d19e0b4cbe2b24990ab5c5832840cea948c5b302c975741e72e3",
+      "source_structure_hash": "sha256:422bed1d460b108363d889d0b8e63a03c6ca1e22ab7b63e06ddd253274dee49c",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "smooth",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 28,
+          "projection_end": 44,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 45,
+          "projection_end": 65,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "normalized",
+          "projection_start": 132,
+          "projection_end": 142,
+          "concept": "source-phrase-normalized",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid",
+          "projection_start": 150,
+          "projection_end": 158,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 215,
+          "projection_end": 224,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "objects",
+          "projection_start": 242,
+          "projection_end": 249,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal",
+          "projection_start": 287,
+          "projection_end": 294,
+          "concept": "source-phrase-minimal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal versal formal object",
+          "projection_start": 328,
+          "projection_end": 356,
+          "concept": "wave979091-formal-defos-minimal-versal-formal-object",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06TD:prose-0002",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:9e12a1b7f2547eb3920e956e23ad41155a7acece1d3010d34e514a42785507ff",
+      "source_structure_hash": "sha256:4aea7f985923851a3ce4eaa8070a4ace39009a286d586c390f0411decff3dbd7",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "normalized",
+          "projection_start": 184,
+          "projection_end": 194,
+          "concept": "source-phrase-normalized",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 195,
+          "projection_end": 201,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 202,
+          "projection_end": 218,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 219,
+          "projection_end": 239,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal",
+          "projection_start": 243,
+          "projection_end": 250,
+          "concept": "source-phrase-minimal",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KN:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:3f9b6975d54bee888240986feafdc1a9bab40b26de38bec09ab8bb4837b7aae5",
+      "source_structure_hash": "sha256:154ab98e815f17fc6b5e1e11437559eac409b37773400593e4f109cd42530380",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "smooth",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 28,
+          "projection_end": 44,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 45,
+          "projection_end": 65,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "normalized",
+          "projection_start": 125,
+          "projection_end": 135,
+          "concept": "source-phrase-normalized",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 155,
+          "projection_end": 163,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 187,
+          "projection_end": 198,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "tangent spaces",
+          "projection_start": 202,
+          "projection_end": 216,
+          "concept": "source-phrase-tangent-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal",
+          "projection_start": 251,
+          "projection_end": 258,
+          "concept": "source-phrase-minimal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 278,
+          "projection_end": 284,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 320,
+          "projection_end": 325,
+          "concept": "image",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KN:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:76c7434a8b4d4237096ec7f24b3035a961cc35fe8eb336783adadd342a7c6853",
+      "source_structure_hash": "sha256:69ab66d8bb9de35167487cdda3cd58b65231a6d89aeed6f5f65f488ddf20453b",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "set",
+          "projection_start": 67,
+          "projection_end": 70,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presentation",
+          "projection_start": 108,
+          "projection_end": 120,
+          "concept": "source-phrase-presentation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "deformation category",
+          "projection_start": 129,
+          "projection_end": 149,
+          "concept": "source-phrase-deformation-category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal versal formal objects",
+          "projection_start": 258,
+          "projection_end": 287,
+          "concept": "wave979091-formal-defos-minimal-versal-formal-object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 305,
+          "projection_end": 316,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal versal object",
+          "projection_start": 364,
+          "projection_end": 385,
+          "concept": "wave979091-formal-defos-minimal-versal-object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 396,
+          "projection_end": 399,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06TD:prose-0003",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:5d1e4de00d1f7aa9cc2e05911520cfa45c920f74442692c508f3999fb452afda",
+      "source_structure_hash": "sha256:ccd8ff3823a96b5f05d73ac99d5abed7ab2eef66b8d0884a8b43250d7939e06c",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "quotient",
+          "projection_start": 18,
+          "projection_end": 26,
+          "concept": "quotient",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "minimal",
+          "projection_start": 32,
+          "projection_end": 39,
+          "concept": "source-phrase-minimal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 40,
+          "projection_end": 56,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 57,
+          "projection_end": 77,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "automorphisms",
+          "projection_start": 139,
+          "projection_end": 152,
+          "concept": "automorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KP:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:d60e5bb71dcb46aaeaeb7c7019b1ca104d0cb0922416ea4317cc81dd3b7649d7",
+      "source_structure_hash": "sha256:ef869dfeb821b787629dec88d73b8252422ab8b66187ed0eea23f60834a334b2",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "prorepresentable functor",
+          "projection_start": 21,
+          "projection_end": 45,
+          "concept": "wave979091-formal-defos-prorepresentable-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 68,
+          "projection_end": 76,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 105,
+          "projection_end": 116,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 141,
+          "projection_end": 152,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KP:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:33627110e584c4c1bae782b816b56e3840cb0bbfeba47e212b086f371211fe77",
+      "source_structure_hash": "sha256:e138f28b412d99f5223d140089e412d2edb8c1733bfda9eeae03b3a94f8cc444",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "morphism",
+          "projection_start": 73,
+          "projection_end": 81,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 131,
+          "projection_end": 139,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 184,
+          "projection_end": 195,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 264,
+          "projection_end": 274,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 301,
+          "projection_end": 311,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "endomorphism",
+          "projection_start": 312,
+          "projection_end": 324,
+          "concept": "endomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Noetherian ring",
+          "projection_start": 330,
+          "projection_end": 345,
+          "concept": "source-phrase-noetherian-ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 352,
+          "projection_end": 363,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Algebra",
+          "projection_start": 369,
+          "projection_end": 376,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 464,
+          "projection_end": 475,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:06KQ:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:b498c06743c7f23039b61df73f7080765be4b54fa1e98b7252d10137159e75c0",
+      "source_structure_hash": "sha256:8b3332fc37e047f50720914406f87cd6a9ad6f5c4c1ec9803940abb02cbdc44d",
+      "catalog_hash": "sha256:7b351208b1c772bce453ca444093ec8e9b0c64e97d163b24d34190e0600cd3a7",
+      "occurrences": [
+        {
+          "source_term": "minimal",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "source-phrase-minimal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 29,
+          "projection_end": 35,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "prorepresentable",
+          "projection_start": 36,
+          "projection_end": 52,
+          "concept": "source-phrase-prorepresentable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoid in functors",
+          "projection_start": 53,
+          "projection_end": 73,
+          "concept": "source-phrase-groupoid-in-functors",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 111,
+          "projection_end": 136,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cofibered in groupoids",
+          "projection_start": 137,
+          "projection_end": 159,
+          "concept": "wave979091-formal-defos-cofibered-in-groupoids",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 184,
+          "projection_end": 195,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06L8:theorem/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06L8:theorem/0001",
+          "parent_tag": "06L0",
+          "chapter": "formal-defos",
+          "node_kind": "theorem",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002>. Then <MATH_0003> admits a presentation by a\nsmooth prorepresentable groupoid in functors on <MATH_0004>\nif and only if the following conditions hold:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a deformation category.\n<STRUCT_0004> <MATH_0006> is finite.\n<STRUCT_0005> <MATH_0007> is finite.\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{theorem}",
+            "LOCKED_0001": "\\label{theorem-presentation-deformation-groupoid}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "MATH_0004": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0005": "\\item",
+            "MATH_0007": "$\\dim_k \\text{Inf}(\\mathcal{F})$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{theorem}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d1cf37a8307067040e4d10d7ec3a2364eba4069463c310ed80bdb3d52af95553",
+          "source_structure_hash": "sha256:0e77d79b809b1c625dccf57981edfbae3c51e41d67750df74f3f4f23e130f2e9",
+          "source_math_hash": "sha256:023077f58745a145ed52926ab006914be691ee0e7f3fcee79796718d21c25ac8"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 255690,
+          "byte_end": 256184,
+          "line_start": 6779,
+          "line_end": 6790,
+          "fragment_hash": "sha256:442ea05d41995ae98fd40da0edbd8ed6796ca0f997a79300d83834f7d2ad520c"
+        },
+        "owner_tag": "06L8",
+        "parent_tag": "06L0"
+      },
+      "hash": "sha256:a3d0a7160a09b347c4640d8b2e95089ea019c453506713c0c33d7da628ca1418"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06TD:section_title/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06TD:section_title/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Remarks regarding minimality<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-minimality}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:587b8ef5875349fa731142e6dda9824e1fecae330209252b2920f17993375ee7",
+          "source_structure_hash": "sha256:3a9a4e098e5596e02921e28474f6388a5f18a82365e48902e691ef0363b946ae",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 257493,
+          "byte_end": 257558,
+          "line_start": 6827,
+          "line_end": 6828,
+          "fragment_hash": "sha256:ac08d2c716ad542b0b9b147739ad4df958ced45457b7c9b93ede925fa3ec287a"
+        },
+        "owner_tag": "06TD",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:dc6f5746d2f7cdfff18b3ef2d1cd78dc3c6365b58c34a78b4901f801a105d04a"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06L8:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06L8:proof/0001",
+          "parent_tag": "06L0",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nRecall that a prorepresentable functor is a deformation functor, see\nExample <REF_0001>. Thus\nif <MATH_0001> is equivalent to a smooth prorepresentable groupoid in\nfunctors, then conditions (1), (2), and (3) follow from\nLemma <REF_0002> (1), (2), and (3).\n\n<STRUCT_0002><STRUCT_0003>\nConversely, assume conditions (1), (2), and (3) hold. Condition (1)\nimplies that (S1) and (S2) are satisfied, see\nLemma <REF_0003>.\nBy\nLemma <REF_0004>\nthere exists a versal formal object <MATH_0002>. Setting\n<MATH_0003> the\nassociated map <MATH_0004> is smooth (this is\nthe definition of a versal formal object).\nLet <MATH_0005> be the groupoid in functors constructed in\nLemma <REF_0005>\nfrom the map <MATH_0006>. By\nLemma <REF_0006>\nwe see that <MATH_0007> is a smooth groupoid in functors and that\n<MATH_0008> is an equivalence. By\nLemma <REF_0007>\nwe see that <MATH_0009> is prorepresentable.\nHence <MATH_0010> is the desired presentation of <MATH_0011>.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{example-prorepresentable-deformation-functor}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "REF_0002": "\\ref{lemma-deformation-groupoid-quotient}",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "REF_0003": "\\ref{lemma-RS-implies-S1-S2}",
+            "REF_0004": "\\ref{lemma-versal-object-existence}",
+            "MATH_0002": "$\\xi$",
+            "MATH_0003": "$U = \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0004": "$\\underline{\\xi} : U \\to \\mathcal{F}$",
+            "MATH_0005": "$(U, R, s, t, c)$",
+            "REF_0005": "\\ref{lemma-presentation-construction}",
+            "MATH_0006": "$\\underline{\\xi}$",
+            "REF_0006": "\\ref{lemma-smooth-groupoid-in-functors-construction}",
+            "MATH_0007": "$(U, R, s, t, c)$",
+            "MATH_0008": "$[U/R] \\to \\mathcal{F}$",
+            "REF_0007": "\\ref{lemma-prorepresentable-groupoid-in-functors-construction}",
+            "MATH_0009": "$(U, R, s, t, c)$",
+            "MATH_0010": "$[U/R] \\to \\mathcal{F}$",
+            "MATH_0011": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8c3fd203313c309e54b242d0ae3f848baf5d41a6779cb18d5fd30eaa35286ebb",
+          "source_structure_hash": "sha256:9ca9df5dd29d7a88065160d89e260134f93c3b2537e57134592d268ab5fe048b",
+          "source_math_hash": "sha256:8c1649765967bb8600a9f4f2a88f62ac224aa9d7f357531ec64fa495bc00291b"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 256186,
+          "byte_end": 257484,
+          "line_start": 6792,
+          "line_end": 6818,
+          "fragment_hash": "sha256:8a08cb326c441b5abf04746d8bf1e9066a42ac2a38c81eb1d15a811443360ec4"
+        },
+        "owner_tag": "06L8",
+        "parent_tag": "06L0"
+      },
+      "hash": "sha256:f0f35cff62c7b9b69ff0e5c20be65dad9bfadcab38dce29ac4774e3629a19240"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06TD:paragraph/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06TD:paragraph/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe main theorem of this chapter is\nTheorem <REF_0001>\nabove. It describes completely those categories cofibred in groupoids\nover <MATH_0001> which have a presentation by a\nsmooth prorepresentable groupoid in functors. In this section we briefly\ndiscuss how the minimality discussed in\nSections <REF_0002> and\n<REF_0003>\ncan be used to obtain a ``minimal'' smooth prorepresentable presentation.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "REF_0001": "\\ref{theorem-presentation-deformation-groupoid}",
+            "MATH_0001": "$\\mathcal{C}_\\Lambda$",
+            "REF_0002": "\\ref{section-minimal-versal}",
+            "REF_0003": "\\ref{section-miniversal-objects-existence}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2206f71c809f64291427f9c0988db4ba9684d24091b31db2ad6ef3f4f415cf37",
+          "source_structure_hash": "sha256:ec3dcefe330057fe28b171f4532ff35bd0f95449680aff9230fa2142c1c85950",
+          "source_math_hash": "sha256:fb6ad280346362a580dd3b1ba5464da5eea3146f40ecf0a8f3a682476d6fa006"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 257560,
+          "byte_end": 258061,
+          "line_start": 6830,
+          "line_end": 6839,
+          "fragment_hash": "sha256:92f36c91580ad6b1d0453f1dd6173dad20f00924b25b24899efed6fae92c791e"
+        },
+        "owner_tag": "06TD",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:2f1ef540c79c76385bd81148a0ac1e3f2e48ea1521e25c42b7ad9a4e9327b5d5"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KM:definition/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KM:definition/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a smooth prorepresentable groupoid in functors\non <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> We say <MATH_0003> is <TEXTITOPEN_0001>normalized<TEXTITCLOSE_0001> if the groupoid\n<MATH_0004> is totally disconnected,\ni.e., there are no morphisms between distinct objects.\n<STRUCT_0004> We say <MATH_0005> is <TEXTITOPEN_0002>minimal<TEXTITCLOSE_0002> if the <MATH_0006>\nis given by a minimal versal formal object of <MATH_0007>.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-minimal-groupoid-in-functors}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$(U, R, s, t, c)$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0004": "$(U(k[\\epsilon]), R(k[\\epsilon]), s, t, c)$",
+            "STRUCT_0004": "\\item",
+            "MATH_0005": "$(U, R, s, t, c)$",
+            "TEXTITOPEN_0002": "{\\it ",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0006": "$U \\to [U/R]$",
+            "MATH_0007": "$[U/R]$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:627841bd979cadf72fb042cc7f52df1a241260ef98d55553c6bb65e3f8f82628",
+          "source_structure_hash": "sha256:22a0d7e32728482838101740d686f6cbf282ff1ae057aa70e5750b8c088a7ce1",
+          "source_math_hash": "sha256:2d963953d90c3bf9040e2a2f7ea768b1db9785b109e03f91b8ca61ad13c82d1e"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 258063,
+          "byte_end": 258593,
+          "line_start": 6841,
+          "line_end": 6852,
+          "fragment_hash": "sha256:0e674513bed95f8ac47a871e10624808202a15ff5f63e4ed027a314eef3adc25"
+        },
+        "owner_tag": "06KM",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:cfd653699869ee8cb5f1ea05531fc7e8a1452259c9b529b56f03bfd68574c689"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06TD:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06TD:paragraph/0002",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe difference between the two notions is related to the difference between\nconditions (<REF_0001>) and (<REF_0002>)\nand disappears when <MATH_0001> is separable. Also a\nnormalized smooth prorepresentable groupoid in functors is minimal\nas the following lemma shows. Here is a precise statement.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "REF_0001": "\\ref{equation-bijective}",
+            "REF_0002": "\\ref{equation-bijective-orbits}",
+            "MATH_0001": "$k' \\subset k$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:9e12a1b7f2547eb3920e956e23ad41155a7acece1d3010d34e514a42785507ff",
+          "source_structure_hash": "sha256:4aea7f985923851a3ce4eaa8070a4ace39009a286d586c390f0411decff3dbd7",
+          "source_math_hash": "sha256:d012609d04f3650f5a5489156f4762b92df28b31e6d2d64b6a21fe125d6164a0"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 258595,
+          "byte_end": 258938,
+          "line_start": 6854,
+          "line_end": 6859,
+          "fragment_hash": "sha256:368486e6569a3fd79c480696740df91833ea4b5c71165c706230bd4487d3e1a7"
+        },
+        "owner_tag": "06TD",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:2fde87971ea9ffba4ab041ada3cc4b81ae5652941eec7ceebfc96b228a80f6b0"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KN:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KN:lemma/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a smooth prorepresentable groupoid in\nfunctors on <MATH_0002>.\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is normalized if and only if the morphism\n<MATH_0004> induces an isomorphism on tangent spaces, and\n<STRUCT_0004> <MATH_0005> is minimal if and only if the kernel of\n<MATH_0006> is contained in the image of\n<MATH_0007>.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-characterize-minimal-groupoid-in-functors}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$(U, R, s, t, c)$",
+            "MATH_0004": "$U \\to [U/R]$",
+            "STRUCT_0004": "\\item",
+            "MATH_0005": "$(U, R, s, t, c)$",
+            "MATH_0006": "$TU \\to T[U/R]$",
+            "MATH_0007": "$\\text{Der}_\\Lambda(k, k) \\to TU$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:42da2b4fe226aef30afb8de948d3747ed1150f979efac1d525ac3fd013993a46",
+          "source_structure_hash": "sha256:0084388dfbba7e166164c92bfdaed89518da14b159cba3585dfba4eba47cb7d2",
+          "source_math_hash": "sha256:ccbee746606de860aff75be07d1ad361169dbceaf077bd6d5b0d74d3c9cecf0a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 258940,
+          "byte_end": 259423,
+          "line_start": 6861,
+          "line_end": 6872,
+          "fragment_hash": "sha256:27b429ead3e32177bd12c90633a0ba9d62a9510345f421111c541a00b9e6bbd1"
+        },
+        "owner_tag": "06KN",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:7561e6aee523baee503137019dea94e6d86103115e8c1a37cb2e48bb15d110b7"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KN:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KN:proof/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nPart (1) follows immediately from the definitions.\nTo see part (2) set <MATH_0001>. Since <MATH_0002>\nhas a presentation it is a deformation category, see\nTheorem <REF_0001>.\nIn particular it satisfies (RS), (S1), and (S2), see\nLemma <REF_0002>.\nRecall that minimal versal formal objects are unique up to isomorphism, see\nLemma <REF_0003>.\nBy\nTheorem <REF_0004>\na minimal versal object induces a map\n<MATH_0003>\nsatisfying (<REF_0005>). Since\n<MATH_0004> over <MATH_0005>\nwe see that <MATH_0006> satisfies the property\nas stated in the lemma.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\mathcal{F} = [U/R]$",
+            "MATH_0002": "$\\mathcal{F}$",
+            "REF_0001": "\\ref{theorem-presentation-deformation-groupoid}",
+            "REF_0002": "\\ref{lemma-RS-implies-S1-S2}",
+            "REF_0003": "\\ref{lemma-minimal-versal}",
+            "REF_0004": "\\ref{theorem-miniversal-object-existence}",
+            "MATH_0003": "$\\underline{\\xi} : \\underline{R}|_{\\mathcal{C}_\\Lambda} \\to \\mathcal{F}$",
+            "REF_0005": "\\ref{equation-bijective-orbits}",
+            "MATH_0004": "$U \\cong \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0005": "$\\mathcal{F}$",
+            "MATH_0006": "$TU \\to T\\mathcal{F} = T[U/R]$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:252faceeb084a7ded4627533fdb0e9e623bdca5d311ce86b953c8e5fb30a407d",
+          "source_structure_hash": "sha256:304a260729af19d0340fc44eba798acd710929377fd2dd9383ac9dc4d5a13743",
+          "source_math_hash": "sha256:d76b0c99ec5064b7595ffcff99678c49323853dde6a63daec7ee9c462192b63a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 259425,
+          "byte_end": 260245,
+          "line_start": 6874,
+          "line_end": 6891,
+          "fragment_hash": "sha256:68eda9a71a0466cdaed7c5c3341f99493069985b6021e886a3e3c20d572eda64"
+        },
+        "owner_tag": "06KN",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:cfbc1de6412ccd43160a159449c7bf57a04a6fcc8e390f3cfff607ec8b61514b"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06TD:paragraph/0003",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06TD:paragraph/0003",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe quotient of a minimal prorepresentable groupoid in functors on <MATH_0001> does not admit autoequivalences which are not automorphisms.  To\nprove this, we first note the following lemma.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$\\mathcal\nC_\\Lambda$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:5d1e4de00d1f7aa9cc2e05911520cfa45c920f74442692c508f3999fb452afda",
+          "source_structure_hash": "sha256:ccd8ff3823a96b5f05d73ac99d5abed7ab2eef66b8d0884a8b43250d7939e06c",
+          "source_math_hash": "sha256:3036a24565a93abf1c8c699c7b8492de873c6823e29841a4a645cbccf96ff9f3"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 260247,
+          "byte_end": 260456,
+          "line_start": 6893,
+          "line_end": 6896,
+          "fragment_hash": "sha256:549a5d03a59b2e69e2888d5fa74b3ea40ef415eaa1f0ff61f44f2cf30f8e22a9"
+        },
+        "owner_tag": "06TD",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:9067a4df8bfc4effeeab2ab716501919a27b2c2746b54bc7ec92c87c9345b894"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KP:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KP:lemma/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a\nprorepresentable functor. Let <MATH_0002> be a morphism such\nthat <MATH_0003> is an isomorphism.  Then <MATH_0004> is an\nisomorphism.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-surjective-morphism-prorepresentable-functor}",
+            "MATH_0001": "$U: \\mathcal{C}_\\Lambda \\to \\textit{Sets}$",
+            "MATH_0002": "$\\varphi : U \\to U$",
+            "MATH_0003": "$d\\varphi : TU \\to TU$",
+            "MATH_0004": "$\\varphi$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:37ec73293b6908967966c86ee8bb02b323484e86b530e997befd81165ae385c3",
+          "source_structure_hash": "sha256:356750afaee427f930905f17c99ffb1af0d85436db4d32fb4a05fdabab848779",
+          "source_math_hash": "sha256:8db9331666a87556414c23052289375bc77c444129a4d515b3cd72a6d1717265"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 260458,
+          "byte_end": 260745,
+          "line_start": 6898,
+          "line_end": 6904,
+          "fragment_hash": "sha256:9c24ebaaac7934a73474b18b518b9406c20e5811dc5e04100feb76006a3d5adf"
+        },
+        "owner_tag": "06KP",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:ee95af051f5802ffcd58625f52d0df4457fc17773237756d41459110339c476a"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KP:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KP:proof/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nIf <MATH_0001> for some\n<MATH_0002>,\nthen completing <MATH_0003> gives a morphism <MATH_0004>.\nIf <MATH_0005> is the corresponding morphism in\n<MATH_0006>, then <MATH_0007> induces an isomorphism\n<MATH_0008>, see\nExample <REF_0001>.\nIn particular <MATH_0009> is a surjection by\nLemma <REF_0002>.\nAs a surjective endomorphism of a Noetherian ring is an isomorphism (see\nAlgebra, Lemma <REF_0003>)\nwe conclude <MATH_0010>, hence <MATH_0011>, hence <MATH_0012>\nis an isomorphism.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$U \\cong \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0002": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_\\Lambda)$",
+            "MATH_0003": "$\\varphi$",
+            "MATH_0004": "$\\underline{R} \\to \\underline{R}$",
+            "MATH_0005": "$f: R \\to R$",
+            "MATH_0006": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0007": "$f$",
+            "MATH_0008": "$\\text{Der}_\\Lambda(R, k) \\to \\text{Der}_\\Lambda(R, k)$",
+            "REF_0001": "\\ref{example-tangent-space-map-prorepresentable-functor}",
+            "MATH_0009": "$f$",
+            "REF_0002": "\\ref{lemma-derivations-surjective}",
+            "REF_0003": "\\ref{algebra-lemma-surjective-endo-noetherian-ring-is-iso}",
+            "MATH_0010": "$f$",
+            "MATH_0011": "$\\underline{R}\n\\to \\underline{R}$",
+            "MATH_0012": "$\\varphi : U \\to U$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:409712c49827fc50bc19bb0bc25d55165e050a101001495a42568783daecd49e",
+          "source_structure_hash": "sha256:887d61757cb381cfe4154846951df07bb8979fdc68a3d8ab42f3271815fae8f0",
+          "source_math_hash": "sha256:bb3381e1e5f71b264b4c81cd4b070b0b459c56a8776dc2f89d3a68ba3c3c9ec2"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 260747,
+          "byte_end": 261524,
+          "line_start": 6906,
+          "line_end": 6921,
+          "fragment_hash": "sha256:199af312548aa5fa199c6451a5f5b7866f8ecb76052e00c6ac250e5fe65f2d76"
+        },
+        "owner_tag": "06KP",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:c38ae46f2935cbefd272ec6b2939ea9065d47bdadb47d4dea30fb46dfa538d5b"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KQ:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KQ:lemma/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a minimal smooth prorepresentable groupoid in\nfunctors on <MATH_0002>. If <MATH_0003> is an\nequivalence of categories cofibered in groupoids, then <MATH_0004> is an\nisomorphism.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-minimal-prorepresentable-groupoid-autoequivalence}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$\\varphi : [U/R] \\to [U/R]$",
+            "MATH_0004": "$\\varphi$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bbb17da293676061ff4f45ccecbd9df45bb929ca81b0e235112d8a09a963ca63",
+          "source_structure_hash": "sha256:fcea34c635e2d26d5c6da2767e4298e6ac3f11eefb3a5db380f29ac1e06202ec",
+          "source_math_hash": "sha256:97631266e98cb13494757aa017e614cea02adc47d1c8b8d457399ba079d7f244"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 261526,
+          "byte_end": 261842,
+          "line_start": 6923,
+          "line_end": 6929,
+          "fragment_hash": "sha256:6bc2c9ca7f7c715051dfe6497e579eecce07a5a2c0fe27b606f4e906914fa56e"
+        },
+        "owner_tag": "06KQ",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:a9d8a01b726f57e47b6ec4875f604b36a0a48a147b5b75cf3865eab0c71b2a1c"
+    },
+    {
+      "context_id": "locked-English-neighbor:formal-defos:inventory:formal-defos:06KQ:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KQ:proof/0001",
+          "parent_tag": "06TD",
+          "chapter": "formal-defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nA morphism <MATH_0001> is the same thing as a\nmorphism <MATH_0002> of\ngroupoids in functors over <MATH_0003> as defined in\nDefinition <REF_0001>.\nDenote <MATH_0004> and <MATH_0005> the corresponding morphisms.\nBecause the diagram\n<MATH_0006>\nis commutative, since <MATH_0007> is bijective, and since we have\nthe characterization of minimality in\nLemma <REF_0002>\nwe conclude that <MATH_0008> is injective (hence bijective by dimension reasons).\nThus <MATH_0009> is an isomorphism by\nLemma <REF_0003>.\nWe can use a similar argument, using the exact sequence\n<MATH_0010>\nof\nLemma <REF_0004>\nto prove that <MATH_0011> is an isomorphism. But is also a consequence\nof the fact that <MATH_0012> and that <MATH_0013> and <MATH_0014>\nare isomorphisms.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\varphi : [U/R] \\to [U/R]$",
+            "MATH_0002": "$\\varphi : (U, R, s, t, c) \\to (U, R, s, t, c)$",
+            "MATH_0003": "$\\mathcal{C}_\\Lambda$",
+            "REF_0001": "\\ref{definition-groupoid-in-functors}",
+            "MATH_0004": "$\\phi : U \\to U$",
+            "MATH_0005": "$\\psi : R \\to R$",
+            "MATH_0006": "$$\n\\xymatrix{\n& \\text{Der}_\\Lambda(k, k) \\ar[dr]_\\gamma \\ar[dl]^\\gamma \\\\\nTU \\ar[rr]_{d\\phi} \\ar[d] & & TU \\ar[d]  \\\\\nT[U/R] \\ar[rr]^{d\\varphi} & & T[U/R]\n}\n$$",
+            "MATH_0007": "$d\\varphi$",
+            "REF_0002": "\\ref{lemma-characterize-minimal-groupoid-in-functors}",
+            "MATH_0008": "$d\\phi$",
+            "MATH_0009": "$\\phi : U \\to U$",
+            "REF_0003": "\\ref{lemma-surjective-morphism-prorepresentable-functor}",
+            "MATH_0010": "$$\n0 \\to \\text{Inf}([U/R]) \\to TR \\to TU \\oplus TU\n$$",
+            "REF_0004": "\\ref{lemma-deformation-functor-diagonal}",
+            "MATH_0011": "$\\psi : R \\to R$",
+            "MATH_0012": "$R = U \\times_{[U/R]} U$",
+            "MATH_0013": "$\\varphi$",
+            "MATH_0014": "$\\phi$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:b4556aa56babfd848986856935e18d965042337b71d52bf87f684044673d3d83",
+          "source_structure_hash": "sha256:e9747927c1fada666d68a4e66befc840a73e2923f0934efd73144e825fefc0e5",
+          "source_math_hash": "sha256:307f9641fecfa1cba55279a6781363c1366e39434ee83e4ebf479a9ae3db49a8"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 261844,
+          "byte_end": 263032,
+          "line_start": 6931,
+          "line_end": 6960,
+          "fragment_hash": "sha256:419155e5766a2b6b776677d16cb3459b7f48808271be3b89d50158bbfdb75b2b"
+        },
+        "owner_tag": "06KQ",
+        "parent_tag": "06TD"
+      },
+      "hash": "sha256:0c1d118294a4576e10d4a0e8b13b59fd9b83d942d406daea1e99f3813faa0c60"
+    },
+    {
+      "context_id": "locked-English-reference:algebra:inventory:algebra:06RN:lemma/0001:algebra-lemma-surjective-endo-noetherian-ring-is-iso",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:algebra:06RN:lemma/0001",
+          "parent_tag": "00FM",
+          "chapter": "algebra",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAny surjective endomorphism of a Noetherian ring is an isomorphism.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-surjective-endo-noetherian-ring-is-iso}",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:11efd1c8d41e3580f5cd94446f1f007afce1979d82666e8f1408c1713a7ff6c0",
+          "source_structure_hash": "sha256:07274d04941b93df83492b25b7f4f1313d904cd7cd3a8105fbd704cf724fdbca",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "algebra.tex",
+          "byte_start": 223642,
+          "byte_end": 223788,
+          "line_start": 6218,
+          "line_end": 6221,
+          "fragment_hash": "sha256:9728d2ac730edd1506f8cef2a8ee0a59cbf2b93b22e90f97673e7e2f57dc5d84"
+        },
+        "owner_tag": "06RN",
+        "parent_tag": "00FM",
+        "requested_label": "algebra-lemma-surjective-endo-noetherian-ring-is-iso",
+        "requested_tag": "06RN"
+      },
+      "hash": "sha256:97f9c120afda566ebe76e67ae0f78944fdc8586abe4dbbb4417fe15d1323a75d"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IL:equation/0001:formal-defos-equation-bijective",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:formal-defos:06IL:equation/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "equation",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<MATHSEG_0001> is bijective<MATHSEG_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "MATHSEG_0001": "\\begin{equation}\n\\label{equation-bijective}\nd\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F} \n\\text{",
+            "MATHSEG_0002": "}\n\\end{equation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "environment",
+              "source": "\\begin{equation}\n\\label{equation-bijective}\nd\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F} \n\\text{ is bijective}\n\\end{equation}",
+              "source_hash": "sha256:c2f6af7287476b7c813986f6161cb416cae3124e4b0d9663eca094268d6eec44",
+              "source_byte_span": {
+                "start": 0,
+                "end": 141
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " is bijective",
+                  "command": "text",
+                  "policy_entry": "deformations-natural-16",
+                  "slot_byte_span": {
+                    "start": 112,
+                    "end": 125
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-source-frames",
+                    "usage_source": {
+                      "before": "} \n",
+                      "after": "\n\\end{equation}",
+                      "environments": [
+                        "equation"
+                      ]
+                    },
+                    "source_label": "formal-defos-section-miniversal-objects-existence",
+                    "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "formal-defos.tex",
+                      "owner_tag": "06IL",
+                      "owner_label": "formal-defos-section-miniversal-objects-existence",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 168214,
+                            "end": 168355
+                          },
+                          "container_hash": "sha256:c2f6af7287476b7c813986f6161cb416cae3124e4b0d9663eca094268d6eec44",
+                          "command_byte_span": {
+                            "start": 168320,
+                            "end": 168340
+                          },
+                          "command_hash": "sha256:98994379d4375d52a8c547842e85b7d693d0a21fa31cd359841ac3e11373d666"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:581f0b0ba4a41e0d10706c372a4df663664ece197730a2fe2f6bac035d268431",
+          "source_text_hash": "sha256:1d52782063766ee95a32f009cb575211d47c699d1fffaaa8501c18f2ba045d6e",
+          "source_structure_hash": "sha256:6864540b5be9dc47f55904d2b610e4401856982ac7571ede26fc54012e921469",
+          "source_math_hash": "sha256:3a018148d39d0f9237fe9429c4c7f264387ee2254b2bb97f42d6431183b2b89d"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 168214,
+          "byte_end": 168355,
+          "line_start": 4399,
+          "line_end": 4403,
+          "fragment_hash": "sha256:c2f6af7287476b7c813986f6161cb416cae3124e4b0d9663eca094268d6eec44"
+        },
+        "owner_tag": "06IL",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-equation-bijective",
+        "requested_tag": "06IM"
+      },
+      "hash": "sha256:fa18b5e97a4be0767d2e70132eea1e162d674d14d95798ca55b06774b53bc9d0"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IL:equation/0002:formal-defos-equation-bijective-orbits",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:formal-defos:06IL:equation/0002",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "equation",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<MATHSEG_0001> is bijective on <MATHSEG_0002>-orbits.<MATHSEG_0003>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "MATHSEG_0001": "\\begin{equation}\n\\label{equation-bijective-orbits}\nd\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F} \n\\text{",
+            "MATHSEG_0002": "}\\text{Der}_\\Lambda(k, k)\\text{",
+            "MATHSEG_0003": "}\n\\end{equation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "environment",
+              "source": "\\begin{equation}\n\\label{equation-bijective-orbits}\nd\\underline{\\xi} : \\text{Der}_\\Lambda(R, k) \\to T\\mathcal{F} \n\\text{ is bijective on }\\text{Der}_\\Lambda(k, k)\\text{-orbits.}\n\\end{equation}",
+              "source_hash": "sha256:01f7ac665ce9ae222003b3c5adc47664718eb4b0bc84281f10c0cf6915f431a3",
+              "source_byte_span": {
+                "start": 0,
+                "end": 191
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0002"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " is bijective on ",
+                  "command": "text",
+                  "policy_entry": "deformations-natural-17",
+                  "slot_byte_span": {
+                    "start": 119,
+                    "end": 136
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-source-frames",
+                    "usage_source": {
+                      "before": "} \n",
+                      "after": "\\text{Der}",
+                      "environments": [
+                        "equation"
+                      ]
+                    },
+                    "source_label": "formal-defos-section-miniversal-objects-existence",
+                    "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "formal-defos.tex",
+                      "owner_tag": "06IL",
+                      "owner_label": "formal-defos-section-miniversal-objects-existence",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 168374,
+                            "end": 168565
+                          },
+                          "container_hash": "sha256:01f7ac665ce9ae222003b3c5adc47664718eb4b0bc84281f10c0cf6915f431a3",
+                          "command_byte_span": {
+                            "start": 168487,
+                            "end": 168511
+                          },
+                          "command_hash": "sha256:89123340c460d2b53c8dc6bd5deb53883b822cd89836a4b5b0faaba6535bcd67"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0002",
+                  "source": "-orbits.",
+                  "command": "text",
+                  "policy_entry": "deformations-natural-18",
+                  "slot_byte_span": {
+                    "start": 167,
+                    "end": 175
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0002",
+                    "MATHSEG_0003"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-source-frames",
+                    "usage_source": {
+                      "before": ")",
+                      "after": "\n\\end{equation}",
+                      "environments": [
+                        "equation"
+                      ]
+                    },
+                    "source_label": "formal-defos-section-miniversal-objects-existence",
+                    "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "formal-defos.tex",
+                      "owner_tag": "06IL",
+                      "owner_label": "formal-defos-section-miniversal-objects-existence",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 168374,
+                            "end": 168565
+                          },
+                          "container_hash": "sha256:01f7ac665ce9ae222003b3c5adc47664718eb4b0bc84281f10c0cf6915f431a3",
+                          "command_byte_span": {
+                            "start": 168535,
+                            "end": 168550
+                          },
+                          "command_hash": "sha256:5aa0acfce9278b6ebd57a70fdb6c5abff8f60c08238d99753d54dafe0cb8f92c"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:662f716a258d6d2cc7389167315a13a164d5bf7eb91ce5a4e567213736904547",
+          "source_text_hash": "sha256:2e49041a82928d48348f977fd0bbf8cdb94edf61e13d3e64591928f1371edaa7",
+          "source_structure_hash": "sha256:e7b75d3ad5edc7a1189a7e5477c8a106cbe14a9344d643002377fb1b4c884e10",
+          "source_math_hash": "sha256:c865632c3382fe455854569eaecd7be65cb9bfbb94a4ee7c0b705284406e1df9"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 168374,
+          "byte_end": 168565,
+          "line_start": 4405,
+          "line_end": 4409,
+          "fragment_hash": "sha256:01f7ac665ce9ae222003b3c5adc47664718eb4b0bc84281f10c0cf6915f431a3"
+        },
+        "owner_tag": "06IL",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-equation-bijective-orbits",
+        "requested_tag": "06T6"
+      },
+      "hash": "sha256:5e98cfcb2c3e22fe76c453a2da2c71d448caf9ba3cd1fd9e7936cda1f5fd66c3"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06JB:example/0001:formal-defos-example-prorepresentable-deformation-functor",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06JB:example/0001",
+          "parent_tag": "06J1",
+          "chapter": "formal-defos",
+          "node_kind": "example",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA prorepresentable functor <MATH_0001> is a deformation functor. Namely, suppose\n<MATH_0002> and\n<MATH_0003>.\nThere is a unique morphism <MATH_0004>, so <MATH_0005> is a one element set.\nSince\n<MATH_0006>\nthe same is true for maps in <MATH_0007> and\nwe see that <MATH_0008> has (RS).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{example}",
+            "LOCKED_0001": "\\label{example-prorepresentable-deformation-functor}",
+            "MATH_0001": "$F$",
+            "MATH_0002": "$R \\in \\Ob(\\widehat{\\mathcal{C}}_\\Lambda)$",
+            "MATH_0003": "$F(A) = \\Mor_{\\widehat{\\mathcal{C}}_\\Lambda}(R, A)$",
+            "MATH_0004": "$R \\to k$",
+            "MATH_0005": "$F(k)$",
+            "MATH_0006": "$$\n\\Hom_\\Lambda(R, A_1 \\times_A A_2) =\n\\Hom_\\Lambda(R, A_1) \\times_{\\Hom_\\Lambda(R, A)}\n\\Hom_\\Lambda(R, A_2)\n$$",
+            "MATH_0007": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0008": "$F$",
+            "STRUCT_0002": "\\end{example}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:6fbd3c8ddf79d94ea06c97c15b0a8c2aeb417b22470e840f1f27bb320e64d3e8",
+          "source_structure_hash": "sha256:2944a8f48c36ed9fecad56f11698b712cc5d976818056071d4811999b739260c",
+          "source_math_hash": "sha256:a3f0f474c9ca48c7aef0d9ec1139dd1d692cc70659b64b67baf3712177193c2f"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 192779,
+          "byte_end": 193313,
+          "line_start": 5110,
+          "line_end": 5124,
+          "fragment_hash": "sha256:0b4b99d47dee1adcf9c1a7dfd5c394923899ee193034eb56c2f69ae6aaf73b11"
+        },
+        "owner_tag": "06JB",
+        "parent_tag": "06J1",
+        "requested_label": "formal-defos-example-prorepresentable-deformation-functor",
+        "requested_tag": "06JB"
+      },
+      "hash": "sha256:7c92e2ac3f84556a25b9feca3821f5fcbc1fb30ce67587754e4c291ec015e385"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06ST:example/0001:formal-defos-example-tangent-space-map-prorepresentable-functor",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06ST:example/0001",
+          "parent_tag": "06I2",
+          "chapter": "formal-defos",
+          "node_kind": "example",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nSuppose that <MATH_0001> is a ring map in <MATH_0002>.\nSet <MATH_0003> and\n<MATH_0004>. The ring map\n<MATH_0005> induces a transformation of functors <MATH_0006>. By\nLemma <REF_0001>\nwe get a <MATH_0007>-linear map <MATH_0008>. This is the map\n<MATH_0009>\nas follows from the canonical identifications\n<MATH_0010> and\n<MATH_0011> of\nExample <REF_0002>\nand the rule for computing the map on tangent spaces.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{example}",
+            "LOCKED_0001": "\\label{example-tangent-space-map-prorepresentable-functor}",
+            "MATH_0001": "$f : R \\to S$",
+            "MATH_0002": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0003": "$F = \\underline{R}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0004": "$G = \\underline{S}|_{\\mathcal{C}_\\Lambda}$",
+            "MATH_0005": "$f$",
+            "MATH_0006": "$G \\to F$",
+            "REF_0001": "\\ref{lemma-morphism-tangent-spaces}",
+            "MATH_0007": "$k$",
+            "MATH_0008": "$TG \\to TF$",
+            "MATH_0009": "$$\nTG = \\text{Der}_\\Lambda(S, k) \\longrightarrow \\text{Der}_\\Lambda(R, k) = TF\n$$",
+            "MATH_0010": "$F(k[V]) = \\text{Der}_\\Lambda(R, V)$",
+            "MATH_0011": "$G(k[V]) = \\text{Der}_\\Lambda(S, V)$",
+            "REF_0002": "\\ref{example-tangent-space-prorepresentable-functor}",
+            "STRUCT_0002": "\\end{example}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:cfffdd447b3aef7c37c2a98450c3d88654d5cdb5b88c44a063c0ecba68cd550c",
+          "source_structure_hash": "sha256:e399a4e5e358a8a8f2a35358a3484b6d9949ab24cb44f51b7eef440d79d00c56",
+          "source_math_hash": "sha256:0759aab2e559de6cdabbb21c932a84c423513af8aaba02c2ec432517d0c63727"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 133430,
+          "byte_end": 134177,
+          "line_start": 3388,
+          "line_end": 3404,
+          "fragment_hash": "sha256:3bef2c9bc1c615b4bc5aa14d13d14a7cfa39b7080830e5522c777e4266aefaa6"
+        },
+        "owner_tag": "06ST",
+        "parent_tag": "06I2",
+        "requested_label": "formal-defos-example-tangent-space-map-prorepresentable-functor",
+        "requested_tag": "06ST"
+      },
+      "hash": "sha256:6f0d7010c6ad7af57963f889c79353b960305ca50b321ca8ac948280c9286a21"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06J7:lemma/0001:formal-defos-lemma-RS-implies-S1-S2",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06J7:lemma/0001",
+          "parent_tag": "06J1",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002>. The condition (RS) for <MATH_0003>\nimplies both (S1) and (S2) for <MATH_0004>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-RS-implies-S1-S2}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:ec93f6029ad361522090d600058e47c00743c8c49cfe8ed7fb7e18a0cca1fa17",
+          "source_structure_hash": "sha256:49ed5a2b64701b9db14abf9cd807580402cff235a78160ddca02bea3b0f62e0c",
+          "source_math_hash": "sha256:df4655e1a150ba41896fcd755d7f59177ea4ac36cacca1efc5160009adbfceee"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 187006,
+          "byte_end": 187228,
+          "line_start": 4946,
+          "line_end": 4951,
+          "fragment_hash": "sha256:953d6fa2e200ef4d3204e1ae8a61841540751e86860a8725d26585a66680a2da"
+        },
+        "owner_tag": "06J7",
+        "parent_tag": "06J1",
+        "requested_label": "formal-defos-lemma-RS-implies-S1-S2",
+        "requested_tag": "06J7"
+      },
+      "hash": "sha256:6a3d8fbfa0a2f63de2761c6028ad822db749410db1641c57f3d2ee7e39ebe6de"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06KU:lemma/0001:formal-defos-lemma-deformation-groupoid-quotient",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KU:lemma/0001",
+          "parent_tag": "06KS",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a smooth groupoid in functors on <MATH_0002>.\nAssume <MATH_0003> and <MATH_0004> are deformation functors. Then:\n<STRUCT_0002>\n<STRUCT_0003> The quotient <MATH_0005> is a deformation category.\n<STRUCT_0004> The tangent space of <MATH_0006> is\n<MATH_0007>\n<STRUCT_0005> The space of infinitesimal automorphisms of <MATH_0008> is\n<MATH_0009>\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-deformation-groupoid-quotient}",
+            "MATH_0001": "$(U, R, s, t, c)$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$U$",
+            "MATH_0004": "$R$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0005": "$[U/R]$",
+            "STRUCT_0004": "\\item",
+            "MATH_0006": "$[U/R]$",
+            "MATH_0007": "$$\nT[U/R] = \\Coker(ds-dt: TR \\to TU).\n$$",
+            "STRUCT_0005": "\\item",
+            "MATH_0008": "$[U/R]$",
+            "MATH_0009": "$$\n\\text{Inf}([U/R]) =\n\\Ker(ds \\oplus dt : TR \\to TU \\oplus TU).\n$$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:82880ed8a9c9c50d1ca99d0e4848774364db362f24adb4e6e73d958894770832",
+          "source_structure_hash": "sha256:f9c63c3cfb04b648391834a3df05145aeaec1fe6e9dd4610008f46c2effa012d",
+          "source_math_hash": "sha256:d58d88131411aba2b799ca5608ec65a71c0653b14edb39427c054749e4e74fae"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 248541,
+          "byte_end": 249038,
+          "line_start": 6574,
+          "line_end": 6590,
+          "fragment_hash": "sha256:43cdaee432c7597b5aee7d4bb2ceb9eb4b7ee7e44232a3c67c2966802f6dae56"
+        },
+        "owner_tag": "06KU",
+        "parent_tag": "06KS",
+        "requested_label": "formal-defos-lemma-deformation-groupoid-quotient",
+        "requested_tag": "06KU"
+      },
+      "hash": "sha256:5f58b2a13472ed54bc9192f018f709bcfc5a34b12caa2b2b9593aacd20cf799a"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06SD:lemma/0001:formal-defos-lemma-derivations-surjective",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06SD:lemma/0001",
+          "parent_tag": "06GV",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of <MATH_0002>.\nIf <MATH_0003> is injective,\nthen <MATH_0004> is surjective.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-derivations-surjective}",
+            "MATH_0001": "$f : R \\to S$",
+            "MATH_0002": "$\\widehat{\\mathcal{C}}_\\Lambda$",
+            "MATH_0003": "$\\text{Der}_\\Lambda(S, k) \\to \\text{Der}_\\Lambda(R, k)$",
+            "MATH_0004": "$f$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8af5738f7f66062d8f2423e7ccf17e6f8c9ceda546457fd39d820834ba8b22f8",
+          "source_structure_hash": "sha256:0e312dd442be57478209e10fa8e30da12a62a78e0fd440082f2b9e966ddbee8b",
+          "source_math_hash": "sha256:84e4c81bbce901750a3042e2dc06b6e8d60fafb604f6a2e2c52db717901e596d"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 42616,
+          "byte_end": 42843,
+          "line_start": 1002,
+          "line_end": 1007,
+          "fragment_hash": "sha256:c8d742bd854b21a5d4f3b6722bd70ee19f6e4ac98819687e6780e4833d2e1b3c"
+        },
+        "owner_tag": "06SD",
+        "parent_tag": "06GV",
+        "requested_label": "formal-defos-lemma-derivations-surjective",
+        "requested_tag": "06SD"
+      },
+      "hash": "sha256:f6899cb98d8fbe2226364523b8bf810b6dd7680110c4fa091e73df44a2a767ed"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06T5:lemma/0001:formal-defos-lemma-minimal-versal",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06T5:lemma/0001",
+          "parent_tag": "06T0",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a predeformation category which\nhas a versal formal object. Then\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> has a minimal versal formal object,\n<STRUCT_0004> minimal versal objects are unique up to isomorphism, and\n<STRUCT_0005> any versal object is the pushforward of a minimal versal\nobject along a power series ring extension.\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-minimal-versal}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "STRUCT_0005": "\\item",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:30bdf69f6ea684536c349828d2235905d2b8bc865fe2d8084104ffa44ffe8d5c",
+          "source_structure_hash": "sha256:6df1f18781c1756517ac960ab74ee5740d9fc6038d504d80a447f921d54ed602",
+          "source_math_hash": "sha256:2dcb778ede4329b6e71133d05e099b677ddfe9365950cb12abe1674abb2ad6ed"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 166091,
+          "byte_end": 166491,
+          "line_start": 4340,
+          "line_end": 4350,
+          "fragment_hash": "sha256:0132f613de18e29685e2f1d43c1e19de46c53dce6b7627ee1784e6e47fe26c54"
+        },
+        "owner_tag": "06T5",
+        "parent_tag": "06T0",
+        "requested_label": "formal-defos-lemma-minimal-versal",
+        "requested_tag": "06T5"
+      },
+      "hash": "sha256:bdf06f3305db63abb3532e4c60f5fedbf59e990d6115cb24c851502841e6bada"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06KY:lemma/0001:formal-defos-lemma-presentation-construction",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06KY:lemma/0001",
+          "parent_tag": "06KW",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be category cofibered in groupoids over a category\n<MATH_0002>. Let <MATH_0003> be a functor.\nLet <MATH_0004> be a morphism of categories cofibered in groupoids\nover <MATH_0005>. Define <MATH_0006> as follows:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0007> is the functor\n<MATH_0008>.\n<STRUCT_0004> <MATH_0009> are the first and second projections,\nrespectively.\n<STRUCT_0005> <MATH_0010> is the morphism given by projection\nonto the first and last factors of\n<MATH_0011>\nunder the canonical isomorphism\n<MATH_0012>.\n<STRUCT_0006>\nThen <MATH_0013> is a groupoid in functors on <MATH_0014>.\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-presentation-construction}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}$",
+            "MATH_0003": "$U : \\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0004": "$f : U \\to \\mathcal{F}$",
+            "MATH_0005": "$\\mathcal{C}$",
+            "MATH_0006": "$R, s, t, c$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0007": "$R : \\mathcal{C} \\to \\textit{Sets}$",
+            "MATH_0008": "$U \\times_{f, \\mathcal{F}, f} U$",
+            "STRUCT_0004": "\\item",
+            "MATH_0009": "$t, s : R \\to U$",
+            "STRUCT_0005": "\\item",
+            "MATH_0010": "$c : R \\times_{s, U, t} R \\to R$",
+            "MATH_0011": "$U \\times_{f, \\mathcal{F}, f} U \\times_{f, \\mathcal{F}, f} U$",
+            "MATH_0012": "$R \\times_{s, U, t} R \\to\nU \\times_{f, \\mathcal{F}, f} U \\times_{f, \\mathcal{F}, f} U$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "MATH_0013": "$(U, R, s, t, c)$",
+            "MATH_0014": "$\\mathcal{C}$",
+            "STRUCT_0007": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:53e51637cb1779e7b85313fc802e141178e0858d01177956ad11bd61a9c22ce7",
+          "source_structure_hash": "sha256:fd8e9d26e631b072379533f53300332ad49d888edfefa21c9ef58179ae686f2a",
+          "source_math_hash": "sha256:d05ad197cde031a7dbb5d916aeea4c425c45c5f14e2a89f1668b526a23031b38"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 250048,
+          "byte_end": 250941,
+          "line_start": 6626,
+          "line_end": 6645,
+          "fragment_hash": "sha256:9b0ed37bc2c05cd7b56bc2f82009f8d04ab99d52d1278817f00d92ae49d0421d"
+        },
+        "owner_tag": "06KY",
+        "parent_tag": "06KW",
+        "requested_label": "formal-defos-lemma-presentation-construction",
+        "requested_tag": "06KY"
+      },
+      "hash": "sha256:e4d69d75120039ce9457edea89a43f685bea0de8a25b55bd0102729f2c753a5a"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06L7:lemma/0001:formal-defos-lemma-prorepresentable-groupoid-in-functors-construction",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06L7:lemma/0001",
+          "parent_tag": "06L0",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a deformation category.\nLet <MATH_0002> be a prorepresentable functor.\nLet <MATH_0003> be a morphism of categories cofibered in groupoids.\nLet <MATH_0004> be the groupoid in functors on <MATH_0005>\nconstructed from <MATH_0006> in\nLemma <REF_0001>. If\n<MATH_0007>, then\n<MATH_0008> is prorepresentable.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-prorepresentable-groupoid-in-functors-construction}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$U : \\mathcal{C}_\\Lambda \\to \\textit{Sets}$",
+            "MATH_0003": "$f : U \\to \\mathcal{F}$",
+            "MATH_0004": "$(U, R, s, t, c)$",
+            "MATH_0005": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0006": "$f : U \\to \\mathcal{F}$",
+            "REF_0001": "\\ref{lemma-presentation-construction}",
+            "MATH_0007": "$\\dim_k \\text{Inf}(\\mathcal{F}) < \\infty$",
+            "MATH_0008": "$(U, R, s, t, c)$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:501e913b4ac37b17d84edf077157fee683f749924092ff259fdf09b96237f7b8",
+          "source_structure_hash": "sha256:c7d9b17ebff59284114d942b4ddc0ad36f88f3941f5376e94f41c9c20297171d",
+          "source_math_hash": "sha256:9fe16a9b81c278875d57e59221516aec4789752a079b47b945fc42b7b7ac90be"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 254106,
+          "byte_end": 254654,
+          "line_start": 6744,
+          "line_end": 6754,
+          "fragment_hash": "sha256:b103d53bd49d4ba3eb16c5746846543d8019e10be932c32d431032186268aff7"
+        },
+        "owner_tag": "06L7",
+        "parent_tag": "06L0",
+        "requested_label": "formal-defos-lemma-prorepresentable-groupoid-in-functors-construction",
+        "requested_tag": "06L7"
+      },
+      "hash": "sha256:59fbee1237d6926fb263835e02022b8d8e2e648a00f7849022e5fa5b99f02e14"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06L1:lemma/0001:formal-defos-lemma-smooth-groupoid-in-functors-construction",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06L1:lemma/0001",
+          "parent_tag": "06L0",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002>. Let <MATH_0003>\nbe a functor. Let <MATH_0004> be a smooth morphism of\ncategories cofibered in groupoids. Then:\n<STRUCT_0002>\n<STRUCT_0003> If <MATH_0005> is the groupoid in functors on\n<MATH_0006> constructed from <MATH_0007> in\nLemma <REF_0001>, then <MATH_0008>\nis smooth.\n<STRUCT_0004> If <MATH_0009> is essentially surjective,\nthen the morphism <MATH_0010> of\nLemma <REF_0002>\nis an equivalence.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-smooth-groupoid-in-functors-construction}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$U : \\mathcal{C}_\\Lambda \\to \\textit{Sets}$",
+            "MATH_0004": "$f : U \\to \\mathcal{F}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0005": "$(U, R, s, t, c)$",
+            "MATH_0006": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0007": "$f : U \\to \\mathcal{F}$",
+            "REF_0001": "\\ref{lemma-presentation-construction}",
+            "MATH_0008": "$(U, R, s, t, c)$",
+            "STRUCT_0004": "\\item",
+            "MATH_0009": "$f : U(k) \\to \\mathcal{F}(k)$",
+            "MATH_0010": "$[f] : [U/R] \\to \\mathcal{F}$",
+            "REF_0002": "\\ref{lemma-presentation-morphism}",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:ed7babcb019984b8fc05ad0199225fc5965fa4a782fb62d126de29ebfeedace5",
+          "source_structure_hash": "sha256:07d6a3d5950d8338d54f82a2b53df3a2da93acd12da08efee7bae4c19367dedc",
+          "source_math_hash": "sha256:9c1bac96719bd88222126945b0c78f00597d47ac7cf517a183a1090a8aa8874e"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 252072,
+          "byte_end": 252803,
+          "line_start": 6685,
+          "line_end": 6701,
+          "fragment_hash": "sha256:6535c57b638bf467837e1e88e5e7bb5c9e793956028cdda5f5c2a2ee570585a5"
+        },
+        "owner_tag": "06L1",
+        "parent_tag": "06L0",
+        "requested_label": "formal-defos-lemma-smooth-groupoid-in-functors-construction",
+        "requested_tag": "06L1"
+      },
+      "hash": "sha256:ab09f87f109ea93bd1b0be936ecbb763bdda0091bdbd78404138a6ad7db92f3c"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IW:lemma/0001:formal-defos-lemma-versal-object-existence",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IW:lemma/0001",
+          "parent_tag": "06SX",
+          "chapter": "formal-defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibred in groupoids over\n<MATH_0002>. Assume the following conditions hold:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0003> is a predeformation category.\n<STRUCT_0004> <MATH_0004> satisfies (S1).\n<STRUCT_0005> <MATH_0005> satisfies (S2).\n<STRUCT_0006> <MATH_0006> is finite.\n<STRUCT_0007>\nThen <MATH_0007> has a versal formal object.\n<STRUCT_0008>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-versal-object-existence}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0005": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0006": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0007": "\\end{enumerate}",
+            "MATH_0007": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:44d42869be4272aebf7ca805392f2fa2a6a555ca64dab86b3839b22c9bb47e7a",
+          "source_structure_hash": "sha256:8c7a56f652d10448650f3a44ed828a23ce50550cd57e918d5a5390e338236be1",
+          "source_math_hash": "sha256:1f0b6b9ea8b0e5b948ecf8935fc58eb5e41c89e3a023fe6cce454ef2710aec95"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 149345,
+          "byte_end": 149770,
+          "line_start": 3866,
+          "line_end": 3877,
+          "fragment_hash": "sha256:15899ae6f58ce7cb9db5798b7a17f41a9c406a481e8fff2639cdb353acee6244"
+        },
+        "owner_tag": "06IW",
+        "parent_tag": "06SX",
+        "requested_label": "formal-defos-lemma-versal-object-existence",
+        "requested_tag": "06IW"
+      },
+      "hash": "sha256:fe72fda4242d84a357bf4d3756bdaac402777036f2a4d362b56f99876e60d589"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06T0:section_title/0001:formal-defos-section-minimal-versal",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06T0:section_title/0001",
+          "parent_tag": "06T0",
+          "chapter": "formal-defos",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Minimal versal formal objects<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-minimal-versal}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:6c0a12c81d95978f7822770b927842b221c922de68633403f0fc9620c265ebf6",
+          "source_structure_hash": "sha256:d96a4f8375f41cd9b3e6a2cfc95bec738eb6224d4b61dfc8fd197e1612ad57b7",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 155843,
+          "byte_end": 155913,
+          "line_start": 4063,
+          "line_end": 4064,
+          "fragment_hash": "sha256:4a7f30f31c29c6e50cd43349113ed79ceb546117fdcc1f38f06ec191bda13701"
+        },
+        "owner_tag": "06T0",
+        "parent_tag": "06T0",
+        "requested_label": "formal-defos-section-minimal-versal",
+        "requested_tag": "06T0"
+      },
+      "hash": "sha256:a34e067f6563e65ac1de0a564b94dc6b0d37599ad0270b97f6519bc020825e59"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IL:section_title/0001:formal-defos-section-miniversal-objects-existence",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IL:section_title/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Miniversal formal objects and tangent spaces<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-miniversal-objects-existence}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:9b2b557075848fae9a3c3764bf30f1586332eca83f365cf3551c0df0c1c3422a",
+          "source_structure_hash": "sha256:5ec9819dc86c5236fd91cd2f9dce45b76b4aef3fcc456451f66b64a47ee3c788",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 167715,
+          "byte_end": 167814,
+          "line_start": 4387,
+          "line_end": 4388,
+          "fragment_hash": "sha256:634160c91a30964a2b3fea5d77858eda13afbe65afe0495a6f481d633698c1d3"
+        },
+        "owner_tag": "06IL",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-section-miniversal-objects-existence",
+        "requested_tag": "06IL"
+      },
+      "hash": "sha256:5e17dfadd8be38a72712d8b0c94ac54a640fc79fed2351eb75e151e5d8477525"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06IX:theorem/0001:formal-defos-theorem-miniversal-object-existence",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06IX:theorem/0001",
+          "parent_tag": "06IL",
+          "chapter": "formal-defos",
+          "node_kind": "theorem",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a predeformation category.\nConsider the following conditions\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0002> has a minimal versal formal object satisfying\n(<REF_0001>),\n<STRUCT_0004> <MATH_0003> has a minimal versal formal object satisfying\n(<REF_0002>),\n<STRUCT_0005> the following conditions hold:\n<STRUCT_0006>\n<STRUCT_0007> <MATH_0004> satisfies (S1).\n<STRUCT_0008> <MATH_0005> satisfies (S2).\n<STRUCT_0009> <MATH_0006> is finite.\n<STRUCT_0010>\n<STRUCT_0011>\nWe always have\n<MATH_0007>\nIf <MATH_0008> is separable, then all three are equivalent.\n<STRUCT_0012>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{theorem}",
+            "LOCKED_0001": "\\label{theorem-miniversal-object-existence}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$\\mathcal{F}$",
+            "REF_0001": "\\ref{equation-bijective}",
+            "STRUCT_0004": "\\item",
+            "MATH_0003": "$\\mathcal{F}$",
+            "REF_0002": "\\ref{equation-bijective-orbits}",
+            "STRUCT_0005": "\\item",
+            "STRUCT_0006": "\\begin{enumerate}",
+            "STRUCT_0007": "\\item",
+            "MATH_0004": "$\\mathcal{F}$",
+            "STRUCT_0008": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0009": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0010": "\\end{enumerate}",
+            "STRUCT_0011": "\\end{enumerate}",
+            "MATH_0007": "$$\n(1) \\Rightarrow (3) \\Rightarrow (2).\n$$",
+            "MATH_0008": "$k' \\subset k$",
+            "STRUCT_0012": "\\end{theorem}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c78adacae1256ed463bbebeca3a569c2569c82ef92c50e4963ddfd7c20a44b61",
+          "source_structure_hash": "sha256:76feb24f54be4d11fee51274e7656905fc2562cb48194031d62cf51e850d0677",
+          "source_math_hash": "sha256:bec83be64564e516efab93c43b9512678ffad3ecf139609cf1b3f130b918d0fe"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 176065,
+          "byte_end": 176752,
+          "line_start": 4619,
+          "line_end": 4640,
+          "fragment_hash": "sha256:daf50f6770746f726ac94dc3751448f65151bab3e7cb080e5c43a23f87f4f372"
+        },
+        "owner_tag": "06IX",
+        "parent_tag": "06IL",
+        "requested_label": "formal-defos-theorem-miniversal-object-existence",
+        "requested_tag": "06IX"
+      },
+      "hash": "sha256:8ef9dbb4b8f3487b376f4108b55b5651dd0aaaa7242dfdb429c4b42af5a04219"
+    },
+    {
+      "context_id": "locked-English-reference:formal-defos:inventory:formal-defos:06L8:theorem/0001:formal-defos-theorem-presentation-deformation-groupoid",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:formal-defos:06L8:theorem/0001",
+          "parent_tag": "06L0",
+          "chapter": "formal-defos",
+          "node_kind": "theorem",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a category cofibered in groupoids over\n<MATH_0002>. Then <MATH_0003> admits a presentation by a\nsmooth prorepresentable groupoid in functors on <MATH_0004>\nif and only if the following conditions hold:\n<STRUCT_0002>\n<STRUCT_0003> <MATH_0005> is a deformation category.\n<STRUCT_0004> <MATH_0006> is finite.\n<STRUCT_0005> <MATH_0007> is finite.\n<STRUCT_0006>\n<STRUCT_0007>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{theorem}",
+            "LOCKED_0001": "\\label{theorem-presentation-deformation-groupoid}",
+            "MATH_0001": "$\\mathcal{F}$",
+            "MATH_0002": "$\\mathcal{C}_\\Lambda$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "MATH_0004": "$\\mathcal{C}_\\Lambda$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0005": "$\\mathcal{F}$",
+            "STRUCT_0004": "\\item",
+            "MATH_0006": "$\\dim_k T\\mathcal{F}$",
+            "STRUCT_0005": "\\item",
+            "MATH_0007": "$\\dim_k \\text{Inf}(\\mathcal{F})$",
+            "STRUCT_0006": "\\end{enumerate}",
+            "STRUCT_0007": "\\end{theorem}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d1cf37a8307067040e4d10d7ec3a2364eba4069463c310ed80bdb3d52af95553",
+          "source_structure_hash": "sha256:0e77d79b809b1c625dccf57981edfbae3c51e41d67750df74f3f4f23e130f2e9",
+          "source_math_hash": "sha256:023077f58745a145ed52926ab006914be691ee0e7f3fcee79796718d21c25ac8"
+        },
+        "location": {
+          "file": "formal-defos.tex",
+          "byte_start": 255690,
+          "byte_end": 256184,
+          "line_start": 6779,
+          "line_end": 6790,
+          "fragment_hash": "sha256:442ea05d41995ae98fd40da0edbd8ed6796ca0f997a79300d83834f7d2ad520c"
+        },
+        "owner_tag": "06L8",
+        "parent_tag": "06L0",
+        "requested_label": "formal-defos-theorem-presentation-deformation-groupoid",
+        "requested_tag": "06L8"
+      },
+      "hash": "sha256:4b50658112f56feaebdea459c7513979bb04b87e753e820f5e864e85626d2648"
+    }
+  ],
+  "policy_git_origin": "61da37dadd182f85bbf8da5402e639ecf63c1765",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:6c7b3b1cce1df31c8a313760fa07de473ab062514748605c5df800a0d07ad39e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:88a7438f6f309e25961f54d0404519281e4786a3c2d470e485c819ce15539756"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:ef9263cdedf15a3e360f6184509c2cc7615c299a5fff9074d46544f7a4abb656"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:385dde972b3048344f9d5e7b9098624f636a993b4c3d34071846916ccc154a9f"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-01.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-02.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-03.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-04.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-05.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-06.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-07.jsonl",
+    "docs/evidence/formal-defos90-gpt61sol-p036-r02-20261117-raw-08.jsonl"
+  ],
+  "rules": "Actual model generates all five fields; protect exact token order/count and trailing whitespace. All mathematical terms are provisional bilingual occurrences with unknown_terms. No candidate translation memory."
+}

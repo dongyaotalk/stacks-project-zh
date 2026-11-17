@@ -68,6 +68,13 @@ runtime 副本的完整 `runtime` 必须逐项等于原冻结身份，实际 tur
 runtime 中的原 provider 必须相等；已写出的矛盾摘要不得忽略。诊断明确记录绑定方式，
 原 runtime/model-input/run/raw/freeze 原字节不改写，不生成新身份或审校权限。
 
+尚未首次 Git 交付的执行辅助副本可以使用独立 #1038 的
+[公开回执投影](runtime-public-copies.md)：本地原件不改写，交付视图明确记录省略
+本机命令路径的固定投影及原 capture 哈希。当前检查核验公开的确切 Make 形状、
+唯一版本/登记命令输出及完整冻结身份，报告 `public-make-capture-projection`、
+`private_capture_replay=not_claimed`。已加入 Git 的回执、实际模型文字和生成历史
+不获得重写权限，私有 capture 哈希不被用作生成或祖先凭证。
+
 准备中的 `prior_adoptions` 必须库存完整上一采用的有序 units/candidates 快照：
 逐项核验原 record 的身份/hash/Schema、所有输出的精确归档路径、原字节/hash、
 Schema、来源和配对 ID 顺序，并与整个冻结 batch/unit 范围及模型输入的

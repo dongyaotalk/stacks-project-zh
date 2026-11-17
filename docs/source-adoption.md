@@ -157,6 +157,27 @@ model-input/runtime/scope快照。原完整聚合解析器、实际装配及失�
 冻结新的完整模型包并实际生成；旧部分库存不替代来源/术语/保护/完整生成门禁。
 精确细则见 [当前章节验收](chapter-current-validation.md)。
 
+### 未采用 v2 部分输出的完整前继库存（独立工具 #1030）
+
+同一准备副本验证任务补足原 v2 完整再次生成中止后的负结果库存。原输入必须
+保留非空完整 prior_adoptions；现存原 raw 的路径、hash、顺序、unit ID 与完整五字段
+须先由原解析器验证，唯一覆盖拒绝是缺少部分 unit 的完整记录。
+
+继续要求完整 scope/policy/runtime/source/context 原绑定有效、origin 属于 accepted main
+祖先、该新身份没有 run、采用或当前候选，也没有 ordinary prior attempts 或 shared
+history。既有前继库存函数须核对完整 prior record 的身份/hash/Schema、锁定来源、
+时间、所有原 output 和精确配对 unit/candidate 归档原字节、完整有序 ID，以及模型
+输入中的 previous_complete_candidates；部分库存函数再次读取核验这些绑定，不接受
+外部 PASS。
+
+报告保存原尝试、expected/present/missing IDs，附
+predecessor_validation=complete-paired-snapshot-inventory；generation_validation=not_claimed，
+run_created=false，adoption_created=false。记录仅作库存，不声称前继回放或新的生成
+成功，不消费前继、不产生当前候选，也不赋予来源、术语或人工审校权限。原完整 raw
+聚合解析器、实际装配与历史回放不变，v3/v5/v6、空、部分或混合前继继续拒绝。
+旧 v1/v4 的无前继部分库存合同保持，所有历史 run/raw/freeze/model-input/runtime
+及快照原字节保留。
+
 ## 来源权限
 
 从锁定 English Git 重新选择完整容器，验证真实 owner、Section、kind、ordinal、

@@ -8,6 +8,10 @@ from stacks_zh.source_containers import Containers
 from stacks_zh.source_reextractions import byte_hash,LockedEnglish
 from stacks_zh.source_reextractions import source_tex
 ROOT=Path(__file__).resolve().parents[1]
+NUMERIC_POLICY_SECTION='\nlocked_numeric_item_labels:\n  defos-lift-complex:\n    literals: ["\\\\item[(\\\\romannumeral1)]", "\\\\item[(\\\\romannumeral2)]", "\\\\item[(\\\\romannumeral3)]", "\\\\item[(\\\\romannumeral4)]"]\n    usage: "finite-roman-item-label"\n    source_label: "defos-lemma-lift-complex"\n'
+CURRENT_POLICY=(ROOT/'config/macro-policy.yml').read_text()
+assert CURRENT_POLICY.count(NUMERIC_POLICY_SECTION) in {0,1}
+DISABLED_POLICY=CURRENT_POLICY.replace(NUMERIC_POLICY_SECTION,'',1)
 FIXTURE=json.loads((ROOT/'tests/fixtures/defos-numeric-item-labels.json').read_text())
 class NumericItemLabelsTests(unittest.TestCase):
  def test_complete_labels_require_explicit_opt_in(self):
@@ -37,8 +41,8 @@ class NumericItemLabelsTests(unittest.TestCase):
    self.assertEqual(meta['source'],literal);self.assertEqual(meta['integer_source'],str(i))
    span=meta['source_byte_span'];self.assertEqual(text.encode()[span['start']:span['end']].decode(),literal)
    with self.assertRaises(ValueError):label_metadata(text,start,finish-1)
- def test_current_policy_keeps_four_unknown_macros_blocked(self):
-  policy=Policy((ROOT/'config/macro-policy.yml').read_text())
+ def test_explicit_disabled_policy_keeps_four_unknown_macros_blocked(self):
+  policy=Policy(DISABLED_POLICY)
   self.assertNotIn('romannumeral',policy.commands)
   _,_,errors=Scanner(FIXTURE['full_source_container'],policy).protect(0,len(FIXTURE['full_source_container']))
   self.assertEqual(len([e for e in errors if e['kind']=='unknown-command' and 'romannumeral' in e['message']]),4)
@@ -55,7 +59,7 @@ class NumericItemLabelsTests(unittest.TestCase):
   for witness in FIXTURE['witnesses']:
    span=witness['git_byte_span'];self.assertEqual(raw[span['start']:span['end']].decode(),witness['source'])
   with self.assertRaisesRegex(RecordError,'unknown command or unsupported scoped command: romannumeral'):
-   Containers(ROOT,harvest).select(FIXTURE['selector'])
+   Containers(ROOT,harvest,policy_bytes=DISABLED_POLICY.encode()).select(FIXTURE['selector'])
 
 
 import copy,hashlib,re,types
@@ -63,7 +67,7 @@ from stacks_zh.numeric_item_labels import policy_registry,resolve_policy_witness
 from stacks_zh.extraction import resolve_natural_math_witnesses
 from stacks_zh.records import _validate_candidate,placeholder_names,sha256_value
 from stacks_zh.source_containers import lower_container
-PRODUCTION=(ROOT/'config/macro-policy.yml').read_text()
+PRODUCTION=DISABLED_POLICY
 SECTION=('\nlocked_numeric_item_labels:\n  defos-lift-complex:\n'
          '    literals: '+json.dumps(list(LABELS))+'\n'
          '    usage: "finite-roman-item-label"\n'

@@ -1,6 +1,7 @@
 """Direct derivation replay, stopping at unchanged accepted parent outputs."""
 import json
 import re
+import shlex
 import subprocess
 from pathlib import Path
 from .records import RecordError, load_jsonl
@@ -346,7 +347,7 @@ def _adopted_unselected_raw_inventory(root, frozen, model_input, entry, scope, s
 
 
 def _partial_unadopted_raw_inventory(root, frozen, attempts, scope, snapshot,
-                                   scope_errors, policy_errors):
+                                   scope_errors, policy_errors, previous=None):
     """Keep a valid partial preparation as inventory, never an adopted run.
 
     The complete parser and all actual assembly/history paths stay unchanged.
@@ -363,8 +364,14 @@ def _partial_unadopted_raw_inventory(root, frozen, attempts, scope, snapshot,
         if scope_errors or policy_errors:
             raise
     aid, run_id = frozen['adoption_id'], frozen['run_id']
-    if (frozen['tool_version'] not in {'source-adoption-input-v1', 'source-adoption-input-v4'}
-            or 'prior_adoptions' in frozen or 'shared_run_histories' in frozen
+    version = frozen['tool_version']
+    paired_prior = version == 'source-adoption-input-v2'
+    if paired_prior:
+        if not frozen.get('prior_adoptions') or not isinstance(previous, list):
+            raise RecordError('partial v2 preparation lacks complete paired predecessor inventory')
+        _preparation_prior_snapshots(root, frozen, previous, snapshot)
+    if (version not in {'source-adoption-input-v1', 'source-adoption-input-v4', 'source-adoption-input-v2'}
+            or ('prior_adoptions' in frozen and not paired_prior) or 'shared_run_histories' in frozen
             or any(b['prior_attempts'] for b in frozen['batches'])
             or (root/f'translation-data/source-adoptions/{aid}.json').exists()
             or (root/f'translation-data/runs/{run_id}.json').exists()):
@@ -388,9 +395,60 @@ def _partial_unadopted_raw_inventory(root, frozen, attempts, scope, snapshot,
     if not ordered or not missing:
         raise RecordError('partial preparation requires a nonempty proper output subset')
     a._raw_records(a.Reads(root), attempts, ordered, scope['allowed_write_files'])
-    return dict(disposition='partial-output-inventory',expected_unit_ids=frozen['unit_ids'],
+    detail = dict(disposition='partial-output-inventory',expected_unit_ids=frozen['unit_ids'],
                 present_unit_ids=ordered,missing_unit_ids=missing,raw_attempts=attempts,
                 generation_validation='not_claimed',run_created=False,adoption_created=False)
+    if paired_prior:
+        detail['predecessor_validation'] = 'complete-paired-snapshot-inventory'
+    return detail
+
+
+def _runtime_copy_binding(frozen, runtime, registry_bytes):
+    """Verify original captures without adding summaries to immutable evidence."""
+    expected = frozen['runtime']
+    capture = runtime.get('harness_check', {})
+    if runtime.get('runtime') != expected or capture.get('exit_code') != 0:
+        raise RecordError('runtime evidence differs from frozen actual runtime')
+    version = expected['harness']['version']
+    if 'observed_version' in capture:
+        if capture['observed_version'] != version:
+            raise RecordError('runtime evidence differs from frozen actual runtime')
+        version_mode = 'explicit-summary'
+    else:
+        from .harness import parse_harness_registry
+        identifier = expected['harness']['id']
+        spec = parse_harness_registry(registry_bytes.decode('utf-8')).get(identifier, {})
+        command = spec.get('version_command')
+        argv, stdout = capture.get('argv'), capture.get('stdout')
+        if (not version or version.lower() in {'unknown', 'auto'}
+                or not isinstance(argv, list) or len(argv) < 3
+                or argv[:2] != ['make', 'harness-check']
+                or any(not isinstance(item, str) for item in argv)
+                or [item for item in argv if item.startswith('HARNESS_ID=')]
+                   != ['HARNESS_ID=' + identifier]
+                or not isinstance(stdout, str) or not command):
+            raise RecordError('runtime capture lacks the exact registered Harness check')
+        assignments = [item.partition('=') for item in argv[2:]]
+        if (any(not separator or not value or key not in {'HARNESS_ID', 'PYTHON', 'HARVEST_DIR'}
+                for key, separator, value in assignments)
+                or len({key for key, _, _ in assignments}) != len(assignments)):
+            raise RecordError('runtime capture contains an unsupported or duplicate make argument')
+        try:
+            configured_command = ' '.join(shlex.split(command))
+        except ValueError as exc:
+            raise RecordError('runtime capture has an invalid registered command') from exc
+        versions = re.findall(r'^' + re.escape(identifier) + r': (\S+)$', stdout, re.M)
+        commands = re.findall(r'^command: (.+)$', stdout, re.M)
+        if versions != [version] or commands != [configured_command]:
+            raise RecordError('runtime capture differs from the frozen Harness version/command')
+        version_mode = 'original-make-capture'
+    if ('provider' in runtime
+            and (not isinstance(runtime['provider'], str)
+                 or runtime['provider'].lower() != expected['model']['provider'].lower())):
+        raise RecordError('runtime turn metadata differs from frozen identity')
+    return dict(version_binding=version_mode,
+                provider_binding='explicit-summary' if 'provider' in runtime else 'exact-frozen-runtime',
+                runtime_changed=False)
 
 
 def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, reads, native):
@@ -468,14 +526,11 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 raise RecordError('model-input prompt/style/glossary differs from locked origin')
         runtime_path=relative.removesuffix('-model-input.json')+'-runtime.json'
         runtime=json.loads(snapshot.read(root/runtime_path))
-        if (runtime.get('runtime')!=frozen['runtime'] or runtime.get('harness_check',{}).get('exit_code')!=0
-                or runtime['harness_check'].get('observed_version')!=frozen['runtime']['harness']['version']):
-            raise RecordError('runtime evidence differs from frozen actual runtime')
+        runtime_binding = _runtime_copy_binding(frozen, runtime, policy_bytes['config/harnesses.yml'])
         metadata=runtime.get('turn_metadata',{})
         if (metadata.get('turn_id')!=frozen['runtime']['turn_id']
                 or metadata.get('model')!=frozen['runtime']['model']['requested_id']
-                or metadata.get('effort')!=frozen['runtime']['reasoning_effort']
-                or runtime.get('provider','').lower()!=frozen['runtime']['model']['provider'].lower()):
+                or metadata.get('effort')!=frozen['runtime']['reasoning_effort']):
             raise RecordError('runtime turn metadata differs from frozen identity')
         reserved=model_input['raw_output_paths_reserved']
         if (not isinstance(reserved,list) or len(reserved)!=len(set(reserved))
@@ -496,6 +551,7 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 unused = _adopted_unselected_raw_inventory(root,frozen,model_input,entry,scope,snapshot)
                 if unused:
                     detail['unselected_raw_attempts'] = unused
+            detail['runtime_copy_binding'] = runtime_binding
             diagnostics.append(detail)
             continue
         # No run/adoption was created. Validate complete aggregate coverage with
@@ -509,7 +565,7 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
             rows=[json.loads(x) for x in raw.decode().splitlines() if x.strip()]
             attempts.append(dict(path=p,hash=byte_hash(raw),unit_ids=[row.get('unit_id') for row in rows]))
         partial_inventory=(_partial_unadopted_raw_inventory(root,frozen,attempts,scope,snapshot,
-                           scope_errors,policy_errors) if attempts else None)
+                           scope_errors,policy_errors,previous) if attempts else None)
         prep_native=a._daily_containers(root,harvest,policy_bytes['config/macro-policy.yml'])
         # Preparations are inventory, not successful generation. Check the
         # canonical lowered source and report non-native selector snapshots as
@@ -552,6 +608,7 @@ def check_preparation_evidence(root, harvest, snapshot, changed, chapter, lane, 
                 raise RecordError('preparation rejection does not reproduce at native selector gate')
         detail=dict(input=entry['path'],status='rejected-unadopted-preparation' if source_errors or scope_errors or policy_errors else 'unadopted-preparation',source_errors=sorted(set(source_errors)),scope_errors=scope_errors,policy_errors=policy_errors,source_schema_witness=schema_witness,legacy_zeroth_projection=legacy_projection,run_created=run.exists(),
                     generation_validation='not_claimed',history_audit='not_run')
+        detail['runtime_copy_binding'] = runtime_binding
         if partial_inventory is not None:
             detail['raw_inventory']=partial_inventory
         diagnostics.append(detail)

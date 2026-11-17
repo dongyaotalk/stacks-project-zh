@@ -1,0 +1,1965 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/criteria97-gpt61sol-p016-20261117.json",
+    "hash": "sha256:c11a3b8fc0af289bbebbee1e7652b4671c94f72e32297fd73ce6bf6bd0088065"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e4cd-25ac-7c40-b79c-c86891503420",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/criteria97-20261116.json",
+    "hash": "sha256:a3751a6f9fbbab0f73e8d18d65517d034be52a4b6cd860eab7e1f45dba33da71"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "schema_version": 1,
+      "unit_id": "tag:05YH:proof",
+      "parent_tag": "05XM",
+      "chapter": "criteria",
+      "node_kind": "proof",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a scheme and let <MATH_0002> be an object of\n<MATH_0003> over <MATH_0004>.\nHere <MATH_0005> is just the structure morphism of <MATH_0006>.\nThe fifth component <MATH_0007> exists and is unique\nsince everything is over <MATH_0008>.\nAlso, let <MATH_0009> be an object of <MATH_0010> over <MATH_0011>.\nWe have to show the <MATH_0012>-fibre product\n<MATH_0013>\nis representable by an algebraic space. To explain why this is so\nwe introduce\n<MATH_0014>\nwhich is an algebraic space over <MATH_0015> by assumption. Let <MATH_0016>\nbe a scheme over <MATH_0017>. What does it mean to give an object of the fibre\ncategory of (<REF_0001>) over <MATH_0018>? Well, it means that we\nhave an object <MATH_0019> of\n<MATH_0020> over <MATH_0021> and isomorphisms\n<MATH_0022> and\n<MATH_0023>. Thus <MATH_0024> is isomorphic to\n<MATH_0025>\nfor some morphism\n<MATH_0026>\nin the fibre category of <MATH_0027> over <MATH_0028>. Hence\nwe can view <MATH_0029> as a morphism <MATH_0030>.\nIn this way we see that (<REF_0002>)\nis representable by <MATH_0031> which is an algebraic space by\nProposition <REF_0003>.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$U$",
+        "MATH_0002": "$\\xi = (U, Z, p, x, 1)$",
+        "MATH_0003": "$\\mathcal{H}_d(\\mathcal{X}) = \\mathcal{H}_d(\\mathcal{X}/S)$",
+        "MATH_0004": "$U$",
+        "MATH_0005": "$p$",
+        "MATH_0006": "$U$",
+        "MATH_0007": "$1$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$y$",
+        "MATH_0010": "$\\mathcal{Y}$",
+        "MATH_0011": "$U$",
+        "MATH_0012": "$2$",
+        "MATH_0013": "\\begin{equation}\n\\label{equation-res-isom}\n(\\Sch/U)_{fppf}\n\\times_{\\xi \\times y, \\mathcal{H}_d(\\mathcal{X}) \\times \\mathcal{Y}}\n\\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})\n\\end{equation}",
+        "MATH_0014": "$$\nI = \\mathit{Isom}_\\mathcal{Y}(y|_Z, F(x))\n$$",
+        "MATH_0015": "$Z$",
+        "MATH_0016": "$a : U' \\to U$",
+        "MATH_0017": "$U$",
+        "REF_0001": "\\ref{equation-res-isom}",
+        "MATH_0018": "$U'$",
+        "MATH_0019": "$\\xi' = (U', Z', y', x', \\alpha')$",
+        "MATH_0020": "$\\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})$",
+        "MATH_0021": "$U'$",
+        "MATH_0022": "$(U', Z', p', x', 1) \\cong (U, Z, p, x, 1)|_{U'}$",
+        "MATH_0023": "$y' \\cong y|_{U'}$",
+        "MATH_0024": "$\\xi'$",
+        "MATH_0025": "$(U', U' \\times_{a, U} Z, a^*y, x|_{U' \\times_{a, U} Z}, \\alpha)$",
+        "MATH_0026": "$$\n\\alpha :\na^*y|_{U' \\times_{a, U} Z}\n\\longrightarrow\nF(x|_{U' \\times_{a, U} Z})\n$$",
+        "MATH_0027": "$\\mathcal{Y}$",
+        "MATH_0028": "$U' \\times_{a, U} Z$",
+        "MATH_0029": "$\\alpha$",
+        "MATH_0030": "$b : U' \\times_{a, U} Z \\to I$",
+        "REF_0002": "\\ref{equation-res-isom}",
+        "MATH_0031": "$\\text{Res}_{Z/U}(I)$",
+        "REF_0003": "\\ref{proposition-restriction-of-scalars-algebraic-space}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "source_text_hash": "sha256:92bf1de867094aeed8372310bb770fe041410a343617666ce734d65d1067170e",
+      "source_structure_hash": "sha256:9e0f431b364be8ea21abe4f832d647d85d6961bdfb744c20e78da0f67bcf3643",
+      "source_math_hash": "sha256:465cc94fdd50ee4007701c3ebd5219933d79c5b3537566b581bbcaee77dda3c5"
+    },
+    {
+      "schema_version": 1,
+      "unit_id": "tag:05YJ:proof",
+      "parent_tag": "05XM",
+      "chapter": "criteria",
+      "node_kind": "proof",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a scheme and let <MATH_0002> be an object of\n<MATH_0003> over <MATH_0004>.\nWe have to prove that the <MATH_0005>-fibre product\n<MATH_0006>\nis representable by an algebraic space over <MATH_0007>.\nAn object of this over <MATH_0008> corresponds to an object\n<MATH_0009> of <MATH_0010> over <MATH_0011> such that\n<MATH_0012>. By assumption the <MATH_0013>-fibre product\n<MATH_0014>\nis representable by an algebraic space <MATH_0015> over <MATH_0016>. It follows that\n(<REF_0001>) is representable by <MATH_0017>,\nwhich is an algebraic space by\nProposition <REF_0002>.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$U$",
+        "MATH_0002": "$\\xi = (U, Z, y, x, \\alpha)$",
+        "MATH_0003": "$\\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})$",
+        "MATH_0004": "$U$",
+        "MATH_0005": "$2$",
+        "MATH_0006": "\\begin{equation}\n\\label{equation-to-show-again}\n(\\Sch/U)_{fppf}\n\\times_{\\xi, \\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})}\n\\mathcal{H}_d(\\mathcal{X}'/\\mathcal{Y})\n\\end{equation}",
+        "MATH_0007": "$U$",
+        "MATH_0008": "$a : U' \\to U$",
+        "MATH_0009": "$x'$",
+        "MATH_0010": "$\\mathcal{X}'$",
+        "MATH_0011": "$U' \\times_{a, U} Z$",
+        "MATH_0012": "$G(x') \\cong x|_{U' \\times_{a, U} Z}$",
+        "MATH_0013": "$2$",
+        "MATH_0014": "$$\n(\\Sch/Z)_{fppf} \\times_{x, \\mathcal{X}} \\mathcal{X}'\n$$",
+        "MATH_0015": "$W$",
+        "MATH_0016": "$Z$",
+        "REF_0001": "\\ref{equation-to-show-again}",
+        "MATH_0017": "$\\text{Res}_{Z/U}(W)$",
+        "REF_0002": "\\ref{proposition-restriction-of-scalars-algebraic-space}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "source_text_hash": "sha256:ba86a5a8821a89278f1b9909ba014a686d34509fd1eec68ce5c6a882096063d8",
+      "source_structure_hash": "sha256:a645ef973588dac966651fcabef27e79fbecc4d24da2562894a76edb04e19d76",
+      "source_math_hash": "sha256:56f72ca79d008a27223260f819894881db58584ebe6a3dd936713198427148af"
+    },
+    {
+      "schema_version": 2,
+      "unit_id": "tag:05YL:prose-0001",
+      "parent_tag": "05YL",
+      "chapter": "criteria",
+      "node_kind": "paragraph",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be an integer. In\nExamples of Stacks, Definition <REF_0001>\nwe defined a stack in groupoids <MATH_0002>.\nIn this section we prove that <MATH_0003> is an\nalgebraic stack. We will throughout assume that\n<MATH_0004>.\nThe general case will follow from this by base change.\nRecall that the fibre category of <MATH_0005> over a scheme <MATH_0006>\nis the category of finite locally free morphisms <MATH_0007> of\ndegree <MATH_0008>. Instead of classifying these directly we first\nstudy the quasi-coherent sheaves of algebras <MATH_0009>.\n\n<STRUCT_0002><STRUCT_0003>\nLet <MATH_0010> be a ring. Let us temporarily make the following definition:\nA <TEXTITOPEN_0001>free <MATH_0011>-dimensional algebra over <MATH_0012><TEXTITCLOSE_0001>\nis given by a commutative <MATH_0013>-algebra structure <MATH_0014> on <MATH_0015>\nsuch that <MATH_0016> is a unit<FOOTNOTEOPEN_0001>It may be better\nto think of this as a pair consisting of a multiplication map\n<MATH_0017> and\na ring map <MATH_0018> satisfying a bunch of axioms.<FOOTNOTECLOSE_0001>.\nWe think of <MATH_0019> as an <MATH_0020>-linear map\n<MATH_0021>\nsuch that <MATH_0022> and such that <MATH_0023> defines a\ncommutative and associative ring structure. If we write\n<MATH_0024> then we see this boils down\nto the conditions\n<MATH_0025>\nwhere <MATH_0026> is the Kronecker <MATH_0027>-function. OK, so let's define\n<MATH_0028>\nwhere the ideal <MATH_0029> is the ideal generated by the relations displayed above.\nDenote\n<MATH_0030>\nthe free <MATH_0031>-dimensional algebra <MATH_0032> over <MATH_0033> whose structure\nconstants are the classes of <MATH_0034> modulo <MATH_0035>.\nThen it is clear that given any free <MATH_0036>-dimensional algebra <MATH_0037> over a ring\n<MATH_0038> there exists a unique <MATH_0039>-algebra homomorphism\n<MATH_0040> such that <MATH_0041> (this means that\n<MATH_0042> is what you get by applying the base change functor\n<MATH_0043> to <MATH_0044>). In other words, setting\n<MATH_0045> we obtain a canonical identification\n<MATHSEG_0001>free <MATHSEG_0002>-dimensional algebras <MATHSEG_0003> over <MATHSEG_0004>\nfor varying <MATH_0046>. By Zariski localization we obtain\nthe following seemingly more general identification\n<MATHSEG_0005>free <MATHSEG_0006>-dimensional algebras <MATHSEG_0007> over <MATHSEG_0008>\nfor any scheme <MATH_0047>.\n\n<STRUCT_0004><STRUCT_0005>\nNext we talk a little bit about <TEXTITOPEN_0002>isomorphisms of free <MATH_0048>-dimensional\n<MATH_0049>-algebras<TEXTITCLOSE_0002>. Namely, suppose that <MATH_0050>, <MATH_0051> are two free <MATH_0052>-dimensional\nalgebras over a ring <MATH_0053>. An <TEXTITOPEN_0003>isomorphism from <MATH_0054> to <MATH_0055><TEXTITCLOSE_0003> is given by\nan invertible <MATH_0056>-linear map\n<MATH_0057>\nsuch that <MATH_0058> and such that\n<MATH_0059>\nNote that we can compose these so that the collection of\nfree <MATH_0060>-dimensional algebras over <MATH_0061> becomes a category.\nIn this way we obtain a functor\n<MATH_0062>\nfrom the category of schemes to groupoids: to a scheme <MATH_0063> we associate the\nset of free <MATH_0064>-dimensional algebras over <MATH_0065>\nendowed with the structure\nof a category using the notion of isomorphisms just defined.\n\n<STRUCT_0006><STRUCT_0007>\nThe above suggests we consider the functor <MATH_0066> in groups\nwhich associates to any scheme <MATH_0067> the group\n<MATH_0068>\nIt is clear that <MATH_0069> (see\nGroupoids, Example <REF_0002>)\nis the closed subgroup scheme cut out by the equations\n<MATH_0070> and <MATH_0071> for <MATH_0072>. Hence <MATH_0073> is a smooth\naffine group scheme over <MATH_0074>. Consider the\naction\n<MATH_0075>\nwhich associates to a <MATH_0076>-valued point <MATH_0077> with <MATH_0078>\non the left hand side the free <MATH_0079>-dimensional algebra over <MATH_0080>\ngiven by\n<MATH_0081>\nNote that this means that <MATH_0082> defines an isomorphism <MATH_0083>\nof <MATH_0084>-dimensional free <MATH_0085>-algebras. We omit the verification that\n<MATH_0086> indeed defines an action of the group scheme <MATH_0087> on the scheme <MATH_0088>.\n\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$d \\geq 1$",
+        "REF_0001": "\\ref{examples-stacks-definition-hilbert-d-stack}",
+        "MATH_0002": "$\\mathcal{H}_d$",
+        "MATH_0003": "$\\mathcal{H}_d$",
+        "MATH_0004": "$S = \\Spec(\\mathbf{Z})$",
+        "MATH_0005": "$\\mathcal{H}_d$",
+        "MATH_0006": "$T$",
+        "MATH_0007": "$\\pi : Z \\to T$",
+        "MATH_0008": "$d$",
+        "MATH_0009": "$\\pi_*\\mathcal{O}_Z$",
+        "STRUCT_0002": "\\medskip",
+        "STRUCT_0003": "\\noindent",
+        "MATH_0010": "$R$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "MATH_0011": "$d$",
+        "MATH_0012": "$R$",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0013": "$R$",
+        "MATH_0014": "$m$",
+        "MATH_0015": "$R^{\\oplus d}$",
+        "MATH_0016": "$e_1 = (1, 0, \\ldots, 0)$",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0017": "$m : R^{\\oplus d} \\otimes_R R^{\\oplus d} \\to R^{\\oplus d}$",
+        "MATH_0018": "$\\psi : R \\to R^{\\oplus d}$",
+        "FOOTNOTECLOSE_0001": "}",
+        "MATH_0019": "$m$",
+        "MATH_0020": "$R$",
+        "MATH_0021": "$$\nm : R^{\\oplus d} \\otimes_R R^{\\oplus d} \\longrightarrow R^{\\oplus d}\n$$",
+        "MATH_0022": "$m(e_1, x) = m(x, e_1) = x$",
+        "MATH_0023": "$m$",
+        "MATH_0024": "$m(e_i, e_j) = \\sum a_{ij}^ke_k$",
+        "MATH_0025": "$$\n\\left\\{\n\\begin{matrix}\n\\sum_l a_{ij}^la_{lk}^m = \\sum_l a_{il}^ma_{jk}^l & \\forall i, j, k, m \\\\\na_{ij}^k = a_{ji}^k & \\forall i, j, k \\\\\na_{i1}^j = \\delta_{ij} & \\forall i, j\n\\end{matrix}\n\\right.\n$$",
+        "MATH_0026": "$\\delta_{ij}$",
+        "MATH_0027": "$\\delta$",
+        "MATH_0028": "$$\nR_{univ} = \\mathbf{Z}[a_{ij}^k]/J\n$$",
+        "MATH_0029": "$J$",
+        "MATH_0030": "$$\nm_{univ} :\nR_{univ}^{\\oplus d} \\otimes_{R_{univ}} R_{univ}^{\\oplus d}\n\\longrightarrow\nR_{univ}^{\\oplus d}\n$$",
+        "MATH_0031": "$d$",
+        "MATH_0032": "$m$",
+        "MATH_0033": "$R_{univ}$",
+        "MATH_0034": "$a_{ij}^k$",
+        "MATH_0035": "$J$",
+        "MATH_0036": "$d$",
+        "MATH_0037": "$m$",
+        "MATH_0038": "$R$",
+        "MATH_0039": "$\\mathbf{Z}$",
+        "MATH_0040": "$\\psi : R_{univ} \\to R$",
+        "MATH_0041": "$\\psi_*m_{univ} = m$",
+        "MATH_0042": "$m$",
+        "MATH_0043": "$- \\otimes_{R_{univ}} R$",
+        "MATH_0044": "$m_{univ}$",
+        "MATH_0045": "$X = \\Spec(R_{univ})$",
+        "MATHSEG_0001": "$$\nX(T) = \\{\\text{",
+        "MATHSEG_0002": "}d\\text{",
+        "MATHSEG_0003": "}m\\text{",
+        "MATHSEG_0004": "}R\\}\n$$",
+        "MATH_0046": "$T = \\Spec(R)$",
+        "MATHSEG_0005": "\\begin{equation}\n\\label{equation-objects}\nX(T) = \\{\\text{",
+        "MATHSEG_0006": "}d\\text{",
+        "MATHSEG_0007": "}\nm\\text{",
+        "MATHSEG_0008": "}\\Gamma(T, \\mathcal{O}_T)\\}\n\\end{equation}",
+        "MATH_0047": "$T$",
+        "STRUCT_0004": "\\medskip",
+        "STRUCT_0005": "\\noindent",
+        "TEXTITOPEN_0002": "{\\it ",
+        "MATH_0048": "$d$",
+        "MATH_0049": "$R$",
+        "TEXTITCLOSE_0002": "}",
+        "MATH_0050": "$m$",
+        "MATH_0051": "$m'$",
+        "MATH_0052": "$d$",
+        "MATH_0053": "$R$",
+        "TEXTITOPEN_0003": "{\\it ",
+        "MATH_0054": "$m$",
+        "MATH_0055": "$m'$",
+        "TEXTITCLOSE_0003": "}",
+        "MATH_0056": "$R$",
+        "MATH_0057": "$$\n\\varphi : R^{\\oplus d} \\longrightarrow R^{\\oplus d}\n$$",
+        "MATH_0058": "$\\varphi(e_1) = e_1$",
+        "MATH_0059": "$$\nm \\circ \\varphi \\otimes \\varphi = \\varphi \\circ m'.\n$$",
+        "MATH_0060": "$d$",
+        "MATH_0061": "$R$",
+        "MATH_0062": "\\begin{equation}\n\\label{equation-FAd}\nFA_d : \\Sch_{fppf}^{opp} \\longrightarrow \\textit{Groupoids}\n\\end{equation}",
+        "MATH_0063": "$T$",
+        "MATH_0064": "$d$",
+        "MATH_0065": "$\\Gamma(T, \\mathcal{O}_T)$",
+        "STRUCT_0006": "\\medskip",
+        "STRUCT_0007": "\\noindent",
+        "MATH_0066": "$G$",
+        "MATH_0067": "$T$",
+        "MATH_0068": "$$\nG(T) = \\{g \\in \\text{GL}_d(\\Gamma(T, \\mathcal{O}_T)) \\mid g(e_1) = e_1\\}\n$$",
+        "MATH_0069": "$G \\subset \\text{GL}_d$",
+        "REF_0002": "\\ref{groupoids-example-general-linear-group}",
+        "MATH_0070": "$x_{11} = 1$",
+        "MATH_0071": "$x_{i1} = 0$",
+        "MATH_0072": "$i > 1$",
+        "MATH_0073": "$G$",
+        "MATH_0074": "$\\Spec(\\mathbf{Z})$",
+        "MATH_0075": "$$\na : G \\times_{\\Spec(\\mathbf{Z})} X \\longrightarrow X\n$$",
+        "MATH_0076": "$T$",
+        "MATH_0077": "$(g, m)$",
+        "MATH_0078": "$T = \\Spec(R)$",
+        "MATH_0079": "$d$",
+        "MATH_0080": "$R$",
+        "MATH_0081": "$$\na(g, m) = g^{-1} \\circ m \\circ g \\otimes g.\n$$",
+        "MATH_0082": "$g$",
+        "MATH_0083": "$m \\to a(g, m)$",
+        "MATH_0084": "$d$",
+        "MATH_0085": "$R$",
+        "MATH_0086": "$a$",
+        "MATH_0087": "$G$",
+        "MATH_0088": "$X$"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "math_text_regions": [
+        {
+          "region_id": "math/0001",
+          "delimiter_kind": "display-dollar",
+          "source": "$$\nX(T) = \\{\\text{free }d\\text{-dimensional algebras }m\\text{ over }R\\}\n$$",
+          "source_hash": "sha256:4d10f95cd90d6b461bce4f4cad119b43c5f9bb5087d2b2b210d4b08cd0cd5443",
+          "source_byte_span": {
+            "start": 2426,
+            "end": 2500
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0001/text/0001",
+              "source": "free ",
+              "command": "text",
+              "policy_entry": "deformations-natural-5",
+              "slot_byte_span": {
+                "start": 18,
+                "end": 23
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\{",
+                  "after": "d",
+                  "environments": []
+                },
+                "source_label": "criteria-section-hilbert-point",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "criteria.tex",
+                  "owner_tag": "05YL",
+                  "owner_label": "criteria-section-hilbert-point",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 80981,
+                        "end": 82979
+                      },
+                      "container_hash": "sha256:0ef0f81f743018f8b30d070456bfd6571ce5b582178ccf71ce6bb38b8a0f2c18",
+                      "command_byte_span": {
+                        "start": 82802,
+                        "end": 82814
+                      },
+                      "command_hash": "sha256:df9922c16940c138d4fe0bd4038bc10a3ba648e36247a42b294d4a2f2a219ed7"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 82979,
+                        "end": 83128
+                      },
+                      "container_hash": "sha256:112c12d4ce9add222d48753ed50a8a2fcb1ea975541ccd016b510a0a0a2c55cd",
+                      "command_byte_span": {
+                        "start": 83030,
+                        "end": 83042
+                      },
+                      "command_hash": "sha256:df9922c16940c138d4fe0bd4038bc10a3ba648e36247a42b294d4a2f2a219ed7"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0002",
+              "source": "-dimensional algebras ",
+              "command": "text",
+              "policy_entry": "deformations-natural-6",
+              "slot_byte_span": {
+                "start": 31,
+                "end": 53
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "d",
+                  "after": "m",
+                  "environments": []
+                },
+                "source_label": "criteria-section-hilbert-point",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "criteria.tex",
+                  "owner_tag": "05YL",
+                  "owner_label": "criteria-section-hilbert-point",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 80981,
+                        "end": 82979
+                      },
+                      "container_hash": "sha256:0ef0f81f743018f8b30d070456bfd6571ce5b582178ccf71ce6bb38b8a0f2c18",
+                      "command_byte_span": {
+                        "start": 82815,
+                        "end": 82844
+                      },
+                      "command_hash": "sha256:705194c4ff273c2156ef7acb16b7a986f1d45e0df54d582381c66f098eebcc89"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 82979,
+                        "end": 83128
+                      },
+                      "container_hash": "sha256:112c12d4ce9add222d48753ed50a8a2fcb1ea975541ccd016b510a0a0a2c55cd",
+                      "command_byte_span": {
+                        "start": 83043,
+                        "end": 83072
+                      },
+                      "command_hash": "sha256:705194c4ff273c2156ef7acb16b7a986f1d45e0df54d582381c66f098eebcc89"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0003",
+              "source": " over ",
+              "command": "text",
+              "policy_entry": "stacks-root-over",
+              "slot_byte_span": {
+                "start": 61,
+                "end": 67
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "usage": "root-phrase",
+                "usage_source": {
+                  "before": "m",
+                  "after": "R",
+                  "environments": []
+                },
+                "source_label": "stacks-lemma-relative-sheaf-over-stack-is-stack",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "stacks.tex",
+                  "owner_tag": "0CKJ",
+                  "owner_label": "stacks-lemma-relative-sheaf-over-stack-is-stack",
+                  "kind": "lemma",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 48733,
+                        "end": 49450
+                      },
+                      "container_hash": "sha256:359261f960bb91f2414885c3a8e642d81da49faedb6444421caa0fa55d9043ba",
+                      "command_byte_span": {
+                        "start": 49303,
+                        "end": 49316
+                      },
+                      "command_hash": "sha256:1635df8c1b7cd3d54240320c9cd066d4fc8d5fd586e481c579c1570b3f27ed53"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "region_id": "math/0002",
+          "delimiter_kind": "environment",
+          "source": "\\begin{equation}\n\\label{equation-objects}\nX(T) = \\{\\text{free }d\\text{-dimensional algebras }\nm\\text{ over }\\Gamma(T, \\mathcal{O}_T)\\}\n\\end{equation}",
+          "source_hash": "sha256:112c12d4ce9add222d48753ed50a8a2fcb1ea975541ccd016b510a0a0a2c55cd",
+          "source_byte_span": {
+            "start": 2615,
+            "end": 2764
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0005"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0002/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0006"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0002/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0007"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0002/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0008"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0002/text/0001",
+              "source": "free ",
+              "command": "text",
+              "policy_entry": "deformations-natural-5",
+              "slot_byte_span": {
+                "start": 57,
+                "end": 62
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0005",
+                "MATHSEG_0006"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\{",
+                  "after": "d",
+                  "environments": [
+                    "equation"
+                  ]
+                },
+                "source_label": "criteria-section-hilbert-point",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "criteria.tex",
+                  "owner_tag": "05YL",
+                  "owner_label": "criteria-section-hilbert-point",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 80981,
+                        "end": 82979
+                      },
+                      "container_hash": "sha256:0ef0f81f743018f8b30d070456bfd6571ce5b582178ccf71ce6bb38b8a0f2c18",
+                      "command_byte_span": {
+                        "start": 82802,
+                        "end": 82814
+                      },
+                      "command_hash": "sha256:df9922c16940c138d4fe0bd4038bc10a3ba648e36247a42b294d4a2f2a219ed7"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 82979,
+                        "end": 83128
+                      },
+                      "container_hash": "sha256:112c12d4ce9add222d48753ed50a8a2fcb1ea975541ccd016b510a0a0a2c55cd",
+                      "command_byte_span": {
+                        "start": 83030,
+                        "end": 83042
+                      },
+                      "command_hash": "sha256:df9922c16940c138d4fe0bd4038bc10a3ba648e36247a42b294d4a2f2a219ed7"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0002/text/0002",
+              "source": "-dimensional algebras ",
+              "command": "text",
+              "policy_entry": "deformations-natural-6",
+              "slot_byte_span": {
+                "start": 70,
+                "end": 92
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0006",
+                "MATHSEG_0007"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "d",
+                  "after": "\nm",
+                  "environments": [
+                    "equation"
+                  ]
+                },
+                "source_label": "criteria-section-hilbert-point",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "criteria.tex",
+                  "owner_tag": "05YL",
+                  "owner_label": "criteria-section-hilbert-point",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 80981,
+                        "end": 82979
+                      },
+                      "container_hash": "sha256:0ef0f81f743018f8b30d070456bfd6571ce5b582178ccf71ce6bb38b8a0f2c18",
+                      "command_byte_span": {
+                        "start": 82815,
+                        "end": 82844
+                      },
+                      "command_hash": "sha256:705194c4ff273c2156ef7acb16b7a986f1d45e0df54d582381c66f098eebcc89"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 82979,
+                        "end": 83128
+                      },
+                      "container_hash": "sha256:112c12d4ce9add222d48753ed50a8a2fcb1ea975541ccd016b510a0a0a2c55cd",
+                      "command_byte_span": {
+                        "start": 83043,
+                        "end": 83072
+                      },
+                      "command_hash": "sha256:705194c4ff273c2156ef7acb16b7a986f1d45e0df54d582381c66f098eebcc89"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0002/text/0003",
+              "source": " over ",
+              "command": "text",
+              "policy_entry": "deformations-natural-7",
+              "slot_byte_span": {
+                "start": 101,
+                "end": 107
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0007",
+                "MATHSEG_0008"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "m",
+                  "after": "\\Gamma",
+                  "environments": [
+                    "equation"
+                  ]
+                },
+                "source_label": "criteria-section-hilbert-point",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "criteria.tex",
+                  "owner_tag": "05YL",
+                  "owner_label": "criteria-section-hilbert-point",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 82979,
+                        "end": 83128
+                      },
+                      "container_hash": "sha256:112c12d4ce9add222d48753ed50a8a2fcb1ea975541ccd016b510a0a0a2c55cd",
+                      "command_byte_span": {
+                        "start": 83074,
+                        "end": 83087
+                      },
+                      "command_hash": "sha256:1635df8c1b7cd3d54240320c9cd066d4fc8d5fd586e481c579c1570b3f27ed53"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "source_math_skeleton_hash": "sha256:3dfe5506bc90e195bd4489d0efe0015f8e84efc8081b9a66a9a73a93a69f5cec",
+      "source_text_hash": "sha256:7cc76b989773e19d77ba5240006e31eb1b49e0890fa91ffa497652740802ea1a",
+      "source_structure_hash": "sha256:87d2ed990d50fc64023870fec79260a6e89def29b21666b111c1c56eda568a81",
+      "source_math_hash": "sha256:ebc9c7b6d2597704007ccb08581f396fe2e5d92ae375a2ed86d6857883db48e6"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:05YH:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:92bf1de867094aeed8372310bb770fe041410a343617666ce734d65d1067170e",
+      "source_structure_hash": "sha256:9e0f431b364be8ea21abe4f832d647d85d6961bdfb744c20e78da0f67bcf3643",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 54,
+          "projection_end": 60,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "structure morphism",
+          "projection_start": 123,
+          "projection_end": 141,
+          "concept": "source-phrase-structure-morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 277,
+          "projection_end": 283,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 349,
+          "projection_end": 362,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 378,
+          "projection_end": 391,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 398,
+          "projection_end": 413,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 478,
+          "projection_end": 493,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 547,
+          "projection_end": 553,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 601,
+          "projection_end": 607,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 621,
+          "projection_end": 629,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 695,
+          "projection_end": 701,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 750,
+          "projection_end": 762,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphic",
+          "projection_start": 812,
+          "projection_end": 822,
+          "concept": "isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 847,
+          "projection_end": 855,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 881,
+          "projection_end": 889,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 958,
+          "projection_end": 966,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 1020,
+          "projection_end": 1033,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 1061,
+          "projection_end": 1076,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05YJ:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:ba86a5a8821a89278f1b9909ba014a686d34509fd1eec68ce5c6a882096063d8",
+      "source_structure_hash": "sha256:a645ef973588dac966651fcabef27e79fbecc4d24da2562894a76edb04e19d76",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "scheme",
+          "projection_start": 21,
+          "projection_end": 27,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 54,
+          "projection_end": 60,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 132,
+          "projection_end": 145,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 161,
+          "projection_end": 174,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 181,
+          "projection_end": 196,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 218,
+          "projection_end": 224,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "object",
+          "projection_start": 268,
+          "projection_end": 274,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fibre product",
+          "projection_start": 372,
+          "projection_end": 385,
+          "concept": "fibre-product",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 401,
+          "projection_end": 414,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 421,
+          "projection_end": 436,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "representable",
+          "projection_start": 499,
+          "projection_end": 512,
+          "concept": "representable",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic space",
+          "projection_start": 541,
+          "projection_end": 556,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:05YL:prose-0001",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:7cc76b989773e19d77ba5240006e31eb1b49e0890fa91ffa497652740802ea1a",
+      "source_structure_hash": "sha256:87d2ed990d50fc64023870fec79260a6e89def29b21666b111c1c56eda568a81",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "Stacks",
+          "projection_start": 60,
+          "projection_end": 66,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "stack",
+          "projection_start": 103,
+          "projection_end": 108,
+          "concept": "stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 112,
+          "projection_end": 121,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic stack",
+          "projection_start": 183,
+          "projection_end": 198,
+          "concept": "algebraic-stack",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 286,
+          "projection_end": 297,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 321,
+          "projection_end": 329,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 352,
+          "projection_end": 358,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 378,
+          "projection_end": 386,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "finite locally free",
+          "projection_start": 390,
+          "projection_end": 409,
+          "concept": "source-phrase-finite-locally-free",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 410,
+          "projection_end": 419,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 435,
+          "projection_end": 441,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaves",
+          "projection_start": 512,
+          "projection_end": 534,
+          "concept": "quasi-coherent-sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 538,
+          "projection_end": 546,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 608,
+          "projection_end": 612,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 695,
+          "projection_end": 702,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 734,
+          "projection_end": 745,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 758,
+          "projection_end": 765,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "multiplication map",
+          "projection_start": 913,
+          "projection_end": 931,
+          "concept": "source-phrase-multiplication-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring map",
+          "projection_start": 950,
+          "projection_end": 958,
+          "concept": "ring-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 1064,
+          "projection_end": 1070,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1071,
+          "projection_end": 1074,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 1145,
+          "projection_end": 1156,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "associative",
+          "projection_start": 1161,
+          "projection_end": 1172,
+          "concept": "associative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring structure",
+          "projection_start": 1173,
+          "projection_end": 1187,
+          "concept": "source-phrase-ring-structure",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "function",
+          "projection_start": 1318,
+          "projection_end": 1326,
+          "concept": "function",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1370,
+          "projection_end": 1375,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 1395,
+          "projection_end": 1400,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "relations",
+          "projection_start": 1418,
+          "projection_end": 1427,
+          "concept": "relation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1497,
+          "projection_end": 1504,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "classes",
+          "projection_start": 1568,
+          "projection_end": 1575,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 1672,
+          "projection_end": 1679,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 1699,
+          "projection_end": 1703,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra homomorphism",
+          "projection_start": 1750,
+          "projection_end": 1770,
+          "concept": "source-phrase-algebra-homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "base change",
+          "projection_start": 1866,
+          "projection_end": 1877,
+          "concept": "base-change",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 1878,
+          "projection_end": 1885,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 1963,
+          "projection_end": 1972,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 2034,
+          "projection_end": 2042,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "localization",
+          "projection_start": 2114,
+          "projection_end": 2126,
+          "concept": "localization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 2235,
+          "projection_end": 2243,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 2287,
+          "projection_end": 2293,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 2366,
+          "projection_end": 2378,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 2423,
+          "projection_end": 2431,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 2516,
+          "projection_end": 2524,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 2532,
+          "projection_end": 2536,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 2553,
+          "projection_end": 2564,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "invertible",
+          "projection_start": 2612,
+          "projection_end": 2622,
+          "concept": "invertible",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 2635,
+          "projection_end": 2641,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2642,
+          "projection_end": 2645,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 2792,
+          "projection_end": 2800,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 2828,
+          "projection_end": 2836,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 2862,
+          "projection_end": 2869,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 2891,
+          "projection_end": 2899,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "schemes",
+          "projection_start": 2903,
+          "projection_end": 2910,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groupoids",
+          "projection_start": 2914,
+          "projection_end": 2923,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 2930,
+          "projection_end": 2936,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 2966,
+          "projection_end": 2969,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 3002,
+          "projection_end": 3010,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "category",
+          "projection_start": 3060,
+          "projection_end": 3068,
+          "concept": "category",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 3089,
+          "projection_end": 3101,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 3178,
+          "projection_end": 3185,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groups",
+          "projection_start": 3201,
+          "projection_end": 3207,
+          "concept": "group",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 3232,
+          "projection_end": 3238,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "group",
+          "projection_start": 3255,
+          "projection_end": 3260,
+          "concept": "group",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Groupoids",
+          "projection_start": 3307,
+          "projection_end": 3316,
+          "concept": "groupoid",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "subgroup scheme",
+          "projection_start": 3352,
+          "projection_end": 3367,
+          "concept": "subgroup-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "smooth",
+          "projection_start": 3461,
+          "projection_end": 3467,
+          "concept": "smooth",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "affine",
+          "projection_start": 3468,
+          "projection_end": 3474,
+          "concept": "affine",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "group scheme",
+          "projection_start": 3475,
+          "projection_end": 3487,
+          "concept": "group-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra",
+          "projection_start": 3669,
+          "projection_end": 3676,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 3764,
+          "projection_end": 3775,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 3832,
+          "projection_end": 3840,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "group scheme",
+          "projection_start": 3916,
+          "projection_end": 3928,
+          "concept": "group-scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "scheme",
+          "projection_start": 3948,
+          "projection_end": 3954,
+          "concept": "scheme",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:criteria:inventory:criteria:05YH:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:05YH:lemma/0001",
+          "parent_tag": "05XM",
+          "chapter": "criteria",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a <MATH_0002>-morphism of stacks in groupoids\nover <MATH_0003>. Assume that\n<MATH_0004>\nis representable by algebraic spaces. Then\n<MATH_0005>\nsee\nExamples of Stacks, Equation\n(<REF_0001>)\nis representable by algebraic spaces.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-relative-hilbert}",
+            "MATH_0001": "$F : \\mathcal{X} \\to \\mathcal{Y}$",
+            "MATH_0002": "$1$",
+            "MATH_0003": "$(\\Sch/S)_{fppf}$",
+            "MATH_0004": "$\\Delta : \\mathcal{Y} \\to \\mathcal{Y} \\times \\mathcal{Y}$",
+            "MATH_0005": "$$\n\\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})\n\\longrightarrow\n\\mathcal{H}_d(\\mathcal{X}) \\times \\mathcal{Y}\n$$",
+            "REF_0001": "\\ref{examples-stacks-equation-diagram-hilbert-d-stack}",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d7c654d781d168a4aede53faa7871dba497686dc11df095a696dd2e178c5eb70",
+          "source_structure_hash": "sha256:a1ced1516032b053ec02bcc533faf8dba71a3a223dfff8e86aedeb09569d6a78",
+          "source_math_hash": "sha256:4c25ec6b0985d1616751afdd794b4fd1392e0cdbda6e8eed0f32f549981e5710"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 72720,
+          "byte_end": 73227,
+          "line_start": 1898,
+          "line_end": 1913,
+          "fragment_hash": "sha256:c12387fd2d7ee971e854324953ab873cf9b8c9850efdd0f3718a4130e85d7b5c"
+        },
+        "owner_tag": "05YH",
+        "parent_tag": "05XM"
+      },
+      "hash": "sha256:a1e4b21ad3aaf3f317199cdc64d72380bb6e32e4dc3187b12065867ec79a47ee"
+    },
+    {
+      "context_id": "locked-English-neighbor:criteria:inventory:criteria:05XM:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:05XM:paragraph/0002",
+          "parent_tag": "05XM",
+          "chapter": "criteria",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe following lemma is a (partial) generalization of\nLemma <REF_0001>.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "REF_0001": "\\ref{lemma-etale-covering-hilbert}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:44f1f1fc86007a8b6b76f40416f59f83301abc7b66000e592f51c6d8db192d02",
+          "source_structure_hash": "sha256:7c5e0e29c8f1a726b052c00f779005acad1acf4effb3d0da5a50bf648b57f100",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 74857,
+          "byte_end": 74961,
+          "line_start": 1956,
+          "line_end": 1958,
+          "fragment_hash": "sha256:43a42da5d9bd3199a1aeb3dd78c0318f8607f9aee458f911008e8b2752b6daf3"
+        },
+        "owner_tag": "05XM",
+        "parent_tag": "05XM"
+      },
+      "hash": "sha256:4472d90ee3bdc85a6ca530e476c6a771c68f180fa73e10ba792748362fa8f3b4"
+    },
+    {
+      "context_id": "locked-English-neighbor:criteria:inventory:criteria:05YJ:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:05YJ:lemma/0001",
+          "parent_tag": "05XM",
+          "chapter": "criteria",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002>\nbe <MATH_0003>-morphisms of stacks in groupoids over <MATH_0004>.\nIf <MATH_0005> is representable by algebraic spaces, then the <MATH_0006>-morphism\n<MATH_0007>\nis representable by algebraic spaces.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-representable-on-top}",
+            "MATH_0001": "$F : \\mathcal{X} \\to \\mathcal{Y}$",
+            "MATH_0002": "$G : \\mathcal{X}' \\to \\mathcal{X}$",
+            "MATH_0003": "$1$",
+            "MATH_0004": "$(\\Sch/S)_{fppf}$",
+            "MATH_0005": "$G$",
+            "MATH_0006": "$1$",
+            "MATH_0007": "$$\n\\mathcal{H}_d(\\mathcal{X}'/\\mathcal{Y})\n\\longrightarrow\n\\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})\n$$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:f70a134037deefb5cfa6f48796cfc2f0c727e76fc881e7ab1ea6b7429a623aed",
+          "source_structure_hash": "sha256:ccfcc093f157eb7c6fbf4a762233ef440bb8bdaacf02668a4043a29dc35f50a9",
+          "source_math_hash": "sha256:b98f383c1473cffa3bf563cbfaa8d64cbc79345d75f8dff0f149a5e003303de8"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 74963,
+          "byte_end": 75370,
+          "line_start": 1960,
+          "line_end": 1971,
+          "fragment_hash": "sha256:6eb78e31ad09aec4c3a7edf919ec8fc98e470fcbaae2e847e2cdee60a9c04a5d"
+        },
+        "owner_tag": "05YJ",
+        "parent_tag": "05XM"
+      },
+      "hash": "sha256:b779ef02d3364d5b5d60e8001ac80c8a18e99971cff5994a87673b3e0c631068"
+    },
+    {
+      "context_id": "locked-English-neighbor:criteria:inventory:criteria:06CH:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:06CH:lemma/0001",
+          "parent_tag": "05XM",
+          "chapter": "criteria",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a <MATH_0002>-morphism of stacks in groupoids\nover <MATH_0003>. Assume <MATH_0004> is representable by algebraic\nspaces and locally of finite presentation. Then\n<MATH_0005>\nis limit preserving on objects.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-limit-preserving}",
+            "MATH_0001": "$F : \\mathcal{X} \\to \\mathcal{Y}$",
+            "MATH_0002": "$1$",
+            "MATH_0003": "$(\\Sch/S)_{fppf}$",
+            "MATH_0004": "$F$",
+            "MATH_0005": "$$\np : \\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y}) \\to \\mathcal{Y}\n$$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3ab6badea3981102949ed48a6af8646882833774627f36f189651cc479d3e464",
+          "source_structure_hash": "sha256:72619623e08e6a3a0947764fd8437f7231122e7aadd0e95e4602bb3171d21e50",
+          "source_math_hash": "sha256:c24e15448e4957d2fb307d0924c3f959ec3160f890be1ffe70b6c0e4f65b4052"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 76288,
+          "byte_end": 76633,
+          "line_start": 1996,
+          "line_end": 2005,
+          "fragment_hash": "sha256:070675d2b095c6d8d2c7135710eda5cda33cfc183f0afccac3acbf364290c64c"
+        },
+        "owner_tag": "06CH",
+        "parent_tag": "05XM"
+      },
+      "hash": "sha256:da06e89daa6361fe18a3d151490d5fc2abc551193598f8d0c390df5fb56d5d5a"
+    },
+    {
+      "context_id": "locked-English-neighbor:criteria:inventory:criteria:05YL:section_title/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:05YL:section_title/0001",
+          "parent_tag": "05YL",
+          "chapter": "criteria",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>The finite Hilbert stack of a point<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-hilbert-point}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:4ec7a40242ba684978435d9d8ecb93d631bf3afd5ea29359044c3865abbe97c2",
+          "source_structure_hash": "sha256:650a94cd7a2f7b87a8926a10d3e9d8bd23b797f98f76862d9ffba91988b3261f",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 80289,
+          "byte_end": 80364,
+          "line_start": 2107,
+          "line_end": 2108,
+          "fragment_hash": "sha256:5f02fe82ecdeaee1144cb712b33cf48673092386ae7e7b21705c3f21652c9da9"
+        },
+        "owner_tag": "05YL",
+        "parent_tag": "05YL"
+      },
+      "hash": "sha256:f6cd074508212eb5d2c472760c92d6ed90be8f5dd7194b1e94614f088fd1d6ef"
+    },
+    {
+      "context_id": "locked-English-neighbor:criteria:inventory:criteria:05YP:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:05YP:lemma/0001",
+          "parent_tag": "05YL",
+          "chapter": "criteria",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe functor in groupoids <MATH_0001> defined in (<REF_0001>)\nis isomorphic (!) to the functor in groupoids which associates\nto a scheme <MATH_0002> the category with\n<STRUCT_0002>\n<STRUCT_0003> set of objects is <MATH_0003>,\n<STRUCT_0004> set of morphisms is <MATH_0004>,\n<STRUCT_0005> <MATH_0005> is the projection map,\n<STRUCT_0006> <MATH_0006> is <MATH_0007>, and\n<STRUCT_0007> composition <MATH_0008> is given by <MATH_0009>.\n<STRUCT_0008>\n<STRUCT_0009>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-represent-FAd}",
+            "MATH_0001": "$FA_d$",
+            "REF_0001": "\\ref{equation-FAd}",
+            "MATH_0002": "$T$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0003": "$X(T)$",
+            "STRUCT_0004": "\\item",
+            "MATH_0004": "$G(T) \\times X(T)$",
+            "STRUCT_0005": "\\item",
+            "MATH_0005": "$s : G(T) \\times X(T) \\to X(T)$",
+            "STRUCT_0006": "\\item",
+            "MATH_0006": "$t : G(T) \\times X(T) \\to X(T)$",
+            "MATH_0007": "$a(T)$",
+            "STRUCT_0007": "\\item",
+            "MATH_0008": "$G(T) \\times X(T) \\times_{s, X(T), t} G(T) \\times X(T)\n\\to G(T) \\times X(T)$",
+            "MATH_0009": "$((g, m), (g', m')) \\mapsto (gg', m')$",
+            "STRUCT_0008": "\\end{enumerate}",
+            "STRUCT_0009": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:b2401b458f4fe79004805842553b5a0b4fe617f9ad4f9daf328737223149e497",
+          "source_structure_hash": "sha256:df22e1f9bf6c65e9ad844848fd0691862abcdb440dfc81d6bea30bc05c15ee4e",
+          "source_math_hash": "sha256:58bb94ee940ad8b4bdf9b397381844095535b6a2e18082bda9b0b1fa95b2f05f"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 85034,
+          "byte_end": 85621,
+          "line_start": 2229,
+          "line_end": 2242,
+          "fragment_hash": "sha256:2e535752be965627142dfb67e0930c8efd5e32e51d24cc4359edf40783acd168"
+        },
+        "owner_tag": "05YP",
+        "parent_tag": "05YL"
+      },
+      "hash": "sha256:75f8a656714fd74a6bf6e8dbafa5ffa1e88a6d8df108e376ed1108399ca01859"
+    },
+    {
+      "context_id": "locked-English-reference:criteria:inventory:criteria:05YF:proposition/0001:criteria-proposition-restriction-of-scalars-algebraic-space",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:criteria:05YF:proposition/0001",
+          "parent_tag": "05Y8",
+          "chapter": "criteria",
+          "node_kind": "proposition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be morphisms of\nalgebraic spaces over <MATH_0003>. If <MATH_0004> is finite locally free\nthen <MATH_0005> is an algebraic space.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proposition}",
+            "LOCKED_0001": "\\label{proposition-restriction-of-scalars-algebraic-space}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$X \\to Z \\to B$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$Z \\to B$",
+            "MATH_0005": "$\\text{Res}_{Z/B}(X)$",
+            "STRUCT_0002": "\\end{proposition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:7f00a8c607cafdeeb4bc7ec65973bcbe6a61b46260b24ea52cf772f277ea67a0",
+          "source_structure_hash": "sha256:c0950b0f51b82060da3a45bd2ad479d7a79e8291735639a5e981ac49dc3842e7",
+          "source_math_hash": "sha256:20aefff84ec3da905a0aab4343d03d2eb536fd0f2914cec0a53cafd5f413c085"
+        },
+        "location": {
+          "file": "criteria.tex",
+          "byte_start": 65452,
+          "byte_end": 65718,
+          "line_start": 1691,
+          "line_end": 1696,
+          "fragment_hash": "sha256:07976ff0755b20a5b70c14ebf28c49ed5cf25d3d82e5eea415d433e34e09b69e"
+        },
+        "owner_tag": "05YF",
+        "parent_tag": "05Y8",
+        "requested_label": "criteria-proposition-restriction-of-scalars-algebraic-space",
+        "requested_tag": "05YF"
+      },
+      "hash": "sha256:78618eb62dbd549b8b4630a26aa2fca88762a88efc976b23923e96a0fd1eebde"
+    },
+    {
+      "context_id": "locked-English-reference:examples-stacks:inventory:examples-stacks:05WC:definition/0001:examples-stacks-definition-hilbert-d-stack",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:examples-stacks:05WC:definition/0001",
+          "parent_tag": "05WA",
+          "chapter": "examples-stacks",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nWe will denote <MATH_0001>\nthe <TEXTITOPEN_0001>degree <MATH_0002> finite Hilbert stack of <MATH_0003> over <MATH_0004><TEXTITCLOSE_0001>\nconstructed above. If <MATH_0005> we write\n<MATH_0006>.\nIf <MATH_0007> we denote it <MATH_0008>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-hilbert-d-stack}",
+            "MATH_0001": "$\\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "MATH_0002": "$d$",
+            "MATH_0003": "$\\mathcal{X}$",
+            "MATH_0004": "$\\mathcal{Y}$",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0005": "$\\mathcal{Y} = S$",
+            "MATH_0006": "$\\mathcal{H}_d(\\mathcal{X}) = \\mathcal{H}_d(\\mathcal{X}/\\mathcal{Y})$",
+            "MATH_0007": "$\\mathcal{X} = \\mathcal{Y} = S$",
+            "MATH_0008": "$\\mathcal{H}_d$",
+            "STRUCT_0002": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:78213ee1e75f719f73912aed379ab00a3b52fdb28bb11674d7e62623479fe711",
+          "source_structure_hash": "sha256:0c12c6285097e95b1b67b9cb21e78b2a939e4197b6534ba7e6bf91f47bc0007f",
+          "source_math_hash": "sha256:eed295fc175fef6cfbe4b0e04da19bd4d8fa756095a04d5b6dc441004743b9fb"
+        },
+        "location": {
+          "file": "examples-stacks.tex",
+          "byte_start": 63674,
+          "byte_end": 64063,
+          "line_start": 1805,
+          "line_end": 1812,
+          "fragment_hash": "sha256:95fa011135e948be54ca501f3fad58644b77293911451b8907b20025db9bda11"
+        },
+        "owner_tag": "05WC",
+        "parent_tag": "05WA",
+        "requested_label": "examples-stacks-definition-hilbert-d-stack",
+        "requested_tag": "05WC"
+      },
+      "hash": "sha256:ca117c294af6e49a1398aeed73eaa96c8a587118a467f3b643549d9483963ce4"
+    },
+    {
+      "context_id": "locked-English-reference:groupoids:inventory:groupoids:022W:example/0001:groupoids-example-general-linear-group",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:groupoids:022W:example/0001",
+          "parent_tag": "047F",
+          "chapter": "groupoids",
+          "node_kind": "example",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001><ENVARGOPEN_0001>General linear group scheme<ENVARGEND_0001>\n<LOCKED_0001>\nLet <MATH_0001>.\nConsider the functor which associates\nto any scheme <MATH_0002> the group\n<MATH_0003>\nof invertible <MATH_0004> matrices over\nthe global sections of the structure sheaf.\nThis is representable by the scheme\n<MATH_0005>\nwhere <MATH_0006> with <MATH_0007> the <MATH_0008> matrix\nwith entry <MATH_0009> in the <MATH_0010>-spot.\nThe morphism giving the group structure is the morphism\n<MATH_0011>\nHence we see that <MATH_0012> is a group scheme over <MATH_0013>.\nFor any scheme <MATH_0014> the base change <MATH_0015> is a\ngroup scheme over <MATH_0016> whose functor of points is\n<MATH_0017>\nas before.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{example}",
+            "ENVARGOPEN_0001": "[",
+            "ENVARGEND_0001": "]",
+            "LOCKED_0001": "\\label{example-general-linear-group}",
+            "MATH_0001": "$n \\geq 1$",
+            "MATH_0002": "$T$",
+            "MATH_0003": "$$\n\\text{GL}_n(\\Gamma(T, \\mathcal{O}_T))\n$$",
+            "MATH_0004": "$n \\times n$",
+            "MATH_0005": "$$\n\\text{GL}_n = \\Spec(\\mathbf{Z}[\\{x_{ij}\\}_{1 \\leq i, j \\leq n}][1/d])\n$$",
+            "MATH_0006": "$d = \\det((x_{ij}))$",
+            "MATH_0007": "$(x_{ij})$",
+            "MATH_0008": "$n \\times n$",
+            "MATH_0009": "$x_{ij}$",
+            "MATH_0010": "$(i, j)$",
+            "MATH_0011": "\\begin{eqnarray*}\n\\text{GL}_n \\times \\text{GL}_n & \\to & \\text{GL}_n \\\\\n\\Spec(\\mathbf{Z}[x_{ij}, 1/d] \\otimes_{\\mathbf{Z}}\n\\mathbf{Z}[x_{ij}, 1/d])\n& \\to &\n\\Spec(\\mathbf{Z}[x_{ij}, 1/d]) \\\\\n\\mathbf{Z}[x_{ij}, 1/d] \\otimes_{\\mathbf{Z}} \\mathbf{Z}[x_{ij}, 1/d]\n& \\leftarrow &\n\\mathbf{Z}[x_{ij}, 1/d] \\\\\n\\sum x_{ik} \\otimes x_{kj} & \\leftarrow & x_{ij}\n\\end{eqnarray*}",
+            "MATH_0012": "$\\text{GL}_n$",
+            "MATH_0013": "$\\mathbf{Z}$",
+            "MATH_0014": "$S$",
+            "MATH_0015": "$\\text{GL}_{n, S}$",
+            "MATH_0016": "$S$",
+            "MATH_0017": "$$\nT/S\n\\longmapsto\n\\text{GL}_{n, S}(T) = \\text{GL}_n(T) =\\text{GL}_n(\\Gamma(T, \\mathcal{O}_T))\n$$",
+            "STRUCT_0002": "\\end{example}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:72a8ee70eac0158821ea4a985870142a75a91697dd0cc1a7979237081ef0db1a",
+          "source_structure_hash": "sha256:6acb26cc8792c098a53f92221dc9eb74e7a694ae5417262b1d9560089dd66ef9",
+          "source_math_hash": "sha256:b0e0a87fe77c2d7c57ac719478667c7adf399d0726b8089b437a0f0efade37ab"
+        },
+        "location": {
+          "file": "groupoids.tex",
+          "byte_start": 14473,
+          "byte_end": 15708,
+          "line_start": 484,
+          "line_end": 521,
+          "fragment_hash": "sha256:09d01fcd4a8a494e4065282d3d2063755146bd2a4ec20662850c067d6e84a131"
+        },
+        "owner_tag": "022W",
+        "parent_tag": "047F",
+        "requested_label": "groupoids-example-general-linear-group",
+        "requested_tag": "022W"
+      },
+      "hash": "sha256:d7cbbaa17afd8e16a839b6abb35a674b11bcceb12558ff043188ec92210e59c6"
+    }
+  ],
+  "policy_git_origin": "9c104567d0e9b01c16c0bf5f5d0c71b3c1c5c028",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:1c2bcce41979b5c282eac775e823e7c797aefdcd0fa0faa28a061c24674c6e7e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:88a7438f6f309e25961f54d0404519281e4786a3c2d470e485c819ce15539756"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:ef9263cdedf15a3e360f6184509c2cc7615c299a5fff9074d46544f7a4abb656"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:385dde972b3048344f9d5e7b9098624f636a993b4c3d34071846916ccc154a9f"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-01.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-02.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-03.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-04.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-05.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-06.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-07.jsonl",
+    "docs/evidence/criteria97-gpt61sol-p016-20261117-raw-08.jsonl"
+  ],
+  "rules": "Actual model generates all five translator fields for every unit. Protect token order/count and exact trailing whitespace. Unknown terms remain provisional. No prior candidate is supplied as translation memory."
+}

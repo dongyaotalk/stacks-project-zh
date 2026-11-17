@@ -831,6 +831,8 @@ class Scanner:
                         'anchor': self.policy.math_text_witnesses[slot['policy_entry']]}})
                 if 'parameter_components' in slot:
                     text_slots[-1]['parameter_components'] = slot['parameter_components']
+                if 'parameter_reference_leaves' in slot:
+                    text_slots[-1]['parameter_reference_leaves'] = slot['parameter_reference_leaves']
                 if 'parameter_reference' in slot:
                     text_slots[-1]['parameter_reference'] = slot['parameter_reference']
                 protected.extend([before, slot['value']])
@@ -1054,7 +1056,7 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
         for region in unit.get('math_text_regions', []):
             stream = nodes(region['source'])
             for slot in region['slots']:
-                parameter_start = slot.get('parameter_reference', slot.get('parameter_components', {})).get(
+                parameter_start = slot.get('parameter_reference_leaves', slot.get('parameter_reference', slot.get('parameter_components', {}))).get(
                     'parameter_byte_span', slot['slot_byte_span'])['start']
                 node = next(n for n in stream if n.get('command') == slot['command'] and
                             len(region['source'][:n['parameter_start']].encode('utf-8')) == parameter_start)

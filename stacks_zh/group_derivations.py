@@ -21,6 +21,9 @@ def revision_group(record: dict[str, Any], group: dict[str, Any],
 
 def replay_groups(record, units, candidates, corrections, previous_outputs, restorations, tags):
     units, candidates = [clean(u) for u in units], [clean(c) for c in candidates]
+    if (any(u.get('schema_version') == 5 for u in units)
+            or any(u.get('schema_version') == 5 for g in record['unit_groups'] for u in g['output_units'])):
+        raise RecordError('group derivation v4 cannot adopt unit-v5 internal references')
     if (any(u.get('schema_version') == 4 for u in units)
             or any(u.get('schema_version') == 4 for g in record['unit_groups'] for u in g['output_units'])):
         raise RecordError('group derivation v4 cannot adopt unit-v4 protected references')

@@ -1115,6 +1115,8 @@ def load_source_containers(root: Path, harvest: Path | None = None, *,
                 _first_addition_is_immutable(root, frozen_path)
                 frozen[role] = [clean(u) for u in load_jsonl(frozen_path)]
             units, candidates = frozen['input_units'], frozen['input_candidates']
+            if any(u.get('schema_version') == 5 for u in units + record['new_units']):
+                raise RecordError('historical source-container restoration cannot adopt unit-v5 internal references')
             if any(u.get('schema_version') == 4 for u in units + record['new_units']):
                 raise RecordError('historical source-container restoration cannot adopt unit-v4 references')
             if (not units or len({u['unit_id'] for u in units}) != len(units)
@@ -1245,6 +1247,8 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
             raise RecordError('container preparation requires the exact committed current complete batch')
     units = [clean(u) for u in load_jsonl(unit_path)]
     candidates = [clean(c) for c in load_jsonl(candidate_path)]
+    if any(u.get('schema_version') == 5 for u in units):
+        raise RecordError('historical source-container preparation cannot process unit-v5 internal references')
     old_ids = [u['unit_id'] for u in units]
     if (not old_ids or len(set(old_ids)) != len(old_ids)
             or [c['unit_id'] for c in candidates] != old_ids
@@ -1307,6 +1311,8 @@ def _prepare_verified_containers(preparation: _VerifiedPreparation, plan: dict[s
                     raise RecordError('selected source containers overlap or reverse complete source order')
                 last_location[file] = location['byte_end']
                 new_units = lower_container(selected, containers.policy, layout=group['layout'])
+                if any(u.get('schema_version') == 5 for u in new_units):
+                    raise RecordError('historical source-container preparation cannot adopt unit-v5 internal references')
                 if any(u.get('schema_version') == 4 for u in new_units):
                     raise RecordError('historical source-container preparation cannot adopt unit-v4 references')
                 witnessed_version = None

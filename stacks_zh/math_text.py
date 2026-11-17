@@ -18,6 +18,7 @@ from . import math_text_sites_cohomology as sites
 from . import math_text_spaces as spaces
 from . import math_text_groupoids as groupoids
 from . import math_text_deformations as deformations
+from . import math_text_deformations_references as internal_refs
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
 COMMAND = re.compile(r'\\(?:[A-Za-z@]+|[\s\S])')
@@ -27,7 +28,7 @@ USAGES = {'quad-connector', 'matrix-condition', 'set-description',
           'root-condition', 'matrix-row-condition', 'root-hyphen-phrase',
           'matrix-membership', 'aligned-set-connector', 'matrix-row-description',
           'matrix-row-statement', 'matrix-operator-compatibility',
-          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES | groupoids.USAGES | deformations.USAGES
+          'matrix-numeric-category-prefix', 'matrix-category-description'} | descent.USAGES | etale.USAGES | sites.USAGES | spaces.USAGES | groupoids.USAGES | deformations.USAGES | internal_refs.USAGES
 MATRIX_ROW_USAGES = {'matrix-row-text', 'matrix-row-prefix'}
 COMPONENT_USAGE = 'indexed-component-description'
 COMPONENT_LITERAL = r' irred.\ comp. with '
@@ -51,6 +52,7 @@ def plain_text(text: str) -> bool:
 def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Strict, JSON-valued subset of the macro policy's explicit registry."""
     rules, active, seen, entry, components, references = {}, False, set(), None, False, False
+    internal = False
     contexts, contextual = {}, False
     for line in text.splitlines():
         if not line.strip() or line.lstrip().startswith('#'):
@@ -59,11 +61,14 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
             section = line.partition(':')[0]
             components = section == 'translatable_math_text_components'
             references = section == 'translatable_math_text_references'
+            internal = section == 'translatable_math_text_internal_references'
             contextual = section == 'translatable_math_text_contexts'
             active = line in {'translatable_math_text:', 'translatable_math_text_components:',
-                              'translatable_math_text_contexts:', 'translatable_math_text_references:'}
+                              'translatable_math_text_contexts:', 'translatable_math_text_references:',
+                              'translatable_math_text_internal_references:'}
             if section in {'translatable_math_text', 'translatable_math_text_components',
-                           'translatable_math_text_contexts', 'translatable_math_text_references'}:
+                           'translatable_math_text_contexts', 'translatable_math_text_references',
+                           'translatable_math_text_internal_references'}:
                 if not active or section in seen:
                     raise ValueError('invalid or duplicate natural math-text policy section')
                 seen.add(section)
@@ -76,7 +81,8 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 if entry in rules or entry in contexts:
                     raise ValueError('duplicate natural math-text policy entry')
                 destination[entry] = ({'slot_schema_version':3} if components else
-                                      {'slot_schema_version':4} if references else {})
+                                      {'slot_schema_version':4} if references else
+                                      {'slot_schema_version':5} if internal else {})
             else:
                 field = re.fullmatch(r'    ([a-z_]+): (.+)', line)
                 if field is None or entry is None or field[1] in destination[entry]:
@@ -84,6 +90,19 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 destination[entry][field[1]] = json.loads(field[2])
     seen_literals = set()
     for rule in rules.values():
+        if rule.get('slot_schema_version') == 5:
+            fields = {'slot_schema_version', 'literal', 'command', 'usage', 'source_label',
+                      'witness_kind', 'witness_ordinal'}
+            if (set(rule) != fields or internal_refs.literal_contract(rule['literal']) is None
+                    or rule['command'] != 'text' or rule['usage'] != internal_refs.REFERENCE_USAGE
+                    or rule['literal'] in seen_literals or rule['literal'] in notations
+                    or not isinstance(rule['source_label'], str)
+                    or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label'])
+                    or rule['witness_kind'] != 'remark' or type(rule['witness_ordinal']) is not int
+                    or rule['witness_ordinal'] != 1):
+                raise ValueError('unsupported complete internal-reference policy')
+            seen_literals.add(rule['literal'])
+            continue
         if rule.get('slot_schema_version') == 4:
             expected = dict(slot_schema_version=4, literal=sites.REFERENCE_LITERAL,
                 prefix=sites.REFERENCE_PREFIX, reference=sites.REFERENCE,
@@ -98,6 +117,11 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
                 raise ValueError('unsupported complete protected-reference policy')
             seen_literals.add(rule['literal'])
             continue
+        if rule.get('usage') == internal_refs.REFERENCE_USAGE:
+            raise ValueError('internal references require their independent unit-v5 policy section')
+        if (rule.get('usage') == internal_refs.PLAIN_USAGE
+                and rule.get('literal') not in internal_refs.PRIMARY_LITERALS):
+            raise ValueError('reference-frame primary requires its exact complete literal')
         component = rule.get('slot_schema_version') == 3
         if set(rule) != ({'literal', 'command', 'usage', 'source_label', 'witness_kind', 'witness_ordinal'}
                          | ({'slot_schema_version','components','separator'} if component else set())):
@@ -141,7 +165,7 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         if (not isinstance(rule['source_label'], str)
                 or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', rule['source_label'])
                 or not isinstance(rule['witness_kind'], str)
-                or rule['witness_kind'] not in {'section', 'lemma', 'proof'}
+                or rule['witness_kind'] not in ({'remark'} if rule['usage'] == internal_refs.PLAIN_USAGE else {'section', 'lemma', 'proof'})
                 or type(rule['witness_ordinal']) is not int or rule['witness_ordinal'] < 1):
             raise ValueError('invalid natural math-text source witness')
     context_pairs = set()
@@ -152,14 +176,15 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         expected = {'matrix-membership': {' in '}, 'aligned-set-connector': {' and '},
                     'matrix-category-description': {' over '},
                     'descent-sheaf-set-matrices': {'each '}}
-        if (base is None or base.get('slot_schema_version') in {3,4}
+        if (base is None or base.get('slot_schema_version') in {3,4,5}
                 or not ((base['usage'] == 'root-phrase'
                          and context['usage'] in expected
                          and base['literal'] in expected[context['usage']])
                         or (base['usage'], base['literal']) in etale.CONTEXTS.get(context['usage'], set())
                         or (base['usage'], base['literal']) in spaces.CONTEXTS.get(context['usage'], set())
                         or (base['usage'], base['literal']) in groupoids.CONTEXTS.get(context['usage'], set())
-                        or (base['usage'], base['literal']) in deformations.CONTEXTS.get(context['usage'], set()))):
+                        or (base['usage'], base['literal']) in deformations.CONTEXTS.get(context['usage'], set())
+                        or (base['usage'], base['literal']) in internal_refs.CONTEXTS.get(context['usage'], set()))):
             raise ValueError('natural context requires its exact ordinary root literal and new role')
         pair = (base['literal'], context['usage'])
         if pair in context_pairs:
@@ -167,7 +192,7 @@ def policy_rules(text: str, notations: dict[str, Any]) -> dict[str, dict[str, An
         context_pairs.add(pair)
         if (not isinstance(context['source_label'], str)
                 or not re.fullmatch(r'[a-z][a-z0-9_-]*-[A-Za-z][A-Za-z0-9_-]*', context['source_label'])
-                or context['witness_kind'] not in {'section', 'lemma', 'proof'}
+                or context['witness_kind'] not in ({'remark'} if context['usage'] == internal_refs.PLAIN_USAGE else {'section', 'lemma', 'proof'})
                 or type(context['witness_ordinal']) is not int or context['witness_ordinal'] < 1):
             raise ValueError('invalid natural math-text context witness')
         rules[key] = {**base, **{name: value for name, value in context.items() if name != 'base_rule'}}
@@ -477,6 +502,8 @@ def _context_usage(source, stream, index, kind):
 
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
+    if kind in internal_refs.USAGES:
+        return internal_refs.usage(source, stream, index, kind)
     if kind in deformations.USAGES:
         return deformations.usage(source, stream, index, kind)
     qualified = groupoids.qualified_usage(source, stream, index, kind)
@@ -610,11 +637,15 @@ def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, 
             if node['value'] != rule['literal'] or node['command'] != rule['command']:
                 continue
             witness = usage(source, stream, index, rule['usage'])
-            if witness is not None and (rule.get('slot_schema_version') in {3,4} or plain_text(node['value'])):
+            if witness is not None and (rule.get('slot_schema_version') in {3,4,5} or plain_text(node['value'])):
                 if matched:
                     raise ValueError('ambiguous natural math-text roles for one complete parameter')
                 matched = True
-            if witness is not None and rule.get('slot_schema_version') == 4:
+            if witness is not None and rule.get('slot_schema_version') == 5:
+                for leaf in internal_refs.reference_leaves(source, node):
+                    accepted.append({**node, **leaf, 'policy_entry': key, 'usage': rule['usage'],
+                                     'usage_source': witness})
+            elif witness is not None and rule.get('slot_schema_version') == 4:
                 accepted.append({**node, 'parameter_end': node['parameter_start'] + len(rule['prefix']),
                     'value': rule['prefix'], 'policy_entry': key, 'usage': rule['usage'],
                     'usage_source': witness, 'parameter_reference': sites.reference_metadata(source, node)})
@@ -699,16 +730,19 @@ def bind_regions(unit: dict[str, Any], proposed: list[dict[str, Any]]) -> dict[s
         regions.append(region)
     component = any('parameter_components' in s for r in regions for s in r['slots'])
     reference = any('parameter_reference' in s for r in regions for s in r['slots'])
+    internal = any('parameter_reference_leaves' in s for r in regions for s in r['slots'])
+    if internal and (reference or component):
+        raise ValueError('unit-v5 cannot mix previous component/reference formats')
     if reference and component:
         raise ValueError('unit-v4 does not permit component parameters')
-    version = 4 if reference else 3 if component else 2
+    version = 5 if internal else 4 if reference else 3 if component else 2
     unit.update(schema_version=version, risk_level='R3', math_text_regions=regions)
     unit['source_math_skeleton_hash'] = digest(skeleton(unit))
     return unit
 
 
 def validate_regions(unit: dict[str, Any]) -> list[str]:
-    if type(unit.get('schema_version')) is not int or unit['schema_version'] not in {1, 2, 3, 4}:
+    if type(unit.get('schema_version')) is not int or unit['schema_version'] not in {1, 2, 3, 4, 5}:
         return ['unsupported mathematical unit schema version']
     if unit['schema_version'] == 1:
         return ['unit-v1 cannot contain split math tokens'] if any(
@@ -717,7 +751,8 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
         from .schema_validation import validate_named_schema
         regions = unit['math_text_regions']
         version = unit['schema_version']
-        schema = ('math-text-references.schema.json' if version == 4 else
+        schema = ('math-text-internal-references.schema.json' if version == 5 else
+                  'math-text-references.schema.json' if version == 4 else
                   'math-text-components.schema.json' if version == 3 else 'math-text-regions.schema.json')
         errors = validate_named_schema(regions, schema, 'math_text_regions')
         if errors:
@@ -728,6 +763,9 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
             raise ValueError('unit-v3 requires at least one complete composite text parameter')
         if version == 4 and not any('parameter_reference' in s for r in regions for s in r['slots']):
             raise ValueError('unit-v4 requires a complete protected-reference parameter')
+        if version == 5 and (not any('parameter_reference_leaves' in s for r in regions for s in r['slots'])
+                or any('parameter_reference' in s or 'parameter_components' in s for r in regions for s in r['slots'])):
+            raise ValueError('unit-v5 requires complete internal-reference pairs without legacy formats')
         full = (unit['render']['prefix'] + restore(unit, unit['source_text']) + unit['render']['suffix']).encode('utf-8')
         used, last_end = [], -1
         for index, region in enumerate(regions, 1):
@@ -779,6 +817,13 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
                         if ordinal in seen:
                             raise ValueError('composite parameter repeats a text component')
                         seen.append(ordinal)
+                    if 'parameter_reference_leaves' in slot:
+                        key = node['parameter_start']
+                        ordinal = slot['parameter_reference_leaves']['leaf_index']
+                        seen = coverage.setdefault(key, [])
+                        if ordinal in seen:
+                            raise ValueError('internal-reference parameter repeats a pure leaf')
+                        seen.append(ordinal)
                     witness = slot['classification_witness']
                     anchor = witness['anchor']
                     if (anchor['source_commit'] != unit['source_commit']
@@ -810,7 +855,7 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
 
 def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
     errors = validate_regions(unit)
-    if errors or unit.get('schema_version') not in {2,3,4}:
+    if errors or unit.get('schema_version') not in {2,3,4,5}:
         return errors
     if not isinstance(translation, str):
         return ['typed math translation must be a string']
@@ -842,8 +887,12 @@ def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
                     first = slots[0]
                     component = 'parameter_components' in first
                     reference = 'parameter_reference' in first
-                    separator = first['parameter_components']['separator'] if component else None
-                    leaves = (node.get('value','').split(separator) if component else
+                    internal = first.get('parameter_reference_leaves')
+                    separator = (internal['separator'] if internal else
+                                 first['parameter_components']['separator'] if component else None)
+                    split = internal_refs.split_parameter(node.get('value', ''), separator) if internal else None
+                    leaves = ([split[0], split[2]] if internal and split is not None else [] if internal else
+                              node.get('value','').split(separator) if component else
                               [sites.reference_prefix(node.get('value'))] if reference else [node.get('value','')])
                     if (node.get('command') != first['command'] or len(leaves) != len(slots)
                             or any(not plain_text(leaf) and not (source == region['source']
@@ -871,7 +920,9 @@ def validate_translation(unit: dict[str, Any], translation: str) -> list[str]:
 def _slot_node(source, stream, slot, version):
     component = slot.get('parameter_components')
     reference = slot.get('parameter_reference')
-    span = (reference['parameter_byte_span'] if reference else
+    internal = slot.get('parameter_reference_leaves')
+    span = (internal['parameter_byte_span'] if internal else
+            reference['parameter_byte_span'] if reference else
             component['parameter_byte_span'] if component else slot['slot_byte_span'])
     matches = [(i,n) for i,n in enumerate(stream) if n.get('command') == slot['command']
         and len(source[:n['parameter_start']].encode()) == span['start']
@@ -879,13 +930,23 @@ def _slot_node(source, stream, slot, version):
     if len(matches) != 1:
         raise ValueError('math slot lacks its complete real parent parameter')
     index,node = matches[0]
-    if (slot['command'] == 'textit' and (version != 2 or component or reference
+    if (slot['command'] == 'textit' and (version != 2 or component or reference or internal
             or not ((slot['source'] == etale.ITALIC_LITERAL
                      and slot['classification_witness']['usage'] == etale.ITALIC_USAGE)
                     or groupoids.italic_contract(slot['command'], slot['source'],
                         slot['classification_witness']['usage'])))):
         raise ValueError('italic math text requires an exact complete category phrase')
-    if reference:
+    if internal:
+        ordinal = internal['leaf_index']
+        if (version != 5 or component or reference or type(ordinal) is not int or ordinal not in {1, 2}
+                or slot['classification_witness']['usage'] != internal_refs.REFERENCE_USAGE):
+            raise ValueError('internal-reference leaf requires its independent version and exact role')
+        expected = internal_refs.reference_leaves(source, node)[ordinal - 1]
+        a, b = expected['parameter_start'], expected['parameter_end']
+        if (internal != expected['parameter_reference_leaves'] or slot['source'] != expected['value']
+                or slot['slot_byte_span'] != dict(start=len(source[:a].encode()), end=len(source[:b].encode()))):
+            raise ValueError('internal-reference leaf differs from its complete original parameter')
+    elif reference:
         start = span['start']
         if (version != 4 or component or node['value'] != sites.REFERENCE_LITERAL
                 or slot['source'] != sites.REFERENCE_PREFIX

@@ -397,3 +397,15 @@ v6 不允许 prior_attempts、prior_adoptions 或 shared_run_histories。既有�
 原字节 hash 和最终结果一致性。它们不改变原选择，只保存未选输出库存；不会被
 重新称为原 run 的已接受记录、实际修订或祖先。新的实际装配继续传入全部有序 raw，
 未知或未声明辅助数据、当前来源/候选/运行错误和全部历史不可变门禁保持。
+
+## 数学文字内部引用两侧纯文字叶的首次生成（v7；独立工具 #1018）
+
+该独立入口要求实际 accepted origin 已包含本工具及其 Schema 能力。工具完成集成、来源/Schema/历史回归、当前全量验收、适用编译及远端门禁并进入 main 后，生产政策与具体数据才可在独立任务中采用；工具分支或局部 Schema 通过不授予具体数据权限。
+
+`source-adoption-input-v7` / `source-adoption-v7` 必须冻结完整来源模型包，至少含一个 unit-v5 内部引用两叶单元；其他输出仅允许原 unit-v1/v2，不混入 v3 组件或 v4 前缀引用。引用参数只能是已声明完整数学帧内的两种精确参数；两侧纯文字可变，完整引用命令、引用键和括号分隔符保持原字节。每叶独立绑定父参数、叶序号、父/叶/分隔符/引用的 UTF-8 范围；同一父参数严格有序出现 [1,2] 各一次。
+
+v7 完整政策集合为 v6 REFERENCE_POLICIES 加 `schema/math-text-internal-references.schema.json`。所有冻结字节必须来自同一个真实 accepted origin。该 origin 的 unit Schema 明确包含 v5、独立 Schema ID 匹配、两份首次采用 Schema 明确登记 input-v7/v7。相邻与引用上下文继续冻结所有来源和必要 Schema；已有 unit-v4 英文引用上下文按独立 `math-text-references.schema.json` 同时验证原冻结和当前 Schema，原对象不转换。此上下文权限不允许 unit-v4 成为 v7 输出，也不更改 v1–v6 的来源 Schema 映射。不能由一个工具分支、自报版本或局部 Schema PASS 推断主线能力。
+
+v7 不允许 prior_attempts、prior_adoptions 或 shared_run_histories。实际 raw 的失败与重试仍按原有完整冻结、有序 raw_attempts 合同保留。旧 v1–v6、ordinary assemble 两入口、historical source-container 的准备及回放和 group-derivation v4 均拒绝 unit-v5；新 Schema 不授予旧修订或来源恢复权限。
+
+完整模型五字段、真实运行身份/Harness/turn/effort、精确 scope、来源不重叠、锁定完整容器、全部上下文、当前保护/术语与溯源/渲染门禁保持。活动 unit-v5 必须绑定完整回放通过的 v7 首次采用；决定和预览消费真实溯源凭证。无语言/数学审校、术语批准、选择、正式采用或发布状态从工具或候选合并继承。

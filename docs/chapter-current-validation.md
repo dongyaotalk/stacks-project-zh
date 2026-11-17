@@ -118,6 +118,12 @@ unit/candidate 原字节/hash、精确归档路径、顺序、来源、时间和
 group`声明与现行词核范围差异。核验原范围并保留原元数据，不改变unit、词表或
 现行候选术语要求；未知旧实现、其他元数据变化或已有raw/run/采用继续拒绝。
 
+原 scope/policy 有效、无前继及无该身份 run/采用/当前候选的 v1/v4 准备另按
+[原声明库存合同](preparation-term-inventory.md) 核验已知原声明函数和其余八个
+不变 reader，重算完整冻结 units/catalog 并要求完整原库存相等。原始记录保持不变；
+原 runtime、raw、来源及上下文门禁继续执行，报告 original_term_inventory，
+generation_validation=not_claimed。当前候选、实际装配及历史回放不使用此入口。
+
 章节末尾与每个渲染安装边界先合并实际读取和快照声明，再一次读取依赖并核验原始
 内容 hash；保留各自 root/HEAD、路径、模式、实现、来源与发行声明检查。渲染内部不
 重复调用同一章节凭证的完整输入复核；安装前后仍分别检查，失败恢复旧输出。

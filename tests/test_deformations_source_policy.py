@@ -9,7 +9,6 @@ import unittest
 
 from stacks_zh.extraction import Policy, Scanner
 from stacks_zh.math_text import validate_regions, validate_translation
-from stacks_zh.numeric_item_labels import LABELS
 from stacks_zh.records import RecordError
 from stacks_zh.schema_validation import validate_named_schema
 from stacks_zh.source_containers import Containers, lower_container
@@ -20,13 +19,10 @@ FIXTURE = json.loads((ROOT/'tests/fixtures/deformations-source-policy.json').rea
 SOURCE_PATH = ROOT/'tests/fixtures/deformations-math-frames.json'
 SOURCE = json.loads(SOURCE_PATH.read_bytes())
 BEFORE = subprocess.check_output(['git','show',FIXTURE['accepted_base']+':config/macro-policy.yml'],cwd=ROOT)
-CURRENT_POLICY = (ROOT/'config/macro-policy.yml').read_bytes()
-NUMERIC_SECTION = ('\nlocked_numeric_item_labels:\n  defos-lift-complex:\n'
-                   '    literals: ' + json.dumps(list(LABELS)) + '\n'
-                   '    usage: "finite-roman-item-label"\n'
-                   '    source_label: "defos-lemma-lift-complex"\n').encode()
-assert CURRENT_POLICY.count(NUMERIC_SECTION) in {0, 1}
-SOURCE_POLICY = CURRENT_POLICY.replace(NUMERIC_SECTION, b'', 1)
+# The historical fixture verifies the original accepted policy.
+SOURCE_POLICY_COMMIT = '9c104567d0e9b01c16c0bf5f5d0c71b3c1c5c028'
+SOURCE_POLICY = subprocess.check_output(
+    ['git', 'show', SOURCE_POLICY_COMMIT+':config/macro-policy.yml'], cwd=ROOT)
 
 
 def digest(value):
@@ -41,6 +37,7 @@ class DeformationsSourcePolicyTests(unittest.TestCase):
         self.assertTrue(SOURCE['source_only'])
         self.assertFalse(SOURCE['actual_model_data'])
         subprocess.run(['git','merge-base','--is-ancestor',FIXTURE['accepted_base'],'HEAD'],cwd=ROOT,check=True)
+        subprocess.run(['git','merge-base','--is-ancestor',SOURCE_POLICY_COMMIT,'HEAD'],cwd=ROOT,check=True)
         old, current = Policy(BEFORE.decode()), Policy((ROOT/'config/macro-policy.yml').read_text())
         for attr in ['math_text_rules','math_text_notations','math_text_contexts','math_text_notation_contexts']:
             if not hasattr(old,attr):continue

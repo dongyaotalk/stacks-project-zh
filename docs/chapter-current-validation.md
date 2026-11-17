@@ -60,6 +60,14 @@ rejected-unadopted-preparation，generation_validation=not_claimed。它不能�
 当前候选、祖先或生成成功凭证；当前候选错误、新实际 run/采用错误仍使章节失败。
 未知辅助资料仍触发未消费输入门禁，不通过泛化“证据文件”豁免。
 
+runtime 副本的完整 `runtime` 必须逐项等于原冻结身份，实际 turn/model/effort 和
+成功退出检查保持。若原副本遗漏冗余 `observed_version`，只读核验其原
+`make harness-check` argv 中唯一且相同的 Harness ID、唯一具体版本输出，以及
+原冻结注册表登记命令的唯一输出；缺失、重复、矛盾、未知版本或未登记命令仍失败。
+不执行旧 argv，也不以今天的版本命令证明旧运行。顶层 provider 摘要可缺省，但完整
+runtime 中的原 provider 必须相等；已写出的矛盾摘要不得忽略。诊断明确记录绑定方式，
+原 runtime/model-input/run/raw/freeze 原字节不改写，不生成新身份或审校权限。
+
 准备中的 `prior_adoptions` 必须库存完整上一采用的有序 units/candidates 快照：
 逐项核验原 record 的身份/hash/Schema、所有输出的精确归档路径、原字节/hash、
 Schema、来源和配对 ID 顺序，并与整个冻结 batch/unit 范围及模型输入的
@@ -97,6 +105,14 @@ unit/candidate覆盖门禁。原冻结scope由既有current=False合同核验；
 接受主线Git快照，来源/模型/Harness/提示/词表等其他政策保持原origin字节。保留
 原错误origin与policy_errors，匹配快照只用于验证库存，不能重新绑定生成身份。
 其他政策差异或不存在完整接受快照仍失败。
+完整前继的旧 v2 未采用准备也可保存部分原输出库存：仅当原聚合解析器已核验
+全部现存五字段并只因缺少完整覆盖拒绝，且没有该身份的 run、采用或当前候选、
+ordinary prior attempts 或 shared history 时，逐项核验完整 prior record、全部配对
+unit/candidate 原字节/hash、精确归档路径、顺序、来源、时间和模型输入的完整 previous
+清单。报告 predecessor_validation=complete-paired-snapshot-inventory，仅为无回放权限
+的库存；不创建模型、采用、祖先或审批凭证。v3/v5/v6、空或不完整前继仍拒绝，
+实际装配、完整聚合解析器和历史回放继续严格要求完整模型生成。
+
 无raw的纯准备可只读核验“zeroth”后保护caron前缀的原术语投影：原Git函数必须
 匹配已知指纹，保护的组/重音字节正确，完整元数据仅有恰好一处原`ech cohomology
 group`声明与现行词核范围差异。核验原范围并保留原元数据，不改变unit、词表或

@@ -49,6 +49,11 @@ def load_harness_registry(config_path: Path) -> dict[str, dict[str, str | None]]
     except OSError as exc:
         raise HarnessVersionError(f"cannot read Harness registry {config_path}: {exc}") from exc
 
+    return parse_harness_registry(text)
+
+
+def parse_harness_registry(text: str) -> dict[str, dict[str, str | None]]:
+    """Parse the same fixed-shape registry from verified frozen text."""
     records: dict[str, dict[str, str | None]] = {}
     in_section = False
     current: str | None = None

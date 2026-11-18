@@ -1,0 +1,936 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/defos91-gpt61sol-p010-20261116.json",
+    "hash": "sha256:29ce9c153f21833b8255a0f89ef6a917d0ad1ac93ed4924967e315e08ffc8fa0"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/defos91-20261116.json",
+    "hash": "sha256:4f5b867bef8e948a67204a4d80caa6238fbe639fba88ed4cc2f2cb78062ae319"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "defos",
+      "node_kind": "lemma",
+      "parent_tag": "0D15",
+      "placeholders": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$DQ_X(\\mathcal{F}) \\to DQ_X(\\mathcal{G})$",
+        "MATH_0003": "$F$",
+        "REF_0001": "\\ref{spaces-perfect-section-better-coherator}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-thickening-space-quasi-coherent}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:d842b790843a74c90bd00be3a28bc9cb71962cdce8313ed2c9df1b16d2a72475",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:b6180dc4082003906a19a4caf0e5cf9ff80e4a0b2323ea28277db6a2666a97f5",
+      "source_text": "In the situation above assume that <MATH_0001> is quasi-compact and quasi-separated\nand that <MATH_0002>\n(Derived Categories of Spaces, Section\n<REF_0001>)\nis an isomorphism. Then the functor <MATH_0003> is an equivalence of categories.\n",
+      "source_text_hash": "sha256:e2c5d2af2180358d52e3f845284711e213cb6cfef0d938af799e771af1ff7483",
+      "unit_id": "tag:0D3P:statement"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "proof",
+      "parent_tag": "0D15",
+      "placeholders": {
+        "MATH_0001": "$\\NL_{X/B}$",
+        "MATH_0002": "$D_\\QCoh(\\mathcal{O}_X)$",
+        "MATH_0003": "$$\n\\Ext^i_X(\\NL_{X/B}, \\mathcal{F}) \\longrightarrow\n\\Ext^i_X(\\NL_{X/B}, \\mathcal{G})\n$$",
+        "MATH_0004": "$i$",
+        "MATH_0005": "$\\mathcal{O}_X \\oplus \\mathcal{F}$",
+        "MATH_0006": "$\\mathcal{O}_X \\oplus \\mathcal{G}$",
+        "REF_0001": "\\ref{spaces-more-morphisms-lemma-netherlander-quasi-coherent}",
+        "REF_0002": "\\ref{lemma-huge-diagram-ringed-topoi}",
+        "REF_0003": "\\ref{lemma-choices-ringed-topoi}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:4ee1cdf5311eff108e2e1b009e81c9f982f40ab5aedd9834828a244ca217698b",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:5a5d272bf80d62bd07c44378a956829f07d714e68584cbce7386cd5d7d80051e",
+      "source_text": "Recall that <MATH_0001> is an object of <MATH_0002>, see\nMore on Morphisms of Spaces, Lemma\n<REF_0001>.\nHence our assumption implies the maps\n<MATH_0003>\nare isomorphisms for all <MATH_0004>. This implies our functor is fully\nfaithful by Lemma <REF_0002>.\nOn the other hand, the functor is essentially surjective by\nLemma <REF_0003> because\nwe have the solutions <MATH_0005>\nand <MATH_0006> in both categories.\n",
+      "source_text_hash": "sha256:4bba49b5b4c2bbe1360c8c0190c7113be8ff588f48f9570c9aab4cf6c6f21fde",
+      "unit_id": "tag:0D3P:proof"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:0D3P:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:e2c5d2af2180358d52e3f845284711e213cb6cfef0d938af799e771af1ff7483",
+      "source_structure_hash": "sha256:b6180dc4082003906a19a4caf0e5cf9ff80e4a0b2323ea28277db6a2666a97f5",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "quasi-compact",
+          "projection_start": 50,
+          "projection_end": 63,
+          "concept": "quasi-compact",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-separated",
+          "projection_start": 68,
+          "projection_end": 83,
+          "concept": "quasi-separated",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Derived Categories of Spaces",
+          "projection_start": 106,
+          "projection_end": 134,
+          "concept": "source-phrase-derived-categories-of-spaces",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 162,
+          "projection_end": 173,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 184,
+          "projection_end": 191,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "equivalence of categories",
+          "projection_start": 210,
+          "projection_end": 235,
+          "concept": "source-phrase-equivalence-of-categories",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0D3P:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:4bba49b5b4c2bbe1360c8c0190c7113be8ff588f48f9570c9aab4cf6c6f21fde",
+      "source_structure_hash": "sha256:5a5d272bf80d62bd07c44378a956829f07d714e68584cbce7386cd5d7d80051e",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "object",
+          "projection_start": 30,
+          "projection_end": 36,
+          "concept": "object",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 65,
+          "projection_end": 74,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 137,
+          "projection_end": 141,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphisms",
+          "projection_start": 158,
+          "projection_end": 170,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 209,
+          "projection_end": 216,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "fully faithful",
+          "projection_start": 220,
+          "projection_end": 234,
+          "concept": "fully-faithful",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 279,
+          "projection_end": 286,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "essentially surjective",
+          "projection_start": 290,
+          "projection_end": 312,
+          "concept": "essentially-surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "categories",
+          "projection_start": 399,
+          "projection_end": 409,
+          "concept": "category",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D15:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D15:paragraph/0002",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002>\nbe a morphism of algebraic spaces over <MATH_0003>.\nLet <MATH_0004> be a homomorphism of <MATH_0005>-modules\n(not necessarily quasi-coherent).\nConsider the functor\n<MATH_0006>\ngiven by pushout.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$f : X \\to B$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$\\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0005": "$\\mathcal{O}_X$",
+            "MATH_0006": "$$\nF :\n\\left\\{\n\\begin{matrix}\n\\text{extensions of }f^{-1}\\mathcal{O}_B\\text{ algebras}\\\\\n0 \\to \\mathcal{F} \\to \\mathcal{O}' \\to \\mathcal{O}_X \\to 0\\\\\n\\text{where }\\mathcal{F}\\text{ is an ideal of square zero}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{extensions of }f^{-1}\\mathcal{O}_B\\text{ algebras}\\\\\n0 \\to \\mathcal{G} \\to \\mathcal{O}' \\to \\mathcal{O}_X \\to 0\\\\\n\\text{where }\\mathcal{G}\\text{ is an ideal of square zero}\n\\end{matrix}\n\\right\\}\n$$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:d03a6954ccee0c1cddf6b5e22631dfd0b1252a6344951164014eb3012d3a199c",
+          "source_structure_hash": "sha256:e375b5ed806d13c9b13c01c8ca692bc71309e1d9dfb389094c03f7bab2e6a105",
+          "source_math_hash": "sha256:6e047fe6c3439f840aa3c20839079a0581b993f7919a6f1523bbae8f624327ab"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 178883,
+          "byte_end": 179601,
+          "line_start": 4801,
+          "line_end": 4825,
+          "fragment_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6"
+        },
+        "owner_tag": "0D15",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:522508ac71db4d8dd829cce7c2c6343ea2ac73689590a8d6dd6b8168bc2d8673"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D3P:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D3P:proof/0001",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nRecall that <MATH_0001> is an object of <MATH_0002>, see\nMore on Morphisms of Spaces, Lemma\n<REF_0001>.\nHence our assumption implies the maps\n<MATH_0003>\nare isomorphisms for all <MATH_0004>. This implies our functor is fully\nfaithful by Lemma <REF_0002>.\nOn the other hand, the functor is essentially surjective by\nLemma <REF_0003> because\nwe have the solutions <MATH_0005>\nand <MATH_0006> in both categories.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\NL_{X/B}$",
+            "MATH_0002": "$D_\\QCoh(\\mathcal{O}_X)$",
+            "REF_0001": "\\ref{spaces-more-morphisms-lemma-netherlander-quasi-coherent}",
+            "MATH_0003": "$$\n\\Ext^i_X(\\NL_{X/B}, \\mathcal{F}) \\longrightarrow\n\\Ext^i_X(\\NL_{X/B}, \\mathcal{G})\n$$",
+            "MATH_0004": "$i$",
+            "REF_0002": "\\ref{lemma-huge-diagram-ringed-topoi}",
+            "REF_0003": "\\ref{lemma-choices-ringed-topoi}",
+            "MATH_0005": "$\\mathcal{O}_X \\oplus \\mathcal{F}$",
+            "MATH_0006": "$\\mathcal{O}_X \\oplus \\mathcal{G}$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2d282d97e877c3dc044e0fd68cdd7e6addfc7cac23a9cf5f413355e27c473a8a",
+          "source_structure_hash": "sha256:3893b357c7813e49286a01cd548f10522e6d7d7cfa089fb683126404fbbad896",
+          "source_math_hash": "sha256:4ee1cdf5311eff108e2e1b009e81c9f982f40ab5aedd9834828a244ca217698b"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 179962,
+          "byte_end": 180625,
+          "line_start": 4836,
+          "line_end": 4851,
+          "fragment_hash": "sha256:67538242c1a086bf2921ccb740a8103ce2bf40c1c26c67aeaa9d2d9b504000ce"
+        },
+        "owner_tag": "0D3P",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:69e4ec2079863e2a31058d565fca20a663ffcf0ad3f094faa4c65b2b6be2f740"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D3P:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D3P:lemma/0001",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation above assume that <MATH_0001> is quasi-compact and quasi-separated\nand that <MATH_0002>\n(Derived Categories of Spaces, Section\n<REF_0001>)\nis an isomorphism. Then the functor <MATH_0003> is an equivalence of categories.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-thickening-space-quasi-coherent}",
+            "MATH_0001": "$X$",
+            "MATH_0002": "$DQ_X(\\mathcal{F}) \\to DQ_X(\\mathcal{G})$",
+            "REF_0001": "\\ref{spaces-perfect-section-better-coherator}",
+            "MATH_0003": "$F$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bf0c95421eb4ecb7a5981dc01faefa022603a78a2ea9a21c96a86a1f8593b172",
+          "source_structure_hash": "sha256:9c83abd4afdd6ee46d8a1adbf591e685be2b11fb1854c401a307edf99c0d60f2",
+          "source_math_hash": "sha256:d842b790843a74c90bd00be3a28bc9cb71962cdce8313ed2c9df1b16d2a72475"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 179603,
+          "byte_end": 179960,
+          "line_start": 4827,
+          "line_end": 4834,
+          "fragment_hash": "sha256:8cc38e1d05f37a164b5aa2a9ad837a8c00fc81a317b7b2c58ba74e943b416ce2"
+        },
+        "owner_tag": "0D3P",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:354b97ab6fa8987bca4b41009a238b3b256a011ba94b5035a870c761998355d0"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D15:paragraph/0003",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:defos:0D15:paragraph/0003",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "paragraph",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a first order thickening of\nalgebraic spaces over <MATH_0003> with ideal sheaf <MATH_0004>\nwhich we view either as a quasi-coherent <MATH_0005>-module\nor as a quasi-coherent sheaf of ideals on <MATH_0006>, see\nMore on Morphisms of Spaces, Section\n<REF_0001>.\nLet <MATH_0007> be a morphism of algebraic spaces over <MATH_0008>.\nLet <MATH_0009> be a homomorphism of\n<MATH_0010>-modules (not necessarily quasi-coherent).\nLet <MATH_0011> be a map\nof <MATH_0012>-modules and denote\n<MATH_0013> the composition.\nConsider the functor\n<MATHSEG_0001> for <MATHSEG_0002> and <MATHSEG_0003> for <MATHSEG_0004> and <MATHSEG_0005>\ngiven by pushout.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$B \\subset B'$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$\\mathcal{J}$",
+            "MATH_0005": "$\\mathcal{O}_B$",
+            "MATH_0006": "$B'$",
+            "REF_0001": "\\ref{spaces-more-morphisms-section-thickenings}",
+            "MATH_0007": "$f : X \\to B$",
+            "MATH_0008": "$S$",
+            "MATH_0009": "$\\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0010": "$\\mathcal{O}_X$",
+            "MATH_0011": "$c : f^{-1}\\mathcal{J} \\to \\mathcal{F}$",
+            "MATH_0012": "$f^{-1}\\mathcal{O}_B$",
+            "MATH_0013": "$c' : f^{-1}\\mathcal{J} \\to \\mathcal{G}$",
+            "MATHSEG_0001": "$$\nFT :\n\\{\\text{solutions to }(\\ref{equation-to-solve-ringed-topoi})\n\\text{",
+            "MATHSEG_0002": "}\\mathcal{F}\\text{",
+            "MATHSEG_0003": "}c\\}\n\\longrightarrow\n\\{\\text{solutions to }(\\ref{equation-to-solve-ringed-topoi})\n\\text{",
+            "MATHSEG_0004": "}\\mathcal{G}\\text{",
+            "MATHSEG_0005": "}c'\\}\n$$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\nFT :\n\\{\\text{solutions to }(\\ref{equation-to-solve-ringed-topoi})\n\\text{ for }\\mathcal{F}\\text{ and }c\\}\n\\longrightarrow\n\\{\\text{solutions to }(\\ref{equation-to-solve-ringed-topoi})\n\\text{ for }\\mathcal{G}\\text{ and }c'\\}\n$$",
+              "source_hash": "sha256:41ede1231f3031c7254b7c65800064d099ead39065a7366880047bf325f3b710",
+              "source_byte_span": {
+                "start": 691,
+                "end": 918
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0002"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0003"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0004"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0004"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0005"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " for ",
+                  "command": "text",
+                  "policy_entry": "cohomology-for",
+                  "slot_byte_span": {
+                    "start": 75,
+                    "end": 80
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "root-phrase",
+                    "usage_source": {
+                      "before": ")\n",
+                      "after": "\\mathcal",
+                      "environments": []
+                    },
+                    "source_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "sites-cohomology.tex",
+                      "owner_tag": "0D6N",
+                      "owner_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                      "kind": "lemma",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 194611,
+                            "end": 195355
+                          },
+                          "container_hash": "sha256:d294a56dc4e1a05ad1fd6b4a5581ce0100baf4c2ee2f73a6ae52369d37460477",
+                          "command_byte_span": {
+                            "start": 195083,
+                            "end": 195095
+                          },
+                          "command_hash": "sha256:5ba78007ce3c87a955134033be043f8e893936410ada883891a40acdaf83f4f4"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0002",
+                  "source": " and ",
+                  "command": "text",
+                  "policy_entry": "root-and",
+                  "slot_byte_span": {
+                    "start": 98,
+                    "end": 103
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0002",
+                    "MATHSEG_0003"
+                  ],
+                  "classification_witness": {
+                    "usage": "root-phrase",
+                    "usage_source": {
+                      "before": "}",
+                      "after": "c",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-posets-limits",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "002Z",
+                      "owner_label": "categories-section-posets-limits",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 89996,
+                            "end": 91549
+                          },
+                          "container_hash": "sha256:e1691eec227eb5d9857c4ac2ba175c2e7202c81b64bb1f8f8951d0ad006958a3",
+                          "command_byte_span": {
+                            "start": 90325,
+                            "end": 90337
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0003",
+                  "source": " for ",
+                  "command": "text",
+                  "policy_entry": "cohomology-for",
+                  "slot_byte_span": {
+                    "start": 191,
+                    "end": 196
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0003",
+                    "MATHSEG_0004"
+                  ],
+                  "classification_witness": {
+                    "usage": "root-phrase",
+                    "usage_source": {
+                      "before": ")\n",
+                      "after": "\\mathcal",
+                      "environments": []
+                    },
+                    "source_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "sites-cohomology.tex",
+                      "owner_tag": "0D6N",
+                      "owner_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                      "kind": "lemma",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 194611,
+                            "end": 195355
+                          },
+                          "container_hash": "sha256:d294a56dc4e1a05ad1fd6b4a5581ce0100baf4c2ee2f73a6ae52369d37460477",
+                          "command_byte_span": {
+                            "start": 195083,
+                            "end": 195095
+                          },
+                          "command_hash": "sha256:5ba78007ce3c87a955134033be043f8e893936410ada883891a40acdaf83f4f4"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0004",
+                  "source": " and ",
+                  "command": "text",
+                  "policy_entry": "root-and",
+                  "slot_byte_span": {
+                    "start": 214,
+                    "end": 219
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0004",
+                    "MATHSEG_0005"
+                  ],
+                  "classification_witness": {
+                    "usage": "root-phrase",
+                    "usage_source": {
+                      "before": "}",
+                      "after": "c",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-posets-limits",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "002Z",
+                      "owner_label": "categories-section-posets-limits",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 89996,
+                            "end": 91549
+                          },
+                          "container_hash": "sha256:e1691eec227eb5d9857c4ac2ba175c2e7202c81b64bb1f8f8951d0ad006958a3",
+                          "command_byte_span": {
+                            "start": 90325,
+                            "end": 90337
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:476750c82b6499d7c9c3460ec63762b3f88e160a12df1d3d391e11f579b55eb6",
+          "source_text_hash": "sha256:07ad6d277b9871d3dd2beac8c9fb24dbd797c1174221b498b4eb4a6bc6edcd66",
+          "source_structure_hash": "sha256:d0464e59369cc63a72759478344d6f1f552076c6fa2f6a346ad5305859929a4a",
+          "source_math_hash": "sha256:4eec3657f9922da8accae2b7adc078cb44df03ec38c22cee9a8b71703bfd8f8e"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 180627,
+          "byte_end": 181563,
+          "line_start": 4853,
+          "line_end": 4875,
+          "fragment_hash": "sha256:a4b86df6203507bb95452c5c7c455799de4428a3e9fdeebeb8188c5cb16683c5"
+        },
+        "owner_tag": "0D15",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:f953be7b3556361aa339d1810246d59bec1a4a2aa02341c99d5769f6ff02c033"
+    },
+    {
+      "context_id": "locked-English-reference:defos:inventory:defos:08UK:lemma/0001:defos-lemma-choices-ringed-topoi",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08UK:lemma/0001",
+          "parent_tag": "08UE",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf there exists a solution to (<REF_0001>),\nthen the set of isomorphism classes of solutions is principal homogeneous\nunder <MATH_0001>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-choices-ringed-topoi}",
+            "REF_0001": "\\ref{equation-to-solve-ringed-topoi}",
+            "MATH_0001": "$\\Ext^1_\\mathcal{O}(\n\\NL_{\\mathcal{O}/\\mathcal{O}_\\mathcal{B}}, \\mathcal{G})$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:0cedf1db101ad79413c8303fa7d0f448eee115118ba0b3d234d5cc542cd40775",
+          "source_structure_hash": "sha256:a07e492b903e1bc260fb7f5c050093122c8caae967f780f21f3a29cd79cd6ce4",
+          "source_math_hash": "sha256:bb4f6bb85c40d4fb1c7f0ebe4691fc92b67e55aa06a699bdab57b25cf0e7d0c4"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 155881,
+          "byte_end": 156170,
+          "line_start": 4195,
+          "line_end": 4201,
+          "fragment_hash": "sha256:3dac870d227720cf78a81a0cfdcfd335faf75384b4e8afbd8b8b3a43b8b8d1a4"
+        },
+        "owner_tag": "08UK",
+        "parent_tag": "08UE",
+        "requested_label": "defos-lemma-choices-ringed-topoi",
+        "requested_tag": "08UK"
+      },
+      "hash": "sha256:4992dd7aeb82da2d8d2dd51f56ea3d71e98ea4bfa33718a5849ebb5f426979f3"
+    },
+    {
+      "context_id": "locked-English-reference:defos:inventory:defos:08UG:lemma/0001:defos-lemma-huge-diagram-ringed-topoi",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08UG:lemma/0001",
+          "parent_tag": "08UE",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAssume given a commutative diagram of morphisms ringed topoi\n<MATH_0001>\nwhose horizontal arrows are first order thickenings. Set\n<MATH_0002> and assume given a\nmap of <MATH_0003>-modules\n<MATH_0004>\ngiving rise to the commutative diagram\n<MATH_0005>\nwith front and back solutions to (<REF_0001>).\n(The north-north-west arrows are maps on <MATH_0006> after applying\n<MATH_0007> to the source.)\n<STRUCT_0002>\n<STRUCT_0003> There exist a canonical element in\n<MATH_0008>\nwhose vanishing is a necessary and sufficient condition for the existence\nof a morphism of ringed topoi\n<MATH_0009> fitting into\n(<REF_0002>) compatibly with <MATH_0010>.\n<STRUCT_0004> If there exists a morphism\n<MATH_0011>\nfitting into\n(<REF_0003>) compatibly with <MATH_0012> the set\nof all such morphisms is a principal homogeneous space under\n<MATH_0013>\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-huge-diagram-ringed-topoi}",
+            "MATH_0001": "\\begin{equation}\n\\label{equation-huge-1-ringed-topoi}\n\\vcenter{\n\\xymatrix{\n& (\\Sh(\\mathcal{C}_2), \\mathcal{O}_2) \\ar[r]_{i_2} \\ar[d]_{f_2} \\ar[ddl]_g &\n(\\Sh(\\mathcal{C}'_2), \\mathcal{O}'_2) \\ar[d]^{f'_2} \\\\\n&\n(\\Sh(\\mathcal{B}_2), \\mathcal{O}_{\\mathcal{B}_2}) \\ar[r]^{t_2} \\ar[ddl]|\\hole &\n(\\Sh(\\mathcal{B}'_2), \\mathcal{O}_{\\mathcal{B}'_2}) \\ar[ddl] \\\\\n(\\Sh(\\mathcal{C}_1), \\mathcal{O}_1) \\ar[r]_{i_1} \\ar[d]_{f_1} &\n(\\Sh(\\mathcal{C}'_1), \\mathcal{O}'_1) \\ar[d]^{f'_1} \\\\\n(\\Sh(\\mathcal{B}_1), \\mathcal{O}_{\\mathcal{B}_1}) \\ar[r]^{t_1} &\n(\\Sh(\\mathcal{B}'_1), \\mathcal{O}_{\\mathcal{B}'_1})\n}\n}\n\\end{equation}",
+            "MATH_0002": "$\\mathcal{G}_j = \\Ker(i_j^\\sharp)$",
+            "MATH_0003": "$g^{-1}\\mathcal{O}_1$",
+            "MATH_0004": "$\\nu : g^{-1}\\mathcal{G}_1 \\to \\mathcal{G}_2$",
+            "MATH_0005": "\\begin{equation}\n\\label{equation-huge-2-ringed-topoi}\n\\vcenter{\n\\xymatrix{\n& 0 \\ar[r] & \\mathcal{G}_2 \\ar[r] &\n\\mathcal{O}'_2 \\ar[r] &\n\\mathcal{O}_2 \\ar[r] & 0 \\\\\n& 0 \\ar[r]|\\hole &\nf_2^{-1}\\mathcal{J}_2 \\ar[u]_{c_2} \\ar[r] &\nf_2^{-1}\\mathcal{O}_{\\mathcal{B}'_2} \\ar[u] \\ar[r]|\\hole &\nf_2^{-1}\\mathcal{O}_{\\mathcal{B}_2} \\ar[u] \\ar[r] & 0 \\\\\n0 \\ar[r] &\n\\mathcal{G}_1 \\ar[ruu] \\ar[r] &\n\\mathcal{O}'_1 \\ar[r] &\n\\mathcal{O}_1 \\ar[ruu] \\ar[r] & 0 \\\\\n0 \\ar[r] &\nf_1^{-1}\\mathcal{J}_1 \\ar[ruu]|\\hole \\ar[u]^{c_1} \\ar[r] &\nf_1^{-1}\\mathcal{O}_{\\mathcal{B}'_1} \\ar[ruu]|\\hole \\ar[u] \\ar[r] &\nf_1^{-1}\\mathcal{O}_{\\mathcal{B}_1} \\ar[ruu]|\\hole \\ar[u] \\ar[r] & 0\n}\n}\n\\end{equation}",
+            "REF_0001": "\\ref{equation-to-solve-ringed-topoi}",
+            "MATH_0006": "$\\mathcal{C}_2$",
+            "MATH_0007": "$g^{-1}$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0008": "$\\Ext^1_{\\mathcal{O}_2}(\nLg^*\\NL_{\\mathcal{O}_1/\\mathcal{O}_{\\mathcal{B}_1}}, \\mathcal{G}_2)$",
+            "MATH_0009": "$(\\Sh(\\mathcal{C}'_2), \\mathcal{O}'_2) \\to\n(\\Sh(\\mathcal{C}'_1), \\mathcal{O}'_1)$",
+            "REF_0002": "\\ref{equation-huge-1-ringed-topoi}",
+            "MATH_0010": "$\\nu$",
+            "STRUCT_0004": "\\item",
+            "MATH_0011": "$(\\Sh(\\mathcal{C}'_2), \\mathcal{O}'_2) \\to\n(\\Sh(\\mathcal{C}'_1), \\mathcal{O}'_1)$",
+            "REF_0003": "\\ref{equation-huge-1-ringed-topoi}",
+            "MATH_0012": "$\\nu$",
+            "MATH_0013": "$$\n\\Hom_{\\mathcal{O}_1}(\n\\Omega_{\\mathcal{O}_1/\\mathcal{O}_{\\mathcal{B}_1}}, g_*\\mathcal{G}_2) =\n\\Hom_{\\mathcal{O}_2}(\ng^*\\Omega_{\\mathcal{O}_1/\\mathcal{O}_{\\mathcal{B}_1}}, \\mathcal{G}_2) =\n\\Ext^0_{\\mathcal{O}_2}(\nLg^*\\NL_{\\mathcal{O}_1/\\mathcal{O}_{\\mathcal{B}_1}}, \\mathcal{G}_2).\n$$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c3df7ce1dd8df521ef3e4e93a12d212911f960a4b6e4f9cd46f292ba715128f0",
+          "source_structure_hash": "sha256:139bf51fbc467860868bc23b8b74e03f05cff427a1f96fadd99d26dd108baa16",
+          "source_math_hash": "sha256:bfd7d39bbe3e7bcfa1371e36f78865241af4400696a84bee0970ce32f6b1b8be"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 144033,
+          "byte_end": 146813,
+          "line_start": 3905,
+          "line_end": 3978,
+          "fragment_hash": "sha256:d81123d4ccaf37d65926b14dfd8a0de5c54d2cdb8ea3a30886795e9a73134436"
+        },
+        "owner_tag": "08UG",
+        "parent_tag": "08UE",
+        "requested_label": "defos-lemma-huge-diagram-ringed-topoi",
+        "requested_tag": "08UG"
+      },
+      "hash": "sha256:0078f55a2e48b2eaac40e04e21b9ef5aceb0309c6ae67fa8a03a20aa7139d40b"
+    },
+    {
+      "context_id": "locked-English-reference:spaces-more-morphisms:inventory:spaces-more-morphisms:0D0Y:lemma/0001:spaces-more-morphisms-lemma-netherlander-quasi-coherent",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-more-morphisms:0D0Y:lemma/0001",
+          "parent_tag": "0D0U",
+          "chapter": "spaces-more-morphisms",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a morphism of\nalgebraic spaces over <MATH_0003>. The cohomology sheaves\nof the complex <MATH_0004> are quasi-coherent, zero outside\ndegrees <MATH_0005>, <MATH_0006> and equal to <MATH_0007> in degree <MATH_0008>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-netherlander-quasi-coherent}",
+            "MATH_0001": "$S$",
+            "MATH_0002": "$f : X \\to Y$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$\\NL_{X/Y}$",
+            "MATH_0005": "$-1$",
+            "MATH_0006": "$0$",
+            "MATH_0007": "$\\Omega_{X/Y}$",
+            "MATH_0008": "$0$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3916191f707f4bdf42adc3dd4631994108851bccf333267c9ee2fa1b28c1b997",
+          "source_structure_hash": "sha256:681b02630fcae22465ebf3268de65faf56ce55067ca39651ed8b3a2cdc4bfd73",
+          "source_math_hash": "sha256:0c0b2c9c876e05c49427f9740dce38bf2e2ce27e94773f92f05c2a9b11bf2c52"
+        },
+        "location": {
+          "file": "spaces-more-morphisms.tex",
+          "byte_start": 191760,
+          "byte_end": 192054,
+          "line_start": 5397,
+          "line_end": 5403,
+          "fragment_hash": "sha256:c0cb4b53e3be97036748ccf8af93abd1b1d985d5e4497e5e2a768fcc2a64fc58"
+        },
+        "owner_tag": "0D0Y",
+        "parent_tag": "0D0U",
+        "requested_label": "spaces-more-morphisms-lemma-netherlander-quasi-coherent",
+        "requested_tag": "0D0Y"
+      },
+      "hash": "sha256:27c4a4542066cbbcbae9a65b39841286e784417f61e4071cb273d763b4a9d6e5"
+    },
+    {
+      "context_id": "locked-English-reference:spaces-perfect:inventory:spaces-perfect:0CR3:section_title/0001:spaces-perfect-section-better-coherator",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-perfect:0CR3:section_title/0001",
+          "parent_tag": "0CR3",
+          "chapter": "spaces-perfect",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>The coherator revisited<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-better-coherator}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:284590d7bc1c910eb8efde71dc30a8ec922a81a937bcdb1e0a475ed5840c93d8",
+          "source_structure_hash": "sha256:3c99972d6034a6a1cb0419caf4da767ffeb1805113afbbb388537924a0a8564b",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces-perfect.tex",
+          "byte_start": 167177,
+          "byte_end": 167243,
+          "line_start": 4413,
+          "line_end": 4414,
+          "fragment_hash": "sha256:29a72bf2933a62cb1fd3e26873a71dba6b8bc3e2b4cd2b812b4395ad23434c0b"
+        },
+        "owner_tag": "0CR3",
+        "parent_tag": "0CR3",
+        "requested_label": "spaces-perfect-section-better-coherator",
+        "requested_tag": "0CR3"
+      },
+      "hash": "sha256:afe7e022a256e9703edf8be570eea507d5a097078ecf246c7a83916a79b48ab8"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-01.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-02.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-03.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-04.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-05.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-06.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-07.jsonl",
+    "docs/evidence/defos91-gpt61sol-p010-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

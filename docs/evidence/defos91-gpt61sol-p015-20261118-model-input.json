@@ -1,0 +1,3402 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/defos91-gpt61sol-p015-20261118.json",
+    "hash": "sha256:e9956ab41946f37ad71d733bbb7331a343b0873fa874cfabbf1566798f8c557b"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1ebf8-ecda-7960-90a1-d680e239d0cd",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/defos91-20261116.json",
+    "hash": "sha256:7cbf3ea70c872c1ef7e8e609c4e9e992d3737ef64fc3d090070a6214a73e78d3"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "schema_version": 5,
+      "unit_id": "tag:08LB:statement",
+      "parent_tag": "08L3",
+      "chapter": "defos",
+      "node_kind": "remark",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001>\nbe a trivial first order thickening of ringed spaces\nand let <MATH_0002>\nbe a trivialization. Then given any triple\n<MATH_0003> consisting of a pair of\n<MATH_0004>-modules and a map\n<MATH_0005>\nwe may set\n<MATH_0006>\nand use the splitting (<REF_0001>) associated to <MATH_0007>\nand the map <MATH_0008> to define the <MATH_0009>-module structure\nand obtain an extension (<REF_0002>). We will call\n<MATH_0010> the <TEXTITOPEN_0001>trivial extension<TEXTITCLOSE_0001> of <MATH_0011>\nby <MATH_0012> corresponding\nto <MATH_0013> and the trivialization <MATH_0014>. Given any extension\n<MATH_0015> as in (<REF_0003>) we can use\n<MATH_0016> to think of <MATH_0017>\nas an <MATH_0018>-module extension, hence a class <MATH_0019>\nin <MATH_0020>.\nLemma <REF_0004> assures that\n<MATH_0021>\ninduces a bijection\n<MATHSEG_0001>isomorphism classes of extensions<MATHSEG_0002> as in <MATHSEG_0003> with <MATHSEG_0004>\nMoreover, the trivial extension <MATH_0022> maps to the zero class.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+        "MATH_0002": "$\\pi : (X', \\mathcal{O}_{X'}) \\to (X, \\mathcal{O}_X)$",
+        "MATH_0003": "$(\\mathcal{F}, \\mathcal{K}, c)$",
+        "MATH_0004": "$\\mathcal{O}_X$",
+        "MATH_0005": "$c : \\mathcal{I} \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to \\mathcal{K}$",
+        "MATH_0006": "$$\n\\mathcal{F}'_{c, triv} = \\mathcal{F} \\oplus \\mathcal{K}\n$$",
+        "REF_0001": "\\ref{equation-splitting}",
+        "MATH_0007": "$\\pi$",
+        "MATH_0008": "$c$",
+        "MATH_0009": "$\\mathcal{O}_{X'}$",
+        "REF_0002": "\\ref{equation-extension}",
+        "MATH_0010": "$\\mathcal{F}'_{c, triv}$",
+        "TEXTITOPEN_0001": "{\\it ",
+        "TEXTITCLOSE_0001": "}",
+        "MATH_0011": "$\\mathcal{F}$",
+        "MATH_0012": "$\\mathcal{K}$",
+        "MATH_0013": "$c$",
+        "MATH_0014": "$\\pi$",
+        "MATH_0015": "$\\mathcal{F}'$",
+        "REF_0003": "\\ref{equation-extension}",
+        "MATH_0016": "$\\pi^\\sharp : \\mathcal{O}_X \\to \\mathcal{O}_{X'}$",
+        "MATH_0017": "$\\mathcal{F}'$",
+        "MATH_0018": "$\\mathcal{O}_X$",
+        "MATH_0019": "$\\xi_{\\mathcal{F}'}$",
+        "MATH_0020": "$\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})$",
+        "REF_0004": "\\ref{lemma-inf-ext}",
+        "MATH_0021": "$\\mathcal{F}' \\mapsto \\xi_{\\mathcal{F}'}$",
+        "MATHSEG_0001": "$$\n\\left\\{\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0002": "}\\\\\n\\mathcal{F}'\\text{",
+        "MATHSEG_0003": "(\\ref{equation-extension})",
+        "MATHSEG_0004": "}c = c_{\\mathcal{F}'}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})\n$$",
+        "MATH_0022": "$\\mathcal{F}'_{c, triv}$"
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-trivial-extension}\n",
+        "suffix": "\\end{remark}"
+      },
+      "math_text_regions": [
+        {
+          "region_id": "math/0001",
+          "delimiter_kind": "display-dollar",
+          "source": "$$\n\\left\\{\n\\begin{matrix}\n\\text{isomorphism classes of extensions}\\\\\n\\mathcal{F}'\\text{ as in (\\ref{equation-extension}) with }c = c_{\\mathcal{F}'}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})\n$$",
+          "source_hash": "sha256:3592c514594d0d2b3092956442c5c2f4fa491ca202de189343881f130e95669b",
+          "source_byte_span": {
+            "start": 1220,
+            "end": 1457
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0001/text/0001",
+              "source": "isomorphism classes of extensions",
+              "command": "text",
+              "policy_entry": "defos-extension-reference-isomorphism-classes",
+              "slot_byte_span": {
+                "start": 32,
+                "end": 65
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "usage": "deformations-reference-frame-text",
+                "usage_source": {
+                  "before": "\\begin{matrix}\n",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 34975,
+                        "end": 35015
+                      },
+                      "command_hash": "sha256:15e27b28b8f423caa21374cbc8cde62df10bf63f1b0e10dff7e5ab8579c2575a"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0002",
+              "source": " as in ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 87,
+                "end": 94
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "'",
+                  "after": "c",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 87,
+                  "end": 126
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 94,
+                  "end": 120
+                },
+                "reference_byte_span": {
+                  "start": 95,
+                  "end": 119
+                },
+                "leaf_count": 2,
+                "leaf_index": 1
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0003",
+              "source": " with ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 120,
+                "end": 126
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "'",
+                  "after": "c",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 87,
+                  "end": 126
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 94,
+                  "end": 120
+                },
+                "reference_byte_span": {
+                  "start": 95,
+                  "end": 119
+                },
+                "leaf_count": 2,
+                "leaf_index": 2
+              }
+            }
+          ]
+        }
+      ],
+      "source_math_skeleton_hash": "sha256:d25178e3f6c911daf32c00c14c84ae2a2cf83286baaa5ec553ec4372a3d9df3f",
+      "source_text_hash": "sha256:2cc1f6c623aefa79439a1a56825878b1d617977e864a61176977723d1560976b",
+      "source_structure_hash": "sha256:ddff840f76e744eae3d08d8319f103e9e07a7c272bf45a9a1ff30f618e86577c",
+      "source_math_hash": "sha256:f3bf6c5204718f52a10f2eaddd5b15e3c1ad9f2aefe62595102766156eeb5aa8"
+    },
+    {
+      "schema_version": 5,
+      "unit_id": "tag:08LC:statement",
+      "parent_tag": "08L3",
+      "chapter": "defos",
+      "node_kind": "remark",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a ringed space. Let\n<MATH_0002>, <MATH_0003>\nbe first order thickenings with ideal sheaves <MATH_0004>.\nLet <MATH_0005>\nbe a morphism of first order thickenings of <MATH_0006>.\nPicture\n<MATH_0007>\nObserve that <MATH_0008>\nin particular induces an <MATH_0009>-module map\n<MATH_0010>.\nLet <MATH_0011> be an\n<MATH_0012>-module. Let <MATH_0013>, <MATH_0014> be a pair\nconsisting of an <MATH_0015>-module <MATH_0016> and a map\n<MATH_0017>. Assume furthermore given a map\nof <MATH_0018>-modules <MATH_0019>\nsuch that\n<MATH_0020>\nis commutative. Then there is a canonical functoriality\n<MATHSEG_0001> as in <MATHSEG_0002> with <MATHSEG_0003> and <MATHSEG_0004> as in <MATHSEG_0005> with <MATHSEG_0006> and <MATHSEG_0007>\nNamely, thinking of all sheaves <MATH_0021>, <MATH_0022>,\n<MATH_0023>, <MATH_0024>, etc as sheaves on <MATH_0025>, we set\ngiven <MATH_0026> the sheaf <MATH_0027> equal to the\npushout, i.e., fitting into the following diagram of extensions\n<MATH_0028>\nWe omit the construction of the <MATH_0029>-module structure\non the pushout (this uses the commutativity of the diagram\ninvolving <MATH_0030> and <MATH_0031>).\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$(X, \\mathcal{O}_X)$",
+        "MATH_0002": "$(X, \\mathcal{O}_X) \\to (X'_i, \\mathcal{O}_{X'_i})$",
+        "MATH_0003": "$i = 1, 2$",
+        "MATH_0004": "$\\mathcal{I}_i$",
+        "MATH_0005": "$h : (X'_1, \\mathcal{O}_{X'_1}) \\to (X'_2, \\mathcal{O}_{X'_2})$",
+        "MATH_0006": "$(X, \\mathcal{O}_X)$",
+        "MATH_0007": "$$\n\\xymatrix{\n& (X, \\mathcal{O}_X) \\ar[ld] \\ar[rd] & \\\\\n(X'_1, \\mathcal{O}_{X'_1}) \\ar[rr]^h & & \n(X'_2, \\mathcal{O}_{X'_2})\n}\n$$",
+        "MATH_0008": "$h^\\sharp : \\mathcal{O}_{X'_2} \\to \\mathcal{O}_{X'_1}$",
+        "MATH_0009": "$\\mathcal{O}_X$",
+        "MATH_0010": "$\\mathcal{I}_2 \\to \\mathcal{I}_1$",
+        "MATH_0011": "$\\mathcal{F}$",
+        "MATH_0012": "$\\mathcal{O}_X$",
+        "MATH_0013": "$(\\mathcal{K}_i, c_i)$",
+        "MATH_0014": "$i = 1, 2$",
+        "MATH_0015": "$\\mathcal{O}_X$",
+        "MATH_0016": "$\\mathcal{K}_i$",
+        "MATH_0017": "$c_i : \\mathcal{I}_i \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to\n\\mathcal{K}_i$",
+        "MATH_0018": "$\\mathcal{O}_X$",
+        "MATH_0019": "$\\mathcal{K}_2 \\to \\mathcal{K}_1$",
+        "MATH_0020": "$$\n\\xymatrix{\n\\mathcal{I}_2 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]_-{c_2} \\ar[d] &\n\\mathcal{K}_2 \\ar[d] \\\\\n\\mathcal{I}_1 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]^-{c_1} &\n\\mathcal{K}_1\n}\n$$",
+        "MATHSEG_0001": "$$\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_2\\text{",
+        "MATHSEG_0002": "(\\ref{equation-extension})",
+        "MATHSEG_0003": "}\\\\\nc_2 = c_{\\mathcal{F}'_2}\\text{",
+        "MATHSEG_0004": "}\\mathcal{K} = \\mathcal{K}_2\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_1\\text{",
+        "MATHSEG_0005": "(\\ref{equation-extension})",
+        "MATHSEG_0006": "}\\\\\nc_1 = c_{\\mathcal{F}'_1}\\text{",
+        "MATHSEG_0007": "}\\mathcal{K} = \\mathcal{K}_1\n\\end{matrix}\n\\right\\}\n$$",
+        "MATH_0021": "$\\mathcal{O}_X$",
+        "MATH_0022": "$\\mathcal{O}_{X'_i}$",
+        "MATH_0023": "$\\mathcal{F}$",
+        "MATH_0024": "$\\mathcal{K}_i$",
+        "MATH_0025": "$X$",
+        "MATH_0026": "$\\mathcal{F}'_2$",
+        "MATH_0027": "$\\mathcal{F}'_1$",
+        "MATH_0028": "$$\n\\xymatrix{\n0 \\ar[r] &\n\\mathcal{K}_2 \\ar[r] \\ar[d] &\n\\mathcal{F}'_2 \\ar[r] \\ar[d] &\n\\mathcal{F} \\ar@{=}[d] \\ar[r] & 0 \\\\\n0 \\ar[r] &\n\\mathcal{K}_1 \\ar[r] &\n\\mathcal{F}'_1 \\ar[r] &\n\\mathcal{F} \\ar[r] & 0\n}\n$$",
+        "MATH_0029": "$\\mathcal{O}_{X'_1}$",
+        "MATH_0030": "$c_1$",
+        "MATH_0031": "$c_2$"
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-extension-functorial}\n",
+        "suffix": "\\end{remark}"
+      },
+      "math_text_regions": [
+        {
+          "region_id": "math/0001",
+          "delimiter_kind": "display-dollar",
+          "source": "$$\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_2\\text{ as in (\\ref{equation-extension}) with }\\\\\nc_2 = c_{\\mathcal{F}'_2}\\text{ and }\\mathcal{K} = \\mathcal{K}_2\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_1\\text{ as in (\\ref{equation-extension}) with }\\\\\nc_1 = c_{\\mathcal{F}'_1}\\text{ and }\\mathcal{K} = \\mathcal{K}_1\n\\end{matrix}\n\\right\\}\n$$",
+          "source_hash": "sha256:b1eee073c174f07a1c23942105979583411135b18f1cf97de07709ee68c61c1a",
+          "source_byte_span": {
+            "start": 1247,
+            "end": 1612
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0004"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0005"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0005"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0006"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0006"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0007"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0001/text/0001",
+              "source": " as in ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 46,
+                "end": 53
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "2",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 46,
+                  "end": 85
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 53,
+                  "end": 79
+                },
+                "reference_byte_span": {
+                  "start": 54,
+                  "end": 78
+                },
+                "leaf_count": 2,
+                "leaf_index": 1
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0002",
+              "source": " with ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 79,
+                "end": 85
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "2",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 46,
+                  "end": 85
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 53,
+                  "end": 79
+                },
+                "reference_byte_span": {
+                  "start": 54,
+                  "end": 78
+                },
+                "leaf_count": 2,
+                "leaf_index": 2
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0003",
+              "source": " and ",
+              "command": "text",
+              "policy_entry": "defos-extension-reference-and",
+              "slot_byte_span": {
+                "start": 119,
+                "end": 124
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "usage": "deformations-reference-frame-text",
+                "usage_source": {
+                  "before": "}",
+                  "after": "\\mathcal",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-extension-functorial",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LC",
+                  "owner_label": "defos-remark-extension-functorial",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36642,
+                        "end": 36654
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36830,
+                        "end": 36842
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0004",
+              "source": " as in ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 234,
+                "end": 241
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0004",
+                "MATHSEG_0005"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "1",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 234,
+                  "end": 273
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 241,
+                  "end": 267
+                },
+                "reference_byte_span": {
+                  "start": 242,
+                  "end": 266
+                },
+                "leaf_count": 2,
+                "leaf_index": 1
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0005",
+              "source": " with ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 267,
+                "end": 273
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0005",
+                "MATHSEG_0006"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "1",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 234,
+                  "end": 273
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 241,
+                  "end": 267
+                },
+                "reference_byte_span": {
+                  "start": 242,
+                  "end": 266
+                },
+                "leaf_count": 2,
+                "leaf_index": 2
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0006",
+              "source": " and ",
+              "command": "text",
+              "policy_entry": "defos-extension-reference-and",
+              "slot_byte_span": {
+                "start": 307,
+                "end": 312
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0006",
+                "MATHSEG_0007"
+              ],
+              "classification_witness": {
+                "usage": "deformations-reference-frame-text",
+                "usage_source": {
+                  "before": "}",
+                  "after": "\\mathcal",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-remark-extension-functorial",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LC",
+                  "owner_label": "defos-remark-extension-functorial",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36642,
+                        "end": 36654
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36830,
+                        "end": 36842
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "source_math_skeleton_hash": "sha256:bf4a1144a29cd093554770c1fdc4ccb7732eb6ab4ab8bf6a6ee941d099620ae4",
+      "source_text_hash": "sha256:4f82d92a3d0102fc6c684da9f8d0da4d43c1436b712cdc3b5692407c86d0aa23",
+      "source_structure_hash": "sha256:148aec4c4ad7f69d13459879062d39cfe7f9cef1878285046b733f0639e5e251",
+      "source_math_hash": "sha256:f9a335ef6cb897b4dda670ae8e60ccc67efc6d7752b0107c48114a0bf315b032"
+    },
+    {
+      "schema_version": 5,
+      "unit_id": "tag:08LD:statement",
+      "parent_tag": "08L3",
+      "chapter": "defos",
+      "node_kind": "remark",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001>, <MATH_0002>,\n<MATH_0003>, and\n<MATH_0004>\nbe as in Remark <REF_0001>. Assume that we are\ngiven trivializations <MATH_0005> such that\n<MATH_0006>. In other words, assume <MATH_0007> is a morphism\nof trivialized first order thickening of <MATH_0008>. Let\n<MATH_0009>, <MATH_0010> be a pair consisting of an\n<MATH_0011>-module <MATH_0012> and a map\n<MATH_0013>. Assume furthermore given a map\nof <MATH_0014>-modules <MATH_0015>\nsuch that\n<MATH_0016>\nis commutative. In this situation the construction of\nRemark <REF_0002> induces\na commutative diagram\n<MATHSEG_0001> as in <MATHSEG_0002> with <MATHSEG_0003> and <MATHSEG_0004> as in <MATHSEG_0005> with <MATHSEG_0006> and <MATHSEG_0007>\nwhere the vertical map on the right is given by functoriality of <MATH_0017>\nand the map <MATH_0018> and the vertical map on the left\nis the one from Remark <REF_0003>.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$(X, \\mathcal{O}_X)$",
+        "MATH_0002": "$(X, \\mathcal{O}_X) \\to (X'_i, \\mathcal{O}_{X'_i})$",
+        "MATH_0003": "$\\mathcal{I}_i$",
+        "MATH_0004": "$h : (X'_1, \\mathcal{O}_{X'_1}) \\to (X'_2, \\mathcal{O}_{X'_2})$",
+        "REF_0001": "\\ref{remark-extension-functorial}",
+        "MATH_0005": "$\\pi_i : X'_i \\to X$",
+        "MATH_0006": "$\\pi_1 = h \\circ \\pi_2$",
+        "MATH_0007": "$h$",
+        "MATH_0008": "$(X, \\mathcal{O}_X)$",
+        "MATH_0009": "$(\\mathcal{K}_i, c_i)$",
+        "MATH_0010": "$i = 1, 2$",
+        "MATH_0011": "$\\mathcal{O}_X$",
+        "MATH_0012": "$\\mathcal{K}_i$",
+        "MATH_0013": "$c_i : \\mathcal{I}_i \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to\n\\mathcal{K}_i$",
+        "MATH_0014": "$\\mathcal{O}_X$",
+        "MATH_0015": "$\\mathcal{K}_2 \\to \\mathcal{K}_1$",
+        "MATH_0016": "$$\n\\xymatrix{\n\\mathcal{I}_2 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]_-{c_2} \\ar[d] &\n\\mathcal{K}_2 \\ar[d] \\\\\n\\mathcal{I}_1 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]^-{c_1} &\n\\mathcal{K}_1\n}\n$$",
+        "REF_0002": "\\ref{remark-trivial-extension}",
+        "MATHSEG_0001": "$$\n\\xymatrix{\n\\{\\mathcal{F}'_2\\text{",
+        "MATHSEG_0002": "(\\ref{equation-extension})",
+        "MATHSEG_0003": "}\nc_2 = c_{\\mathcal{F}'_2}\\text{",
+        "MATHSEG_0004": "}\\mathcal{K} = \\mathcal{K}_2\\}\n\\ar[d] \\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_2) \\ar[d] \\\\\n\\{\\mathcal{F}'_1\\text{",
+        "MATHSEG_0005": "(\\ref{equation-extension})",
+        "MATHSEG_0006": "}\nc_1 = c_{\\mathcal{F}'_1}\\text{",
+        "MATHSEG_0007": "}\\mathcal{K} = \\mathcal{K}_1\\}\n\\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_1)\n}\n$$",
+        "MATH_0017": "$\\Ext$",
+        "MATH_0018": "$\\mathcal{K}_2 \\to \\mathcal{K}_1$",
+        "REF_0003": "\\ref{remark-extension-functorial}"
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-trivial-extension-functorial}\n",
+        "suffix": "\\end{remark}"
+      },
+      "math_text_regions": [
+        {
+          "region_id": "math/0001",
+          "delimiter_kind": "display-dollar",
+          "source": "$$\n\\xymatrix{\n\\{\\mathcal{F}'_2\\text{ as in (\\ref{equation-extension}) with }\nc_2 = c_{\\mathcal{F}'_2}\\text{ and }\\mathcal{K} = \\mathcal{K}_2\\}\n\\ar[d] \\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_2) \\ar[d] \\\\\n\\{\\mathcal{F}'_1\\text{ as in (\\ref{equation-extension}) with }\nc_1 = c_{\\mathcal{F}'_1}\\text{ and }\\mathcal{K} = \\mathcal{K}_1\\}\n\\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_1)\n}\n$$",
+          "source_hash": "sha256:3ec10a709f648d23c787b4b557d86351bab761246bdb873860026babbecf0008",
+          "source_byte_span": {
+            "start": 1087,
+            "end": 1506
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0004"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0005"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0005"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0006"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0006"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0007"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0001/text/0001",
+              "source": " as in ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 36,
+                "end": 43
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "2",
+                  "after": "\nc",
+                  "environments": []
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 36,
+                  "end": 75
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 43,
+                  "end": 69
+                },
+                "reference_byte_span": {
+                  "start": 44,
+                  "end": 68
+                },
+                "leaf_count": 2,
+                "leaf_index": 1
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0002",
+              "source": " with ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 69,
+                "end": 75
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "2",
+                  "after": "\nc",
+                  "environments": []
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 36,
+                  "end": 75
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 43,
+                  "end": 69
+                },
+                "reference_byte_span": {
+                  "start": 44,
+                  "end": 68
+                },
+                "leaf_count": 2,
+                "leaf_index": 2
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0003",
+              "source": " and ",
+              "command": "text",
+              "policy_entry": "defos-extension-reference-and",
+              "slot_byte_span": {
+                "start": 107,
+                "end": 112
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "usage": "deformations-reference-frame-text",
+                "usage_source": {
+                  "before": "}",
+                  "after": "\\mathcal",
+                  "environments": []
+                },
+                "source_label": "defos-remark-extension-functorial",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LC",
+                  "owner_label": "defos-remark-extension-functorial",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36642,
+                        "end": 36654
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36830,
+                        "end": 36842
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0004",
+              "source": " as in ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 245,
+                "end": 252
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0004",
+                "MATHSEG_0005"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "1",
+                  "after": "\nc",
+                  "environments": []
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 245,
+                  "end": 284
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 252,
+                  "end": 278
+                },
+                "reference_byte_span": {
+                  "start": 253,
+                  "end": 277
+                },
+                "leaf_count": 2,
+                "leaf_index": 1
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0005",
+              "source": " with ",
+              "command": "text",
+              "policy_entry": "defos-internal-reference-equation-extension",
+              "slot_byte_span": {
+                "start": 278,
+                "end": 284
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0005",
+                "MATHSEG_0006"
+              ],
+              "classification_witness": {
+                "usage": "deformations-extension-reference",
+                "usage_source": {
+                  "before": "1",
+                  "after": "\nc",
+                  "environments": []
+                },
+                "source_label": "defos-remark-trivial-extension",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LB",
+                  "owner_label": "defos-remark-trivial-extension",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 33729,
+                        "end": 35280
+                      },
+                      "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                      "command_byte_span": {
+                        "start": 35030,
+                        "end": 35076
+                      },
+                      "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                    }
+                  ]
+                }
+              },
+              "parameter_reference_leaves": {
+                "parameter_source": " as in (\\ref{equation-extension}) with ",
+                "parameter_byte_span": {
+                  "start": 245,
+                  "end": 284
+                },
+                "reference_source": "\\ref{equation-extension}",
+                "reference_command": "ref",
+                "reference_label": "equation-extension",
+                "separator": "(\\ref{equation-extension})",
+                "separator_byte_span": {
+                  "start": 252,
+                  "end": 278
+                },
+                "reference_byte_span": {
+                  "start": 253,
+                  "end": 277
+                },
+                "leaf_count": 2,
+                "leaf_index": 2
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0006",
+              "source": " and ",
+              "command": "text",
+              "policy_entry": "defos-extension-reference-and",
+              "slot_byte_span": {
+                "start": 316,
+                "end": 321
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0006",
+                "MATHSEG_0007"
+              ],
+              "classification_witness": {
+                "usage": "deformations-reference-frame-text",
+                "usage_source": {
+                  "before": "}",
+                  "after": "\\mathcal",
+                  "environments": []
+                },
+                "source_label": "defos-remark-extension-functorial",
+                "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "08LC",
+                  "owner_label": "defos-remark-extension-functorial",
+                  "kind": "remark",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36642,
+                        "end": 36654
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 35282,
+                        "end": 37533
+                      },
+                      "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                      "command_byte_span": {
+                        "start": 36830,
+                        "end": 36842
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "source_math_skeleton_hash": "sha256:caf338b751a3b7ea4df3f3ff20f29c7966f484fe324ef8f44c642ae63526829c",
+      "source_text_hash": "sha256:3034422771cf050c6f902fc929a292efc53f0832a0c15658e5a4743769c27663",
+      "source_structure_hash": "sha256:82c9f2c006a6af33da7228b7dcb12138eaf00120688c39263ff1fa7619d33c0f",
+      "source_math_hash": "sha256:4db8811db2cea3361f58010e8a1f2b707d70e2be8c8676f4c23ec971b0e75723"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:08LB:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:2cc1f6c623aefa79439a1a56825878b1d617977e864a61176977723d1560976b",
+      "source_structure_hash": "sha256:ddff840f76e744eae3d08d8319f103e9e07a7c272bf45a9a1ff30f618e86577c",
+      "catalog_hash": "sha256:f73dd4efb00b32339d18fa253add1487436649173e9e990deb68583561f44958",
+      "occurrences": [
+        {
+          "source_term": "trivial",
+          "projection_start": 21,
+          "projection_end": 28,
+          "concept": "source-phrase-trivial",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivialization",
+          "projection_start": 94,
+          "projection_end": 108,
+          "concept": "source-phrase-trivialization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 180,
+          "projection_end": 187,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 194,
+          "projection_end": 197,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "splitting",
+          "projection_start": 245,
+          "projection_end": 254,
+          "concept": "splitting",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 302,
+          "projection_end": 305,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 344,
+          "projection_end": 350,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivial extension",
+          "projection_start": 428,
+          "projection_end": 445,
+          "concept": "trivial extension",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "trivialization",
+          "projection_start": 513,
+          "projection_end": 527,
+          "concept": "source-phrase-trivialization",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 657,
+          "projection_end": 663,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 683,
+          "projection_end": 688,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 769,
+          "projection_end": 778,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism classes",
+          "projection_start": 793,
+          "projection_end": 812,
+          "concept": "source-phrase-isomorphism-classes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "trivial extension",
+          "projection_start": 896,
+          "projection_end": 913,
+          "concept": "trivial extension",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 926,
+          "projection_end": 930,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 943,
+          "projection_end": 948,
+          "concept": "class",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08LC:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:4f82d92a3d0102fc6c684da9f8d0da4d43c1436b712cdc3b5692407c86d0aa23",
+      "source_structure_hash": "sha256:148aec4c4ad7f69d13459879062d39cfe7f9cef1878285046b733f0639e5e251",
+      "catalog_hash": "sha256:f73dd4efb00b32339d18fa253add1487436649173e9e990deb68583561f44958",
+      "occurrences": [
+        {
+          "source_term": "ideal sheaves",
+          "projection_start": 96,
+          "projection_end": 109,
+          "concept": "source-phrase-ideal-sheaves",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 144,
+          "projection_end": 152,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module map",
+          "projection_start": 278,
+          "projection_end": 288,
+          "concept": "source-phrase-module-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 336,
+          "projection_end": 342,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 412,
+          "projection_end": 418,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 437,
+          "projection_end": 440,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 481,
+          "projection_end": 484,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 500,
+          "projection_end": 507,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 545,
+          "projection_end": 556,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 574,
+          "projection_end": 583,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 757,
+          "projection_end": 764,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 824,
+          "projection_end": 831,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 851,
+          "projection_end": 854,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 877,
+          "projection_end": 882,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 908,
+          "projection_end": 915,
+          "concept": "pushout",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 950,
+          "projection_end": 957,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1028,
+          "projection_end": 1034,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 1052,
+          "projection_end": 1059,
+          "concept": "pushout",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1096,
+          "projection_end": 1103,
+          "concept": "diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08LD:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:3034422771cf050c6f902fc929a292efc53f0832a0c15658e5a4743769c27663",
+      "source_structure_hash": "sha256:82c9f2c006a6af33da7228b7dcb12138eaf00120688c39263ff1fa7619d33c0f",
+      "catalog_hash": "sha256:f73dd4efb00b32339d18fa253add1487436649173e9e990deb68583561f44958",
+      "occurrences": [
+        {
+          "source_term": "morphism",
+          "projection_start": 203,
+          "projection_end": 211,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 334,
+          "projection_end": 340,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 359,
+          "projection_end": 362,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 403,
+          "projection_end": 406,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 422,
+          "projection_end": 429,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 467,
+          "projection_end": 478,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 546,
+          "projection_end": 565,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 720,
+          "projection_end": 723,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 786,
+          "projection_end": 789,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 819,
+          "projection_end": 822,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08L9:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08L9:remark/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed space. A first order thickening\n<MATH_0002> is said\nto be <TEXTITOPEN_0001>trivial<TEXTITCLOSE_0001> if there exists a morphism of ringed spaces\n<MATH_0003> which is a\nleft inverse to <MATH_0004>. The choice of such a morphism\n<MATH_0005> is called a <TEXTITOPEN_0002>trivialization<TEXTITCLOSE_0002> of the first order thickening.\nGiven <MATH_0006> we obtain a splitting\n<MATH_0007>\nas sheaves of algebras on <MATH_0008> by using <MATH_0009> to split the surjection\n<MATH_0010>. Conversely, such a splitting determines\na morphism <MATH_0011>. The category of trivialized first order thickenings of\n<MATH_0012> is equivalent to the category of \n<MATH_0013>-modules.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-trivial-thickening}",
+            "MATH_0001": "$(X, \\mathcal{O}_X)$",
+            "MATH_0002": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0003": "$\\pi : (X', \\mathcal{O}_{X'}) \\to (X, \\mathcal{O}_X)$",
+            "MATH_0004": "$i$",
+            "MATH_0005": "$\\pi$",
+            "TEXTITOPEN_0002": "{\\it ",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0006": "$\\pi$",
+            "MATH_0007": "\\begin{equation}\n\\label{equation-splitting}\n\\mathcal{O}_{X'} = \\mathcal{O}_X \\oplus \\mathcal{I}\n\\end{equation}",
+            "MATH_0008": "$X$",
+            "MATH_0009": "$\\pi^\\sharp$",
+            "MATH_0010": "$\\mathcal{O}_{X'} \\to \\mathcal{O}_X$",
+            "MATH_0011": "$\\pi$",
+            "MATH_0012": "$(X, \\mathcal{O}_X)$",
+            "MATH_0013": "$\\mathcal{O}_X$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:36e67c628a788275521ecd2969e227b73d9029fa7a4587c5f5c4a3066b81a13e",
+          "source_structure_hash": "sha256:3a7b5d5f59a728dc83be7cf256518bb1ca2685730e201abdbb50efb9fd69bd18",
+          "source_math_hash": "sha256:b3de6d743439212f3f16c6d4ce9bb9b7af89a29e3879896abe0555632284c9b2"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 32835,
+          "byte_end": 33727,
+          "line_start": 895,
+          "line_end": 913,
+          "fragment_hash": "sha256:66db5aef2e18c3a2c14968856b9ef721880387e855da7777952d724c0a6bd546"
+        },
+        "owner_tag": "08L9",
+        "parent_tag": "08L3"
+      },
+      "hash": "sha256:a4619ccd6fb608b60ad7b4a098d4e75b14108a854c953ee2f663779ec21e5c28"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08LC:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 5,
+          "unit_id": "inventory:defos:08LC:remark/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed space. Let\n<MATH_0002>, <MATH_0003>\nbe first order thickenings with ideal sheaves <MATH_0004>.\nLet <MATH_0005>\nbe a morphism of first order thickenings of <MATH_0006>.\nPicture\n<MATH_0007>\nObserve that <MATH_0008>\nin particular induces an <MATH_0009>-module map\n<MATH_0010>.\nLet <MATH_0011> be an\n<MATH_0012>-module. Let <MATH_0013>, <MATH_0014> be a pair\nconsisting of an <MATH_0015>-module <MATH_0016> and a map\n<MATH_0017>. Assume furthermore given a map\nof <MATH_0018>-modules <MATH_0019>\nsuch that\n<MATH_0020>\nis commutative. Then there is a canonical functoriality\n<MATHSEG_0001> as in <MATHSEG_0002> with <MATHSEG_0003> and <MATHSEG_0004> as in <MATHSEG_0005> with <MATHSEG_0006> and <MATHSEG_0007>\nNamely, thinking of all sheaves <MATH_0021>, <MATH_0022>,\n<MATH_0023>, <MATH_0024>, etc as sheaves on <MATH_0025>, we set\ngiven <MATH_0026> the sheaf <MATH_0027> equal to the\npushout, i.e., fitting into the following diagram of extensions\n<MATH_0028>\nWe omit the construction of the <MATH_0029>-module structure\non the pushout (this uses the commutativity of the diagram\ninvolving <MATH_0030> and <MATH_0031>).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-extension-functorial}",
+            "MATH_0001": "$(X, \\mathcal{O}_X)$",
+            "MATH_0002": "$(X, \\mathcal{O}_X) \\to (X'_i, \\mathcal{O}_{X'_i})$",
+            "MATH_0003": "$i = 1, 2$",
+            "MATH_0004": "$\\mathcal{I}_i$",
+            "MATH_0005": "$h : (X'_1, \\mathcal{O}_{X'_1}) \\to (X'_2, \\mathcal{O}_{X'_2})$",
+            "MATH_0006": "$(X, \\mathcal{O}_X)$",
+            "MATH_0007": "$$\n\\xymatrix{\n& (X, \\mathcal{O}_X) \\ar[ld] \\ar[rd] & \\\\\n(X'_1, \\mathcal{O}_{X'_1}) \\ar[rr]^h & & \n(X'_2, \\mathcal{O}_{X'_2})\n}\n$$",
+            "MATH_0008": "$h^\\sharp : \\mathcal{O}_{X'_2} \\to \\mathcal{O}_{X'_1}$",
+            "MATH_0009": "$\\mathcal{O}_X$",
+            "MATH_0010": "$\\mathcal{I}_2 \\to \\mathcal{I}_1$",
+            "MATH_0011": "$\\mathcal{F}$",
+            "MATH_0012": "$\\mathcal{O}_X$",
+            "MATH_0013": "$(\\mathcal{K}_i, c_i)$",
+            "MATH_0014": "$i = 1, 2$",
+            "MATH_0015": "$\\mathcal{O}_X$",
+            "MATH_0016": "$\\mathcal{K}_i$",
+            "MATH_0017": "$c_i : \\mathcal{I}_i \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to\n\\mathcal{K}_i$",
+            "MATH_0018": "$\\mathcal{O}_X$",
+            "MATH_0019": "$\\mathcal{K}_2 \\to \\mathcal{K}_1$",
+            "MATH_0020": "$$\n\\xymatrix{\n\\mathcal{I}_2 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]_-{c_2} \\ar[d] &\n\\mathcal{K}_2 \\ar[d] \\\\\n\\mathcal{I}_1 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]^-{c_1} &\n\\mathcal{K}_1\n}\n$$",
+            "MATHSEG_0001": "$$\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_2\\text{",
+            "MATHSEG_0002": "(\\ref{equation-extension})",
+            "MATHSEG_0003": "}\\\\\nc_2 = c_{\\mathcal{F}'_2}\\text{",
+            "MATHSEG_0004": "}\\mathcal{K} = \\mathcal{K}_2\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_1\\text{",
+            "MATHSEG_0005": "(\\ref{equation-extension})",
+            "MATHSEG_0006": "}\\\\\nc_1 = c_{\\mathcal{F}'_1}\\text{",
+            "MATHSEG_0007": "}\\mathcal{K} = \\mathcal{K}_1\n\\end{matrix}\n\\right\\}\n$$",
+            "MATH_0021": "$\\mathcal{O}_X$",
+            "MATH_0022": "$\\mathcal{O}_{X'_i}$",
+            "MATH_0023": "$\\mathcal{F}$",
+            "MATH_0024": "$\\mathcal{K}_i$",
+            "MATH_0025": "$X$",
+            "MATH_0026": "$\\mathcal{F}'_2$",
+            "MATH_0027": "$\\mathcal{F}'_1$",
+            "MATH_0028": "$$\n\\xymatrix{\n0 \\ar[r] &\n\\mathcal{K}_2 \\ar[r] \\ar[d] &\n\\mathcal{F}'_2 \\ar[r] \\ar[d] &\n\\mathcal{F} \\ar@{=}[d] \\ar[r] & 0 \\\\\n0 \\ar[r] &\n\\mathcal{K}_1 \\ar[r] &\n\\mathcal{F}'_1 \\ar[r] &\n\\mathcal{F} \\ar[r] & 0\n}\n$$",
+            "MATH_0029": "$\\mathcal{O}_{X'_1}$",
+            "MATH_0030": "$c_1$",
+            "MATH_0031": "$c_2$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_2\\text{ as in (\\ref{equation-extension}) with }\\\\\nc_2 = c_{\\mathcal{F}'_2}\\text{ and }\\mathcal{K} = \\mathcal{K}_2\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\mathcal{F}'_1\\text{ as in (\\ref{equation-extension}) with }\\\\\nc_1 = c_{\\mathcal{F}'_1}\\text{ and }\\mathcal{K} = \\mathcal{K}_1\n\\end{matrix}\n\\right\\}\n$$",
+              "source_hash": "sha256:b1eee073c174f07a1c23942105979583411135b18f1cf97de07709ee68c61c1a",
+              "source_byte_span": {
+                "start": 1247,
+                "end": 1612
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0002"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0003"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0004"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0004"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0005"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0005"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0006"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0006"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0007"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " as in ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 46,
+                    "end": 53
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "2",
+                      "after": "\\\\",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 46,
+                      "end": 85
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 53,
+                      "end": 79
+                    },
+                    "reference_byte_span": {
+                      "start": 54,
+                      "end": 78
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 1
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0002",
+                  "source": " with ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 79,
+                    "end": 85
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0002",
+                    "MATHSEG_0003"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "2",
+                      "after": "\\\\",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 46,
+                      "end": 85
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 53,
+                      "end": 79
+                    },
+                    "reference_byte_span": {
+                      "start": 54,
+                      "end": 78
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 2
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0003",
+                  "source": " and ",
+                  "command": "text",
+                  "policy_entry": "defos-extension-reference-and",
+                  "slot_byte_span": {
+                    "start": 119,
+                    "end": 124
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0003",
+                    "MATHSEG_0004"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-reference-frame-text",
+                    "usage_source": {
+                      "before": "}",
+                      "after": "\\mathcal",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-extension-functorial",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LC",
+                      "owner_label": "defos-remark-extension-functorial",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36642,
+                            "end": 36654
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36830,
+                            "end": 36842
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0004",
+                  "source": " as in ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 234,
+                    "end": 241
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0004",
+                    "MATHSEG_0005"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "1",
+                      "after": "\\\\",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 234,
+                      "end": 273
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 241,
+                      "end": 267
+                    },
+                    "reference_byte_span": {
+                      "start": 242,
+                      "end": 266
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 1
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0005",
+                  "source": " with ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 267,
+                    "end": 273
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0005",
+                    "MATHSEG_0006"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "1",
+                      "after": "\\\\",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 234,
+                      "end": 273
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 241,
+                      "end": 267
+                    },
+                    "reference_byte_span": {
+                      "start": 242,
+                      "end": 266
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 2
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0006",
+                  "source": " and ",
+                  "command": "text",
+                  "policy_entry": "defos-extension-reference-and",
+                  "slot_byte_span": {
+                    "start": 307,
+                    "end": 312
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0006",
+                    "MATHSEG_0007"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-reference-frame-text",
+                    "usage_source": {
+                      "before": "}",
+                      "after": "\\mathcal",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-extension-functorial",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LC",
+                      "owner_label": "defos-remark-extension-functorial",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36642,
+                            "end": 36654
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36830,
+                            "end": 36842
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:bf4a1144a29cd093554770c1fdc4ccb7732eb6ab4ab8bf6a6ee941d099620ae4",
+          "source_text_hash": "sha256:47cbfeb2feba21769cb54e001c56680ea86098509d9c5148d7ec887b5d88136b",
+          "source_structure_hash": "sha256:e65d23048e4674b5253bc0806e2402d8d2b3c01a8c05f0e749394c1bbd46e33c",
+          "source_math_hash": "sha256:f9a335ef6cb897b4dda670ae8e60ccc67efc6d7752b0107c48114a0bf315b032"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 35282,
+          "byte_end": 37533,
+          "line_start": 954,
+          "line_end": 1024,
+          "fragment_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9"
+        },
+        "owner_tag": "08LC",
+        "parent_tag": "08L3"
+      },
+      "hash": "sha256:da77f79188c9ef1f3533ad752fe76d3fff740bbf0ab2e16d3db6ba80371437d8"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08LB:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 5,
+          "unit_id": "inventory:defos:08LB:remark/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>\nbe a trivial first order thickening of ringed spaces\nand let <MATH_0002>\nbe a trivialization. Then given any triple\n<MATH_0003> consisting of a pair of\n<MATH_0004>-modules and a map\n<MATH_0005>\nwe may set\n<MATH_0006>\nand use the splitting (<REF_0001>) associated to <MATH_0007>\nand the map <MATH_0008> to define the <MATH_0009>-module structure\nand obtain an extension (<REF_0002>). We will call\n<MATH_0010> the <TEXTITOPEN_0001>trivial extension<TEXTITCLOSE_0001> of <MATH_0011>\nby <MATH_0012> corresponding\nto <MATH_0013> and the trivialization <MATH_0014>. Given any extension\n<MATH_0015> as in (<REF_0003>) we can use\n<MATH_0016> to think of <MATH_0017>\nas an <MATH_0018>-module extension, hence a class <MATH_0019>\nin <MATH_0020>.\nLemma <REF_0004> assures that\n<MATH_0021>\ninduces a bijection\n<MATHSEG_0001>isomorphism classes of extensions<MATHSEG_0002> as in <MATHSEG_0003> with <MATHSEG_0004>\nMoreover, the trivial extension <MATH_0022> maps to the zero class.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-trivial-extension}",
+            "MATH_0001": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+            "MATH_0002": "$\\pi : (X', \\mathcal{O}_{X'}) \\to (X, \\mathcal{O}_X)$",
+            "MATH_0003": "$(\\mathcal{F}, \\mathcal{K}, c)$",
+            "MATH_0004": "$\\mathcal{O}_X$",
+            "MATH_0005": "$c : \\mathcal{I} \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to \\mathcal{K}$",
+            "MATH_0006": "$$\n\\mathcal{F}'_{c, triv} = \\mathcal{F} \\oplus \\mathcal{K}\n$$",
+            "REF_0001": "\\ref{equation-splitting}",
+            "MATH_0007": "$\\pi$",
+            "MATH_0008": "$c$",
+            "MATH_0009": "$\\mathcal{O}_{X'}$",
+            "REF_0002": "\\ref{equation-extension}",
+            "MATH_0010": "$\\mathcal{F}'_{c, triv}$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0011": "$\\mathcal{F}$",
+            "MATH_0012": "$\\mathcal{K}$",
+            "MATH_0013": "$c$",
+            "MATH_0014": "$\\pi$",
+            "MATH_0015": "$\\mathcal{F}'$",
+            "REF_0003": "\\ref{equation-extension}",
+            "MATH_0016": "$\\pi^\\sharp : \\mathcal{O}_X \\to \\mathcal{O}_{X'}$",
+            "MATH_0017": "$\\mathcal{F}'$",
+            "MATH_0018": "$\\mathcal{O}_X$",
+            "MATH_0019": "$\\xi_{\\mathcal{F}'}$",
+            "MATH_0020": "$\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})$",
+            "REF_0004": "\\ref{lemma-inf-ext}",
+            "MATH_0021": "$\\mathcal{F}' \\mapsto \\xi_{\\mathcal{F}'}$",
+            "MATHSEG_0001": "$$\n\\left\\{\n\\begin{matrix}\n\\text{",
+            "MATHSEG_0002": "}\\\\\n\\mathcal{F}'\\text{",
+            "MATHSEG_0003": "(\\ref{equation-extension})",
+            "MATHSEG_0004": "}c = c_{\\mathcal{F}'}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})\n$$",
+            "MATH_0022": "$\\mathcal{F}'_{c, triv}$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\left\\{\n\\begin{matrix}\n\\text{isomorphism classes of extensions}\\\\\n\\mathcal{F}'\\text{ as in (\\ref{equation-extension}) with }c = c_{\\mathcal{F}'}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})\n$$",
+              "source_hash": "sha256:3592c514594d0d2b3092956442c5c2f4fa491ca202de189343881f130e95669b",
+              "source_byte_span": {
+                "start": 1220,
+                "end": 1457
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0002"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0003"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0004"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": "isomorphism classes of extensions",
+                  "command": "text",
+                  "policy_entry": "defos-extension-reference-isomorphism-classes",
+                  "slot_byte_span": {
+                    "start": 32,
+                    "end": 65
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-reference-frame-text",
+                    "usage_source": {
+                      "before": "\\begin{matrix}\n",
+                      "after": "\\\\",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 34975,
+                            "end": 35015
+                          },
+                          "command_hash": "sha256:15e27b28b8f423caa21374cbc8cde62df10bf63f1b0e10dff7e5ab8579c2575a"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0002",
+                  "source": " as in ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 87,
+                    "end": 94
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0002",
+                    "MATHSEG_0003"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "'",
+                      "after": "c",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 87,
+                      "end": 126
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 94,
+                      "end": 120
+                    },
+                    "reference_byte_span": {
+                      "start": 95,
+                      "end": 119
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 1
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0003",
+                  "source": " with ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 120,
+                    "end": 126
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0003",
+                    "MATHSEG_0004"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "'",
+                      "after": "c",
+                      "environments": [
+                        "matrix"
+                      ]
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 87,
+                      "end": 126
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 94,
+                      "end": 120
+                    },
+                    "reference_byte_span": {
+                      "start": 95,
+                      "end": 119
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:d25178e3f6c911daf32c00c14c84ae2a2cf83286baaa5ec553ec4372a3d9df3f",
+          "source_text_hash": "sha256:a64bd588106ec4c690933e4ec6866a329c9d57ce8362c2e7cac170e7db8ecf2c",
+          "source_structure_hash": "sha256:7620793119a32286aad6b8658907d464725d010a289245c4b7b43e30c6cab8e2",
+          "source_math_hash": "sha256:f3bf6c5204718f52a10f2eaddd5b15e3c1ad9f2aefe62595102766156eeb5aa8"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 33729,
+          "byte_end": 35280,
+          "line_start": 915,
+          "line_end": 952,
+          "fragment_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2"
+        },
+        "owner_tag": "08LB",
+        "parent_tag": "08L3"
+      },
+      "hash": "sha256:731638c55ad9f961db28cff54b6d1d5b2a09621e5afaaebfb9a05b72a6592a8f"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08LD:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 5,
+          "unit_id": "inventory:defos:08LD:remark/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001>, <MATH_0002>,\n<MATH_0003>, and\n<MATH_0004>\nbe as in Remark <REF_0001>. Assume that we are\ngiven trivializations <MATH_0005> such that\n<MATH_0006>. In other words, assume <MATH_0007> is a morphism\nof trivialized first order thickening of <MATH_0008>. Let\n<MATH_0009>, <MATH_0010> be a pair consisting of an\n<MATH_0011>-module <MATH_0012> and a map\n<MATH_0013>. Assume furthermore given a map\nof <MATH_0014>-modules <MATH_0015>\nsuch that\n<MATH_0016>\nis commutative. In this situation the construction of\nRemark <REF_0002> induces\na commutative diagram\n<MATHSEG_0001> as in <MATHSEG_0002> with <MATHSEG_0003> and <MATHSEG_0004> as in <MATHSEG_0005> with <MATHSEG_0006> and <MATHSEG_0007>\nwhere the vertical map on the right is given by functoriality of <MATH_0017>\nand the map <MATH_0018> and the vertical map on the left\nis the one from Remark <REF_0003>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-trivial-extension-functorial}",
+            "MATH_0001": "$(X, \\mathcal{O}_X)$",
+            "MATH_0002": "$(X, \\mathcal{O}_X) \\to (X'_i, \\mathcal{O}_{X'_i})$",
+            "MATH_0003": "$\\mathcal{I}_i$",
+            "MATH_0004": "$h : (X'_1, \\mathcal{O}_{X'_1}) \\to (X'_2, \\mathcal{O}_{X'_2})$",
+            "REF_0001": "\\ref{remark-extension-functorial}",
+            "MATH_0005": "$\\pi_i : X'_i \\to X$",
+            "MATH_0006": "$\\pi_1 = h \\circ \\pi_2$",
+            "MATH_0007": "$h$",
+            "MATH_0008": "$(X, \\mathcal{O}_X)$",
+            "MATH_0009": "$(\\mathcal{K}_i, c_i)$",
+            "MATH_0010": "$i = 1, 2$",
+            "MATH_0011": "$\\mathcal{O}_X$",
+            "MATH_0012": "$\\mathcal{K}_i$",
+            "MATH_0013": "$c_i : \\mathcal{I}_i \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to\n\\mathcal{K}_i$",
+            "MATH_0014": "$\\mathcal{O}_X$",
+            "MATH_0015": "$\\mathcal{K}_2 \\to \\mathcal{K}_1$",
+            "MATH_0016": "$$\n\\xymatrix{\n\\mathcal{I}_2 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]_-{c_2} \\ar[d] &\n\\mathcal{K}_2 \\ar[d] \\\\\n\\mathcal{I}_1 \\otimes_{\\mathcal{O}_X} \\mathcal{F}\n\\ar[r]^-{c_1} &\n\\mathcal{K}_1\n}\n$$",
+            "REF_0002": "\\ref{remark-trivial-extension}",
+            "MATHSEG_0001": "$$\n\\xymatrix{\n\\{\\mathcal{F}'_2\\text{",
+            "MATHSEG_0002": "(\\ref{equation-extension})",
+            "MATHSEG_0003": "}\nc_2 = c_{\\mathcal{F}'_2}\\text{",
+            "MATHSEG_0004": "}\\mathcal{K} = \\mathcal{K}_2\\}\n\\ar[d] \\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_2) \\ar[d] \\\\\n\\{\\mathcal{F}'_1\\text{",
+            "MATHSEG_0005": "(\\ref{equation-extension})",
+            "MATHSEG_0006": "}\nc_1 = c_{\\mathcal{F}'_1}\\text{",
+            "MATHSEG_0007": "}\\mathcal{K} = \\mathcal{K}_1\\}\n\\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_1)\n}\n$$",
+            "MATH_0017": "$\\Ext$",
+            "MATH_0018": "$\\mathcal{K}_2 \\to \\mathcal{K}_1$",
+            "REF_0003": "\\ref{remark-extension-functorial}",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\xymatrix{\n\\{\\mathcal{F}'_2\\text{ as in (\\ref{equation-extension}) with }\nc_2 = c_{\\mathcal{F}'_2}\\text{ and }\\mathcal{K} = \\mathcal{K}_2\\}\n\\ar[d] \\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_2) \\ar[d] \\\\\n\\{\\mathcal{F}'_1\\text{ as in (\\ref{equation-extension}) with }\nc_1 = c_{\\mathcal{F}'_1}\\text{ and }\\mathcal{K} = \\mathcal{K}_1\\}\n\\ar[rr] & &\n\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K}_1)\n}\n$$",
+              "source_hash": "sha256:3ec10a709f648d23c787b4b557d86351bab761246bdb873860026babbecf0008",
+              "source_byte_span": {
+                "start": 1087,
+                "end": 1506
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0002"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0003"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0004"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0004"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0005"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0005"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0006"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0006"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0007"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": " as in ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 36,
+                    "end": 43
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "2",
+                      "after": "\nc",
+                      "environments": []
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 36,
+                      "end": 75
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 43,
+                      "end": 69
+                    },
+                    "reference_byte_span": {
+                      "start": 44,
+                      "end": 68
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 1
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0002",
+                  "source": " with ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 69,
+                    "end": 75
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0002",
+                    "MATHSEG_0003"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "2",
+                      "after": "\nc",
+                      "environments": []
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 36,
+                      "end": 75
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 43,
+                      "end": 69
+                    },
+                    "reference_byte_span": {
+                      "start": 44,
+                      "end": 68
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 2
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0003",
+                  "source": " and ",
+                  "command": "text",
+                  "policy_entry": "defos-extension-reference-and",
+                  "slot_byte_span": {
+                    "start": 107,
+                    "end": 112
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0003",
+                    "MATHSEG_0004"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-reference-frame-text",
+                    "usage_source": {
+                      "before": "}",
+                      "after": "\\mathcal",
+                      "environments": []
+                    },
+                    "source_label": "defos-remark-extension-functorial",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LC",
+                      "owner_label": "defos-remark-extension-functorial",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36642,
+                            "end": 36654
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36830,
+                            "end": 36842
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0004",
+                  "source": " as in ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 245,
+                    "end": 252
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0004",
+                    "MATHSEG_0005"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "1",
+                      "after": "\nc",
+                      "environments": []
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 245,
+                      "end": 284
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 252,
+                      "end": 278
+                    },
+                    "reference_byte_span": {
+                      "start": 253,
+                      "end": 277
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 1
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0005",
+                  "source": " with ",
+                  "command": "text",
+                  "policy_entry": "defos-internal-reference-equation-extension",
+                  "slot_byte_span": {
+                    "start": 278,
+                    "end": 284
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0005",
+                    "MATHSEG_0006"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-extension-reference",
+                    "usage_source": {
+                      "before": "1",
+                      "after": "\nc",
+                      "environments": []
+                    },
+                    "source_label": "defos-remark-trivial-extension",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LB",
+                      "owner_label": "defos-remark-trivial-extension",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 33729,
+                            "end": 35280
+                          },
+                          "container_hash": "sha256:b15ea11a209e19c620d1ca85676d52115889eb63a28b1150bd5e529f5c2872c2",
+                          "command_byte_span": {
+                            "start": 35030,
+                            "end": 35076
+                          },
+                          "command_hash": "sha256:5f880042e5e2551ac8452db1cad9c64eea5be89160581c0398083bb69b10c056"
+                        }
+                      ]
+                    }
+                  },
+                  "parameter_reference_leaves": {
+                    "parameter_source": " as in (\\ref{equation-extension}) with ",
+                    "parameter_byte_span": {
+                      "start": 245,
+                      "end": 284
+                    },
+                    "reference_source": "\\ref{equation-extension}",
+                    "reference_command": "ref",
+                    "reference_label": "equation-extension",
+                    "separator": "(\\ref{equation-extension})",
+                    "separator_byte_span": {
+                      "start": 252,
+                      "end": 278
+                    },
+                    "reference_byte_span": {
+                      "start": 253,
+                      "end": 277
+                    },
+                    "leaf_count": 2,
+                    "leaf_index": 2
+                  }
+                },
+                {
+                  "slot_id": "math/0001/text/0006",
+                  "source": " and ",
+                  "command": "text",
+                  "policy_entry": "defos-extension-reference-and",
+                  "slot_byte_span": {
+                    "start": 316,
+                    "end": 321
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0006",
+                    "MATHSEG_0007"
+                  ],
+                  "classification_witness": {
+                    "usage": "deformations-reference-frame-text",
+                    "usage_source": {
+                      "before": "}",
+                      "after": "\\mathcal",
+                      "environments": []
+                    },
+                    "source_label": "defos-remark-extension-functorial",
+                    "policy_hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "defos.tex",
+                      "owner_tag": "08LC",
+                      "owner_label": "defos-remark-extension-functorial",
+                      "kind": "remark",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36642,
+                            "end": 36654
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 35282,
+                            "end": 37533
+                          },
+                          "container_hash": "sha256:1b0d7704a37eff41d36be4cd6bf4716ab138d6eb56ff1fe75c5927f6d7db75b9",
+                          "command_byte_span": {
+                            "start": 36830,
+                            "end": 36842
+                          },
+                          "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:caf338b751a3b7ea4df3f3ff20f29c7966f484fe324ef8f44c642ae63526829c",
+          "source_text_hash": "sha256:b296821b1c9cb9d47a47ac8fe12f7d8c196a4e4ba9160ad4023b2c32a3d5a44c",
+          "source_structure_hash": "sha256:5d6ef97dcaa8664ff36f9dd83050e350f42fa1376f1f5b063d68b34034fc6fff",
+          "source_math_hash": "sha256:4db8811db2cea3361f58010e8a1f2b707d70e2be8c8676f4c23ec971b0e75723"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 37535,
+          "byte_end": 39263,
+          "line_start": 1026,
+          "line_end": 1069,
+          "fragment_hash": "sha256:de1bde303ec9ea39df672d2c83300e5ed0cf573de0af19a0d1f1f0ffa3136876"
+        },
+        "owner_tag": "08LD",
+        "parent_tag": "08L3"
+      },
+      "hash": "sha256:92fe61d6ad669bd0909390c23f098944498be872443ea35a323b9ad8894eaafc"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08LE:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08LE:remark/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed space. We define a sequence of morphisms\nof first order thickenings\n<MATH_0002>\nof <MATH_0003> to be a <TEXTITOPEN_0001>complex<TEXTITCLOSE_0001>\nif the corresponding maps between\nthe ideal sheaves <MATH_0004>\ngive a complex of <MATH_0005>-modules\n<MATH_0006>\n(i.e., the composition is zero). In this case the composition\n<MATH_0007> factors through\n<MATH_0008>, i.e.,\nthe first order thickening <MATH_0009> of\n<MATH_0010> is trivial and comes with\na canonical trivialization\n<MATH_0011>.\n\n<STRUCT_0002><STRUCT_0003>\nWe say a sequence of morphisms of first order thickenings\n<MATH_0012>\nof <MATH_0013> is <TEXTITOPEN_0002>a short exact sequence<TEXTITCLOSE_0002> if the\ncorresponding maps between ideal sheaves is a short exact sequence\n<MATH_0014>\nof <MATH_0015>-modules.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-short-exact-sequence-thickenings}",
+            "MATH_0001": "$(X, \\mathcal{O}_X)$",
+            "MATH_0002": "$$\n(X'_1, \\mathcal{O}_{X'_1}) \\to\n(X'_2, \\mathcal{O}_{X'_2}) \\to\n(X'_3, \\mathcal{O}_{X'_3})\n$$",
+            "MATH_0003": "$(X, \\mathcal{O}_X)$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0004": "$\\mathcal{I}_i$",
+            "MATH_0005": "$\\mathcal{O}_X$",
+            "MATH_0006": "$\\mathcal{I}_3 \\to \\mathcal{I}_2 \\to \\mathcal{I}_1$",
+            "MATH_0007": "$(X'_1, \\mathcal{O}_{X'_1}) \\to (X_3', \\mathcal{O}_{X'_3})$",
+            "MATH_0008": "$(X, \\mathcal{O}_X) \\to (X'_3, \\mathcal{O}_{X'_3})$",
+            "MATH_0009": "$(X'_1, \\mathcal{O}_{X'_1})$",
+            "MATH_0010": "$(X, \\mathcal{O}_X)$",
+            "MATH_0011": "$\\pi : (X'_1, \\mathcal{O}_{X'_1}) \\to (X, \\mathcal{O}_X)$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0012": "$$\n(X'_1, \\mathcal{O}_{X'_1}) \\to\n(X'_2, \\mathcal{O}_{X'_2}) \\to\n(X'_3, \\mathcal{O}_{X'_3})\n$$",
+            "MATH_0013": "$(X, \\mathcal{O}_X)$",
+            "TEXTITOPEN_0002": "{\\it ",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0014": "$$\n0 \\to \\mathcal{I}_3 \\to \\mathcal{I}_2 \\to \\mathcal{I}_1 \\to 0\n$$",
+            "MATH_0015": "$\\mathcal{O}_X$",
+            "STRUCT_0004": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:9abbe4fced1fcf994e441fec83685a5d57b22993752e421b611e562680dc806a",
+          "source_structure_hash": "sha256:a4d3903bf9cff309028bc81b9333cddfccf1313c4130d6debc47368ae80f02d6",
+          "source_math_hash": "sha256:9c9f1af1a0ce5b5040d55dd63ac70702372e03780644657e708ec4b0de0db444"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 39265,
+          "byte_end": 40535,
+          "line_start": 1071,
+          "line_end": 1106,
+          "fragment_hash": "sha256:e7d685506406380150886d20574b99da19d714de95d98d69dec606485c4d78b6"
+        },
+        "owner_tag": "08LE",
+        "parent_tag": "08L3"
+      },
+      "hash": "sha256:437db2cd6e68884b34a0e74e2e63497b0d025fcaa994ce0504696f3175a492ea"
+    },
+    {
+      "context_id": "locked-English-math-reference:defos:defos-equation-extension",
+      "value": {
+        "kind": "locked-English-math-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_math_node": "\\begin{equation}\n\\label{equation-extension}\n0 \\to \\mathcal{K} \\to \\mathcal{F}' \\to \\mathcal{F} \\to 0\n\\end{equation}",
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 22217,
+          "byte_end": 22332,
+          "line_start": 585,
+          "line_end": 588,
+          "fragment_hash": "sha256:46fec69b9c0afd53df2861557c5990b1b8db2a702877b363a0e7816331a898dd"
+        },
+        "requested_label": "defos-equation-extension",
+        "requested_tag": "08L4"
+      },
+      "hash": "sha256:0ad4df2b7ca43fa7787227b6f750cbdf9a6b2434c399d66466b0aab36e280ec9"
+    },
+    {
+      "context_id": "locked-English-reference:defos:inventory:defos:08L9:remark/0001:defos-equation-splitting",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08L9:remark/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a ringed space. A first order thickening\n<MATH_0002> is said\nto be <TEXTITOPEN_0001>trivial<TEXTITCLOSE_0001> if there exists a morphism of ringed spaces\n<MATH_0003> which is a\nleft inverse to <MATH_0004>. The choice of such a morphism\n<MATH_0005> is called a <TEXTITOPEN_0002>trivialization<TEXTITCLOSE_0002> of the first order thickening.\nGiven <MATH_0006> we obtain a splitting\n<MATH_0007>\nas sheaves of algebras on <MATH_0008> by using <MATH_0009> to split the surjection\n<MATH_0010>. Conversely, such a splitting determines\na morphism <MATH_0011>. The category of trivialized first order thickenings of\n<MATH_0012> is equivalent to the category of \n<MATH_0013>-modules.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-trivial-thickening}",
+            "MATH_0001": "$(X, \\mathcal{O}_X)$",
+            "MATH_0002": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0003": "$\\pi : (X', \\mathcal{O}_{X'}) \\to (X, \\mathcal{O}_X)$",
+            "MATH_0004": "$i$",
+            "MATH_0005": "$\\pi$",
+            "TEXTITOPEN_0002": "{\\it ",
+            "TEXTITCLOSE_0002": "}",
+            "MATH_0006": "$\\pi$",
+            "MATH_0007": "\\begin{equation}\n\\label{equation-splitting}\n\\mathcal{O}_{X'} = \\mathcal{O}_X \\oplus \\mathcal{I}\n\\end{equation}",
+            "MATH_0008": "$X$",
+            "MATH_0009": "$\\pi^\\sharp$",
+            "MATH_0010": "$\\mathcal{O}_{X'} \\to \\mathcal{O}_X$",
+            "MATH_0011": "$\\pi$",
+            "MATH_0012": "$(X, \\mathcal{O}_X)$",
+            "MATH_0013": "$\\mathcal{O}_X$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:36e67c628a788275521ecd2969e227b73d9029fa7a4587c5f5c4a3066b81a13e",
+          "source_structure_hash": "sha256:3a7b5d5f59a728dc83be7cf256518bb1ca2685730e201abdbb50efb9fd69bd18",
+          "source_math_hash": "sha256:b3de6d743439212f3f16c6d4ce9bb9b7af89a29e3879896abe0555632284c9b2"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 32835,
+          "byte_end": 33727,
+          "line_start": 895,
+          "line_end": 913,
+          "fragment_hash": "sha256:66db5aef2e18c3a2c14968856b9ef721880387e855da7777952d724c0a6bd546"
+        },
+        "owner_tag": "08L9",
+        "parent_tag": "08L3",
+        "requested_label": "defos-equation-splitting",
+        "requested_tag": "08LA"
+      },
+      "hash": "sha256:1d7b613b3cc8085b3610e8f120751c2a1338eaff423eee80a5923e4606d3a411"
+    },
+    {
+      "context_id": "locked-English-reference:defos:inventory:defos:08L7:lemma/0001:defos-lemma-inf-ext",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08L7:lemma/0001",
+          "parent_tag": "08L3",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a first order\nthickening of ringed spaces.\nAssume given <MATH_0002>-modules <MATH_0003>, <MATH_0004>\nand an <MATH_0005>-linear map\n<MATH_0006>.\nIf there exists a sequence (<REF_0001>) with\n<MATH_0007> then the set of isomorphism classes of these\nextensions is principal homogeneous under\n<MATH_0008>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-inf-ext}",
+            "MATH_0001": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+            "MATH_0002": "$\\mathcal{O}_X$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "MATH_0004": "$\\mathcal{K}$",
+            "MATH_0005": "$\\mathcal{O}_X$",
+            "MATH_0006": "$c : \\mathcal{I} \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to \\mathcal{K}$",
+            "REF_0001": "\\ref{equation-extension}",
+            "MATH_0007": "$c_{\\mathcal{F}'} = c$",
+            "MATH_0008": "$\\Ext^1_{\\mathcal{O}_X}(\\mathcal{F}, \\mathcal{K})$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:07db0accdec9bfabe241dbde48db5a346228e3cf72313c4147f0e2c7f4a9238c",
+          "source_structure_hash": "sha256:ec6e3a75050cdce18438dbcbc07867de6e704ace48d910d775d066149d4d5832",
+          "source_math_hash": "sha256:eff67eaaab5dd93362222a3db7e42ec963aa25e774f8df75dc9ea8638d08fe7b"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 26787,
+          "byte_end": 27328,
+          "line_start": 728,
+          "line_end": 739,
+          "fragment_hash": "sha256:55de3c667f6f4210656c21a954b419a3a3c4c7bf3f5cab43e9a5559eccbc8ee0"
+        },
+        "owner_tag": "08L7",
+        "parent_tag": "08L3",
+        "requested_label": "defos-lemma-inf-ext",
+        "requested_tag": "08L7"
+      },
+      "hash": "sha256:3f0b85300e466579d3b21a4df032015ae0df3b540d70909b4a031a6f2980d586"
+    }
+  ],
+  "policy_git_origin": "b34056f92178bad5ba4f9ea0423b67b2cbfa34a8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:d5424e0ed0b946adf6ccca4f77aeaf242514109112ec3df3a19eb7fabfb42b4c"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:b16c347f4abc716183311b55dbffd22038acf0820df58d435592e05ff53b9b57"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:f0708c3177eecf540f66538ff99d71c8c7927800e1c6a46294c5516f119560db"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:b344b59fca827ee03f535c0dc703219395d2ac6613ae61bd7f906c17dda344c6"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:51b1b42bba5af266ce4f6e0a410871b98efff51aaf1d708970e3fd63bfc8dd47"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:ef9263cdedf15a3e360f6184509c2cc7615c299a5fff9074d46544f7a4abb656"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:385dde972b3048344f9d5e7b9098624f636a993b4c3d34071846916ccc154a9f"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    },
+    {
+      "path": "schema/math-text-references.schema.json",
+      "hash": "sha256:755d3d039baf1c5e9392f653b55184d5dcca7b6444291d8906173ff6092c2c78"
+    },
+    {
+      "path": "schema/math-text-internal-references.schema.json",
+      "hash": "sha256:f20a210e0904e8e0bc0f224ac544bebd3d014ee7998573bb4c5861742ac9162b"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-01.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-02.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-03.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-04.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-05.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-06.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-07.jsonl",
+    "docs/evidence/defos91-gpt61sol-p015-20261118-raw-08.jsonl"
+  ],
+  "rules": "Translate protected natural-language input, including typed leaves. Return unit_id and all five translator fields. Preserve token order, multiplicity and trailing whitespace. Report provisional terms and any genuine source notes."
+}

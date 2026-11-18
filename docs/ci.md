@@ -22,6 +22,16 @@ PR checkout 明确使用 event head；比较点为 event base 与 head 的 merge
 main push 使用 before/head 范围；首次或缺失比较点明确走当前全量，不依赖历史 artifact。
 不使用 pull_request_target 执行不可信 head，不改变现有 pr-contract 的可信执行方式。
 
+分类 runner 只加载比较点的分类器。比较点缺少调度器或首次 push 时明确选择
+`current-all`。两个验证 runner 均核对事件比较点与分类结果绑定的提交，并从
+`upstream.lock` 获取独立英文 checkout。公共范围的 `tool-test` 与
+`current-validation` 并行；后者执行 `qa-current-all` 及其 workflow/harvest
+前置、index、chapter-template、适用的 progress/plan 检查和比较点 diff 检查。
+非公共范围由 `current-validation` 直接调用比较点原调度器，保留表中的范围。
+总门禁 `policy-and-data` 始终检查分类与当前校验成功，并要求公共范围的工具测试
+成功，其他范围的工具测试明确跳过。必要 job 失败、取消、缺失或跳过均不能通过。
+`pr-contract` 继续独立运行。
+
 本地 Python3.12 命令：
 
 ```sh

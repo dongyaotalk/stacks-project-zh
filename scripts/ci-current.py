@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from stacks_zh.ci_scope import classify
-from stacks_zh.chapter_validation import git, check_current_repository
+from stacks_zh.chapter_validation import check_current_repository
 from stacks_zh.records import RecordError
 from stacks_zh.generated_reports import check_generated_reports
 
@@ -46,18 +46,19 @@ def run():
         make('upstream-index-check','chapter-template-check')
         chapters=set(dispatch['chapters'])
         if len(chapters)>1:
-            print('Expanding multi-chapter/shared participants to qa-current-all; pure data tool tests not run',flush=True)
-            chapters=None
+            print('Validating the affected chapters and their shared run participants',flush=True)
         payload=check_current_repository(root,args.harvest,args.base_ref,report=print,chapters=chapters)
         (out/'chapters.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
+    elif dispatch['kind']=='test-only':
+        make('tool-test')
     elif dispatch['kind']=='current-all':
         make('tool-test','qa-current-all','upstream-index-check','chapter-template-check')
     else:
         print('Data acceptance not run: '+dispatch['reason'],flush=True)
     paths=dispatch['paths']
-    if any(x in paths for x in ['README.md','docs/progress.md','docs/translation-progress.md','stacks_zh/progress.py','tests/test_progress.py','Makefile']):make('progress-check')
+    if any(x in paths for x in ['README.md','docs/progress.md','docs/translation-progress.md','stacks_zh/progress.py','stacks_zh/progress_coverage.py','tests/test_progress.py','tests/test_progress_coverage.py','Makefile']):make('progress-check')
     if any(x in paths for x in ['README.md','docs/translation-priority.md','docs/translation-plan.md','docs/task-allocation.md','docs/ci.md','config/translation-priorities.json','stacks_zh/planning.py','stacks_zh/schema_validation.py','stacks_zh/cli.py','tests/test_planning.py','Makefile','.github/workflows/ci.yml']):make('plan-check')
-    subprocess.run(['git','diff','--check'],cwd=root,check=True)
+    subprocess.run(['git','diff','--check',args.base_ref],cwd=root,check=True)
 
 
 if __name__=='__main__':

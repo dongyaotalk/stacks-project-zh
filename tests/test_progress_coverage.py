@@ -366,6 +366,67 @@ class FirstAdoptionProgressTests(unittest.TestCase):
                 self.assertEqual(section(root,harvest).prepared_tags,4)
             self.assertEqual(seen,[g['selector'] for b in frozen['batches'] for g in b['containers']])
 
+    def test_first_adoption_reuse_binds_exact_policy_and_keeps_each_groups_checks(self):
+        from stacks_zh import derivations, progress_coverage
+        from stacks_zh.source_reextractions import byte_hash
+
+        for change in ('identical-policy', 'different-policy', 'transient-policy'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as tmp:
+                root, harvest, record, frozen, _ = adoption_setup(Path(tmp))
+                policy = root / 'config/macro-policy.yml'
+                original_policy = policy.read_bytes()
+                child, child_record = copy.deepcopy(frozen), copy.deepcopy(record)
+                child.update(adoption_id='synthetic-second', run_id='run-synthetic-second')
+                if change == 'different-policy':
+                    policy.write_bytes(original_policy + b'\n# distinct historical bytes\n')
+                    git(root, 'add', str(policy.relative_to(root)))
+                    git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=test@example.invalid',
+                        'commit', '-qm', 'another policy')
+                    child['origin_commit'] = git(root, 'rev-parse', 'HEAD')
+                    next(p for p in child['policies'] if p['path'] == 'config/macro-policy.yml')['hash'] = byte_hash(policy.read_bytes())
+                ip = 'translation-data/source-adoption-inputs/synthetic-second.json'
+                ap = 'translation-data/source-adoptions/synthetic-second.json'
+                rp = 'docs/evidence/synthetic-second-raw.jsonl'
+                run = 'translation-data/runs/run-synthetic-second.json'
+                scope = json.loads(child['task']['scope_bytes'])
+                scope['allowed_write_files'] += [ip, ap, rp, run]
+                scope['data_scopes'][0]['allowed_write_files'] += [ip, ap, rp, run]
+                scope['data_scopes'][0]['run_scope'].append(child['run_id'])
+                child['task']['scope_bytes'] = json.dumps(scope)
+                child['task']['scope_manifest_sha256'] = byte_hash(child['task']['scope_bytes'].encode())
+                write(root / ip, child)
+                child_record.update(adoption_id=child['adoption_id'], run_id=child['run_id'],
+                    origin_commit=child['origin_commit'], input=dict(path=ip, hash=byte_hash((root/ip).read_bytes())),
+                    raw_attempts=[dict(path=rp, hash='sha256:'+'0'*64, unit_ids=child['unit_ids'])],
+                    run=dict(path=run, hash='sha256:'+'0'*64))
+                write(root / ap, child_record)
+
+                real_read = progress_coverage.read_bytes
+                def transient(path):
+                    if path != policy or change != 'transient-policy':
+                        return real_read(path)
+                    try:
+                        policy.write_bytes(original_policy + b'\n# changed on cache hit\n')
+                        return real_read(path)
+                    finally:
+                        policy.write_bytes(original_policy)
+
+                # The second group must still pass replay and ownership.
+                # Its frozen selection describes the original policy bytes.
+                expected = {
+                    'identical-policy': 'duplicate native item Tags',
+                    'different-policy': 'differs from its complete Git container',
+                    'transient-policy': 'input bytes changed',
+                }[change]
+                with (patch.object(progress_coverage, 'Containers', wraps=progress_coverage.Containers) as containers,
+                      patch.object(derivations, '_git_origin_bytes', wraps=derivations._git_origin_bytes) as git_bytes,
+                      patch.object(progress_coverage, 'read_bytes', side_effect=transient),
+                      self.assertRaisesRegex(RecordError, expected)):
+                    container_tag_coverage(root, harvest, current_units(root))
+                multiplier = 2 if change == 'different-policy' else 1
+                self.assertEqual(containers.call_count, multiplier)
+                self.assertEqual(git_bytes.call_count, multiplier * len(frozen['policies']))
+
     def test_consumed_adoption_is_not_a_second_current_source_owner(self):
         from stacks_zh.source_reextractions import byte_hash
         with tempfile.TemporaryDirectory() as tmp:

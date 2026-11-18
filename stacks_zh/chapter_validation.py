@@ -12,7 +12,7 @@ from weakref import WeakValueDictionary, finalize
 from .current_qa import CurrentSourceQA, InputSnapshot
 from .records import RecordError
 from .schema_validation import validate_named_schema
-from .validation_io import InputReads, current_inputs, tracked_inputs, glob_paths, remember_tree
+from .validation_io import InputReads, current_inputs, tracked_inputs, glob_paths, remember_tree, read_bytes
 
 _ISSUED = WeakValueDictionary()
 _CLAIMS = {}
@@ -62,18 +62,23 @@ class Base:
             mode_type_oid, path = entry.split(b'\t', 1)
             mode, kind, oid = mode_type_oid.decode().split()
             self.entries[path.decode()] = (mode, kind, oid)
-        self.changed = set(git(root, 'diff', '--name-only', '--no-renames', '-z', self.commit, raw=True).decode().split('\0')) - {''}
+        self.change_identity = self._change_identity()
+        worktree_diff, index_diff, visible = self.change_identity
+        self.changed = {path.decode() for diff in (worktree_diff, index_diff)
+                        for path in diff.split(b'\0')[1::2]}
         # ls-files --others without excludes includes ignored new facts. Generated
         # trees outside facts remain generated, not undeclared translation inputs.
         extra = git(root, 'ls-files', '--others', '-z', raw=True).decode().split('\0')
         self.changed.update(p for p in extra if p.startswith(('translation-data/', 'review/', 'docs/evidence/', 'task-scopes/')))
-        extra_visible = git(root, 'ls-files', '--others', '--exclude-standard', '-z', raw=True).decode().split('\0')
-        self.changed.update(filter(None, extra_visible))
+        self.changed.update(path.decode() for path in visible.split(b'\0') if path)
         self._accepted = {}
-        self.change_identity = self._change_identity()
 
     def _change_identity(self):
-        return (git(self.root, 'diff', '--raw', '--no-renames', '-z', self.commit, raw=True),
+        # The index and the worktree can have different modes for the same path.
+        # A regular worktree file must not hide a staged executable bit.
+        diff = ('diff', '--raw', '--no-renames', '-z')
+        return (git(self.root, '-c', 'core.fileMode=true', *diff, self.commit, raw=True),
+                git(self.root, *diff, '--cached', self.commit, raw=True),
                 git(self.root, 'ls-files', '--others', '--exclude-standard', '-z', raw=True))
 
     def assert_unchanged(self):
@@ -119,14 +124,18 @@ class AdoptionBoundary:
         self.nodes = set()
         self.cache = {}
         self.snapshots = {}
+        self.affected_candidates: set[str] | None = None
 
-    def finish(self):
-        merged={}
+    def finish(self, primary=None):
+        merged = {} if primary is None else {primary.root: primary}
         for snapshot in self.snapshots.values():
             if snapshot.root not in merged:
-                merged[snapshot.root]=InputSnapshot(snapshot.root)
-            merged[snapshot.root].include_dependencies(snapshot)
-        for snapshot in merged.values():snapshot.assert_unchanged()
+                merged[snapshot.root] = InputSnapshot(snapshot.root)
+            if merged[snapshot.root] is not snapshot:
+                merged[snapshot.root].include_dependencies(snapshot)
+        for snapshot in merged.values():
+            if snapshot is not primary:
+                snapshot.assert_unchanged()
 
     def prepare(self, root, entry, harvest, overrides, visiting):
         from . import source_adoptions as a
@@ -147,7 +156,11 @@ class AdoptionBoundary:
         if self.base.accepted(record_path) and self.base.accepted(entry['path']):
             # Direct input and outputs still checked by replay(); do not enter
             # accepted context, prior_attempts or retired ancestry.
-            native = a.Containers(root, harvest)
+            from .records import load_upstream_commit
+            policy = read_bytes(root / 'config/macro-policy.yml')
+            native = a._daily_containers(root, harvest, policy)
+            if native.english.commit != load_upstream_commit(root / 'upstream.lock'):
+                raise RecordError('current source lock changed during direct validation')
             result = frozen, reads, native, {}
             self.accepted_inputs.add(entry['path'])
         else:
@@ -248,46 +261,82 @@ class ChapterCheckResult:
                        for (p,uid),value in self.adoptions.items()], report=self.report))
 
 
-def discover(snapshot, chapter, lane, *, partial=False):
-    root = snapshot.root
-    if not lane or '/' in lane or '..' in lane:
-        raise RecordError('invalid model lane')
-    units, ids, selected = {}, set(), []
-    for up in sorted(glob_paths(root/'translation-data/units', '*.jsonl')):
-        rows = snapshot.jsonl(up)
-        chapters = {u['chapter'] for u in rows}
-        for u in rows:
-            if u['unit_id'] in ids:
-                raise RecordError('duplicate global unit ID: ' + u['unit_id'])
-            ids.add(u['unit_id'])
-        units[up.name] = (up, rows)
-        if chapter in chapters:
-            if chapters != {chapter}:
+class _CurrentScope:
+    """One tracked inventory of unit ownership and candidate file pairings."""
+
+    def __init__(self, snapshot):
+        root = snapshot.root
+        self.units = {}
+        self.units_by_id = {}
+        self.chapters_by_file = {}
+        self.candidates_by_name = {}
+        for up in sorted(glob_paths(root/'translation-data/units', '*.jsonl')):
+            rows = snapshot.jsonl(up)
+            self.units[up.name] = (up, rows)
+            self.chapters_by_file[up.name] = {u['chapter'] for u in rows}
+            for row in rows:
+                uid = row['unit_id']
+                if uid in self.units_by_id:
+                    raise RecordError('duplicate global unit ID: ' + uid)
+                self.units_by_id[uid] = row
+        self.files_by_chapter = {}
+        for name, chapters in self.chapters_by_file.items():
+            for chapter in chapters:
+                self.files_by_chapter.setdefault(chapter, []).append(name)
+
+        for cp in sorted(glob_paths(root/'translation-data/candidates', '*/*.jsonl')):
+            if cp.name not in self.units:
+                raise RecordError('candidate has no matching unit file: ' + str(cp))
+            self.candidates_by_name.setdefault(cp.name, {})[cp.parent.name] = cp
+
+    def scopes(self, chapters):
+        """An orphaned unit file must not disappear from the repository union."""
+        from .source_containers import clean
+        result = set()
+        names = self.units if chapters is None else sorted({
+            name for chapter in chapters for name in self.files_by_chapter.get(chapter, ())
+        })
+        for name in names:
+            up, rows = self.units[name]
+            owners = self.chapters_by_file[name]
+            lanes = self.candidates_by_name.get(name)
+            if not lanes:
+                for row in rows:
+                    errors = validate_named_schema(clean(row), 'unit.schema.json', str(up))
+                    if errors:
+                        raise RecordError('\n'.join(errors))
+                raise RecordError('current unit has no candidate pair: '+str(up))
+            result.update((chapter, lane) for chapter in owners for lane in lanes
+                          if chapters is None or chapter in chapters)
+        return sorted(result)
+
+    def pairs(self, snapshot, chapter, lane, *, partial):
+        if not lane or '/' in lane or '..' in lane:
+            raise RecordError('invalid model lane')
+        selected = []
+        for name in self.files_by_chapter.get(chapter, ()):
+            if self.chapters_by_file[name] != {chapter}:
                 raise RecordError('chapter scope contains mixed chapter file')
-            cp=root/'translation-data/candidates'/lane/up.name
-            if not partial or cp.exists():selected.append((up,cp))
-    for cp in glob_paths(root/'translation-data/candidates', '*/*.jsonl'):
-        if cp.name not in units:
-            raise RecordError('candidate has no matching unit file: ' + str(cp))
-    if not selected:
-        raise RecordError('no complete chapter pairs found')
-    for up, cp in selected:
-        if not cp.is_file():
-            raise RecordError('complete chapter has missing candidate pair: ' + cp.name)
-        if {row.get('model_lane') for row in snapshot.jsonl(cp)} != {lane}:
-            raise RecordError('complete chapter candidate directory/lane mismatch')
-    return selected
+            cp = self.candidates_by_name.get(name, {}).get(lane)
+            if cp is None:
+                if partial:
+                    continue
+                raise RecordError('complete chapter has missing candidate pair: ' + name)
+            if {row.get('model_lane') for row in snapshot.jsonl(cp)} != {lane}:
+                raise RecordError('complete chapter candidate directory/lane mismatch')
+            selected.append((self.units[name][0], cp))
+        if not selected:
+            raise RecordError('no complete chapter pairs found')
+        return selected
+
+
+def discover(snapshot, chapter, lane, *, partial=False):
+    return _CurrentScope(snapshot).pairs(snapshot, chapter, lane, partial=partial)
 
 
 @tracked_inputs
-def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, current_all=False, _current=None, _joined=False):
+def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, current_all=False):
     """Check one complete chapter plus directly associated new records, once."""
-    from . import source_adoptions as a
-    from .repository_validation import _SourceIdentity, _ImplementationIdentity, _snapshot_claims
-    from .source_containers import clean
-    from .provenance import _candidate_manifest_errors
-    started = time.monotonic()
-    emit = report or (lambda _: None)
     root = root.resolve()
     if str(chapter).isdigit():
         from .source_reextractions import _git_bytes
@@ -297,25 +346,41 @@ def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, curren
         ordinal=int(chapter)
         if not 1 <= ordinal <= len(ordered):raise RecordError('invalid chapter ordinal')
         chapter=ordered[ordinal-1][0]
-    snapshot = _current.snapshot if _current is not None else InputSnapshot(root)
-    reads = current_inputs()
-    inventory(root, reads)
-    implementation = _ImplementationIdentity()
-    reads.seed_implementation(implementation)
+    snapshot = InputSnapshot(root)
+    inventory(root, current_inputs())
     base = Base(root, base_ref, snapshot)
     base.immutable_changes()
-    from .ci_scope import classify
-    dispatch = classify(root,base.commit,paths=base.changed)
+    scope = _CurrentScope(snapshot)
+    from .ci_scope import _classify
+    dispatch = _classify(root, base.commit, sorted(base.changed), entries=base.entries,
+                         units_by_id=scope.units_by_id)
     if not current_all and dispatch['kind'] == 'current-all':
         raise RecordError('scope expansion required: qa-current-all; ' + dispatch['reason'])
-    if not current_all and not _joined and set(dispatch['chapters']) - {chapter}:
+    if not current_all and set(dispatch['chapters']) - {chapter}:
         raise RecordError('scope expansion required for all changed chapters: ' + ', '.join(dispatch['chapters']))
-    selected = discover(snapshot, chapter, lane, partial=current_all)
-    if not current_all and not _joined:
+    selected = scope.pairs(snapshot, chapter, lane, partial=current_all)
+    if not current_all:
         pair_paths={p.relative_to(root).as_posix() for pair in selected for p in pair}
         outside=[p for p in base.changed if p.startswith(('translation-data/units/','translation-data/candidates/'))
                  and p.endswith('.jsonl') and p not in pair_paths]
         if outside:raise RecordError('changed pairs require all chapters/lanes: qa-current-all; '+', '.join(sorted(outside)))
+    current = CurrentSourceQA(root, harvest, snapshot=snapshot, fresh_chapters=True,
+                              _units_by_id=scope.units_by_id)
+    return _check_chapter(root, harvest, chapter, lane, base, current, scope, selected,
+                          report=report, current_all=current_all)
+
+
+def _check_chapter(root, harvest, chapter, lane, base, current, scope, selected, *,
+                   report, current_all, union=None):
+    from . import source_adoptions as a
+    from .repository_validation import _SourceIdentity, _snapshot_claims
+    from .source_containers import clean
+    from .provenance import _candidate_manifest_errors
+    started = time.monotonic()
+    emit = report or (lambda _: None)
+    snapshot = current.snapshot
+    reads = current_inputs()
+    implementation = current._implementation
     emit('scope: %s/%s %d complete pairs; history_audit=not_run' % (chapter,lane,len(selected)))
     for up, cp in selected:
         for path, schema in ((up,'unit.schema.json'),(cp,'candidate.schema.json')):
@@ -324,12 +389,11 @@ def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, curren
                 if errors:
                     raise RecordError('\n'.join(errors))
     schema_seconds = time.monotonic()-started
-    current = _current or CurrentSourceQA(root, harvest, snapshot=snapshot, fresh_chapters=True)
-    if _joined:
+    if union is not None:
         # Keep this owner's reads active for its QA only; direct historical
         # dependencies belong to the enclosing union, not every future QA call.
         with current._reads.activate():
-            count, errors = current.validate_pairs([u for u,c in selected], [c for u,c in selected])
+            count, errors = current._validate_pairs([u for u,c in selected], [c for u,c in selected])
     else:
         count, errors = current.validate_pairs([u for u,c in selected], [c for u,c in selected])
     if errors:
@@ -410,7 +474,10 @@ def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, curren
             for run_id in {c['run_id'] for rows in ordinary.values() for c in rows}:
                 manifest=json.loads(snapshot.read(root/'translation-data/runs'/f'{run_id}.json'))
                 participants={e['candidate_path'] for e in manifest['inputs'].get('settings',{}).get('accepted_records',[])}
-                if not current_all and participants - {c.relative_to(root).as_posix() for u,c in selected}:
+                affected_paths = union.affected_candidates if union is not None else None
+                if affected_paths is None and not current_all:
+                    affected_paths = {c.relative_to(root).as_posix() for _,c in selected}
+                if affected_paths is not None and participants - affected_paths:
                     raise RecordError('shared run requires all participating chapters/lanes: qa-current-all')
             a._complete_prior_runs(a.Reads(root), {p:[rows] for p,rows in ordinary.items()})
         manifests = {}
@@ -461,22 +528,22 @@ def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, curren
     from .decisions import validate_current_decisions
     token = a._DAILY.set(boundary)
     try:
-        errors = validate_current_decisions(root, harvest, selected, changed=base.changed, base=base)
+        errors = validate_current_decisions(root, harvest, selected, changed=base.changed, base=base,
+                                            _scope=scope, _implementation=implementation)
     finally:
         a._DAILY.reset(token)
-    if _joined:
-        boundary.finish()  # Collected into the enclosing current union.
+    if union is not None:
+        union.snapshots.update(boundary.snapshots)
     else:
         for dependency in boundary.snapshots.values():
             snapshot.include_dependencies(dependency)
     if errors:
         raise RecordError('\n'.join(errors))
-    if not current_all and not _joined:
+    if not current_all and union is None:
         unread = [p for p in base.changed if p.startswith(('translation-data/','review/','docs/evidence/','task-scopes/'))
                   and (root/p).resolve() not in reads.hashes]
         if unread:
             raise RecordError('changed inputs outside checked direct scope; expand/repair: '+', '.join(sorted(unread)))
-    source = _SourceIdentity(root, harvest)
     result_report = dict(schema_version=1, scope='current-pairs' if current_all else 'chapter-current', history_audit='not_run',
         base=base.commit, head=snapshot.head, tree=base.tree, input_view='worktree',
         implementation=implementation.binding(), source_commit=current.source_commit, chapter=chapter, lane=lane,
@@ -485,14 +552,15 @@ def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, curren
                     decisions=time.monotonic()-started-schema_seconds-current_seconds-direct_seconds),
         preparations=preparations, direct_nodes=len(boundary.nodes), accepted_boundaries=len(boundary.accepted_inputs),
         seconds=time.monotonic()-started, errors=[], exit_status=0)
-    result = ChapterCheckResult(root,current.harvest.resolve(),chapter,lane,tuple(selected),count,current,base,reads,adopted,result_report,derivations,corrections)
-    object.__setattr__(result, '_source', source)
-    if _joined:
+    if union is not None:
         # A joined current check uses these reports only. Do not issue a render
         # receipt or repeatedly bind/re-read all preceding scopes' inputs.
         result_report['validation_state'] = 'pending_union'
         emit('%s: checked; final input union pending (%.3fs)' % (result_report['scope'],result_report['seconds']))
-        return result
+        return result_report
+    source = _SourceIdentity(root, harvest)
+    result = ChapterCheckResult(root,current.harvest.resolve(),chapter,lane,tuple(selected),count,current,base,reads,adopted,result_report,derivations,corrections)
+    object.__setattr__(result, '_source', source)
     _ISSUED[id(result)] = result
     from .repository_validation import _source_claims
     _CLAIMS[id(result)] = (result._binding(), reads.claims(), _snapshot_claims(snapshot),
@@ -501,6 +569,65 @@ def check_chapter(root, harvest, chapter, lane, base_ref, *, report=None, curren
     result.assert_valid(root,harvest)
     emit('%s: PASS; history_audit=not_run (%.3fs)' % (result_report['scope'],result_report['seconds']))
     return result
+
+
+def _affected_pairs(snapshot, scope, chapters, base):
+    """Close a multi-chapter scope over actual pairs of changed ordinary runs."""
+    from .source_containers import safe_path
+    root = snapshot.root
+    included = set()
+    pending = set(chapters)
+    preparations = set()
+    for relative in sorted(base.changed):
+        if relative.startswith('docs/evidence/') and relative.endswith('-model-input.json'):
+            model_input = json.loads(snapshot.read(root / relative))
+            freeze = safe_path(root, model_input['generation_freeze']['path'],
+                               r'translation-data/source-adoption-inputs/[A-Za-z0-9._-]+\.json')
+            frozen = json.loads(snapshot.read(freeze))
+            pending.add(frozen['chapter'])
+            preparations.add((frozen['chapter'], frozen['runtime']['model_lane'],
+                              freeze.relative_to(root).as_posix()))
+    selected = {}
+    seen_runs = set()
+    candidate_paths = set()
+    while pending:
+        chapter = min(pending)
+        pending.remove(chapter)
+        included.add(chapter)
+        scopes = scope.scopes({chapter})
+        if not scopes:
+            raise RecordError('affected chapter has no current pairs: ' + chapter)
+        for _, lane in scopes:
+            pairs = scope.pairs(snapshot, chapter, lane, partial=True)
+            selected[chapter, lane] = pairs
+            for unit, candidate in pairs:
+                up, cp = (p.relative_to(root).as_posix() for p in (unit, candidate))
+                candidate_paths.add(cp)
+                for row in snapshot.jsonl(candidate):
+                    if any(row.get(field) for field in ('source_adoption_id', 'derivation_id', 'model_correction_id')):
+                        continue
+                    run_path = 'translation-data/runs/' + row['run_id'] + '.json'
+                    if run_path in seen_runs or not base.changed & {up, cp, run_path}:
+                        continue
+                    manifest = json.loads(snapshot.read(safe_path(
+                        root, run_path, r'translation-data/runs/[A-Za-z0-9._-]+\.json')))
+                    seen_runs.add(run_path)
+                    for entry in manifest['inputs'].get('settings', {}).get('accepted_records', []):
+                        path = safe_path(root, entry['candidate_path'],
+                                         r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
+                        owners = scope.chapters_by_file.get(path.name, set())
+                        if (len(owners) != 1 or
+                                scope.candidates_by_name.get(path.name, {}).get(path.parent.name) != path):
+                            raise RecordError('shared run participant has no unique current pair: ' + str(path))
+                        pending.update(owners - included)
+    selected_paths = {path.relative_to(root).as_posix()
+                      for pairs in selected.values() for pair in pairs for path in pair}
+    missing = sorted(path for path in base.changed
+                     if path.startswith(('translation-data/units/', 'translation-data/candidates/'))
+                     and path.endswith('.jsonl') and path not in selected_paths)
+    if missing:
+        raise RecordError('affected validation omitted changed pairs: ' + ', '.join(missing))
+    return selected, candidate_paths, preparations
 
 
 @tracked_inputs
@@ -512,43 +639,60 @@ def check_current_repository(root, harvest, base_ref, *, report=None, chapters=N
     snapshot=InputSnapshot(root)
     base=Base(root,base_ref,snapshot)
     base.immutable_changes()
-    scopes=set()
-    from .source_containers import clean
-    candidates=list(glob_paths(root/'translation-data/candidates','*/*.jsonl'))
-    paired_names={cp.name for cp in candidates}
-    for up in glob_paths(root/'translation-data/units','*.jsonl'):
-        rows=snapshot.jsonl(up)
-        selected=chapters is None or any(u.get('chapter') in chapters for u in rows)
-        if not selected:continue
-        # Reading the global ID inventory is not Schema validation. A current
-        # unit with no candidate must not disappear from the union's scopes.
-        for row in rows:
-            errors=validate_named_schema(clean(row),'unit.schema.json',str(up))
-            if errors:raise RecordError('\n'.join(errors))
-        if up.name not in paired_names:
-            raise RecordError('current unit has no candidate pair: '+str(up))
-    for cp in candidates:
-        up=root/'translation-data/units'/cp.name
-        rows=snapshot.jsonl(up)
-        scopes.update((u['chapter'],cp.parent.name) for u in rows if chapters is None or u['chapter'] in chapters)
-    current=CurrentSourceQA(root,harvest,snapshot=snapshot,fresh_chapters=True)
+    scope = _CurrentScope(snapshot)
+    emit = report or (lambda line: None)
+    if chapters is not None:
+        from .ci_scope import _classify, DECISION_INPUT
+        dispatch = _classify(root, base.commit, sorted(base.changed), entries=base.entries,
+                             units_by_id=scope.units_by_id)
+        if dispatch['kind'] == 'current-all':
+            raise RecordError('scope expansion required: qa-current-all; ' + dispatch['reason'])
+        if set(dispatch['chapters']) - chapters:
+            raise RecordError('scope expansion required for all changed chapters: ' + ', '.join(dispatch['chapters']))
+        if len(chapters) > 1 and any(path.startswith(DECISION_INPUT) for path in base.changed):
+            emit('Expanding multi-chapter decisions to all current relationships')
+            chapters = None
+    affected = chapters is not None and len(chapters) > 1
+    boundary = AdoptionBoundary(base, emit)
+    if affected:
+        selected, boundary.affected_candidates, preparations = _affected_pairs(snapshot, scope, chapters, base)
+        scopes = sorted(selected)
+        emit('Affected chapters: ' + ', '.join(sorted({chapter for chapter, _ in scopes})))
+    else:
+        scopes = scope.scopes(chapters)
+    from .repository_validation import _SourceIdentity
+    source = _SourceIdentity(root, harvest)
+    current = CurrentSourceQA(root, harvest, snapshot=snapshot, fresh_chapters=True,
+                              _units_by_id=scope.units_by_id)
     reports=[]
     from . import source_adoptions as a
-    boundary=AdoptionBoundary(base,report or (lambda line:None))
+    # Discovery reads are evidence of ownership, not of validation coverage.
+    validated_reads = InputReads() if affected else reads
     token=a._DAILY.set(boundary)
     try:
-        for chapter,lane in sorted(scopes):
-            result=check_chapter(root,harvest,chapter,lane,base_ref,report=report,current_all=chapters is None,_current=current,_joined=True)
-            reports.append(result.report)
+        with validated_reads.activate():
+            for chapter, lane in scopes:
+                pairs = selected[chapter, lane] if affected else scope.pairs(
+                    snapshot, chapter, lane, partial=chapters is None)
+                reports.append(_check_chapter(root, harvest, chapter, lane, base, current, scope,
+                                              pairs, report=report, current_all=chapters is None or affected,
+                                              union=boundary))
     finally:
         a._DAILY.reset(token)
-    boundary.finish()
+    boundary.finish(primary=snapshot)
     unread=[p for p in base.changed if p.startswith(('translation-data/','review/','docs/evidence/','task-scopes/'))
-            and (root/p).resolve() not in reads.hashes]
+            and (root/p).resolve() not in validated_reads.hashes]
     if unread:raise RecordError('changed inputs have no validated current relationship: '+', '.join(sorted(unread)))
+    if affected:
+        checked_preparations = {(result['chapter'], result['lane'], detail['input'])
+                                for result in reports for detail in result['preparations']}
+        if missing := preparations - checked_preparations:
+            raise RecordError('changed preparation has no validated owning scope: ' +
+                              ', '.join(path for _, _, path in sorted(missing)))
     current.assert_unchanged()
+    source.assert_valid(root, harvest)
     base.assert_unchanged()
     for result_report in reports:
         result_report['validation_state'] = 'validated_current'
-    return dict(schema_version=1,scope='current-all' if chapters is None else 'chapter-current',history_audit='not_run',base=base.commit,
+    return dict(schema_version=1,scope='current-all' if chapters is None else 'affected-current' if affected else 'chapter-current',history_audit='not_run',base=base.commit,
                 head=snapshot.head,chapters=reports,exit_status=0)

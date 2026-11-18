@@ -14,22 +14,90 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  policy-and-data:
+  classify:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    outputs:
+      kind: ${{ steps.scope.outputs.kind }}
+      compare: ${{ steps.context.outputs.compare }}
     steps:
-      - name: Check out Chinese repository
+      - &checkout-chinese
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Set up Python
+      - &setup-python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
+      - &event-comparison
+        id: context
+        name: Resolve the trusted event comparison
+        env:
+          EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EVENT_HEAD"
+          if test -z "$EVENT_BASE" || test "$EVENT_BASE" = 0000000000000000000000000000000000000000; then
+            compare="$EVENT_HEAD"
+            trusted=false
+            git update-ref refs/remotes/origin/main "$EVENT_HEAD"
+          else
+            compare=$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")
+            git merge-base --is-ancestor "$compare" "$EVENT_BASE"
+            trusted=true
+            git update-ref refs/remotes/origin/main "$EVENT_BASE"
+          fi
+          printf 'compare=%s\ntrusted=%s\n' "$compare" "$trusted" >> "$GITHUB_OUTPUT"
 
-      - name: Check out locked English harvest
+      - &trusted-tools
+        name: Check out trusted comparison tools
+        if: steps.context.outputs.trusted == 'true'
+        env:
+          COMPARE: ${{ steps.context.outputs.compare }}
+        shell: bash
+        run: git worktree add --detach ../ci-trusted-tools "$COMPARE"
+      - name: Classify with the trusted comparison tools
+        id: scope
+        env:
+          COMPARE: ${{ steps.context.outputs.compare }}
+          TRUSTED: ${{ steps.context.outputs.trusted }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TRUSTED_TOOLS="$PWD/../ci-trusted-tools"
+          if test "$TRUSTED" = true && test -f "$TRUSTED_TOOLS/scripts/ci-current.py"; then
+            kind=$(python -I - "$TRUSTED_TOOLS" "$PWD" "$COMPARE" <<'PY'
+          from pathlib import Path
+          import sys
+          tools, root, compare = sys.argv[1:]
+          sys.path.insert(0, tools)
+          from stacks_zh.ci_scope import classify
+          print(classify(Path(root), compare)['kind'])
+          PY
+            )
+          else
+            kind=current-all
+            echo "First push or comparison lacks a dispatcher; using broad validation"
+          fi
+          case "$kind" in
+            current-all|test-only|chapter-current|generated-reports|documentation) ;;
+            *) exit 1 ;;
+          esac
+          printf 'kind=%s\n' "$kind" >> "$GITHUB_OUTPUT"
+
+  current-validation:
+    needs: classify
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - *checkout-chinese
+      - *setup-python
+      - *event-comparison
+      - *trusted-tools
+      - &locked-harvest
+        name: Check out locked English harvest
         shell: bash
         run: |
           set -euo pipefail
@@ -42,36 +110,96 @@ jobs:
           git -C ../stacks-project remote add origin "$repository"
           git -C ../stacks-project fetch --depth 1 origin "$commit"
           git -C ../stacks-project checkout --detach FETCH_HEAD
-
-      - name: Dispatch current validation from trusted comparison tools
+      - name: Run current validation and applicable checks
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          EVENT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          COMPARE: ${{ steps.context.outputs.compare }}
+          TRUSTED: ${{ steps.context.outputs.trusted }}
+          CLASSIFIED_COMPARE: ${{ needs.classify.outputs.compare }}
+          KIND: ${{ needs.classify.outputs.kind }}
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$EVENT_HEAD"
-          force=()
-          if test -z "$EVENT_BASE" || test "$EVENT_BASE" = 0000000000000000000000000000000000000000; then
-            compare="$EVENT_HEAD"
-            force=(--force-broad)
-          else
-            compare=$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")
-            git merge-base --is-ancestor "$compare" "$EVENT_BASE"
+          test "$COMPARE" = "$CLASSIFIED_COMPARE"
+          python_path=$(python -c 'import sys; assert sys.version_info[:2] == (3, 12); print(sys.executable)')
+          harvest="$PWD/../stacks-project"
+          TRUSTED_TOOLS="$PWD/../ci-trusted-tools"
+          case "$KIND" in
+            chapter-current|generated-reports|documentation)
+              test "$TRUSTED" = true
+              "$python_path" -I "$TRUSTED_TOOLS/scripts/ci-current.py" \
+                --root "$PWD" --harvest "$harvest" --base-ref "$COMPARE"
+              ;;
+            current-all|test-only)
+              make_args=("PYTHON=$python_path" "HARVEST_DIR=$harvest" "BASE_REF=$COMPARE")
+              # A single Make invocation also schedules common prerequisites once.
+              targets=(workflow-check harvest-check)
+              if test "$KIND" = current-all; then
+                targets+=(qa-current-all upstream-index-check chapter-template-check)
+              fi
+              make "${make_args[@]}" "${targets[@]}"
+              progress_changes=$(git diff --name-only --no-renames "$COMPARE" -- \
+                README.md docs/progress.md docs/translation-progress.md Makefile \
+                stacks_zh/progress.py stacks_zh/progress_coverage.py \
+                tests/test_progress.py tests/test_progress_coverage.py)
+              if test -n "$progress_changes"; then
+                make "${make_args[@]}" progress-check
+              fi
+              plan_changes=$(git diff --name-only --no-renames "$COMPARE" -- \
+                README.md docs/translation-priority.md docs/translation-plan.md docs/task-allocation.md docs/ci.md \
+                config/translation-priorities.json stacks_zh/planning.py stacks_zh/schema_validation.py \
+                stacks_zh/cli.py tests/test_planning.py Makefile .github/workflows/ci.yml)
+              if test -n "$plan_changes"; then
+                make "${make_args[@]}" plan-check
+              fi
+              ;;
+            *) exit 1 ;;
+          esac
+          # Include committed changes on PR and push, even with a legacy driver.
+          if test "$KIND" != generated-reports; then
+            git diff --check "$COMPARE"
           fi
-          # The trusted main event base is an explicit local anchor for the
-          # same Base contract used by local checks. Never read it from PR data.
-          if test -n "$EVENT_BASE" && test "$EVENT_BASE" != 0000000000000000000000000000000000000000; then
-            git update-ref refs/remotes/origin/main "$EVENT_BASE"
-          else
-            git update-ref refs/remotes/origin/main "$EVENT_HEAD"
-          fi
-          git worktree add --detach ../ci-trusted-tools "$compare"
-          driver=../ci-trusted-tools/scripts/ci-current.py
-          if ! test -f "$driver"; then
-            driver=scripts/ci-current.py
-            force=(--force-broad)
-          fi
-          python "$driver" --root "$PWD" --harvest "$PWD/../stacks-project" \
-            --base-ref "$compare" "${force[@]}"
+
+  tool-test:
+    needs: classify
+    if: needs.classify.outputs.kind == 'current-all' || needs.classify.outputs.kind == 'test-only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - *checkout-chinese
+      - *setup-python
+      - *event-comparison
+      - *locked-harvest
+      - name: Run HEAD tool tests
+        env:
+          COMPARE: ${{ steps.context.outputs.compare }}
+          CLASSIFIED_COMPARE: ${{ needs.classify.outputs.compare }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$COMPARE" = "$CLASSIFIED_COMPARE"
+          make tool-test "PYTHON=$(python -c 'import sys; assert sys.version_info[:2] == (3, 12); print(sys.executable)')" \
+            "BASE_REF=$COMPARE" "HARVEST_DIR=$PWD/../stacks-project"
+
+  policy-and-data:
+    needs: [classify, current-validation, tool-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all jobs selected by the trusted classification
+        env:
+          CLASSIFICATION: ${{ needs.classify.result }}
+          KIND: ${{ needs.classify.outputs.kind }}
+          CURRENT: ${{ needs.current-validation.result }}
+          TOOLS: ${{ needs.tool-test.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'classify=%s kind=%s current-validation=%s tool-test=%s\n' \
+            "$CLASSIFICATION" "$KIND" "$CURRENT" "$TOOLS"
+          test "$CLASSIFICATION" = success
+          test "$CURRENT" = success
+          case "$KIND" in
+            current-all|test-only) test "$TOOLS" = success ;;
+            chapter-current|generated-reports|documentation) test "$TOOLS" = skipped ;;
+            *) exit 1 ;;
+          esac

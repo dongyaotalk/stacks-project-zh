@@ -7,8 +7,9 @@
 
 | 变化 | policy-and-data |
 | --- | --- |
-| 纯章节 unit/candidate、run/raw/freeze/直接关系/相关决定 | 单章 chapter-current；多章/共享参与者明确扩大为 qa-current-all，纯数据不附加全工具测试 |
+| 纯章节 unit/candidate、run/raw/freeze/直接关系/相关决定 | 单章 chapter-current；归属明确的多章数据检查受影响章和共享 run 参与者，纯数据不附加全工具测试 |
 | 纯生成 progress/plan 报告，完整 diff 和全部实际输入与可信主线绑定 | workflow-check、harvest-check、progress-check、plan-check、git diff --check；不附加工具测试、当前数据 QA、历史、render/pdf |
+| 允许的纯测试代码或普通 fixture | workflow、harvest、tool-test、比较点 diff 与适用报告检查 |
 | 明确列举的非规范说明文档 | workflow/harvest 与 diff 检查，报告数据验收未运行原因 |
 | 工具、Schema、公共政策/来源、共享或未知路径 | tool-test、qa-current-all、来源/index/模板及适用专项回归 |
 | 历史语义/验证器变化 | 对应历史回归；任务明确要求真实全审计时运行 audit-history |
@@ -21,6 +22,29 @@ PR checkout 明确使用 event head；比较点为 event base 与 head 的 merge
 执行 head 的工具回归和当前全量。首次迁移时 base 无调度器，明确扩大为工具/当前全量。
 main push 使用 before/head 范围；首次或缺失比较点明确走当前全量，不依赖历史 artifact。
 不使用 pull_request_target 执行不可信 head，不改变现有 pr-contract 的可信执行方式。
+
+分类 runner 只加载比较点的分类器。比较点缺少调度器或首次 push 时明确选择
+`current-all`。两个验证 runner 均核对事件比较点与分类结果绑定的提交，并从
+`upstream.lock` 获取独立英文 checkout。公共范围的 `tool-test` 与
+`current-validation` 并行；后者执行 `qa-current-all` 及其 workflow/harvest
+前置、index、chapter-template、适用的 progress/plan 检查和比较点 diff 检查。
+章数据、生成报告和说明文档由 `current-validation` 直接调用比较点原调度器。
+纯测试范围由工具 runner 执行 `tool-test`，当前验收 runner 执行流程与来源预检及适用报告检查。
+总门禁 `policy-and-data` 始终检查分类与当前校验成功，并要求公共范围和纯测试范围的
+工具测试成功，其他范围的工具测试明确跳过。必要 job 失败、取消、缺失或跳过均不能通过。
+`pr-contract` 继续独立运行。
+
+纯测试分流只允许 `tests/test_*.py` 和约定类型的 `tests/fixtures/` 普通文件。
+完整工作树、暂存区及新增路径共同决定范围。测试文件删除、重命名、执行位变化、
+符号链接、混入事实或实施文件时扩大验证。测试相关的 progress 或 plan 文件触发条件
+继续生效。
+
+多章纯数据启动一个受跟踪的联合会话。它按实际 unit 所属章及候选文件配对，
+沿发生变化的普通 run 的真实参与者路径补齐章/lane，再验证完整受影响集合。
+共享 run 参与者缺失、变更文件未经实际校验读取、全局 ID 重复或配对缺失均失败。
+已故意保留的部分 lane 继续按当前文件对合同核验。涉及多章决定关系时继续检查
+全库当前关系。公共规则的来源证据标签只用于定位证据，当前宏规则可能匹配多个章；
+共享政策、来源锁、Schema、验证器或其他无法判定影响范围的公共改动继续全库。
 
 本地 Python3.12 命令：
 

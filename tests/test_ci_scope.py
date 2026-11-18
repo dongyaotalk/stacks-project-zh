@@ -1,5 +1,7 @@
 """Real Git diffs and structured ownership; no filename or caller PASS shortcut."""
 import json
+import os
+import textwrap
 import importlib.util
 import sys
 from unittest.mock import patch
@@ -9,6 +11,8 @@ import unittest
 from pathlib import Path
 from stacks_zh.ci_scope import classify
 from stacks_zh.records import RecordError
+
+TOOLS = Path(__file__).resolve().parents[1]
 
 
 def git(root,*args):
@@ -22,7 +26,9 @@ class CIScopeTests(unittest.TestCase):
             path=root/'translation-data/units'/(name+'.jsonl');path.parent.mkdir(parents=True,exist_ok=True)
             path.write_text(json.dumps(dict(unit_id=uid,chapter=chapter))+'\n')
         git(root,'add','.');git(root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','synthetic accepted units')
-        return git(root,'rev-parse','HEAD')
+        base = git(root,'rev-parse','HEAD')
+        git(root, 'update-ref', 'refs/remotes/origin/main', base)
+        return base
 
     def test_semantic_ownership_shared_run_and_unknown_participants(self):
         with tempfile.TemporaryDirectory() as d:
@@ -57,16 +63,123 @@ class CIScopeTests(unittest.TestCase):
             (root/'translation-data/units/duplicate.jsonl').write_text('{"unit_id":"a","chapter":"beta"}\n')
             with self.assertRaises(RecordError):classify(root,base,paths=[path.relative_to(root).as_posix()])
 
-    def test_workflow_uses_actual_event_identity_and_base_driver(self):
-        workflow=(Path(__file__).parents[1]/'.github/workflows/ci.yml').read_text()
-        self.assertIn('ref: ${{ github.event.pull_request.head.sha || github.sha }}',workflow)
-        self.assertIn('compare=$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")',workflow)
-        self.assertIn('driver=../ci-trusted-tools/scripts/ci-current.py',workflow)
-        self.assertIn('--force-broad',workflow)
-        self.assertNotIn('make qa-all',workflow)
-        self.assertNotIn('pull_request_target',workflow)
+    def workflow_script(self, path, step):
+        step_body = (TOOLS / path).read_text().split(f'name: {step}\n', 1)[1]
+        body = step_body.split('run: |\n', 1)[1]
+        indent = len(body) - len(body.lstrip(' '))
+        lines = []
+        for line in body.splitlines():
+            if line.strip() and not line.startswith(' ' * indent):
+                break
+            lines.append(line)
+        return textwrap.dedent('\n'.join(lines)) + '\n'
 
-    def test_driver_widens_shared_chapters_without_unconditional_tool_tests(self):
+    def test_workflow_uses_actual_event_identity_and_base_driver(self):
+        workflow = (TOOLS / '.github/workflows/ci.yml').read_text()
+        self.assertIn('ref: ${{ github.event.pull_request.head.sha || github.sha }}', workflow)
+        self.assertEqual(workflow.count('- *checkout-chinese'), 2)
+        self.assertIn('${{ github.event.pull_request.base.sha || github.event.before }}', workflow)
+        self.assertIn('compare=$(git merge-base "$EVENT_BASE" "$EVENT_HEAD")', workflow)
+        self.assertIn('"$TRUSTED_TOOLS/scripts/ci-current.py"', workflow)
+        self.assertIn('needs: [classify, current-validation, tool-test]', workflow)
+        self.assertEqual(workflow.count('needs: classify'), 2)
+        self.assertIn('if: always()', workflow)
+        self.assertNotIn('make qa-all', workflow)
+        self.assertNotIn('pull_request_target', workflow)
+
+    def test_required_summary_rejects_missing_cancelled_failed_and_unexpected_skips(self):
+        script = self.workflow_script('.github/workflows/ci.yml',
+                                      'Require all jobs selected by the trusted classification')
+        for kind in ('current-all', 'test-only', 'chapter-current', 'generated-reports', 'documentation'):
+            wanted = 'success' if kind in {'current-all', 'test-only'} else 'skipped'
+            valid = dict(CLASSIFICATION='success', KIND=kind, CURRENT='success', TOOLS=wanted)
+            for change in ({}, *({field: status}
+                                 for field in valid
+                                 for status in ('failure', 'cancelled', 'skipped', '', 'success')
+                                 if status != valid[field])):
+                with self.subTest(kind=kind, change=change):
+                    result = subprocess.run(['bash'], input=script, text=True,
+                                            env=os.environ | valid | change, capture_output=True)
+                    self.assertEqual(result.returncode == 0, not change, result.stdout + result.stderr)
+
+    def test_pr_and_push_resolve_event_base_and_initial_push_selects_broad(self):
+        resolve = self.workflow_script('.github/workflows/ci.yml',
+                                       'Resolve the trusted event comparison')
+        classify_script = self.workflow_script('.github/workflows/ci.yml',
+                                                'Classify with the trusted comparison tools')
+        for event in ('pull_request', 'push', 'initial-push'):
+            with self.subTest(event=event), tempfile.TemporaryDirectory() as d:
+                directory = Path(d)
+                root = directory / 'repo'
+                root.mkdir()
+                base = self.prepare(root)
+                p = root / 'translation-data/units/ordinary.jsonl'
+                p.write_text(json.dumps(dict(unit_id='b', chapter='beta', changed=True))+'\n')
+                git(root, 'add', '.')
+                git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=test@example.invalid',
+                    'commit', '-qm', 'event head')
+                head = git(root, 'rev-parse', 'HEAD')
+                output = directory / 'outputs'
+                event_base = '0' * 40 if event == 'initial-push' else base
+                env = os.environ | dict(EVENT_BASE=event_base, EVENT_HEAD=head, GITHUB_OUTPUT=str(output))
+                subprocess.run(['bash'], cwd=root, input=resolve, text=True, env=env,
+                               check=True, capture_output=True)
+                values = dict(line.split('=', 1) for line in output.read_text().splitlines())
+                self.assertEqual(values['compare'], head if event == 'initial-push' else base)
+                self.assertEqual(git(root, 'rev-parse', 'origin/main'), values['compare'])
+                self.assertEqual(values['trusted'], 'false' if event == 'initial-push' else 'true')
+                if event == 'pull_request':
+                    # Simulate a comparison with the legacy dispatcher. It
+                    # contains the real classifier and must override HEAD.
+                    trusted = directory / 'ci-trusted-tools'
+                    git(root, 'worktree', 'add', '--detach', str(trusted), values['compare'])
+                    (trusted / 'stacks_zh').symlink_to(TOOLS / 'stacks_zh', target_is_directory=True)
+                    (trusted / 'scripts').mkdir()
+                    (trusted / 'scripts/ci-current.py').touch()
+                    (root / 'stacks_zh').mkdir()
+                    (root / 'stacks_zh/ci_scope.py').write_text('raise AssertionError("HEAD classifier imported")')
+                env.update(COMPARE=values['compare'], TRUSTED=values['trusted'],
+                           PATH=str(Path(sys.executable).parent) + os.pathsep + env['PATH'])
+                subprocess.run(['bash'], cwd=root, input=classify_script, text=True, env=env,
+                               check=True, capture_output=True)
+                expected = 'chapter-current' if event == 'pull_request' else 'current-all'
+                self.assertIn('kind=' + expected, output.read_text().splitlines())
+
+    def test_public_runner_requires_current_and_path_checks_without_tool_test(self):
+        script = self.workflow_script('.github/workflows/ci.yml',
+                                      'Run current validation and applicable checks')
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            base = self.prepare(root)
+            for name in ('docs/progress.md', 'docs/translation-plan.md'):
+                path = root / name
+                path.parent.mkdir(exist_ok=True)
+                path.write_text('Public change.\n')
+            git(root, 'add', '.')
+            git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=test@example.invalid',
+                'commit', '-qm', 'broad fixture')
+            # The shell runs the actual Make entry points on a runner. A log
+            # executable isolates their scheduling from the heavyweight data.
+            output = root / 'make.log'
+            make = root / 'make'
+            make.write_text('#!/bin/sh\nprintf "%s\\n" "$@" >> "$MAKE_LOG"\n')
+            make.chmod(0o755)
+            env = os.environ | dict(COMPARE=base, CLASSIFIED_COMPARE=base, KIND='current-all',
+                                    MAKE_LOG=str(output), PATH=os.pathsep.join(
+                                    [str(root), str(Path(sys.executable).parent), os.environ['PATH']]))
+            subprocess.run(['bash'], cwd=root, input=script, text=True, env=env,
+                           check=True, capture_output=True)
+            commands = [arg for arg in output.read_text().splitlines() if '=' not in arg]
+            self.assertEqual(commands, ['workflow-check', 'harvest-check', 'qa-current-all',
+                                        'upstream-index-check', 'chapter-template-check',
+                                        'progress-check', 'plan-check'])
+            with (root / 'docs/progress.md').open('a') as stream:
+                stream.write('Bad whitespace. \n')
+            result = subprocess.run(['bash'], cwd=root, input=script, text=True, env=env, capture_output=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('trailing whitespace', result.stdout)
+
+    def test_driver_passes_affected_chapters_without_unconditional_tool_tests(self):
         path=Path(__file__).parents[1]/'scripts/ci-current.py'
         spec=importlib.util.spec_from_file_location('ci_current_test',path)
         driver=importlib.util.module_from_spec(spec);spec.loader.exec_module(driver)
@@ -84,7 +197,7 @@ class CIScopeTests(unittest.TestCase):
                 return subprocess.CompletedProcess(command,0)
             with patch.object(sys,'argv',argv),patch.object(driver.subprocess,'run',side_effect=called),patch.object(driver,'check_current_repository',return_value={'test_kind':'scheduling-only'}) as check:
                 driver.run()
-            self.assertIsNone(check.call_args.kwargs['chapters'])
+            self.assertEqual(check.call_args.kwargs['chapters'], {'alpha', 'beta'})
             self.assertFalse(any('tool-test' in cmd for cmd in commands))
             dispatch=json.loads((root/'build/ci-current/dispatch.json').read_text())
             self.assertEqual(dispatch['chapters'],['alpha','beta'])
@@ -93,6 +206,63 @@ class CIScopeTests(unittest.TestCase):
                 driver.run()
             self.assertEqual(check.call_args.kwargs['chapters'],{'alpha'})
 
+
+    def test_test_only_requires_the_complete_regular_file_diff(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            base = self.prepare(root)
+            path = root / 'tests/test_local_regression.py'
+            path.parent.mkdir()
+            path.write_text('def test_example(): pass\n')
+            git(root, 'add', str(path.relative_to(root)))
+            self.assertEqual(classify(root, base)['kind'], 'test-only')
+            git(root, 'config', 'core.fileMode', 'false')
+            path.chmod(0o755)
+            self.assertEqual(classify(root, base)['kind'], 'current-all')
+            path.chmod(0o644)
+            git(root, 'update-index', '--chmod=+x', str(path.relative_to(root)))
+            self.assertEqual(classify(root, base)['kind'], 'current-all')
+            git(root, 'update-index', '--chmod=-x', str(path.relative_to(root)))
+            lock = root / 'upstream.lock'
+            lock.write_text('Changed source lock\n')
+            self.assertEqual(classify(root, base)['kind'], 'current-all')
+            self.assertEqual(classify(root, base, paths=['tests/test_local_regression.py'])['kind'], 'current-all')
+            lock.unlink()
+            path.unlink()
+            path.symlink_to(root / 'translation-data/units/ordinary.jsonl')
+            self.assertEqual(classify(root, base)['kind'], 'current-all')
+
+    def test_ci_test_only_runner_keeps_report_gate_without_full_data_qa(self):
+        script = self.workflow_script('.github/workflows/ci.yml',
+                                      'Run current validation and applicable checks')
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            base = self.prepare(root)
+            path = root / 'tests/test_progress.py'
+            path.parent.mkdir()
+            path.write_text('def test_example(): pass\n')
+            git(root, 'add', '.')
+            git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=test@example.invalid',
+                'commit', '-qm', 'test-only fixture')
+            output = root / 'make.log'
+            make = root / 'make'
+            make.write_text('#!/bin/sh\nprintf "%s\\n" "$@" >> "$MAKE_LOG"\n')
+            make.chmod(0o755)
+            env = os.environ | dict(COMPARE=base, CLASSIFIED_COMPARE=base, KIND='test-only',
+                                    MAKE_LOG=str(output), PATH=os.pathsep.join(
+                                    [str(root), str(Path(sys.executable).parent), os.environ['PATH']]))
+            subprocess.run(['bash'], cwd=root, input=script, text=True, env=env,
+                           check=True, capture_output=True)
+            commands = [arg for arg in output.read_text().splitlines() if '=' not in arg]
+            self.assertEqual(commands, ['workflow-check', 'harvest-check', 'progress-check'])
+
+    def test_changed_current_unit_owner_requires_broad_validation(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            base = self.prepare(root)
+            path = root / 'translation-data/units/ordinary.jsonl'
+            path.write_text(json.dumps(dict(unit_id='b', chapter='new-owner'))+'\n')
+            self.assertEqual(classify(root, base)['kind'], 'current-all')
 
     def test_driver_tests_head_tools_when_pr_changes_dispatcher(self):
         path=Path(__file__).parents[1]/'scripts/ci-current.py'

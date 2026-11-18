@@ -1,6 +1,7 @@
 """Source coverage for current complete containers; never an approval check."""
 from __future__ import annotations
 
+from collections import OrderedDict
 import json
 import re
 from pathlib import Path
@@ -14,7 +15,7 @@ from .source_container_boundaries import _item_tags
 from .source_containers import Containers, clean, load_source_containers, lower_container, safe_path
 from .source_integrity import STATEMENTS
 from .source_reextractions import byte_hash, source_tex
-from .validation_io import read_text, read_bytes, glob_paths
+from .validation_io import read_text, read_bytes, glob_paths, tracked_inputs
 
 FIRST_ADOPTION_LIST_KINDS = STATEMENTS | {'remarks', 'prose_block'}
 
@@ -215,6 +216,7 @@ def _restored_container_tag_coverage(
     return coverage
 
 
+@tracked_inputs
 def _first_adoption_tag_coverage(root, harvest, units_by_file):
     """Verify source preparation only; candidate/history QA remains independent."""
     from .derivations import _git_origin_bytes
@@ -261,6 +263,12 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
 
     commit = load_upstream_commit(root / 'upstream.lock')
     coverage, owned = {}, set()
+    # These Git objects belong to one root/HEAD. Every record still verifies
+    # its own policy hashes, even when the origin blob was already fetched.
+    origin_bytes = {}
+    # Keep a small number of policies resident. Each Containers also caches
+    # the parsed chapters it uses under that policy and locked English source.
+    containers = OrderedDict()
     for relative, (path, record, frozen) in records.items():
         if relative in consumed:
             continue
@@ -285,8 +293,12 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
             raise RecordError('progress first adoption lacks its complete origin policy set')
         historical = {}
         for entry in policies:
-            raw = _git_origin_bytes(root, frozen['origin_commit'], entry['path'])
-            if byte_hash(raw) != entry['hash']:
+            key = frozen['origin_commit'], entry['path']
+            if key not in origin_bytes:
+                raw = _git_origin_bytes(root, *key)
+                origin_bytes[key] = raw, byte_hash(raw)
+            raw, digest = origin_bytes[key]
+            if digest != entry['hash']:
                 raise RecordError('progress first adoption origin policy hash differs')
             historical[entry['path']] = raw
         if frozen['tool_version'] == 'source-adoption-input-v7':
@@ -294,7 +306,20 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
             _first_reference_contract([u for b in frozen['batches'] for u in b['units']], frozen['tool_version'])
         if commit not in historical['upstream.lock'].decode('utf-8'):
             raise RecordError('progress first adoption origin has a different English lock')
-        native = Containers(root, harvest, policy_bytes=historical['config/macro-policy.yml'])
+        policy = historical['config/macro-policy.yml']
+        native = containers.get(policy)
+        if native is None:
+            if len(containers) == 4:
+                _, evicted = containers.popitem(last=False)
+                evicted.assert_unchanged()
+            native = containers[policy] = Containers(root, harvest, policy_bytes=policy)
+        else:
+            # Observe mutable dependencies again on reuse. The final check
+            # verifies the union of locked Git chapter blobs for this policy.
+            if (read_bytes(root / 'config/macro-policy.yml') != native.current_policy_bytes
+                    or load_upstream_commit(root / 'upstream.lock') != commit):
+                raise RecordError('progress source inputs changed while reusing historical policy')
+            containers.move_to_end(policy)
         if native.english.commit != commit or len(record['outputs']) != len(frozen['batches']):
             raise RecordError('progress first adoption has incomplete current source outputs')
         ids, locations = [], []
@@ -335,6 +360,7 @@ def _first_adoption_tag_coverage(root, harvest, units_by_file):
             ids.extend(u['unit_id'] for u in actual)
         if ids != frozen['unit_ids'] or len(ids) != len(set(ids)):
             raise RecordError('progress first adoption complete unit order differs')
+    for native in containers.values():
         native.assert_unchanged()
     reads.snapshot.assert_unchanged()
     return coverage

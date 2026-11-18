@@ -124,6 +124,7 @@ class AdoptionBoundary:
         self.nodes = set()
         self.cache = {}
         self.snapshots = {}
+        self.affected_candidates: set[str] | None = None
 
     def finish(self, primary=None):
         merged = {} if primary is None else {primary.root: primary}
@@ -292,10 +293,12 @@ class _CurrentScope:
         """An orphaned unit file must not disappear from the repository union."""
         from .source_containers import clean
         result = set()
-        for name, (up, rows) in self.units.items():
+        names = self.units if chapters is None else sorted({
+            name for chapter in chapters for name in self.files_by_chapter.get(chapter, ())
+        })
+        for name in names:
+            up, rows = self.units[name]
             owners = self.chapters_by_file[name]
-            if chapters is not None and not owners & chapters:
-                continue
             lanes = self.candidates_by_name.get(name)
             if not lanes:
                 for row in rows:
@@ -471,7 +474,10 @@ def _check_chapter(root, harvest, chapter, lane, base, current, scope, selected,
             for run_id in {c['run_id'] for rows in ordinary.values() for c in rows}:
                 manifest=json.loads(snapshot.read(root/'translation-data/runs'/f'{run_id}.json'))
                 participants={e['candidate_path'] for e in manifest['inputs'].get('settings',{}).get('accepted_records',[])}
-                if not current_all and participants - {c.relative_to(root).as_posix() for u,c in selected}:
+                affected_paths = union.affected_candidates if union is not None else None
+                if affected_paths is None and not current_all:
+                    affected_paths = {c.relative_to(root).as_posix() for _,c in selected}
+                if affected_paths is not None and participants - affected_paths:
                     raise RecordError('shared run requires all participating chapters/lanes: qa-current-all')
             a._complete_prior_runs(a.Reads(root), {p:[rows] for p,rows in ordinary.items()})
         manifests = {}
@@ -565,6 +571,65 @@ def _check_chapter(root, harvest, chapter, lane, base, current, scope, selected,
     return result
 
 
+def _affected_pairs(snapshot, scope, chapters, base):
+    """Close a multi-chapter scope over actual pairs of changed ordinary runs."""
+    from .source_containers import safe_path
+    root = snapshot.root
+    included = set()
+    pending = set(chapters)
+    preparations = set()
+    for relative in sorted(base.changed):
+        if relative.startswith('docs/evidence/') and relative.endswith('-model-input.json'):
+            model_input = json.loads(snapshot.read(root / relative))
+            freeze = safe_path(root, model_input['generation_freeze']['path'],
+                               r'translation-data/source-adoption-inputs/[A-Za-z0-9._-]+\.json')
+            frozen = json.loads(snapshot.read(freeze))
+            pending.add(frozen['chapter'])
+            preparations.add((frozen['chapter'], frozen['runtime']['model_lane'],
+                              freeze.relative_to(root).as_posix()))
+    selected = {}
+    seen_runs = set()
+    candidate_paths = set()
+    while pending:
+        chapter = min(pending)
+        pending.remove(chapter)
+        included.add(chapter)
+        scopes = scope.scopes({chapter})
+        if not scopes:
+            raise RecordError('affected chapter has no current pairs: ' + chapter)
+        for _, lane in scopes:
+            pairs = scope.pairs(snapshot, chapter, lane, partial=True)
+            selected[chapter, lane] = pairs
+            for unit, candidate in pairs:
+                up, cp = (p.relative_to(root).as_posix() for p in (unit, candidate))
+                candidate_paths.add(cp)
+                for row in snapshot.jsonl(candidate):
+                    if any(row.get(field) for field in ('source_adoption_id', 'derivation_id', 'model_correction_id')):
+                        continue
+                    run_path = 'translation-data/runs/' + row['run_id'] + '.json'
+                    if run_path in seen_runs or not base.changed & {up, cp, run_path}:
+                        continue
+                    manifest = json.loads(snapshot.read(safe_path(
+                        root, run_path, r'translation-data/runs/[A-Za-z0-9._-]+\.json')))
+                    seen_runs.add(run_path)
+                    for entry in manifest['inputs'].get('settings', {}).get('accepted_records', []):
+                        path = safe_path(root, entry['candidate_path'],
+                                         r'translation-data/candidates/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+\.jsonl')
+                        owners = scope.chapters_by_file.get(path.name, set())
+                        if (len(owners) != 1 or
+                                scope.candidates_by_name.get(path.name, {}).get(path.parent.name) != path):
+                            raise RecordError('shared run participant has no unique current pair: ' + str(path))
+                        pending.update(owners - included)
+    selected_paths = {path.relative_to(root).as_posix()
+                      for pairs in selected.values() for pair in pairs for path in pair}
+    missing = sorted(path for path in base.changed
+                     if path.startswith(('translation-data/units/', 'translation-data/candidates/'))
+                     and path.endswith('.jsonl') and path not in selected_paths)
+    if missing:
+        raise RecordError('affected validation omitted changed pairs: ' + ', '.join(missing))
+    return selected, candidate_paths, preparations
+
+
 @tracked_inputs
 def check_current_repository(root, harvest, base_ref, *, report=None, chapters=None):
     """All current pairs/direct inputs, retaining the same accepted-ancestor boundary."""
@@ -575,39 +640,59 @@ def check_current_repository(root, harvest, base_ref, *, report=None, chapters=N
     base=Base(root,base_ref,snapshot)
     base.immutable_changes()
     scope = _CurrentScope(snapshot)
-    scopes = scope.scopes(chapters)
+    emit = report or (lambda line: None)
     if chapters is not None:
-        from .ci_scope import _classify
+        from .ci_scope import _classify, DECISION_INPUT
         dispatch = _classify(root, base.commit, sorted(base.changed), entries=base.entries,
                              units_by_id=scope.units_by_id)
         if dispatch['kind'] == 'current-all':
             raise RecordError('scope expansion required: qa-current-all; ' + dispatch['reason'])
         if set(dispatch['chapters']) - chapters:
             raise RecordError('scope expansion required for all changed chapters: ' + ', '.join(dispatch['chapters']))
+        if len(chapters) > 1 and any(path.startswith(DECISION_INPUT) for path in base.changed):
+            emit('Expanding multi-chapter decisions to all current relationships')
+            chapters = None
+    affected = chapters is not None and len(chapters) > 1
+    boundary = AdoptionBoundary(base, emit)
+    if affected:
+        selected, boundary.affected_candidates, preparations = _affected_pairs(snapshot, scope, chapters, base)
+        scopes = sorted(selected)
+        emit('Affected chapters: ' + ', '.join(sorted({chapter for chapter, _ in scopes})))
+    else:
+        scopes = scope.scopes(chapters)
     from .repository_validation import _SourceIdentity
     source = _SourceIdentity(root, harvest)
     current = CurrentSourceQA(root, harvest, snapshot=snapshot, fresh_chapters=True,
                               _units_by_id=scope.units_by_id)
     reports=[]
     from . import source_adoptions as a
-    boundary=AdoptionBoundary(base,report or (lambda line:None))
+    # Discovery reads are evidence of ownership, not of validation coverage.
+    validated_reads = InputReads() if affected else reads
     token=a._DAILY.set(boundary)
     try:
-        for chapter, lane in scopes:
-            selected = scope.pairs(snapshot, chapter, lane, partial=chapters is None)
-            reports.append(_check_chapter(root, harvest, chapter, lane, base, current, scope,
-                                          selected, report=report, current_all=chapters is None,
-                                          union=boundary))
+        with validated_reads.activate():
+            for chapter, lane in scopes:
+                pairs = selected[chapter, lane] if affected else scope.pairs(
+                    snapshot, chapter, lane, partial=chapters is None)
+                reports.append(_check_chapter(root, harvest, chapter, lane, base, current, scope,
+                                              pairs, report=report, current_all=chapters is None or affected,
+                                              union=boundary))
     finally:
         a._DAILY.reset(token)
     boundary.finish(primary=snapshot)
     unread=[p for p in base.changed if p.startswith(('translation-data/','review/','docs/evidence/','task-scopes/'))
-            and (root/p).resolve() not in reads.hashes]
+            and (root/p).resolve() not in validated_reads.hashes]
     if unread:raise RecordError('changed inputs have no validated current relationship: '+', '.join(sorted(unread)))
+    if affected:
+        checked_preparations = {(result['chapter'], result['lane'], detail['input'])
+                                for result in reports for detail in result['preparations']}
+        if missing := preparations - checked_preparations:
+            raise RecordError('changed preparation has no validated owning scope: ' +
+                              ', '.join(path for _, _, path in sorted(missing)))
     current.assert_unchanged()
     source.assert_valid(root, harvest)
     base.assert_unchanged()
     for result_report in reports:
         result_report['validation_state'] = 'validated_current'
-    return dict(schema_version=1,scope='current-all' if chapters is None else 'chapter-current',history_audit='not_run',base=base.commit,
+    return dict(schema_version=1,scope='current-all' if chapters is None else 'affected-current' if affected else 'chapter-current',history_audit='not_run',base=base.commit,
                 head=snapshot.head,chapters=reports,exit_status=0)

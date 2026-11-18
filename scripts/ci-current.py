@@ -46,10 +46,11 @@ def run():
         make('upstream-index-check','chapter-template-check')
         chapters=set(dispatch['chapters'])
         if len(chapters)>1:
-            print('Expanding multi-chapter/shared participants to qa-current-all; pure data tool tests not run',flush=True)
-            chapters=None
+            print('Validating the affected chapters and their shared run participants',flush=True)
         payload=check_current_repository(root,args.harvest,args.base_ref,report=print,chapters=chapters)
         (out/'chapters.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n')
+    elif dispatch['kind']=='test-only':
+        make('tool-test')
     elif dispatch['kind']=='current-all':
         make('tool-test','qa-current-all','upstream-index-check','chapter-template-check')
     else:

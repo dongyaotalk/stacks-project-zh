@@ -10,6 +10,27 @@ DATA = re.compile(r'(?:translation-data/(?:units/[^/]+\.jsonl|candidates/[^/]+/[
 # Only descriptive, non-contract documentation can bypass data verification.
 DESCRIPTIVE = re.compile(r'(?:LICENSE(?:S/.*)?|CODE_OF_CONDUCT\.md|SECURITY\.md|docs/notes/[^/]+\.md)\Z')
 
+# Only the test runner consumes these files as code or fixture data.
+TEST_INPUT = re.compile(r'tests/(?:test_[A-Za-z0-9_]+\.py|fixtures/(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\.(?:json|jsonl|tex|yml|yaml|txt|md))\Z')
+DECISION_INPUT = ('review/', 'translation-data/selections/', 'translation-data/reviewed/')
+
+
+def _test_only(root, ref, paths):
+    if not paths or not all(TEST_INPUT.fullmatch(path) for path in paths):
+        return False
+    from .chapter_validation import Base
+    from .current_qa import InputSnapshot
+    base = Base(root, ref, InputSnapshot(root))
+    if base.changed != set(paths):
+        return False
+    for diff in base.change_identity[:2]:
+        for line in diff.split(b'\0')[::2]:
+            if line and line.split()[:2] not in ([b':100644', b'100644'], [b':000000', b'100644']):
+                return False
+    return all((root / name).is_file() and not (root / name).stat().st_mode & 0o111
+               and not any(path.is_symlink() for path in (root / name, *(root / name).parents)
+                           if path.is_relative_to(root)) for name in paths)
+
 
 def classify(root, base, *, paths=None):
     root = root.resolve()
@@ -33,6 +54,9 @@ def _classify(root, base, paths, *, entries=None, units_by_id=None):
                     reason='report filenames contain public/unsafe or mixed changes')
     if not paths or all(DESCRIPTIVE.fullmatch(p) for p in paths):
         return dict(kind='documentation',paths=paths,chapters=[],reason='only descriptive documents; data QA not run')
+    if _test_only(root, base, paths):
+        return dict(kind='test-only', paths=paths, chapters=[],
+                    reason='only test code and fixtures; run tool tests and applicable report checks')
     broad = [p for p in paths if not DATA.fullmatch(p)]
     # Mode-only or staged type changes must also expand, even on repositories
     # whose local core.fileMode setting ignores executable changes.
@@ -85,8 +109,15 @@ def _classify(root, base, paths, *, entries=None, units_by_id=None):
         try:
             if path.suffix=='.json':inspect(json.loads(read_text(path)))
             else:
-                for line in read_text(path).splitlines():
-                    if line.strip():inspect(json.loads(line))
+                rows = [json.loads(line) for line in read_text(path).splitlines() if line.strip()]
+                if p.startswith('translation-data/units/') and p in entries:
+                    previous = [json.loads(line) for line in git(root, 'show', base + ':' + p).splitlines()
+                                if line.strip()]
+                    if {row['chapter'] for row in previous} != {row['chapter'] for row in rows}:
+                        return dict(kind='current-all', paths=paths, chapters=[],
+                                    reason='current unit file changed chapter ownership: ' + p)
+                for row in rows:
+                    inspect(row)
         except (ValueError,KeyError,TypeError) as exc:
             raise RecordError('cannot classify structured changes: '+p) from exc
     if unresolved:

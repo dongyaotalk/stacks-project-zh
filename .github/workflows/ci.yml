@@ -82,7 +82,7 @@ jobs:
             echo "First push or comparison lacks a dispatcher; using broad validation"
           fi
           case "$kind" in
-            current-all|chapter-current|generated-reports|documentation) ;;
+            current-all|test-only|chapter-current|generated-reports|documentation) ;;
             *) exit 1 ;;
           esac
           printf 'kind=%s\n' "$kind" >> "$GITHUB_OUTPUT"
@@ -129,11 +129,14 @@ jobs:
               "$python_path" -I "$TRUSTED_TOOLS/scripts/ci-current.py" \
                 --root "$PWD" --harvest "$harvest" --base-ref "$COMPARE"
               ;;
-            current-all)
+            current-all|test-only)
               make_args=("PYTHON=$python_path" "HARVEST_DIR=$harvest" "BASE_REF=$COMPARE")
               # A single Make invocation also schedules common prerequisites once.
-              make "${make_args[@]}" workflow-check harvest-check qa-current-all \
-                upstream-index-check chapter-template-check
+              targets=(workflow-check harvest-check)
+              if test "$KIND" = current-all; then
+                targets+=(qa-current-all upstream-index-check chapter-template-check)
+              fi
+              make "${make_args[@]}" "${targets[@]}"
               progress_changes=$(git diff --name-only --no-renames "$COMPARE" -- \
                 README.md docs/progress.md docs/translation-progress.md Makefile \
                 stacks_zh/progress.py stacks_zh/progress_coverage.py \
@@ -158,7 +161,7 @@ jobs:
 
   tool-test:
     needs: classify
-    if: needs.classify.outputs.kind == 'current-all'
+    if: needs.classify.outputs.kind == 'current-all' || needs.classify.outputs.kind == 'test-only'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -196,7 +199,7 @@ jobs:
           test "$CLASSIFICATION" = success
           test "$CURRENT" = success
           case "$KIND" in
-            current-all) test "$TOOLS" = success ;;
+            current-all|test-only) test "$TOOLS" = success ;;
             chapter-current|generated-reports|documentation) test "$TOOLS" = skipped ;;
             *) exit 1 ;;
           esac

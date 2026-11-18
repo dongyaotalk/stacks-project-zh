@@ -565,6 +565,55 @@ class ChapterTests(unittest.TestCase):
             with self.assertRaisesRegex(RecordError, 'duplicate global unit ID'):
                 cv.check_current_repository(root, harvest, base)
 
+    def test_affected_pairs_close_real_shared_run_and_exclude_unrelated_chapter(self):
+        from types import SimpleNamespace
+        from stacks_zh import chapter_validation as cv
+        from stacks_zh.current_qa import InputSnapshot
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            git(root, 'init', '-q')
+            (root / 'README.md').write_text('Synthetic Git root\n')
+            git(root, 'add', '.')
+            git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=test@example.invalid',
+                'commit', '-qm', 'synthetic base')
+            candidate_paths = {}
+            for chapter in ('alpha', 'beta', 'gamma', 'unrelated'):
+                up = root / f'translation-data/units/{chapter}.jsonl'
+                cp = root / f'translation-data/candidates/synthetic/{chapter}.jsonl'
+                up.parent.mkdir(parents=True, exist_ok=True)
+                cp.parent.mkdir(parents=True, exist_ok=True)
+                write_jsonl(up, [dict(chapter=chapter, unit_id=chapter)])
+                run = 'shared' if chapter in ('alpha', 'gamma') else chapter
+                write_jsonl(cp, [dict(unit_id=chapter, model_lane='synthetic', run_id=run)])
+                candidate_paths[chapter] = cp.relative_to(root).as_posix()
+            run_path = root / 'translation-data/runs/shared.json'
+            run_path.parent.mkdir()
+            def manifest(*members):
+                write(run_path, dict(inputs=dict(settings=dict(accepted_records=[
+                    dict(candidate_path=path) for path in members]))))
+            manifest(candidate_paths['alpha'], candidate_paths['gamma'])
+            changed = SimpleNamespace(changed={candidate_paths['alpha']})
+            snapshot = InputSnapshot(root)
+            index = cv._CurrentScope(snapshot)
+            pairs, included, preparations = cv._affected_pairs(snapshot, index, {'alpha', 'beta'}, changed)
+            self.assertEqual(preparations, set())
+            self.assertEqual(set(pairs), {(c, 'synthetic') for c in ('alpha', 'beta', 'gamma')})
+            self.assertEqual(included, {candidate_paths[c] for c in ('alpha', 'beta', 'gamma')})
+
+            freeze = 'translation-data/source-adoption-inputs/local.json'
+            write(root / freeze, dict(chapter='unrelated', runtime={'model_lane': 'synthetic'}))
+            input_path = 'docs/evidence/local-model-input.json'
+            write(root / input_path, dict(generation_freeze={'path': freeze}))
+            prepared = SimpleNamespace(changed={input_path})
+            pairs, _, preparations = cv._affected_pairs(InputSnapshot(root), index, {'alpha', 'beta'}, prepared)
+            self.assertEqual(set(pairs), {(c, 'synthetic') for c in ('alpha', 'beta', 'unrelated')})
+            self.assertEqual(preparations, {('unrelated', 'synthetic', freeze)})
+
+            manifest(candidate_paths['alpha'], 'translation-data/candidates/synthetic/missing.jsonl')
+            with self.assertRaisesRegex(RecordError, 'shared run participant has no unique current pair'):
+                cv._affected_pairs(InputSnapshot(root), index, {'alpha', 'beta'}, changed)
+
     def test_current_decisions_enumerate_candidate_names_once_and_detect_other_lane_duplicate(self):
         from stacks_zh import decisions
         with tempfile.TemporaryDirectory() as d:

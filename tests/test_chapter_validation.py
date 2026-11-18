@@ -505,12 +505,15 @@ class ChapterTests(unittest.TestCase):
             root,harvest,base,fp,rp,frozen=fixture(Path(d))
             seen=[]
             def observed(*args,**kwargs):
-                result=check_chapter(*args,**kwargs)
-                with self.assertRaisesRegex(RecordError,'live chapter check'):
-                    result.assert_valid(root,harvest)
-                seen.append(result)
-                return result
-            with patch.object(chapter_validation,'check_chapter',side_effect=observed):
+                report=check_scope(*args,**kwargs)
+                self.assertIs(type(report),dict)
+                self.assertEqual(report['validation_state'],'pending_union')
+                self.assertEqual(set(chapter_validation._ISSUED), issued)
+                seen.append(report)
+                return report
+            check_scope=chapter_validation._check_chapter
+            issued=set(chapter_validation._ISSUED)
+            with patch.object(chapter_validation,'_check_chapter',side_effect=observed):
                 report=chapter_validation.check_current_repository(root,harvest,base)
             self.assertEqual(len(seen),1)
             self.assertEqual(report['scope'],'current-all')
@@ -518,12 +521,49 @@ class ChapterTests(unittest.TestCase):
             scoped=chapter_validation.check_current_repository(root,harvest,base,chapters={'test'})
             self.assertEqual(scoped['scope'],'chapter-current')
             def changed(*args,**kwargs):
-                result=check_chapter(*args,**kwargs)
+                report=check_scope(*args,**kwargs)
                 rp.write_bytes(rp.read_bytes()+b'\n')
-                return result
-            with patch.object(chapter_validation,'check_chapter',side_effect=changed):
+                return report
+            with patch.object(chapter_validation,'_check_chapter',side_effect=changed):
                 with self.assertRaises(RecordError):
                     chapter_validation.check_current_repository(root,harvest,base)
+
+    def test_joined_multichapter_multilane_initializes_global_scope_once(self):
+        from stacks_zh import chapter_validation as cv
+        with tempfile.TemporaryDirectory() as d:
+            root, harvest, base, _, _, frozen = fixture(Path(d))
+            git(root, 'add', '.')
+            git(root, '-c', 'user.name=Synthetic', '-c', 'user.email=test@example.invalid',
+                'commit', '-qm', 'accepted synthetic facts')
+            base = git(root, 'rev-parse', 'HEAD')
+            git(root, 'update-ref', 'refs/heads/main', base)
+            for extra in (False, True):
+                if extra:
+                    for chapter, lane, name in [('test', 'second', Path(frozen['batches'][0]['units_path']).name),
+                                                ('other', 'synthetic', 'other.jsonl'),
+                                                ('other', 'second', 'other.jsonl')]:
+                        if chapter == 'other':
+                            row = dict(frozen['batches'][0]['units'][0], chapter=chapter, unit_id='tag:OTHER:scope')
+                            write_jsonl(root/'translation-data/units'/name, [row])
+                        cp = root/'translation-data/candidates'/lane/name
+                        cp.parent.mkdir(exist_ok=True)
+                        write_jsonl(cp, [dict(model_lane=lane)])
+                # Exercise real scope discovery and union bookkeeping. The
+                # synthetic extra lanes intentionally have no model provenance.
+                with (patch.object(cv, 'inventory', wraps=cv.inventory) as inventory,
+                      patch.object(cv, 'Base', wraps=cv.Base) as base_init,
+                      patch.object(cv, 'glob_paths', wraps=cv.glob_paths) as glob,
+                      patch.object(cv, '_check_chapter', side_effect=lambda *a, **k: {}) as chapter_check):
+                    receipt = cv.check_current_repository(root, harvest, base)
+                self.assertEqual(inventory.call_count, 1)
+                self.assertEqual(base_init.call_count, 1)
+                self.assertEqual([c.args[1] for c in glob.call_args_list], ['*.jsonl', '*/*.jsonl'])
+                self.assertEqual(chapter_check.call_count, 4 if extra else 1)
+                self.assertTrue(all(r['validation_state'] == 'validated_current' for r in receipt['chapters']))
+            row['unit_id'] = frozen['batches'][0]['units'][0]['unit_id']
+            write_jsonl(root/'translation-data/units/other.jsonl', [row])
+            with self.assertRaisesRegex(RecordError, 'duplicate global unit ID'):
+                cv.check_current_repository(root, harvest, base)
 
     def test_current_decisions_enumerate_candidate_names_once_and_detect_other_lane_duplicate(self):
         from stacks_zh import decisions
@@ -650,13 +690,18 @@ class ChapterTests(unittest.TestCase):
         self._reject_mutations(('hidden','unknown','base'))
 
     def test_accepted_immutable_mode_and_bytes_cannot_change(self):
-        for mutation in ('bytes','mode','delete','rename','symlink'):
+        for mutation in ('bytes','mode','staged-mode','delete','rename','symlink'):
             with self.subTest(mutation=mutation),tempfile.TemporaryDirectory() as d:
                 root,harvest,base,fp,rp,frozen=fixture(Path(d))
                 git(root,'add','.');git(root,'-c','user.name=Synthetic','-c','user.email=test@example.invalid','commit','-qm','accepted fixture')
                 base=git(root,'rev-parse','HEAD');git(root,'update-ref','refs/heads/main',base)
                 if mutation=='bytes':rp.write_bytes(rp.read_bytes()+b'\n')
-                if mutation=='mode':rp.chmod(0o755)
+                if mutation in {'mode', 'staged-mode'}:
+                    git(root, 'config', 'core.fileMode', 'false')
+                    if mutation == 'mode':
+                        rp.chmod(0o755)
+                    else:
+                        git(root, 'update-index', '--chmod=+x', str(rp.relative_to(root)))
                 if mutation=='delete':rp.unlink()
                 if mutation=='rename':git(root,'mv',str(rp.relative_to(root)),str(rp.relative_to(root))+'.renamed')
                 if mutation=='symlink':rp.unlink();rp.symlink_to(fp)

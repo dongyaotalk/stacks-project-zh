@@ -221,7 +221,7 @@ class CurrentSourceQA:
 
     @object_inputs
     def __init__(self, root: Path, harvest: Path | None = None, *, snapshot: InputSnapshot | None = None,
-                 inventory: Path | None = None, fresh_chapters: bool = False):
+                 inventory: Path | None = None, fresh_chapters: bool = False, _units_by_id=None):
         from .source_containers import Containers
         self.root = root.resolve()
         from .repository_validation import _ImplementationIdentity
@@ -230,8 +230,10 @@ class CurrentSourceQA:
         self.snapshot = snapshot or InputSnapshot(self.root)
         if self.snapshot.root != self.root:
             raise RecordError('validation snapshot belongs to another repository')
-        for directory in ['config', 'schema', 'translation-data/units']:
+        for directory in ['config', 'schema']:
             self.snapshot.watch_tree(self.root / directory)
+        if _units_by_id is None:
+            self.snapshot.watch_tree(self.root / 'translation-data/units')
         self.snapshot.watch_tree(self.root / 'stacks_zh', '*.py')
         self.snapshot.read(self.root / 'upstream.lock')
         policy = self.snapshot.read(self.root / 'config/workflow.yml').decode('utf-8')
@@ -247,13 +249,19 @@ class CurrentSourceQA:
             raise RecordError('current source term catalog must not be empty')
         self.approved = load_approved_term_pairs(self.root / 'config/glossary.yml')
         self.units: dict[str, dict[str, Any]] = {}
-        for path in sorted(_input_glob(self.root / 'translation-data/units', '*.jsonl')):
-            for unit in self.snapshot.jsonl(path):
-                if unit['unit_id'] in self.units:
-                    raise RecordError(f"duplicate active source unit: {unit['unit_id']}")
-                if unit['source_commit'] != self.source_commit:
-                    raise RecordError(f"different source commit: {unit['unit_id']}")
-                self.units[unit['unit_id']] = unit
+        if _units_by_id is None:
+            for path in sorted(_input_glob(self.root / 'translation-data/units', '*.jsonl')):
+                for unit in self.snapshot.jsonl(path):
+                    if unit['unit_id'] in self.units:
+                        raise RecordError(f"duplicate active source unit: {unit['unit_id']}")
+                    self.units[unit['unit_id']] = unit
+        else:
+            # Chapter scope discovery already observed the unit glob and bytes
+            # in the enclosing session, using this same InputSnapshot.
+            self.units = _units_by_id
+        for uid, unit in self.units.items():
+            if unit['source_commit'] != self.source_commit:
+                raise RecordError(f"different source commit: {uid}")
         self.catalog_evidence, errors = validate_catalog_evidence(
             self.root, self.catalog, list(self.units.values()), self.harvest, containers=self.containers)
         if errors:
@@ -316,6 +324,12 @@ class CurrentSourceQA:
     @object_inputs
     def validate_pairs(self, unit_paths: Iterable[Path], candidate_paths: Iterable[Path],
                        *, chapter: str | None = None) -> tuple[int, list[str]]:
+        count, errors = self._validate_pairs(unit_paths, candidate_paths, chapter=chapter)
+        self.assert_unchanged()
+        return count, errors
+
+    def _validate_pairs(self, unit_paths, candidate_paths, *, chapter=None):
+        """Validate scoped records; the joined chapter caller seals the union."""
         unit_paths, candidate_paths = list(unit_paths), list(candidate_paths)
         self._pair_locations = None
         if not unit_paths or len(unit_paths) != len(candidate_paths):
@@ -343,7 +357,6 @@ class CurrentSourceQA:
             errors.append('no current candidate batches selected')
         if not errors:
             errors.extend(self.source_errors(batches))
-        self.assert_unchanged()
         return count, errors
 
     @object_inputs

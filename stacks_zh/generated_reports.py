@@ -32,10 +32,9 @@ def report_scope(root, ref):
     base = Base(root, ref, snapshot)
     if not base.changed or not base.changed <= REPORT_FILES:
         return None
-    for entry in base.change_identity[0].split(b'\0'):
-        if entry.startswith(b':'):
-            fields = entry.split()
-            if fields[0][1:] != b'100644' or fields[1] != b'100644':
+    for diff in base.change_identity[:2]:
+        for entry in diff.split(b'\0')[::2]:
+            if entry and entry.split()[:2] != [b':100644', b'100644']:
                 return None
     for name in REPORT_FILES:
         entry = base.entries.get(name)

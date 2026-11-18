@@ -139,11 +139,13 @@ def _require_provenance_binding(candidate: dict[str, Any], decision: dict[str, A
 
 @tracked_inputs
 def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
-                                  _provenance: object | None = None, _current_pairs=None, _changed=(), _base=None) -> list[str]:
+                                  _provenance: object | None = None, _current_pairs=None, _changed=(), _base=None,
+                                  _scope=None, _implementation=None) -> list[str]:
     """Validate candidate selection, human review and formal revision linkage."""
     from .repository_validation import _ImplementationIdentity
-    implementation = _ImplementationIdentity()
-    current_inputs().seed_implementation(implementation)
+    implementation = _implementation or _ImplementationIdentity()
+    if _implementation is None:
+        current_inputs().seed_implementation(implementation)
     if _current_pairs is None:
         current_inputs().watch_root(root)
     errors: list[str] = []
@@ -156,8 +158,12 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
         selected_names={cp.name for cp in selected_paths}
         # Enumerate names once. Each per-filename glob otherwise repeatedly
         # compares the entire frozen fact inventory, including unrelated history.
-        extra={p for p in _input_glob(root/'translation-data/candidates','*/*.jsonl')
-               if p.name in selected_names and p not in selected_paths}
+        if _scope is None:
+            extra = {p for p in _input_glob(root/'translation-data/candidates','*/*.jsonl')
+                     if p.name in selected_names and p not in selected_paths}
+        else:
+            extra = {p for name in selected_names for p in _scope.candidates_by_name[name].values()
+                     if p not in selected_paths}
         others=_candidate_index(root,errors,extra)
         if candidates.keys() & others.keys():errors.append('duplicate candidate identity across lanes')
         candidates.update(others)
@@ -209,7 +215,7 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
                     candidate['_provenance_hash'] = candidate_provenance_hash(root, candidate)
                 except (OSError, ValueError, KeyError, TypeError) as exc:
                     errors.append(f"{candidate.get('unit_id')}: invalid composite provenance: {exc}")
-    unit_facts = _unit_facts(root, errors)
+    unit_facts = _unit_facts(root, errors) if _scope is None else _scope.units_by_id
     approved_terms: set[tuple[str, str]] | None = None
 
     selections: dict[str, tuple[Path, dict[str, Any]]] = {}
@@ -386,9 +392,9 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
         if unit_fact is None:
             errors.append(f"{path}: revision references an unknown unit")
         else:
-            if revision.get("source_text_hash") != unit_fact["source_text_hash"]:
+            if revision.get("source_text_hash") != str(unit_fact.get("source_text_hash", "")):
                 errors.append(f"{path}: source_text_hash does not match unit")
-            if revision.get("risk_level") != unit_fact["risk_level"]:
+            if revision.get("risk_level") != str(unit_fact.get("risk_level", "")):
                 errors.append(f"{path}: risk_level does not match unit")
         if revision.get("source_status") != "CURRENT":
             errors.append(f"{path}: formal revision source_status must be CURRENT")
@@ -467,6 +473,7 @@ def validate_repository_decisions(root: Path, harvest: Path | None = None, *,
     return errors
 
 
-def validate_current_decisions(root, harvest, pairs, *, changed=(), base=None):
+def validate_current_decisions(root, harvest, pairs, *, changed=(), base=None, _scope=None, _implementation=None):
     """Current exact selection/review/revision links; caller checks direct provenance."""
-    return validate_repository_decisions(root, harvest, _current_pairs=pairs, _changed=changed, _base=base)
+    return validate_repository_decisions(root, harvest, _current_pairs=pairs, _changed=changed, _base=base,
+                                         _scope=_scope, _implementation=_implementation)

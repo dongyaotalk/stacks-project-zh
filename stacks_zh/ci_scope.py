@@ -4,6 +4,7 @@ import json
 import re
 from .records import RecordError
 from .chapter_validation import git
+from .validation_io import read_text
 
 DATA = re.compile(r'(?:translation-data/(?:units/[^/]+\.jsonl|candidates/[^/]+/[^/]+\.jsonl|(?:runs|source-adoptions|source-adoption-inputs|derivations|model-corrections|source-container-restorations|derivation-archives|selections)/[^/]+\.json|reviewed/.+\.json|retired/.+\.(?:json|jsonl)|chapter-templates/[^/]+\.json)|docs/evidence/[^/]+\.(?:json|jsonl)|task-scopes/[^/]+\.json|review/(?:language|mathematics)/.+\.json)\Z')
 # Only descriptive, non-contract documentation can bypass data verification.
@@ -14,7 +15,10 @@ def classify(root, base, *, paths=None):
     root = root.resolve()
     if paths is None:
         paths = list(filter(None,git(root,'diff','--name-only','--no-renames','-z',base,raw=True).decode().split('\0')))
-    paths = sorted(set(paths))
+    return _classify(root, base, sorted(set(paths)))
+
+
+def _classify(root, base, paths, *, entries=None, units_by_id=None):
     from .generated_reports import REPORT_FILES, report_scope
     if paths and set(paths) <= REPORT_FILES:
         scope = report_scope(root, base)
@@ -32,24 +36,30 @@ def classify(root, base, *, paths=None):
     broad = [p for p in paths if not DATA.fullmatch(p)]
     # Mode-only or staged type changes must also expand, even on repositories
     # whose local core.fileMode setting ignores executable changes.
-    entries={}
-    for entry in filter(None,git(root,'ls-tree','-r','-z',base,raw=True).split(b'\0')):
-        meta,path=entry.split(b'\t',1)
-        entries[path.decode()]=meta.split()[0].decode()
+    if entries is None:
+        entries = {}
+        for entry in filter(None, git(root,'ls-tree','-r','-z',base,raw=True).split(b'\0')):
+            meta, path = entry.split(b'\t',1)
+            entries[path.decode()] = meta.decode().split()
     for p in paths:
         if p in entries and (root/p).is_file():
             mode='100755' if (root/p).stat().st_mode & 0o111 else '100644'
-            if entries[p]!=mode:broad.append(p)
+            if entries[p][0]!=mode:broad.append(p)
     if broad:
         return dict(kind='current-all',paths=paths,chapters=[],reason='public implementation/policy/source or unknown paths: '+', '.join(broad))
     owners, chapters, unresolved = {}, set(), set()
-    for up in (root/'translation-data/units').glob('*.jsonl'):
-        for line in up.read_text().splitlines():
-            if line.strip():
-                u=json.loads(line)
-                if u['unit_id'] in owners:
-                    raise RecordError('duplicate unit ID during CI classification')
-                owners[u['unit_id']]=u['chapter']
+    if units_by_id is None:
+        # Standalone CI classification still uses its own trusted code and
+        # directly inspects the target checkout. No caller-provided inventory.
+        for up in (root/'translation-data/units').glob('*.jsonl'):
+            for line in read_text(up).splitlines():
+                if line.strip():
+                    u=json.loads(line)
+                    if u['unit_id'] in owners:
+                        raise RecordError('duplicate unit ID during CI classification')
+                    owners[u['unit_id']]=u['chapter']
+    else:
+        owners = {uid: u['chapter'] for uid, u in units_by_id.items()}
     def inspect(value):
         if not isinstance(value,dict):
             raise RecordError('structured change is not an object')
@@ -73,9 +83,9 @@ def classify(root, base, *, paths=None):
         if not path.is_file() or path.is_symlink():
             return dict(kind='current-all',paths=paths,chapters=[],reason='deleted or unsafe data path: '+p)
         try:
-            if path.suffix=='.json':inspect(json.loads(path.read_text()))
+            if path.suffix=='.json':inspect(json.loads(read_text(path)))
             else:
-                for line in path.read_text().splitlines():
+                for line in read_text(path).splitlines():
                     if line.strip():inspect(json.loads(line))
         except (ValueError,KeyError,TypeError) as exc:
             raise RecordError('cannot classify structured changes: '+p) from exc

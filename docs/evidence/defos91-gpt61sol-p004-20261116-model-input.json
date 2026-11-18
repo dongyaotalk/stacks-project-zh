@@ -1,0 +1,3628 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/defos91-gpt61sol-p004-20261116.json",
+    "hash": "sha256:a53b6d099ff933bab96bacc6e4c4b698eb5383b2c1e5e5c843b232f91c17d7b7"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e014-80b9-7763-a221-aa6cf1825991",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/defos91-20261116.json",
+    "hash": "sha256:4f5b867bef8e948a67204a4d80caa6238fbe639fba88ed4cc2f2cb78062ae319"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "chapter": "defos",
+      "node_kind": "section_title",
+      "parent_tag": "08U6",
+      "placeholders": {},
+      "render": {
+        "prefix": "\\section{",
+        "suffix": "}\n\\label{section-deformations-ringed-spaces}"
+      },
+      "risk_level": "R1",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:f6129dee118185255396b4c9a9d50dff6f94287b207a2de636f6c63297412f5e",
+      "source_text": "Deformations of ringed spaces and the naive cotangent complex",
+      "source_text_hash": "sha256:97a32711657d6e04329d280163bbceb683c74c1371734fdf7eae8781dfadce3c",
+      "unit_id": "tag:08U6:title"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "paragraph",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$t : (S, \\mathcal{O}_S) \\to (S', \\mathcal{O}_{S'})$",
+        "MATH_0002": "$\\mathcal{J} = \\Ker(t^\\sharp)$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$S'$",
+        "MATH_0005": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+        "MATH_0006": "$\\mathcal{O}_X$",
+        "MATH_0007": "$\\mathcal{G}$",
+        "MATH_0008": "$f$",
+        "MATH_0009": "$c : \\mathcal{J} \\to \\mathcal{G}$",
+        "MATH_0010": "\\begin{equation}\n\\label{equation-to-solve-ringed-spaces}\n\\vcenter{\n\\xymatrix{\n0 \\ar[r] & \\mathcal{G} \\ar[r] & {?} \\ar[r] & \\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{J} \\ar[u]^c \\ar[r] & \\mathcal{O}_{S'} \\ar[u] \\ar[r] &\n\\mathcal{O}_S \\ar[u] \\ar[r] & 0\n}\n}\n\\end{equation}",
+        "MATH_0011": "$f$",
+        "MATH_0012": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+        "MATH_0013": "$(f, f')$",
+        "MATH_0014": "$\\Ker(i^\\sharp)$",
+        "MATH_0015": "$\\mathcal{G}$",
+        "MATH_0016": "$(f')^\\sharp$",
+        "MATH_0017": "$c$",
+        "MATH_0018": "$X'$",
+        "REF_0001": "\\ref{sheaves-definition-f-map}",
+        "REF_0002": "\\ref{sheaves-section-ringed-spaces-functoriality-modules}",
+        "REF_0003": "\\ref{equation-morphism-thickenings}",
+        "REF_0004": "\\ref{equation-to-solve-ringed-spaces}",
+        "STRUCT_0001": "\\noindent",
+        "TEXTITCLOSE_0001": "}",
+        "TEXTITOPEN_0001": "{\\it "
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "risk_level": "R2",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:3b932db6a4fef078bd85e81884d8ec3966419326eed5b3ebd4071d5b8cb78fff",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:e0f3e2c2da208d1b386916d3c0a4f1fcd47a58ee13567a4c9009b154e77e286a",
+      "source_text": "\n\n<STRUCT_0001>\nIn this section we use the naive cotangent complex to do a little bit\nof deformation theory. We start with a first order thickening\n<MATH_0001> of ringed spaces.\nWe denote <MATH_0002> and we\nidentify the underlying topological spaces of <MATH_0003> and <MATH_0004>.\nMoreover we assume given a morphism of ringed spaces\n<MATH_0005>, an <MATH_0006>-module\n<MATH_0007>, and an <MATH_0008>-map <MATH_0009>\nof sheaves of modules (Sheaves, Definition <REF_0001>\nand Section <REF_0002>).\nIn this section we ask ourselves whether we can find\nthe question mark fitting into the following diagram\n<MATH_0010>\n(where the vertical arrows are <MATH_0011>-maps)\nand moreover how unique the solution is (if it exists). More precisely,\nwe look for a first order thickening\n<MATH_0012>\nand a morphism of thickenings <MATH_0013> as in\n(<REF_0003>)\nwhere <MATH_0014> is identified with <MATH_0015>\nsuch that <MATH_0016> induces the given map <MATH_0017>.\nWe will say <MATH_0018> is a <TEXTITOPEN_0001>solution<TEXTITCLOSE_0001> to\n(<REF_0004>).\n\n",
+      "source_text_hash": "sha256:3694dfbc4e3e24a5d7c18849ab3db963667f78ce1e9d88cc8f0d953ec3592107",
+      "unit_id": "tag:08U6:prose-0001"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "lemma",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "\\begin{equation}\n\\label{equation-huge-1}\n\\vcenter{\n\\xymatrix{\n& (X_2, \\mathcal{O}_{X_2}) \\ar[r]_{i_2} \\ar[d]_{f_2} \\ar[ddl]_g &\n(X'_2, \\mathcal{O}_{X'_2}) \\ar[d]^{f'_2} \\\\\n& (S_2, \\mathcal{O}_{S_2}) \\ar[r]^{t_2} \\ar[ddl]|\\hole &\n(S'_2, \\mathcal{O}_{S'_2}) \\ar[ddl] \\\\\n(X_1, \\mathcal{O}_{X_1}) \\ar[r]_{i_1} \\ar[d]_{f_1} &\n(X'_1, \\mathcal{O}_{X'_1}) \\ar[d]^{f'_1} \\\\\n(S_1, \\mathcal{O}_{S_1}) \\ar[r]^{t_1} &\n(S'_1, \\mathcal{O}_{S'_1})\n}\n}\n\\end{equation}",
+        "MATH_0002": "$\\mathcal{G}_j = \\Ker(i_j^\\sharp)$",
+        "MATH_0003": "$g$",
+        "MATH_0004": "$\\nu : \\mathcal{G}_1 \\to \\mathcal{G}_2$",
+        "MATH_0005": "\\begin{equation}\n\\label{equation-huge-2}\n\\vcenter{\n\\xymatrix{\n& 0 \\ar[r] & \\mathcal{G}_2 \\ar[r] &\n\\mathcal{O}_{X'_2} \\ar[r] &\n\\mathcal{O}_{X_2} \\ar[r] & 0 \\\\\n& 0 \\ar[r]|\\hole &\n\\mathcal{J}_2 \\ar[u]_{c_2} \\ar[r] &\n\\mathcal{O}_{S'_2} \\ar[u] \\ar[r]|\\hole &\n\\mathcal{O}_{S_2} \\ar[u] \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{G}_1 \\ar[ruu] \\ar[r] &\n\\mathcal{O}_{X'_1} \\ar[r] &\n\\mathcal{O}_{X_1} \\ar[ruu] \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{J}_1 \\ar[ruu]|\\hole \\ar[u]^{c_1} \\ar[r] &\n\\mathcal{O}_{S'_1} \\ar[ruu]|\\hole \\ar[u] \\ar[r] &\n\\mathcal{O}_{S_1} \\ar[ruu]|\\hole \\ar[u] \\ar[r] & 0\n}\n}\n\\end{equation}",
+        "MATH_0006": "$\\Ext^1_{\\mathcal{O}_{X_2}}(Lg^*\\NL_{X_1/S_1}, \\mathcal{G}_2)$",
+        "MATH_0007": "$X'_2 \\to X'_1$",
+        "MATH_0008": "$\\nu$",
+        "MATH_0009": "$X'_2 \\to X'_1$",
+        "MATH_0010": "$\\nu$",
+        "MATH_0011": "$$\n\\Hom_{\\mathcal{O}_{X_1}}(\\Omega_{X_1/S_1}, g_*\\mathcal{G}_2) =\n\\Hom_{\\mathcal{O}_{X_2}}(g^*\\Omega_{X_1/S_1}, \\mathcal{G}_2) =\n\\Ext^0_{\\mathcal{O}_{X_2}}(Lg^*\\NL_{X_1/S_1}, \\mathcal{G}_2).\n$$",
+        "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+        "REF_0002": "\\ref{equation-huge-1}",
+        "REF_0003": "\\ref{equation-huge-1}",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "STRUCT_0003": "\\item",
+        "STRUCT_0004": "\\end{enumerate}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-huge-diagram-ringed-spaces}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:8fcaede624300bb4858e5ef0c76994d65b58b611e9ebd082b821c8b8a0d25a1b",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:6ba37ab952bea2cc1750fafb2f2be86b899b3310c8007afd87ff1e8523d5e074",
+      "source_text": "Assume given a commutative diagram of morphisms of ringed spaces\n<MATH_0001>\nwhose horizontal arrows are first order thickenings. Set\n<MATH_0002> and assume given\na <MATH_0003>-map <MATH_0004> of modules\ngiving rise to the commutative diagram\n<MATH_0005>\nwith front and back solutions to (<REF_0001>).\n<STRUCT_0001>\n<STRUCT_0002> There exist a canonical element in\n<MATH_0006>\nwhose vanishing is a necessary and sufficient condition for the existence\nof a morphism of ringed spaces <MATH_0007> fitting into\n(<REF_0002>) compatibly with <MATH_0008>.\n<STRUCT_0003> If there exists a morphism <MATH_0009> fitting into\n(<REF_0003>) compatibly with <MATH_0010> the set of all such morphisms\nis a principal homogeneous space under\n<MATH_0011>\n<STRUCT_0004>\n",
+      "source_text_hash": "sha256:49776def3d1f970a61451126fd05a00bb4be87121e6188218aef8acf20040e28",
+      "unit_id": "tag:08U8:statement"
+    },
+    {
+      "chapter": "defos",
+      "math_text_regions": [
+        {
+          "delimiter_kind": "display-dollar",
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            }
+          ],
+          "region_id": "math/0001",
+          "slots": [
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "categories.tex",
+                  "kind": "section",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 242287,
+                        "start": 242277
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 242359,
+                        "start": 242149
+                      },
+                      "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe"
+                    },
+                    {
+                      "command_byte_span": {
+                        "end": 242783,
+                        "start": 242773
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 242847,
+                        "start": 242659
+                      },
+                      "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f"
+                    },
+                    {
+                      "command_byte_span": {
+                        "end": 243361,
+                        "start": 243351
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 243453,
+                        "start": 243199
+                      },
+                      "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "categories-section-inertia",
+                  "owner_tag": "04Z2",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                "source_label": "categories-section-inertia",
+                "usage": "quad-connector",
+                "usage_source": {
+                  "after": "\\quad",
+                  "before": "\\quad",
+                  "environments": []
+                }
+              },
+              "command": "text",
+              "policy_entry": "connective-and",
+              "slot_byte_span": {
+                "end": 92,
+                "start": 89
+              },
+              "slot_id": "math/0001/text/0001",
+              "source": "and"
+            }
+          ],
+          "source": "$$\n\\mathcal{I}' =\n\\Ker(\\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n\\quad\\text{and}\\quad\n\\mathcal{I} =\n\\Ker(\\mathcal{O}_{S_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n$$",
+          "source_byte_span": {
+            "end": 3038,
+            "start": 2864
+          },
+          "source_hash": "sha256:61268c051cf9efc24819b12691824bb1c7c206ced90e46966404ae365e30b321"
+        },
+        {
+          "delimiter_kind": "display-dollar",
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0002/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            }
+          ],
+          "region_id": "math/0002",
+          "slots": [
+            {
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "anchor": {
+                  "file": "categories.tex",
+                  "kind": "section",
+                  "matches": [
+                    {
+                      "command_byte_span": {
+                        "end": 242287,
+                        "start": 242277
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 242359,
+                        "start": 242149
+                      },
+                      "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe"
+                    },
+                    {
+                      "command_byte_span": {
+                        "end": 242783,
+                        "start": 242773
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 242847,
+                        "start": 242659
+                      },
+                      "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f"
+                    },
+                    {
+                      "command_byte_span": {
+                        "end": 243361,
+                        "start": 243351
+                      },
+                      "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a",
+                      "container_byte_span": {
+                        "end": 243453,
+                        "start": 243199
+                      },
+                      "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de"
+                    }
+                  ],
+                  "ordinal": 1,
+                  "owner_label": "categories-section-inertia",
+                  "owner_tag": "04Z2",
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14"
+                },
+                "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                "source_label": "categories-section-inertia",
+                "usage": "quad-connector",
+                "usage_source": {
+                  "after": "\\quad",
+                  "before": "\\quad",
+                  "environments": []
+                }
+              },
+              "command": "text",
+              "policy_entry": "connective-and",
+              "slot_byte_span": {
+                "end": 76,
+                "start": 73
+              },
+              "slot_id": "math/0002/text/0001",
+              "source": "and"
+            }
+          ],
+          "source": "$$\na : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_1}\n\\quad\\text{and}\\quad\nb : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_2}\n$$",
+          "source_byte_span": {
+            "end": 3361,
+            "start": 3217
+          },
+          "source_hash": "sha256:58a919c29bf906f197e6d6b3106e7fb34c6bbc57e3a1dee64415245d1e88e613"
+        }
+      ],
+      "node_kind": "proof",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATHSEG_0001": "$$\n\\mathcal{I}' =\n\\Ker(\\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n\\quad\\text{",
+        "MATHSEG_0002": "}\\quad\n\\mathcal{I} =\n\\Ker(\\mathcal{O}_{S_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n$$",
+        "MATHSEG_0003": "$$\na : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_1}\n\\quad\\text{",
+        "MATHSEG_0004": "}\\quad\nb : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_2}\n$$",
+        "MATH_0001": "$\\NL_{X_1/S_1}$",
+        "MATH_0002": "$g^*$",
+        "MATH_0003": "$g_*$",
+        "MATH_0004": "$H^0(\\NL_{X_1/S_1}) = \\Omega_{X_1/S_1}$",
+        "MATH_0005": "$Lg^*$",
+        "MATH_0006": "$g^*$",
+        "MATH_0007": "$\\Ext^k_{\\mathcal{O}_{X_2}}(Lg^*\\NL_{X_1/S_1}, \\mathcal{G}_2)$",
+        "MATH_0008": "$k = 0, 1$",
+        "MATH_0009": "$g^{-1}\\NL_{X_1/S_1}$",
+        "MATH_0010": "$g^{-1}f_1^{-1}\\mathcal{O}_{S_1} \\to g^{-1}\\mathcal{O}_{X_1}$",
+        "MATH_0011": "$0$",
+        "MATH_0012": "$\\NL_{X_1/S_1}$",
+        "MATH_0013": "$\\mathcal{O}_{X_1}$",
+        "MATH_0014": "$$\nLg^*\\NL_{X_1/S_1}\n\\longrightarrow\ng^{-1}\\NL_{X_1/S_1} \\otimes_{g^{-1}\\mathcal{O}_{X_1}} \\mathcal{O}_{X_2}\n$$",
+        "MATH_0015": "$0$",
+        "MATH_0016": "$-1$",
+        "MATH_0017": "$$\n\\Ext^k_{g^{-1}\\mathcal{O}_{X_1}}(g^{-1}\\NL_{X_1/S_1}, \\mathcal{G}_2) =\n\\Ext^k_{g^{-1}\\mathcal{O}_{X_1}}(\n\\NL_{g^{-1}\\mathcal{O}_{X_1}/g^{-1}f_1^{-1}\\mathcal{O}_{S_1}}, \\mathcal{G}_2)\n$$",
+        "MATH_0018": "$X'_2 \\to X'_1$",
+        "MATH_0019": "$\\nu$",
+        "MATH_0020": "$g^{-1}f_1^{-1}\\mathcal{O}_{S'_1}$",
+        "MATH_0021": "$g^{-1}\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+        "MATH_0022": "$f^\\sharp$",
+        "MATH_0023": "$\\nu$",
+        "MATH_0024": "$X$",
+        "MATH_0025": "$\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+        "MATH_0026": "$X$",
+        "MATH_0027": "$\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+        "MATH_0028": "$\\Ext^k_{\\mathcal{O}_{X_1}}(\n\\NL_{\\mathcal{O}_{X_1}/\\mathcal{O}_{S_1}}, \\mathcal{G}_2)$",
+        "MATH_0029": "$k = 0, 1$",
+        "MATH_0030": "$$\n\\mathcal{E} = \\mathcal{O}_{X'_1} \\times_{\\mathcal{O}_{X_2}} \\mathcal{O}_{X'_2}\n$$",
+        "MATH_0031": "$\\alpha : \\mathcal{E} \\to \\mathcal{O}_{X_1}$",
+        "MATH_0032": "$\\NL(\\alpha)$",
+        "MATH_0033": "$\\NL_{\\mathcal{O}_{X_1}/\\mathcal{O}_{S_1}}$",
+        "MATH_0034": "$\\mathcal{I}' \\to \\mathcal{I}$",
+        "MATH_0035": "$\\mathcal{J}_1\\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+        "MATH_0036": "$\\mathcal{O}_{S'_1}$",
+        "MATH_0037": "$a|_{\\mathcal{I}'} : \\mathcal{I}' \\to \\mathcal{G}_1$",
+        "MATH_0038": "$b|_{\\mathcal{I}'} : \\mathcal{I}' \\to \\mathcal{G}_2$",
+        "MATH_0039": "$a$",
+        "MATH_0040": "$b$",
+        "MATH_0041": "$(\\mathcal{I}')^2$",
+        "MATH_0042": "$a$",
+        "MATH_0043": "$b$",
+        "MATH_0044": "$\\mathcal{J}_1\\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+        "MATH_0045": "$\\mathcal{G}_2$",
+        "MATH_0046": "$b|_{\\mathcal{I}'} - \\nu \\circ a|_{\\mathcal{I}'}$",
+        "MATH_0047": "$\\mathcal{O}_{X_1}$",
+        "MATH_0048": "$$\n\\xi : \\mathcal{I}/\\mathcal{I}^2 \\longrightarrow \\mathcal{G}_2\n$$",
+        "MATH_0049": "$f$",
+        "MATH_0050": "$\\mathcal{I}$",
+        "MATH_0051": "$\\nu(a(f')) - b(f')$",
+        "MATH_0052": "$f'$",
+        "MATH_0053": "$f$",
+        "MATH_0054": "$\\mathcal{I}'$",
+        "MATH_0055": "$[\\xi] \\in \\Ext^1_{\\mathcal{O}_{X_1}}(\\NL(\\alpha), \\mathcal{G}_2)$",
+        "MATH_0056": "$[\\xi]$",
+        "MATH_0057": "$\\Omega = \\Omega_{\\mathcal{O}_{S_1}[\\mathcal{E}]/\\mathcal{O}_{S_1}}\n\\otimes_{\\mathcal{O}_{S_1}[\\mathcal{E}]} \\mathcal{O}_{X_1}$",
+        "MATH_0058": "$\\NL(\\alpha) = (\\mathcal{I}/\\mathcal{I}^2 \\to \\Omega)$",
+        "MATH_0059": "$$\n\\Omega[0] \\to\n\\NL(\\alpha) \\to\n\\mathcal{I}/\\mathcal{I}^2[1] \\to\n\\Omega[1]\n$$",
+        "MATH_0060": "$[\\xi]$",
+        "MATH_0061": "$\\xi$",
+        "MATH_0062": "$\\mathcal{I}/\\mathcal{I}^2 \\to \\Omega \\to \\mathcal{G}_2$",
+        "MATH_0063": "$\\Omega \\to \\mathcal{G}_2$",
+        "MATH_0064": "$\\varphi : \\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+        "MATH_0065": "$\\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{G}_2$",
+        "MATH_0066": "$f' \\mapsto b(f') - \\varphi(a(f'))$",
+        "MATH_0067": "$\\mathcal{J}_1\\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+        "MATH_0068": "$\\mathcal{O}_{S_1}[\\mathcal{E}] \\to \\mathcal{G}_2$",
+        "MATH_0069": "$\\Omega \\to \\mathcal{G}_2$",
+        "MATH_0070": "$[\\xi] = 0$",
+        "MATH_0071": "$[\\xi]$",
+        "MATH_0072": "$\\theta : \\Omega \\to \\mathcal{G}_2$",
+        "MATH_0073": "$\\mathcal{O}_{X_1}$",
+        "MATH_0074": "$\\xi$",
+        "MATH_0075": "$\\theta \\circ (\\mathcal{I}/\\mathcal{I}^2 \\to \\Omega)$",
+        "MATH_0076": "$$\nb + \\theta \\circ d : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_2}\n$$",
+        "MATH_0077": "$\\mathcal{I}'$",
+        "MATH_0078": "$\\nu \\circ a : \\mathcal{I}' \\to \\mathcal{G}_2$",
+        "MATH_0079": "$\\mathcal{O}_{X'_1}$",
+        "MATH_0080": "$\\mathcal{I}' \\to \\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+        "MATH_0081": "$\\mathcal{I}' \\to \\mathcal{G}_1$",
+        "MATH_0082": "$b + \\theta \\circ d$",
+        "MATH_0083": "$a$",
+        "MATH_0084": "$\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+        "REF_0001": "\\ref{modules-definition-cotangent-complex-morphism-ringed-topoi}",
+        "REF_0002": "\\ref{modules-lemma-pullback-NL}",
+        "REF_0003": "\\ref{equation-huge-1}",
+        "REF_0004": "\\ref{equation-huge-2}",
+        "REF_0005": "\\ref{equation-huge-2}",
+        "REF_0006": "\\ref{modules-lemma-NL-up-to-qis}",
+        "REF_0007": "\\ref{equation-huge-2}",
+        "REF_0008": "\\ref{equation-huge-2}",
+        "REF_0009": "\\ref{equation-huge-2}",
+        "REF_0010": "\\ref{lemma-huge-diagram}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent",
+        "STRUCT_0005": "\\medskip",
+        "STRUCT_0006": "\\noindent",
+        "STRUCT_0007": "\\medskip",
+        "STRUCT_0008": "\\noindent",
+        "STRUCT_0009": "\\medskip",
+        "STRUCT_0010": "\\noindent",
+        "STRUCT_0011": "\\medskip",
+        "STRUCT_0012": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 2,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:daeaf9ab462895891877ba1b43c654f1284334243c02b7f52d34cd2860ad62b4",
+      "source_math_skeleton_hash": "sha256:37b00c50af40baeb3980c9478c6358cea44abdd477d9d0932daeb47cc2d299f1",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:8d384bdfc0a8fd8f3001a7ad0e8d4575aff99066e160e2477239757bb5c2de9a",
+      "source_text": "The naive cotangent complex <MATH_0001> is defined in Modules, Definition\n<REF_0001>.\nThe equalities in the last statement of the lemma follow from\nthe fact that <MATH_0002> is adjoint to <MATH_0003>, the fact that\n<MATH_0004> (by construction of the\nnaive cotangent complex) and the fact that <MATH_0005> is the left\nderived functor of <MATH_0006>. Thus we will work with the groups\n<MATH_0007>,\n<MATH_0008> in the rest of the proof. We first argue that we can reduce\nto the case where the underlying topological spaces of all ringed\nspaces in the lemma is the same.\n\n<STRUCT_0001><STRUCT_0002>\nTo do this, observe that <MATH_0009> is equal to the naive\ncotangent complex of the homomorphism of sheaves of rings\n<MATH_0010>, see\nModules, Lemma <REF_0002>.\nMoreover, the degree <MATH_0011> term of <MATH_0012> is a flat\n<MATH_0013>-module, hence the canonical map\n<MATH_0014>\ninduces an isomorphism on cohomology sheaves in degrees <MATH_0015> and <MATH_0016>.\nThus we may replace the Ext groups of the lemma with\n<MATH_0017>\nThe set of morphism of ringed spaces <MATH_0018> fitting into\n(<REF_0003>) compatibly with <MATH_0019>\nis in one-to-one bijection with\nthe set of homomorphisms of <MATH_0020>-algebras\n<MATH_0021> which are compatible with\n<MATH_0022> and <MATH_0023>. In this way we see that we may assume we have a\ndiagram (<REF_0004>) of sheaves on <MATH_0024> and we are looking to\nfind a homomorphism of sheaves of rings\n<MATH_0025> fitting into it.\n\n<STRUCT_0003><STRUCT_0004>\nIn the rest of the proof of the lemma we assume\nall underlying topological spaces are the\nsame, i.e., we have a diagram (<REF_0005>) of sheaves on\na space <MATH_0026> and we are looking for homomorphisms of sheaves of rings\n<MATH_0027> fitting into it.\nAs ext groups we will use\n<MATH_0028>, <MATH_0029>.\n\n<STRUCT_0005><STRUCT_0006>\nStep 1. Construction of the obstruction class. Consider the sheaf\nof sets\n<MATH_0030>\nThis comes with a surjective map <MATH_0031>\nand hence we can use <MATH_0032> instead of\n<MATH_0033>, see\nModules, Lemma <REF_0006>.\nSet\n<MATHSEG_0001>and<MATHSEG_0002>\nThere is a surjection <MATH_0034> whose kernel\nis <MATH_0035>.\nWe obtain two homomorphisms of <MATH_0036>-algebras\n<MATHSEG_0003>and<MATHSEG_0004>\nwhich induce maps <MATH_0037> and\n<MATH_0038>. Both <MATH_0039> and <MATH_0040>\nannihilate <MATH_0041>. Moreover <MATH_0042> and <MATH_0043> agree on\n<MATH_0044> as maps into <MATH_0045>\nbecause the left hand square of (<REF_0007>) is commutative.\nThus the difference\n<MATH_0046>\ninduces a well defined <MATH_0047>-linear map\n<MATH_0048>\nwhich sends the class of a local section <MATH_0049> of <MATH_0050> to\n<MATH_0051> where <MATH_0052> is a lift of <MATH_0053> to a local\nsection of <MATH_0054>. We let\n<MATH_0055>\nbe the image (see below).\n\n<STRUCT_0007><STRUCT_0008>\nStep 2. Vanishing of <MATH_0056> is necessary. Let us write\n<MATH_0057>.\nObserve that <MATH_0058>\nfits into a distinguished triangle\n<MATH_0059>\nThus we see that <MATH_0060> is zero if and only if <MATH_0061>\nis a composition <MATH_0062>\nfor some map <MATH_0063>. Suppose there exists a\nhomomorphisms of sheaves of rings\n<MATH_0064> fitting into\n(<REF_0008>). In this case consider the map\n<MATH_0065>,\n<MATH_0066>. A calculation\nshows this annihilates <MATH_0067>\nand induces a derivation <MATH_0068>.\nThe resulting linear map <MATH_0069> witnesses the\nfact that <MATH_0070> in this case.\n\n<STRUCT_0009><STRUCT_0010>\nStep 3. Vanishing of <MATH_0071> is sufficient. Let\n<MATH_0072> be a <MATH_0073>-linear map\nsuch that <MATH_0074> is equal to\n<MATH_0075>.\nThen a calculation shows that\n<MATH_0076>\nrestricted to <MATH_0077> agrees with\n<MATH_0078>. Since <MATH_0079>\nis the pushout of <MATH_0080>\nand <MATH_0081> the maps <MATH_0082>\nand <MATH_0083> define a map\n<MATH_0084> fitting into\n(<REF_0009>).\n\n<STRUCT_0011><STRUCT_0012>\nProof of (2) in the special case above. Omitted. Hint:\nThis is exactly the same as the proof of (2) of Lemma <REF_0010>.\n",
+      "source_text_hash": "sha256:7b80570a662278aa9c6bd35405257abe906712d917069f45093c6861b240d2d9",
+      "unit_id": "tag:08U8:proof"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "lemma",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$X$",
+        "MATH_0002": "$\\mathcal{A} \\to \\mathcal{B}$",
+        "MATH_0003": "$\\mathcal{G}$",
+        "MATH_0004": "$\\mathcal{B}$",
+        "MATH_0005": "$\\xi \\in \\Ext^1_\\mathcal{B}(\\NL_{\\mathcal{B}/\\mathcal{A}}, \\mathcal{G})$",
+        "MATH_0006": "$\\alpha : \\mathcal{E} \\to \\mathcal{B}$",
+        "MATH_0007": "$\\xi \\in \\Ext^1_\\mathcal{B}(\\NL(\\alpha), \\mathcal{G})$",
+        "MATH_0008": "$\\mathcal{I}/\\mathcal{I}^2 \\to \\mathcal{G}$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-NL-represent-ext-class}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:c3042e8d650573ee440146595048e77fa3a675e16d5e7185b090e49c7894ff73",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:f2f1edb6bdb091e988a653b79acc4f0c1bae4fff67459883a904f59035b7f593",
+      "source_text": "Let <MATH_0001> be a topological space. Let <MATH_0002> be a\nhomomorphism of sheaves of rings. Let <MATH_0003> be a <MATH_0004>-module.\nLet\n<MATH_0005>. \nThere exists a map of sheaves of sets <MATH_0006>\nsuch that <MATH_0007>\nis the class of a map <MATH_0008>\n(see proof for notation).\n",
+      "source_text_hash": "sha256:5035d22b0a5475b9e09dcc56d62007c1d2db066b4e588ae267605b1714f7cca0",
+      "unit_id": "tag:08UB:statement"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "proof",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$\\alpha : \\mathcal{E} \\to \\mathcal{B}$",
+        "MATH_0002": "$\\mathcal{A}[\\mathcal{E}] \\to \\mathcal{B}$",
+        "MATH_0003": "$\\mathcal{I}$",
+        "MATH_0004": "$\\NL(\\alpha) = (\\mathcal{I}/\\mathcal{I}^2 \\to \n\\Omega_{\\mathcal{A}[\\mathcal{E}]/\\mathcal{A}}\n\\otimes_{\\mathcal{A}[\\mathcal{E}]} \\mathcal{B})$",
+        "MATH_0005": "$\\NL_{\\mathcal{B}/\\mathcal{A}}$",
+        "MATH_0006": "$\\Omega = \\Omega_{\\mathcal{A}[\\mathcal{E}]/\\mathcal{A}}\n\\otimes_{\\mathcal{A}[\\mathcal{E}]} \\mathcal{B}$",
+        "MATH_0007": "$U \\mapsto \\bigoplus_{e \\in \\mathcal{E}(U)} \\mathcal{B}(U)$",
+        "MATH_0008": "$\\Omega$",
+        "MATH_0009": "$\\mathcal{B}$",
+        "MATH_0010": "$\\mathcal{E}$",
+        "MATH_0011": "$\\mathcal{E} \\to \\Omega$",
+        "MATH_0012": "$\\mathcal{E}$",
+        "MATH_0013": "$\\mathcal{E} = \\mathcal{B}$",
+        "MATH_0014": "$\\xi$",
+        "MATH_0015": "$\\mathcal{I}/\\mathcal{I}^2 \\to \\mathcal{G}$",
+        "MATH_0016": "$\\Ext^1_\\mathcal{B}(\\Omega, \\mathcal{G})$",
+        "MATH_0017": "$0 \\to \\mathcal{G} \\to \\mathcal{H} \\to \\Omega \\to 0$",
+        "MATH_0018": "$\\mathcal{B}$",
+        "MATH_0019": "$\\mathcal{E}' = \\mathcal{E} \\times_\\Omega \\mathcal{H}$",
+        "MATH_0020": "$\\alpha' : \\mathcal{E}' \\to \\mathcal{B}$",
+        "MATH_0021": "$\\mathcal{I}' = \\Ker(\\mathcal{A}[\\mathcal{E}'] \\to \\mathcal{B})$",
+        "MATH_0022": "$\\Omega' = \\Omega_{\\mathcal{A}[\\mathcal{E}']/\\mathcal{A}}\n\\otimes_{\\mathcal{A}[\\mathcal{E}']} \\mathcal{B}$",
+        "MATH_0023": "$\\xi$",
+        "MATH_0024": "$\\NL(\\alpha') \\to \\NL(\\alpha)$",
+        "MATH_0025": "$\\Ext^1_\\mathcal{B}(\\Omega', \\mathcal{G})$",
+        "MATH_0026": "$\\mathcal{H}$",
+        "MATH_0027": "$\\Omega' \\to \\Omega$",
+        "MATH_0028": "$\\Omega'$",
+        "MATH_0029": "$\\mathcal{B}$",
+        "MATH_0030": "$\\mathcal{E}'$",
+        "MATH_0031": "$$\n\\xymatrix{\n\\mathcal{E}' \\ar[r] \\ar[d] & \\mathcal{E} \\ar[d] \\\\\n\\mathcal{H} \\ar[r] & \\Omega\n}\n$$",
+        "REF_0001": "\\ref{modules-lemma-NL-up-to-qis}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:15af02df3f67789cdcdaa7bcb5f4f54765b251b7cb80860d53e66d528b2b6059",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:3efae59489c662c840a8b08864ce316dfd807450a96bf00113a4500db5a0d50b",
+      "source_text": "Recall that given <MATH_0001>\nsuch that <MATH_0002> is surjective\nwith kernel <MATH_0003> the complex\n<MATH_0004> is canonically\nisomorphic to <MATH_0005>, see\nModules, Lemma <REF_0001>.\nObserve moreover, that\n<MATH_0006> is the sheaf\nassociated to the presheaf\n<MATH_0007>.\nIn other words, <MATH_0008> is the free <MATH_0009>-module on the\nsheaf of sets <MATH_0010> and in particular there is a canonical\nmap <MATH_0011>.\n\n<STRUCT_0001><STRUCT_0002>\nHaving said this, pick some <MATH_0012> (for example\n<MATH_0013> as in the definition of the naive cotangent\ncomplex). The obstruction to writing <MATH_0014> as the class of a map\n<MATH_0015> is an element in\n<MATH_0016>. Say this is represented\nby the extension <MATH_0017>\nof <MATH_0018>-modules. Consider the sheaf of sets\n<MATH_0019>\nwhich comes with an induced map <MATH_0020>.\nLet <MATH_0021>\nand <MATH_0022>.\nThe pullback of <MATH_0023> under the quasi-isomorphism\n<MATH_0024> maps to zero in\n<MATH_0025>\nbecause the pullback of the extension <MATH_0026>\nby the map <MATH_0027> is split as <MATH_0028> is the free\n<MATH_0029>-module on the sheaf of sets <MATH_0030> and since\nby construction there is a commutative diagram\n<MATH_0031>\nThis finishes the proof.\n",
+      "source_text_hash": "sha256:201b1856ca6b91157ca0ae098ff5c847f5d53b6fee28aa5c3609ed531ddac3f9",
+      "unit_id": "tag:08UB:proof"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "lemma",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$\\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+        "REF_0001": "\\ref{equation-to-solve-ringed-spaces}"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-choices-ringed-spaces}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:791e65679ca9a43360c54d5af2d2673d94529bcdaffaf589373a18a016870d15",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:49d70a4e99e4523e9775eb53a6393f5303b968d804667654b4397c91cccd8e63",
+      "source_text": "If there exists a solution to (<REF_0001>),\nthen the set of isomorphism classes of solutions is principal homogeneous\nunder <MATH_0001>.\n",
+      "source_text_hash": "sha256:d19d62db74f130321a451247683961208d5f06d6d279709582bd1b2b32c42e39",
+      "unit_id": "tag:08UC:statement"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "proof",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$X'_1$",
+        "MATH_0002": "$X'_2$",
+        "MATH_0003": "$o(X'_1, X'_2) \\in \\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+        "MATH_0004": "$X'_1 \\to X'_2$",
+        "MATH_0005": "$X'$",
+        "MATH_0006": "$\\xi \\in \\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+        "MATH_0007": "$X'_\\xi$",
+        "MATH_0008": "$o(X', X'_\\xi) = \\xi$",
+        "MATH_0009": "$\\alpha : \\mathcal{E} \\to \\mathcal{O}_X$",
+        "MATH_0010": "$\\xi$",
+        "MATH_0011": "$f^{-1}\\mathcal{O}_S[\\mathcal{E}] \\to \\mathcal{O}_X$",
+        "MATH_0012": "$\\mathcal{I}$",
+        "MATH_0013": "$\\NL(\\alpha) = (\\mathcal{I}/\\mathcal{I}^2 \\to\n\\Omega_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]/f^{-1}\\mathcal{O}_S}\n\\otimes_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]} \\mathcal{O}_X)$",
+        "MATH_0014": "$\\xi$",
+        "MATH_0015": "$\\delta : \\mathcal{I}/\\mathcal{I}^2 \\to \\mathcal{G}$",
+        "MATH_0016": "$\\mathcal{E}$",
+        "MATH_0017": "$\\mathcal{E} \\times_{\\mathcal{O}_X} \\mathcal{O}_{X'}$",
+        "MATH_0018": "$\\alpha$",
+        "MATH_0019": "$\\alpha' : \\mathcal{E} \\to \\mathcal{O}_{X'}$",
+        "MATH_0020": "$f^{-1}\\mathcal{O}_{S'}$",
+        "MATH_0021": "$\\varphi : f^{-1}\\mathcal{O}_{S'}[\\mathcal{E}] \\to \\mathcal{O}_{X'}$",
+        "MATH_0022": "$\\mathcal{I}' = \\Ker(f^{-1}\\mathcal{O}_{S'}[\\mathcal{E}] \\to \\mathcal{O}_X)$",
+        "MATH_0023": "$\\varphi$",
+        "MATH_0024": "$\\varphi|_{\\mathcal{I}'} : \\mathcal{I}' \\to \\mathcal{G}$",
+        "MATH_0025": "$\\mathcal{O}_{X'}$",
+        "MATH_0026": "$$\n\\xymatrix{\n0 \\ar[r] & \\mathcal{G} \\ar[r] & \\mathcal{O}_{X'} \\ar[r] &\n\\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{I}' \\ar[u]^{\\varphi|_{\\mathcal{I}'}} \\ar[r] &\nf^{-1}\\mathcal{O}_{S'}[\\mathcal{E}] \\ar[u] \\ar[r] &\n\\mathcal{O}_X \\ar[u]_{=} \\ar[r] & 0\n}\n$$",
+        "MATH_0027": "$\\psi : \\mathcal{I}' \\to \\mathcal{G}$",
+        "MATH_0028": "$\\varphi|_{\\mathcal{I}'}$",
+        "MATH_0029": "$$\n\\mathcal{I}' \\to \\mathcal{I}'/(\\mathcal{I}')^2 \\to\n\\mathcal{I}/\\mathcal{I}^2 \\xrightarrow{\\delta} \\mathcal{G}.\n$$",
+        "MATH_0030": "$\\psi$",
+        "MATH_0031": "$\\mathcal{O}_{X'_\\xi}$",
+        "MATH_0032": "$o(X', X'_\\xi) = \\xi$",
+        "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+        "REF_0002": "\\ref{lemma-huge-diagram-ringed-spaces}",
+        "REF_0003": "\\ref{lemma-NL-represent-ext-class}",
+        "STRUCT_0001": "\\medskip",
+        "STRUCT_0002": "\\noindent",
+        "STRUCT_0003": "\\medskip",
+        "STRUCT_0004": "\\noindent"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:b2c0e5e8b30b4e6584f7308b5afe100f89aef29677a15d0b9332a6cfe4dc08fa",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:ed94cf784eb9385cea2b5bd894fd4f878dbd70242df86ef5c2b56a87fcd0ab86",
+      "source_text": "We observe right away that given two solutions <MATH_0001> and <MATH_0002>\nto (<REF_0001>) we obtain by\nLemma <REF_0002> an obstruction element\n<MATH_0003>\nto the existence of a map <MATH_0004>. Clearly, this element\nis the obstruction to the existence of an isomorphism, hence separates\nthe isomorphism classes. To finish the proof it therefore suffices to\nshow that given a solution <MATH_0005> and an element\n<MATH_0006>\nwe can find a second solution <MATH_0007> such that\n<MATH_0008>.\n\n<STRUCT_0001><STRUCT_0002>\nPick <MATH_0009> as in\nLemma <REF_0003>\nfor the class <MATH_0010>. Consider the surjection\n<MATH_0011>\nwith kernel <MATH_0012> and corresponding naive cotangent complex\n<MATH_0013>.\nBy the lemma <MATH_0014> is the class of a morphism\n<MATH_0015>.\nAfter replacing <MATH_0016> by\n<MATH_0017> we may also assume\nthat <MATH_0018> factors through a map\n<MATH_0019>.\n\n<STRUCT_0003><STRUCT_0004>\nThese choices determine an <MATH_0020>-algebra map\n<MATH_0021>. Let\n<MATH_0022>.\nObserve that <MATH_0023> induces a map\n<MATH_0024>\nand that <MATH_0025> is the pushout, as in the following\ndiagram\n<MATH_0026>\nLet <MATH_0027> be the sum of the map\n<MATH_0028> and the composition\n<MATH_0029>\nThen the pushout along <MATH_0030> is an other ring extension\n<MATH_0031> fitting into a diagram as above.\nA calculation (omitted) shows that <MATH_0032> as desired.\n",
+      "source_text_hash": "sha256:7b00c49b5d8c7cf31fb02ed5e649dc0c7494b12a434a46c50ec0eb879c594f45",
+      "unit_id": "tag:08UC:proof"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "lemma",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "FOOTNOTECLOSE_0001": "}",
+        "FOOTNOTEOPEN_0001": "\\footnote{",
+        "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+        "MATH_0002": "$\\mathcal{G}$",
+        "MATH_0003": "$\\mathcal{O}_X$",
+        "MATH_0004": "$f^{-1}\\mathcal{O}_S$",
+        "MATH_0005": "$$\n0 \\to \\mathcal{G} \\to \\mathcal{O}_{X'} \\to \\mathcal{O}_X \\to 0\n$$",
+        "MATH_0006": "$\\mathcal{G}$",
+        "MATH_0007": "$i : X \\to X'$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$\\mathcal{G} \\to \\Ker(i^\\sharp)$",
+        "MATH_0010": "$\\mathcal{O}_X$",
+        "MATH_0011": "$\\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-extensions-of-relative-ringed-spaces}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:ede9495dac98c13ecddbb2962aae31ebc304920cf7a98e8a0e33d90f9a82c8d1",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:a3d0d4249416ae8ee07cbb34bf096def27c261a2bf47013d8e83380f93b997f8",
+      "source_text": "Let <MATH_0001> be a morphism of\nringed spaces. Let <MATH_0002> be a <MATH_0003>-module.\nThe set of isomorphism classes of extensions of\n<MATH_0004>-algebras\n<MATH_0005>\nwhere <MATH_0006> is an ideal of square zero<FOOTNOTEOPEN_0001>In other words,\nthe set of isomorphism classes of first order thickenings\n<MATH_0007> over <MATH_0008> endowed with an isomorphism\n<MATH_0009> of <MATH_0010>-modules.<FOOTNOTECLOSE_0001> \nis canonically bijective to\n<MATH_0011>.\n",
+      "source_text_hash": "sha256:cf9f36d6cfea3d2f1e5a3d4c22d6c023aeee45383cf8f65200786db418a2c820",
+      "unit_id": "tag:0GPZ:statement"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "proof",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$$\n\\xymatrix{\n0 \\ar[r] &\n\\mathcal{G} \\ar[r] &\n{?} \\ar[r] &\n\\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] &\n0 \\ar[u] \\ar[r] &\n\\mathcal{O}_S \\ar[u] \\ar[r]^{\\text{id}} &\n\\mathcal{O}_S \\ar[u] \\ar[r] & 0\n}\n$$",
+        "MATH_0002": "$\\mathcal{G} \\oplus \\mathcal{O}_X$",
+        "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+        "REF_0002": "\\ref{lemma-choices-ringed-spaces}"
+      },
+      "render": {
+        "prefix": "\\begin{proof}\n",
+        "suffix": "\\end{proof}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:a702d0b80f8a4626e0c6f8f7e3bf6bbed7fb49148b6e5ae4569b37e0c8ccd70c",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:838330edec4347da900e45611cf210eb28c6e3a5b982e07f47087be37b29c6c3",
+      "source_text": "To prove this we apply the previous results to the case where\n(<REF_0001>) is given by the diagram\n<MATH_0001>\nThus our lemma follows from Lemma <REF_0002>\nand the fact that there exists a solution, namely\n<MATH_0002>.\n(See remark below for a direct construction of the bijection.)\n",
+      "source_text_hash": "sha256:a4205cb1601489cbc9679a60042c88fa81f16c4213ea109952176f7d4788c654",
+      "unit_id": "tag:0GPZ:proof"
+    },
+    {
+      "chapter": "defos",
+      "node_kind": "remark",
+      "parent_tag": "08U6",
+      "placeholders": {
+        "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+        "MATH_0002": "$\\mathcal{G}$",
+        "MATH_0003": "$0 \\to \\mathcal{G} \\to \\mathcal{O}_{X'} \\to \\mathcal{O}_X \\to 0$",
+        "MATH_0004": "$\\mathcal{E}$",
+        "MATH_0005": "$$\n\\xymatrix{\n\\mathcal{E} \\ar[d]_{\\alpha'} \\ar[rd]^\\alpha \\\\\n\\mathcal{O}_{X'} \\ar[r] & \\mathcal{O}_X\n}\n$$",
+        "MATH_0006": "$f^{-1}\\mathcal{O}_S[\\mathcal{E}] \\to \\mathcal{O}_X$",
+        "MATH_0007": "$\\mathcal{J}$",
+        "MATH_0008": "$\\mathcal{O}_{X'}$",
+        "MATH_0009": "$$\n\\NL_{X/S} \\cong \\NL(\\alpha) = \n\\left(\n\\mathcal{J}/\\mathcal{J}^2\n\\longrightarrow\n\\Omega_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]/f^{-1}\\mathcal{O}_S}\n\\otimes_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]} \\mathcal{O}_X\\right)\n$$",
+        "MATH_0010": "$\\alpha'$",
+        "MATH_0011": "$f^{-1}\\mathcal{O}_S[\\mathcal{E}] \\to \\mathcal{O}_{X'}$",
+        "MATH_0012": "$$\n\\mathcal{J}/\\mathcal{J}^2 \\longrightarrow \\mathcal{G}\n$$",
+        "MATH_0013": "$\\Ext^1_{\\mathcal{O}_X}(\\NL(\\alpha), \\mathcal{G}) =\n\\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+        "MATH_0014": "$\\mathcal{O}_{X'}$",
+        "REF_0001": "\\ref{lemma-extensions-of-relative-ringed-spaces}",
+        "REF_0002": "\\ref{modules-section-netherlander}",
+        "REF_0003": "\\ref{modules-lemma-NL-up-to-qis}"
+      },
+      "render": {
+        "prefix": "\\begin{remark}\n\\label{remark-extensions-of-relative-ringed-spaces}\n",
+        "suffix": "\\end{remark}"
+      },
+      "risk_level": "R3",
+      "schema_version": 1,
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_math_hash": "sha256:8642beecc3fc5d32a356947674914cb677accce598d1e638e8b54942ede79cfa",
+      "source_status": "CURRENT",
+      "source_structure_hash": "sha256:ab47004b3ec880b77865efbe7592b47565beb6665a58643261fcb14f929ffe41",
+      "source_text": "Let <MATH_0001> and <MATH_0002>\nbe as in Lemma <REF_0001>.\nConsider an extension\n<MATH_0003>\nas in the lemma. We can choose a sheaf of sets <MATH_0004>\nand a commutative diagram\n<MATH_0005>\nsuch that <MATH_0006>\nis surjective with kernel <MATH_0007>.\n(For example you can take any sheaf of sets surjecting\nonto <MATH_0008>.) Then\n<MATH_0009>\nSee Modules, Section <REF_0002> and in particular\nLemma <REF_0003>. Of course <MATH_0010> determines a map\n<MATH_0011>\nwhich in turn determines a map\n<MATH_0012>\nwhich in turn determines the element of\n<MATH_0013>\ncorresponding to <MATH_0014> by the bijection of the lemma.\n",
+      "source_text_hash": "sha256:e7004c90ccdd7417d1d9d7f12ffe61d7882043a9aef7c48d874e0b8621da25e2",
+      "unit_id": "tag:0GQ0:statement"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:08U6:title",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:97a32711657d6e04329d280163bbceb683c74c1371734fdf7eae8781dfadce3c",
+      "source_structure_hash": "sha256:f6129dee118185255396b4c9a9d50dff6f94287b207a2de636f6c63297412f5e",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "Deformations",
+          "projection_start": 0,
+          "projection_end": 12,
+          "concept": "deformation",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 38,
+          "projection_end": 61,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08U6:prose-0001",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:3694dfbc4e3e24a5d7c18849ab3db963667f78ce1e9d88cc8f0d953ec3592107",
+      "source_structure_hash": "sha256:e0f3e2c2da208d1b386916d3c0a4f1fcd47a58ee13567a4c9009b154e77e286a",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 41,
+          "projection_end": 64,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "deformation theory",
+          "projection_start": 87,
+          "projection_end": 105,
+          "concept": "deformation-theory",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological spaces",
+          "projection_start": 229,
+          "projection_end": 247,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism of ringed spaces",
+          "projection_start": 307,
+          "projection_end": 332,
+          "concept": "source-phrase-morphism-of-ringed-spaces",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 361,
+          "projection_end": 367,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 400,
+          "projection_end": 403,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 419,
+          "projection_end": 426,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 430,
+          "projection_end": 437,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Sheaves",
+          "projection_start": 439,
+          "projection_end": 446,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 593,
+          "projection_end": 600,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 656,
+          "projection_end": 660,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "solution",
+          "projection_start": 690,
+          "projection_end": 698,
+          "concept": "solution",
+          "rule": "source-declaration"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 789,
+          "projection_end": 797,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 933,
+          "projection_end": 936,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "solution",
+          "projection_start": 979,
+          "projection_end": 987,
+          "concept": "solution",
+          "rule": "source-declaration"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08U8:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:49776def3d1f970a61451126fd05a00bb4be87121e6188218aef8acf20040e28",
+      "source_structure_hash": "sha256:6ba37ab952bea2cc1750fafb2f2be86b899b3310c8007afd87ff1e8523d5e074",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 15,
+          "projection_end": 34,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 38,
+          "projection_end": 47,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "horizontal",
+          "projection_start": 83,
+          "projection_end": 93,
+          "concept": "horizontal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 177,
+          "projection_end": 180,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 196,
+          "projection_end": 203,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 223,
+          "projection_end": 242,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical",
+          "projection_start": 344,
+          "projection_end": 353,
+          "concept": "canonical",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 354,
+          "projection_end": 361,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism of ringed spaces",
+          "projection_start": 456,
+          "projection_end": 481,
+          "concept": "source-phrase-morphism-of-ringed-spaces",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 581,
+          "projection_end": 589,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 660,
+          "projection_end": 663,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphisms",
+          "projection_start": 676,
+          "projection_end": 685,
+          "concept": "morphism",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08U8:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:7b80570a662278aa9c6bd35405257abe906712d917069f45093c6861b240d2d9",
+      "source_structure_hash": "sha256:8d384bdfc0a8fd8f3001a7ad0e8d4575aff99066e160e2477239757bb5c2de9a",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 4,
+          "projection_end": 27,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 54,
+          "projection_end": 61,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "adjoint",
+          "projection_start": 177,
+          "projection_end": 184,
+          "concept": "adjoint",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 251,
+          "projection_end": 274,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "derived functor",
+          "projection_start": 318,
+          "projection_end": 333,
+          "concept": "derived-functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "groups",
+          "projection_start": 377,
+          "projection_end": 383,
+          "concept": "group",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological spaces",
+          "projection_start": 502,
+          "projection_end": 520,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 648,
+          "projection_end": 671,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 679,
+          "projection_end": 691,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves of rings",
+          "projection_start": 695,
+          "projection_end": 711,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 729,
+          "projection_end": 736,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degree",
+          "projection_start": 770,
+          "projection_end": 776,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 814,
+          "projection_end": 818,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 831,
+          "projection_end": 837,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical map",
+          "projection_start": 849,
+          "projection_end": 862,
+          "concept": "source-phrase-canonical-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 886,
+          "projection_end": 897,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "cohomology sheaves",
+          "projection_start": 901,
+          "projection_end": 919,
+          "concept": "source-phrase-cohomology-sheaves",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "degrees",
+          "projection_start": 923,
+          "projection_end": 930,
+          "concept": "degree",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Ext groups",
+          "projection_start": 984,
+          "projection_end": 994,
+          "concept": "source-phrase-ext-groups",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1029,
+          "projection_end": 1032,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism of ringed spaces",
+          "projection_start": 1036,
+          "projection_end": 1061,
+          "concept": "source-phrase-morphism-of-ringed-spaces",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 1145,
+          "projection_end": 1154,
+          "concept": "bijection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 1164,
+          "projection_end": 1167,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 1171,
+          "projection_end": 1184,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 1200,
+          "projection_end": 1208,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1324,
+          "projection_end": 1331,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1348,
+          "projection_end": 1355,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 1400,
+          "projection_end": 1412,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves of rings",
+          "projection_start": 1416,
+          "projection_end": 1432,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "topological spaces",
+          "projection_start": 1552,
+          "projection_end": 1570,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1601,
+          "projection_end": 1608,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 1625,
+          "projection_end": 1632,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 1679,
+          "projection_end": 1692,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves of rings",
+          "projection_start": 1696,
+          "projection_end": 1712,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ext groups",
+          "projection_start": 1745,
+          "projection_end": 1755,
+          "concept": "source-phrase-ext-groups",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "obstruction class",
+          "projection_start": 1849,
+          "projection_end": 1866,
+          "concept": "source-phrase-obstruction-class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 1881,
+          "projection_end": 1886,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 1890,
+          "projection_end": 1894,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 1925,
+          "projection_end": 1935,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1936,
+          "projection_end": 1939,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 2013,
+          "projection_end": 2020,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Set",
+          "projection_start": 2040,
+          "projection_end": 2043,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 2087,
+          "projection_end": 2097,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 2116,
+          "projection_end": 2122,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 2153,
+          "projection_end": 2166,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 2182,
+          "projection_end": 2190,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2236,
+          "projection_end": 2240,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 2388,
+          "projection_end": 2392,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative",
+          "projection_start": 2458,
+          "projection_end": 2469,
+          "concept": "commutative",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 2538,
+          "projection_end": 2544,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 2545,
+          "projection_end": 2548,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 2577,
+          "projection_end": 2582,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "image",
+          "projection_start": 2748,
+          "projection_end": 2753,
+          "concept": "image",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 3008,
+          "projection_end": 3019,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3041,
+          "projection_end": 3044,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphisms",
+          "projection_start": 3081,
+          "projection_end": 3094,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves of rings",
+          "projection_start": 3098,
+          "projection_end": 3114,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3180,
+          "projection_end": 3183,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 3311,
+          "projection_end": 3317,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3318,
+          "projection_end": 3321,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "linear",
+          "projection_start": 3492,
+          "projection_end": 3498,
+          "concept": "linear",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3499,
+          "projection_end": 3502,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 3668,
+          "projection_end": 3675,
+          "concept": "pushout",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 3711,
+          "projection_end": 3715,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 3753,
+          "projection_end": 3756,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08UB:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:5035d22b0a5475b9e09dcc56d62007c1d2db066b4e588ae267605b1714f7cca0",
+      "source_structure_hash": "sha256:f2f1edb6bdb091e988a653b79acc4f0c1bae4fff67459883a904f59035b7f593",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "topological space",
+          "projection_start": 21,
+          "projection_end": 38,
+          "concept": "topological-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 61,
+          "projection_end": 73,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves of rings",
+          "projection_start": 77,
+          "projection_end": 93,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 128,
+          "projection_end": 134,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 168,
+          "projection_end": 171,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves",
+          "projection_start": 175,
+          "projection_end": 182,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 186,
+          "projection_end": 190,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 232,
+          "projection_end": 237,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 243,
+          "projection_end": 246,
+          "concept": "map",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08UB:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:201b1856ca6b91157ca0ae098ff5c847f5d53b6fee28aa5c3609ed531ddac3f9",
+      "source_structure_hash": "sha256:3efae59489c662c840a8b08864ce316dfd807450a96bf00113a4500db5a0d50b",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "surjective",
+          "projection_start": 55,
+          "projection_end": 65,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 71,
+          "projection_end": 77,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "complex",
+          "projection_start": 94,
+          "projection_end": 101,
+          "concept": "complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonically isomorphic",
+          "projection_start": 117,
+          "projection_end": 139,
+          "concept": "source-phrase-canonically-isomorphic",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 160,
+          "projection_end": 167,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 229,
+          "projection_end": 234,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "presheaf",
+          "projection_start": 253,
+          "projection_end": 261,
+          "concept": "presheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 327,
+          "projection_end": 333,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 341,
+          "projection_end": 346,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 350,
+          "projection_end": 354,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonical map",
+          "projection_start": 396,
+          "projection_end": 409,
+          "concept": "source-phrase-canonical-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 543,
+          "projection_end": 566,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 615,
+          "projection_end": 620,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 626,
+          "projection_end": 629,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 648,
+          "projection_end": 655,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 740,
+          "projection_end": 747,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 762,
+          "projection_end": 767,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 771,
+          "projection_end": 775,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "induced map",
+          "projection_start": 808,
+          "projection_end": 819,
+          "concept": "source-phrase-induced-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 870,
+          "projection_end": 878,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-isomorphism",
+          "projection_start": 904,
+          "projection_end": 921,
+          "concept": "hyphen-quasi-isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 934,
+          "projection_end": 938,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pullback",
+          "projection_start": 974,
+          "projection_end": 982,
+          "concept": "pullback",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1019,
+          "projection_end": 1022,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 1083,
+          "projection_end": 1089,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 1097,
+          "projection_end": 1102,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 1106,
+          "projection_end": 1110,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 1160,
+          "projection_end": 1179,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08UC:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:d19d62db74f130321a451247683961208d5f06d6d279709582bd1b2b32c42e39",
+      "source_structure_hash": "sha256:49d70a4e99e4523e9775eb53a6393f5303b968d804667654b4397c91cccd8e63",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "set",
+          "projection_start": 53,
+          "projection_end": 56,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism classes",
+          "projection_start": 60,
+          "projection_end": 79,
+          "concept": "source-phrase-isomorphism-classes",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:08UC:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:7b00c49b5d8c7cf31fb02ed5e649dc0c7494b12a434a46c50ec0eb879c594f45",
+      "source_structure_hash": "sha256:ed94cf784eb9385cea2b5bd894fd4f878dbd70242df86ef5c2b56a87fcd0ab86",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "element",
+          "projection_start": 136,
+          "projection_end": 143,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 178,
+          "projection_end": 181,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 209,
+          "projection_end": 216,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 259,
+          "projection_end": 270,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism classes",
+          "projection_start": 292,
+          "projection_end": 311,
+          "concept": "source-phrase-isomorphism-classes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 404,
+          "projection_end": 411,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 564,
+          "projection_end": 569,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 596,
+          "projection_end": 606,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 624,
+          "projection_end": 630,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "naive cotangent complex",
+          "projection_start": 661,
+          "projection_end": 684,
+          "concept": "source-phrase-naive-cotangent-complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "class",
+          "projection_start": 730,
+          "projection_end": 735,
+          "concept": "class",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 741,
+          "projection_end": 749,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 860,
+          "projection_end": 863,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebra map",
+          "projection_start": 943,
+          "projection_end": 954,
+          "concept": "source-phrase-algebra-map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1020,
+          "projection_end": 1023,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 1064,
+          "projection_end": 1071,
+          "concept": "pushout",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1093,
+          "projection_end": 1100,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1147,
+          "projection_end": 1150,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 1171,
+          "projection_end": 1182,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 1204,
+          "projection_end": 1211,
+          "concept": "pushout",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ring",
+          "projection_start": 1242,
+          "projection_end": 1246,
+          "concept": "ring",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagram",
+          "projection_start": 1284,
+          "projection_end": 1291,
+          "concept": "diagram",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0GPZ:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:cf9f36d6cfea3d2f1e5a3d4c22d6c023aeee45383cf8f65200786db418a2c820",
+      "source_structure_hash": "sha256:a3d0d4249416ae8ee07cbb34bf096def27c261a2bf47013d8e83380f93b997f8",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "morphism of ringed spaces",
+          "projection_start": 21,
+          "projection_end": 46,
+          "concept": "source-phrase-morphism-of-ringed-spaces",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 81,
+          "projection_end": 87,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 93,
+          "projection_end": 96,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism classes",
+          "projection_start": 100,
+          "projection_end": 119,
+          "concept": "source-phrase-isomorphism-classes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 149,
+          "projection_end": 157,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal of square zero",
+          "projection_start": 194,
+          "projection_end": 214,
+          "concept": "source-phrase-ideal-of-square-zero",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "set",
+          "projection_start": 253,
+          "projection_end": 256,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism classes",
+          "projection_start": 260,
+          "projection_end": 279,
+          "concept": "source-phrase-isomorphism-classes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "isomorphism",
+          "projection_start": 352,
+          "projection_end": 363,
+          "concept": "isomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 391,
+          "projection_end": 398,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "canonically bijective",
+          "projection_start": 423,
+          "projection_end": 444,
+          "concept": "source-phrase-canonically-bijective",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0GPZ:proof",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:a4205cb1601489cbc9679a60042c88fa81f16c4213ea109952176f7d4788c654",
+      "source_structure_hash": "sha256:838330edec4347da900e45611cf210eb28c6e3a5b982e07f47087be37b29c6c3",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "diagram",
+          "projection_start": 91,
+          "projection_end": 98,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 270,
+          "projection_end": 279,
+          "concept": "bijection",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0GQ0:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:e7004c90ccdd7417d1d9d7f12ffe61d7882043a9aef7c48d874e0b8621da25e2",
+      "source_structure_hash": "sha256:ab47004b3ec880b77865efbe7592b47565beb6665a58643261fcb14f929ffe41",
+      "catalog_hash": "sha256:2b43e217dcf57a02dc1266d4df13c9d4fe1c06dc1f648d4aa365ca52caa65aba",
+      "occurrences": [
+        {
+          "source_term": "sheaf",
+          "projection_start": 126,
+          "projection_end": 131,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 135,
+          "projection_end": 139,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commutative diagram",
+          "projection_start": 158,
+          "projection_end": 177,
+          "concept": "commutative-diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjective",
+          "projection_start": 215,
+          "projection_end": 225,
+          "concept": "surjective",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "kernel",
+          "projection_start": 231,
+          "projection_end": 237,
+          "concept": "kernel",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 281,
+          "projection_end": 286,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sets",
+          "projection_start": 290,
+          "projection_end": 294,
+          "concept": "set",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Modules",
+          "projection_start": 346,
+          "projection_end": 353,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 445,
+          "projection_end": 448,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 488,
+          "projection_end": 491,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "element",
+          "projection_start": 533,
+          "projection_end": 540,
+          "concept": "element",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "bijection",
+          "projection_start": 592,
+          "projection_end": 601,
+          "concept": "bijection",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08VT:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08VT:proof/0001",
+          "parent_tag": "08VQ",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nNote that both <MATH_0001> and <MATH_0002>\nrestrict to <MATH_0003> on <MATH_0004> and that the kernels of\n<MATH_0005> and <MATH_0006>\nare given by <MATH_0007>.\nHence flatness by Lemma <REF_0001>.\nTaking the boundary makes sense as the sequence of modules\n<MATH_0008>\nis short exact due to the assumptions in\nSituation <REF_0002>\nand the fact that <MATH_0009> is flat over <MATH_0010>.\nThe statement on the obstruction class is a direct translation\nof the result of\nRemark <REF_0003>\nto this particular situation.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\pi^*\\mathcal{F}$",
+            "MATH_0002": "$h^*\\mathcal{F}'_2$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "MATH_0004": "$X$",
+            "MATH_0005": "$\\pi^*\\mathcal{F} \\to \\mathcal{F}$",
+            "MATH_0006": "$h^*\\mathcal{F}'_2 \\to \\mathcal{F}$",
+            "MATH_0007": "$f^*\\mathcal{J}_1 \\otimes_{\\mathcal{O}_X} \\mathcal{F}$",
+            "REF_0001": "\\ref{lemma-deform-module}",
+            "MATH_0008": "$$\n0 \\to f^*\\mathcal{J}_3 \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to\nf^*\\mathcal{J}_2 \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to\nf^*\\mathcal{J}_1 \\otimes_{\\mathcal{O}_X} \\mathcal{F} \\to 0\n$$",
+            "REF_0002": "\\ref{situation-ses-flat-thickenings}",
+            "MATH_0009": "$\\mathcal{F}$",
+            "MATH_0010": "$S$",
+            "REF_0003": "\\ref{remark-complex-thickenings-and-ses-modules}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:1974332731ac75e0c3d91d3784470dc2c5cb5ab4aed78e64abecdc61eec90cd3",
+          "source_structure_hash": "sha256:714170939094cd3cddb342dbe8b7410fba25024e32db2c37f88efe76ea17b71d",
+          "source_math_hash": "sha256:e66fc290bb7850635abd0f2737f2b1b3ba67dc903d06887b3f75210d1533d2e8"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 60880,
+          "byte_end": 61763,
+          "line_start": 1675,
+          "line_end": 1694,
+          "fragment_hash": "sha256:2a2efee766bfdc27cac7e752364f1f55eefd4748efdc043963443cdfaef4e072"
+        },
+        "owner_tag": "08VT",
+        "parent_tag": "08VQ"
+      },
+      "hash": "sha256:5826777324885a47e0adea8a761f2cc55ebb815de5739d346358be4c1d056916"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08U6:paragraph/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08U6:paragraph/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nIn this section we use the naive cotangent complex to do a little bit\nof deformation theory. We start with a first order thickening\n<MATH_0001> of ringed spaces.\nWe denote <MATH_0002> and we\nidentify the underlying topological spaces of <MATH_0003> and <MATH_0004>.\nMoreover we assume given a morphism of ringed spaces\n<MATH_0005>, an <MATH_0006>-module\n<MATH_0007>, and an <MATH_0008>-map <MATH_0009>\nof sheaves of modules (Sheaves, Definition <REF_0001>\nand Section <REF_0002>).\nIn this section we ask ourselves whether we can find\nthe question mark fitting into the following diagram\n",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\noindent",
+            "MATH_0001": "$t : (S, \\mathcal{O}_S) \\to (S', \\mathcal{O}_{S'})$",
+            "MATH_0002": "$\\mathcal{J} = \\Ker(t^\\sharp)$",
+            "MATH_0003": "$S$",
+            "MATH_0004": "$S'$",
+            "MATH_0005": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+            "MATH_0006": "$\\mathcal{O}_X$",
+            "MATH_0007": "$\\mathcal{G}$",
+            "MATH_0008": "$f$",
+            "MATH_0009": "$c : \\mathcal{J} \\to \\mathcal{G}$",
+            "REF_0001": "\\ref{sheaves-definition-f-map}",
+            "REF_0002": "\\ref{sheaves-section-ringed-spaces-functoriality-modules}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:023dc5e704f9750a41c5a9579ec01ef8e0b5ee0f2f6d66f5281134f38d2a1e5b",
+          "source_structure_hash": "sha256:6808c8263b7cd38cf2d92a866856c24602398c770940ef94fbba8b84413f92c1",
+          "source_math_hash": "sha256:1b54bad6a51d1e94e2e306435d01d39c6e7212480ac1f4571e6e3a5846209aa8"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 61886,
+          "byte_end": 62650,
+          "line_start": 1704,
+          "line_end": 1716,
+          "fragment_hash": "sha256:18cadd249da183ff3e7b25ead5650c81e5165ca431e351383ea4a5dda2717972"
+        },
+        "owner_tag": "08U6",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:d4b72d06c80aabdc178d6bebee0ce7347e17a4be655fd7be88746ce8be1d1004"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08U6:section_title/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08U6:section_title/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Deformations of ringed spaces and the naive cotangent complex<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-deformations-ringed-spaces}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:8b04edc9031db97733da380707bb3691675cea6f9a8cfffdc6aaee93566b7f5b",
+          "source_structure_hash": "sha256:9ed54dec45c5492f38609f31ccd7f76f43a2282cf888a527c735eba74c8a02c7",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 61770,
+          "byte_end": 61884,
+          "line_start": 1701,
+          "line_end": 1702,
+          "fragment_hash": "sha256:b12f1c24eaa7b2a30c02f4bac73d41aa46307f11725625ea1163ceb18d1c439a"
+        },
+        "owner_tag": "08U6",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:ab6cf5dbac0267b1ef0c84ff0af03a2f6aa16aeb7fd0cea30c0d23fffdf3a24b"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08U8:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08U8:lemma/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nAssume given a commutative diagram of morphisms of ringed spaces\n<MATH_0001>\nwhose horizontal arrows are first order thickenings. Set\n<MATH_0002> and assume given\na <MATH_0003>-map <MATH_0004> of modules\ngiving rise to the commutative diagram\n<MATH_0005>\nwith front and back solutions to (<REF_0001>).\n<STRUCT_0002>\n<STRUCT_0003> There exist a canonical element in\n<MATH_0006>\nwhose vanishing is a necessary and sufficient condition for the existence\nof a morphism of ringed spaces <MATH_0007> fitting into\n(<REF_0002>) compatibly with <MATH_0008>.\n<STRUCT_0004> If there exists a morphism <MATH_0009> fitting into\n(<REF_0003>) compatibly with <MATH_0010> the set of all such morphisms\nis a principal homogeneous space under\n<MATH_0011>\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-huge-diagram-ringed-spaces}",
+            "MATH_0001": "\\begin{equation}\n\\label{equation-huge-1}\n\\vcenter{\n\\xymatrix{\n& (X_2, \\mathcal{O}_{X_2}) \\ar[r]_{i_2} \\ar[d]_{f_2} \\ar[ddl]_g &\n(X'_2, \\mathcal{O}_{X'_2}) \\ar[d]^{f'_2} \\\\\n& (S_2, \\mathcal{O}_{S_2}) \\ar[r]^{t_2} \\ar[ddl]|\\hole &\n(S'_2, \\mathcal{O}_{S'_2}) \\ar[ddl] \\\\\n(X_1, \\mathcal{O}_{X_1}) \\ar[r]_{i_1} \\ar[d]_{f_1} &\n(X'_1, \\mathcal{O}_{X'_1}) \\ar[d]^{f'_1} \\\\\n(S_1, \\mathcal{O}_{S_1}) \\ar[r]^{t_1} &\n(S'_1, \\mathcal{O}_{S'_1})\n}\n}\n\\end{equation}",
+            "MATH_0002": "$\\mathcal{G}_j = \\Ker(i_j^\\sharp)$",
+            "MATH_0003": "$g$",
+            "MATH_0004": "$\\nu : \\mathcal{G}_1 \\to \\mathcal{G}_2$",
+            "MATH_0005": "\\begin{equation}\n\\label{equation-huge-2}\n\\vcenter{\n\\xymatrix{\n& 0 \\ar[r] & \\mathcal{G}_2 \\ar[r] &\n\\mathcal{O}_{X'_2} \\ar[r] &\n\\mathcal{O}_{X_2} \\ar[r] & 0 \\\\\n& 0 \\ar[r]|\\hole &\n\\mathcal{J}_2 \\ar[u]_{c_2} \\ar[r] &\n\\mathcal{O}_{S'_2} \\ar[u] \\ar[r]|\\hole &\n\\mathcal{O}_{S_2} \\ar[u] \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{G}_1 \\ar[ruu] \\ar[r] &\n\\mathcal{O}_{X'_1} \\ar[r] &\n\\mathcal{O}_{X_1} \\ar[ruu] \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{J}_1 \\ar[ruu]|\\hole \\ar[u]^{c_1} \\ar[r] &\n\\mathcal{O}_{S'_1} \\ar[ruu]|\\hole \\ar[u] \\ar[r] &\n\\mathcal{O}_{S_1} \\ar[ruu]|\\hole \\ar[u] \\ar[r] & 0\n}\n}\n\\end{equation}",
+            "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0006": "$\\Ext^1_{\\mathcal{O}_{X_2}}(Lg^*\\NL_{X_1/S_1}, \\mathcal{G}_2)$",
+            "MATH_0007": "$X'_2 \\to X'_1$",
+            "REF_0002": "\\ref{equation-huge-1}",
+            "MATH_0008": "$\\nu$",
+            "STRUCT_0004": "\\item",
+            "MATH_0009": "$X'_2 \\to X'_1$",
+            "REF_0003": "\\ref{equation-huge-1}",
+            "MATH_0010": "$\\nu$",
+            "MATH_0011": "$$\n\\Hom_{\\mathcal{O}_{X_1}}(\\Omega_{X_1/S_1}, g_*\\mathcal{G}_2) =\n\\Hom_{\\mathcal{O}_{X_2}}(g^*\\Omega_{X_1/S_1}, \\mathcal{G}_2) =\n\\Ext^0_{\\mathcal{O}_{X_2}}(Lg^*\\NL_{X_1/S_1}, \\mathcal{G}_2).\n$$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:b5bd8f6db9f5b451eba12cb15b2f09e2f9002863cd36baf23eaeed0ea14b79ef",
+          "source_structure_hash": "sha256:91691b0fe4701fd7a17ecce58da9595435e06adde74c1615fdf4c67226f3dc01",
+          "source_math_hash": "sha256:8fcaede624300bb4858e5ef0c76994d65b58b611e9ebd082b821c8b8a0d25a1b"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 63401,
+          "byte_end": 65543,
+          "line_start": 1738,
+          "line_end": 1796,
+          "fragment_hash": "sha256:8f45adfc93ebbfb7c45bfc40734779e493fd51bc2513fe7508cf23e736672f37"
+        },
+        "owner_tag": "08U8",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:74e437ab0959c6aa59f31c4a03c788196af4b5aa11db4f650cfcb1b85420be1e"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08U6:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08U6:paragraph/0002",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "(where the vertical arrows are <MATH_0001>-maps)\nand moreover how unique the solution is (if it exists). More precisely,\nwe look for a first order thickening\n<MATH_0002>\nand a morphism of thickenings <MATH_0003> as in\n(<REF_0001>)\nwhere <MATH_0004> is identified with <MATH_0005>\nsuch that <MATH_0006> induces the given map <MATH_0007>.\nWe will say <MATH_0008> is a <TEXTITOPEN_0001>solution<TEXTITCLOSE_0001> to\n(<REF_0002>).",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "MATH_0001": "$f$",
+            "MATH_0002": "$i : (X, \\mathcal{O}_X) \\to (X', \\mathcal{O}_{X'})$",
+            "MATH_0003": "$(f, f')$",
+            "REF_0001": "\\ref{equation-morphism-thickenings}",
+            "MATH_0004": "$\\Ker(i^\\sharp)$",
+            "MATH_0005": "$\\mathcal{G}$",
+            "MATH_0006": "$(f')^\\sharp$",
+            "MATH_0007": "$c$",
+            "MATH_0008": "$X'$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "REF_0002": "\\ref{equation-to-solve-ringed-spaces}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:e27433e32e994553d9f0d54136779e2b72bb2a373f74797e73cf061e52ea0534",
+          "source_structure_hash": "sha256:9e7f7f55d3b25f7bae6d67592ada6047a098dfb0daacdd179c1dd6eac98bc6c8",
+          "source_math_hash": "sha256:e624e470e1fafdbe672ba15f93bca0baea764e163513039549896b6e1dc250df"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 62926,
+          "byte_end": 63399,
+          "line_start": 1727,
+          "line_end": 1736,
+          "fragment_hash": "sha256:c921c273b40c0da9d4d1ace57c007e4f884afa0db05bbdbe7ccdce154ec07dfe"
+        },
+        "owner_tag": "08U6",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:238f9a5d5243c93ae39554fe0a82da045c620689ebb6ba8b8e5f8932281da0a1"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08U8:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 2,
+          "unit_id": "inventory:defos:08U8:proof/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nThe naive cotangent complex <MATH_0001> is defined in Modules, Definition\n<REF_0001>.\nThe equalities in the last statement of the lemma follow from\nthe fact that <MATH_0002> is adjoint to <MATH_0003>, the fact that\n<MATH_0004> (by construction of the\nnaive cotangent complex) and the fact that <MATH_0005> is the left\nderived functor of <MATH_0006>. Thus we will work with the groups\n<MATH_0007>,\n<MATH_0008> in the rest of the proof. We first argue that we can reduce\nto the case where the underlying topological spaces of all ringed\nspaces in the lemma is the same.\n\n<STRUCT_0002><STRUCT_0003>\nTo do this, observe that <MATH_0009> is equal to the naive\ncotangent complex of the homomorphism of sheaves of rings\n<MATH_0010>, see\nModules, Lemma <REF_0002>.\nMoreover, the degree <MATH_0011> term of <MATH_0012> is a flat\n<MATH_0013>-module, hence the canonical map\n<MATH_0014>\ninduces an isomorphism on cohomology sheaves in degrees <MATH_0015> and <MATH_0016>.\nThus we may replace the Ext groups of the lemma with\n<MATH_0017>\nThe set of morphism of ringed spaces <MATH_0018> fitting into\n(<REF_0003>) compatibly with <MATH_0019>\nis in one-to-one bijection with\nthe set of homomorphisms of <MATH_0020>-algebras\n<MATH_0021> which are compatible with\n<MATH_0022> and <MATH_0023>. In this way we see that we may assume we have a\ndiagram (<REF_0004>) of sheaves on <MATH_0024> and we are looking to\nfind a homomorphism of sheaves of rings\n<MATH_0025> fitting into it.\n\n<STRUCT_0004><STRUCT_0005>\nIn the rest of the proof of the lemma we assume\nall underlying topological spaces are the\nsame, i.e., we have a diagram (<REF_0005>) of sheaves on\na space <MATH_0026> and we are looking for homomorphisms of sheaves of rings\n<MATH_0027> fitting into it.\nAs ext groups we will use\n<MATH_0028>, <MATH_0029>.\n\n<STRUCT_0006><STRUCT_0007>\nStep 1. Construction of the obstruction class. Consider the sheaf\nof sets\n<MATH_0030>\nThis comes with a surjective map <MATH_0031>\nand hence we can use <MATH_0032> instead of\n<MATH_0033>, see\nModules, Lemma <REF_0006>.\nSet\n<MATHSEG_0001>and<MATHSEG_0002>\nThere is a surjection <MATH_0034> whose kernel\nis <MATH_0035>.\nWe obtain two homomorphisms of <MATH_0036>-algebras\n<MATHSEG_0003>and<MATHSEG_0004>\nwhich induce maps <MATH_0037> and\n<MATH_0038>. Both <MATH_0039> and <MATH_0040>\nannihilate <MATH_0041>. Moreover <MATH_0042> and <MATH_0043> agree on\n<MATH_0044> as maps into <MATH_0045>\nbecause the left hand square of (<REF_0007>) is commutative.\nThus the difference\n<MATH_0046>\ninduces a well defined <MATH_0047>-linear map\n<MATH_0048>\nwhich sends the class of a local section <MATH_0049> of <MATH_0050> to\n<MATH_0051> where <MATH_0052> is a lift of <MATH_0053> to a local\nsection of <MATH_0054>. We let\n<MATH_0055>\nbe the image (see below).\n\n<STRUCT_0008><STRUCT_0009>\nStep 2. Vanishing of <MATH_0056> is necessary. Let us write\n<MATH_0057>.\nObserve that <MATH_0058>\nfits into a distinguished triangle\n<MATH_0059>\nThus we see that <MATH_0060> is zero if and only if <MATH_0061>\nis a composition <MATH_0062>\nfor some map <MATH_0063>. Suppose there exists a\nhomomorphisms of sheaves of rings\n<MATH_0064> fitting into\n(<REF_0008>). In this case consider the map\n<MATH_0065>,\n<MATH_0066>. A calculation\nshows this annihilates <MATH_0067>\nand induces a derivation <MATH_0068>.\nThe resulting linear map <MATH_0069> witnesses the\nfact that <MATH_0070> in this case.\n\n<STRUCT_0010><STRUCT_0011>\nStep 3. Vanishing of <MATH_0071> is sufficient. Let\n<MATH_0072> be a <MATH_0073>-linear map\nsuch that <MATH_0074> is equal to\n<MATH_0075>.\nThen a calculation shows that\n<MATH_0076>\nrestricted to <MATH_0077> agrees with\n<MATH_0078>. Since <MATH_0079>\nis the pushout of <MATH_0080>\nand <MATH_0081> the maps <MATH_0082>\nand <MATH_0083> define a map\n<MATH_0084> fitting into\n(<REF_0009>).\n\n<STRUCT_0012><STRUCT_0013>\nProof of (2) in the special case above. Omitted. Hint:\nThis is exactly the same as the proof of (2) of Lemma <REF_0010>.\n<STRUCT_0014>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\NL_{X_1/S_1}$",
+            "REF_0001": "\\ref{modules-definition-cotangent-complex-morphism-ringed-topoi}",
+            "MATH_0002": "$g^*$",
+            "MATH_0003": "$g_*$",
+            "MATH_0004": "$H^0(\\NL_{X_1/S_1}) = \\Omega_{X_1/S_1}$",
+            "MATH_0005": "$Lg^*$",
+            "MATH_0006": "$g^*$",
+            "MATH_0007": "$\\Ext^k_{\\mathcal{O}_{X_2}}(Lg^*\\NL_{X_1/S_1}, \\mathcal{G}_2)$",
+            "MATH_0008": "$k = 0, 1$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0009": "$g^{-1}\\NL_{X_1/S_1}$",
+            "MATH_0010": "$g^{-1}f_1^{-1}\\mathcal{O}_{S_1} \\to g^{-1}\\mathcal{O}_{X_1}$",
+            "REF_0002": "\\ref{modules-lemma-pullback-NL}",
+            "MATH_0011": "$0$",
+            "MATH_0012": "$\\NL_{X_1/S_1}$",
+            "MATH_0013": "$\\mathcal{O}_{X_1}$",
+            "MATH_0014": "$$\nLg^*\\NL_{X_1/S_1}\n\\longrightarrow\ng^{-1}\\NL_{X_1/S_1} \\otimes_{g^{-1}\\mathcal{O}_{X_1}} \\mathcal{O}_{X_2}\n$$",
+            "MATH_0015": "$0$",
+            "MATH_0016": "$-1$",
+            "MATH_0017": "$$\n\\Ext^k_{g^{-1}\\mathcal{O}_{X_1}}(g^{-1}\\NL_{X_1/S_1}, \\mathcal{G}_2) =\n\\Ext^k_{g^{-1}\\mathcal{O}_{X_1}}(\n\\NL_{g^{-1}\\mathcal{O}_{X_1}/g^{-1}f_1^{-1}\\mathcal{O}_{S_1}}, \\mathcal{G}_2)\n$$",
+            "MATH_0018": "$X'_2 \\to X'_1$",
+            "REF_0003": "\\ref{equation-huge-1}",
+            "MATH_0019": "$\\nu$",
+            "MATH_0020": "$g^{-1}f_1^{-1}\\mathcal{O}_{S'_1}$",
+            "MATH_0021": "$g^{-1}\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+            "MATH_0022": "$f^\\sharp$",
+            "MATH_0023": "$\\nu$",
+            "REF_0004": "\\ref{equation-huge-2}",
+            "MATH_0024": "$X$",
+            "MATH_0025": "$\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "REF_0005": "\\ref{equation-huge-2}",
+            "MATH_0026": "$X$",
+            "MATH_0027": "$\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+            "MATH_0028": "$\\Ext^k_{\\mathcal{O}_{X_1}}(\n\\NL_{\\mathcal{O}_{X_1}/\\mathcal{O}_{S_1}}, \\mathcal{G}_2)$",
+            "MATH_0029": "$k = 0, 1$",
+            "STRUCT_0006": "\\medskip",
+            "STRUCT_0007": "\\noindent",
+            "MATH_0030": "$$\n\\mathcal{E} = \\mathcal{O}_{X'_1} \\times_{\\mathcal{O}_{X_2}} \\mathcal{O}_{X'_2}\n$$",
+            "MATH_0031": "$\\alpha : \\mathcal{E} \\to \\mathcal{O}_{X_1}$",
+            "MATH_0032": "$\\NL(\\alpha)$",
+            "MATH_0033": "$\\NL_{\\mathcal{O}_{X_1}/\\mathcal{O}_{S_1}}$",
+            "REF_0006": "\\ref{modules-lemma-NL-up-to-qis}",
+            "MATHSEG_0001": "$$\n\\mathcal{I}' =\n\\Ker(\\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n\\quad\\text{",
+            "MATHSEG_0002": "}\\quad\n\\mathcal{I} =\n\\Ker(\\mathcal{O}_{S_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n$$",
+            "MATH_0034": "$\\mathcal{I}' \\to \\mathcal{I}$",
+            "MATH_0035": "$\\mathcal{J}_1\\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+            "MATH_0036": "$\\mathcal{O}_{S'_1}$",
+            "MATHSEG_0003": "$$\na : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_1}\n\\quad\\text{",
+            "MATHSEG_0004": "}\\quad\nb : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_2}\n$$",
+            "MATH_0037": "$a|_{\\mathcal{I}'} : \\mathcal{I}' \\to \\mathcal{G}_1$",
+            "MATH_0038": "$b|_{\\mathcal{I}'} : \\mathcal{I}' \\to \\mathcal{G}_2$",
+            "MATH_0039": "$a$",
+            "MATH_0040": "$b$",
+            "MATH_0041": "$(\\mathcal{I}')^2$",
+            "MATH_0042": "$a$",
+            "MATH_0043": "$b$",
+            "MATH_0044": "$\\mathcal{J}_1\\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+            "MATH_0045": "$\\mathcal{G}_2$",
+            "REF_0007": "\\ref{equation-huge-2}",
+            "MATH_0046": "$b|_{\\mathcal{I}'} - \\nu \\circ a|_{\\mathcal{I}'}$",
+            "MATH_0047": "$\\mathcal{O}_{X_1}$",
+            "MATH_0048": "$$\n\\xi : \\mathcal{I}/\\mathcal{I}^2 \\longrightarrow \\mathcal{G}_2\n$$",
+            "MATH_0049": "$f$",
+            "MATH_0050": "$\\mathcal{I}$",
+            "MATH_0051": "$\\nu(a(f')) - b(f')$",
+            "MATH_0052": "$f'$",
+            "MATH_0053": "$f$",
+            "MATH_0054": "$\\mathcal{I}'$",
+            "MATH_0055": "$[\\xi] \\in \\Ext^1_{\\mathcal{O}_{X_1}}(\\NL(\\alpha), \\mathcal{G}_2)$",
+            "STRUCT_0008": "\\medskip",
+            "STRUCT_0009": "\\noindent",
+            "MATH_0056": "$[\\xi]$",
+            "MATH_0057": "$\\Omega = \\Omega_{\\mathcal{O}_{S_1}[\\mathcal{E}]/\\mathcal{O}_{S_1}}\n\\otimes_{\\mathcal{O}_{S_1}[\\mathcal{E}]} \\mathcal{O}_{X_1}$",
+            "MATH_0058": "$\\NL(\\alpha) = (\\mathcal{I}/\\mathcal{I}^2 \\to \\Omega)$",
+            "MATH_0059": "$$\n\\Omega[0] \\to\n\\NL(\\alpha) \\to\n\\mathcal{I}/\\mathcal{I}^2[1] \\to\n\\Omega[1]\n$$",
+            "MATH_0060": "$[\\xi]$",
+            "MATH_0061": "$\\xi$",
+            "MATH_0062": "$\\mathcal{I}/\\mathcal{I}^2 \\to \\Omega \\to \\mathcal{G}_2$",
+            "MATH_0063": "$\\Omega \\to \\mathcal{G}_2$",
+            "MATH_0064": "$\\varphi : \\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+            "REF_0008": "\\ref{equation-huge-2}",
+            "MATH_0065": "$\\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{G}_2$",
+            "MATH_0066": "$f' \\mapsto b(f') - \\varphi(a(f'))$",
+            "MATH_0067": "$\\mathcal{J}_1\\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+            "MATH_0068": "$\\mathcal{O}_{S_1}[\\mathcal{E}] \\to \\mathcal{G}_2$",
+            "MATH_0069": "$\\Omega \\to \\mathcal{G}_2$",
+            "MATH_0070": "$[\\xi] = 0$",
+            "STRUCT_0010": "\\medskip",
+            "STRUCT_0011": "\\noindent",
+            "MATH_0071": "$[\\xi]$",
+            "MATH_0072": "$\\theta : \\Omega \\to \\mathcal{G}_2$",
+            "MATH_0073": "$\\mathcal{O}_{X_1}$",
+            "MATH_0074": "$\\xi$",
+            "MATH_0075": "$\\theta \\circ (\\mathcal{I}/\\mathcal{I}^2 \\to \\Omega)$",
+            "MATH_0076": "$$\nb + \\theta \\circ d : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_2}\n$$",
+            "MATH_0077": "$\\mathcal{I}'$",
+            "MATH_0078": "$\\nu \\circ a : \\mathcal{I}' \\to \\mathcal{G}_2$",
+            "MATH_0079": "$\\mathcal{O}_{X'_1}$",
+            "MATH_0080": "$\\mathcal{I}' \\to \\mathcal{O}_{S'_1}[\\mathcal{E}]$",
+            "MATH_0081": "$\\mathcal{I}' \\to \\mathcal{G}_1$",
+            "MATH_0082": "$b + \\theta \\circ d$",
+            "MATH_0083": "$a$",
+            "MATH_0084": "$\\mathcal{O}_{X'_1} \\to \\mathcal{O}_{X'_2}$",
+            "REF_0009": "\\ref{equation-huge-2}",
+            "STRUCT_0012": "\\medskip",
+            "STRUCT_0013": "\\noindent",
+            "REF_0010": "\\ref{lemma-huge-diagram}",
+            "STRUCT_0014": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "math_text_regions": [
+            {
+              "region_id": "math/0001",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\n\\mathcal{I}' =\n\\Ker(\\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n\\quad\\text{and}\\quad\n\\mathcal{I} =\n\\Ker(\\mathcal{O}_{S_1}[\\mathcal{E}] \\to \\mathcal{O}_{X_1})\n$$",
+              "source_hash": "sha256:61268c051cf9efc24819b12691824bb1c7c206ced90e46966404ae365e30b321",
+              "source_byte_span": {
+                "start": 2864,
+                "end": 3038
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0001"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0001/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0002"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0001/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 89,
+                    "end": 92
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0001",
+                    "MATHSEG_0002"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "region_id": "math/0002",
+              "delimiter_kind": "display-dollar",
+              "source": "$$\na : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_1}\n\\quad\\text{and}\\quad\nb : \\mathcal{O}_{S'_1}[\\mathcal{E}] \\to \\mathcal{O}_{X'_2}\n$$",
+              "source_hash": "sha256:58a919c29bf906f197e6d6b3106e7fb34c6bbc57e3a1dee64415245d1e88e613",
+              "source_byte_span": {
+                "start": 3217,
+                "end": 3361
+              },
+              "pieces": [
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0003"
+                },
+                {
+                  "kind": "text",
+                  "slot_id": "math/0002/text/0001"
+                },
+                {
+                  "kind": "locked",
+                  "placeholder": "MATHSEG_0004"
+                }
+              ],
+              "slots": [
+                {
+                  "slot_id": "math/0002/text/0001",
+                  "source": "and",
+                  "command": "text",
+                  "policy_entry": "connective-and",
+                  "slot_byte_span": {
+                    "start": 73,
+                    "end": 76
+                  },
+                  "boundary_placeholders": [
+                    "MATHSEG_0003",
+                    "MATHSEG_0004"
+                  ],
+                  "classification_witness": {
+                    "usage": "quad-connector",
+                    "usage_source": {
+                      "before": "\\quad",
+                      "after": "\\quad",
+                      "environments": []
+                    },
+                    "source_label": "categories-section-inertia",
+                    "policy_hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897",
+                    "anchor": {
+                      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                      "file": "categories.tex",
+                      "owner_tag": "04Z2",
+                      "owner_label": "categories-section-inertia",
+                      "kind": "section",
+                      "ordinal": 1,
+                      "matches": [
+                        {
+                          "container_byte_span": {
+                            "start": 242149,
+                            "end": 242359
+                          },
+                          "container_hash": "sha256:5e5c65214fc77b4f09f86b1bce6c25714697de4be2e8e78c1a2637d6f027befe",
+                          "command_byte_span": {
+                            "start": 242277,
+                            "end": 242287
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 242659,
+                            "end": 242847
+                          },
+                          "container_hash": "sha256:c56690e42ba08b833426b2187a56e6527ac6172fb9b61653b212c3400b48a67f",
+                          "command_byte_span": {
+                            "start": 242773,
+                            "end": 242783
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        },
+                        {
+                          "container_byte_span": {
+                            "start": 243199,
+                            "end": 243453
+                          },
+                          "container_hash": "sha256:22bd2849d377c2382ec7d8e17d3577c7f8754022db5b490d58106c1c7300a2de",
+                          "command_byte_span": {
+                            "start": 243351,
+                            "end": 243361
+                          },
+                          "command_hash": "sha256:fd3d664c90c8644f5970c6b1608b04e5cf1fc7984e8c9b92c1131eba0cfd124a"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "source_math_skeleton_hash": "sha256:37b00c50af40baeb3980c9478c6358cea44abdd477d9d0932daeb47cc2d299f1",
+          "source_text_hash": "sha256:0b4a2b554d31192308679fbb10c56e996b31f05d3cc58703222d6db7a30aa390",
+          "source_structure_hash": "sha256:42de305bb3dce919fc66e54e02955143a3ab514c4aac6180aa1d8f466637621c",
+          "source_math_hash": "sha256:daeaf9ab462895891877ba1b43c654f1284334243c02b7f52d34cd2860ad62b4"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 65545,
+          "byte_end": 71647,
+          "line_start": 1798,
+          "line_end": 1938,
+          "fragment_hash": "sha256:6787be5c09ecfb7266c91f797e6b554537a52ca9c458da4f4a70435e0fbd12f5"
+        },
+        "owner_tag": "08U8",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:006842566ba59338cb6261420aea33a723016b8ef14e2c8eaeaa3265b755533d"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08UB:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08UB:lemma/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a topological space. Let <MATH_0002> be a\nhomomorphism of sheaves of rings. Let <MATH_0003> be a <MATH_0004>-module.\nLet\n<MATH_0005>. \nThere exists a map of sheaves of sets <MATH_0006>\nsuch that <MATH_0007>\nis the class of a map <MATH_0008>\n(see proof for notation).\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-NL-represent-ext-class}",
+            "MATH_0001": "$X$",
+            "MATH_0002": "$\\mathcal{A} \\to \\mathcal{B}$",
+            "MATH_0003": "$\\mathcal{G}$",
+            "MATH_0004": "$\\mathcal{B}$",
+            "MATH_0005": "$\\xi \\in \\Ext^1_\\mathcal{B}(\\NL_{\\mathcal{B}/\\mathcal{A}}, \\mathcal{G})$",
+            "MATH_0006": "$\\alpha : \\mathcal{E} \\to \\mathcal{B}$",
+            "MATH_0007": "$\\xi \\in \\Ext^1_\\mathcal{B}(\\NL(\\alpha), \\mathcal{G})$",
+            "MATH_0008": "$\\mathcal{I}/\\mathcal{I}^2 \\to \\mathcal{G}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:0b8f37bfac82371369734da13e227ad50c49f060ef127c8dce5d200a8a30732d",
+          "source_structure_hash": "sha256:728cd1e189345c21097c119a16d4b55c32d8c06df29463b1b36bc32e2c34e929",
+          "source_math_hash": "sha256:c3042e8d650573ee440146595048e77fa3a675e16d5e7185b090e49c7894ff73"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 71649,
+          "byte_end": 72174,
+          "line_start": 1940,
+          "line_end": 1950,
+          "fragment_hash": "sha256:ea9455fc07f92830934fa2c964449eeadc03a174aee02e0ac601c2d8619dd462"
+        },
+        "owner_tag": "08UB",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:6ec335ad6bd590ee15a429ec6a13c377fe5f04dd170a11e52124e2162be905ca"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08UB:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08UB:proof/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nRecall that given <MATH_0001>\nsuch that <MATH_0002> is surjective\nwith kernel <MATH_0003> the complex\n<MATH_0004> is canonically\nisomorphic to <MATH_0005>, see\nModules, Lemma <REF_0001>.\nObserve moreover, that\n<MATH_0006> is the sheaf\nassociated to the presheaf\n<MATH_0007>.\nIn other words, <MATH_0008> is the free <MATH_0009>-module on the\nsheaf of sets <MATH_0010> and in particular there is a canonical\nmap <MATH_0011>.\n\n<STRUCT_0002><STRUCT_0003>\nHaving said this, pick some <MATH_0012> (for example\n<MATH_0013> as in the definition of the naive cotangent\ncomplex). The obstruction to writing <MATH_0014> as the class of a map\n<MATH_0015> is an element in\n<MATH_0016>. Say this is represented\nby the extension <MATH_0017>\nof <MATH_0018>-modules. Consider the sheaf of sets\n<MATH_0019>\nwhich comes with an induced map <MATH_0020>.\nLet <MATH_0021>\nand <MATH_0022>.\nThe pullback of <MATH_0023> under the quasi-isomorphism\n<MATH_0024> maps to zero in\n<MATH_0025>\nbecause the pullback of the extension <MATH_0026>\nby the map <MATH_0027> is split as <MATH_0028> is the free\n<MATH_0029>-module on the sheaf of sets <MATH_0030> and since\nby construction there is a commutative diagram\n<MATH_0031>\nThis finishes the proof.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\alpha : \\mathcal{E} \\to \\mathcal{B}$",
+            "MATH_0002": "$\\mathcal{A}[\\mathcal{E}] \\to \\mathcal{B}$",
+            "MATH_0003": "$\\mathcal{I}$",
+            "MATH_0004": "$\\NL(\\alpha) = (\\mathcal{I}/\\mathcal{I}^2 \\to \n\\Omega_{\\mathcal{A}[\\mathcal{E}]/\\mathcal{A}}\n\\otimes_{\\mathcal{A}[\\mathcal{E}]} \\mathcal{B})$",
+            "MATH_0005": "$\\NL_{\\mathcal{B}/\\mathcal{A}}$",
+            "REF_0001": "\\ref{modules-lemma-NL-up-to-qis}",
+            "MATH_0006": "$\\Omega = \\Omega_{\\mathcal{A}[\\mathcal{E}]/\\mathcal{A}}\n\\otimes_{\\mathcal{A}[\\mathcal{E}]} \\mathcal{B}$",
+            "MATH_0007": "$U \\mapsto \\bigoplus_{e \\in \\mathcal{E}(U)} \\mathcal{B}(U)$",
+            "MATH_0008": "$\\Omega$",
+            "MATH_0009": "$\\mathcal{B}$",
+            "MATH_0010": "$\\mathcal{E}$",
+            "MATH_0011": "$\\mathcal{E} \\to \\Omega$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0012": "$\\mathcal{E}$",
+            "MATH_0013": "$\\mathcal{E} = \\mathcal{B}$",
+            "MATH_0014": "$\\xi$",
+            "MATH_0015": "$\\mathcal{I}/\\mathcal{I}^2 \\to \\mathcal{G}$",
+            "MATH_0016": "$\\Ext^1_\\mathcal{B}(\\Omega, \\mathcal{G})$",
+            "MATH_0017": "$0 \\to \\mathcal{G} \\to \\mathcal{H} \\to \\Omega \\to 0$",
+            "MATH_0018": "$\\mathcal{B}$",
+            "MATH_0019": "$\\mathcal{E}' = \\mathcal{E} \\times_\\Omega \\mathcal{H}$",
+            "MATH_0020": "$\\alpha' : \\mathcal{E}' \\to \\mathcal{B}$",
+            "MATH_0021": "$\\mathcal{I}' = \\Ker(\\mathcal{A}[\\mathcal{E}'] \\to \\mathcal{B})$",
+            "MATH_0022": "$\\Omega' = \\Omega_{\\mathcal{A}[\\mathcal{E}']/\\mathcal{A}}\n\\otimes_{\\mathcal{A}[\\mathcal{E}']} \\mathcal{B}$",
+            "MATH_0023": "$\\xi$",
+            "MATH_0024": "$\\NL(\\alpha') \\to \\NL(\\alpha)$",
+            "MATH_0025": "$\\Ext^1_\\mathcal{B}(\\Omega', \\mathcal{G})$",
+            "MATH_0026": "$\\mathcal{H}$",
+            "MATH_0027": "$\\Omega' \\to \\Omega$",
+            "MATH_0028": "$\\Omega'$",
+            "MATH_0029": "$\\mathcal{B}$",
+            "MATH_0030": "$\\mathcal{E}'$",
+            "MATH_0031": "$$\n\\xymatrix{\n\\mathcal{E}' \\ar[r] \\ar[d] & \\mathcal{E} \\ar[d] \\\\\n\\mathcal{H} \\ar[r] & \\Omega\n}\n$$",
+            "STRUCT_0004": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:c35bb08fc2b6be1e150c67df87de6f96ca22d2adcef1d5714dac5e09c656a106",
+          "source_structure_hash": "sha256:b1b431c5f96a75e631d2bb9f5df2509f68855b87872c163d8aacd278ec5c7d62",
+          "source_math_hash": "sha256:15af02df3f67789cdcdaa7bcb5f4f54765b251b7cb80860d53e66d528b2b6059"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 72176,
+          "byte_end": 74277,
+          "line_start": 1952,
+          "line_end": 1997,
+          "fragment_hash": "sha256:df8ba3e524e44fa98660eed8d99b534d85786c0ee5e2fa9a759629c88f0b4206"
+        },
+        "owner_tag": "08UB",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:56473d0c64a10999ef32bc41b9bf7dbd5a3a6b6b32564984acb66e00f618efc6"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08UC:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08UC:lemma/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIf there exists a solution to (<REF_0001>),\nthen the set of isomorphism classes of solutions is principal homogeneous\nunder <MATH_0001>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-choices-ringed-spaces}",
+            "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+            "MATH_0001": "$\\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:0cedf1db101ad79413c8303fa7d0f448eee115118ba0b3d234d5cc542cd40775",
+          "source_structure_hash": "sha256:b8007b3e453b138d0d29bf0befc84bb17a52703e90bd68ab0640625d7fd93922",
+          "source_math_hash": "sha256:791e65679ca9a43360c54d5af2d2673d94529bcdaffaf589373a18a016870d15"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 74279,
+          "byte_end": 74541,
+          "line_start": 1999,
+          "line_end": 2004,
+          "fragment_hash": "sha256:5e69928ab7d5241a5529f9cc2eb51cd58ae0f4f05b326c927484f015c368d5c6"
+        },
+        "owner_tag": "08UC",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:5c0bb4fc8e305c5d365125a81f11d6166cdcbdb902538ff01e2b9a0e9fe59c6d"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:08UC:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08UC:proof/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nWe observe right away that given two solutions <MATH_0001> and <MATH_0002>\nto (<REF_0001>) we obtain by\nLemma <REF_0002> an obstruction element\n<MATH_0003>\nto the existence of a map <MATH_0004>. Clearly, this element\nis the obstruction to the existence of an isomorphism, hence separates\nthe isomorphism classes. To finish the proof it therefore suffices to\nshow that given a solution <MATH_0005> and an element\n<MATH_0006>\nwe can find a second solution <MATH_0007> such that\n<MATH_0008>.\n\n<STRUCT_0002><STRUCT_0003>\nPick <MATH_0009> as in\nLemma <REF_0003>\nfor the class <MATH_0010>. Consider the surjection\n<MATH_0011>\nwith kernel <MATH_0012> and corresponding naive cotangent complex\n<MATH_0013>.\nBy the lemma <MATH_0014> is the class of a morphism\n<MATH_0015>.\nAfter replacing <MATH_0016> by\n<MATH_0017> we may also assume\nthat <MATH_0018> factors through a map\n<MATH_0019>.\n\n<STRUCT_0004><STRUCT_0005>\nThese choices determine an <MATH_0020>-algebra map\n<MATH_0021>. Let\n<MATH_0022>.\nObserve that <MATH_0023> induces a map\n<MATH_0024>\nand that <MATH_0025> is the pushout, as in the following\ndiagram\n<MATH_0026>\nLet <MATH_0027> be the sum of the map\n<MATH_0028> and the composition\n<MATH_0029>\nThen the pushout along <MATH_0030> is an other ring extension\n<MATH_0031> fitting into a diagram as above.\nA calculation (omitted) shows that <MATH_0032> as desired.\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$X'_1$",
+            "MATH_0002": "$X'_2$",
+            "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+            "REF_0002": "\\ref{lemma-huge-diagram-ringed-spaces}",
+            "MATH_0003": "$o(X'_1, X'_2) \\in \\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+            "MATH_0004": "$X'_1 \\to X'_2$",
+            "MATH_0005": "$X'$",
+            "MATH_0006": "$\\xi \\in \\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+            "MATH_0007": "$X'_\\xi$",
+            "MATH_0008": "$o(X', X'_\\xi) = \\xi$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0009": "$\\alpha : \\mathcal{E} \\to \\mathcal{O}_X$",
+            "REF_0003": "\\ref{lemma-NL-represent-ext-class}",
+            "MATH_0010": "$\\xi$",
+            "MATH_0011": "$f^{-1}\\mathcal{O}_S[\\mathcal{E}] \\to \\mathcal{O}_X$",
+            "MATH_0012": "$\\mathcal{I}$",
+            "MATH_0013": "$\\NL(\\alpha) = (\\mathcal{I}/\\mathcal{I}^2 \\to\n\\Omega_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]/f^{-1}\\mathcal{O}_S}\n\\otimes_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]} \\mathcal{O}_X)$",
+            "MATH_0014": "$\\xi$",
+            "MATH_0015": "$\\delta : \\mathcal{I}/\\mathcal{I}^2 \\to \\mathcal{G}$",
+            "MATH_0016": "$\\mathcal{E}$",
+            "MATH_0017": "$\\mathcal{E} \\times_{\\mathcal{O}_X} \\mathcal{O}_{X'}$",
+            "MATH_0018": "$\\alpha$",
+            "MATH_0019": "$\\alpha' : \\mathcal{E} \\to \\mathcal{O}_{X'}$",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "MATH_0020": "$f^{-1}\\mathcal{O}_{S'}$",
+            "MATH_0021": "$\\varphi : f^{-1}\\mathcal{O}_{S'}[\\mathcal{E}] \\to \\mathcal{O}_{X'}$",
+            "MATH_0022": "$\\mathcal{I}' = \\Ker(f^{-1}\\mathcal{O}_{S'}[\\mathcal{E}] \\to \\mathcal{O}_X)$",
+            "MATH_0023": "$\\varphi$",
+            "MATH_0024": "$\\varphi|_{\\mathcal{I}'} : \\mathcal{I}' \\to \\mathcal{G}$",
+            "MATH_0025": "$\\mathcal{O}_{X'}$",
+            "MATH_0026": "$$\n\\xymatrix{\n0 \\ar[r] & \\mathcal{G} \\ar[r] & \\mathcal{O}_{X'} \\ar[r] &\n\\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] & \\mathcal{I}' \\ar[u]^{\\varphi|_{\\mathcal{I}'}} \\ar[r] &\nf^{-1}\\mathcal{O}_{S'}[\\mathcal{E}] \\ar[u] \\ar[r] &\n\\mathcal{O}_X \\ar[u]_{=} \\ar[r] & 0\n}\n$$",
+            "MATH_0027": "$\\psi : \\mathcal{I}' \\to \\mathcal{G}$",
+            "MATH_0028": "$\\varphi|_{\\mathcal{I}'}$",
+            "MATH_0029": "$$\n\\mathcal{I}' \\to \\mathcal{I}'/(\\mathcal{I}')^2 \\to\n\\mathcal{I}/\\mathcal{I}^2 \\xrightarrow{\\delta} \\mathcal{G}.\n$$",
+            "MATH_0030": "$\\psi$",
+            "MATH_0031": "$\\mathcal{O}_{X'_\\xi}$",
+            "MATH_0032": "$o(X', X'_\\xi) = \\xi$",
+            "STRUCT_0006": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:5cbf0f8fa0e3240ad09bbbcd6849386a5ca37e6f3391bd8d3e29f74a0c69f4f5",
+          "source_structure_hash": "sha256:83e9b24b7591019500537e5c6944b3d36af0eb931595cfb2cc4b724c4fee5f89",
+          "source_math_hash": "sha256:b2c0e5e8b30b4e6584f7308b5afe100f89aef29677a15d0b9332a6cfe4dc08fa"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 74543,
+          "byte_end": 77009,
+          "line_start": 2006,
+          "line_end": 2061,
+          "fragment_hash": "sha256:6f5e4002cbd9223c68f5f5033e07b6ad9ded38220051d0d5b0920f5a31a14c77"
+        },
+        "owner_tag": "08UC",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:8e3c3597c8ef4808c8933454d6c5e9724cf670b27d2af9da31ec3caa43415634"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0GPZ:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0GPZ:lemma/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a morphism of\nringed spaces. Let <MATH_0002> be a <MATH_0003>-module.\nThe set of isomorphism classes of extensions of\n<MATH_0004>-algebras\n<MATH_0005>\nwhere <MATH_0006> is an ideal of square zero<FOOTNOTEOPEN_0001>In other words,\nthe set of isomorphism classes of first order thickenings\n<MATH_0007> over <MATH_0008> endowed with an isomorphism\n<MATH_0009> of <MATH_0010>-modules.<FOOTNOTECLOSE_0001> \nis canonically bijective to\n<MATH_0011>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-extensions-of-relative-ringed-spaces}",
+            "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+            "MATH_0002": "$\\mathcal{G}$",
+            "MATH_0003": "$\\mathcal{O}_X$",
+            "MATH_0004": "$f^{-1}\\mathcal{O}_S$",
+            "MATH_0005": "$$\n0 \\to \\mathcal{G} \\to \\mathcal{O}_{X'} \\to \\mathcal{O}_X \\to 0\n$$",
+            "MATH_0006": "$\\mathcal{G}$",
+            "FOOTNOTEOPEN_0001": "\\footnote{",
+            "MATH_0007": "$i : X \\to X'$",
+            "MATH_0008": "$S$",
+            "MATH_0009": "$\\mathcal{G} \\to \\Ker(i^\\sharp)$",
+            "MATH_0010": "$\\mathcal{O}_X$",
+            "FOOTNOTECLOSE_0001": "}",
+            "MATH_0011": "$\\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:283a5461de8556f170f8c6723da250d4e45088df7516d8e4de3520c7e4392a1a",
+          "source_structure_hash": "sha256:bc06e1a4dcd16d269183cf9eaa4dcf1555e11f11ae6a73504bd9e07df4c7d219",
+          "source_math_hash": "sha256:ede9495dac98c13ecddbb2962aae31ebc304920cf7a98e8a0e33d90f9a82c8d1"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 77011,
+          "byte_end": 77689,
+          "line_start": 2063,
+          "line_end": 2078,
+          "fragment_hash": "sha256:66c316c4166975316116caeb33e358fa2c9ed47aa2105f9c6e22df6c6b6c4b0f"
+        },
+        "owner_tag": "0GPZ",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:86299f6eb113b02be749299de77da8a35231ae1a488b39e4999cd508f3d533c8"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0GPZ:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0GPZ:proof/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nTo prove this we apply the previous results to the case where\n(<REF_0001>) is given by the diagram\n<MATH_0001>\nThus our lemma follows from Lemma <REF_0002>\nand the fact that there exists a solution, namely\n<MATH_0002>.\n(See remark below for a direct construction of the bijection.)\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "REF_0001": "\\ref{equation-to-solve-ringed-spaces}",
+            "MATH_0001": "$$\n\\xymatrix{\n0 \\ar[r] &\n\\mathcal{G} \\ar[r] &\n{?} \\ar[r] &\n\\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] &\n0 \\ar[u] \\ar[r] &\n\\mathcal{O}_S \\ar[u] \\ar[r]^{\\text{id}} &\n\\mathcal{O}_S \\ar[u] \\ar[r] & 0\n}\n$$",
+            "REF_0002": "\\ref{lemma-choices-ringed-spaces}",
+            "MATH_0002": "$\\mathcal{G} \\oplus \\mathcal{O}_X$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:e3a356f888875c22998798e09a1dd87085c775ada000d91ed5f423ef1cd3d228",
+          "source_structure_hash": "sha256:a5439c45e5e7f7c7621ec9878c47f3a89ea8dac48172ed59721be4664cb819ed",
+          "source_math_hash": "sha256:a702d0b80f8a4626e0c6f8f7e3bf6bbed7fb49148b6e5ae4569b37e0c8ccd70c"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 77691,
+          "byte_end": 78254,
+          "line_start": 2080,
+          "line_end": 2099,
+          "fragment_hash": "sha256:2b4941b22dfb1eade1d5f826bfbda2f9ff6de6b7f7aab6030a9de42abe66c1f1"
+        },
+        "owner_tag": "0GPZ",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:ceae2af00d12fab81cbbc3b134a82ba07679ef6da032ef623c8e5b18cf97df9a"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0GQ0:remark/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0GQ0:remark/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "remark",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and <MATH_0002>\nbe as in Lemma <REF_0001>.\nConsider an extension\n<MATH_0003>\nas in the lemma. We can choose a sheaf of sets <MATH_0004>\nand a commutative diagram\n<MATH_0005>\nsuch that <MATH_0006>\nis surjective with kernel <MATH_0007>.\n(For example you can take any sheaf of sets surjecting\nonto <MATH_0008>.) Then\n<MATH_0009>\nSee Modules, Section <REF_0002> and in particular\nLemma <REF_0003>. Of course <MATH_0010> determines a map\n<MATH_0011>\nwhich in turn determines a map\n<MATH_0012>\nwhich in turn determines the element of\n<MATH_0013>\ncorresponding to <MATH_0014> by the bijection of the lemma.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{remark}",
+            "LOCKED_0001": "\\label{remark-extensions-of-relative-ringed-spaces}",
+            "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+            "MATH_0002": "$\\mathcal{G}$",
+            "REF_0001": "\\ref{lemma-extensions-of-relative-ringed-spaces}",
+            "MATH_0003": "$0 \\to \\mathcal{G} \\to \\mathcal{O}_{X'} \\to \\mathcal{O}_X \\to 0$",
+            "MATH_0004": "$\\mathcal{E}$",
+            "MATH_0005": "$$\n\\xymatrix{\n\\mathcal{E} \\ar[d]_{\\alpha'} \\ar[rd]^\\alpha \\\\\n\\mathcal{O}_{X'} \\ar[r] & \\mathcal{O}_X\n}\n$$",
+            "MATH_0006": "$f^{-1}\\mathcal{O}_S[\\mathcal{E}] \\to \\mathcal{O}_X$",
+            "MATH_0007": "$\\mathcal{J}$",
+            "MATH_0008": "$\\mathcal{O}_{X'}$",
+            "MATH_0009": "$$\n\\NL_{X/S} \\cong \\NL(\\alpha) = \n\\left(\n\\mathcal{J}/\\mathcal{J}^2\n\\longrightarrow\n\\Omega_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]/f^{-1}\\mathcal{O}_S}\n\\otimes_{f^{-1}\\mathcal{O}_S[\\mathcal{E}]} \\mathcal{O}_X\\right)\n$$",
+            "REF_0002": "\\ref{modules-section-netherlander}",
+            "REF_0003": "\\ref{modules-lemma-NL-up-to-qis}",
+            "MATH_0010": "$\\alpha'$",
+            "MATH_0011": "$f^{-1}\\mathcal{O}_S[\\mathcal{E}] \\to \\mathcal{O}_{X'}$",
+            "MATH_0012": "$$\n\\mathcal{J}/\\mathcal{J}^2 \\longrightarrow \\mathcal{G}\n$$",
+            "MATH_0013": "$\\Ext^1_{\\mathcal{O}_X}(\\NL(\\alpha), \\mathcal{G}) =\n\\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{G})$",
+            "MATH_0014": "$\\mathcal{O}_{X'}$",
+            "STRUCT_0002": "\\end{remark}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:4f3e1888d49e27ac2d8f6eba8bf2fe681f3126afb5921a34de7bdeb9f77ad7de",
+          "source_structure_hash": "sha256:5b1971aee2b1950e496cf0c9e228a40c266735ee3939f789b2bc9b70488d5bd5",
+          "source_math_hash": "sha256:8642beecc3fc5d32a356947674914cb677accce598d1e638e8b54942ede79cfa"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 78256,
+          "byte_end": 79657,
+          "line_start": 2101,
+          "line_end": 2138,
+          "fragment_hash": "sha256:e6cf96866971addc2d5bafc0d54988b500449750cef29056c2b9d25c8050a07d"
+        },
+        "owner_tag": "0GQ0",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:84a8a56f9188b49a7ef17cce75e7cca0a540e707495f763abe34a53916b79d65"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0GQ1:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0GQ1:lemma/0001",
+          "parent_tag": "08U6",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> and\n<MATH_0002> be morphisms\nof ringed spaces. Let <MATH_0003> be a <MATH_0004>-module.\nLet <MATH_0005> be a <MATH_0006>-module. Let\n<MATH_0007> be a <MATH_0008>-map. Finally, consider\n<STRUCT_0002>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0009>\nan extension of <MATH_0010>-algebras\ncorresponding to <MATH_0011>, and\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0012>\nan extension of <MATH_0013>-algebras\ncorresponding to <MATH_0014>.\n<STRUCT_0003>\nSee Lemma <REF_0001>.\nThen there is an <MATH_0015>-morphism <MATH_0016>\ncompatible with <MATH_0017> and <MATH_0018> if and only if <MATH_0019> and <MATH_0020>\nmap to the same element of\n<MATH_0021>.\n<STRUCT_0004>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-extensions-of-relative-ringed-spaces-functorial}",
+            "MATH_0001": "$f : (X, \\mathcal{O}_X) \\to (S, \\mathcal{O}_S)$",
+            "MATH_0002": "$g : (Y, \\mathcal{O}_Y) \\to (X, \\mathcal{O}_X)$",
+            "MATH_0003": "$\\mathcal{F}$",
+            "MATH_0004": "$\\mathcal{O}_X$",
+            "MATH_0005": "$\\mathcal{G}$",
+            "MATH_0006": "$\\mathcal{O}_Y$",
+            "MATH_0007": "$c : \\mathcal{F} \\to \\mathcal{G}$",
+            "MATH_0008": "$g$",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "ITEMOPEN_0001": "\\item[",
+            "ITEMCLOSE_0001": "]",
+            "MATH_0009": "$0 \\to \\mathcal{F} \\to \\mathcal{O}_{X'} \\to \\mathcal{O}_X \\to 0$",
+            "MATH_0010": "$f^{-1}\\mathcal{O}_S$",
+            "MATH_0011": "$\\xi \\in \\Ext^1_{\\mathcal{O}_X}(\\NL_{X/S}, \\mathcal{F})$",
+            "ITEMOPEN_0002": "\\item[",
+            "ITEMCLOSE_0002": "]",
+            "MATH_0012": "$0 \\to \\mathcal{G} \\to \\mathcal{O}_{Y'} \\to \\mathcal{O}_Y \\to 0$",
+            "MATH_0013": "$g^{-1}f^{-1}\\mathcal{O}_S$",
+            "MATH_0014": "$\\zeta \\in \\Ext^1_{\\mathcal{O}_Y}(\\NL_{Y/S}, \\mathcal{G})$",
+            "STRUCT_0003": "\\end{enumerate}",
+            "REF_0001": "\\ref{lemma-extensions-of-relative-ringed-spaces}",
+            "MATH_0015": "$S$",
+            "MATH_0016": "$g' : Y' \\to X'$",
+            "MATH_0017": "$g$",
+            "MATH_0018": "$c$",
+            "MATH_0019": "$\\xi$",
+            "MATH_0020": "$\\zeta$",
+            "MATH_0021": "$\\Ext^1_{\\mathcal{O}_Y}(Lg^*\\NL_{X/S}, \\mathcal{G})$",
+            "STRUCT_0004": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:b5e0efa1dce13ac20c5bc1b5401a4663e163879d43308abe83d1c0c386b2f9ad",
+          "source_structure_hash": "sha256:7def83d9ad83420a7cb994ddee48be2828e5642c8f19549adfd8ef9b02dcb3dc",
+          "source_math_hash": "sha256:3ae7a143597d13123b770a1e7cddf8ab71fa6943a395c7d8fb7b81acca73d66b"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 79659,
+          "byte_end": 80736,
+          "line_start": 2140,
+          "line_end": 2160,
+          "fragment_hash": "sha256:6a2c88940b1b1ea7d4d13e56e78e3c0f301a1a5ae95a3e68991eb7446eb3d79f"
+        },
+        "owner_tag": "0GQ1",
+        "parent_tag": "08U6"
+      },
+      "hash": "sha256:91ff11cbbea2a106913df1c9bb64a59766d1ce8c576744abc83c3fa5953ce76a"
+    },
+    {
+      "context_id": "locked-English-reference:defos:inventory:defos:08KZ:situation/0001:defos-equation-morphism-thickenings",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08KZ:situation/0001",
+          "parent_tag": "08KY",
+          "chapter": "defos",
+          "node_kind": "situation",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nA morphism of thickenings <MATH_0001> is given by a commutative diagram\n<MATH_0002>\nof ringed spaces whose horizontal arrows are thickenings. In this\nsituation we set\n<MATH_0003> and\n<MATH_0004>.\nAs <MATH_0005> on underlying topological spaces we will identify\nthe (topological) pullback functors <MATH_0006> and <MATH_0007>.\nObserve that <MATH_0008>\ninduces in particular a map <MATH_0009>\nand therefore a map of <MATH_0010>-modules\n<MATH_0011>\nIf <MATH_0012> and <MATH_0013> are first order thickenings, then\n<MATH_0014> and the map above becomes a\nmap <MATH_0015>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{situation}",
+            "LOCKED_0001": "\\label{situation-morphism-thickenings}",
+            "MATH_0001": "$(f, f')$",
+            "MATH_0002": "\\begin{equation}\n\\label{equation-morphism-thickenings}\n\\vcenter{\n\\xymatrix{\n(X, \\mathcal{O}_X) \\ar[r]_i \\ar[d]_f & (X', \\mathcal{O}_{X'}) \\ar[d]^{f'} \\\\\n(S, \\mathcal{O}_S) \\ar[r]^t & (S', \\mathcal{O}_{S'})\n}\n}\n\\end{equation}",
+            "MATH_0003": "$\\mathcal{I} = \\Ker(i^\\sharp) \\subset \\mathcal{O}_{X'}$",
+            "MATH_0004": "$\\mathcal{J} = \\Ker(t^\\sharp) \\subset \\mathcal{O}_{S'}$",
+            "MATH_0005": "$f = f'$",
+            "MATH_0006": "$f^{-1}$",
+            "MATH_0007": "$(f')^{-1}$",
+            "MATH_0008": "$(f')^\\sharp : f^{-1}\\mathcal{O}_{S'} \\to \\mathcal{O}_{X'}$",
+            "MATH_0009": "$f^{-1}\\mathcal{J} \\to \\mathcal{I}$",
+            "MATH_0010": "$\\mathcal{O}_{X'}$",
+            "MATH_0011": "$$\n(f')^*\\mathcal{J} \\longrightarrow \\mathcal{I}\n$$",
+            "MATH_0012": "$i$",
+            "MATH_0013": "$t$",
+            "MATH_0014": "$(f')^*\\mathcal{J} = f^*\\mathcal{J}$",
+            "MATH_0015": "$f^*\\mathcal{J} \\to \\mathcal{I}$",
+            "STRUCT_0002": "\\end{situation}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3a0abb533077e9cb4b2de7ffd091dc6578b0b8621c2d798aeb8bb393a6ae4c11",
+          "source_structure_hash": "sha256:908999d948049904d3b3943378c84b897c0dc0e9b33f8a28b92552955e2e0fd3",
+          "source_math_hash": "sha256:c31fc5217627658bcc780239e8511c42b1369fc758a74a3ee13ab8606c1f6fef"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 19857,
+          "byte_end": 20939,
+          "line_start": 519,
+          "line_end": 546,
+          "fragment_hash": "sha256:383da46d2f81161914da5b29b60d6ed2a5577db8f509ff9296689e2eb043646a"
+        },
+        "owner_tag": "08KZ",
+        "parent_tag": "08KY",
+        "requested_label": "defos-equation-morphism-thickenings",
+        "requested_tag": "08L0"
+      },
+      "hash": "sha256:fc20eb2154e925702f36ae5c42fa77c7a163d26c22990e1f933037a70a359c66"
+    },
+    {
+      "context_id": "locked-English-reference:defos:inventory:defos:08S5:lemma/0001:defos-lemma-huge-diagram",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:08S5:lemma/0001",
+          "parent_tag": "08S3",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nGiven a commutative diagram\n<MATH_0001>\nwith front and back solutions to (<REF_0001>) we have\n<STRUCT_0002>\n<STRUCT_0003> There exist a canonical element in\n<MATH_0002>\nwhose vanishing is a necessary and sufficient condition for the existence\nof a ring map <MATH_0003> fitting into the diagram.\n<STRUCT_0004> If there exists a map <MATH_0004> fitting into the diagram\nthe set of all such maps is a principal homogeneous space under\n<MATH_0005>.\n<STRUCT_0005>\n<STRUCT_0006>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-huge-diagram}",
+            "MATH_0001": "$$\n\\xymatrix{\n& 0 \\ar[r] & N_2 \\ar[r] & B'_2 \\ar[r] & B_2 \\ar[r] & 0 \\\\\n& 0 \\ar[r]|\\hole & I_2 \\ar[u]_{c_2} \\ar[r] &\nA'_2 \\ar[u] \\ar[r]|\\hole & A_2 \\ar[u] \\ar[r] & 0 \\\\\n0 \\ar[r] & N_1 \\ar[ruu] \\ar[r] & B'_1 \\ar[r] & B_1 \\ar[ruu] \\ar[r] & 0 \\\\\n0 \\ar[r] & I_1 \\ar[ruu]|\\hole \\ar[u]^{c_1} \\ar[r] &\nA'_1 \\ar[ruu]|\\hole \\ar[u] \\ar[r] & A_1 \\ar[ruu]|\\hole \\ar[u] \\ar[r] & 0\n}\n$$",
+            "REF_0001": "\\ref{equation-to-solve}",
+            "STRUCT_0002": "\\begin{enumerate}",
+            "STRUCT_0003": "\\item",
+            "MATH_0002": "$\\Ext^1_{B_1}(\\NL_{B_1/A_1}, N_2)$",
+            "MATH_0003": "$B'_1 \\to B'_2$",
+            "STRUCT_0004": "\\item",
+            "MATH_0004": "$B'_1 \\to B'_2$",
+            "MATH_0005": "$\\Hom_{B_1}(\\Omega_{B_1/A_1}, N_2)$",
+            "STRUCT_0005": "\\end{enumerate}",
+            "STRUCT_0006": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:ad6684e20ef92df84cc32fdbd584685dcbfae54e712413840117fcef3d1e2821",
+          "source_structure_hash": "sha256:d00ba21c8de72b7ff99476ee63cbdbe29e9dd294cf952b021694e8624e16819e",
+          "source_math_hash": "sha256:d524743e832077d3eac5980b519b7d95a485b964259193fcbe4f38fdf478d99a"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 1638,
+          "byte_end": 2568,
+          "line_start": 57,
+          "line_end": 80,
+          "fragment_hash": "sha256:c31e3dfa1d432f3e3cb09e9f3a89d99358fd0aea10d625a4fa93ae821fa4577b"
+        },
+        "owner_tag": "08S5",
+        "parent_tag": "08S3",
+        "requested_label": "defos-lemma-huge-diagram",
+        "requested_tag": "08S5"
+      },
+      "hash": "sha256:6d52d1545df1c4ef281a492dbac257037015202661f1d72b69d9d81769c5d77c"
+    },
+    {
+      "context_id": "locked-English-reference:modules:inventory:modules:08TN:definition/0001:modules-definition-cotangent-complex-morphism-ringed-topoi",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:modules:08TN:definition/0001",
+          "parent_tag": "08TG",
+          "chapter": "modules",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nThe <TEXTITOPEN_0001>naive cotangent complex<TEXTITCLOSE_0001> <MATH_0001> of a morphism of ringed\nspaces <MATH_0002> is\n<MATH_0003>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-cotangent-complex-morphism-ringed-topoi}",
+            "TEXTITOPEN_0001": "{\\it ",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0001": "$\\NL_f = \\NL_{X/Y}$",
+            "MATH_0002": "$f : (X, \\mathcal{O}_X) \\to (Y, \\mathcal{O}_Y)$",
+            "MATH_0003": "$\\NL_{\\mathcal{O}_X/f^{-1}\\mathcal{O}_Y}$",
+            "STRUCT_0002": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:cd9fbeb2e36cc86bdfe41c61045fb7c33adbd82c2c2af9781277496e6cd41729",
+          "source_structure_hash": "sha256:228b6cb9b9e14bd1eb79bf086c12e3ea4ccef31b852271a1c83252a697a77bf8",
+          "source_math_hash": "sha256:0ac93487bb7cbf5fc075f9055cffc18d676e5f7904d6c94eab661ded6fc019fd"
+        },
+        "location": {
+          "file": "modules.tex",
+          "byte_start": 202051,
+          "byte_end": 202324,
+          "line_start": 5850,
+          "line_end": 5855,
+          "fragment_hash": "sha256:9299b54af61fa2ead584769003ac943690bb57da897d36c2cffd877a5815f96b"
+        },
+        "owner_tag": "08TN",
+        "parent_tag": "08TG",
+        "requested_label": "modules-definition-cotangent-complex-morphism-ringed-topoi",
+        "requested_tag": "08TN"
+      },
+      "hash": "sha256:6d7ed051b2cca2f2f4fcf21953627bbe386cf80aba18f982d479718588bb1196"
+    },
+    {
+      "context_id": "locked-English-reference:modules:inventory:modules:08TL:lemma/0001:modules-lemma-NL-up-to-qis",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:modules:08TL:lemma/0001",
+          "parent_tag": "08TG",
+          "chapter": "modules",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation above there is a canonical isomorphism\n<MATH_0001> in <MATH_0002>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-NL-up-to-qis}",
+            "MATH_0001": "$\\NL(\\alpha) = \\NL_{\\mathcal{B}/\\mathcal{A}}$",
+            "MATH_0002": "$D(\\mathcal{B})$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2aef125e0f3805aa35daccce5e0d4870b00ee06c5df0ff7aec29df3bf02c27a0",
+          "source_structure_hash": "sha256:db5e26eefdf2ce6b559dffc9b9263feed76184f62ec2ac87e1d5b26b8b6506d0",
+          "source_math_hash": "sha256:a46300c078882fba0c6512f415f83c6df8be6b0a4d3a2100fa0bf8c10c06bb20"
+        },
+        "location": {
+          "file": "modules.tex",
+          "byte_start": 197419,
+          "byte_end": 197594,
+          "line_start": 5725,
+          "line_end": 5729,
+          "fragment_hash": "sha256:ac8142781ba28e7c1d96d013c8af882314605339e276d0b55e734a756ad01150"
+        },
+        "owner_tag": "08TL",
+        "parent_tag": "08TG",
+        "requested_label": "modules-lemma-NL-up-to-qis",
+        "requested_tag": "08TL"
+      },
+      "hash": "sha256:635d9d4db6f0c92d0da47de491b85c61723e3bfe949202cdd2004f2c1949ab9b"
+    },
+    {
+      "context_id": "locked-English-reference:modules:inventory:modules:08TM:lemma/0001:modules-lemma-pullback-NL",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:modules:08TM:lemma/0001",
+          "parent_tag": "08TG",
+          "chapter": "modules",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a continuous map of topological spaces.\nLet <MATH_0002> be a homomorphism of sheaves of rings\non <MATH_0003>. Then <MATH_0004>.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-pullback-NL}",
+            "MATH_0001": "$f : X \\to Y$",
+            "MATH_0002": "$\\mathcal{A} \\to \\mathcal{B}$",
+            "MATH_0003": "$Y$",
+            "MATH_0004": "$f^{-1}\\NL_{\\mathcal{B}/\\mathcal{A}} =\n\\NL_{f^{-1}\\mathcal{B}/f^{-1}\\mathcal{A}}$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:69e0c4c3ebb9cb221acfbee5d32bb4bf2fad18128a379cebf1f269443eba5efe",
+          "source_structure_hash": "sha256:639ea17971cdd1ba00882ff574226ca603dbc577acd1c308b7497379b9256684",
+          "source_math_hash": "sha256:80e5550381140619bb4a8c257748033af8b1799602111378cf8c1f001855b579"
+        },
+        "location": {
+          "file": "modules.tex",
+          "byte_start": 199001,
+          "byte_end": 199281,
+          "line_start": 5760,
+          "line_end": 5766,
+          "fragment_hash": "sha256:9f0e31feccb614f8fb115c2832549211b4ef34151d10fa629121f2f0fb58e3d9"
+        },
+        "owner_tag": "08TM",
+        "parent_tag": "08TG",
+        "requested_label": "modules-lemma-pullback-NL",
+        "requested_tag": "08TM"
+      },
+      "hash": "sha256:55bb8140e26fe223a6f74f30d40bfe1c7e0b383d6d99585f0a13274a3324f71b"
+    },
+    {
+      "context_id": "locked-English-reference:modules:inventory:modules:08TG:section_title/0001:modules-section-netherlander",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:modules:08TG:section_title/0001",
+          "parent_tag": "08TG",
+          "chapter": "modules",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>The naive cotangent complex<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-netherlander}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3f4952890642a9424c553a3abcc992a945f2327d169d06326e82a6ed273df729",
+          "source_structure_hash": "sha256:14ab21c5bccaab362bf98e839e2623f98704376ac2a575695504d569f55e100f",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "modules.tex",
+          "byte_start": 192891,
+          "byte_end": 192957,
+          "line_start": 5605,
+          "line_end": 5606,
+          "fragment_hash": "sha256:db8a109e7c35978345d2a09a6b4bc614eb97003c6535c731f63c82e31631b753"
+        },
+        "owner_tag": "08TG",
+        "parent_tag": "08TG",
+        "requested_label": "modules-section-netherlander",
+        "requested_tag": "08TG"
+      },
+      "hash": "sha256:eebd2ef0b6fbf777802e9177cbf741f7547f723c2ceb4e407556b95b5a1930e3"
+    },
+    {
+      "context_id": "locked-English-reference:sheaves:inventory:sheaves:008J:definition/0001:sheaves-definition-f-map",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sheaves:008J:definition/0001",
+          "parent_tag": "008C",
+          "chapter": "sheaves",
+          "node_kind": "definition",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nLet <MATH_0001> be a continuous map.\nLet <MATH_0002> be a sheaf of sets on <MATH_0003> and\nlet <MATH_0004> be a sheaf of sets on <MATH_0005>.\nAn <TEXTITOPEN_0001><MATH_0006>-map <MATH_0007><TEXTITCLOSE_0001>\nis a collection of maps\n<MATH_0008>\nindexed by open subsets <MATH_0009> such that\n<MATH_0010>\ncommutes for all <MATH_0011> open.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{definition}",
+            "LOCKED_0001": "\\label{definition-f-map}",
+            "MATH_0001": "$f : X \\to Y$",
+            "MATH_0002": "$\\mathcal{F}$",
+            "MATH_0003": "$X$",
+            "MATH_0004": "$\\mathcal{G}$",
+            "MATH_0005": "$Y$",
+            "TEXTITOPEN_0001": "{\\it ",
+            "MATH_0006": "$f$",
+            "MATH_0007": "$\\xi : \\mathcal{G} \\to \\mathcal{F}$",
+            "TEXTITCLOSE_0001": "}",
+            "MATH_0008": "$\\xi_V : \\mathcal{G}(V) \\to \\mathcal{F}(f^{-1}(V))$",
+            "MATH_0009": "$V \\subset Y$",
+            "MATH_0010": "$$\n\\xymatrix{\n\\mathcal{G}(V) \\ar[r]_{\\xi_V} \\ar[d]_{\\text{restriction of }\\mathcal{G}} &\n\\mathcal{F}(f^{-1}V) \\ar[d]^{\\text{restriction of }\\mathcal{F}} \\\\\n\\mathcal{G}(V') \\ar[r]^{\\xi_{V'}} &\n\\mathcal{F}(f^{-1}V')\n}\n$$",
+            "MATH_0011": "$V' \\subset V \\subset Y$",
+            "STRUCT_0002": "\\end{definition}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:a902d2e67a9cb925dd92c55f650ed879bef38491a1360667703a8808b84a3bc6",
+          "source_structure_hash": "sha256:e00ebadca538f087676038c5b6b2c9840c0d246e2b13bf40e1e66a55ceb4f0f7",
+          "source_math_hash": "sha256:8282ad7500c3c7e617ab1c7302ce8bab1307b6baa5a3adffdd4012dfbe8f8ccb"
+        },
+        "location": {
+          "file": "sheaves.tex",
+          "byte_start": 74690,
+          "byte_end": 75326,
+          "line_start": 2223,
+          "line_end": 2241,
+          "fragment_hash": "sha256:ce890501eac337b11aaa080fa6308548ad9dcf67acba0783ed7129883eba0bc2"
+        },
+        "owner_tag": "008J",
+        "parent_tag": "008C",
+        "requested_label": "sheaves-definition-f-map",
+        "requested_tag": "008J"
+      },
+      "hash": "sha256:87709e1b7f262e8a43c8375245122fb09ce189e23b1b87b92c5af3fd373e4403"
+    },
+    {
+      "context_id": "locked-English-reference:sheaves:inventory:sheaves:0094:section_title/0001:sheaves-section-ringed-spaces-functoriality-modules",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:sheaves:0094:section_title/0001",
+          "parent_tag": "0094",
+          "chapter": "sheaves",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Morphisms of ringed spaces and modules<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-ringed-spaces-functoriality-modules}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:a8988c917ad2cc16c09236ace49da63eb7915f600ee0c09e1626e1892f505dee",
+          "source_structure_hash": "sha256:bce9d628f82860e06e3ce4cfdf4f15bc1ee324d1f4bbe552ddb5a2488c75cfc5",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "sheaves.tex",
+          "byte_start": 105772,
+          "byte_end": 105872,
+          "line_start": 3108,
+          "line_end": 3109,
+          "fragment_hash": "sha256:2b6040093f2e4419f6e9743bbadb645b66cf476991720cc2c8638b25fe131db5"
+        },
+        "owner_tag": "0094",
+        "parent_tag": "0094",
+        "requested_label": "sheaves-section-ringed-spaces-functoriality-modules",
+        "requested_tag": "0094"
+      },
+      "hash": "sha256:cd16730256a029557a5325cecf4345354eb851f721f957785ea9165f03f65f1a"
+    }
+  ],
+  "policy_git_origin": "11b8d45dfa1a9acd72ede2d34264c25d363f1ae8",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:2b6ba73b56f88b8a16631f0e81af25e71e8b34209da6884d7ca4888f362ba897"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:47f1957d065fae97eddaa7d7c41f9b741c33fe32a006a311743ceb1f6deaf02e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:90b34fac39416c58293e7fb72a73930803d3c142ecd8cf31de4b0cfc4dac386f"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:a01b762fdd5a585a5d88c57f4b741279a60ea4907de83203d18699ec40bda64a"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:3aab9cfe9db6dd90bbee5786dac35de9bed259696901491690f4f577d540a743"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-01.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-02.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-03.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-04.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-05.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-06.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-07.jsonl",
+    "docs/evidence/defos91-gpt61sol-p004-20261116-raw-08.jsonl"
+  ],
+  "rules": "Translate only extracted natural language and supported typed math text. Generate all six fields for each unit; protect token order/count and exact trailing whitespace. Unknown terms use provisional bilingual rendering and unknown_terms. No previous unreviewed candidate is translation memory."
+}

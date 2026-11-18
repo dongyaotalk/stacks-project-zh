@@ -1,0 +1,1617 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/defos91-gpt61sol-p013-20261117.json",
+    "hash": "sha256:06707932bfc22abf16685595ad4e4b6943e22b458320591d6a18214c1f41b682"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e4cd-25ac-7c40-b79c-c86891503420",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/defos91-20261116.json",
+    "hash": "sha256:88998c68fdb2d060e10671bfbb442eb5d5ffb4d471739a6a9f055f2d2f73488a"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "schema_version": 2,
+      "unit_id": "tag:0D15:prose-0002",
+      "parent_tag": "0D15",
+      "chapter": "defos",
+      "node_kind": "paragraph",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002>\nbe a morphism of algebraic spaces over <MATH_0003>.\nLet <MATH_0004> be a homomorphism of <MATH_0005>-modules\n(not necessarily quasi-coherent).\nConsider the functor\n<MATHSEG_0001>extensions of <MATHSEG_0002> algebras<MATHSEG_0003>where <MATHSEG_0004> is an ideal of square zero<MATHSEG_0005>extensions of <MATHSEG_0006> algebras<MATHSEG_0007>where <MATHSEG_0008> is an ideal of square zero<MATHSEG_0009>\ngiven by pushout.\n\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$f : X \\to B$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{F} \\to \\mathcal{G}$",
+        "MATH_0005": "$\\mathcal{O}_X$",
+        "MATHSEG_0001": "$$\nF :\n\\left\\{\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0002": "}f^{-1}\\mathcal{O}_B\\text{",
+        "MATHSEG_0003": "}\\\\\n0 \\to \\mathcal{F} \\to \\mathcal{O}' \\to \\mathcal{O}_X \\to 0\\\\\n\\text{",
+        "MATHSEG_0004": "}\\mathcal{F}\\text{",
+        "MATHSEG_0005": "}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{",
+        "MATHSEG_0006": "}f^{-1}\\mathcal{O}_B\\text{",
+        "MATHSEG_0007": "}\\\\\n0 \\to \\mathcal{G} \\to \\mathcal{O}' \\to \\mathcal{O}_X \\to 0\\\\\n\\text{",
+        "MATHSEG_0008": "}\\mathcal{G}\\text{",
+        "MATHSEG_0009": "}\n\\end{matrix}\n\\right\\}\n$$"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "math_text_regions": [
+        {
+          "region_id": "math/0001",
+          "delimiter_kind": "display-dollar",
+          "source": "$$\nF :\n\\left\\{\n\\begin{matrix}\n\\text{extensions of }f^{-1}\\mathcal{O}_B\\text{ algebras}\\\\\n0 \\to \\mathcal{F} \\to \\mathcal{O}' \\to \\mathcal{O}_X \\to 0\\\\\n\\text{where }\\mathcal{F}\\text{ is an ideal of square zero}\n\\end{matrix}\n\\right\\}\n\\longrightarrow\n\\left\\{\n\\begin{matrix}\n\\text{extensions of }f^{-1}\\mathcal{O}_B\\text{ algebras}\\\\\n0 \\to \\mathcal{G} \\to \\mathcal{O}' \\to \\mathcal{O}_X \\to 0\\\\\n\\text{where }\\mathcal{G}\\text{ is an ideal of square zero}\n\\end{matrix}\n\\right\\}\n$$",
+          "source_hash": "sha256:a778f55b83e23f19de1c17a0b3ce44c501114059dc248a8fce3c3ca412a32545",
+          "source_byte_span": {
+            "start": 229,
+            "end": 702
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0004"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0005"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0005"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0006"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0006"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0007"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0007"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0008"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0008"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0009"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0001/text/0001",
+              "source": "extensions of ",
+              "command": "text",
+              "policy_entry": "deformations-natural-21",
+              "slot_byte_span": {
+                "start": 36,
+                "end": 50
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\begin{matrix}\n",
+                  "after": "f",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179140,
+                        "end": 179161
+                      },
+                      "command_hash": "sha256:48aeb852b9effbd7f4708810eae569ec78b792b97cbd43375bab85a535db49ba"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179380,
+                        "end": 179401
+                      },
+                      "command_hash": "sha256:48aeb852b9effbd7f4708810eae569ec78b792b97cbd43375bab85a535db49ba"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0002",
+              "source": " algebras",
+              "command": "text",
+              "policy_entry": "deformations-natural-22",
+              "slot_byte_span": {
+                "start": 76,
+                "end": 85
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "B",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179180,
+                        "end": 179196
+                      },
+                      "command_hash": "sha256:b35e9609dddb38b80cb1e6d478847e9e02924f8f0e595e8e893e7afddc2b69ae"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179420,
+                        "end": 179436
+                      },
+                      "command_hash": "sha256:b35e9609dddb38b80cb1e6d478847e9e02924f8f0e595e8e893e7afddc2b69ae"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0003",
+              "source": "where ",
+              "command": "text",
+              "policy_entry": "deformations-natural-23",
+              "slot_byte_span": {
+                "start": 156,
+                "end": 162
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\\\\n",
+                  "after": "\\mathcal",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179260,
+                        "end": 179273
+                      },
+                      "command_hash": "sha256:92bc4cacc8cc2fa1113759eef13b4bd958d4c76646f16dacce0239979b1a52b9"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179500,
+                        "end": 179513
+                      },
+                      "command_hash": "sha256:92bc4cacc8cc2fa1113759eef13b4bd958d4c76646f16dacce0239979b1a52b9"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0004",
+              "source": " is an ideal of square zero",
+              "command": "text",
+              "policy_entry": "deformations-natural-24",
+              "slot_byte_span": {
+                "start": 180,
+                "end": 207
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0004",
+                "MATHSEG_0005"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "}",
+                  "after": "\n\\end{matrix}",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179284,
+                        "end": 179318
+                      },
+                      "command_hash": "sha256:bab0853539602cea4b2daa579063b84a8ec730e97048e20c7002a0d22f693439"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179524,
+                        "end": 179558
+                      },
+                      "command_hash": "sha256:bab0853539602cea4b2daa579063b84a8ec730e97048e20c7002a0d22f693439"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0005",
+              "source": "extensions of ",
+              "command": "text",
+              "policy_entry": "deformations-natural-21",
+              "slot_byte_span": {
+                "start": 276,
+                "end": 290
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0005",
+                "MATHSEG_0006"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\begin{matrix}\n",
+                  "after": "f",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179140,
+                        "end": 179161
+                      },
+                      "command_hash": "sha256:48aeb852b9effbd7f4708810eae569ec78b792b97cbd43375bab85a535db49ba"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179380,
+                        "end": 179401
+                      },
+                      "command_hash": "sha256:48aeb852b9effbd7f4708810eae569ec78b792b97cbd43375bab85a535db49ba"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0006",
+              "source": " algebras",
+              "command": "text",
+              "policy_entry": "deformations-natural-22",
+              "slot_byte_span": {
+                "start": 316,
+                "end": 325
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0006",
+                "MATHSEG_0007"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "B",
+                  "after": "\\\\",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179180,
+                        "end": 179196
+                      },
+                      "command_hash": "sha256:b35e9609dddb38b80cb1e6d478847e9e02924f8f0e595e8e893e7afddc2b69ae"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179420,
+                        "end": 179436
+                      },
+                      "command_hash": "sha256:b35e9609dddb38b80cb1e6d478847e9e02924f8f0e595e8e893e7afddc2b69ae"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0007",
+              "source": "where ",
+              "command": "text",
+              "policy_entry": "deformations-natural-23",
+              "slot_byte_span": {
+                "start": 396,
+                "end": 402
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0007",
+                "MATHSEG_0008"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\\\\n",
+                  "after": "\\mathcal",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179260,
+                        "end": 179273
+                      },
+                      "command_hash": "sha256:92bc4cacc8cc2fa1113759eef13b4bd958d4c76646f16dacce0239979b1a52b9"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179500,
+                        "end": 179513
+                      },
+                      "command_hash": "sha256:92bc4cacc8cc2fa1113759eef13b4bd958d4c76646f16dacce0239979b1a52b9"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0008",
+              "source": " is an ideal of square zero",
+              "command": "text",
+              "policy_entry": "deformations-natural-24",
+              "slot_byte_span": {
+                "start": 420,
+                "end": 447
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0008",
+                "MATHSEG_0009"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "}",
+                  "after": "\n\\end{matrix}",
+                  "environments": [
+                    "matrix"
+                  ]
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179284,
+                        "end": 179318
+                      },
+                      "command_hash": "sha256:bab0853539602cea4b2daa579063b84a8ec730e97048e20c7002a0d22f693439"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 178883,
+                        "end": 179601
+                      },
+                      "container_hash": "sha256:b2fe59aeaf25e1af52a64870c47f4aa06271c4a493738c023bde70b5e4438ad6",
+                      "command_byte_span": {
+                        "start": 179524,
+                        "end": 179558
+                      },
+                      "command_hash": "sha256:bab0853539602cea4b2daa579063b84a8ec730e97048e20c7002a0d22f693439"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "source_math_skeleton_hash": "sha256:7db22b3f1a83a373fb8b68864541e0a497ff7410c1cd76dfcc7e5a0f454e985a",
+      "source_text_hash": "sha256:2da1b1defb45b5be0f93c43599f8d43f85d12ef3f28bf751df3d952cc85099dd",
+      "source_structure_hash": "sha256:bd73d7728943cc13c5b986a1fd4153420a3fcd67c4b545f2dba083fe7c6f2234",
+      "source_math_hash": "sha256:0ab29d89192b938a8e50c8088c39a6d6ac4fc401b8cd6d26a762886ac8c9842c"
+    },
+    {
+      "schema_version": 2,
+      "unit_id": "tag:0D15:prose-0003",
+      "parent_tag": "0D15",
+      "chapter": "defos",
+      "node_kind": "paragraph",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "\n\n<STRUCT_0001>\nLet <MATH_0001> be a scheme. Let <MATH_0002> be a first order thickening of\nalgebraic spaces over <MATH_0003> with ideal sheaf <MATH_0004>\nwhich we view either as a quasi-coherent <MATH_0005>-module\nor as a quasi-coherent sheaf of ideals on <MATH_0006>, see\nMore on Morphisms of Spaces, Section\n<REF_0001>.\nLet <MATH_0007> be a morphism of algebraic spaces over <MATH_0008>.\nLet <MATH_0009> be a homomorphism of\n<MATH_0010>-modules (not necessarily quasi-coherent).\nLet <MATH_0011> be a map\nof <MATH_0012>-modules and denote\n<MATH_0013> the composition.\nConsider the functor\n<MATHSEG_0001>solutions to <MATHSEG_0002> for <MATHSEG_0003> and <MATHSEG_0004>solutions to <MATHSEG_0005> for <MATHSEG_0006> and <MATHSEG_0007>\ngiven by pushout.\n\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "STRUCT_0001": "\\noindent",
+        "MATH_0001": "$S$",
+        "MATH_0002": "$B \\subset B'$",
+        "MATH_0003": "$S$",
+        "MATH_0004": "$\\mathcal{J}$",
+        "MATH_0005": "$\\mathcal{O}_B$",
+        "MATH_0006": "$B'$",
+        "REF_0001": "\\ref{spaces-more-morphisms-section-thickenings}",
+        "MATH_0007": "$f : X \\to B$",
+        "MATH_0008": "$S$",
+        "MATH_0009": "$\\mathcal{F} \\to \\mathcal{G}$",
+        "MATH_0010": "$\\mathcal{O}_X$",
+        "MATH_0011": "$c : f^{-1}\\mathcal{J} \\to \\mathcal{F}$",
+        "MATH_0012": "$f^{-1}\\mathcal{O}_B$",
+        "MATH_0013": "$c' : f^{-1}\\mathcal{J} \\to \\mathcal{G}$",
+        "MATHSEG_0001": "$$\nFT :\n\\{\\text{",
+        "MATHSEG_0002": "}(\\ref{equation-to-solve-ringed-topoi})\n\\text{",
+        "MATHSEG_0003": "}\\mathcal{F}\\text{",
+        "MATHSEG_0004": "}c\\}\n\\longrightarrow\n\\{\\text{",
+        "MATHSEG_0005": "}(\\ref{equation-to-solve-ringed-topoi})\n\\text{",
+        "MATHSEG_0006": "}\\mathcal{G}\\text{",
+        "MATHSEG_0007": "}c'\\}\n$$"
+      },
+      "render": {
+        "prefix": "",
+        "suffix": ""
+      },
+      "math_text_regions": [
+        {
+          "region_id": "math/0001",
+          "delimiter_kind": "display-dollar",
+          "source": "$$\nFT :\n\\{\\text{solutions to }(\\ref{equation-to-solve-ringed-topoi})\n\\text{ for }\\mathcal{F}\\text{ and }c\\}\n\\longrightarrow\n\\{\\text{solutions to }(\\ref{equation-to-solve-ringed-topoi})\n\\text{ for }\\mathcal{G}\\text{ and }c'\\}\n$$",
+          "source_hash": "sha256:41ede1231f3031c7254b7c65800064d099ead39065a7366880047bf325f3b710",
+          "source_byte_span": {
+            "start": 693,
+            "end": 920
+          },
+          "pieces": [
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0001"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0001"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0002"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0002"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0003"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0003"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0004"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0004"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0005"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0005"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0006"
+            },
+            {
+              "kind": "text",
+              "slot_id": "math/0001/text/0006"
+            },
+            {
+              "kind": "locked",
+              "placeholder": "MATHSEG_0007"
+            }
+          ],
+          "slots": [
+            {
+              "slot_id": "math/0001/text/0001",
+              "source": "solutions to ",
+              "command": "text",
+              "policy_entry": "deformations-natural-25",
+              "slot_byte_span": {
+                "start": 16,
+                "end": 29
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0001",
+                "MATHSEG_0002"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\{",
+                  "after": "(",
+                  "environments": []
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 180627,
+                        "end": 181563
+                      },
+                      "container_hash": "sha256:a4b86df6203507bb95452c5c7c455799de4428a3e9fdeebeb8188c5cb16683c5",
+                      "command_byte_span": {
+                        "start": 181328,
+                        "end": 181348
+                      },
+                      "command_hash": "sha256:63a11b8e20ee4c15812f684c385459e20b2b61369932ee03d6cf1b7f2d4d9940"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 180627,
+                        "end": 181563
+                      },
+                      "container_hash": "sha256:a4b86df6203507bb95452c5c7c455799de4428a3e9fdeebeb8188c5cb16683c5",
+                      "command_byte_span": {
+                        "start": 181444,
+                        "end": 181464
+                      },
+                      "command_hash": "sha256:63a11b8e20ee4c15812f684c385459e20b2b61369932ee03d6cf1b7f2d4d9940"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0002",
+              "source": " for ",
+              "command": "text",
+              "policy_entry": "cohomology-for",
+              "slot_byte_span": {
+                "start": 75,
+                "end": 80
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0002",
+                "MATHSEG_0003"
+              ],
+              "classification_witness": {
+                "usage": "root-phrase",
+                "usage_source": {
+                  "before": ")\n",
+                  "after": "\\mathcal",
+                  "environments": []
+                },
+                "source_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "sites-cohomology.tex",
+                  "owner_tag": "0D6N",
+                  "owner_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                  "kind": "lemma",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 194611,
+                        "end": 195355
+                      },
+                      "container_hash": "sha256:d294a56dc4e1a05ad1fd6b4a5581ce0100baf4c2ee2f73a6ae52369d37460477",
+                      "command_byte_span": {
+                        "start": 195083,
+                        "end": 195095
+                      },
+                      "command_hash": "sha256:5ba78007ce3c87a955134033be043f8e893936410ada883891a40acdaf83f4f4"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0003",
+              "source": " and ",
+              "command": "text",
+              "policy_entry": "root-and",
+              "slot_byte_span": {
+                "start": 98,
+                "end": 103
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0003",
+                "MATHSEG_0004"
+              ],
+              "classification_witness": {
+                "usage": "root-phrase",
+                "usage_source": {
+                  "before": "}",
+                  "after": "c",
+                  "environments": []
+                },
+                "source_label": "categories-section-posets-limits",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "categories.tex",
+                  "owner_tag": "002Z",
+                  "owner_label": "categories-section-posets-limits",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 89996,
+                        "end": 91549
+                      },
+                      "container_hash": "sha256:e1691eec227eb5d9857c4ac2ba175c2e7202c81b64bb1f8f8951d0ad006958a3",
+                      "command_byte_span": {
+                        "start": 90325,
+                        "end": 90337
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0004",
+              "source": "solutions to ",
+              "command": "text",
+              "policy_entry": "deformations-natural-25",
+              "slot_byte_span": {
+                "start": 132,
+                "end": 145
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0004",
+                "MATHSEG_0005"
+              ],
+              "classification_witness": {
+                "usage": "deformations-source-frames",
+                "usage_source": {
+                  "before": "\\{",
+                  "after": "(",
+                  "environments": []
+                },
+                "source_label": "defos-section-deformations-spaces",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "defos.tex",
+                  "owner_tag": "0D15",
+                  "owner_label": "defos-section-deformations-spaces",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 180627,
+                        "end": 181563
+                      },
+                      "container_hash": "sha256:a4b86df6203507bb95452c5c7c455799de4428a3e9fdeebeb8188c5cb16683c5",
+                      "command_byte_span": {
+                        "start": 181328,
+                        "end": 181348
+                      },
+                      "command_hash": "sha256:63a11b8e20ee4c15812f684c385459e20b2b61369932ee03d6cf1b7f2d4d9940"
+                    },
+                    {
+                      "container_byte_span": {
+                        "start": 180627,
+                        "end": 181563
+                      },
+                      "container_hash": "sha256:a4b86df6203507bb95452c5c7c455799de4428a3e9fdeebeb8188c5cb16683c5",
+                      "command_byte_span": {
+                        "start": 181444,
+                        "end": 181464
+                      },
+                      "command_hash": "sha256:63a11b8e20ee4c15812f684c385459e20b2b61369932ee03d6cf1b7f2d4d9940"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0005",
+              "source": " for ",
+              "command": "text",
+              "policy_entry": "cohomology-for",
+              "slot_byte_span": {
+                "start": 191,
+                "end": 196
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0005",
+                "MATHSEG_0006"
+              ],
+              "classification_witness": {
+                "usage": "root-phrase",
+                "usage_source": {
+                  "before": ")\n",
+                  "after": "\\mathcal",
+                  "environments": []
+                },
+                "source_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "sites-cohomology.tex",
+                  "owner_tag": "0D6N",
+                  "owner_label": "sites-cohomology-lemma-is-limit-spaltenstein",
+                  "kind": "lemma",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 194611,
+                        "end": 195355
+                      },
+                      "container_hash": "sha256:d294a56dc4e1a05ad1fd6b4a5581ce0100baf4c2ee2f73a6ae52369d37460477",
+                      "command_byte_span": {
+                        "start": 195083,
+                        "end": 195095
+                      },
+                      "command_hash": "sha256:5ba78007ce3c87a955134033be043f8e893936410ada883891a40acdaf83f4f4"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "slot_id": "math/0001/text/0006",
+              "source": " and ",
+              "command": "text",
+              "policy_entry": "root-and",
+              "slot_byte_span": {
+                "start": 214,
+                "end": 219
+              },
+              "boundary_placeholders": [
+                "MATHSEG_0006",
+                "MATHSEG_0007"
+              ],
+              "classification_witness": {
+                "usage": "root-phrase",
+                "usage_source": {
+                  "before": "}",
+                  "after": "c",
+                  "environments": []
+                },
+                "source_label": "categories-section-posets-limits",
+                "policy_hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b",
+                "anchor": {
+                  "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+                  "file": "categories.tex",
+                  "owner_tag": "002Z",
+                  "owner_label": "categories-section-posets-limits",
+                  "kind": "section",
+                  "ordinal": 1,
+                  "matches": [
+                    {
+                      "container_byte_span": {
+                        "start": 89996,
+                        "end": 91549
+                      },
+                      "container_hash": "sha256:e1691eec227eb5d9857c4ac2ba175c2e7202c81b64bb1f8f8951d0ad006958a3",
+                      "command_byte_span": {
+                        "start": 90325,
+                        "end": 90337
+                      },
+                      "command_hash": "sha256:6e5522c0a1350340494261508011ca0c1df443bd6c94368f38fc9511a9fe8390"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "source_math_skeleton_hash": "sha256:8ca323d8f1cebbf9afbf8ebd382b14838862785e31e7fe6888376fbd80b89b2f",
+      "source_text_hash": "sha256:5a7994edebcf89cb4fa878bf2b7bd06a918b03f92ff17322a92fb4c7bbbd0a32",
+      "source_structure_hash": "sha256:6af58147e9b641d3bbd65cda97ca8f97cf34ad14c1f38a89e1ee62e753d937d8",
+      "source_math_hash": "sha256:4eec3657f9922da8accae2b7adc078cb44df03ec38c22cee9a8b71703bfd8f8e"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:0D15:prose-0002",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:2da1b1defb45b5be0f93c43599f8d43f85d12ef3f28bf751df3d952cc85099dd",
+      "source_structure_hash": "sha256:bd73d7728943cc13c5b986a1fd4153420a3fcd67c4b545f2dba083fe7c6f2234",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "scheme",
+          "projection_start": 35,
+          "projection_end": 41,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 64,
+          "projection_end": 72,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 76,
+          "projection_end": 92,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 132,
+          "projection_end": 144,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 160,
+          "projection_end": 167,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 215,
+          "projection_end": 222,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 266,
+          "projection_end": 274,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal of square zero",
+          "projection_start": 315,
+          "projection_end": 335,
+          "concept": "source-phrase-ideal-of-square-zero",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebras",
+          "projection_start": 378,
+          "projection_end": 386,
+          "concept": "algebra",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal of square zero",
+          "projection_start": 427,
+          "projection_end": 447,
+          "concept": "source-phrase-ideal-of-square-zero",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 471,
+          "projection_end": 478,
+          "concept": "pushout",
+          "rule": "catalog"
+        }
+      ]
+    },
+    {
+      "unit_id": "tag:0D15:prose-0003",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:5a7994edebcf89cb4fa878bf2b7bd06a918b03f92ff17322a92fb4c7bbbd0a32",
+      "source_structure_hash": "sha256:6af58147e9b641d3bbd65cda97ca8f97cf34ad14c1f38a89e1ee62e753d937d8",
+      "catalog_hash": "sha256:ac31bb625f141ce33bb4abcba36bf961dd58efdeb4be19ce65f657142bb0687e",
+      "occurrences": [
+        {
+          "source_term": "scheme",
+          "projection_start": 35,
+          "projection_end": 41,
+          "concept": "scheme",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 90,
+          "projection_end": 106,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "ideal",
+          "projection_start": 129,
+          "projection_end": 134,
+          "concept": "ideal",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaf",
+          "projection_start": 135,
+          "projection_end": 140,
+          "concept": "sheaf",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "module",
+          "projection_start": 206,
+          "projection_end": 212,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-coherent sheaf of ideals",
+          "projection_start": 221,
+          "projection_end": 251,
+          "concept": "source-phrase-quasi-coherent-sheaf-of-ideals",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "Morphisms",
+          "projection_start": 280,
+          "projection_end": 289,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "morphism",
+          "projection_start": 342,
+          "projection_end": 350,
+          "concept": "morphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "algebraic spaces",
+          "projection_start": 354,
+          "projection_end": 370,
+          "concept": "algebraic-space",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "homomorphism",
+          "projection_start": 410,
+          "projection_end": 422,
+          "concept": "homomorphism",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 438,
+          "projection_end": 445,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 501,
+          "projection_end": 504,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 520,
+          "projection_end": 527,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 555,
+          "projection_end": 566,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "functor",
+          "projection_start": 581,
+          "projection_end": 588,
+          "concept": "functor",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "pushout",
+          "projection_start": 743,
+          "projection_end": 750,
+          "concept": "pushout",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D17:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D17:proof/0001",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nWe will apply the material on deformations of ringed topoi\nto the small <ACCENT_0001>tale topoi of the algebraic spaces in the lemma.\nWe may think of <MATH_0001> as a closed subspace of <MATH_0002>\nso that <MATH_0003>\nis a morphism of first order thickenings.\nBy Lemma <REF_0001>\nthis translates into a morphism of thickenings of ringed topoi.\nThen we see from More on Morphisms of Spaces, Lemma\n<REF_0002>\n(or from the more general Lemma <REF_0003>)\nthat the ideal sheaf of <MATH_0004> in <MATH_0005> is equal to <MATH_0006>\nand this is in fact equivalent to flatness of <MATH_0007> over <MATH_0008>.\nHence we have a commutative diagram\n<MATH_0009>\nPlease compare with (<REF_0004>).\nObserve that automorphisms <MATH_0010> as in (2)\ngive automorphisms <MATH_0011>\nfitting in the diagram above. Conversely, an automorphism\n<MATH_0012>\nfitting into the diagram of sheaves above is equal to <MATH_0013>\nfor some automorphism <MATH_0014> as in (2)\nby More on Morphisms of Spaces, Lemma\n<REF_0005>.\nFinally, by More on Morphisms of Spaces, Lemma\n<REF_0006>\nif we find another sheaf of rings <MATH_0015> on <MATH_0016>\nfitting into the diagram\n<MATH_0017>\nthen there exists a first order thickening <MATH_0018>\nwith <MATH_0019> and applying \nMore on Morphisms of Spaces, Lemma\n<REF_0007>\nonce more, we obtain a morphism\n<MATH_0020> with all the\ndesired properties.\nThus part (1) follows from\nLemma <REF_0008>\nand part (2) from part (2) of\nLemma <REF_0009>.\n(Note that <MATH_0021> as defined for a morphism of algebraic spaces in\nMore on Morphisms of Spaces, Section\n<REF_0010>\nagrees with <MATH_0022> as used in\nSection <REF_0011>.)\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "ACCENT_0001": "\\'e",
+            "MATH_0001": "$X$",
+            "MATH_0002": "$X'$",
+            "MATH_0003": "$(f, f') : (X \\subset X') \\to (Y \\subset Y')$",
+            "REF_0001": "\\ref{lemma-match-thickenings}",
+            "REF_0002": "\\ref{spaces-more-morphisms-lemma-deform}",
+            "REF_0003": "\\ref{lemma-deform-module-ringed-topoi}",
+            "MATH_0004": "$X$",
+            "MATH_0005": "$X'$",
+            "MATH_0006": "$f^*\\mathcal{C}_{Y'/Y}$",
+            "MATH_0007": "$X'$",
+            "MATH_0008": "$Y'$",
+            "MATH_0009": "$$\n\\xymatrix{\n0 \\ar[r] & f^*\\mathcal{C}_{Y/Y'} \\ar[r] &\n\\mathcal{O}_{X'} \\ar[r] &\n\\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] &\nf_{small}^{-1}\\mathcal{C}_{Y/Y'} \\ar[u] \\ar[r] &\nf_{small}^{-1}\\mathcal{O}_{Y'} \\ar[u] \\ar[r] &\nf_{small}^{-1}\\mathcal{O}_Y \\ar[u] \\ar[r] & 0\n}\n$$",
+            "REF_0004": "\\ref{equation-to-solve-ringed-topoi}",
+            "MATH_0010": "$\\varphi$",
+            "MATH_0011": "$\\varphi^\\sharp : \\mathcal{O}_{X'} \\to \\mathcal{O}_{X'}$",
+            "MATH_0012": "$\\alpha : \\mathcal{O}_{X'} \\to \\mathcal{O}_{X'}$",
+            "MATH_0013": "$\\varphi^\\sharp$",
+            "MATH_0014": "$\\varphi$",
+            "REF_0005": "\\ref{spaces-more-morphisms-lemma-first-order-thickening-maps}",
+            "REF_0006": "\\ref{spaces-more-morphisms-lemma-first-order-thickening}",
+            "MATH_0015": "$\\mathcal{A}$",
+            "MATH_0016": "$X_\\etale$",
+            "MATH_0017": "$$\n\\xymatrix{\n0 \\ar[r] & f^*\\mathcal{C}_{Y/Y'} \\ar[r] &\n\\mathcal{A} \\ar[r] &\n\\mathcal{O}_X \\ar[r] & 0 \\\\\n0 \\ar[r] &\nf_{small}^{-1}\\mathcal{C}_{Y/Y'} \\ar[u] \\ar[r] &\nf_{small}^{-1}\\mathcal{O}_{Y'} \\ar[u] \\ar[r] &\nf_{small}^{-1}\\mathcal{O}_Y \\ar[u] \\ar[r] & 0\n}\n$$",
+            "MATH_0018": "$X \\subset X''$",
+            "MATH_0019": "$\\mathcal{O}_{X''} = \\mathcal{A}$",
+            "REF_0007": "\\ref{spaces-more-morphisms-lemma-first-order-thickening-maps}",
+            "MATH_0020": "$(f, f'') : (X \\subset X'') \\to (Y \\subset Y')$",
+            "REF_0008": "\\ref{lemma-choices-ringed-topoi}",
+            "REF_0009": "\\ref{lemma-huge-diagram-ringed-topoi}",
+            "MATH_0021": "$\\NL_{X/Y}$",
+            "REF_0010": "\\ref{spaces-more-morphisms-section-netherlander}",
+            "MATH_0022": "$\\NL_{X/Y}$",
+            "REF_0011": "\\ref{section-deformations-ringed-topoi}",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2b1c6422e41bfe91ea243d33bd1abf18ea890fd8f9acf97ca34110e1fa30f562",
+          "source_structure_hash": "sha256:33d59f32c5e4531c52d27954c9fd614504ecbfd27ae0019238ae1b096b74aa19",
+          "source_math_hash": "sha256:e4a8e4a5d5a0c9d3d9249accb7bbdc5cf00f9ff48ceb42c5f75f16243eec596a"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 176217,
+          "byte_end": 178881,
+          "line_start": 4734,
+          "line_end": 4799,
+          "fragment_hash": "sha256:53635caa437642756bb2e1f2e5f9775d491f79f09f419e08bfd354cf1cfc34df"
+        },
+        "owner_tag": "0D17",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:d1d0020336add0e8dd80ee7b531b71608a59826db33c9740ffb1090d9a1522e5"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D3P:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D3P:lemma/0001",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation above assume that <MATH_0001> is quasi-compact and quasi-separated\nand that <MATH_0002>\n(Derived Categories of Spaces, Section\n<REF_0001>)\nis an isomorphism. Then the functor <MATH_0003> is an equivalence of categories.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-thickening-space-quasi-coherent}",
+            "MATH_0001": "$X$",
+            "MATH_0002": "$DQ_X(\\mathcal{F}) \\to DQ_X(\\mathcal{G})$",
+            "REF_0001": "\\ref{spaces-perfect-section-better-coherator}",
+            "MATH_0003": "$F$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bf0c95421eb4ecb7a5981dc01faefa022603a78a2ea9a21c96a86a1f8593b172",
+          "source_structure_hash": "sha256:9c83abd4afdd6ee46d8a1adbf591e685be2b11fb1854c401a307edf99c0d60f2",
+          "source_math_hash": "sha256:d842b790843a74c90bd00be3a28bc9cb71962cdce8313ed2c9df1b16d2a72475"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 179603,
+          "byte_end": 179960,
+          "line_start": 4827,
+          "line_end": 4834,
+          "fragment_hash": "sha256:8cc38e1d05f37a164b5aa2a9ad837a8c00fc81a317b7b2c58ba74e943b416ce2"
+        },
+        "owner_tag": "0D3P",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:354b97ab6fa8987bca4b41009a238b3b256a011ba94b5035a870c761998355d0"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D3P:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D3P:proof/0001",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nRecall that <MATH_0001> is an object of <MATH_0002>, see\nMore on Morphisms of Spaces, Lemma\n<REF_0001>.\nHence our assumption implies the maps\n<MATH_0003>\nare isomorphisms for all <MATH_0004>. This implies our functor is fully\nfaithful by Lemma <REF_0002>.\nOn the other hand, the functor is essentially surjective by\nLemma <REF_0003> because\nwe have the solutions <MATH_0005>\nand <MATH_0006> in both categories.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$\\NL_{X/B}$",
+            "MATH_0002": "$D_\\QCoh(\\mathcal{O}_X)$",
+            "REF_0001": "\\ref{spaces-more-morphisms-lemma-netherlander-quasi-coherent}",
+            "MATH_0003": "$$\n\\Ext^i_X(\\NL_{X/B}, \\mathcal{F}) \\longrightarrow\n\\Ext^i_X(\\NL_{X/B}, \\mathcal{G})\n$$",
+            "MATH_0004": "$i$",
+            "REF_0002": "\\ref{lemma-huge-diagram-ringed-topoi}",
+            "REF_0003": "\\ref{lemma-choices-ringed-topoi}",
+            "MATH_0005": "$\\mathcal{O}_X \\oplus \\mathcal{F}$",
+            "MATH_0006": "$\\mathcal{O}_X \\oplus \\mathcal{G}$",
+            "STRUCT_0002": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:2d282d97e877c3dc044e0fd68cdd7e6addfc7cac23a9cf5f413355e27c473a8a",
+          "source_structure_hash": "sha256:3893b357c7813e49286a01cd548f10522e6d7d7cfa089fb683126404fbbad896",
+          "source_math_hash": "sha256:4ee1cdf5311eff108e2e1b009e81c9f982f40ab5aedd9834828a244ca217698b"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 179962,
+          "byte_end": 180625,
+          "line_start": 4836,
+          "line_end": 4851,
+          "fragment_hash": "sha256:67538242c1a086bf2921ccb740a8103ce2bf40c1c26c67aeaa9d2d9b504000ce"
+        },
+        "owner_tag": "0D3P",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:69e4ec2079863e2a31058d565fca20a663ffcf0ad3f094faa4c65b2b6be2f740"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0D3Q:lemma/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0D3Q:lemma/0001",
+          "parent_tag": "0D15",
+          "chapter": "defos",
+          "node_kind": "lemma",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\n<LOCKED_0001>\nIn the situation above assume that <MATH_0001> is quasi-compact and quasi-separated\nand that <MATH_0002>\n(Derived Categories of Spaces, Section\n<REF_0001>)\nis an isomorphism. Then the functor <MATH_0003> is an equivalence of categories.\n<STRUCT_0002>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{lemma}",
+            "LOCKED_0001": "\\label{lemma-thickening-over-thickening-space-quasi-coherent}",
+            "MATH_0001": "$X$",
+            "MATH_0002": "$DQ_X(\\mathcal{F}) \\to DQ_X(\\mathcal{G})$",
+            "REF_0001": "\\ref{spaces-perfect-section-better-coherator}",
+            "MATH_0003": "$FT$",
+            "STRUCT_0002": "\\end{lemma}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:bf0c95421eb4ecb7a5981dc01faefa022603a78a2ea9a21c96a86a1f8593b172",
+          "source_structure_hash": "sha256:dc4a6c917e5fdc7d7e2f182eb60da093d1cea9d8e28f505d358a3c5904dc53ce",
+          "source_math_hash": "sha256:66a230ad8daa2fccf4f7b5cb9813ad36fa5fa2d703762166ac2fde4535c3d3b5"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 181565,
+          "byte_end": 181939,
+          "line_start": 4877,
+          "line_end": 4884,
+          "fragment_hash": "sha256:d517526e2c30e0c66c106cda1aea3b1de22d331d31258bbc18de27e28685d5ce"
+        },
+        "owner_tag": "0D3Q",
+        "parent_tag": "0D15"
+      },
+      "hash": "sha256:d901652263e861fef4e69bdf65504811fa4c6ac6b0f0ac525527bd8493702cc5"
+    },
+    {
+      "context_id": "locked-English-math-reference:defos:defos-equation-to-solve-ringed-topoi",
+      "value": {
+        "kind": "locked-English-math-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_math_node": "\\begin{equation}\n\\label{equation-to-solve-ringed-topoi}\n\\vcenter{\n\\xymatrix{\n0 \\ar[r] & \\mathcal{G} \\ar[r] & {?} \\ar[r] & \\mathcal{O} \\ar[r] & 0 \\\\\n0 \\ar[r] & f^{-1}\\mathcal{J} \\ar[u]^c \\ar[r] &\nf^{-1}\\mathcal{O}_{\\mathcal{B}'} \\ar[u] \\ar[r] &\nf^{-1}\\mathcal{O}_\\mathcal{B} \\ar[u] \\ar[r] & 0\n}\n}\n\\end{equation}",
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 143220,
+          "byte_end": 143530,
+          "line_start": 3883,
+          "line_end": 3893,
+          "fragment_hash": "sha256:fca7eecb6e505cc55b440d4dddd7ee6f081b93f7fe1807c960156752cb14bb14"
+        },
+        "requested_label": "defos-equation-to-solve-ringed-topoi",
+        "requested_tag": "08UF"
+      },
+      "hash": "sha256:85da38d16341c07752620a6c48fb523b97c1c0dea5ce00d34b7b21488c041633"
+    },
+    {
+      "context_id": "locked-English-reference:spaces-more-morphisms:inventory:spaces-more-morphisms:05ZJ:section_title/0001:spaces-more-morphisms-section-thickenings",
+      "value": {
+        "kind": "locked-English-reference",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:spaces-more-morphisms:05ZJ:section_title/0001",
+          "parent_tag": "05ZJ",
+          "chapter": "spaces-more-morphisms",
+          "node_kind": "section_title",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<TEXTOPEN_0001>Thickenings<TEXTCLOSE_0001>\n<LOCKED_0001>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "TEXTOPEN_0001": "\\section{",
+            "TEXTCLOSE_0001": "}",
+            "LOCKED_0001": "\\label{section-thickenings}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3396fb7fac5e8d7e0469377ce185aba1d3760f7f49e323c89acf039381e273c8",
+          "source_structure_hash": "sha256:73edf15168847e28f319f21f9b73930f675eadee09e6dc949d1def5d4158f747",
+          "source_math_hash": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        "location": {
+          "file": "spaces-more-morphisms.tex",
+          "byte_start": 53487,
+          "byte_end": 53536,
+          "line_start": 1501,
+          "line_end": 1502,
+          "fragment_hash": "sha256:038479b5e3e53b6f91d3e9fcadee71339b8e66b0ec01ceda4dc42ad4bb3eadc0"
+        },
+        "owner_tag": "05ZJ",
+        "parent_tag": "05ZJ",
+        "requested_label": "spaces-more-morphisms-section-thickenings",
+        "requested_tag": "05ZJ"
+      },
+      "hash": "sha256:98667e30f32221c6fff977c80fddd068cea3da1dbf0c76332a84eb6a709b5503"
+    }
+  ],
+  "policy_git_origin": "9c104567d0e9b01c16c0bf5f5d0c71b3c1c5c028",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:f8a34b4e5b7d68795e0dc64557b5b4e7dbafccbf0b101ba18991531598581f9b"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:1c2bcce41979b5c282eac775e823e7c797aefdcd0fa0faa28a061c24674c6e7e"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:88a7438f6f309e25961f54d0404519281e4786a3c2d470e485c819ce15539756"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:ef9263cdedf15a3e360f6184509c2cc7615c299a5fff9074d46544f7a4abb656"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:385dde972b3048344f9d5e7b9098624f636a993b4c3d34071846916ccc154a9f"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-01.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-02.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-03.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-04.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-05.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-06.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-07.jsonl",
+    "docs/evidence/defos91-gpt61sol-p013-20261117-raw-08.jsonl"
+  ],
+  "rules": "Actual model generates all five translator fields for every unit. Protect token order/count and exact trailing whitespace. Unknown terms remain provisional. No prior candidate is supplied as translation memory."
+}

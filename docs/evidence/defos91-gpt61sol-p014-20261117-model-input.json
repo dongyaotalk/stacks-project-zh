@@ -1,0 +1,589 @@
+{
+  "generation_freeze": {
+    "path": "translation-data/source-adoption-inputs/defos91-gpt61sol-p014-20261117.json",
+    "hash": "sha256:cc20c55f1cd903a0d1145cc8cbbcd5c9d755db9168a1c107f9dca4d271436266"
+  },
+  "runtime": {
+    "model_lane": "openai-gpt-6.1-sol",
+    "model": {
+      "record_id": "openai:gpt-6.1-sol:declared",
+      "provider": "OpenAI",
+      "requested_id": "gpt-6.1-sol",
+      "resolved_id": "gpt-6.1-sol",
+      "snapshot": null,
+      "identity_confidence": "declared"
+    },
+    "harness": {
+      "id": "codex",
+      "version": "0.169.0",
+      "adapter_version": "stacks-harness-v1"
+    },
+    "reasoning_effort": "high",
+    "turn_id": "01a1e811-11fd-77e1-8227-611404037322",
+    "replayable": false
+  },
+  "scope_manifest": {
+    "path": "task-scopes/defos91-20261116.json",
+    "hash": "sha256:4c3a758d602c2780fe54b8ffd6c845292306ebbc0bf4e1e9dde151004cc53acc"
+  },
+  "prompt": "# Translator prompt v2\n\n## Role\n\nTranslate only the supplied natural-language unit from the locked Stacks Project\nsource into simplified Chinese mathematical prose. The surrounding program owns\nall LaTeX structure.\n\n## Hard constraints\n\n1. Preserve the source meaning, logical strength, order of claims, and scope of\n   every qualifier. Add no explanation, example, assumption, conclusion, or\n   translator note.\n2. Copy every protected token such as `<MATH_0001>`, `<REF_0001>`, and\n   `<CITE_0001>` exactly once and in the original order. Do not emit raw LaTeX.\n3. Every occurrence of a mathematical term must retain both languages in the\n   exact form `中文（English）`. This applies on every occurrence, not only the\n   first one. Use full-width Chinese parentheses, put no space before them, and\n   preserve the English form supplied for that occurrence.\n4. Follow the approved glossary supplied in the context for the Chinese half of\n   each bilingual term. If a needed term is not approved, use the best explicit\n   provisional Chinese rendering, retain its English occurrence in parentheses,\n   and report the occurrence in `term_occurrences` and the decision in\n   `unknown_terms`; do not claim that the term is approved.\n5. Leave only names, standard abbreviations, code, and explicitly allowed\n   non-terminological English unchanged. Do not add Markdown or commentary\n   outside the record.\n6. Do not claim structural QA, independent criticism, language review,\n   mathematics review, publication, or any human identity.\n\n## Output\n\nReturn exactly one JSON object with these translator-owned fields:\n\n```json\n{\n  \"unit_id\": \"the input unit_id\",\n  \"translation\": \"Chinese text with protected tokens and 中文（English） terms\",\n  \"allowed_english\": [],\n  \"term_occurrences\": [\n    {\n      \"source_term\": \"English spelling from this occurrence\",\n      \"target_term\": \"Chinese rendering immediately before it\"\n    }\n  ],\n  \"unknown_terms\": [\n    {\n      \"source_term\": \"unapproved English term\",\n      \"target_term\": \"provisional Chinese rendering used above\",\n      \"context\": \"short reason this term is needed here\"\n    }\n  ],\n  \"notes\": []\n}\n```\n\nList `term_occurrences` in textual order and include repeated terms repeatedly.\nThe pipeline, not the translator, attaches source hashes, model provenance,\nstatus fields, context hash, timestamp, and deterministic QA results.\n",
+  "style": "# 中文翻译风格规范\n\n## 1. 语言\n\n- 使用简体中文和正式数学书面语。\n- 以准确、清楚为先，不追求文学化改写。\n- 不使用“显然可知”“众所周知”等原文没有的评价。\n- 不添加总结、提示、学习建议、免责声明或模型口吻。\n- 原文有意重复时不得仅为避免中文重复而删除信息。\n\n## 2. 术语\n\n- `config/glossary.yml` 中 `approved` 词条具有约束力。\n- `proposed` 词条只能用于讨论，不能作为批量翻译依据。\n- 一个术语有多个语境译法时，必须按词条条件选择。\n- 不确定时保留候选译文并填写 `unknown_terms`，不得静默创造新译法。\n- 每一次数学术语出现都必须写成 `中文（English）`，不得只在首次出现时附英文。\n- 双语术语使用中文全角括号，中文与左括号之间不留空格；括号内保留该处英文\n  原词形。标题、列表、图表、脚注和正文适用同一规则。\n- 人名等非数学专名不强制双语；首次出现时是否附英文由词表决定。\n\n## 3. 数学逻辑\n\n- 完整保留量词、否定、条件、唯一性和存在性。\n- “当且仅当”不得缩写为只表达一个方向的句式。\n- “至少”“至多”“恰有”“任意”“某个”必须逐一对应。\n- `respectively` 必须保持对象顺序；中文过长时可拆句，但不能改变配对。\n- 定义中的术语和条件优先逐项对应，不为流畅合并不同条件。\n\n## 4. 标点和排版\n\n- 中文正文使用全角中文标点。\n- 数学模式、命令、标签、引用键、URL 和代码内部保持原 ASCII 形式。\n- 中文与行内数学之间不手工插入不可控空格，由排版层统一处理。\n- 括号内是完整中文说明时使用中文标点；纯数学内容保留数学标点。\n- 不在译文数据中写死页码、定理号或章节号。\n- 不得仅为消除不完整候选预览中的孤行、寡行或大块页尾留白而压缩或改写忠实译文；\n  这类分页会随相邻单元加入而变化。只有裁切、重叠、不可读或结构错误才构成翻译级阻断。\n\n## 5. 结构名称\n\n章节、定义、引理、命题、定理、推论、证明、注记、例和练习的显示名称由模板\n统一设置。译文数据不重复手写环境标题，除非英文节点本身有显式标题参数。\n\n## 6. 引用\n\n- `\\ref`、`\\cite` 等目标不可修改。\n- 引用前后的中文可以调整语序，但不得改变引用所支持的陈述。\n- 文献作者和标题按项目词表或文献数据库决定，不凭模型记忆标准化。\n\n## 7. 译者说明\n\n正文默认不加入译者注。确有必要时使用独立、可识别的审校元数据或项目批准的\n专用环境，并通过单独 PR 审查；模型无权自行加入。\n",
+  "glossary": "schema: 1\nlanguage: zh-CN\n\nallowed_statuses:\n  - proposed\n  - approved\n  - deprecated\n\nentry_requirements:\n  - source_term\n  - target_term\n  - status\n  - definition_or_context\n  - evidence\n\ndisplay_policy:\n  retain_english: true\n  scope: every_mathematical_term_occurrence\n  format: target_fullwidth_parentheses_source\n  english_form: source_occurrence\n\nentries: []\n",
+  "source_units": [
+    {
+      "schema_version": 1,
+      "unit_id": "tag:0DIT:statement",
+      "parent_tag": "0DIS",
+      "chapter": "defos",
+      "node_kind": "lemma",
+      "risk_level": "R3",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text": "Let <MATH_0001> be a site. Let <MATH_0002>\nbe a surjection of sheaves of rings. Assume given the following data\n<STRUCT_0001>\n<STRUCT_0002> flat <MATH_0003>-modules <MATH_0004>,\n<STRUCT_0003> maps of <MATH_0005>-modules <MATH_0006>,\n<STRUCT_0004> a complex <MATH_0007> of <MATH_0008>-modules,\n<STRUCT_0005> maps of <MATH_0009>-modules <MATH_0010>\n<STRUCT_0006>\nsuch that\n<STRUCT_0007>\n<ITEMOPEN_0001>(a)<ITEMCLOSE_0001> <MATH_0011> for <MATH_0012>,\n<ITEMOPEN_0002>(b)<ITEMCLOSE_0002> <MATH_0013> for <MATH_0014>,\n<ITEMOPEN_0003>(c)<ITEMCLOSE_0003> with\n<MATH_0015>\nthe induced maps determine a complex <MATH_0016> and a map\nof complexes <MATH_0017>.\n<STRUCT_0008>\nThen there exist\n<STRUCT_0009>\n<STRUCT_0010>\nflat <MATH_0018>-modules <MATH_0019>,\n<STRUCT_0011>\nmaps of <MATH_0020>-modules <MATH_0021>,\n<STRUCT_0012>\nmaps of <MATH_0022>-modules <MATH_0023>,\n<STRUCT_0013>\nmaps of <MATH_0024>-modules <MATH_0025>,\n<STRUCT_0014>\nsuch that <MATH_0026> for <MATH_0027>, such that the diagrams\n<MATH_0028>\ncommute for all <MATH_0029>, such that the composition\n<MATH_0030>\nis the given map <MATH_0031>, and such that with\n<MATH_0032>\nwe obtain a complex <MATH_0033> and map of complexes\n<MATH_0034> which is a\nquasi-isomorphism.\n",
+      "source_status": "CURRENT",
+      "placeholders": {
+        "MATH_0001": "$\\mathcal{C}$",
+        "MATH_0002": "$\\mathcal{O} \\to \\mathcal{O}_0$",
+        "STRUCT_0001": "\\begin{enumerate}",
+        "STRUCT_0002": "\\item",
+        "MATH_0003": "$\\mathcal{O}$",
+        "MATH_0004": "$\\mathcal{G}^n$",
+        "STRUCT_0003": "\\item",
+        "MATH_0005": "$\\mathcal{O}$",
+        "MATH_0006": "$\\mathcal{G}^n \\to \\mathcal{G}^{n + 1}$",
+        "STRUCT_0004": "\\item",
+        "MATH_0007": "$\\mathcal{K}_0^\\bullet$",
+        "MATH_0008": "$\\mathcal{O}_0$",
+        "STRUCT_0005": "\\item",
+        "MATH_0009": "$\\mathcal{O}$",
+        "MATH_0010": "$\\mathcal{G}^n \\to \\mathcal{K}_0^n$",
+        "STRUCT_0006": "\\end{enumerate}",
+        "STRUCT_0007": "\\begin{enumerate}",
+        "ITEMOPEN_0001": "\\item[",
+        "ITEMCLOSE_0001": "]",
+        "MATH_0011": "$H^n(\\mathcal{K}_0^\\bullet) = 0$",
+        "MATH_0012": "$n \\gg 0$",
+        "ITEMOPEN_0002": "\\item[",
+        "ITEMCLOSE_0002": "]",
+        "MATH_0013": "$\\mathcal{G}^n = 0$",
+        "MATH_0014": "$n \\gg 0$",
+        "ITEMOPEN_0003": "\\item[",
+        "ITEMCLOSE_0003": "]",
+        "MATH_0015": "$\\mathcal{G}^n_0 = \\mathcal{G}^n \\otimes_\\mathcal{O} \\mathcal{O}_0$",
+        "MATH_0016": "$\\mathcal{G}_0^\\bullet$",
+        "MATH_0017": "$\\mathcal{G}_0^\\bullet \\to \\mathcal{K}_0^\\bullet$",
+        "STRUCT_0008": "\\end{enumerate}",
+        "STRUCT_0009": "\\begin{enumerate}",
+        "STRUCT_0010": "\\item[(\\romannumeral1)]",
+        "MATH_0018": "$\\mathcal{O}$",
+        "MATH_0019": "$\\mathcal{F}^n$",
+        "STRUCT_0011": "\\item[(\\romannumeral2)]",
+        "MATH_0020": "$\\mathcal{O}$",
+        "MATH_0021": "$\\mathcal{F}^n \\to \\mathcal{F}^{n + 1}$",
+        "STRUCT_0012": "\\item[(\\romannumeral3)]",
+        "MATH_0022": "$\\mathcal{O}$",
+        "MATH_0023": "$\\mathcal{F}^n \\to \\mathcal{K}_0^n$",
+        "STRUCT_0013": "\\item[(\\romannumeral4)]",
+        "MATH_0024": "$\\mathcal{O}$",
+        "MATH_0025": "$\\mathcal{G}^n \\to \\mathcal{F}^n$",
+        "STRUCT_0014": "\\end{enumerate}",
+        "MATH_0026": "$\\mathcal{F}^n = 0$",
+        "MATH_0027": "$n \\gg 0$",
+        "MATH_0028": "$$\n\\xymatrix{\n\\mathcal{G}^n \\ar[r] \\ar[d] & \\mathcal{G}^{n + 1} \\ar[d] \\\\\n\\mathcal{F}^n \\ar[r] & \\mathcal{F}^{n + 1}\n}\n$$",
+        "MATH_0029": "$n$",
+        "MATH_0030": "$\\mathcal{G}^n \\to \\mathcal{F}^n \\to \\mathcal{K}_0^n$",
+        "MATH_0031": "$\\mathcal{G}^n \\to \\mathcal{K}_0^n$",
+        "MATH_0032": "$\\mathcal{F}^n_0 = \\mathcal{F}^n \\otimes_\\mathcal{O} \\mathcal{O}_0$",
+        "MATH_0033": "$\\mathcal{F}_0^\\bullet$",
+        "MATH_0034": "$\\mathcal{F}_0^\\bullet \\to \\mathcal{K}_0^\\bullet$"
+      },
+      "render": {
+        "prefix": "\\begin{lemma}\n\\label{lemma-lift-complex}\n",
+        "suffix": "\\end{lemma}"
+      },
+      "source_text_hash": "sha256:b49701e3661d160fe6c354c6b3eb0e806977a72fdbe608666803568e7a3bccf3",
+      "source_structure_hash": "sha256:839024387dcad23c6dceb2db47fe203e7d74f8be4f392aaee9eaf2313e5a4e1b",
+      "source_math_hash": "sha256:7f9c51c871a99d40233a3d5c5370b00237fcaa8fc28f4a0d20f3c810f5497b55"
+    }
+  ],
+  "required_source_occurrences": [
+    {
+      "unit_id": "tag:0DIT:statement",
+      "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+      "source_text_hash": "sha256:b49701e3661d160fe6c354c6b3eb0e806977a72fdbe608666803568e7a3bccf3",
+      "source_structure_hash": "sha256:839024387dcad23c6dceb2db47fe203e7d74f8be4f392aaee9eaf2313e5a4e1b",
+      "catalog_hash": "sha256:f73dd4efb00b32339d18fa253add1487436649173e9e990deb68583561f44958",
+      "occurrences": [
+        {
+          "source_term": "site",
+          "projection_start": 21,
+          "projection_end": 25,
+          "concept": "site",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "surjection",
+          "projection_start": 48,
+          "projection_end": 58,
+          "concept": "surjection",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "sheaves of rings",
+          "projection_start": 62,
+          "projection_end": 78,
+          "concept": "source-phrase-sheaf-of-rings",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 140,
+          "projection_end": 144,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 157,
+          "projection_end": 164,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 192,
+          "projection_end": 196,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 212,
+          "projection_end": 219,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "complex",
+          "projection_start": 249,
+          "projection_end": 256,
+          "concept": "complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 284,
+          "projection_end": 291,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 307,
+          "projection_end": 311,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 327,
+          "projection_end": 334,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 577,
+          "projection_end": 581,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "complex",
+          "projection_start": 594,
+          "projection_end": 601,
+          "concept": "complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 620,
+          "projection_end": 623,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "complexes",
+          "projection_start": 627,
+          "projection_end": 636,
+          "concept": "complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "flat",
+          "projection_start": 709,
+          "projection_end": 713,
+          "concept": "flat",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 726,
+          "projection_end": 733,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 761,
+          "projection_end": 765,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 781,
+          "projection_end": 788,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 816,
+          "projection_end": 820,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 836,
+          "projection_end": 843,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "maps",
+          "projection_start": 871,
+          "projection_end": 875,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "modules",
+          "projection_start": 891,
+          "projection_end": 898,
+          "concept": "module",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "diagrams",
+          "projection_start": 979,
+          "projection_end": 987,
+          "concept": "diagram",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "commute",
+          "projection_start": 1000,
+          "projection_end": 1007,
+          "concept": "commutes",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "composition",
+          "projection_start": 1043,
+          "projection_end": 1054,
+          "concept": "composition",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1080,
+          "projection_end": 1083,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "complex",
+          "projection_start": 1140,
+          "projection_end": 1147,
+          "concept": "complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "map",
+          "projection_start": 1164,
+          "projection_end": 1167,
+          "concept": "map",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "complexes",
+          "projection_start": 1171,
+          "projection_end": 1180,
+          "concept": "complex",
+          "rule": "catalog"
+        },
+        {
+          "source_term": "quasi-isomorphism",
+          "projection_start": 1204,
+          "projection_end": 1221,
+          "concept": "hyphen-quasi-isomorphism",
+          "rule": "catalog"
+        }
+      ]
+    }
+  ],
+  "locked_english_contexts": [
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0DIS:paragraph/0002",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0DIS:paragraph/0002",
+          "parent_tag": "0DIS",
+          "chapter": "defos",
+          "node_kind": "paragraph",
+          "risk_level": "R1",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001><STRUCT_0002>\nThe material in this section works in the setting of a first order thickening\nof ringed topoi as defined in Section <REF_0001>.\nHowever, in order to simplify the notation we will assume the underlying\nsites <MATH_0001> and <MATH_0002> are the same.\nMoreover, the surjective homomorphism <MATH_0003>\nof sheaves of rings will be denoted <MATH_0004>\nas is perhaps more customary in the literature.",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\medskip",
+            "STRUCT_0002": "\\noindent",
+            "REF_0001": "\\ref{section-thickenings-ringed-topoi}",
+            "MATH_0001": "$\\mathcal{C}$",
+            "MATH_0002": "$\\mathcal{D}$",
+            "MATH_0003": "$\\mathcal{O}' \\to \\mathcal{O}$",
+            "MATH_0004": "$\\mathcal{O} \\to \\mathcal{O}_0$"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:3d2b77c770192753d78fd42c6a7728fe6cd72adb20a9b9df5026cdcd84dac7a5",
+          "source_structure_hash": "sha256:5c0ae0b874c97314eb1b91583dc0eda3c2765801a8dec2965014090a4866713a",
+          "source_math_hash": "sha256:f081ee17a1afb43b8340ea3c27aa45f4b899a061f1ed248be160d70d9a082724"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 187271,
+          "byte_end": 187754,
+          "line_start": 5041,
+          "line_end": 5048,
+          "fragment_hash": "sha256:8403e6c6b800a993d6341297235b4e1ae5829d2295f96c6c35fbd14f7c9badc1"
+        },
+        "owner_tag": "0DIS",
+        "parent_tag": "0DIS"
+      },
+      "hash": "sha256:aa02423f0f6fb2ba7cabdd4af0e65c67b8654a124ac9c76005b36193c65529b9"
+    },
+    {
+      "context_id": "locked-English-neighbor:defos:inventory:defos:0DIT:proof/0001",
+      "value": {
+        "kind": "locked-English-neighbor",
+        "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+        "source_unit": {
+          "schema_version": 1,
+          "unit_id": "inventory:defos:0DIT:proof/0001",
+          "parent_tag": "0DIS",
+          "chapter": "defos",
+          "node_kind": "proof",
+          "risk_level": "R3",
+          "source_commit": "a04446e57ec1fbc252a871afcec7752fb2807b14",
+          "source_text": "<STRUCT_0001>\nWe will prove by descending induction on <MATH_0001> that we can find <MATH_0002>,\n<MATH_0003>, and\n<MATH_0004> for <MATH_0005>\nfitting into a commutative diagram\n<MATH_0006>\nsuch that <MATH_0007> is a complex,\nthe induced map <MATH_0008>\ninduces an isomorphism on <MATH_0009> for <MATH_0010> and a surjection\nfor <MATH_0011>. For <MATH_0012> this is true because we can take\n<MATH_0013> for <MATH_0014> in that case by assumptions\n(a) and (b).\n\n<STRUCT_0002><STRUCT_0003>\nInduction step. We have to construct <MATH_0015>\nand the maps <MATH_0016>,\n<MATH_0017>, and\n<MATH_0018>.\nWe will choose <MATH_0019>\nas a direct sum of three pieces.\n\n<STRUCT_0004><STRUCT_0005>\nFor the first we take <MATH_0020> and we choose our map\n<MATH_0021> to be the inclusion of\nthe first summand. The maps <MATH_0022>\nand <MATH_0023> will be the obvious ones.\n\n<STRUCT_0006><STRUCT_0007>\nTo choose <MATH_0024> we consider the surjection (by induction hypothesis)\n<MATH_0025>\nWe can choose a set <MATH_0026>, for each <MATH_0027>\nan object <MATH_0028> of <MATH_0029>, and sections\n<MATH_0030>, <MATH_0031>\nsuch that\n<STRUCT_0008>\n<STRUCT_0009> <MATH_0032> maps to a section of <MATH_0033>,\n<STRUCT_0010> <MATH_0034> and <MATH_0035> map to the same section of\n<MATH_0036>,\n<STRUCT_0011> the sections <MATH_0037> generate <MATH_0038> as an <MATH_0039>-module.\n<STRUCT_0012>\nWe omit giving the full justification for this;\none uses that <MATH_0040>\nis a surjective maps of sheaves of sets. Then we set\nto put\n<MATH_0041>\nand define the maps <MATH_0042> and <MATH_0043>\nby using <MATH_0044> and <MATH_0045> to determine where to send the summand\n<MATH_0046>.\n\n<STRUCT_0013><STRUCT_0014>\nWith <MATH_0047> and maps as above,\nthis produces a diagram as above for <MATH_0048> such that\n<MATH_0049>\ninduces an isomorphism on <MATH_0050> for <MATH_0051>.\nTo get the map to be surjective on <MATH_0052> we choose\nthe summand <MATH_0053> as follows.\nChoose a set <MATH_0054>, for each <MATH_0055> an object <MATH_0056> of <MATH_0057>\nand a section <MATH_0058> of <MATH_0059>\nover <MATH_0060> such that these sections generate this kernel over\n<MATH_0061>. Then we put\n<MATH_0062>\nand the zero map <MATH_0063> and the map\n<MATH_0064> by using <MATH_0065> to determine where to the summand\n<MATH_0066>. This finishes the induction step\nby taking <MATH_0067> and\nmaps as indicated.\n<STRUCT_0015>",
+          "source_status": "CURRENT",
+          "placeholders": {
+            "STRUCT_0001": "\\begin{proof}",
+            "MATH_0001": "$e$",
+            "MATH_0002": "$\\mathcal{F}^n$",
+            "MATH_0003": "$\\mathcal{G}^n \\to \\mathcal{F}^n$",
+            "MATH_0004": "$\\mathcal{F}^n \\to \\mathcal{F}^{n + 1}$",
+            "MATH_0005": "$n \\geq e$",
+            "MATH_0006": "$$\n\\xymatrix{\n\\ldots \\ar[r] &\n\\mathcal{G}^{e - 1} \\ar[r] \\ar@/_2pc/[dd] &\n\\mathcal{G}^e \\ar[d] \\ar[r] \\ar@/_2pc/[dd] &\n\\mathcal{G}^{e + 1} \\ar[d] \\ar[r] \\ar@/_2pc/[dd]|\\hole &\n\\ldots \\\\\n& &\n\\mathcal{F}^e \\ar[d] \\ar[r] &\n\\mathcal{F}^{e + 1} \\ar[d] \\ar[r] & \\ldots \\\\\n\\ldots  \\ar[r] &\n\\mathcal{K}_0^{e - 1} \\ar[r] &\n\\mathcal{K}_0^e \\ar[r] &\n\\mathcal{K}_0^{e + 1} \\ar[r] & \\ldots\n}\n$$",
+            "MATH_0007": "$\\mathcal{F}_0^\\bullet$",
+            "MATH_0008": "$\\mathcal{F}_0^\\bullet \\to \\mathcal{K}_0^\\bullet$",
+            "MATH_0009": "$H^n$",
+            "MATH_0010": "$n > e$",
+            "MATH_0011": "$n = e$",
+            "MATH_0012": "$e \\gg 0$",
+            "MATH_0013": "$\\mathcal{F}^n = 0$",
+            "MATH_0014": "$n \\geq e$",
+            "STRUCT_0002": "\\medskip",
+            "STRUCT_0003": "\\noindent",
+            "MATH_0015": "$\\mathcal{F}^{e - 1}$",
+            "MATH_0016": "$\\mathcal{G}^{e - 1} \\to \\mathcal{F}^{e - 1}$",
+            "MATH_0017": "$\\mathcal{F}^{e - 1} \\to \\mathcal{F}^e$",
+            "MATH_0018": "$\\mathcal{F}^{e - 1} \\to \\mathcal{K}_0^{e - 1}$",
+            "MATH_0019": "$\\mathcal{F}^{e - 1} = A \\oplus B \\oplus C$",
+            "STRUCT_0004": "\\medskip",
+            "STRUCT_0005": "\\noindent",
+            "MATH_0020": "$A = \\mathcal{G}^{e - 1}$",
+            "MATH_0021": "$\\mathcal{G}^{e - 1} \\to \\mathcal{F}^{e - 1}$",
+            "MATH_0022": "$A \\to \\mathcal{K}^{e - 1}_0$",
+            "MATH_0023": "$A \\to \\mathcal{F}^e$",
+            "STRUCT_0006": "\\medskip",
+            "STRUCT_0007": "\\noindent",
+            "MATH_0024": "$B$",
+            "MATH_0025": "$$\n\\gamma :\n\\Ker(\\mathcal{F}^e_0 \\to \\mathcal{F}^{e + 1}_0)\n\\longrightarrow\n\\Ker(\\mathcal{K}^e_0 \\to \\mathcal{K}^{e + 1}_0)/\n\\Im(\\mathcal{K}^{e - 1}_0 \\to \\mathcal{K}^e_0)\n$$",
+            "MATH_0026": "$I$",
+            "MATH_0027": "$i \\in I$",
+            "MATH_0028": "$U_i$",
+            "MATH_0029": "$\\mathcal{C}$",
+            "MATH_0030": "$s_i \\in \\mathcal{F}^e(U_i)$",
+            "MATH_0031": "$t_i \\in \\mathcal{K}^{e - 1}_0(U_i)$",
+            "STRUCT_0008": "\\begin{enumerate}",
+            "STRUCT_0009": "\\item",
+            "MATH_0032": "$s_i$",
+            "MATH_0033": "$\\Ker(\\gamma) \\subset\n\\Ker(\\mathcal{F}^e_0 \\to \\mathcal{F}^{e + 1}_0)$",
+            "STRUCT_0010": "\\item",
+            "MATH_0034": "$s_i$",
+            "MATH_0035": "$t_i$",
+            "MATH_0036": "$\\mathcal{K}^e_0$",
+            "STRUCT_0011": "\\item",
+            "MATH_0037": "$s_i$",
+            "MATH_0038": "$\\Ker(\\gamma)$",
+            "MATH_0039": "$\\mathcal{O}_0$",
+            "STRUCT_0012": "\\end{enumerate}",
+            "MATH_0040": "$\\mathcal{F}^e \\to \\mathcal{F}^e_0$",
+            "MATH_0041": "$$\nB = \\bigoplus\\nolimits_{i \\in I} j_{U_i!}\\mathcal{O}_{U_i}\n$$",
+            "MATH_0042": "$B \\to \\mathcal{F}^e$",
+            "MATH_0043": "$B \\to \\mathcal{K}_0^{e - 1}$",
+            "MATH_0044": "$s_i$",
+            "MATH_0045": "$t_i$",
+            "MATH_0046": "$j_{U_i!}\\mathcal{O}_{U_i}$",
+            "STRUCT_0013": "\\medskip",
+            "STRUCT_0014": "\\noindent",
+            "MATH_0047": "$\\mathcal{F}^{e - 1} = A \\oplus B$",
+            "MATH_0048": "$e - 1$",
+            "MATH_0049": "$\\mathcal{F}_0^\\bullet \\to \\mathcal{K}_0^\\bullet$",
+            "MATH_0050": "$H^n$",
+            "MATH_0051": "$n \\geq e$",
+            "MATH_0052": "$H^{e - 1}$",
+            "MATH_0053": "$C$",
+            "MATH_0054": "$J$",
+            "MATH_0055": "$j \\in J$",
+            "MATH_0056": "$U_j$",
+            "MATH_0057": "$\\mathcal{C}$",
+            "MATH_0058": "$t_j$",
+            "MATH_0059": "$\\Ker(\\mathcal{K}^{e - 1}_0 \\to \\mathcal{K}^e_0)$",
+            "MATH_0060": "$U_j$",
+            "MATH_0061": "$\\mathcal{O}_0$",
+            "MATH_0062": "$$\nC = \\bigoplus\\nolimits_{j \\in J} j_{U_j!}\\mathcal{O}_{U_j}\n$$",
+            "MATH_0063": "$C \\to \\mathcal{F}^e$",
+            "MATH_0064": "$C \\to \\mathcal{K}_0^{e - 1}$",
+            "MATH_0065": "$s_j$",
+            "MATH_0066": "$j_{U_j!}\\mathcal{O}_{U_j}$",
+            "MATH_0067": "$\\mathcal{F}^{e - 1} = A \\oplus B \\oplus C$",
+            "STRUCT_0015": "\\end{proof}"
+          },
+          "render": {
+            "prefix": "",
+            "suffix": ""
+          },
+          "source_text_hash": "sha256:46fdc83db244d2835aab6bff252c56e6c71c15207470fb7094c72338daf26e98",
+          "source_structure_hash": "sha256:4082bd590a9fdff2b1ddf99a6e02c65366ffd3408cd4f007ee53babe024a861b",
+          "source_math_hash": "sha256:82f12b275ffd0cbb3a573677558975ede8b8565a7c442f8722762fc0a8dfc4c1"
+        },
+        "location": {
+          "file": "defos.tex",
+          "byte_start": 189584,
+          "byte_end": 193093,
+          "line_start": 5096,
+          "line_end": 5188,
+          "fragment_hash": "sha256:65d6f3ca9341a04dec7e6dfc9d4a57679dfb082b397ca728fe191717babe9305"
+        },
+        "owner_tag": "0DIT",
+        "parent_tag": "0DIS"
+      },
+      "hash": "sha256:eb5fd26ba337bf76fc77481f52df4558efa0384be1d3ea93cd6e4ce95b4828f0"
+    }
+  ],
+  "policy_git_origin": "139a245f7a348707c405c674029a8ae07b6e91d6",
+  "policy_files": [
+    {
+      "path": "upstream.lock",
+      "hash": "sha256:34bcb6f597c576cd063eaf08016dbce0d65b7a58164183c1b2042f16d7fa5be4"
+    },
+    {
+      "path": "config/workflow.yml",
+      "hash": "sha256:3f313cfe5066eb3d0c9ad5a130f129dd117ddff00539f6f5d32fa5020faad24f"
+    },
+    {
+      "path": "config/macro-policy.yml",
+      "hash": "sha256:6e799d75fc0740810b010e3ad47bb5f3a358fc91b6ef7f49471cec635415afc1"
+    },
+    {
+      "path": "config/glossary.yml",
+      "hash": "sha256:9fd4f9a43fb330f595aed1440d106bcda0773852ecab418d7dfe1f68d68aba6c"
+    },
+    {
+      "path": "config/source-terms.json",
+      "hash": "sha256:b16c347f4abc716183311b55dbffd22038acf0820df58d435592e05ff53b9b57"
+    },
+    {
+      "path": "config/style-guide.md",
+      "hash": "sha256:c6866028ee4340a9536f63f7a8ff72f6ebcf767d8149ecb86e689b8437b6c030"
+    },
+    {
+      "path": "config/models.yml",
+      "hash": "sha256:1f960426fde2e8edfe9001092d1127833706294ff0b5d3c24522675193abcda5"
+    },
+    {
+      "path": "config/harnesses.yml",
+      "hash": "sha256:3faaf84c8f9e48fa59559f26f306198fe1ed738e5374911e52e9c6f2b1ad34fb"
+    },
+    {
+      "path": "prompts/translator-v2.md",
+      "hash": "sha256:a5f8f3f3ac98c45d2d81bb7410c4c7baf87fbbe721eab33347b68e17714af6d9"
+    },
+    {
+      "path": "schema/unit.schema.json",
+      "hash": "sha256:88a7438f6f309e25961f54d0404519281e4786a3c2d470e485c819ce15539756"
+    },
+    {
+      "path": "schema/candidate.schema.json",
+      "hash": "sha256:6e5ce42a17abf06faed80e37a93ad9b680568b1dfcae4efc476bfa4c04870761"
+    },
+    {
+      "path": "schema/source-adoption.schema.json",
+      "hash": "sha256:344b9b22b5b0e1f4cc763a897506fa5764dab4e2dcf5f2a477e97d49cb2d20c3"
+    },
+    {
+      "path": "schema/source-adoption-input.schema.json",
+      "hash": "sha256:5fef52c79c13d2351b9abb0efbbaa4c1398358ad7d4f304c420fbc3b6ee9d25b"
+    },
+    {
+      "path": "schema/math-text-regions.schema.json",
+      "hash": "sha256:ef9263cdedf15a3e360f6184509c2cc7615c299a5fff9074d46544f7a4abb656"
+    },
+    {
+      "path": "schema/math-text-components.schema.json",
+      "hash": "sha256:385dde972b3048344f9d5e7b9098624f636a993b4c3d34071846916ccc154a9f"
+    },
+    {
+      "path": "schema/run-manifest.schema.json",
+      "hash": "sha256:a6574d9077a2e278bca208750e35e353ef4128cc8ac5a32483ed86c7ca3d0d23"
+    },
+    {
+      "path": "schema/translator-output.schema.json",
+      "hash": "sha256:3311f0f6dff5dd350f2991ec69cd5d0cc34f8faecab4f9d2dfcc01d71ad9c34d"
+    },
+    {
+      "path": "schema/task-scope.schema.json",
+      "hash": "sha256:c7b81a9ee956f4f47ae60af660024d6deefcb9069f15ed0447cb71832fe355db"
+    }
+  ],
+  "raw_output_paths_reserved": [
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-01.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-02.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-03.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-04.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-05.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-06.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-07.jsonl",
+    "docs/evidence/defos91-gpt61sol-p014-20261117-raw-08.jsonl"
+  ],
+  "rules": "Actual model generates all five fields; protected token order/count and trailing whitespace stay exact. Every mathematical term bilingual and provisional, unknown_terms required. No candidate translation memory."
+}

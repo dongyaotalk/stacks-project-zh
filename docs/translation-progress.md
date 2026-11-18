@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 91 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、91-93、95-96、98-104、106-111 章 |
+| 未开始 | 90 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、92-93、95-96、98-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 25 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90、94、97、105、112-116 章 |
+| 候选译文完成，待审校 | 26 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-91、94、97、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 587 / 3,299（17.8%） | 0 | 2,712 |
+| 模型候选译文 | 603 / 3,299（18.3%） | 0 | 2,696 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -126,7 +126,7 @@
 | 88 | 形式空间的代数化（`restricted`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 89 | 曲面解消再论（`spaces-resolve`） | 未开始 | 0 / 9（0.0%） | 0 | 9 | 0 | 0 |
 | 90 | 形式形变理论（`formal-defos`） | 候选译文完成，待审校 | 29 / 29（100.0%） | 0 | 0 | 0 | 0 |
-| 91 | 形变理论（`defos`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
+| 91 | 形变理论（`defos`） | 候选译文完成，待审校 | 16 / 16（100.0%） | 0 | 0 | 0 | 0 |
 | 92 | 余切复形（`cotangent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 93 | 形变问题（`examples-defos`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
 | 94 | 代数栈（`algebraic`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
@@ -751,6 +751,29 @@
 | 27 | `06TD` | Remarks regarding minimality | 完成 | 未开始 | 未开始 |
 | 28 | `0DQA` | Uniqueness of versal rings | 完成 | 未开始 | 未开始 |
 | 29 | `07W7` | Change of residue field | 完成 | 未开始 | 未开始 |
+
+### 第 91 章 形变理论（`defos`）
+
+共 16 个 Section：候选完成 16，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `08KX` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `08S3` | Deformations of rings and the naive cotangent complex | 完成 | 未开始 | 未开始 |
+| 3 | `08KY` | Thickenings of ringed spaces | 完成 | 未开始 | 未开始 |
+| 4 | `08L3` | Modules on first order thickenings of ringed spaces | 完成 | 未开始 | 未开始 |
+| 5 | `08LG` | Infinitesimal deformations of modules on ringed spaces | 完成 | 未开始 | 未开始 |
+| 6 | `08VQ` | Application to flat modules on flat thickenings of ringed spaces | 完成 | 未开始 | 未开始 |
+| 7 | `08U6` | Deformations of ringed spaces and the naive cotangent complex | 完成 | 未开始 | 未开始 |
+| 8 | `0D13` | Deformations of schemes | 完成 | 未开始 | 未开始 |
+| 9 | `08M6` | Thickenings of ringed topoi | 完成 | 未开始 | 未开始 |
+| 10 | `08MA` | Modules on first order thickenings of ringed topoi | 完成 | 未开始 | 未开始 |
+| 11 | `08MN` | Infinitesimal deformations of modules on ringed topoi | 完成 | 未开始 | 未开始 |
+| 12 | `08VV` | Application to flat modules on flat thickenings of ringed topoi | 完成 | 未开始 | 未开始 |
+| 13 | `08UE` | Deformations of ringed topoi and the naive cotangent complex | 完成 | 未开始 | 未开始 |
+| 14 | `0D15` | Deformations of algebraic spaces | 完成 | 未开始 | 未开始 |
+| 15 | `0DYQ` | Deformations of complexes | 完成 | 未开始 | 未开始 |
+| 16 | `0DIS` | Deformations of complexes on ringed topoi | 完成 | 未开始 | 未开始 |
 
 ### 第 94 章 代数栈（`algebraic`）
 

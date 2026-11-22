@@ -21,6 +21,7 @@ from typing import Any
 
 from . import math_text_cotangent as cotangent
 from . import math_text_p0 as p0_frames
+from . import list_counter_layout
 from .chapter_templates import manifest_chapters
 from .records import RecordError, stamp_unit_hashes
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
@@ -143,6 +144,8 @@ class Policy:
         from .numeric_item_labels import policy_registry
         self.numeric_item_rules = policy_registry(text)
         self.numeric_item_witnesses: dict[str, dict[str, Any]] = {}
+        self.list_counter_enabled = list_counter_layout.parse_policy(text)
+        self.list_counter_witness = ''
         self.math_text_witnesses: dict[str, dict[str, Any]] = {}
         notation_section_seen = False
         section = group = command = ''
@@ -945,6 +948,11 @@ class Scanner:
                         out.append(lock('ACCENT', i, stop))
                     elif name in {' ', '\t', '\r', '\n', ',', ';', ':', '!', '/', '\\', '%', '#', '$', '&', '_', '{', '}'}:
                         out.append(lock('SPACE' if name.isspace() else 'STRUCT', i, stop))
+                    elif name == 'setcounter' and (counter_end := list_counter_layout.token_end(
+                            self.text, i, b, self.source_chapter, numeric_environments,
+                            self.policy.list_counter_witness)) is not None:
+                        out.append(lock('STRUCT', i, counter_end))
+                        stop = counter_end
                     elif name in SCAFFOLD:
                         if (name == 'item' and numeric_environments
                                 and numeric_environments[-1] == 'enumerate'
@@ -1277,6 +1285,7 @@ def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> No
     """Validate source anchors independently of natural-text acceptance/cache."""
     from .numeric_item_labels import resolve_policy_witnesses
     resolve_policy_witnesses(policy, english)
+    policy.list_counter_witness = list_counter_layout.verify(policy.list_counter_enabled, english)
     policy.p0_verified_chapters = p0_frames.verify_chapters(policy.p0_frame_chapters, english)
     if not policy.math_text_rules:
         return

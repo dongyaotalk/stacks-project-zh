@@ -19,6 +19,7 @@ from . import math_text_spaces as spaces
 from . import math_text_groupoids as groupoids
 from . import math_text_deformations as deformations
 from . import math_text_cotangent as cotangent
+from . import math_text_p0 as p0_frames
 from . import math_text_deformations_references as internal_refs
 
 TOKEN = re.compile(r'<([A-Z][A-Z0-9]*_[0-9]{4})>')
@@ -506,6 +507,8 @@ def _context_usage(source, stream, index, kind):
 
 
 def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
+    if kind in p0_frames.USAGES.values():
+        return p0_frames.usage(source, stream, index, kind)
     if kind == cotangent.USAGE:
         return cotangent.usage(source, stream, index, kind)
     if kind in internal_refs.USAGES:
@@ -630,7 +633,7 @@ def usage(source: str, stream: list[dict[str, Any]], index: int, kind: str):
             'after': source[node['end']:after_end], 'environments': node['environments']}
 
 
-def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def find_slots(source: str, rules: dict[str, dict[str, Any]], *, p0_chapter=None) -> list[dict[str, Any]]:
     stream = nodes(source)
     if not _known_environments(stream):
         return []
@@ -641,6 +644,9 @@ def find_slots(source: str, rules: dict[str, dict[str, Any]]) -> list[dict[str, 
         matched = False
         for key, rule in rules.items():
             if node['value'] != rule['literal'] or node['command'] != rule['command']:
+                continue
+            if 'p0_chapter' in rule and (rule['p0_chapter'] != p0_chapter or not p0_frames.source_match(
+                    source, index, node, p0_chapter, 'component' if rule.get('slot_schema_version') == 3 else 'plain')):
                 continue
             witness = usage(source, stream, index, rule['usage'])
             if witness is not None and (rule.get('slot_schema_version') in {3,4,5} or plain_text(node['value'])):
@@ -840,6 +846,10 @@ def validate_regions(unit: dict[str, Any]) -> list[str]:
                         container, command = match['container_byte_span'], match['command_byte_span']
                         if not (0 <= container['start'] <= command['start'] < command['end'] <= container['end']):
                             raise ValueError('math text witness command span is outside its real container')
+                    if witness['usage'] in p0_frames.USAGES.values() and not p0_frames.source_match(
+                            source, node_index, node, unit['chapter'],
+                            'component' if witness['usage'] == p0_frames.COMPONENT_USAGE else 'plain'):
+                        raise ValueError('P0 math text does not match its complete original locked frame')
                     actual = usage(source, stream, node_index, witness['usage'])
                     if actual is None or actual != witness['usage_source']:
                         raise ValueError('math text syntax witness differs from original structure')
@@ -971,9 +981,11 @@ def _slot_node(source, stream, slot, version):
         literal, separator = ((COMPONENT_LITERAL, COMPONENT_SEPARATOR) if kind == COMPONENT_USAGE else
                               (node['value'], etale.SEPARATOR) if kind == etale.COMPONENT_USAGE
                               and node['value'] in etale.COMPONENT_LITERALS else
+                              (p0_frames.ETALE_LITERAL, p0_frames.ETALE_SEPARATOR)
+                              if kind == p0_frames.COMPONENT_USAGE else
                               (descent.ETALE_LITERAL, descent.ETALE_SEPARATOR))
         if (version != 3 or node['value'] != component['parameter_source']
-                or kind not in {COMPONENT_USAGE, descent.COMPONENT_USAGE, etale.COMPONENT_USAGE}
+                or kind not in {COMPONENT_USAGE, descent.COMPONENT_USAGE, etale.COMPONENT_USAGE, p0_frames.COMPONENT_USAGE}
                 or component['parameter_source'] != literal
                 or component['component_count'] != 2 or component['separator'] != separator):
             raise ValueError('unsupported composite parent parameter or version')

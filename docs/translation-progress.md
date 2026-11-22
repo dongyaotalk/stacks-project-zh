@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 88 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、93、95-96、98-104、106-107、109-111 章 |
+| 未开始 | 87 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、93、95-96、98-99、101-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 28 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-92、94、97、105、108、112-116 章 |
+| 候选译文完成，待审校 | 29 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-92、94、97、100、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 643 / 3,299（19.5%） | 0 | 2,656 |
+| 模型候选译文 | 657 / 3,299（19.9%） | 0 | 2,642 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -135,7 +135,7 @@
 | 97 | 可表性判据（`criteria`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
 | 98 | Artin 公理（`artin`） | 未开始 | 0 / 27（0.0%） | 0 | 27 | 0 | 0 |
 | 99 | Quot 空间与 Hilbert 空间（`quot`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
-| 100 | 代数栈的性质（`stacks-properties`） | 未开始 | 0 / 14（0.0%） | 0 | 14 | 0 | 0 |
+| 100 | 代数栈的性质（`stacks-properties`） | 候选译文完成，待审校 | 14 / 14（100.0%） | 0 | 0 | 0 | 0 |
 | 101 | 代数栈的态射（`stacks-morphisms`） | 未开始 | 0 / 51（0.0%） | 0 | 51 | 0 | 0 |
 | 102 | 代数栈的极限（`stacks-limits`） | 未开始 | 0 / 7（0.0%） | 0 | 7 | 0 | 0 |
 | 103 | 代数栈上同调（`stacks-cohomology`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
@@ -861,6 +861,27 @@
 | 17 | `06FG` | Applications | 完成 | 未开始 | 未开始 |
 | 18 | `06PI` | When is a quotient stack algebraic? | 完成 | 未开始 | 未开始 |
 | 19 | `076U` | Algebraic stacks in the \'etale topology | 完成 | 未开始 | 未开始 |
+
+### 第 100 章 代数栈的性质（`stacks-properties`）
+
+共 14 个 Section：候选完成 14，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `04X9` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `04XA` | Conventions and abuse of language | 完成 | 未开始 | 未开始 |
+| 3 | `04XB` | Properties of morphisms representable by algebraic spaces | 完成 | 未开始 | 未开始 |
+| 4 | `04XE` | Points of algebraic stacks | 完成 | 未开始 | 未开始 |
+| 5 | `04ZR` | Surjective morphisms | 完成 | 未开始 | 未开始 |
+| 6 | `04YA` | Quasi-compact algebraic stacks | 完成 | 未开始 | 未开始 |
+| 7 | `04YE` | Properties of algebraic stacks defined by properties of schemes | 完成 | 未开始 | 未开始 |
+| 8 | `04ZV` | Monomorphisms of algebraic stacks | 完成 | 未开始 | 未开始 |
+| 9 | `04YK` | Immersions of algebraic stacks | 完成 | 未开始 | 未开始 |
+| 10 | `0508` | Reduced algebraic stacks | 完成 | 未开始 | 未开始 |
+| 11 | `06ML` | Residual gerbes | 完成 | 未开始 | 未开始 |
+| 12 | `0AFL` | Dimension of a stack | 完成 | 未开始 | 未开始 |
+| 13 | `0DQG` | Local irreducibility | 完成 | 未开始 | 未开始 |
+| 14 | `0DTJ` | Finiteness conditions and points | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

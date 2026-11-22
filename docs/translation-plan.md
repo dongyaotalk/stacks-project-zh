@@ -69,7 +69,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 2 / 18 | 第 92 章 余切复形（`cotangent`） | `representability`, `moduli` | Section 1 / `08P6` | `REVIEW` | 余切复形是现代形变理论核心，系统中文资料稀缺 |
 | P0 | 2 / 19 | 第 52 章 代数几何与形式几何（`algebraization`） | `representability` | Section 1 / `0EI6` | `PREPARE_SCOPE` | 形式几何、代数化与模问题之间的核心桥梁，系统中文资料稀缺 |
 | P0 | 2 / 20 | 第 98 章 Artin 公理（`artin`） | `representability`, `stacks-moduli` | Section 1 / `07T0` | `PREPARE_SCOPE` | Artin 公理是代数化与可表性核心，系统中文资料稀缺 |
-| P0 | 2 / 21 | 第 100 章 代数栈的性质（`stacks-properties`） | `stacks-moduli` | Section 1 / `04X9` | `PREPARE_SCOPE` | 代数栈性质是高频核心参考，系统中文资料稀缺 |
+| P0 | 2 / 21 | 第 100 章 代数栈的性质（`stacks-properties`） | `stacks-moduli` | Section 1 / `04X9` | `REVIEW` | 代数栈性质是高频核心参考，系统中文资料稀缺 |
 | P0 | 2 / 22 | 第 101 章 代数栈的态射（`stacks-morphisms`） | `stacks-moduli` | Section 1 / `04XN` | `PREPARE_SCOPE` | 代数栈态射是高频核心参考，系统中文资料稀缺 |
 | P0 | 2 / 23 | 第 108 章 模栈（`moduli`） | `stacks-moduli` | Section 1 / `0DLU` | `REVIEW` | 模空间栈是项目最终目标之一，系统中文资料稀缺 |
 | P1 | 1 / 1 | 第 6 章 空间上的层（`sheaves`） | `scheme-to-stack` | Section 1 / `006B` | `PREPARE_SCOPE` | 位点、层和栈语言的重要前置；基础层论有中文资料但 Stacks 体系仍有增量价值 |

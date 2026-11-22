@@ -22,7 +22,7 @@ FIRST_ADOPTION_LIST_KINDS = STATEMENTS | {'remarks', 'prose_block'}
 
 def _plain_container_item_tags(fragment, kind, policy, tags, chapter):
     """Plain list labels, including labels after item prose; arguments stay opaque."""
-    scanner = Scanner(fragment, policy)
+    scanner = Scanner(fragment, policy, source_chapter=chapter)
     text, protected, errors = scanner.protect(0, len(fragment))
     if errors:
         raise RecordError('native item labels have unsupported source syntax')

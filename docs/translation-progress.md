@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 90 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、92-93、95-96、98-104、106-111 章 |
+| 未开始 | 89 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、93、95-96、98-104、106-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 26 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-91、94、97、105、112-116 章 |
+| 候选译文完成，待审校 | 27 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-92、94、97、105、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 603 / 3,299（18.3%） | 0 | 2,696 |
+| 模型候选译文 | 631 / 3,299（19.1%） | 0 | 2,668 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -127,7 +127,7 @@
 | 89 | 曲面解消再论（`spaces-resolve`） | 未开始 | 0 / 9（0.0%） | 0 | 9 | 0 | 0 |
 | 90 | 形式形变理论（`formal-defos`） | 候选译文完成，待审校 | 29 / 29（100.0%） | 0 | 0 | 0 | 0 |
 | 91 | 形变理论（`defos`） | 候选译文完成，待审校 | 16 / 16（100.0%） | 0 | 0 | 0 | 0 |
-| 92 | 余切复形（`cotangent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
+| 92 | 余切复形（`cotangent`） | 候选译文完成，待审校 | 28 / 28（100.0%） | 0 | 0 | 0 | 0 |
 | 93 | 形变问题（`examples-defos`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
 | 94 | 代数栈（`algebraic`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
 | 95 | 栈的例子（`examples-stacks`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
@@ -774,6 +774,41 @@
 | 14 | `0D15` | Deformations of algebraic spaces | 完成 | 未开始 | 未开始 |
 | 15 | `0DYQ` | Deformations of complexes | 完成 | 未开始 | 未开始 |
 | 16 | `0DIS` | Deformations of complexes on ringed topoi | 完成 | 未开始 | 未开始 |
+
+### 第 92 章 余切复形（`cotangent`）
+
+共 28 个 Section：候选完成 28，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `08P6` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `08UM` | Advice for the reader | 完成 | 未开始 | 未开始 |
+| 3 | `08PL` | The cotangent complex of a ring map | 完成 | 未开始 | 未开始 |
+| 4 | `08PQ` | Simplicial resolutions and derived lower shriek | 完成 | 未开始 | 未开始 |
+| 5 | `08PV` | Constructing a resolution | 完成 | 未开始 | 未开始 |
+| 6 | `08QL` | Functoriality | 完成 | 未开始 | 未开始 |
+| 7 | `08QR` | The fundamental triangle | 完成 | 未开始 | 未开始 |
+| 8 | `08QY` | Localization and \'etale ring maps | 完成 | 未开始 | 未开始 |
+| 9 | `08R4` | Smooth ring maps | 完成 | 未开始 | 未开始 |
+| 10 | `0G5X` | Positive characteristic | 完成 | 未开始 | 未开始 |
+| 11 | `08R6` | Comparison with the naive cotangent complex | 完成 | 未开始 | 未开始 |
+| 12 | `08RC` | A spectral sequence of Quillen | 完成 | 未开始 | 未开始 |
+| 13 | `09AM` | Comparison with Lichtenbaum-Schlessinger | 完成 | 未开始 | 未开始 |
+| 14 | `08SH` | The cotangent complex of a local complete intersection | 完成 | 未开始 | 未开始 |
+| 15 | `09D8` | Tensor products and the cotangent complex | 完成 | 未开始 | 未开始 |
+| 16 | `08SM` | Deformations of ring maps and the cotangent complex | 完成 | 未开始 | 未开始 |
+| 17 | `09DC` | The Atiyah class of a module | 完成 | 未开始 | 未开始 |
+| 18 | `08UQ` | The cotangent complex | 完成 | 未开始 | 未开始 |
+| 19 | `09DF` | The Atiyah class of a sheaf of modules | 完成 | 未开始 | 未开始 |
+| 20 | `08UT` | The cotangent complex of a morphism of ringed spaces | 完成 | 未开始 | 未开始 |
+| 21 | `08UX` | Deformations of ringed spaces and the cotangent complex | 完成 | 未开始 | 未开始 |
+| 22 | `08SQ` | The cotangent complex of a morphism of ringed topoi | 完成 | 未开始 | 未开始 |
+| 23 | `08V3` | Deformations of ringed topoi and the cotangent complex | 完成 | 未开始 | 未开始 |
+| 24 | `08T1` | The cotangent complex of a morphism of schemes | 完成 | 未开始 | 未开始 |
+| 25 | `08V7` | The cotangent complex of a scheme over a ring | 完成 | 未开始 | 未开始 |
+| 26 | `08VC` | The cotangent complex of a morphism of algebraic spaces | 完成 | 未开始 | 未开始 |
+| 27 | `08VH` | The cotangent complex of an algebraic space over a ring | 完成 | 未开始 | 未开始 |
+| 28 | `09DJ` | Fibre products of algebraic spaces and the cotangent complex | 完成 | 未开始 | 未开始 |
 
 ### 第 94 章 代数栈（`algebraic`）
 

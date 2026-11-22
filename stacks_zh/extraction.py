@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from . import math_text_cotangent as cotangent
+from . import math_text_p0 as p0_frames
 from .chapter_templates import manifest_chapters
 from .records import RecordError, stamp_unit_hashes
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
@@ -288,7 +289,11 @@ class Policy:
         self.math_text_notation_contexts = _notation_context_registry(text, self.math_text_notations)
         from .math_text import policy_rules
         try:
+            self.p0_frame_chapters = set(p0_frames.policy_chapters(text))
+            self.p0_verified_chapters = set()
             self.math_text_rules = policy_rules(text, self.math_text_notations) if natural_text_enabled else {}
+            if natural_text_enabled:
+                self.math_text_rules.update(p0_frames.natural_rules(self.p0_frame_chapters))
         except (ValueError, TypeError) as exc:
             raise RecordError('invalid natural math-text policy: ' + str(exc)) from exc
 
@@ -533,15 +538,16 @@ class Scanner:
     def notation_usage(self, command: str, value: str, closing: int, *, command_start: int | None = None):
         """Match an explicit notation rule and its original following tokens."""
         rule = self.policy.math_text_notations.get(value)
-        if rule is None:
-            return None
-        primary = self._notation_rule_usage(command, value, closing, command_start, rule)
-        if primary is not None:
-            return primary
-        for context in getattr(self.policy, 'math_text_notation_contexts', {}).get(value, []):
-            found = self._notation_rule_usage(command, value, closing, command_start, context)
-            if found is not None:
-                return found
+        if rule is not None:
+            primary = self._notation_rule_usage(command, value, closing, command_start, rule)
+            if primary is not None:
+                return primary
+            for context in getattr(self.policy, 'math_text_notation_contexts', {}).get(value, []):
+                found = self._notation_rule_usage(command, value, closing, command_start, context)
+                if found is not None:
+                    return found
+        if self.source_chapter in self.policy.p0_verified_chapters:
+            return p0_frames.notation(self.text, command_start, self.source_chapter, command, value)
         return None
 
     def _explicit_notation_context(self, command_start, closing, value, rule, kind):
@@ -797,7 +803,8 @@ class Scanner:
             child = Scanner(fragment, self.policy, source_chapter=self.source_chapter)
             from .math_text import find_slots, delimiter_kind
             try:
-                slots = find_slots(fragment, self.policy.math_text_rules) if self.policy.math_text_witnesses else []
+                chapter = self.source_chapter if self.source_chapter in self.policy.p0_verified_chapters else None
+                slots = find_slots(fragment, self.policy.math_text_rules, p0_chapter=chapter) if self.policy.math_text_witnesses else []
             except ValueError:
                 slots = []
             if slots and self.source_chapter != 'cotangent':
@@ -1270,6 +1277,7 @@ def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> No
     """Validate source anchors independently of natural-text acceptance/cache."""
     from .numeric_item_labels import resolve_policy_witnesses
     resolve_policy_witnesses(policy, english)
+    policy.p0_verified_chapters = p0_frames.verify_chapters(policy.p0_frame_chapters, english)
     if not policy.math_text_rules:
         return
     from .math_text import find_slots, restore
@@ -1310,7 +1318,7 @@ def resolve_natural_math_witnesses(policy: Policy, english: LockedEnglish) -> No
             for name in re.findall(r'<(MATH_[0-9]{4})>', unit['source_text']):
                 math = unit['placeholders'][name]
                 try:
-                    slots = find_slots(math, {key: rule})
+                    slots = find_slots(math, {key: rule}, p0_chapter=chapter)
                 except ValueError:
                     slots = []
                 prefix = unit['render']['prefix'] + restore(unit, unit['source_text'].partition('<' + name + '>')[0])

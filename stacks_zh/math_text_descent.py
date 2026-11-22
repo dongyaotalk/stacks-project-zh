@@ -184,9 +184,10 @@ def term_projection(unit, text):
     This is lexical QA input, never rendered/source TeX. No other MATHSEG
     payload becomes visible and no historical text projection is generalized.
     """
+    from .math_text_p0 import COMPONENT_USAGE as P0_ETALE_COMPONENT
     components = [slot for region in unit.get('math_text_regions', [])
                   for slot in region['slots']
-                  if slot.get('classification_witness', {}).get('usage') == COMPONENT_USAGE]
+                  if slot.get('classification_witness', {}).get('usage') in {COMPONENT_USAGE, P0_ETALE_COMPONENT}]
     if not components:
         return text
     from .math_text import validate_regions

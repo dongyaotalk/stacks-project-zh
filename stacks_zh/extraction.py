@@ -19,6 +19,7 @@ from array import array
 from pathlib import Path
 from typing import Any
 
+from . import math_text_cotangent as cotangent
 from .chapter_templates import manifest_chapters
 from .records import RecordError, stamp_unit_hashes
 from .source_reextractions import LockedEnglish, _git_bytes, byte_hash, source_tex
@@ -71,8 +72,8 @@ def _notation_context_registry(text, notations):
     result, seen_contexts = {}, set()
     for value in entries.values():
         base = value.get('base_notation')
-        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb', 'can', 'Mod', 'Inf'}:
-            raise RecordError('notation context requires its existing direct pr/-Sets/PAb/can base')
+        if not isinstance(base, str) or base not in notations or base not in {'pr', '-Sets', 'PAb', 'can', 'Mod', 'Inf', '-Alg', 'Tor'}:
+            raise RecordError('notation context requires an existing allowed direct notation base')
         fields = {'base_notation', 'commands', 'usages', 'source_label'}
         if base == '-Sets' and value.get('usages') != ['etale-set-category']:
             fields.add('prefix')
@@ -84,7 +85,12 @@ def _notation_context_registry(text, notations):
                    {'etale-canonical-map'} if base == 'can' else {'sites-pab-shriek', 'etale-pab-category'} if base == 'PAb' else
                    {'starred-subscripted', 'projection-declaration', 'descent-projection', 'etale-projection'} if base == 'pr' else
                    {'prefixed-symbol', 'morphism-category-prefixed-symbol', 'diagram-category-prefixed-symbol', 'etale-set-category'})
-        if (commands != expected_commands or any(c not in notations[base]['commands'] for c in commands)
+        cotangent_context = base in {'-Alg', 'Tor'}
+        if cotangent_context:
+            expected_commands = [cotangent.NOTATION_COMMANDS[base]]
+            allowed = {cotangent.NOTATION_USAGE}
+        if (commands != expected_commands
+                or (not cotangent_context and any(c not in notations[base]['commands'] for c in commands))
                 or not isinstance(usages, list) or not usages
                 or any(not isinstance(v, str) or v not in allowed for v in usages)
                 or len(usages) != len(set(usages))):
@@ -209,7 +215,8 @@ class Policy:
                                              'prefixed-symbol', 'arrow-target-prefixed-symbol',
                                              'sheaf-symbol-suffix', 'category-constructor', 'named-arrow',
                                              'descent-relative-proj', 'etale-finite-etale-category', 'etale-reduced-norm',
-                                             'spaces-category', 'groupoids-cqc-category', 'deformations-symbol-frame'})]:
+                                             'spaces-category', 'groupoids-cqc-category', 'deformations-symbol-frame',
+                                             cotangent.NOTATION_USAGE})]:
                 values = rule[key]
                 if (not isinstance(values, list) or not values or
                         any(not isinstance(v, str) or v not in allowed for v in values) or
@@ -245,6 +252,11 @@ class Policy:
                     or rule['commands'] != ['text']
                     or rule['usages'] != ['deformations-symbol-frame'] or 'contexts' in rule):
                 raise RecordError('deformations operator requires its sole exact finite text role')
+            if (notation in {'Alg', 'Sym'} or cotangent.NOTATION_USAGE in rule['usages']) and (
+                    notation not in {'Alg', 'Sym'}
+                    or rule['commands'] != [cotangent.NOTATION_COMMANDS[notation]]
+                    or rule['usages'] != [cotangent.NOTATION_USAGE] or 'contexts' in rule):
+                raise RecordError('cotangent notation requires its sole exact formula role')
             for name, (font, role) in finite_roles.items():
                 if (notation == name or role in rule['usages']) and (
                         notation != name or rule['commands'] != [font]
@@ -282,8 +294,9 @@ class Policy:
 
 
 class Scanner:
-    def __init__(self, text: str, policy: Policy):
+    def __init__(self, text: str, policy: Policy, *, source_chapter: str | None = None):
         self.text, self.policy = text, policy
+        self.source_chapter = source_chapter
         self.math_text_classifications: list[dict[str, Any]] = []
         self.math_text_regions: list[dict[str, Any]] = []
 
@@ -542,6 +555,10 @@ class Scanner:
         except (ValueError, StopIteration):
             return None
         node = stream[index]
+        if kind == cotangent.NOTATION_USAGE:
+            if self.source_chapter != 'cotangent':
+                return None
+            return cotangent.notation_context(self.text, stream, index, value, kind)
         if kind == 'deformations-symbol-frame':
             from .math_text_deformations import notation_context
             return notation_context(self.text, stream, index, value, kind)
@@ -640,7 +657,8 @@ class Scanner:
                          'diagram-category-prefixed-symbol', 'descent-relative-proj', 'descent-projection',
                          'sites-pab-shriek', 'etale-projection', 'etale-canonical-map',
                          'etale-set-category', 'etale-finite-etale-category', 'etale-reduced-norm', 'etale-pab-category',
-                         'spaces-category', 'groupoids-cqc-category', 'deformations-symbol-frame'}:
+                         'spaces-category', 'groupoids-cqc-category', 'deformations-symbol-frame',
+                         cotangent.NOTATION_USAGE}:
                 context = self._explicit_notation_context(command_start, closing, value, rule, usage)
                 if context is not None:
                     return usage, context, rule['source_label']
@@ -776,12 +794,14 @@ class Scanner:
             # Only exact notation or witnessed plain-text classifications are
             # accepted. Every other textual parameter remains a blocker.
             fragment = self.text[a:b]
-            child = Scanner(fragment, self.policy)
+            child = Scanner(fragment, self.policy, source_chapter=self.source_chapter)
             from .math_text import find_slots, delimiter_kind
             try:
                 slots = find_slots(fragment, self.policy.math_text_rules) if self.policy.math_text_witnesses else []
             except ValueError:
                 slots = []
+            if slots and self.source_chapter != 'cotangent':
+                slots = [slot for slot in slots if slot['usage'] != cotangent.USAGE]
             slots_by_parameter = {s['parameter_start']: s for s in slots}
             i = 0
             while i < len(fragment):
@@ -984,7 +1004,7 @@ def chapter_inventory(chapter: str, raw: bytes, commit: str, tags: dict[str, str
                       policy: Policy, existing: dict[tuple[str, str], list[dict[str, Any]]] | None = None,
                       *, hierarchical_prose: bool = False):
     text = raw.decode('utf-8')
-    scanner = Scanner(text, policy)
+    scanner = Scanner(text, policy, source_chapter=chapter)
     byte_offsets = array('Q', [0])
     for char in text:
         byte_offsets.append(byte_offsets[-1] + len(char.encode('utf-8')))

@@ -223,7 +223,7 @@ class Containers:
                 raise RecordError('prose block has no real document closing boundary')
             end = after['location']['byte_start'] if after else self.closings[chapter]
             fragment = raw[start:end].decode('utf-8')
-            scanner = Scanner(fragment, self.policy)
+            scanner = Scanner(fragment, self.policy, source_chapter=chapter)
             text, tokens, local_problems = scanner.protect(0, len(fragment))
             if local_problems:
                 raise RecordError('prose-block adoption blocked: ' + '; '.join(p['message'] for p in local_problems))
@@ -401,7 +401,7 @@ def lower_container(selected: dict[str, Any], policy: Policy, *, layout: str = '
     owner, parent, kind, ordinal = (selector[k] for k in ('owner_tag', 'parent_tag', 'kind', 'ordinal'))
     if not owner or not parent:
         raise RecordError('container requires real owner and Section parent Tags')
-    scanner = Scanner(fragment, policy)
+    scanner = Scanner(fragment, policy, source_chapter=chapter)
     env = ENVIRONMENT.match(fragment, 0)
     title = None
     if kind in STATEMENTS | {'proof'}:

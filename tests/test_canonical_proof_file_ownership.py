@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from test_source_containers import fixture, selector, git
+from test_source_containers import NAMED, fixture, selector, git
 from test_source_adoptions import synthetic_fixture, write
 from stacks_zh.records import RecordError, stamp_unit_hashes, write_jsonl
 from stacks_zh.source_containers import (Containers, lower_container,
@@ -93,8 +93,9 @@ translatable_math_text:
                 unit = lower_container(native.select(selector(ordinal=index)), native.policy)[0]
                 with self.assertRaisesRegex(RecordError, 'no adjacent labelled statement'):
                     permanent_tag_mapping([unit], native.english.tags)
-                padded = canonical_proof_file_context([unit], native.english.tags, native)
+                padded, gaps = canonical_proof_file_context([unit], native.english.tags, native)
                 self.assertGreater(len(padded), 1)
+                self.assertFalse(gaps)
                 self.assertEqual(canonical_proof_file_mapping([unit], native.english.tags, native),
                                  {unit['unit_id']: unit['unit_id']})
                 groups, errors = proof_groups([unit], native.english.tags, native_containers=native)
@@ -119,6 +120,32 @@ translatable_math_text:
                     changed = stamp_unit_hashes(changed)
                     with self.assertRaises(RecordError):
                         canonical_proof_file_mapping([changed], native.english.tags, native)
+
+    def test_real_in_file_statement_prose_and_proof_keep_source_order(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root, harvest, _ = fixture(Path(temp),
+                statement=NAMED + '\n\nHere is a comment on the argument.\n\n')
+            native = Containers(root, harvest)
+            tags = native.english.tags
+            units = [lower_container(native.select(coordinate), native.policy)[0] for coordinate in (
+                selector('lemma'), selector('prose_block', owner='0000'), selector())]
+            statement, paragraph, proof = units
+            original = copy.deepcopy(units)
+            with self.assertRaisesRegex(RecordError, 'no adjacent labelled statement'):
+                permanent_tag_mapping(units, tags)
+            self.assertEqual(canonical_proof_file_mapping(units, tags, native),
+                             {u['unit_id']: u['unit_id'] for u in units})
+            groups, errors = proof_groups(units, tags, native_containers=native)
+            self.assertEqual(errors, [])
+            self.assertEqual(groups[0]['selector']['statement_tag'], '0001')
+            self.assertEqual(groups[0]['selector']['proof_index'], 1)
+            self.assertEqual(groups[0]['units'], [proof])
+            self.assertEqual(units, original)
+            changed = stamp_unit_hashes(dict(paragraph, source_text='Different prose.'))
+            for invalid in ([statement, changed, proof], [paragraph, proof, statement],
+                            [statement, paragraph, paragraph, proof]):
+                with self.subTest(ids=[u['unit_id'] for u in invalid]), self.assertRaises(RecordError):
+                    canonical_proof_file_mapping(invalid, tags, native)
 
     def test_incomplete_or_legacy_wrapper_cannot_borrow_native_context(self):
         with tempfile.TemporaryDirectory() as temp:

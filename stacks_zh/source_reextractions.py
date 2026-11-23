@@ -219,13 +219,14 @@ def _proof_index(text: str) -> dict[str, Any]:
 
 
 def proof_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
-                 native_containers=None) -> tuple[list[dict[str, Any]], list[str]]:
+                 native_containers=None, _deferred_gaps: frozenset[str] = frozenset()
+                 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Determine owners from complete frozen wrapper chains, never current IDs."""
     if native_containers is not None:
         from .source_containers import canonical_proof_file_context
-        padded = canonical_proof_file_context(units, tags, native_containers)
+        padded, deferred_gaps = canonical_proof_file_context(units, tags, native_containers)
         if padded is not units:
-            groups, errors = proof_groups(padded, tags)
+            groups, errors = proof_groups(padded, tags, _deferred_gaps=deferred_gaps)
             ids = {u['unit_id'] for u in units}
             current = []
             for group in groups:
@@ -236,7 +237,7 @@ def proof_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
                                     'tex': ''.join(source_tex(u) for u in kept),
                                     '_canonical_file_context': True})
             return current, errors
-    mapping = permanent_tag_mapping(units, tags)
+    mapping = permanent_tag_mapping(units, tags, _deferred_gaps=_deferred_gaps)
     groups, errors, active = [], [], None
     owner = None
     statement_kind = None
@@ -261,7 +262,8 @@ def proof_groups(units: list[dict[str, Any]], tags: dict[str, str], *,
             proof_index = 0
         elif unit['node_kind'].endswith('_title') and unit['node_kind'] != 'environment_title':
             owner = None
-        elif unit['node_kind'] == 'paragraph' and statement_kind is None and active is None and r'\begin{proof}' not in prefix:
+        elif (unit['node_kind'] == 'paragraph' and statement_kind is None and active is None
+              and r'\begin{proof}' not in prefix and unit['unit_id'] not in _deferred_gaps):
             owner = None
         if r'\begin{proof}' in prefix:
             if active is not None:

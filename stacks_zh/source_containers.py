@@ -605,11 +605,41 @@ def _verify_complete_proof_lowering(unit, selector, selected, native):
     native.assert_unchanged()
 
 
+def _deferred_proof_gap(native, statement_selector, selected_proof, paragraph):
+    """Recognize the complete native prose block between the statement and proof."""
+    if paragraph['node_kind'] != 'paragraph':
+        return None
+    parent = statement_selector['parent_tag']
+    match = re.fullmatch(r'tag:([0-9A-Z]+):prose-([0-9]{4})', paragraph['unit_id'])
+    if match is None or match[1] != parent:
+        return None
+    file = statement_selector['file']
+    chapter = file[:-4]
+    section_labels = [label for label, tag in native.english.tags.items()
+                      if tag == parent and label.startswith(chapter + '-')]
+    if len(section_labels) != 1:
+        return None
+    selected = native.select(dict(file=file, owner_tag=parent, parent_tag=parent,
+        owner_label=section_labels[0], kind='prose_block', ordinal=int(match[2])))
+    if lower_container(selected, native.policy) != [clean(paragraph)]:
+        return None
+    statement = native.select(statement_selector)['location']
+    middle, proof = selected['location'], selected_proof['location']
+    raw = native.document(chapter)[0]
+    for start, end in ((statement['byte_end'], middle['byte_start']),
+                       (middle['byte_end'], proof['byte_start'])):
+        if start > end or raw[start:end].strip(OUTER_WHITESPACE.encode()):
+            return None
+    return paragraph['unit_id']
+
+
 def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, str],
-                                 native: Containers, *, ownership_native=None) -> list[dict[str, Any]]:
+                                 native: Containers, *, ownership_native=None
+                                 ) -> tuple[list[dict[str, Any]], frozenset[str]]:
     """Supply real English owners only for verified, complete orphan proofs.
 
-    These temporary source rows are validation context, never output facts.
+    Temporary source rows and independently witnessed prose gaps are validation
+    context, never output facts.
     Legacy wrapper migration keeps its original file-local semantics.
     """
     recoverable = ('proof has no adjacent labelled statement owner',
@@ -620,7 +650,7 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
     try:
         mapping = permanent_tag_mapping(units, tags)
         if all(not complete_proof(u) or mapping[u['unit_id']] == u['unit_id'] for u in units):
-            return units
+            return units, frozenset()
     except RecordError as exc:
         if not any(message in str(exc) for message in recoverable):
             raise
@@ -631,10 +661,11 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
         raise RecordError('canonical proof context has duplicate batch unit IDs')
     padded = []
     seeded_owners = set()
+    deferred_gaps = frozenset()
     for unit in units:
         needs_context = False
         try:
-            mapping = permanent_tag_mapping([*padded, unit], tags)
+            mapping = permanent_tag_mapping([*padded, unit], tags, _deferred_gaps=deferred_gaps)
             needs_context = bool(complete_proof(unit) and mapping[unit['unit_id']] != unit['unit_id'])
         except RecordError as exc:
             if not any(message in str(exc) for message in recoverable):
@@ -660,22 +691,29 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
                           if row['owner_tag'] == owner and row['unit']['node_kind'] in STATEMENTS]
             if len(owner_rows) != 1:
                 raise RecordError('canonical proof has no unique complete English statement')
-            seeds = _proof_context_seeds(native,
-                {**selector, 'kind': owner_rows[0]['unit']['node_kind'], 'ordinal': 1}, ownership_native)
+            statement_selector = {**selector, 'kind': owner_rows[0]['unit']['node_kind'], 'ordinal': 1}
+            seeds = _proof_context_seeds(native, statement_selector, ownership_native)
             for index in range(1, ordinal):
                 seeds.extend(_proof_context_seeds(native, {**selector, 'ordinal': index}, ownership_native))
             seed_ids = {u['unit_id'] for u in seeds}
             if seed_ids & (original_ids | {u['unit_id'] for u in padded}):
-                raise RecordError('canonical proof context would duplicate or reorder a batch unit')
-            padded.extend(seeds)
+                gap = None
+                if (len(seeds) == 1 and len(padded) >= 2 and seeds[0]['unit_id'] in original_ids
+                        and clean(padded[-2]) == seeds[0]):
+                    gap = _deferred_proof_gap(native, statement_selector, selected, padded[-1])
+                if gap is None:
+                    raise RecordError('canonical proof context would duplicate or reorder a batch unit')
+                deferred_gaps = deferred_gaps | {gap}
+            else:
+                padded.extend(seeds)
             seeded_owners.add(owner)
-            mapping = permanent_tag_mapping([*padded, unit], tags)
+            mapping = permanent_tag_mapping([*padded, unit], tags, _deferred_gaps=deferred_gaps)
             if mapping[unit['unit_id']] != unit['unit_id']:
                 raise RecordError('canonical proof context changed its permanent coordinate')
         padded.append(unit)
     # A later proof may inherit the temporary owner from an earlier orphan.
     # Verify every such real group, including its ordinal and complete lowering.
-    groups, errors = proof_groups(padded, tags)
+    groups, errors = proof_groups(padded, tags, _deferred_gaps=deferred_gaps)
     if errors:
         raise RecordError('canonical proof context has invalid groups: ' + '; '.join(errors))
     for group in groups:
@@ -692,14 +730,16 @@ def canonical_proof_file_context(units: list[dict[str, Any]], tags: dict[str, st
         selected = native.select(selector)
         _verify_complete_proof_lowering(unit, selector, selected, native)
     native.assert_unchanged()
-    return padded
+    return padded, deferred_gaps
 
 
 def canonical_proof_file_mapping(units: list[dict[str, Any]], tags: dict[str, str],
                                  native: Containers | None = None, *, ownership_native=None) -> dict[str, str]:
-    context = units if native is None else canonical_proof_file_context(
+    if native is None:
+        return permanent_tag_mapping(units, tags)
+    context, deferred_gaps = canonical_proof_file_context(
         units, tags, native, ownership_native=ownership_native)
-    mapping = permanent_tag_mapping(context, tags)
+    mapping = permanent_tag_mapping(context, tags, _deferred_gaps=deferred_gaps)
     return {u['unit_id']: mapping[u['unit_id']] for u in units}
 
 

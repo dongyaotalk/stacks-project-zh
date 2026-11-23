@@ -124,7 +124,8 @@ def _own_tag(unit: dict[str, Any], tags: dict[str, str]) -> str | None:
     return resolved.pop()
 
 
-def permanent_tag_mapping(units: list[dict[str, Any]], tags: dict[str, str]) -> dict[str, str]:
+def permanent_tag_mapping(units: list[dict[str, Any]], tags: dict[str, str], *,
+                          _deferred_gaps: frozenset[str] = frozenset()) -> dict[str, str]:
     mapping = {}
     owner_tag = owner_kind = owner_scope = None
     statement_open = in_proof = False
@@ -159,7 +160,7 @@ def permanent_tag_mapping(units: list[dict[str, Any]], tags: dict[str, str]) -> 
             if owner_scope[0] != unit['chapter'] or (owner_scope[1] != unit['parent_tag'] and own_tag != unit['parent_tag']):
                 raise RecordError(f'{old_id}: proof crosses its owner chapter/parent Tag')
             tag = own_tag or owner_tag
-        elif unit['node_kind'] == 'paragraph' and not statement_open:
+        elif unit['node_kind'] == 'paragraph' and not statement_open and old_id not in _deferred_gaps:
             owner_tag = owner_kind = owner_scope = None
         elif statement_open:
             if owner_scope[0] != unit['chapter'] or (owner_scope[1] != unit['parent_tag'] and own_tag != unit['parent_tag']):

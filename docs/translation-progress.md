@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 87 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、93、95-96、98-99、101-104、106-107、109-111 章 |
+| 未开始 | 86 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、101-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 29 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-92、94、97、100、105、108、112-116 章 |
+| 候选译文完成，待审校 | 30 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-92、94、97-98、100、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 657 / 3,299（19.9%） | 0 | 2,642 |
+| 模型候选译文 | 684 / 3,299（20.7%） | 0 | 2,615 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -133,7 +133,7 @@
 | 95 | 栈的例子（`examples-stacks`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
 | 96 | 代数栈上的层（`stacks-sheaves`） | 未开始 | 0 / 26（0.0%） | 0 | 26 | 0 | 0 |
 | 97 | 可表性判据（`criteria`） | 候选译文完成，待审校 | 19 / 19（100.0%） | 0 | 0 | 0 | 0 |
-| 98 | Artin 公理（`artin`） | 未开始 | 0 / 27（0.0%） | 0 | 27 | 0 | 0 |
+| 98 | Artin 公理（`artin`） | 候选译文完成，待审校 | 27 / 27（100.0%） | 0 | 0 | 0 | 0 |
 | 99 | Quot 空间与 Hilbert 空间（`quot`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 100 | 代数栈的性质（`stacks-properties`） | 候选译文完成，待审校 | 14 / 14（100.0%） | 0 | 0 | 0 | 0 |
 | 101 | 代数栈的态射（`stacks-morphisms`） | 未开始 | 0 / 51（0.0%） | 0 | 51 | 0 | 0 |
@@ -861,6 +861,40 @@
 | 17 | `06FG` | Applications | 完成 | 未开始 | 未开始 |
 | 18 | `06PI` | When is a quotient stack algebraic? | 完成 | 未开始 | 未开始 |
 | 19 | `076U` | Algebraic stacks in the \'etale topology | 完成 | 未开始 | 未开始 |
+
+### 第 98 章 Artin 公理（`artin`）
+
+共 27 个 Section：候选完成 27，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `07T0` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `07T1` | Conventions | 完成 | 未开始 | 未开始 |
+| 3 | `07T2` | Predeformation categories | 完成 | 未开始 | 未开始 |
+| 4 | `07WM` | Pushouts and stacks | 完成 | 未开始 | 未开始 |
+| 5 | `06L9` | The Rim-Schlessinger condition | 完成 | 未开始 | 未开始 |
+| 6 | `07WT` | Deformation categories | 完成 | 未开始 | 未开始 |
+| 7 | `07WW` | Change of field | 完成 | 未开始 | 未开始 |
+| 8 | `07WY` | Tangent spaces | 完成 | 未开始 | 未开始 |
+| 9 | `07X3` | Formal objects | 完成 | 未开始 | 未开始 |
+| 10 | `07XA` | Approximation | 完成 | 未开始 | 未开始 |
+| 11 | `07XK` | Limit preserving | 完成 | 未开始 | 未开始 |
+| 12 | `07XD` | Versality | 完成 | 未开始 | 未开始 |
+| 13 | `07XP` | Openness of versality | 完成 | 未开始 | 未开始 |
+| 14 | `07XJ` | Axioms | 完成 | 未开始 | 未开始 |
+| 15 | `07XZ` | Axioms for functors | 完成 | 未开始 | 未开始 |
+| 16 | `07Y0` | Algebraic spaces | 完成 | 未开始 | 未开始 |
+| 17 | `07Y3` | Algebraic stacks | 完成 | 未开始 | 未开始 |
+| 18 | `0CXN` | Strong Rim-Schlessinger | 完成 | 未开始 | 未开始 |
+| 19 | `0G2I` | Versality and generalizations | 完成 | 未开始 | 未开始 |
+| 20 | `0CXR` | Strong formal effectiveness | 完成 | 未开始 | 未开始 |
+| 21 | `07Y6` | Infinitesimal deformations | 完成 | 未开始 | 未开始 |
+| 22 | `07YF` | Obstruction theories | 完成 | 未开始 | 未开始 |
+| 23 | `07YJ` | Naive obstruction theories | 完成 | 未开始 | 未开始 |
+| 24 | `07YV` | A dual notion | 完成 | 未开始 | 未开始 |
+| 25 | `0GE1` | Limit preserving functors on Noetherian schemes | 完成 | 未开始 | 未开始 |
+| 26 | `0GE6` | Algebraic spaces in the Noetherian setting | 完成 | 未开始 | 未开始 |
+| 27 | `0GH7` | Artin's theorem on contractions | 完成 | 未开始 | 未开始 |
 
 ### 第 100 章 代数栈的性质（`stacks-properties`）
 

@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 85 | 第 5-6、9-20、22-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、101-104、106-107、109-111 章 |
+| 未开始 | 84 | 第 5-6、9-20、22-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 31 | 第 1-4、7-8、21、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100、105、108、112-116 章 |
+| 候选译文完成，待审校 | 32 | 第 1-4、7-8、21、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 712 / 3,299（21.6%） | 0 | 2,587 |
+| 模型候选译文 | 763 / 3,299（23.1%） | 0 | 2,536 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -136,7 +136,7 @@
 | 98 | Artin 公理（`artin`） | 候选译文完成，待审校 | 27 / 27（100.0%） | 0 | 0 | 0 | 0 |
 | 99 | Quot 空间与 Hilbert 空间（`quot`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 100 | 代数栈的性质（`stacks-properties`） | 候选译文完成，待审校 | 14 / 14（100.0%） | 0 | 0 | 0 | 0 |
-| 101 | 代数栈的态射（`stacks-morphisms`） | 未开始 | 0 / 51（0.0%） | 0 | 51 | 0 | 0 |
+| 101 | 代数栈的态射（`stacks-morphisms`） | 候选译文完成，待审校 | 51 / 51（100.0%） | 0 | 0 | 0 | 0 |
 | 102 | 代数栈的极限（`stacks-limits`） | 未开始 | 0 / 7（0.0%） | 0 | 7 | 0 | 0 |
 | 103 | 代数栈上同调（`stacks-cohomology`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
 | 104 | 栈的导出范畴（`stacks-perfect`） | 未开始 | 0 / 8（0.0%） | 0 | 8 | 0 | 0 |
@@ -951,6 +951,64 @@
 | 12 | `0AFL` | Dimension of a stack | 完成 | 未开始 | 未开始 |
 | 13 | `0DQG` | Local irreducibility | 完成 | 未开始 | 未开始 |
 | 14 | `0DTJ` | Finiteness conditions and points | 完成 | 未开始 | 未开始 |
+
+### 第 101 章 代数栈的态射（`stacks-morphisms`）
+
+共 51 个 Section：候选完成 51，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `04XN` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `04XP` | Conventions and abuse of language | 完成 | 未开始 | 未开始 |
+| 3 | `04XQ` | Properties of diagonals | 完成 | 未开始 | 未开始 |
+| 4 | `04YV` | Separation axioms | 完成 | 未开始 | 未开始 |
+| 5 | `050P` | Inertia stacks | 完成 | 未开始 | 未开始 |
+| 6 | `04YX` | Higher diagonals | 完成 | 未开始 | 未开始 |
+| 7 | `050S` | Quasi-compact morphisms | 完成 | 未开始 | 未开始 |
+| 8 | `050Z` | Noetherian algebraic stacks | 完成 | 未开始 | 未开始 |
+| 9 | `0CHP` | Affine morphisms | 完成 | 未开始 | 未开始 |
+| 10 | `0CHT` | Integral and finite morphisms | 完成 | 未开始 | 未开始 |
+| 11 | `06U0` | Open morphisms | 完成 | 未开始 | 未开始 |
+| 12 | `06U5` | Submersive morphisms | 完成 | 未开始 | 未开始 |
+| 13 | `0511` | Universally closed morphisms | 完成 | 未开始 | 未开始 |
+| 14 | `0CI0` | Universally injective morphisms | 完成 | 未开始 | 未开始 |
+| 15 | `0CI5` | Universal homeomorphisms | 完成 | 未开始 | 未开始 |
+| 16 | `06FL` | Types of morphisms smooth local on source-and-target | 完成 | 未开始 | 未开始 |
+| 17 | `06FR` | Morphisms of finite type | 完成 | 未开始 | 未开始 |
+| 18 | `06FW` | Points of finite type | 完成 | 未开始 | 未开始 |
+| 19 | `0DTR` | Automorphism groups | 完成 | 未开始 | 未开始 |
+| 20 | `0DTX` | Presentations and properties of algebraic stacks | 完成 | 未开始 | 未开始 |
+| 21 | `06MC` | Special presentations of algebraic stacks | 完成 | 未开始 | 未开始 |
+| 22 | `0DSL` | The Deligne-Mumford locus | 完成 | 未开始 | 未开始 |
+| 23 | `06PT` | Locally quasi-finite morphisms | 完成 | 未开始 | 未开始 |
+| 24 | `0G2L` | Quasi-finite morphisms | 完成 | 未开始 | 未开始 |
+| 25 | `06PV` | Flat morphisms | 完成 | 未开始 | 未开始 |
+| 26 | `0CIB` | Flat at a point | 完成 | 未开始 | 未开始 |
+| 27 | `06Q1` | Morphisms of finite presentation | 完成 | 未开始 | 未开始 |
+| 28 | `06QB` | Gerbes | 完成 | 未开始 | 未开始 |
+| 29 | `06RB` | Stratification by gerbes | 完成 | 未开始 | 未开始 |
+| 30 | `0DQM` | The topological space of an algebraic stack | 完成 | 未开始 | 未开始 |
+| 31 | `06UH` | Existence of residual gerbes | 完成 | 未开始 | 未开始 |
+| 32 | `0DU0` | \'Etale local structure | 完成 | 未开始 | 未开始 |
+| 33 | `075T` | Smooth morphisms | 完成 | 未开始 | 未开始 |
+| 34 | `0CIE` | Types of morphisms \'etale-smooth local on source-and-target | 完成 | 未开始 | 未开始 |
+| 35 | `0CIK` | \'Etale morphisms | 完成 | 未开始 | 未开始 |
+| 36 | `0CIS` | Unramified morphisms | 完成 | 未开始 | 未开始 |
+| 37 | `0CL4` | Proper morphisms | 完成 | 未开始 | 未开始 |
+| 38 | `0CMH` | Scheme theoretic image | 完成 | 未开始 | 未开始 |
+| 39 | `0CL9` | Valuative criteria | 完成 | 未开始 | 未开始 |
+| 40 | `0CLQ` | Valuative criterion for second diagonal | 完成 | 未开始 | 未开始 |
+| 41 | `0CLS` | Valuative criterion for the diagonal | 完成 | 未开始 | 未开始 |
+| 42 | `0CLV` | Valuative criterion for universal closedness | 完成 | 未开始 | 未开始 |
+| 43 | `0CLY` | Valuative criterion for properness | 完成 | 未开始 | 未开始 |
+| 44 | `0CJ2` | Local complete intersection morphisms | 完成 | 未开始 | 未开始 |
+| 45 | `0DU6` | Stabilizer preserving morphisms | 完成 | 未开始 | 未开始 |
+| 46 | `0GMH` | Normalization | 完成 | 未开始 | 未开始 |
+| 47 | `0GVY` | Points and specializations | 完成 | 未开始 | 未开始 |
+| 48 | `0GW0` | Decent algebraic stacks | 完成 | 未开始 | 未开始 |
+| 49 | `0GW6` | Points on decent stacks | 完成 | 未开始 | 未开始 |
+| 50 | `0GWA` | Integral algebraic stacks | 完成 | 未开始 | 未开始 |
+| 51 | `0H23` | Residual gerbes | 完成 | 未开始 | 未开始 |
 
 ### 第 105 章 代数栈导论（`stacks-introduction`）
 

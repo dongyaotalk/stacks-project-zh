@@ -264,7 +264,7 @@ class ReferenceAdoptionTests(unittest.TestCase):
                 [root/b['candidates_path'] for b in frozen['batches']], root/'upstream.lock',
                 root/'preview','synthetic','Synthetic test fixture',chapter_source_dir=harvest,tags_path=harvest/'tags/tags')
             text=(root/'preview/chapters/test.tex').read_text()
-            self.assertIn(r'\text{注释 \href{https://stacks.math.columbia.edu/tag/0003}{Tag 0003（待译）}}',text)
+            self.assertIn(r'\text{注释 \href{https://stacks.math.columbia.edu/tag/0003}{\text{Tag 0003（待译）}}}',text)
             self.assertIn(r'\text{朴素杯积}',text)
 
     def test_old_adoption_versions_and_incomplete_freezes_write_no_candidates(self):

@@ -341,6 +341,7 @@ class SourceContainerTests(unittest.TestCase):
                   '\\begin{verbatim}\\ref{fake}\\label{fake}\\end{verbatim}\n'
                   '\\url{https://example.invalid/\\ref{fake}}\\cite{key-ref}\n')
         text = (opaque + '\\label{lemma-one}\\label{eq-one}$\\eqref{eq-one}$\n'
+                '$\\eqref{other-lemma-one}$\n'
                 '\\footnote{See \\ref{lemma-one} and \\pageref{other-lemma-one}.}\n'
                 '\\href{https://example.invalid/\\ref{fake}}{See \\ref{lemma-one}.}')
         before = text
@@ -351,6 +352,9 @@ class SourceContainerTests(unittest.TestCase):
         self.assertIn('$\\eqref{test-eq-one}$', projected)
         self.assertIn('See \\ref{test-lemma-one}', projected)
         self.assertIn('https://stacks.math.columbia.edu/tag/0002', projected)
+        self.assertIn(r'$\href{https://stacks.math.columbia.edu/tag/0002}{\text{Tag 0002（待译）}}$', projected)
+        resolved, _ = _project_container_tex(text, 'test', policy, tags, labels | {'other-lemma-one'})
+        self.assertIn(r'$\eqref{other-lemma-one}$', resolved)
         self.assertIn('https://example.invalid/\\ref{fake}', projected)
         self.assertEqual(text, before)
         header = '\\title{测试（Test）}\n\\maketitle\n\\phantomsection\n\\label{section-phantom}\n\\tableofcontents\n'

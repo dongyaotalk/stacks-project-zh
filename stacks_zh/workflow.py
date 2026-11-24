@@ -576,7 +576,7 @@ def _project_container_tex(text, chapter, policy, tags, resolved_labels=None, *,
                     changes.append((a + 1, b - 1, full))
                 elif resolved:
                     changes.append((cursor, stop, f'\\href{{https://stacks.math.columbia.edu/tag/{resolved[1]}}}'
-                                    f'{{Tag {resolved[1]}（待译）}}'))
+                                    f'{{\\text{{Tag {resolved[1]}（待译）}}}}'))
                 elif not tags:
                     changes.append((a + 1, b - 1, full))
                 else:

@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 86 | 第 5-6、9-20、22-33、36-40、42-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、101-104、106-107、109-111 章 |
+| 未开始 | 85 | 第 5-6、9-20、22-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、101-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 30 | 第 1-4、7-8、21、34-35、41、59、65、73-74、78、83、90-92、94、97-98、100、105、108、112-116 章 |
+| 候选译文完成，待审校 | 31 | 第 1-4、7-8、21、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 684 / 3,299（20.7%） | 0 | 2,615 |
+| 模型候选译文 | 712 / 3,299（21.6%） | 0 | 2,587 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -87,7 +87,7 @@
 | 49 | 判别式与不同理想（`discriminant`） | 未开始 | 0 / 16（0.0%） | 0 | 16 | 0 | 0 |
 | 50 | 德拉姆上同调（`derham`） | 未开始 | 0 / 24（0.0%） | 0 | 24 | 0 | 0 |
 | 51 | 局部上同调（`local-cohomology`） | 未开始 | 0 / 22（0.0%） | 0 | 22 | 0 | 0 |
-| 52 | 代数几何与形式几何（`algebraization`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
+| 52 | 代数几何与形式几何（`algebraization`） | 候选译文完成，待审校 | 28 / 28（100.0%） | 0 | 0 | 0 | 0 |
 | 53 | 代数曲线（`curves`） | 未开始 | 0 / 26（0.0%） | 0 | 26 | 0 | 0 |
 | 54 | 曲面的解消（`resolve`） | 未开始 | 0 / 17（0.0%） | 0 | 17 | 0 | 0 |
 | 55 | 半稳定约化（`models`） | 未开始 | 0 / 18（0.0%） | 0 | 18 | 0 | 0 |
@@ -479,6 +479,41 @@
 | 19 | `025L` | Permanence properties | 完成 | 未开始 | 未开始 |
 | 20 | `0BTH` | Descending \'etale morphisms | 完成 | 未开始 | 未开始 |
 | 21 | `0CBN` | Normal crossings divisors | 完成 | 未开始 | 未开始 |
+
+### 第 52 章 代数几何与形式几何（`algebraization`）
+
+共 28 个 Section：候选完成 28，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `0EI6` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `0EH3` | Formal sections, I | 完成 | 未开始 | 未开始 |
+| 3 | `0BLA` | Formal sections, II | 完成 | 未开始 | 未开始 |
+| 4 | `0EI9` | Formal sections, III | 完成 | 未开始 | 未开始 |
+| 5 | `0EFN` | Mittag-Leffler conditions | 完成 | 未开始 | 未开始 |
+| 6 | `0995` | Derived completion on a ringed site | 完成 | 未开始 | 未开始 |
+| 7 | `0A0H` | The theorem on formal functions | 完成 | 未开始 | 未开始 |
+| 8 | `0EFF` | Algebraization of local cohomology, I | 完成 | 未开始 | 未开始 |
+| 9 | `0EFP` | Algebraization of local cohomology, II | 完成 | 未开始 | 未开始 |
+| 10 | `0EFT` | Algebraization of local cohomology, III | 完成 | 未开始 | 未开始 |
+| 11 | `0DXH` | Algebraization of formal sections, I | 完成 | 未开始 | 未开始 |
+| 12 | `0EG1` | Algebraization of formal sections, II | 完成 | 未开始 | 未开始 |
+| 13 | `0EIJ` | Algebraization of formal sections, III | 完成 | 未开始 | 未开始 |
+| 14 | `0ECQ` | Application to connectedness | 完成 | 未开始 | 未开始 |
+| 15 | `0EKN` | The completion functor | 完成 | 未开始 | 未开始 |
+| 16 | `0DXS` | Algebraization of coherent formal modules, I | 完成 | 未开始 | 未开始 |
+| 17 | `0EIT` | Algebraization of coherent formal modules, II | 完成 | 未开始 | 未开始 |
+| 18 | `0EIW` | A distance function | 完成 | 未开始 | 未开始 |
+| 19 | `0EJ2` | Algebraization of coherent formal modules, III | 完成 | 未开始 | 未开始 |
+| 20 | `0EHJ` | Algebraization of coherent formal modules, IV | 完成 | 未开始 | 未开始 |
+| 21 | `0EJD` | Improving coherent formal modules | 完成 | 未开始 | 未开始 |
+| 22 | `0EJH` | Algebraization of coherent formal modules, V | 完成 | 未开始 | 未开始 |
+| 23 | `0EJR` | Algebraization of coherent formal modules, VI | 完成 | 未开始 | 未开始 |
+| 24 | `0EKX` | Application to the completion functor | 完成 | 未开始 | 未开始 |
+| 25 | `0F22` | Coherent triples | 完成 | 未开始 | 未开始 |
+| 26 | `0F29` | Invertible modules on punctured spectra, I | 完成 | 未开始 | 未开始 |
+| 27 | `0F2C` | Invertible modules on punctured spectra, II | 完成 | 未开始 | 未开始 |
+| 28 | `0EL0` | Application to Lefschetz theorems | 完成 | 未开始 | 未开始 |
 
 ### 第 59 章 平展上同调（`etale-cohomology`）
 

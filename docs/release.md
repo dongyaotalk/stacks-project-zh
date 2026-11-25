@@ -11,6 +11,22 @@
 
 候选模型输出不得使用容易让读者误认为正式译本的封面、状态或文件名。
 
+### 多通道全书候选 PDF
+
+使用目标中文修订下已经渲染、采用同一 `upstream.lock` 的 AJbook 全书模型书稿。
+按通道优先顺序装配，每章选用首份有候选正文的书稿。待译章保留原顺序和章标题。
+现有书稿可直接复用。
+
+```sh
+make render-candidate-book CANDIDATE_LANES="openai-gpt-6.1-sol openai-gpt-5.6-sol" HARVEST_DIR=<只读英文目录> PYTHON=<Python3.12>
+make pdf MODEL=candidate HARVEST_DIR=<只读英文目录> PYTHON=<Python3.12>
+```
+
+产物为 `output/pdf/stacks-project-zh-candidate.pdf`。目录的「各章译文来源」一页标明
+各章实际采用的模型通道、Harness、待译和索引状态，点击章号跳转。选章后缺失的跨章
+引用使用英文 Stacks 永久 Tag 链接。使用独立工作树时按 [交付规则](../WORKFLOW.md#本地候选-pdf-交付)
+把本次 PDF 放到用户查看的输出目录。
+
 ## 2. 发布版本
 
 建议 Git tag：

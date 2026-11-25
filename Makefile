@@ -9,6 +9,7 @@ BATCHES ?=
 BASE_REF ?=
 CHAPTER_REPORT ?= build/chapter-validation/$(CHAPTER)-$(MODEL).json
 MODEL_DISPLAY_NAME ?= $(MODEL) 模型候选译文
+CANDIDATE_LANES ?=
 -include config/local.mk
 HARVEST_DIR ?= ../stacks-project
 CHAPTER_MANIFEST ?= $(HARVEST_DIR)/chapters.tex
@@ -449,6 +450,11 @@ render: validate-model validate-render workflow-check harvest-check
 		--tags-file "$(TAGS_FILE)" \
 		--output-dir "$(MODEL_DIR)"
 
+.PHONY: render-candidate-book
+render-candidate-book: workflow-check harvest-check
+	$(PYTHON) -m stacks_zh.candidate_book --harvest "$(HARVEST_DIR)" \
+		$(foreach lane,$(CANDIDATE_LANES),--lane "$(lane)")
+
 render-batch: validate-model validate-batch-list workflow-check harvest-check upstream-index-check chapter-template-check
 	$(PYTHON) stacks_zh.py check-and-render \
 		--units $(foreach file,$(BATCH_UNIT_FILES),"$(file)") \
@@ -591,6 +597,7 @@ help:
 		'make pdf-chapter CHAPTER=categories MODEL=<model>  Build an isolated chapter PDF' \
 		'make template                   Build the AJbook template smoke test' \
 		'make pdf MODEL=<model>          Build ajbook-template/translations/<model>' \
+		'make render-candidate-book CANDIDATE_LANES="<lanes>"  Assemble a full candidate manuscript' \
 		'make list-models                List configured translation model lanes' \
 		'make clean MODEL=<model>        Remove one model build directory' \
 		'make distclean                  Remove all generated files' \

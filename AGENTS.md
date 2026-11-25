@@ -124,6 +124,10 @@
   destination.
 - Treat `build/`, `output/`, `.harvest/`, `source-ir/`, generated reports, and
   SQLite indexes as generated data.
+- For local PDF requests, follow [local candidate PDF delivery](WORKFLOW.md#本地候选-pdf-交付).
+  Deliver a requested full-book PDF at the user-facing output path. Compile-only
+  requests run LaTeX and the necessary bibliography and index passes on the
+  manuscript for the requested revision.
 - Never commit local absolute harvest paths, `config/local.mk`, credentials, PDFs,
   or generated model TeX.
 

@@ -157,8 +157,9 @@ BASE_REF=<已确认主线提交>`，同一进程检查完整章节及本次直�
 再集中编译。只需 QA 时用 `qa-chapter`。公共工具、来源、Schema、政策或共享依赖变化
 执行 `qa-current-all` 和适用回归；模板/渲染/Make 改动另做必要集成构建。显式完整历史
 审计用 `audit-history`；旧 `qa-all` 保持严格兼容语义，不是每章/每 PR 的固定前置。
-本地编译仍要求零退出与最终日志门禁，默认不截图。缺少工具链或失败阻断提交/PR；
-生成物不提交。日常结果为 `chapter-current/history_audit=not_run`，不表示人审或发布通过。
+用于验收、提交或 PR 的本地编译要求零退出与最终日志门禁，默认不截图。缺少工具链或
+失败阻断提交/PR；生成物不提交。日常结果为 `chapter-current/history_audit=not_run`，
+不表示人审或发布通过。
 接口和信任边界见 [章节当前验收](docs/chapter-current-validation.md)。
 纯生成 progress/plan 同步按 [CI 合同](docs/ci.md) 使用 `generated-reports`：完整 diff
 仅含既有 README 生成区间及两份报告，全部事实、生成器、政策和来源输入与可信主线
@@ -168,6 +169,22 @@ BASE_REF=<已确认主线提交>`，同一进程检查完整章节及本次直�
 适用的本地编译证据；发生变化或绑定不充分时执行实际受影响构建。
 默认 `BOOK_TEMPLATE=ajbook`，书目由 Biber 处理；旧 Springer 模板只可通过
 `BOOK_TEMPLATE=springer` 显式选用，并使用 BibTeX。
+
+#### 本地候选 PDF 交付
+
+- 用户要求「全书」「完整编译版」，或指向 `output/pdf` 顶层的现有全书 PDF 时，
+  构建目标模型 lane 的全书书稿，保留锁定来源的章节顺序并纳入目标修订的候选内容。
+  默认交付路径是主检出的 `output/pdf/stacks-project-zh-<lane>.pdf`。
+  在独立工作树编译时，成功后把本次全书 PDF 放到用户指定路径或上述默认路径，
+  替换前备份已有文件，交付时给出实际文件路径。`output/pdf/chapter-preview/`
+  用于章级预览。
+- 用户只要求编译或明确说「直接编译 LaTeX」时，在对应目标修订和模型 lane 的
+  TeX 书稿上直接运行 LaTeX 和必要的书目、索引轮次。书稿缺失或过期时，使用目标
+  修订的已接受候选及与该修订匹配的已有书稿准备所需的 TeX。仅编译的工作以引擎、
+  书目和索引命令的实际退出结果为准。全库 QA、历史回放、额外的日志或页面检查仅在
+  用户单独要求时运行。
+- 译文验收、提交、PR、CI 和正式发布各自执行适用门禁。标准 `make render` 和
+  `make pdf` 保留其内置检查。本地仅编译结果记录为候选 PDF 构建。
 
 ### 4.8 开发阶段 batch 模式
 

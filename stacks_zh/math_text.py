@@ -950,8 +950,10 @@ def _slot_node(source, stream, slot, version):
             or not ((slot['source'] == etale.ITALIC_LITERAL
                      and slot['classification_witness']['usage'] == etale.ITALIC_USAGE)
                     or groupoids.italic_contract(slot['command'], slot['source'],
-                        slot['classification_witness']['usage'])))):
-        raise ValueError('italic math text requires an exact complete category phrase')
+                        slot['classification_witness']['usage'])
+                    or (slot['source'] in p0_frames.ITALIC_LITERALS
+                        and slot['classification_witness']['usage'] == p0_frames.PLAIN_USAGE)))):
+        raise ValueError('italic math text requires an exact complete witnessed phrase')
     if internal:
         ordinal = internal['leaf_index']
         if (version != 5 or component or reference or type(ordinal) is not int or ordinal not in {1, 2}

@@ -1,4 +1,4 @@
-"""Opt-in complete math frames from the five 2026-07-28 locked P0 chapters."""
+"""Opt-in complete math frames from explicitly registered 2026-07-28 locked chapters."""
 from functools import lru_cache
 import json
 import re
@@ -11,6 +11,7 @@ PLAIN_USAGE = 'p0-locked-math-frame'
 COMPONENT_USAGE = 'p0-etale-frame-component'
 SYMBOL_USAGE = 'p0-locked-math-symbol'
 USAGES = {'plain': PLAIN_USAGE, 'component': COMPONENT_USAGE}
+ITALIC_LITERALS = frozenset({'a final object', 'Locally ringed spaces', 'Ringed spaces'})
 SECTION = 'p0_locked_math_frames'
 ETALE_LITERAL = r" is \'etale"
 ETALE_SEPARATOR = r"\'e"
@@ -107,7 +108,7 @@ def _shape(source, stream):
 def usage(source, stream, index, kind):
     from .math_text import plain_text
     node = stream[index]
-    if not 0 < index < len(stream) - 1 or node.get('command') != 'text':
+    if not 0 < index < len(stream) - 1 or node.get('command') not in {'text', 'textit'}:
         return None
     resolved = next((role for role, value in USAGES.items() if value == kind), None)
     value = node['value']
@@ -115,7 +116,8 @@ def usage(source, stream, index, kind):
         valid = plain_text(value)
     elif resolved == 'component':
         leaves = value.split(ETALE_SEPARATOR)
-        valid = len(leaves) == 2 and all(plain_text(leaf) for leaf in leaves)
+        valid = (node['command'] == 'text' and len(leaves) == 2
+                 and all(plain_text(leaf) for leaf in leaves))
     else:
         return None
     if not valid or (index, resolved) not in TRANSLATED_ROLES.get(_shape(source, stream), ()):

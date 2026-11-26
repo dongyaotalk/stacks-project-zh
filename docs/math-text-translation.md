@@ -1075,3 +1075,15 @@ typed 来源仍使用其冻结的原宏政策。只有分类见证的政策哈�
 工具中的有限目录本身无生产权限。独立的 `p0_locked_math_frames` 宏政策需要精确登记
 锁定的英文文件，运行时重新核对 Git 字节和永久 Tag。参见
 [锁定来源回归](../tests/fixtures/p0-finite-math-frames.json)。
+
+### 第 6、26、27 章的锁定数学框架
+
+沿用上述精确来源匹配，新增 `sheaves`、`schemes` 和 `constructions` 的完整框架
+及各章 Git 字节哈希。公式里的 `Proj`、`Sym` 和 `lcm` 保留原记号。集合条件、
+图箭头旁的限制文字和其他自然语言逐参数处理。三条斜体自然语言
+`a final object`、`Locally ringed spaces` 和 `Ringed spaces` 保持原斜体命令，
+只在其锁定框架中开放完整参数。离开对应的原章和完整公式时，这些新规则不生效。
+
+[选择器回归](../tests/fixtures/p1-finite-math-selectors.json)覆盖三个章节此前受阻的
+114 个完整容器，核对来源 Tag、完整 TeX 回放和符号保护。生产启用仍须单独登记
+`p0_locked_math_frames` 中的章源哈希。候选生成和数据采用使用独立任务。

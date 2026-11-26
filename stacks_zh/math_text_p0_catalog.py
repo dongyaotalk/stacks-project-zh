@@ -1,8 +1,11 @@
-"""Math roles verified against the five locked P0 source chapters."""
+"""Math roles verified against exact locked source chapters."""
 
 SOURCE_COMMIT = 'a04446e57ec1fbc252a871afcec7752fb2807b14'
 
 SOURCE_HASHES = {
+    'sheaves': 'sha256:ac4f9edc7db85e66329806ec9ea42816187a469772844baea663e1c9a9f00b38',
+    'schemes': 'sha256:08475a01cf0ddf69734fd7ebc0d14d3831148c25a2ef82aaafdb65666f8fce47',
+    'constructions': 'sha256:a642498dbebe4b72547d8e3ac03d8c8a7c3a3c9b1e604439c2899f18beb4cddb',
     'algebraization': 'sha256:a1d15613e36799787f29497ada72268daaa4c3d8bef0f6457c4ca3e60c4262e9',
     'artin': 'sha256:eba90a897b08eebff451e80925d13381b1a7f6ab883a34118733cd24cf061f47',
     'moduli': 'sha256:c9e283b30207bb93ca7c71cd83df78bb7f1962c471348b28968d9fb6a01b11d5',
@@ -11,6 +14,501 @@ SOURCE_HASHES = {
 }
 
 SOURCE_FRAMES = {
+    'sheaves': {
+        'sha256:46b1e513d60c438507e7737bf84e2df7da8f3eb37a75d28040156c5e63a7ebc5': {
+            9: ('plain', 'textit', 'a final object', 'sheaves-remark-confusion'),
+        },
+        'sha256:49d3818411c57f0099ba05c0cb3438d63bce1b9dfa0c0bf81e4c3a59964a560f': {
+            10: ('plain', 'text', ' continuous', 'sheaves-section-sheaves'),
+            21: ('plain', 'text', ' locally constant', 'sheaves-section-sheaves'),
+        },
+        'sha256:6e27b3731ed8d51a8efcc93242618f746f650f3d0e7dbe809bff491a1adce99f': {
+            51: ('plain', 'text', 'restriction for ', 'sheaves-section-presheaves-functorial'),
+        },
+        'sha256:821f55ab118f4f60deae3e42407386b3a347823ce3cd6587c5b2783dded90d43': {
+            27: ('plain', 'text', 'restriction of ', 'sheaves-definition-f-map'),
+            53: ('plain', 'text', 'restriction of ', 'sheaves-definition-f-map'),
+        },
+        'sha256:953555c97ad37854f643b7c35ed9d5e6c0b23197ba5149bd81855456c0050e90': {
+            18: ('plain', 'text', ' is continuous', 'sheaves-example-basic-continuous-maps'),
+        },
+        'sha256:9aabe33f83038bc0e4807821678816366e7b7a1c5ae9575fbb54f16b27256004': {
+            50: ('plain', 'text', ' resp. ', 'sheaves-section-sheaves-structures'),
+        },
+        'sha256:a879f7b2f3906a8300471aee0a01d91c371846f40c6d96aece7da460be4df955': {
+            32: ('plain', 'text', 'restr.', 'sheaves-lemma-f-map-basis-above-and-below-structures'),
+        },
+        'sha256:f52476b7afbde5d996ed54d80ce59a4148e643b3c2dec240fe125b36cbbcb6d1': {
+            24: ('plain', 'text', ' is continuous', 'sheaves-example-C0-sheaf-rings'),
+        },
+    },
+    'schemes': {
+        'sha256:375a3185432bf74a5ffe42b20562c10a4e543e59db76d02a4485223830b96b74': {
+            9: ('plain', 'text', 'the element ', 'schemes-lemma-extension-quasi-coherent'),
+            12: ('plain', 'text', ' comes from ', 'schemes-lemma-extension-quasi-coherent'),
+        },
+        'sha256:5b716b14daf2e2bceadfc727ed157701925f5102fd902b0981b9c18826e7ed71': {
+            97: ('plain', 'text', 'open covering ', 'schemes-lemma-glue'),
+            111: ('plain', 'text', ' and ', 'schemes-lemma-glue'),
+            131: ('plain', 'text', ' such that', 'schemes-lemma-glue'),
+            157: ('plain', 'text', ' and ', 'schemes-lemma-glue'),
+        },
+        'sha256:a900e33b7125563537344910e8f4f9e1d2eb239cabac4b83b1902ebdbc681422': {
+            12: ('plain', 'text', 'image ', 'schemes-lemma-f-open'),
+        },
+        'sha256:c041fefd3a75842b14d0718c424276c620009135aba5d927d8f9df1c0f5eb17b': {
+            3: ('symbol', 'text', 'Sym', 'schemes-lemma-widetilde-constructions'),
+            11: ('symbol', 'text', 'Sym', 'schemes-lemma-widetilde-constructions'),
+        },
+        'sha256:dd59f3e9af4b2d3e755d0628a30dc01b017ebb6f3424c00950ed1c09af209b89': {
+            2: ('plain', 'textit', 'Locally ringed spaces', 'schemes-section-locally-ringed-spaces'),
+            4: ('plain', 'textit', 'Ringed spaces', 'schemes-section-locally-ringed-spaces'),
+        },
+    },
+    'constructions': {
+        'sha256:00254a50cab88f56eac6a325b45662fa21ee752b155d758b2f4b010610dd8eed': {
+            17: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:00750a5354b98dc0ffb5ea5f203942bcd65c753798ee9346e05a7beed55b11b3': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-relative-proj-transitive'),
+        },
+        'sha256:009f9028e2bd3d562c1a0b2ac1b802fe035a3419e5db6fb69e526839e5a2b181': {
+            6: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-base-change'),
+            30: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-base-change'),
+        },
+        'sha256:01421d4c78c500ff4f32378dc1debd0c5d7de78ad577967a5ba4109182ee3a4d': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+            32: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+            50: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+            71: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+        },
+        'sha256:03aee9495ee53dd17e14a2ad4cfbb498210b8da7d2dc7d218f6841e2650ac790': {
+            39: ('plain', 'text', ' is surjective', 'constructions-lemma-gkn-representable'),
+        },
+        'sha256:03dcadbfb0f721f717016bfc47a0782c4edcfe51b8c232b23558208102e9ed19': {
+            6: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj'),
+        },
+        'sha256:05bf6d4e2b697ee7cac62611eb173cb4663ce3497bda57129868921233601e0b': {
+            3: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-proj'),
+        },
+        'sha256:0753bba54a3503799fdb950919129e6fcc3e372c653bca478f4f58c4cf9d69d0': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-relative-proj'),
+        },
+        'sha256:07e330741ee3b90fd596e8c0851922caa08a5a86620d2976e62f0ca472812bbc': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-sheaves'),
+        },
+        'sha256:0bc3afcba67ac50f09aae1c1f3fc614af88fb9765922f1c2835884ef26c56f98': {
+            1: ('symbol', 'text', 'Sym', 'constructions-example-projective-space'),
+        },
+        'sha256:0d6166600d25c3f84042cb30a9c2ef3318a511d835ed8201b34d7bb62d4753dc': {
+            33: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-base-change'),
+            69: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-base-change'),
+        },
+        'sha256:0dbf99813f697ba3f982f53d5a46492278b5a96017d4fff13933c9afd66d8051': {
+            5: ('symbol', 'text', 'Sym', 'constructions-section-projective-bundle'),
+            13: ('symbol', 'text', 'Sym', 'constructions-section-projective-bundle'),
+            24: ('symbol', 'text', 'Sym', 'constructions-section-projective-bundle'),
+        },
+        'sha256:106a8f8fa9c1e9115bc2febb4d066ab25f8c401acc1d39c7626b47e80a5031d0': {
+            6: ('symbol', 'text', 'Proj', 'constructions-example-not-existence-valuative-big-proj'),
+        },
+        'sha256:134f9c48aa3e0b451283f6e646338212b225816e2b4e2e2eece852ca5c21147a': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:15cb9b15a7dd8c1ad616165bff5eda831ba971a8da521c13ea9cb06261d50ef6': {
+            10: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:15f552e8adf1883363f26c81a7288b1fbe1446cd696cdcf3bb2404f25ea0f32a': {
+            18: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:16a11da1ab306be84c782b9a83e6d9bfacbbefa453e60604f54925f07808f6c6': {
+            3: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+        },
+        'sha256:170f05d72cc17c28f455170181b41c146b7f265df81e73b5b7c4a9a5e7e866ba': {
+            17: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-valuative-criterion'),
+        },
+        'sha256:177007f4f7a7bed1793498014cdde0fef2a6a323bafef96818fb552ec2e5167a': {
+            29: ('symbol', 'text', 'Proj', 'constructions-section-morphisms-proj'),
+        },
+        'sha256:1d115348edb83734a7a73be41f9d5e0f3a2e89e1b669dc2181dc6cb23eb89db5': {
+            8: ('symbol', 'text', 'Proj', 'constructions-section-quasi-coherent-proj'),
+        },
+        'sha256:23c435c899e47914f3d776d044a8043b402a2b63a0cf68385e3c4ff4c877e353': {
+            15: ('symbol', 'text', 'Proj', 'constructions-lemma-segre-embedding'),
+        },
+        'sha256:25fe1b1f0ce1ff18b0a59ed5fef7eaec5a27aa62c439d4fe0ca3f37910c2a1fd': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:27b46388f35f4cc4a94a5018f30234889a90c8d6c8eed62d114d8d313d6683a8': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-sheaves'),
+        },
+        'sha256:29775a95578b84f8bb38a5c5c91085c4831d39587893c408d2218b5619b9c530': {
+            12: ('symbol', 'text', 'Proj', 'constructions-remark-not-in-invertible-locus'),
+        },
+        'sha256:2a63357bc21766618fa5e9ee58e8d1fb1c2a6e420879bb490af6bc5ec64aa675': {
+            19: ('plain', 'text', 'homogeneous', 'constructions-lemma-morphism-proj'),
+        },
+        'sha256:2cf63be406093246c5aaaf62e022fced0b75943cf71d0fe21de97a12584c3da9': {
+            13: ('plain', 'text', 'pairs ', 'constructions-lemma-spec-affine'),
+        },
+        'sha256:2f702581d832ea44dba48023b69796f60d373d0d1e49d1dae1e79bc62cc3663f': {
+            28: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:3137297d162b99fdaed6cc79baeff832cc63565375908cb2f12a4cf51e88cb3d': {
+            34: ('symbol', 'text', 'Proj', 'constructions-lemma-invertible-map-into-relative-proj'),
+        },
+        'sha256:32420e5ee3ce723f6ddcf285c900f7bd142b66b9155fa7e24c54be26aeb64404': {
+            10: ('plain', 'text', 'the map ', 'constructions-lemma-gkn-representable'),
+            40: ('plain', 'text', ' induced by ', 'constructions-lemma-gkn-representable'),
+            50: ('plain', 'text', ' is surjective', 'constructions-lemma-gkn-representable'),
+        },
+        'sha256:324cf4e0edf5846a8f07a29cda678afd8eafeaaa4ed71c0eb0f1bb01283e1f81': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-relative-proj'),
+        },
+        'sha256:33589f49c830b69857c66f4ed93d5f6b99bf3f88e5b6a2a2e3829c0aa080531d': {
+            8: ('symbol', 'text', 'Proj', 'constructions-lemma-twisting-and-proj'),
+            36: ('symbol', 'text', 'Proj', 'constructions-lemma-twisting-and-proj'),
+        },
+        'sha256:36e96106ca1b3077eefbd7a5843d5a0c9462e12b149c21c1337c00ba60c8531a': {
+            1: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+        },
+        'sha256:38c9b78628fa5bd5042ce23278b632e19927dbbad70924a7bfdd915cc0210c77': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+        },
+        'sha256:39d9ed5c7dc7c35211b0caf0efd485ec155f228acf04b763f2fa714bbcb6c450': {
+            3: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:3f1ec8808a8ef6574a0f9beb1e6211c4a7b7bdb0ed9caac38fe98160276dc73a': {
+            14: ('symbol', 'text', 'Sym', 'constructions-example-projective-space'),
+        },
+        'sha256:3ff1a4b31716a798bcce85bdf5b5ef49d34d658264b0b2b4844fb01d08b1bfa0': {
+            19: ('symbol', 'text', 'Sym', 'constructions-section-vector-bundle'),
+        },
+        'sha256:4328a3112363f5462b5b4c12732dc46650570e09eeca22000cc31424ff6a4f31': {
+            15: ('plain', 'text', ' quasi-compact open', 'constructions-lemma-proj-functor'),
+        },
+        'sha256:4516cce4e0d2c83d67ea21387a11105c8349d56970c7ae88a9184ddc9682835c': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-base-change'),
+        },
+        'sha256:48279eecf5002ce70231e5fc5d28ad9291644004643aad493df34574617ce5d9': {
+            15: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj'),
+        },
+        'sha256:4ac8eef3228fecdc7f523338fc4a015f554d95ad3116747f3e1c20c0361d591b': {
+            13: ('symbol', 'text', 'Proj', 'constructions-lemma-widetilde-tensor'),
+            24: ('symbol', 'text', 'Proj', 'constructions-lemma-widetilde-tensor'),
+        },
+        'sha256:4adebee8233c4e01e9be53a0bfc3e28867c3169a2883113bdaa3e4e32268a500': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+            23: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:4f9279125fef693e8ad54af690592a9b1b1a0539da5ed6a0031104a7f8f70dd3': {
+            35: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj'),
+        },
+        'sha256:4fc5ece81707727667114308136409cc03a4f0bf524ac0b3200f16c6f31ffadd': {
+            17: ('symbol', 'text', 'Proj', 'constructions-definition-projective-bundle'),
+            22: ('symbol', 'text', 'Sym', 'constructions-definition-projective-bundle'),
+        },
+        'sha256:4fc910045e524528e9dc6f62677a7226493a89de707dd4c33283c31e209851ff': {
+            3: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-inclusion'),
+            8: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-inclusion'),
+        },
+        'sha256:5287f738de074a68590a01459d95d8eb3eb229f9ed2a028396fe47510bf7f7f3': {
+            3: ('symbol', 'text', 'lcm', 'constructions-lemma-equivalent'),
+        },
+        'sha256:52cc535a9b641db2333e8544debce927ef392a14bd990760c43a77c1f4187d2b': {
+            1: ('symbol', 'text', 'Sym', 'constructions-section-vector-bundle'),
+        },
+        'sha256:54747b86b8e6f0b4d813a9d56149a8cf91b6195db85bf4dd0880607f74f446b8': {
+            16: ('symbol', 'text', 'Proj', 'constructions-lemma-projective-space-bundle'),
+            37: ('symbol', 'text', 'Proj', 'constructions-lemma-projective-space-bundle'),
+        },
+        'sha256:5776eba7c99e2ad1b6d93290fa03484f1ac61f248c9d5cf75bec1860ab603a24': {
+            30: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+            62: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:57b02996a59fe6e58ccd8a660f977425827b2e2155e4bf20a7378f4f282dcd99': {
+            3: ('symbol', 'text', 'Proj', 'constructions-definition-twist'),
+        },
+        'sha256:5d1ea37d12af5cb9d03e6950d89ff0573a10bb44f6aa37c4dda2538d9eb41db0': {
+            15: ('symbol', 'text', 'Proj', 'constructions-definition-projective-space'),
+        },
+        'sha256:5e93dbeb1ef419105ccf40996edb7720b7bfd4390364982cd72301a5dc2c4dd6': {
+            31: ('symbol', 'text', 'Sym', 'constructions-section-vector-bundle'),
+        },
+        'sha256:63e64e4e9ae80f69d66a7429afee9bb42ece194d0d800757ee251f64b2b0df58': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-invertible-map-into-proj'),
+        },
+        'sha256:64215cdeb2ede628c40e2f754717a47e7d25cbed8ed6c673a7ee763bc9fb855b': {
+            20: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-modules'),
+        },
+        'sha256:6534a70edcdf6469c1b6c6934e2ece7199fd7b15300c720da0182f7eef3fe6bd': {
+            19: ('symbol', 'text', 'Sym', 'constructions-lemma-projective-space-bundle'),
+        },
+        'sha256:6a62603a86a0f6e6e851e81bfb9f403d37e1a9b933b790fa4fe9d75714f48cf7': {
+            3: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-proj'),
+        },
+        'sha256:6d80422781665bb368781fada1133652bc60c0a682dceefb2af6a8c2d8300202': {
+            4: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj'),
+            76: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj'),
+        },
+        'sha256:6fe0bdaf78e090a6e746d8aa0f36c02fc7f75ba3bb6b718f9b8cd05d906ca75b': {
+            48: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+            67: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+            78: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:70df971e3cf93e968b0c1a913c62f12e2ef2fa599746bd64cb22d7fbb00f63ba': {
+            4: ('symbol', 'text', 'Proj', 'constructions-lemma-transitive-proj'),
+            10: ('symbol', 'text', 'Proj', 'constructions-lemma-transitive-proj'),
+        },
+        'sha256:71382537af45362e69d608a9f7ed381149bf06f6f70773b01680e4a41b6389f0': {
+            37: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj'),
+        },
+        'sha256:7467420f8cf92d4d6ec40c20ed24c522bb42c5d0799f35ff09535b7b99c3b571': {
+            1: ('symbol', 'text', 'Proj', 'constructions-example-open-subset-proj'),
+        },
+        'sha256:761ea60dbf89ac58177fb5956c039e5a98113557c89cad55858e117b5b6e5696': {
+            1: ('symbol', 'text', 'Proj', 'constructions-example-not-existence-valuative-small-proj'),
+        },
+        'sha256:7699e192e46f6d8f936f1aa09e6f87f5a2c5c8e9e6948bcfdf821d3e400ebc64': {
+            1: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-separated'),
+        },
+        'sha256:7990436f685f2a589971f555af53cc1488a157dea58b0d2c2e82621f7a424fd3': {
+            1: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-affine'),
+        },
+        'sha256:7d4761a19ce471e5d6e1b1efebd2e76123756240ab05c915e7be991ecf7dea39': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+        },
+        'sha256:7d66fc4bb2d5ae2bb3342240c0ca129f6c2fcd36dd1e28889f3813b66973247b': {
+            4: ('symbol', 'text', 'Proj', 'constructions-lemma-d-uple'),
+        },
+        'sha256:804e5891bfde2472a8cfc9e4ed530c7329d68d760aaf1d72c1fda97c9810eff4': {
+            20: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:81bc7a7daab0be7c9bda2b1cb1615b82e1822d0c9fb8c2d76de1ff5e43a3e154': {
+            3: ('symbol', 'text', 'Proj', 'constructions-lemma-closed-in-projective-space'),
+        },
+        'sha256:82c189f0cdfcdb77967a7c4d0c2deb68bf6dbf88e4bf4b8e46d76e261f7ba509': {
+            7: ('symbol', 'text', 'Proj', 'constructions-section-morphisms-proj'),
+        },
+        'sha256:82f841128109bf942f089cf2db8ed25d18b8d5ca9a448faa256503886270712a': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-glueing-gives-functor-proj'),
+        },
+        'sha256:8460258b04aaa646ef8183ea7f73557df1a93b5bb9ec50a7b378a73336b8b91a': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-relative-proj-transitive'),
+        },
+        'sha256:8871acfe7a2f31f772251c3e10f66f1002955fbe32ac0aa6f8e13b13b2087464': {
+            4: ('symbol', 'text', 'Proj', 'constructions-example-projective-bundle'),
+            6: ('symbol', 'text', 'Sym', 'constructions-example-projective-bundle'),
+        },
+        'sha256:8abe9060d05fb76a2b611c8b4b1a97994e3a4f346994bda1df89016621f810cf': {
+            6: ('symbol', 'text', 'Proj', 'constructions-lemma-base-change-map-proj'),
+            25: ('symbol', 'text', 'Proj', 'constructions-lemma-base-change-map-proj'),
+        },
+        'sha256:8d7c70110d8f2fa903a4bbe1b9c9e2f8296ecdd71b15fd8079b2cad89b26ac0b': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-relative-proj'),
+        },
+        'sha256:946c91d499f97cafe5dfab18de715f7d77bfec9898fcfacaf5159516efe0b032': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-modules'),
+        },
+        'sha256:96a6c9cb1bf9e82cacbeeefca96220682736fe41d63517cb56fb8c78a0bec1c6': {
+            4: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-inclusion'),
+            17: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-inclusion'),
+        },
+        'sha256:970110251bd1a700ec38f554ab302b51e82ad37e894c0dcd99dab943a8583591': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-transitive-proj'),
+            10: ('symbol', 'text', 'Proj', 'constructions-lemma-transitive-proj'),
+        },
+        'sha256:980c0ad946d15f4492ef7eb995c63468ad4edb64b86740cdafda7d271bde65b5': {
+            93: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:984fee850abdd685aacc9fb2832284c97e394b1c5344627463bbfa73cb0268c2': {
+            31: ('plain', 'text', 'equivalently', 'constructions-section-projective-bundle'),
+        },
+        'sha256:98f2ded6ccab3c987d087932651ec6c685a899a785feaba0a9914cb4339703e4': {
+            18: ('plain', 'text', ' homogeneous', 'constructions-lemma-invertible-map-into-proj'),
+        },
+        'sha256:9c22841f58f94b7e59fb904d18605a448ad8e1d436f922cc9c96162fde00f7ef': {
+            23: ('plain', 'text', 'strict equivalence classes of triples ', 'constructions-section-morphisms-proj'),
+            34: ('plain', 'text', ' as above', 'constructions-section-morphisms-proj'),
+        },
+        'sha256:9e41f367e53b9ca665283821cbcf6e631ae66e09c9f43f8bcc0a1dad47903fcf': {
+            39: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:a011584ba5aa62461b1c15b9ac7adc9a4193988e2e81926244bd2be437de4eeb': {
+            10: ('symbol', 'text', 'Proj', 'constructions-definition-standard-covering'),
+        },
+        'sha256:a0561749d5847f253ed6afb50c984cce2e99e91b6f8f906d011bdcb41b43aed9': {
+            2: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+            13: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+        },
+        'sha256:a29480e2e5f40b5db0c11293f4c10774ec296df6be80ce3bd69e147bc431c5af': {
+            19: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-scheme'),
+        },
+        'sha256:a340abbe82d98e82a37f6aaa2e0980b9be4ccece6ecd0134fa47bfdb9ea64bf5': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-relative-proj'),
+        },
+        'sha256:a62368ccccef8f7b991840986e5e685273efb1447ce66c069faf1909e4719866': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-tie-up-psi'),
+        },
+        'sha256:a872947fdbcec138a825d3e38f7bf1cbf5f94b7af53c3e6362db8184bbf789f9': {
+            1: ('symbol', 'text', 'Proj', 'constructions-example-trivial-proj'),
+        },
+        'sha256:a8d5dc473988567636bd155e217fe7015b9209ab83ad4a6ca3019c60f9319174': {
+            26: ('plain', 'text', 'th spot', 'constructions-lemma-gkn-representable'),
+        },
+        'sha256:aab290c2b224e4cc8b6958246dfdedae5ff8b6106cde1c4fbbfd39166015d689': {
+            19: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-sheaves'),
+        },
+        'sha256:abb3b1cb122f6383939838ff36ccef37ff109ec096d63b41bffb88e1247a30d2': {
+            1: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj'),
+        },
+        'sha256:ac975dc836c99321605eea90eb0ad0fafdc36348af2116d9e11f6f24cc7065b2': {
+            8: ('symbol', 'text', 'Proj', 'constructions-section-quasi-coherent-proj'),
+        },
+        'sha256:adadf28ad3265d6c489bf9683aee41f7f15a55e5917c6790016839c2992127ff': {
+            20: ('symbol', 'text', 'Sym', 'constructions-definition-vector-bundle'),
+        },
+        'sha256:ae78e07016277be6c9f31d45a9af4242cb052cffe7c2811d89feef7ac4f6a27b': {
+            1: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj-via-glueing'),
+        },
+        'sha256:af5d33d859b9f5ebae0d69b58791c5f056742828ad62c4128981205dd2096d2c': {
+            3: ('symbol', 'text', 'lcm', 'constructions-lemma-equivalent-relative'),
+        },
+        'sha256:afccabd24442d54ef31c9d4f4c95b690a20370fbd9f7c3ec7e4d14c33d4fdc4d': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-apply-relative'),
+        },
+        'sha256:b51f20f570dcba70ac3c825f57f16f26289baa201c9372254fd0ded81ac689cf': {
+            5: ('symbol', 'text', 'lcm', 'constructions-lemma-equivalent-relative'),
+        },
+        'sha256:b5fb060b6953b659eba4f98793638ee2cd0a747ad95b5eb7bf3d21cda1d28a3c': {
+            2: ('symbol', 'text', 'Sym', 'constructions-example-projective-bundle'),
+        },
+        'sha256:badc3c2816467a8d9c2ab107b659ab882f43380b1e83fe86d82b653f42738521': {
+            13: ('symbol', 'text', 'Proj', 'constructions-lemma-projective-space-bundle'),
+        },
+        'sha256:bb6d53a95b737908d1cb388570e1d0b6912af670579fe4507b78d3398c3b3dc2': {
+            10: ('symbol', 'text', 'Proj', 'constructions-example-projective-space'),
+            12: ('symbol', 'text', 'Sym', 'constructions-example-projective-space'),
+        },
+        'sha256:bbfde655a13917820a3b7a5a3c8be8209a3faaa632243559b7dcdb3b984494b4': {
+            19: ('plain', 'text', ' surjective', 'constructions-lemma-gkn-representable'),
+        },
+        'sha256:bde7a297aacbf3511a1474601f29b196c52cc7326817b80168957b1ee77ca6bc': {
+            1: ('symbol', 'text', 'Sym', 'constructions-example-projective-bundle'),
+        },
+        'sha256:be3b75dd46fb07f43a2ea66b20a2ce81dd2b954f0e15806b89e743639319f718': {
+            20: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:c4d9eef26e60344bccfa3051d0c85c6ca301a6f252341451d78707d37a071f27': {
+            30: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-valuative-criterion'),
+        },
+        'sha256:caccc0a412a6f94347ef80cb2f91bc81d678134c180acab17ec40e3c94a67c71': {
+            13: ('plain', 'text', ' quasi-compact open', 'constructions-section-morphisms-proj'),
+        },
+        'sha256:cb948b73197ac7226194d40e846933f74cd50630c1e461fe6f6fc8ddc985f670': {
+            20: ('symbol', 'text', 'Proj', 'constructions-lemma-invertible-map-into-relative-proj'),
+        },
+        'sha256:ceaaf2519e5eef5a40d025f76e2b2fe9f40ee185a0c57bb23e405ba88c5f8b64': {
+            3: ('symbol', 'text', 'lcm', 'constructions-lemma-proj-valuative-criterion'),
+        },
+        'sha256:cf370829c7890e831d762ac910ce2a9baae792b9d0b4af5e46f264f0207ccf2a': {
+            1: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-valuative-criterion'),
+        },
+        'sha256:cffc1bce7651c328f87e74ffec1981f0a81089f83054df201955d7eb661f4a7b': {
+            1: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj-via-glueing'),
+            6: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj-via-glueing'),
+        },
+        'sha256:d0cf8631095045a68f447d9bf6c41ff418c31db33cb6f655a1d9138b9cd3fc41': {
+            4: ('symbol', 'text', 'Proj', 'constructions-section-relative-proj-via-glueing'),
+        },
+        'sha256:d1103d459e38ad9ecd83c0454d8116c529afdd2d82e9b8492f900139964ebcf6': {
+            8: ('symbol', 'text', 'Proj', 'constructions-lemma-segre-embedding'),
+        },
+        'sha256:d1b5e3a38d8ecb028e75f7d8d6c7402b6a55bdca546abb5e41ec2799757ee0c2': {
+            1: ('symbol', 'text', 'Proj', 'constructions-lemma-relative-proj-separated'),
+        },
+        'sha256:d3d044f598b9f85ec37ce6468c001307620d9623d3055f25c290101870447981': {
+            7: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+        },
+        'sha256:d402d028942fc00b64a020ac8514c84c1ae899432adc7f032f5557cb31bfb8d6': {
+            19: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:d479b95335bc1b99cb53ecf895810d67f162dbedb5b04b8ae32f925f46f56c71': {
+            9: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:d5d8481996e6207ef6747c49fe7d2d88f88660318419b05dabf93dadfd011d1e': {
+            1: ('symbol', 'text', 'Proj', 'constructions-section-projective-space'),
+        },
+        'sha256:d5f9e2f4181bfa0065e40ac0d5f825e63acaf01a017b92737a0632eef49d2ebd': {
+            5: ('symbol', 'text', 'Proj', 'constructions-lemma-invertible-map-into-relative-proj'),
+        },
+        'sha256:d88fd0082ca3854a1b2ebd97600316da4232bce7dd48a5b4e66a218cfe1c5020': {
+            12: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-inclusion'),
+            28: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-inclusion'),
+        },
+        'sha256:d99cfa7ba7b62e568617b5c3612537ebd4a004088c27d2638cccb98fafada185': {
+            3: ('symbol', 'text', 'Proj', 'constructions-lemma-morphism-proj-transitive'),
+        },
+        'sha256:da78634c52b8e9e4205afc40b0e71d59f1f53bd1031410135254825ebb21fa3a': {
+            10: ('symbol', 'text', 'Proj', 'constructions-section-quasi-coherent-relative-proj'),
+        },
+        'sha256:dbf1f4d6c4b5c8a475ad140173299b84b301c4d376762fb216bf41c3a7bed45d': {
+            2: ('symbol', 'text', 'Sym', 'constructions-definition-abstract-vector-bundle'),
+        },
+        'sha256:dd65c0baa5acb707dbe8419c24c5c21c8395a8b0812f1b0acae31cb68fd78570': {
+            7: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-sheaves'),
+        },
+        'sha256:de3f85a9fd34ff6ce9ad3101ec265cf94ff33c005a17acff3332f9d9ec951b3c': {
+            30: ('symbol', 'text', 'Proj', 'constructions-lemma-glue-relative-proj-twists'),
+        },
+        'sha256:de6cb2f6147a60e7ef742481eabeb6509c9924eb782112bd38ceb03c4fb2ea9d': {
+            4: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+        },
+        'sha256:df948b1e4a12603054390290378423caf393bcd63905708ca9468599c2308faf': {
+            16: ('symbol', 'text', 'Proj', 'constructions-remark-not-in-invertible-locus'),
+        },
+        'sha256:df9a4cf218712a8d2090a20e2cc1388f79d60e31708f732d262a245ecb27ec12': {
+            26: ('plain', 'text', 'pairs ', 'constructions-section-spec'),
+            32: ('plain', 'text', ' as above', 'constructions-section-spec'),
+        },
+        'sha256:e099f4fd3b213d8a3b1d2fc041dce266c9ae866260a618b7f541445dfd6437bb': {
+            8: ('symbol', 'text', 'Sym', 'constructions-lemma-category-vector-bundles'),
+        },
+        'sha256:e24598f0662fc70b504bb9fbcb1d93262661e7b7be11e2a8998e93f9771000d9': {
+            88: ('symbol', 'text', 'Proj', 'constructions-lemma-invertible-map-into-relative-proj'),
+        },
+        'sha256:e5a5f65994a429b61a0cfc2338d85f6f227b2317af51356475017307c0518a5d': {
+            22: ('plain', 'text', '-graded primes of ', 'constructions-lemma-standard-open'),
+            69: ('plain', 'text', '-graded primes of ', 'constructions-lemma-standard-open'),
+        },
+        'sha256:e816798ce1499b4470ee5c1410db571d1c0c70d0ee3b921d72115d831c30833e': {
+            2: ('symbol', 'text', 'Sym', 'constructions-section-projective-bundle'),
+            36: ('plain', 'text', 'equivalently', 'constructions-section-projective-bundle'),
+            41: ('symbol', 'text', 'Sym', 'constructions-section-projective-bundle'),
+        },
+        'sha256:e8f34ad65ee319ec805a617e526b63142d259c878b9cf974f5b1e003f5a0241e': {
+            8: ('symbol', 'text', 'Proj', 'constructions-lemma-segre-embedding'),
+        },
+        'sha256:e95ca0247300c12e3148f4329caf1f0fa28c224ed6d8f91e8bbf853821bf7ede': {
+            4: ('symbol', 'text', 'Proj', 'constructions-lemma-closed-in-projective-space'),
+        },
+        'sha256:ec2ea5f791859c980b838b9c4f8195b1bdc8230d15a07c702c79f1c9a68c0b9c': {
+            1: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-quasi-compact'),
+        },
+        'sha256:ee941f0ad4e36cf8ce36411f3a7ae8848d58c62c1ff4435f253718f182e7cc18': {
+            3: ('symbol', 'text', 'Proj', 'constructions-section-proj'),
+        },
+        'sha256:f29fb5f965696c4185f978f377206412918db85f2b3380d953610927a5e0ff58': {
+            18: ('symbol', 'text', 'Proj', 'constructions-lemma-proj-scheme'),
+        },
+        'sha256:f5676b2814236c7be8336e34f8b25e366761e56afb8af27e8ebd4320e77c8024': {
+            23: ('plain', 'text', 'strict equivalence classes of ', 'constructions-section-relative-proj'),
+            40: ('plain', 'text', ' as above', 'constructions-section-relative-proj'),
+        },
+        'sha256:ff0bf445f9318c49ffb9b049d0db29cea4d287f4621a48d7b1dd27c81383f846': {
+            16: ('symbol', 'text', 'Proj', 'constructions-lemma-projective-space'),
+        },
+    },
     'algebraization': {
         'sha256:003260eac85d5ec143f929c5146cdcd7856fd9ec0c68cf760e0b1c2a9194eeda': {
             12: ('plain', 'text', 'of', 'algebraization-section-algebraization-sections-general'),
@@ -487,6 +985,33 @@ SOURCE_FRAMES = {
 }
 
 TRANSLATED_ROLES = {
+    'sha256:03d148bd82d3874ceaec2916f00ecf7de17366ad217c2fbea638d29c12669f3c': ((19, 'plain'),),
+    'sha256:1023326bee7c7bb05b8a1fd182075947f93a7b1f41ca8a90cf59f1e2542682ef': ((27, 'plain'), (53, 'plain')),
+    'sha256:153db947a74e4f6c7113da4d5e68de3a2ace0486371f17fea8c44e6ef6c8d646': ((13, 'plain'),),
+    'sha256:2041d2e13d710fb707fa7e3ec5d5c4ad33c30bcb263991d5f4082b3a54210cbe': ((18, 'plain'),),
+    'sha256:225b7a998d5d14cdaf4f0933f333d9e8ba3834cc21f288365ffabfc7aed5f925': ((15, 'plain'),),
+    'sha256:2cbf53ac253ade05c25fd2815632c525ac9a11710623e0b8f85faa5454c45e76': ((12, 'plain'),),
+    'sha256:3ec029a37186350113a5ca817a5f2543c70b83c03dd308542ad6aff4df6f6f1b': ((9, 'plain'),),
+    'sha256:5093f4488e290ca4efadc93fd3a5cf9d4d192c8a920c4912b424f6e279862612': ((26, 'plain'), (32, 'plain')),
+    'sha256:6990e7a927de3d268c365cbb56e76740c49c317013cf07c8e69485d9dfd6b039': ((24, 'plain'),),
+    'sha256:7ecaff8e1cf1e74af325c8f2cf98c980e3fe71573bb5422a538a5727ab9f4383': ((19, 'plain'),),
+    'sha256:80903d5c612a4ac69be596e18931be2f7a609cec463c9f0e16ebd376e0412bf6': ((26, 'plain'),),
+    'sha256:82552c377b56a64fd74a008606811dcaed432c90525b894bf5d6b5654429bd39': ((23, 'plain'), (40, 'plain')),
+    'sha256:8796986582bad71cdf75aa3c7b462e22cb93a93397f6811cc10712c3a4cb8959': ((51, 'plain'),),
+    'sha256:9f3f3e9f9a96e49742a0cfe7ae5a4b3665363a54e8dc5b3dcfa75a6205e80ef5': ((18, 'plain'),),
+    'sha256:a07a91d0c6806ef42306031dc9de466bf8041f6769a30e2616d1242cc1770110': ((32, 'plain'),),
+    'sha256:a52202be83b2d93567be003438f9ffac9c70b48f5287716595e785771b905772': ((9, 'plain'), (12, 'plain')),
+    'sha256:c83a0088f569471af8ca34647421382bf1081a4ac4485274c04b9a80a95d328c': ((22, 'plain'), (69, 'plain')),
+    'sha256:d2a2e33eb32573bf15836dc1e300795ad02c096cdd24267782310e3108b245db': ((36, 'plain'),),
+    'sha256:d5bf80efc5f44855210e037b107a60aea03fad051ac6029b5a82f864d3aed64f': ((13, 'plain'),),
+    'sha256:dd931061499f022e7d899bbbd0e23e0e63da87dc84bdf0807e274bf0ec4af2d3': ((97, 'plain'), (111, 'plain'), (131, 'plain'), (157, 'plain')),
+    'sha256:dec1ba83002a926108e0a907c1603c949668a145efcac79f2a08bf5b6fde2e62': ((10, 'plain'), (40, 'plain'), (50, 'plain')),
+    'sha256:df7544d3c16ab2e21bca7d7bb2cc4bc27fce07194f615ce4fca43f6caed60f52': ((31, 'plain'),),
+    'sha256:e29111f70b806499ed2c92c27c24bc0b06001461d1c249caca9e425dc84f2f53': ((10, 'plain'), (21, 'plain')),
+    'sha256:e7b4d6566b66092b9f443f1099f4c32c80e779b98ee306567352b1fbc0ac5d18': ((50, 'plain'),),
+    'sha256:eb4d4702ca4125378f53a754b099f3f628399e9cda29a6ebb3cf68c5a60db2a7': ((39, 'plain'),),
+    'sha256:f71dfac46b22a456b8dd4f19e6519fc01b7f21dc77873a67a1e95a11b2488c57': ((23, 'plain'), (34, 'plain')),
+    'sha256:ffa7b1fac499434cbe8ad44a3b51cf9b3f33800e80b0e6dba42f5b76ce6ddc6d': ((2, 'plain'), (4, 'plain')),
     'sha256:0474a69dd463f79b62afde1104837afc371ddfab0cd6c20781cad35f7346f4c3': ((32, 'plain'),),
     'sha256:094a35da6f8cceb7fd16aca9c364e2f7b607b328662313a355a7a6f9bb199d7d': ((24, 'plain'), (31, 'plain')),
     'sha256:0ea5a37f25f7573a58fcf8f7eb8b5fd1628879c423fcb1aaaf8c4ef731559543': ((8, 'plain'),),
@@ -535,6 +1060,42 @@ TRANSLATED_ROLES = {
 }
 
 SOURCE_WITNESSES = {
+    'sheaves': {
+        ('plain', 'text', ' continuous'): ('sheaves-section-sheaves', 'section', 1),
+        ('plain', 'text', ' is continuous'): ('sheaves-section-sheaves', 'section', 1),
+        ('plain', 'text', ' locally constant'): ('sheaves-section-sheaves', 'section', 1),
+        ('plain', 'text', ' resp. '): ('sheaves-section-sheaves-structures', 'section', 1),
+        ('plain', 'text', 'restr.'): ('sheaves-section-bases', 'section', 1),
+        ('plain', 'text', 'restriction for '): ('sheaves-section-presheaves-functorial', 'section', 1),
+        ('plain', 'text', 'restriction of '): ('sheaves-section-presheaves-functorial', 'section', 1),
+        ('plain', 'textit', 'a final object'): ('sheaves-section-sheaves', 'section', 1),
+    },
+    'schemes': {
+        ('plain', 'text', ' and '): ('schemes-section-glueing-schemes', 'section', 1),
+        ('plain', 'text', ' comes from '): ('schemes-section-quasi-coherent-affine', 'section', 1),
+        ('plain', 'text', ' such that'): ('schemes-section-glueing-schemes', 'section', 1),
+        ('plain', 'text', 'image '): ('schemes-section-category-affine-schemes', 'section', 1),
+        ('plain', 'text', 'open covering '): ('schemes-section-glueing-schemes', 'section', 1),
+        ('plain', 'text', 'the element '): ('schemes-section-quasi-coherent-affine', 'section', 1),
+        ('plain', 'textit', 'Locally ringed spaces'): ('schemes-section-locally-ringed-spaces', 'section', 1),
+        ('plain', 'textit', 'Ringed spaces'): ('schemes-section-locally-ringed-spaces', 'section', 1),
+    },
+    'constructions': {
+        ('plain', 'text', ' as above'): ('constructions-section-spec', 'section', 1),
+        ('plain', 'text', ' homogeneous'): ('constructions-section-invertible-proj', 'section', 1),
+        ('plain', 'text', ' induced by '): ('constructions-section-grassmannian', 'section', 1),
+        ('plain', 'text', ' is surjective'): ('constructions-section-grassmannian', 'section', 1),
+        ('plain', 'text', ' quasi-compact open'): ('constructions-section-morphisms-proj', 'section', 1),
+        ('plain', 'text', ' surjective'): ('constructions-section-grassmannian', 'section', 1),
+        ('plain', 'text', '-graded primes of '): ('constructions-section-proj', 'section', 1),
+        ('plain', 'text', 'equivalently'): ('constructions-section-projective-bundle', 'section', 1),
+        ('plain', 'text', 'homogeneous'): ('constructions-section-functoriality-proj', 'section', 1),
+        ('plain', 'text', 'pairs '): ('constructions-section-spec', 'section', 1),
+        ('plain', 'text', 'strict equivalence classes of '): ('constructions-section-relative-proj', 'section', 1),
+        ('plain', 'text', 'strict equivalence classes of triples '): ('constructions-section-morphisms-proj', 'section', 1),
+        ('plain', 'text', 'th spot'): ('constructions-section-grassmannian', 'section', 1),
+        ('plain', 'text', 'the map '): ('constructions-section-grassmannian', 'section', 1),
+    },
     'algebraization': {
         ('plain', 'text', ' and '): ('algebraization-section-distance', 'section', 1),
         ('plain', 'text', ' immediate'): ('algebraization-section-distance', 'section', 1),

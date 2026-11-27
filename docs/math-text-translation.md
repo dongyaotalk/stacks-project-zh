@@ -1087,3 +1087,12 @@ typed 来源仍使用其冻结的原宏政策。只有分类见证的政策哈�
 [选择器回归](../tests/fixtures/p1-finite-math-selectors.json)覆盖三个章节此前受阻的
 114 个完整容器，核对来源 Tag、完整 TeX 回放和符号保护。生产启用仍须单独登记
 `p0_locked_math_frames` 中的章源哈希。候选生成和数据采用使用独立任务。
+
+### 第 28、29 章的锁定数学框架
+
+`properties` 和 `morphisms` 使用同一完整帧匹配规则。运算符、函子和下标记号
+保留其 TeX 原字节，例如 `codim`、`Ann`、`Diff` 和 `ft-pts`。矩阵中的对象描述、
+公式中的关系谓语和集合条件只开放各自已核实的自然语言参数。
+[锁定选择器回归](../tests/fixtures/scheme-properties-morphisms-math-selectors.json)
+覆盖原先受阻的 70 个完整容器，核对原政策下的阻断和显式登记后的逐字回放。
+生产启用须在 `p0_locked_math_frames` 中另行登记两章的锁定 Git 哈希。

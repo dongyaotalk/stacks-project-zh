@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 83 | 第 5、9-20、22-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
+| 未开始 | 82 | 第 5、9-20、22-25、27-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 33 | 第 1-4、6-8、21、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
+| 候选译文完成，待审校 | 34 | 第 1-4、6-8、21、26、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 796 / 3,299（24.1%） | 0 | 2,503 |
+| 模型候选译文 | 820 / 3,299（24.9%） | 0 | 2,479 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -61,7 +61,7 @@
 | 23 | 除幂代数（`dpa`） | 未开始 | 0 / 12（0.0%） | 0 | 12 | 0 | 0 |
 | 24 | 微分分次层（`sdga`） | 未开始 | 0 / 35（0.0%） | 0 | 35 | 0 | 0 |
 | 25 | 超覆盖（`hypercovering`） | 未开始 | 0 / 12（0.0%） | 0 | 12 | 0 | 0 |
-| 26 | 概形（`schemes`） | 未开始 | 0 / 24（0.0%） | 0 | 24 | 0 | 0 |
+| 26 | 概形（`schemes`） | 候选译文完成，待审校 | 24 / 24（100.0%） | 0 | 0 | 0 | 0 |
 | 27 | 概形的构造（`constructions`） | 未开始 | 0 / 22（0.0%） | 0 | 22 | 0 | 0 |
 | 28 | 概形的性质（`properties`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 29 | 概形的态射（`morphisms`） | 未开始 | 0 / 59（0.0%） | 0 | 59 | 0 | 0 |
@@ -425,6 +425,37 @@
 | 51 | `0945` | Weakly contractible objects | 完成 | 未开始 | 未开始 |
 | 52 | `0948` | Compact objects | 完成 | 未开始 | 未开始 |
 | 53 | `094F` | Complexes with locally constant cohomology sheaves | 完成 | 未开始 | 未开始 |
+
+### 第 26 章 概形（`schemes`）
+
+共 24 个 Section：候选完成 24，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `01H9` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `01HA` | Locally ringed spaces | 完成 | 未开始 | 未开始 |
+| 3 | `01HD` | Open immersions of locally ringed spaces | 完成 | 未开始 | 未开始 |
+| 4 | `01HJ` | Closed immersions of locally ringed spaces | 完成 | 未开始 | 未开始 |
+| 5 | `01HR` | Affine schemes | 完成 | 未开始 | 未开始 |
+| 6 | `01HX` | The category of affine schemes | 完成 | 未开始 | 未开始 |
+| 7 | `01I6` | Quasi-coherent sheaves on affines | 完成 | 未开始 | 未开始 |
+| 8 | `01IF` | Closed subspaces of affine schemes | 完成 | 未开始 | 未开始 |
+| 9 | `01II` | Schemes | 完成 | 未开始 | 未开始 |
+| 10 | `01IM` | Immersions of schemes | 完成 | 未开始 | 未开始 |
+| 11 | `01IR` | Zariski topology of schemes | 完成 | 未开始 | 未开始 |
+| 12 | `01IZ` | Reduced schemes | 完成 | 未开始 | 未开始 |
+| 13 | `01J5` | Points of schemes | 完成 | 未开始 | 未开始 |
+| 14 | `01JA` | Glueing schemes | 完成 | 未开始 | 未开始 |
+| 15 | `01JF` | A representability criterion | 完成 | 未开始 | 未开始 |
+| 16 | `01JL` | Existence of fibre products of schemes | 完成 | 未开始 | 未开始 |
+| 17 | `01JO` | Fibre products of schemes | 完成 | 未开始 | 未开始 |
+| 18 | `01JW` | Base change in algebraic geometry | 完成 | 未开始 | 未开始 |
+| 19 | `01K2` | Quasi-compact morphisms | 完成 | 未开始 | 未开始 |
+| 20 | `01KA` | Valuative criterion for universal closedness | 完成 | 未开始 | 未开始 |
+| 21 | `01KH` | Separation axioms | 完成 | 未开始 | 未开始 |
+| 22 | `01KY` | Valuative criterion of separatedness | 完成 | 未开始 | 未开始 |
+| 23 | `01L1` | Monomorphisms | 完成 | 未开始 | 未开始 |
+| 24 | `01LA` | Functoriality for quasi-coherent modules | 完成 | 未开始 | 未开始 |
 
 ### 第 34 章 概形上的拓扑（`topologies`）
 

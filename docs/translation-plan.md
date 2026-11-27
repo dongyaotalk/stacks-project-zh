@@ -73,7 +73,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P0 | 2 / 22 | 第 101 章 代数栈的态射（`stacks-morphisms`） | `stacks-moduli` | Section 1 / `04XN` | `REVIEW` | 代数栈态射是高频核心参考，系统中文资料稀缺 |
 | P0 | 2 / 23 | 第 108 章 模栈（`moduli`） | `stacks-moduli` | Section 1 / `0DLU` | `REVIEW` | 模空间栈是项目最终目标之一，系统中文资料稀缺 |
 | P1 | 1 / 1 | 第 6 章 空间上的层（`sheaves`） | `scheme-to-stack` | Section 1 / `006B` | `REVIEW` | 位点、层和栈语言的重要前置；基础层论有中文资料但 Stacks 体系仍有增量价值 |
-| P1 | 1 / 2 | 第 26 章 概形（`schemes`） | `scheme-to-stack` | Section 1 / `01H9` | `PREPARE_SCOPE` | 代数几何主干且重要性极高，但已有中文概形教材与中文授课体系 |
+| P1 | 1 / 2 | 第 26 章 概形（`schemes`） | `scheme-to-stack` | Section 1 / `01H9` | `REVIEW` | 代数几何主干且重要性极高，但已有中文概形教材与中文授课体系 |
 | P1 | 1 / 3 | 第 27 章 概形的构造（`constructions`） | `schemes` | Section 1 / `01LF` | `PREPARE_SCOPE` | 概形构造实用价值高，中文系统参考仍少于基础概形入门 |
 | P1 | 1 / 4 | 第 28 章 概形的性质（`properties`） | `scheme-to-stack` | Section 1 / `01OI` | `PREPARE_SCOPE` | 概形性质是高频核心，但基础内容已有中文概形教材和课程覆盖 |
 | P1 | 1 / 5 | 第 29 章 概形的态射（`morphisms`） | `scheme-to-stack` | Section 1 / `01QM` | `PREPARE_SCOPE` | 概形态射是高频核心，但基础内容已有中文概形教材和课程覆盖 |

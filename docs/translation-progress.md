@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 81 | 第 5、9-20、22-25、28-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
+| 未开始 | 80 | 第 5、9-20、22-25、29-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 35 | 第 1-4、6-8、21、26-27、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
+| 候选译文完成，待审校 | 36 | 第 1-4、6-8、21、26-28、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 842 / 3,299（25.5%） | 0 | 2,457 |
+| 模型候选译文 | 872 / 3,299（26.4%） | 0 | 2,427 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -63,7 +63,7 @@
 | 25 | 超覆盖（`hypercovering`） | 未开始 | 0 / 12（0.0%） | 0 | 12 | 0 | 0 |
 | 26 | 概形（`schemes`） | 候选译文完成，待审校 | 24 / 24（100.0%） | 0 | 0 | 0 | 0 |
 | 27 | 概形的构造（`constructions`） | 候选译文完成，待审校 | 22 / 22（100.0%） | 0 | 0 | 0 | 0 |
-| 28 | 概形的性质（`properties`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
+| 28 | 概形的性质（`properties`） | 候选译文完成，待审校 | 30 / 30（100.0%） | 0 | 0 | 0 | 0 |
 | 29 | 概形的态射（`morphisms`） | 未开始 | 0 / 59（0.0%） | 0 | 59 | 0 | 0 |
 | 30 | 概形上同调（`coherent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 31 | 除子（`divisors`） | 未开始 | 0 / 37（0.0%） | 0 | 37 | 0 | 0 |
@@ -485,6 +485,43 @@
 | 20 | `02NB` | Twisting by invertible sheaves and relative Proj | 完成 | 未开始 | 未开始 |
 | 21 | `01OA` | Projective bundles | 完成 | 未开始 | 未开始 |
 | 22 | `089R` | Grassmannians | 完成 | 未开始 | 未开始 |
+
+### 第 28 章 概形的性质（`properties`）
+
+共 30 个 Section：候选完成 30，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `01OI` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `054B` | Constructible sets | 完成 | 未开始 | 未开始 |
+| 3 | `01OJ` | Integral, irreducible, and reduced schemes | 完成 | 未开始 | 未开始 |
+| 4 | `01OO` | Types of schemes defined by properties of rings | 完成 | 未开始 | 未开始 |
+| 5 | `01OU` | Noetherian schemes | 完成 | 未开始 | 未开始 |
+| 6 | `01P1` | Jacobson schemes | 完成 | 未开始 | 未开始 |
+| 7 | `033H` | Normal schemes | 完成 | 未开始 | 未开始 |
+| 8 | `02IN` | Cohen-Macaulay schemes | 完成 | 未开始 | 未开始 |
+| 9 | `02IR` | Regular schemes | 完成 | 未开始 | 未开始 |
+| 10 | `04MS` | Dimension | 完成 | 未开始 | 未开始 |
+| 11 | `02IV` | Catenary schemes | 完成 | 未开始 | 未开始 |
+| 12 | `033P` | Serre's conditions | 完成 | 未开始 | 未开始 |
+| 13 | `033R` | Japanese and Nagata schemes | 完成 | 未开始 | 未开始 |
+| 14 | `0HA2` | G-schemes | 完成 | 未开始 | 未开始 |
+| 15 | `07R0` | The singular locus | 完成 | 未开始 | 未开始 |
+| 16 | `0BQ1` | Local irreducibility | 完成 | 未开始 | 未开始 |
+| 17 | `01PA` | Characterizing modules of finite type and finite presentation | 完成 | 未开始 | 未开始 |
+| 18 | `0B5K` | Sections over principal opens | 完成 | 未开始 | 未开始 |
+| 19 | `01P5` | Quasi-affine schemes | 完成 | 未开始 | 未开始 |
+| 20 | `05NZ` | Flat modules | 完成 | 未开始 | 未开始 |
+| 21 | `05P1` | Locally free modules | 完成 | 未开始 | 未开始 |
+| 22 | `05JN` | Locally projective modules | 完成 | 未开始 | 未开始 |
+| 23 | `01PD` | Extending quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 24 | `077K` | Gabber's result | 完成 | 未开始 | 未开始 |
+| 25 | `07ZM` | Sections with support in a closed subset | 完成 | 未开始 | 未开始 |
+| 26 | `01PL` | Sections of quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 27 | `01PR` | Ample invertible sheaves | 完成 | 未开始 | 未开始 |
+| 28 | `01QD` | Affine and quasi-affine schemes | 完成 | 未开始 | 未开始 |
+| 29 | `01QG` | Quasi-coherent sheaves and ample invertible sheaves | 完成 | 未开始 | 未开始 |
+| 30 | `01ZU` | Finding suitable affine opens | 完成 | 未开始 | 未开始 |
 
 ### 第 34 章 概形上的拓扑（`topologies`）
 

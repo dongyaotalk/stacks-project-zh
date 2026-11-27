@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 84 | 第 5-6、9-20、22-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
+| 未开始 | 83 | 第 5、9-20、22-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 32 | 第 1-4、7-8、21、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
+| 候选译文完成，待审校 | 33 | 第 1-4、6-8、21、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 763 / 3,299（23.1%） | 0 | 2,536 |
+| 模型候选译文 | 796 / 3,299（24.1%） | 0 | 2,503 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -41,7 +41,7 @@
 | 3 | 集合论（`sets`） | 候选译文完成，待审校 | 12 / 12（100.0%） | 0 | 0 | 0 | 0 |
 | 4 | 范畴（`categories`） | 候选译文完成，待审校 | 44 / 44（100.0%） | 0 | 0 | 0 | 0 |
 | 5 | 拓扑（`topology`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
-| 6 | 空间上的层（`sheaves`） | 未开始 | 0 / 33（0.0%） | 0 | 33 | 0 | 0 |
+| 6 | 空间上的层（`sheaves`） | 候选译文完成，待审校 | 33 / 33（100.0%） | 0 | 0 | 0 | 0 |
 | 7 | 位点与层（`sites`） | 候选译文完成，待审校 | 52 / 52（100.0%） | 0 | 0 | 0 | 0 |
 | 8 | 栈（`stacks`） | 候选译文完成，待审校 | 13 / 13（100.0%） | 0 | 0 | 0 | 0 |
 | 9 | 域（`fields`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
@@ -246,6 +246,46 @@
 | 42 | `02Y4` | Representable 1-morphisms | 完成 | 未开始 | 未开始 |
 | 43 | `0FFJ` | Monoidal categories | 完成 | 未开始 | 未开始 |
 | 44 | `0H17` | Categories of dotted arrows | 完成 | 未开始 | 未开始 |
+
+### 第 6 章 空间上的层（`sheaves`）
+
+共 33 个 Section：候选完成 33，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `006B` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `006C` | Basic notions | 完成 | 未开始 | 未开始 |
+| 3 | `006D` | Presheaves | 完成 | 未开始 | 未开始 |
+| 4 | `006G` | Abelian presheaves | 完成 | 未开始 | 未开始 |
+| 5 | `006M` | Presheaves of algebraic structures | 完成 | 未开始 | 未开始 |
+| 6 | `006P` | Presheaves of modules | 完成 | 未开始 | 未开始 |
+| 7 | `006S` | Sheaves | 完成 | 未开始 | 未开始 |
+| 8 | `006Z` | Abelian sheaves | 完成 | 未开始 | 未开始 |
+| 9 | `0071` | Sheaves of algebraic structures | 完成 | 未开始 | 未开始 |
+| 10 | `0076` | Sheaves of modules | 完成 | 未开始 | 未开始 |
+| 11 | `0078` | Stalks | 完成 | 未开始 | 未开始 |
+| 12 | `007E` | Stalks of abelian presheaves | 完成 | 未开始 | 未开始 |
+| 13 | `007G` | Stalks of presheaves of algebraic structures | 完成 | 未开始 | 未开始 |
+| 14 | `007I` | Stalks of presheaves of modules | 完成 | 未开始 | 未开始 |
+| 15 | `007L` | Algebraic structures | 完成 | 未开始 | 未开始 |
+| 16 | `007S` | Exactness and points | 完成 | 未开始 | 未开始 |
+| 17 | `007X` | Sheafification | 完成 | 未开始 | 未开始 |
+| 18 | `0083` | Sheafification of abelian presheaves | 完成 | 未开始 | 未开始 |
+| 19 | `0086` | Sheafification of presheaves of algebraic structures | 完成 | 未开始 | 未开始 |
+| 20 | `0088` | Sheafification of presheaves of modules | 完成 | 未开始 | 未开始 |
+| 21 | `008C` | Continuous maps and sheaves | 完成 | 未开始 | 未开始 |
+| 22 | `008N` | Continuous maps and abelian sheaves | 完成 | 未开始 | 未开始 |
+| 23 | `008P` | Continuous maps and sheaves of algebraic structures | 完成 | 未开始 | 未开始 |
+| 24 | `008R` | Continuous maps and sheaves of modules | 完成 | 未开始 | 未开始 |
+| 25 | `0090` | Ringed spaces | 完成 | 未开始 | 未开始 |
+| 26 | `0094` | Morphisms of ringed spaces and modules | 完成 | 未开始 | 未开始 |
+| 27 | `0099` | Skyscraper sheaves and stalks | 完成 | 未开始 | 未开始 |
+| 28 | `009D` | Limits and colimits of presheaves | 完成 | 未开始 | 未开始 |
+| 29 | `009E` | Limits and colimits of sheaves | 完成 | 未开始 | 未开始 |
+| 30 | `009H` | Bases and sheaves | 完成 | 未开始 | 未开始 |
+| 31 | `009Z` | Open immersions and (pre)sheaves | 完成 | 未开始 | 未开始 |
+| 32 | `00AD` | Closed immersions and (pre)sheaves | 完成 | 未开始 | 未开始 |
+| 33 | `00AK` | Glueing sheaves | 完成 | 未开始 | 未开始 |
 
 ### 第 7 章 位点与层（`sites`）
 

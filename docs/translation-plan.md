@@ -75,7 +75,7 @@ Section 的当前状态决定动作，但不会为了选择一个更容易执行
 | P1 | 1 / 1 | 第 6 章 空间上的层（`sheaves`） | `scheme-to-stack` | Section 1 / `006B` | `REVIEW` | 位点、层和栈语言的重要前置；基础层论有中文资料但 Stacks 体系仍有增量价值 |
 | P1 | 1 / 2 | 第 26 章 概形（`schemes`） | `scheme-to-stack` | Section 1 / `01H9` | `REVIEW` | 代数几何主干且重要性极高，但已有中文概形教材与中文授课体系 |
 | P1 | 1 / 3 | 第 27 章 概形的构造（`constructions`） | `schemes` | Section 1 / `01LF` | `REVIEW` | 概形构造实用价值高，中文系统参考仍少于基础概形入门 |
-| P1 | 1 / 4 | 第 28 章 概形的性质（`properties`） | `scheme-to-stack` | Section 1 / `01OI` | `PREPARE_SCOPE` | 概形性质是高频核心，但基础内容已有中文概形教材和课程覆盖 |
+| P1 | 1 / 4 | 第 28 章 概形的性质（`properties`） | `scheme-to-stack` | Section 1 / `01OI` | `REVIEW` | 概形性质是高频核心，但基础内容已有中文概形教材和课程覆盖 |
 | P1 | 1 / 5 | 第 29 章 概形的态射（`morphisms`） | `scheme-to-stack` | Section 1 / `01QM` | `PREPARE_SCOPE` | 概形态射是高频核心，但基础内容已有中文概形教材和课程覆盖 |
 | P1 | 1 / 6 | 第 20 章 层上同调（`cohomology`） | `cohomology` | Section 1 / `01DX` | `PREPARE_SCOPE` | 层上同调路线核心；重要性高，但中文同调与层论资料并非空白 |
 | P1 | 1 / 7 | 第 30 章 概形上同调（`coherent`） | `cohomology` | Section 1 / `01X7` | `PREPARE_SCOPE` | 概形上同调是后续几何上同调基础，系统中文参考仍有限 |

@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 80 | 第 5、9-20、22-25、29-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
+| 未开始 | 79 | 第 5、9-20、22-25、30-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 36 | 第 1-4、6-8、21、26-28、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
+| 候选译文完成，待审校 | 37 | 第 1-4、6-8、21、26-29、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 872 / 3,299（26.4%） | 0 | 2,427 |
+| 模型候选译文 | 931 / 3,299（28.2%） | 0 | 2,368 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -64,7 +64,7 @@
 | 26 | 概形（`schemes`） | 候选译文完成，待审校 | 24 / 24（100.0%） | 0 | 0 | 0 | 0 |
 | 27 | 概形的构造（`constructions`） | 候选译文完成，待审校 | 22 / 22（100.0%） | 0 | 0 | 0 | 0 |
 | 28 | 概形的性质（`properties`） | 候选译文完成，待审校 | 30 / 30（100.0%） | 0 | 0 | 0 | 0 |
-| 29 | 概形的态射（`morphisms`） | 未开始 | 0 / 59（0.0%） | 0 | 59 | 0 | 0 |
+| 29 | 概形的态射（`morphisms`） | 候选译文完成，待审校 | 59 / 59（100.0%） | 0 | 0 | 0 | 0 |
 | 30 | 概形上同调（`coherent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
 | 31 | 除子（`divisors`） | 未开始 | 0 / 37（0.0%） | 0 | 37 | 0 | 0 |
 | 32 | 概形的极限（`limits`） | 未开始 | 0 / 22（0.0%） | 0 | 22 | 0 | 0 |
@@ -522,6 +522,72 @@
 | 28 | `01QD` | Affine and quasi-affine schemes | 完成 | 未开始 | 未开始 |
 | 29 | `01QG` | Quasi-coherent sheaves and ample invertible sheaves | 完成 | 未开始 | 未开始 |
 | 30 | `01ZU` | Finding suitable affine opens | 完成 | 未开始 | 未开始 |
+
+### 第 29 章 概形的态射（`morphisms`）
+
+共 59 个 Section：候选完成 59，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `01QM` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `01QN` | Closed immersions | 完成 | 未开始 | 未开始 |
+| 3 | `07RJ` | Immersions | 完成 | 未开始 | 未开始 |
+| 4 | `01QX` | Closed immersions and quasi-coherent sheaves | 完成 | 未开始 | 未开始 |
+| 5 | `056H` | Supports of modules | 完成 | 未开始 | 未开始 |
+| 6 | `01R5` | Scheme theoretic image | 完成 | 未开始 | 未开始 |
+| 7 | `01RA` | Scheme theoretic closure and density | 完成 | 未开始 | 未开始 |
+| 8 | `01RI` | Dominant morphisms | 完成 | 未开始 | 未开始 |
+| 9 | `01RY` | Surjective morphisms | 完成 | 未开始 | 未开始 |
+| 10 | `01S2` | Radicial and universally injective morphisms | 完成 | 未开始 | 未开始 |
+| 11 | `01S5` | Affine morphisms | 完成 | 未开始 | 未开始 |
+| 12 | `0FXQ` | Families of ample invertible modules | 完成 | 未开始 | 未开始 |
+| 13 | `01SJ` | Quasi-affine morphisms | 完成 | 未开始 | 未开始 |
+| 14 | `01SQ` | Types of morphisms defined by properties of ring maps | 完成 | 未开始 | 未开始 |
+| 15 | `01T0` | Morphisms of finite type | 完成 | 未开始 | 未开始 |
+| 16 | `01T9` | Points of finite type and Jacobson schemes | 完成 | 未开始 | 未开始 |
+| 17 | `02J7` | Universally catenary schemes | 完成 | 未开始 | 未开始 |
+| 18 | `0359` | Nagata schemes, reprise | 完成 | 未开始 | 未开始 |
+| 19 | `07R2` | The singular locus, reprise | 完成 | 未开始 | 未开始 |
+| 20 | `0HA6` | Excellent schemes | 完成 | 未开始 | 未开始 |
+| 21 | `01TC` | Quasi-finite morphisms | 完成 | 未开始 | 未开始 |
+| 22 | `01TO` | Morphisms of finite presentation | 完成 | 未开始 | 未开始 |
+| 23 | `054H` | Constructible sets | 完成 | 未开始 | 未开始 |
+| 24 | `01TZ` | Open morphisms | 完成 | 未开始 | 未开始 |
+| 25 | `040G` | Submersive morphisms | 完成 | 未开始 | 未开始 |
+| 26 | `01U2` | Flat morphisms | 完成 | 未开始 | 未开始 |
+| 27 | `04PV` | Flat closed immersions | 完成 | 未开始 | 未开始 |
+| 28 | `0529` | Generic flatness | 完成 | 未开始 | 未开始 |
+| 29 | `02FW` | Morphisms and dimensions of fibres | 完成 | 未开始 | 未开始 |
+| 30 | `02NI` | Morphisms of given relative dimension | 完成 | 未开始 | 未开始 |
+| 31 | `01UB` | Syntomic morphisms | 完成 | 未开始 | 未开始 |
+| 32 | `01R1` | Conormal sheaf of an immersion | 完成 | 未开始 | 未开始 |
+| 33 | `01UM` | Sheaf of differentials of a morphism | 完成 | 未开始 | 未开始 |
+| 34 | `0G43` | Finite order differential operators | 完成 | 未开始 | 未开始 |
+| 35 | `01V4` | Smooth morphisms | 完成 | 未开始 | 未开始 |
+| 36 | `02G3` | Unramified morphisms | 完成 | 未开始 | 未开始 |
+| 37 | `02GH` | \'Etale morphisms | 完成 | 未开始 | 未开始 |
+| 38 | `01VG` | Relatively ample sheaves | 完成 | 未开始 | 未开始 |
+| 39 | `01VL` | Very ample sheaves | 完成 | 未开始 | 未开始 |
+| 40 | `02NO` | Ample and very ample sheaves relative to finite type morphisms | 完成 | 未开始 | 未开始 |
+| 41 | `01VV` | Quasi-projective morphisms | 完成 | 未开始 | 未开始 |
+| 42 | `01W0` | Proper morphisms | 完成 | 未开始 | 未开始 |
+| 43 | `0BX4` | Valuative criteria | 完成 | 未开始 | 未开始 |
+| 44 | `01W7` | Projective morphisms | 完成 | 未开始 | 未开始 |
+| 45 | `01WG` | Integral and finite morphisms | 完成 | 未开始 | 未开始 |
+| 46 | `04DC` | Universal homeomorphisms | 完成 | 未开始 | 未开始 |
+| 47 | `0CN6` | Universal homeomorphisms of affine schemes | 完成 | 未开始 | 未开始 |
+| 48 | `0EUK` | Absolute weak normalization and seminormalization | 完成 | 未开始 | 未开始 |
+| 49 | `02K9` | Finite locally free morphisms | 完成 | 未开始 | 未开始 |
+| 50 | `01RR` | Rational maps | 完成 | 未开始 | 未开始 |
+| 51 | `01RN` | Birational morphisms | 完成 | 未开始 | 未开始 |
+| 52 | `02NV` | Generically finite morphisms | 完成 | 未开始 | 未开始 |
+| 53 | `02JT` | The dimension formula | 完成 | 未开始 | 未开始 |
+| 54 | `0BAK` | Relative normalization | 完成 | 未开始 | 未开始 |
+| 55 | `035E` | Normalization | 完成 | 未开始 | 未开始 |
+| 56 | `0H3I` | Weak normalization | 完成 | 未开始 | 未开始 |
+| 57 | `03GS` | Zariski's Main Theorem (algebraic version) | 完成 | 未开始 | 未开始 |
+| 58 | `03J3` | Universally bounded fibres | 完成 | 未开始 | 未开始 |
+| 59 | `0H1L` | Miscellany | 完成 | 未开始 | 未开始 |
 
 ### 第 34 章 概形上的拓扑（`topologies`）
 

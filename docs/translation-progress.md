@@ -13,9 +13,9 @@
 
 | 当前阶段 | 章数 | 章节 |
 | --- | ---: | --- |
-| 未开始 | 82 | 第 5、9-20、22-25、27-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
+| 未开始 | 81 | 第 5、9-20、22-25、28-33、36-40、42-51、53-58、60-64、66-72、75-77、79-82、84-89、93、95-96、99、102-104、106-107、109-111 章 |
 | 翻译中 | 0 | — |
-| 候选译文完成，待审校 | 34 | 第 1-4、6-8、21、26、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
+| 候选译文完成，待审校 | 35 | 第 1-4、6-8、21、26-27、34-35、41、52、59、65、73-74、78、83、90-92、94、97-98、100-101、105、108、112-116 章 |
 | 人工审校中 | 0 | — |
 | 人工审校完成，待发布 | 0 | — |
 | 发布中 | 0 | — |
@@ -26,7 +26,7 @@
 
 | 流程 | 完成 / 总数 | 进行中的 Section | 未开始的 Section |
 | --- | ---: | ---: | ---: |
-| 模型候选译文 | 820 / 3,299（24.9%） | 0 | 2,479 |
+| 模型候选译文 | 842 / 3,299（25.5%） | 0 | 2,457 |
 | 人工审校 | 0 / 3,299（0.0%） | 0 | 3,299 |
 | 正式发布 | 0 / 3,299（0.0%） | 0 | 3,299 |
 
@@ -62,7 +62,7 @@
 | 24 | 微分分次层（`sdga`） | 未开始 | 0 / 35（0.0%） | 0 | 35 | 0 | 0 |
 | 25 | 超覆盖（`hypercovering`） | 未开始 | 0 / 12（0.0%） | 0 | 12 | 0 | 0 |
 | 26 | 概形（`schemes`） | 候选译文完成，待审校 | 24 / 24（100.0%） | 0 | 0 | 0 | 0 |
-| 27 | 概形的构造（`constructions`） | 未开始 | 0 / 22（0.0%） | 0 | 22 | 0 | 0 |
+| 27 | 概形的构造（`constructions`） | 候选译文完成，待审校 | 22 / 22（100.0%） | 0 | 0 | 0 | 0 |
 | 28 | 概形的性质（`properties`） | 未开始 | 0 / 30（0.0%） | 0 | 30 | 0 | 0 |
 | 29 | 概形的态射（`morphisms`） | 未开始 | 0 / 59（0.0%） | 0 | 59 | 0 | 0 |
 | 30 | 概形上同调（`coherent`） | 未开始 | 0 / 28（0.0%） | 0 | 28 | 0 | 0 |
@@ -456,6 +456,35 @@
 | 22 | `01KY` | Valuative criterion of separatedness | 完成 | 未开始 | 未开始 |
 | 23 | `01L1` | Monomorphisms | 完成 | 未开始 | 未开始 |
 | 24 | `01LA` | Functoriality for quasi-coherent modules | 完成 | 未开始 | 未开始 |
+
+### 第 27 章 概形的构造（`constructions`）
+
+共 22 个 Section：候选完成 22，翻译中 0，未开始 0。
+
+| Section | Tag | 英文标题 | 候选译文 | 人工审校 | 正式发布 |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `01LF` | Introduction | 完成 | 未开始 | 未开始 |
+| 2 | `01LG` | Relative glueing | 完成 | 未开始 | 未开始 |
+| 3 | `01LL` | Relative spectrum via glueing | 完成 | 未开始 | 未开始 |
+| 4 | `01LQ` | Relative spectrum as a functor | 完成 | 未开始 | 未开始 |
+| 5 | `01LZ` | Affine n-space | 完成 | 未开始 | 未开始 |
+| 6 | `01M1` | Vector bundles | 完成 | 未开始 | 未开始 |
+| 7 | `062P` | Cones | 完成 | 未开始 | 未开始 |
+| 8 | `01M3` | Proj of a graded ring | 完成 | 未开始 | 未开始 |
+| 9 | `01MJ` | Quasi-coherent sheaves on Proj | 完成 | 未开始 | 未开始 |
+| 10 | `01MM` | Invertible sheaves on Proj | 完成 | 未开始 | 未开始 |
+| 11 | `01MX` | Functoriality of Proj | 完成 | 未开始 | 未开始 |
+| 12 | `01N4` | Morphisms into Proj | 完成 | 未开始 | 未开始 |
+| 13 | `01ND` | Projective space | 完成 | 未开始 | 未开始 |
+| 14 | `01NJ` | Invertible sheaves and morphisms into Proj | 完成 | 未开始 | 未开始 |
+| 15 | `01NM` | Relative Proj via glueing | 完成 | 未开始 | 未开始 |
+| 16 | `01NS` | Relative Proj as a functor | 完成 | 未开始 | 未开始 |
+| 17 | `01O5` | Quasi-coherent sheaves on relative Proj | 完成 | 未开始 | 未开始 |
+| 18 | `07ZF` | Functoriality of relative Proj | 完成 | 未开始 | 未开始 |
+| 19 | `01O8` | Invertible sheaves and morphisms into relative Proj | 完成 | 未开始 | 未开始 |
+| 20 | `02NB` | Twisting by invertible sheaves and relative Proj | 完成 | 未开始 | 未开始 |
+| 21 | `01OA` | Projective bundles | 完成 | 未开始 | 未开始 |
+| 22 | `089R` | Grassmannians | 完成 | 未开始 | 未开始 |
 
 ### 第 34 章 概形上的拓扑（`topologies`）
 
